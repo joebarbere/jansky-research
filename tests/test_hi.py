@@ -45,7 +45,12 @@ def test_read_lab_slice_parses_wcs(tmp_path):
     nb, nv = 5, 11
     data = np.arange(nb * nv, dtype=float).reshape(1, nb, nv)
     h = fits.PrimaryHDU(data).header
-    h["CTYPE1"], h["CRVAL1"], h["CDELT1"], h["CRPIX1"] = "VELO-LSR", 0.0, 20000.0, 1  # m/s, 20 km/s/ch
+    h["CTYPE1"], h["CRVAL1"], h["CDELT1"], h["CRPIX1"] = (
+        "VELO-LSR",
+        0.0,
+        20000.0,
+        1,
+    )  # m/s, 20 km/s/ch
     h["CUNIT1"] = "M/S"
     h["CTYPE2"], h["CRVAL2"], h["CDELT2"], h["CRPIX2"] = "GLAT-CAR", -2.0, 1.0, 1
     p = tmp_path / "slice.fits"
