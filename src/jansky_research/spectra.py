@@ -3,18 +3,24 @@
 Cross-matches two radio continuum surveys at different frequencies, computes the two-point
 spectral index alpha (S_nu ~ nu^alpha) with propagated errors, classifies each source, and flags
 **ultra-steep-spectrum** sources (alpha < -1.3, the classic high-redshift radio-galaxy selection;
-De Breuck et al. 2000) and **inverted/peaked-spectrum** candidates (alpha > 0; GPS/CSS).
+De Breuck et al. 2000, A&AS 143, 303) and **anomalous positive-index** sources (alpha > 0 — a
+calibration/variability/resolution flag, *not* a GPS/peaked-spectrum claim, which would need a
+third frequency). The matched-catalogue approach follows de Gasperin, Intema & Frail (2018,
+MNRAS 474, 5008; arXiv:1711.11367).
 
-The default pairing is TGSS ADR1 (147.5 MHz) x NVSS (1.4 GHz) — a decade-wide lever, both
-all-sky and openly cone-searchable on VizieR with no authentication. Everything is pure NumPy +
-astropy; the survey fetch goes through ``astroquery.vizier``, and a synthetic two-survey field
-(:func:`synthetic_field`) lets the tests and CI run offline against known injected spectra.
+The default pairing is TGSS ADR1 (Intema et al. 2017, A&A 598, A78; 147.5 MHz) x NVSS (1.4 GHz) —
+a decade-wide lever, both all-sky and openly cone-searchable on VizieR with no authentication.
+Everything is pure NumPy + astropy; the survey fetch goes through ``astroquery.vizier``, and a
+synthetic two-survey field (:func:`synthetic_field`) lets tests/CI run offline against known spectra.
 
 Caveats the analysis must surface (and the write-up must state):
-- TGSS ADR1 has a known position-dependent flux-scale systematic (Hurley-Walker 2017) that can
-  bias alpha by ~0.1; we keep the USS threshold conservative (-1.3) so it does not flip classes.
-- TGSS (25"), NVSS (45") and VLASS (2.5") have different resolutions; alpha from NVSS x TGSS (both
-  recover extended flux) is the primary estimate, VLASS is a compact-source curvature check.
+- TGSS ADR1 has a position-dependent flux-scale systematic (Hurley-Walker 2017, arXiv:1703.06635;
+  ~15% typical, up to ~40-50% in places) that can bias alpha by ~0.1-0.2; the conservative -1.3 cut
+  limits class flips. The rescaled TGSS-RSADR1 covers only Dec <= +30deg, so fields above that use
+  the uncorrected ADR1 scale and may carry a larger, unquantified bias.
+- TGSS (25"), NVSS (45") and VLASS (2.5") differ in resolution; alpha from NVSS x TGSS (both recover
+  extended flux) is the primary estimate, VLASS (QL Epoch 1, Gordon et al. 2021) a compact-source
+  curvature check.
 """
 
 from __future__ import annotations
@@ -80,7 +86,7 @@ def spectral_index(
 
 
 def classify(alpha: float) -> str:
-    """Label a spectral index: uss / steep / flat / inverted (peaked-spectrum candidate)."""
+    """Label a spectral index: uss / steep / flat / inverted (anomalous +ve index, not a GPS claim)."""
     if alpha < USS_THRESHOLD:
         return "uss"
     if alpha < -0.5:
@@ -249,13 +255,10 @@ def annotate_known(
                 rec["name"] = str(row["Object Name"])
                 rec["type"] = str(row["Type"])
                 rec["z"] = zval
-                # zval == zval is False only for NaN (no measured redshift -> still a candidate).
-                rec["known_hzrg"] = (zval == zval) and str(row["Type"]) in {
-                    "G",
-                    "QSO",
-                    "GClstr",
-                    "RadioS",
-                }
+                # Positive galaxy/AGN classifications only. NED type "RadioS" (bare radio detection,
+                # the default for an NVSS-only source) and "GClstr" are NOT an HzRG identification;
+                # "RadioG" (radio galaxy) is. zval==zval is False only for NaN (no redshift).
+                rec["known_hzrg"] = (zval == zval) and str(row["Type"]) in {"G", "QSO", "RadioG"}
         except Exception:  # noqa: BLE001 - NED outages must not crash the analysis
             pass
         out.append(rec)
