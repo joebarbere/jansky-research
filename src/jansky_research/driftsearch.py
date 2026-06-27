@@ -9,8 +9,10 @@ rates, run the brute-force de-drift search, and measure the recovered fraction
 $P_\\mathrm{detect}(\\mathrm{SNR}, \\dot f)$ — plus the noise-only false-positive rate that
 calibrates the detection threshold.
 
-Everything is offline and seedable, so the benchmark is fully reproducible. The same `jansky.seti`
-detector can then be pointed at real data (e.g. the Voyager-1 carrier) as an external validation.
+Everything is offline and seedable, so the benchmark is fully reproducible. Pointing the same
+detector at real data (the Voyager-1 file, :func:`validate_voyager`) is an honest *negative* check:
+it bounds where this synthetic-tuned teaching detector works (injected tones) and where it does not
+(the real, drifting Voyager carrier amid a band-centre DC spike).
 """
 
 from __future__ import annotations
@@ -95,7 +97,10 @@ def completeness_snr(inj_snrs: np.ndarray, p_mean: np.ndarray, level: float = 0.
     p_mean = np.asarray(p_mean, float)
     if p_mean.max() < level:
         return float("nan")
-    return float(np.interp(level, p_mean, inj_snrs))
+    # np.interp needs a monotonic-increasing xp; sort by p_mean so finite-trial
+    # non-monotonicity at the low-SNR end can't silently return a wrong crossing.
+    order = np.argsort(p_mean)
+    return float(np.interp(level, p_mean[order], inj_snrs[order]))
 
 
 def injection_recovery(
@@ -163,7 +168,7 @@ def injection_recovery(
     )
 
 
-def run(out: str = ".", *, n_trials: int = 30, threshold: float = 10.0, seed: int = 0) -> dict:
+def run(out: str = ".", *, n_trials: int = 100, threshold: float = 10.0, seed: int = 0) -> dict:
     """Compute the injection-recovery benchmark; write metrics + a recovery heatmap. Returns metrics."""
     import json
     from pathlib import Path
@@ -221,15 +226,22 @@ def _heatmap(res: RecoveryResult, out_dir) -> None:
     plt.close(fig)
 
 
+VOYAGER_CARRIER_MHZ = 8420.216  # Voyager-1 X-band carrier in this BL file (Estévez 2021)
+
+
 def validate_voyager(
     path=None, *, window: int = 4096
 ) -> dict:  # pragma: no cover - net + optional deps
-    """Recover the Voyager-1 carrier from the Breakthrough Listen open-data file (external validation).
+    """Honest real-data check of the detector on the Breakthrough Listen Voyager-1 file.
 
-    Runs the *same* ``jansky.seti`` drift detector used by the benchmark on a real, known narrowband
-    signal — the Voyager-1 spacecraft downlink near 8420 MHz. Requires the optional ``voyager`` extra
-    (``h5py`` + ``hdf5plugin``; the file is bitshuffle-compressed). Returns the detected tone
-    frequency, drift, and S/N versus a blank-window control.
+    This is a **negative/limitation result**, not a success story. The naive brightest-channel
+    approach latches onto the band-centre DC-spike artifact (channel N/2, ~$10^{3}$× brighter than
+    any astrophysical tone), *not* the spacecraft. Evaluating the ``jansky.seti`` drift search at the
+    documented Voyager-1 carrier (8420.216 MHz; Estévez 2021) — with a wide drift grid, since the
+    carrier drifts ~-0.69 Hz/s (several channels/sample here) — returns only the noise-floor S/N.
+    So this synthetic-tuned teaching detector, validated on injected tones, does **not** recover the
+    real Voyager signal; real BL data needs proper tooling (blimpy/turboSETI). Requires the optional
+    ``voyager`` extra (``h5py`` + ``hdf5plugin``).
     """
     import h5py
     import hdf5plugin  # noqa: F401 - registers the bitshuffle filter
@@ -242,19 +254,26 @@ def validate_voyager(
         wf = np.asarray(f["data"][:]).squeeze().astype(float)
         fch1 = float(f["data"].attrs["fch1"])
         foff = float(f["data"].attrs["foff"])
-    drifts = np.linspace(-3.0, 3.0, 121)
-    k = int(np.argmax(wf.mean(axis=0)))
-    lo = max(0, k - window // 2)
-    carrier = wf[:, lo : lo + window]
-    blank = wf[:, 500_000 : 500_000 + window]
-    res = seti.drift_search(carrier - np.median(carrier), drifts)
-    blank_snr = float(seti.drift_search(blank - np.median(blank), drifts).best_snr)
+    col = wf.mean(axis=0)
+    n = wf.shape[1]
+    drifts = np.linspace(-8.0, 8.0, 321)  # wide enough for the carrier's real drift
+
+    def _snr(center: int) -> float:
+        lo = max(0, center - window // 2)
+        sub = wf[:, lo : lo + window]
+        return float(seti.drift_search(sub - np.median(sub), drifts).best_snr)
+
+    carrier_chan = int(round((VOYAGER_CARRIER_MHZ - fch1) / foff))
+    blank_chan = 500_000 if abs(500_000 - n // 2) > window else n // 4
+    carrier_snr = _snr(carrier_chan)
+    blank_snr = _snr(blank_chan)
     return {
-        "freq_mhz": fch1 + k * foff,
-        "channel": k,
-        "best_snr": float(res.best_snr),
-        "best_drift": float(res.best_drift),
+        "dc_spike_channel": int(np.argmax(col)),  # == n//2: the artifact, not Voyager
+        "dc_spike_is_band_centre": bool(int(np.argmax(col)) == n // 2),
+        "carrier_freq_mhz": VOYAGER_CARRIER_MHZ,
+        "carrier_snr": carrier_snr,
         "blank_snr": blank_snr,
+        "recovered": bool(carrier_snr > blank_snr + 3.0),  # honest verdict: False
     }
 
 
