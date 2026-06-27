@@ -204,7 +204,14 @@ def compare_populations(
         if a.size < 2 or b.size < 2:
             continue
         d, p = stats.ks_2samp(a, b)
-        out[key] = {"ks": float(d), "p": float(p), "n_rep": int(a.size), "n_one": int(b.size)}
+        out[key] = {
+            "ks": float(d),
+            "p": float(p),
+            "n_rep": int(a.size),
+            "n_one": int(b.size),
+            "med_rep": float(np.median(a)),
+            "med_one": float(np.median(b)),
+        }
     return out
 
 

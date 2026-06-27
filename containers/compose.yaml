@@ -1,0 +1,11 @@
+# Containerised builds. Run via the Makefile, e.g. `make paper`.
+services:
+  paper:
+    build:
+      context: ..
+      dockerfile: containers/paper.Dockerfile
+    image: jansky-research-paper:latest
+    volumes:
+      - ../paper:/paper:z
+    working_dir: /paper
+    command: ["tectonic", "main.tex"]

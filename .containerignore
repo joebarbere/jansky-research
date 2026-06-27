@@ -1,0 +1,16 @@
+# Keep the Airflow image build context lean (this whole repo is the context).
+.git/
+.venv/
+data/
+results/
+paper/figures/
+paper/generated/
+paper/*.pdf
+airflow/logs/
+airflow/.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+site/

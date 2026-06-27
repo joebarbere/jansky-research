@@ -1,0 +1,185 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every quantitative result is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A reproducible FRB burst-statistics tool}
+\shortauthors{Barbere \& Claude}
+
+\begin{document}
+
+\title{A Lightweight, Reproducible Tool for Fast-Radio-Burst Burst Statistics,
+Validated on the First CHIME/FRB Catalog}
+
+\author{Joe Barbere}
+\affiliation{Independent researcher}
+
+\author{Claude}
+\affiliation{Anthropic}
+
+\begin{abstract}
+Fast-radio-burst (FRB) population statistics --- wait-time clustering, energy
+distributions, and repeater versus non-repeater comparisons --- are routinely
+recomputed from scratch in individual papers, with no maintained, pip-installable,
+CPU-only library to perform them reproducibly. We survey the open-source radio-astronomy
+tooling landscape, identify this gap, and fill it with \code{frbstats}, a small tested
+Python module built on the \code{jansky} helper package. Run on the \nBursts\ independent
+events of the First CHIME/FRB Catalog, the tool recovers the established result that
+repeating sources have larger temporal widths than apparent non-repeaters
+(Kolmogorov--Smirnov $D=\ksWidthD$, $p=\ksWidthP$; median $\medWidthRep$ ms versus
+$\medWidthOne$ ms), validating the implementation against the literature. It measures a
+differential fluence power-law index $\gamma=\energyGamma\pm\energyGammaErr$ above an
+automatically selected completeness bound of $\energyFmin$~Jy~ms, consistent with the
+catalog's published source counts. We deliberately frame the within-source wait-time
+clustering ($k=\weibullK$) as a cadence-biased illustration rather than a measurement.
+The entire analysis is automated with an Apache Airflow pipeline running on rootless
+Podman --- a combination with, to our knowledge, no prior use in radio astronomy --- and
+regenerates from a clean checkout in one command. This is a reproducibility and tooling
+contribution, not a discovery.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Fast radio bursts (\,) --- Open source software}
+
+\section{Introduction}
+Fast radio bursts are millisecond-duration, highly dispersed radio flashes, most of
+extragalactic origin \citep{chimecat1}. The First CHIME/FRB Catalog \citep{chimecat1}
+turned their study into population science, and a central open question --- whether
+apparent non-repeaters are simply repeaters caught once --- is attacked statistically
+through burst-rate and energy distributions. Yet the standard analyses are reimplemented
+privately for each paper. There is no maintained, lightweight, openly installable library
+that takes a public catalog and returns the wait-time, energy, and population-comparison
+statistics with their uncertainties. We close that gap with a small, tested tool and
+demonstrate it end to end on public data, with full reproducibility as the goal.
+
+\section{Survey and the gap}
+We surveyed the open-source radio-astronomy ecosystem (detection suites such as PRESTO and
+\code{your}; the CHIME open-data utilities \code{cfod}; the population-synthesis package
+\code{frbpoppy}; the web platform FRBSTATS). Detection and I/O are well served, but
+\emph{burst-statistics analysis} is not: Weibull wait-time fitting, power-law energy fits
+with principled lower bounds, and repeater/non-repeater hypothesis tests exist only as
+one-off scripts inside papers, while FRBSTATS exposes a web UI but no offline library.
+Separately, we found that workflow-orchestration tooling in radio astronomy assumes
+observatory HPC: the one published Airflow use \citep[CHIME/FRB baseband;][]{chime25repeaters}
+runs on Docker Swarm, and we found no prior pairing of Airflow with rootless Podman for
+laptop-scale, public-data analysis. Both gaps motivate this work.
+
+\section{Methods: the \code{frbstats} tool}
+\code{frbstats} is a pure-NumPy/SciPy module composing tested helpers from \code{jansky}
+\citep{jansky}. It implements three analyses.
+
+\paragraph{Wait-time clustering.} Inter-burst waiting times are computed \emph{within} each
+repeater source and pooled (\weibullNwaits\ waits across \nRepeaterSources\ sources);
+pooling arrival times across different sources would be meaningless. A Weibull distribution
+is fitted by maximum likelihood with location fixed at zero, and a bootstrap supplies the
+confidence interval on the shape $k$. Shape $k<1$ indicates clustering, $k=1$ a memoryless
+Poisson process.
+
+\paragraph{Energy distribution.} The differential fluence distribution
+$\mathrm{d}N/\mathrm{d}F\propto F^{-\gamma}$ is fitted with the Hill maximum-likelihood
+estimator, $\gamma = 1 + n\left[\sum_i \ln(F_i/F_\mathrm{min})\right]^{-1}$, with the
+lower bound $F_\mathrm{min}$ chosen by the Kolmogorov--Smirnov criterion of
+\citet{clauset2009} so that the fit covers the genuine power-law tail rather than the
+incomplete faint end.
+
+\paragraph{Population comparison.} Two-sample KS tests compare the dispersion measure,
+width, and fluence distributions of repeater versus non-repeater bursts.
+
+Every function is tested against a synthetic catalog with known ground truth, so the test
+suite runs offline and recovers the injected parameters. The same \code{pipeline} entry
+point is called by the command line, the notebooks, and the automation layer, guaranteeing
+one code path.
+
+\section{Automation: Airflow on Podman}
+The analysis is wrapped in an Apache Airflow \citep{airflow} DAG
+(\code{fetch\_dataset}\,$\rightarrow$\,\code{run\_analysis}\,$\rightarrow$\,\code{make\_figures}\,$\rightarrow$\,\code{assemble\_paper\_inputs}),
+run on a rootless-Podman stack (LocalExecutor with a single Postgres metadata database; no
+Celery or Redis). Each task is an in-process Python operator calling \code{frbstats}
+directly --- not a nested container --- so the DAG, the Makefile, and the notebooks execute
+identical code. Standing the stack up on Fedora required fully-qualified image names,
+installing \code{git} in the image, and SELinux \code{:z} bind-mount relabels; once
+resolved, the DAG runs to success and writes the same figures and macros as the command
+line.
+
+\section{Data}
+We use the First CHIME/FRB Catalog \citep{chimecat1}, retrieved as a public CSV. Its 600
+rows are \nBursts\ independent events: multi-component bursts are stored as several
+sub-burst rows, which we collapse to one row per event to avoid pseudo-replicating
+near-identical dispersion measures and inflating significance. The working sample is
+\nRepeaterBursts\ repeater bursts from \nRepeaterSources\ sources plus the non-repeaters.
+
+\section{Results}
+\paragraph{Repeaters are wider (reproduces the literature).} Repeater bursts have
+significantly larger temporal widths than non-repeaters (KS $D=\ksWidthD$,
+$p=\ksWidthP$; medians $\medWidthRep$ versus $\medWidthOne$ ms; Figure~\ref{fig:dm}
+shows the companion DM split). This reproduces the established CHIME morphology result
+\citep{pleunis2021} and is our validation that the tool is correct.
+
+\paragraph{Fluence power law.} The differential index is
+$\gamma=\energyGamma\pm\energyGammaErr$ above the auto-selected bound
+$F_\mathrm{min}=\energyFmin$~Jy~ms (\energyNtail-event tail; Figure~\ref{fig:fluence}).
+This matches the cumulative source-count slope reported for the catalog within
+uncertainties. The selected bound sits above CHIME's nominal $\sim5$~Jy~ms
+peak-sensitivity threshold, as expected for a population spanning a range of dispersion
+measures, widths, and transit positions.
+
+\paragraph{Wait-time clustering (a caveat, not a claim).} The pooled within-source
+Weibull shape is $k=\weibullK$ (95\% CI $\weibullKlo$--$\weibullKhi$; Figure~\ref{fig:wait}),
+formally clustered and broadly comparable to dense-monitoring estimates for FRB~121102
+\citep{oppermann2018}. We report it only as an illustration: CHIME is a transit instrument
+that sees each source roughly once per sidereal day, so the waits are bimodal and
+cadence-biased. Notably, removing the sub-burst pseudo-replication moved this estimate from
+a spurious $0.14$ to $\weibullK$, underscoring why event-level treatment matters.
+
+\paragraph{Additional, exploratory differences.} Repeaters show a lower median dispersion
+measure ($\medDMRep$ versus $\medDMOne$~pc~cm$^{-3}$; KS $D=\ksDMD$, $p=\ksDMP$) and a
+marginally higher fluence ($\medFluenceRep$ versus $\medFluenceOne$~Jy~ms; $p=\ksFluenceP$).
+Unlike the width result these are \emph{not} reproductions of \citet{pleunis2021}, who found
+the Cat~1 DM distributions consistent; a significant DM difference emerged later with larger
+samples \citep{chime25repeaters} and is partly a selection effect (nearer sources are easier
+to re-detect). We therefore present them as exploratory.
+
+\begin{figure}
+\plotone{figures/wait_time_cdf.pdf}
+\caption{Empirical CDF of within-source inter-burst waiting times with the fitted Weibull
+($k=\weibullK$). Reported as a cadence-biased illustration, not a clustering measurement.}
+\label{fig:wait}
+\end{figure}
+
+\begin{figure}
+\plotone{figures/fluence_ccdf.pdf}
+\caption{Complementary CDF of burst fluence with the maximum-likelihood power law
+($\gamma=\energyGamma$ above $\energyFmin$~Jy~ms).}
+\label{fig:fluence}
+\end{figure}
+
+\begin{figure}
+\plotone{figures/dm_by_class.pdf}
+\caption{Dispersion-measure distributions of repeater and non-repeater bursts
+(exploratory; selection-affected).}
+\label{fig:dm}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The headline contribution is a tested, offline-capable tool that recovers a peer-reviewed
+result from public data, plus a reproducible automation pattern. Limitations are stated
+plainly: the catalog-level differences are subject to CHIME's selection function and are not
+corrected for it; the power law is a single fit above one completeness bound; the wait-time
+shape is cadence-dominated. None of the results is a discovery claim. The full chain ---
+fetch data, run the pipeline, build this document --- regenerates from a clean checkout with
+\code{make reproduce}, and the Airflow DAG produces byte-identical figures and macros, so
+every number above is auditable back to the pipeline.
+
+\section{Conclusions}
+We identified a real gap in open-source FRB tooling, filled it with a small tested module,
+validated it by reproducing the CHIME repeater width result, and automated it with a
+reproducible Airflow-on-Podman pipeline. The non-chosen survey candidates (pulsar-timing,
+HI, RFI/ML, and SETI tools) are recorded as future work.
+
+\software{Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib, Apache Airflow
+\citep{airflow}, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

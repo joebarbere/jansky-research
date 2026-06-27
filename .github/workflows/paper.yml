@@ -1,0 +1,38 @@
+name: paper
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-paper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout jansky-research
+        uses: actions/checkout@v4
+        with:
+          path: jansky-research
+      - name: Checkout jansky (the library dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: joebarbere/jansky
+          ref: v0.1.0
+          path: jansky
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Generate figures + macros from the pipeline (offline)
+        working-directory: jansky-research
+        run: |
+          uv sync
+          uv run python -m jansky_research.pipeline --out . --offline
+      - name: Build the PDF with tectonic
+        uses: WtfJoke/setup-tectonic@v3
+      - name: Compile
+        working-directory: jansky-research/paper
+        run: tectonic main.tex
+      - name: Upload paper.pdf
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper
+          path: jansky-research/paper/main.pdf
