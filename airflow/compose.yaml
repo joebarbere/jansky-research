@@ -1,0 +1,74 @@
+# Local Airflow stack for the research pipeline, trimmed for Podman on a single machine.
+#
+# Executor: LocalExecutor + Postgres only — NO Redis/Celery (drops the flakiest containers).
+# Run with: `podman compose -f airflow/compose.yaml up -d`  (or `make airflow-up`).
+#
+# Podman / Fedora notes (see airflow/.env.example):
+#   * every bind mount carries the SELinux ":z" relabel suffix — the #1 docker->podman trap.
+#   * set AIRFLOW_UID=0 for rootless podman (container-root maps to your host user).
+#   * airflow-init is idempotent; scheduler/webserver retry the DB rather than relying on
+#     health-gated ordering (podman-compose's depends_on lags docker-compose).
+
+x-airflow-common: &airflow-common
+  build:
+    context: ..
+    dockerfile: airflow/Dockerfile
+  image: jansky-research-airflow:latest
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__FERNET_KEY: ""
+    JR_OUTPUT: /opt/airflow/project
+    JR_OFFLINE: "${JR_OFFLINE:-0}"
+  user: "${AIRFLOW_UID:-0}:0"
+  volumes:
+    - ./dags:/opt/airflow/dags:z
+    - ./logs:/opt/airflow/logs:z
+    - ..:/opt/airflow/project:z
+  depends_on:
+    - postgres
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db:/var/lib/postgresql/data:z
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+
+  # Idempotent one-shot: migrate the metadata DB and create the admin user.
+  airflow-init:
+    <<: *airflow-common
+    depends_on:
+      - postgres
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create --username admin --password admin \
+          --firstname admin --lastname admin --role Admin --email admin@example.com || true
+    restart: on-failure
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    restart: always
+
+volumes:
+  postgres-db:
