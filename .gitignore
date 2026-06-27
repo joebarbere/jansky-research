@@ -1,0 +1,39 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Data cache (datasets are fetched, never committed)
+data/
+.cache/
+
+# Generated analysis artifacts
+results/*.json
+paper/figures/*
+paper/generated/*
+!paper/figures/.gitkeep
+!paper/generated/.gitkeep
+
+# Airflow runtime
+airflow/logs/
+airflow/*.cfg
+airflow/*.db
+airflow/.env
+
+# LaTeX build aux
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.pdf
+paper/main.pdf
+
+# OS / editors
+.DS_Store

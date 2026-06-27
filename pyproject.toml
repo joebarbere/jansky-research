@@ -1,0 +1,96 @@
+[project]
+name = "jansky-research"
+version = "0.0.1"
+description = "Amateur radio-astronomy research: survey, new tooling, automated analysis of public data, and a reproducible paper. Sibling of the jansky course."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "Joe Barbere" }, { name = "Claude" }]
+keywords = ["radio-astronomy", "astronomy", "research", "reproducibility", "pipeline"]
+
+# Core deps are deliberately lean. The project depends on the `jansky` package
+# for its tested helpers (transients, rfi, timing, seti, sourcecounts, formats,
+# data ...). Heavy/fragile pieces (Airflow, LaTeX) live in extras / containers.
+dependencies = [
+    "jansky",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "astropy>=6.0",
+    "requests>=2.31",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+# Apache Airflow is kept OUT of the core install — its constraint resolution is
+# heavy and conflict-prone. It is installed only inside the Airflow container
+# (airflow/Dockerfile) or via `uv sync --extra airflow` when iterating on DAGs.
+airflow = ["apache-airflow>=2.9,<3.0"]
+
+# The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
+# analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.
+
+[project.urls]
+Homepage = "https://github.com/joebarbere/jansky-research"
+
+# --- jansky dependency source ----------------------------------------------------
+# LOCAL DEV (default): use the sibling checkout so edits across both repos are live.
+# RELEASE / CI on a clean checkout: switch to the pinned git tag instead, e.g.
+#   jansky = { git = "https://github.com/joebarbere/jansky", tag = "v0.1.0" }
+# (the tag is cut on jansky; uv.lock records the exact resolved commit).
+[tool.uv.sources]
+jansky = { path = "../jansky", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jansky_research"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "mypy>=1.11",
+    "nbmake>=1.5",
+    "jupyterlab>=4.2",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks", "data", "paper"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["jansky_research"]
+
+[tool.coverage.report]
+fail_under = 85
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.mypy]
+files = ["src/jansky_research"]
+# 3.12 matches the repo's pinned runtime; the scientific stack's bundled stubs
+# (numpy 2.x) use PEP 695 `type` statements that mypy rejects under older targets.
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true

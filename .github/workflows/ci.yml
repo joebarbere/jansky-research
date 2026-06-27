@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # The jansky dependency is a local path source (../jansky); check it out
+      # as a sibling so `uv sync` resolves it on a clean runner.
+      - name: Checkout jansky-research
+        uses: actions/checkout@v4
+        with:
+          path: jansky-research
+      - name: Checkout jansky (the library dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: joebarbere/jansky
+          ref: v0.1.0
+          path: jansky
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Sync
+        working-directory: jansky-research
+        run: uv sync
+      - name: Lint
+        working-directory: jansky-research
+        run: uv run ruff check src/ tests/
+      - name: Format check
+        working-directory: jansky-research
+        run: uv run ruff format --check src/ tests/
+      - name: Typecheck
+        working-directory: jansky-research
+        run: uv run mypy
+      - name: Test + coverage floor
+        working-directory: jansky-research
+        run: uv run pytest --cov=jansky_research --cov-report=term-missing
