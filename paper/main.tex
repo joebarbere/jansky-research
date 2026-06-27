@@ -91,8 +91,11 @@ point is called by the command line, the notebooks, and the automation layer, gu
 one code path.
 
 \section{Automation: Airflow on Podman}
-The analysis is wrapped in an Apache Airflow \citep{airflow} DAG
-(\code{fetch\_dataset}\,$\rightarrow$\,\code{run\_analysis}\,$\rightarrow$\,\code{make\_figures}\,$\rightarrow$\,\code{assemble\_paper\_inputs}),
+The analysis is wrapped in an Apache Airflow \citep{airflow} DAG with four stages,
+\begin{center}
+\code{fetch\_dataset} $\rightarrow$ \code{run\_analysis} $\rightarrow$ \\
+\code{make\_figures} $\rightarrow$ \code{assemble\_paper\_inputs},
+\end{center}
 run on a rootless-Podman stack (LocalExecutor with a single Postgres metadata database; no
 Celery or Redis). Each task is an in-process Python operator calling \code{frbstats}
 directly --- not a nested container --- so the DAG, the Makefile, and the notebooks execute
