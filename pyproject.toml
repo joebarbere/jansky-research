@@ -26,6 +26,8 @@ dependencies = [
 # heavy and conflict-prone. It is installed only inside the Airflow container
 # (airflow/Dockerfile) or via `uv sync --extra airflow` when iterating on DAGs.
 airflow = ["apache-airflow>=2.9,<3.0"]
+# Reading the bitshuffle-compressed Breakthrough Listen Voyager HDF5 (validate_voyager).
+voyager = ["h5py>=3.0", "hdf5plugin>=4.0"]
 
 # The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
 # analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.

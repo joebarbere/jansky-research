@@ -74,6 +74,16 @@ DATASETS: dict[str, Dataset] = {
         "burst-statistics analysis (CHIME/FRB Collaboration 2021, ApJS 257, 59).",
         size_hint="~216 KB",
     ),
+    "voyager1-h5": Dataset(
+        name="voyager1-h5",
+        url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",
+        filename="Voyager1.single_coarse.fine_res.h5",
+        description="Breakthrough Listen GBT X-band fine-resolution observation of Voyager 1 "
+        "(2015-12-30) — a real narrowband spacecraft carrier near 8420 MHz; the canonical SETI "
+        "drift-search validation file. Bitshuffle-compressed HDF5 (needs the 'voyager' extra).",
+        size_hint="~50 MB",
+        category="large",
+    ),
 }
 
 
