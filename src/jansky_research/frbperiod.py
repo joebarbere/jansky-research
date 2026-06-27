@@ -3,7 +3,8 @@
 Some repeating fast radio bursts show **periodic activity windows** — bursts cluster at a preferred
 phase of a multi-day cycle. The archetype is FRB 20180916B, with a 16.35-day period (CHIME/FRB
 Collaboration 2020, Nature 582, 351). This module searches a repeater's burst arrival times (MJDs)
-for such a period with a phase-folding **Rayleigh ($Z^2_1$) periodogram** — pure NumPy, CPU-only.
+for such a period with a phase-folding **Rayleigh ($Z^2_1$) periodogram** (Buccheri et al. 1983,
+A&A 128, 245) — pure NumPy, CPU-only. (CHIME report 16.35 +/- 0.15 d.)
 
 Honest scope (and the write-up must say this): the CHIME catalogue is a **transit survey** that
 sees each source roughly once per sidereal day with strongly non-uniform exposure. A catalogue-only
@@ -61,8 +62,10 @@ def false_alarm_prob(z2_max: float, n_indep: int) -> float:
     """Exposure-blind false-alarm probability of a peak $Z^2_{\\max}$ over ``n_indep`` trials.
 
     For a single trial, $P(Z^2_1 > z) = e^{-z/2}$ ($\\chi^2_2$ survival). With ``n_indep``
-    independent trial periods, $\\mathrm{FAP} = 1 - (1 - e^{-z/2})^{n_\\mathrm{indep}}$. This
-    **ignores the survey exposure and daily aliasing**, so it is only an upper bound on confidence.
+    independent trial periods, $\\mathrm{FAP} = 1 - (1 - e^{-z/2})^{n_\\mathrm{indep}}$. This assumes
+    the trial frequencies are independent — which a transit survey's aliased spectral window
+    violates — and ignores the exposure, so it is an **approximate** number, not a rigorous
+    significance. Use it only as a rough guide; trust the match to an independently-known period.
     """
     p_single = np.exp(-z2_max / 2.0)
     return float(1.0 - (1.0 - p_single) ** max(n_indep, 1))
