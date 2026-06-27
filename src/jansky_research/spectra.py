@@ -37,6 +37,7 @@ __all__ = [
     "crossmatch",
     "fetch_survey",
     "find_uss",
+    "reference_spindex",
     "spectral_index",
     "synthetic_field",
 ]
@@ -260,6 +261,48 @@ def annotate_known(
                 # "RadioG" (radio galaxy) is. zval==zval is False only for NaN (no redshift).
                 rec["known_hzrg"] = (zval == zval) and str(row["Type"]) in {"G", "QSO", "RadioG"}
         except Exception:  # noqa: BLE001 - NED outages must not crash the analysis
+            pass
+        out.append(rec)
+    return out
+
+
+def reference_spindex(
+    ra: np.ndarray, dec: np.ndarray, radius_arcsec: float = 30.0
+) -> list[dict]:  # pragma: no cover - network
+    """Authoritative TGSS×NVSS spectral index from de Gasperin et al. (2018).
+
+    Looks each position up in the **flux-scale-corrected** 1.4M-source catalogue
+    (VizieR ``J/MNRAS/474/5008/spidxcat``) and returns ``{"spindex", "e_spindex", "sep"}`` for the
+    nearest entry. Compare against this tool's raw-TGSS ``alpha``: a large negative offset means the
+    uncorrected TGSS ADR1 flux scale has *inflated* the index and the USS flag is likely spurious —
+    the mandatory validation before any USS/HzRG claim (this is exactly what reduced a 6-candidate
+    raw list to 1 confirmed USS source in the NGP test field).
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["*"])
+    v.ROW_LIMIT = -1
+    out = []
+    for r, d in zip(np.atleast_1d(ra), np.atleast_1d(dec), strict=True):
+        c = SkyCoord(r * u.deg, d * u.deg)
+        rec = {"spindex": float("nan"), "e_spindex": float("nan"), "sep": float("nan")}
+        try:
+            t = v.query_region(
+                c, radius=radius_arcsec * u.arcsec, catalog="J/MNRAS/474/5008/spidxcat"
+            )
+            if t and len(t[0]):
+                tt = t[0]
+                m = SkyCoord(tt["RAJ2000"], tt["DEJ2000"], unit="deg")
+                sep = c.separation(m).arcsec
+                k = int(np.argmin(sep))
+                rec = {
+                    "spindex": float(tt["SpIndex"][k]),
+                    "e_spindex": float(tt["e_SpIndex"][k]),
+                    "sep": float(sep[k]),
+                }
+        except Exception:  # noqa: BLE001 - VizieR outages must not crash the analysis
             pass
         out.append(rec)
     return out
