@@ -64,22 +64,23 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
                 out[i] = np.nan
         return out
 
+    # Non-repeaters carry a null marker in the repeater-name field; in CHIME/FRB Catalog 1 that
+    # marker is "-9999" (other catalogues use "-" or blank).
+    sentinels = {"-9999", "-9999.0", "-", "--", "", "nan"}
     rep_col = cols["repeater_name"]
-    repeater = np.array(
-        [
-            bool(r.get(rep_col, "").strip())
-            and r.get(rep_col, "").strip() not in {"-", "--", "nan"}
-            for r in rows
-        ]
+    names = (
+        np.array([(r.get(rep_col, "") or "").strip() for r in rows])
         if rep_col
-        else [False] * len(rows)
+        else np.array([""] * len(rows))
     )
+    repeater = np.array([nm not in sentinels for nm in names])
     return {
         "mjd": _floats(cols["mjd"]),
         "fluence": _floats(cols["fluence"]),
         "dm": _floats(cols["dm"]),
         "width": _floats(cols["width"]),
         "repeater": repeater,
+        "repeater_name": names,
     }
 
 
@@ -100,6 +101,7 @@ def metrics_dict(stats: frbstats.BurstStats, source: str) -> dict:
         "source": source,
         "n_bursts": stats.n_bursts,
         "n_repeater_bursts": stats.n_repeater_bursts,
+        "n_repeater_sources": stats.n_repeater_sources,
         "weibull": asdict(stats.weibull),
         "weibull_clustered": stats.weibull.clustered,
         "energy": asdict(stats.energy),

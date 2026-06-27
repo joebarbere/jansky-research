@@ -32,6 +32,8 @@ __all__ = [
     "compare_populations",
     "fit_power_law",
     "fit_weibull_waits",
+    "grouped_wait_times",
+    "select_xmin",
     "summarise",
     "synthetic_catalog",
     "wait_times",
@@ -73,6 +75,7 @@ class BurstStats:
     ks: dict[str, dict[str, float]]
     n_bursts: int
     n_repeater_bursts: int
+    n_repeater_sources: int
 
 
 def wait_times(mjds: np.ndarray) -> np.ndarray:
@@ -82,13 +85,31 @@ def wait_times(mjds: np.ndarray) -> np.ndarray:
     return dt[dt > 0]
 
 
-def fit_weibull_waits(mjds: np.ndarray, *, n_boot: int = 1000, seed: int | None = 0) -> WeibullFit:
+def grouped_wait_times(mjds: np.ndarray, groups: np.ndarray) -> np.ndarray:
+    """Inter-burst waiting times computed *within* each source, then pooled.
+
+    Pooling arrival times across different repeaters is meaningless — a "wait" is only defined
+    between consecutive bursts of the *same* source. This computes ``wait_times`` per group label
+    and concatenates them, so a catalogue with many repeaters yields one combined wait sample.
+    """
+    mjds = np.asarray(mjds, dtype=float)
+    groups = np.asarray(groups)
+    out = [wait_times(mjds[groups == g]) for g in np.unique(groups)]
+    out = [w for w in out if w.size]
+    return np.concatenate(out) if out else np.array([])
+
+
+def fit_weibull_waits(
+    mjds: np.ndarray, *, groups: np.ndarray | None = None, n_boot: int = 1000, seed: int | None = 0
+) -> WeibullFit:
     """Fit a Weibull to the inter-burst waiting times, with a bootstrap CI on the shape.
 
-    Uses ``scipy.stats.weibull_min`` with the location fixed at 0 (waiting times are positive).
-    The shape ``k`` is the clustering diagnostic: ``k < 1`` clustered, ``k = 1`` Poisson.
+    With ``groups`` (per-burst source labels) the waits are computed *within* each source and
+    pooled (the correct treatment for a multi-repeater catalogue); without it the bursts are
+    treated as a single source. Uses ``scipy.stats.weibull_min`` with location fixed at 0. The
+    shape ``k`` is the clustering diagnostic: ``k < 1`` clustered, ``k = 1`` Poisson.
     """
-    waits = wait_times(mjds)
+    waits = grouped_wait_times(mjds, groups) if groups is not None else wait_times(mjds)
     if waits.size < 3:
         raise ValueError("need at least 3 positive waiting times to fit a Weibull")
     k, _loc, scale = stats.weibull_min.fit(waits, floc=0.0)
@@ -104,23 +125,61 @@ def fit_weibull_waits(mjds: np.ndarray, *, n_boot: int = 1000, seed: int | None 
     )
 
 
-def fit_power_law(fluences: np.ndarray, *, f_min: float | None = None) -> PowerLawFit:
+def _hill(tail: np.ndarray, f_min: float) -> float:
+    """Hill/Clauset differential power-law index for ``tail`` above ``f_min``."""
+    return 1.0 + tail.size / np.sum(np.log(tail / f_min))
+
+
+def _ks_distance(tail: np.ndarray, f_min: float, gamma: float) -> float:
+    """KS distance between the empirical CCDF of ``tail`` and the fitted power law."""
+    x = np.sort(tail)
+    cdf_emp = np.arange(1, x.size + 1) / x.size
+    cdf_fit = 1.0 - (x / f_min) ** (-(gamma - 1.0))
+    return float(np.max(np.abs(cdf_emp - cdf_fit)))
+
+
+def select_xmin(fluences: np.ndarray, *, min_tail: int = 30) -> float:
+    """Choose the power-law lower bound by the Clauset-Shalizi-Newman KS criterion.
+
+    Scans candidate lower bounds and returns the one minimising the KS distance between the
+    empirical tail and its fitted power law — i.e. where the data actually become power-law,
+    above the survey's incompleteness. ``min_tail`` guards against tiny, unstable tails.
+    """
+    f = np.asarray(fluences, dtype=float)
+    f = f[np.isfinite(f) & (f > 0)]
+    candidates = np.unique(f)
+    best_xmin, best_d = float(f.min()), np.inf
+    for xm in candidates:
+        tail = f[f >= xm]
+        if tail.size < min_tail:
+            break  # candidates are sorted ascending; tails only shrink from here
+        d = _ks_distance(tail, xm, _hill(tail, xm))
+        if d < best_d:
+            best_d, best_xmin = d, float(xm)
+    return best_xmin
+
+
+def fit_power_law(
+    fluences: np.ndarray, *, f_min: float | None = None, auto_xmin: bool = False
+) -> PowerLawFit:
     """Maximum-likelihood differential power-law index of the fluence distribution.
 
     For dN/dF ∝ F**(-gamma) above a lower bound ``f_min``, the Clauset et al. (2009) / Hill
     estimator is ``gamma = 1 + n / sum(ln(F_i / f_min))`` with standard error
-    ``(gamma - 1) / sqrt(n)``. If ``f_min`` is None it defaults to the smallest positive fluence
-    (the whole sample is treated as the power-law tail).
+    ``(gamma - 1) / sqrt(n)``. With ``auto_xmin`` (and ``f_min`` unset) the lower bound is chosen
+    by :func:`select_xmin` so the fit is over the genuine power-law tail, not the incomplete faint
+    end — essential for a real survey catalogue. Otherwise ``f_min`` defaults to the smallest
+    positive fluence.
     """
     f = np.asarray(fluences, dtype=float)
     f = f[np.isfinite(f) & (f > 0)]
     if f_min is None:
-        f_min = float(f.min())
+        f_min = select_xmin(f) if auto_xmin else float(f.min())
     tail = f[f >= f_min]
     n = tail.size
     if n < 2:
         raise ValueError("need at least 2 fluences above f_min for a power-law fit")
-    gamma = 1.0 + n / np.sum(np.log(tail / f_min))
+    gamma = _hill(tail, f_min)
     return PowerLawFit(
         gamma=float(gamma), gamma_err=float((gamma - 1.0) / np.sqrt(n)), f_min=f_min, n_tail=n
     )
@@ -152,13 +211,21 @@ def compare_populations(
 def summarise(catalog: dict[str, np.ndarray]) -> BurstStats:
     """Run all three analyses over a catalogue dict and bundle the result.
 
-    ``catalog`` keys: ``mjd``, ``fluence``, ``dm``, ``width`` (arrays), and ``repeater`` (bool
-    array). The Weibull wait-time fit uses the repeater bursts (the bursts with a recurrence
-    structure); the energy and population comparisons use the whole catalogue.
+    ``catalog`` keys: ``mjd``, ``fluence``, ``dm``, ``width`` (arrays), ``repeater`` (bool mask),
+    and optionally ``repeater_name`` (per-burst source labels). The Weibull wait-time fit uses the
+    repeater bursts, with waits computed *within* each source when labels are available; the energy
+    and population comparisons use the whole catalogue.
     """
     repeater_mask = np.asarray(catalog["repeater"], dtype=bool)
-    weibull = fit_weibull_waits(np.asarray(catalog["mjd"])[repeater_mask])
-    energy = fit_power_law(np.asarray(catalog["fluence"]))
+    rep_mjd = np.asarray(catalog["mjd"])[repeater_mask]
+    if "repeater_name" in catalog:
+        labels = np.asarray(catalog["repeater_name"])[repeater_mask]
+        weibull = fit_weibull_waits(rep_mjd, groups=labels)
+        n_sources = int(np.unique(labels).size)
+    else:
+        weibull = fit_weibull_waits(rep_mjd)
+        n_sources = 1
+    energy = fit_power_law(np.asarray(catalog["fluence"]), auto_xmin=True)
     rep = {
         k: np.asarray(catalog[k])[repeater_mask] for k in ("dm", "fluence", "width") if k in catalog
     }
@@ -174,6 +241,7 @@ def summarise(catalog: dict[str, np.ndarray]) -> BurstStats:
         ks=ks,
         n_bursts=int(repeater_mask.size),
         n_repeater_bursts=int(repeater_mask.sum()),
+        n_repeater_sources=n_sources,
     )
 
 
@@ -209,10 +277,13 @@ def synthetic_catalog(
     one_dm = rng.normal(650.0, 150.0, n_oneoff)  # shifted DM -> KS has signal
     one_width = 10 ** rng.normal(0.1, 0.4, n_oneoff)
 
+    # The repeater bursts are one synthetic source; non-repeaters get the catalogue sentinel.
+    names = np.array(["SYN-R1"] * n_repeater + ["-9999"] * n_oneoff)
     return {
         "mjd": np.concatenate([rep_mjd, one_mjd]),
         "fluence": np.concatenate([rep_fluence, one_fluence]),
         "dm": np.concatenate([rep_dm, one_dm]),
         "width": np.concatenate([rep_width, one_width]),
         "repeater": np.concatenate([np.ones(n_repeater, bool), np.zeros(n_oneoff, bool)]),
+        "repeater_name": names,
     }

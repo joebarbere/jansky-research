@@ -65,12 +65,14 @@ class Dataset:
 DATASETS: dict[str, Dataset] = {
     "chime-frb-catalog": Dataset(
         name="chime-frb-catalog",
-        url="https://www.chime-frb.ca/catalog/catalog_csv",
+        # Official source is https://www.chime-frb.ca/catalog (often 503); this is the
+        # byte-identical chimefrbcat1.csv vendored by the maintained frbpoppy package.
+        url="https://raw.githubusercontent.com/TRASAL/frbpoppy/master/data/frbcat/chimefrbcat1.csv",
         filename="chimefrbcat1.csv",
-        description="CHIME/FRB Catalog 1 — public CSV of ~600 fast radio bursts "
-        "(DM, fluence, width, repeater flag). Lightweight; the candidate dataset "
-        "for an FRB burst-statistics analysis.",
-        size_hint="~1 MB",
+        description="CHIME/FRB Catalog 1 — public CSV of 600 fast radio bursts (DM, fluence, "
+        "width, repeater name) from 18 repeaters + non-repeaters. The dataset for the FRB "
+        "burst-statistics analysis (CHIME/FRB Collaboration 2021, ApJS 257, 59).",
+        size_hint="~216 KB",
     ),
 }
 

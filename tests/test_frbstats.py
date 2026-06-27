@@ -57,6 +57,24 @@ def test_summarise_bundles_results():
     assert "dm" in s.ks
 
 
+def test_grouped_wait_times_are_within_source():
+    # Two sources; waits must be computed within each, never across the source boundary.
+    mjds = np.array([10.0, 11.0, 13.0, 100.0, 101.0])
+    groups = np.array(["A", "A", "A", "B", "B"])
+    w = np.sort(frbstats.grouped_wait_times(mjds, groups))
+    assert np.allclose(w, [1.0, 1.0, 2.0])  # A:[1,2], B:[1]; the 87-day gap is NOT a wait
+
+
+def test_select_xmin_and_auto_power_law():
+    # Pure power law below x and noise floor of small fluences below it.
+    cat = frbstats.synthetic_catalog(n_repeater=3000, n_oneoff=0, gamma_true=2.3, seed=11)
+    xm = frbstats.select_xmin(cat["fluence"])
+    assert xm >= cat["fluence"].min()
+    fit = frbstats.fit_power_law(cat["fluence"], auto_xmin=True)
+    assert abs(fit.gamma - 2.3) < 0.25
+    assert fit.f_min == xm
+
+
 def test_fit_guards():
     with pytest.raises(ValueError):
         frbstats.fit_weibull_waits(np.array([58000.0, 58001.0]))  # < 3 waits
