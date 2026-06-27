@@ -39,7 +39,11 @@ def read_lab_slice(path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         h = hd[0].header
         d = np.asarray(hd[0].data, dtype=float).squeeze()  # (lat, vel)
     nb, nv = d.shape
-    vel = ((np.arange(nv) + 1 - h["CRPIX1"]) * h["CDELT1"] + h["CRVAL1"]) / 1000.0  # m/s -> km/s
+    vel = (np.arange(nv) + 1 - h["CRPIX1"]) * h["CDELT1"] + h["CRVAL1"]
+    if str(h.get("CUNIT1", "M/S")).strip().upper() in ("M/S", "M S-1", ""):
+        vel = vel / 1000.0  # -> km/s (LAB stores VELO-LSR in m/s)
+    if np.nanmax(np.abs(vel)) < 50.0:  # guard against a misread velocity unit
+        raise ValueError(f"implausible velocity axis (max |v| = {np.nanmax(np.abs(vel)):.2g} km/s)")
     lat = (np.arange(nb) + 1 - h["CRPIX2"]) * h["CDELT2"] + h["CRVAL2"]
     return lat, vel, d
 
@@ -49,9 +53,10 @@ def terminal_velocity(
 ) -> float:
     """Terminal velocity: the most positive LSR velocity with $T_B$ above ``threshold_k`` (inner Galaxy).
 
-    A fixed brightness-temperature threshold is the simple, standard estimator; it sits slightly
-    *inside* the true terminal velocity (the profile edge has finite width), a known systematic the
-    write-up notes.
+    A fixed brightness-temperature threshold is the simple, standard estimator; relative to
+    inflection-point spectral fitting it tends to **overestimate** the terminal velocity (McClure-
+    Griffiths & Dickey 2016 find threshold crossings ~7 km/s higher), biasing $V(R)$ high — a known
+    systematic the write-up notes.
     """
     vel_kms = np.asarray(vel_kms, dtype=float)
     spectrum = np.asarray(spectrum, dtype=float)
@@ -141,14 +146,15 @@ def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> d
         slices = [read_lab_slice(fetch_lab_longitude(ell)) for ell in longitudes]
         source = "LAB (Kalberla et al. 2005)"
     R, V = rotation_curve(longitudes, slices, threshold_k=threshold_k)
-    inner = V[R > 2.0]  # avoid the very inner, bar-affected region
+    flat = V[R > 4.0]  # the bar dominates non-circular motions at R < ~4 kpc; exclude it
     metrics = {
         "source": source,
         "longitudes_deg": longitudes.tolist(),
         "R_kpc": R.tolist(),
         "V_kms": V.tolist(),
-        "V_flat_mean_kms": float(np.mean(inner)),
-        "V_flat_std_kms": float(np.std(inner)),
+        "V_flat_mean_kms": float(np.mean(flat)),
+        "V_flat_std_kms": float(np.std(flat)),
+        "flat_radius_min_kpc": 4.0,
         "R0_kpc": R0_KPC,
         "V0_kms": V0_KMS,
     }
