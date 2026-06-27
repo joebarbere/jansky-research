@@ -13,7 +13,9 @@ regenerate the analysis and the paper from a clean checkout, and document how.
 - `REPRODUCING.md` — exact steps (local path-source vs git-tag jansky; the Airflow-on-Podman
   alternative; offline/synthetic mode).
 - README polish; final pass over CI (`ci`, `notebooks`, `links`, `paper`).
-- Cleanup: delete merged plan files per the jansky convention.
+- Cleanup: delete merged **plan** files per the jansky convention. **Never delete `survey/`** —
+  it is a permanent research artifact, and `survey/candidate-gaps.md` is the future-work backlog
+  of the gaps GATE 1 did *not* pick.
 
 ## Approach
 

@@ -47,7 +47,9 @@ jansky-research/
     data.py              # dataset registry + offline synthetic fallback
     pipeline.py          # fetch -> analyze -> metrics (shared by Make/notebook/Airflow) [P3]
     report.py            # figure/table emitters -> paper inputs [P3]
-  survey/                # the deep-research survey outputs (markdown)
+  survey/                # the deep-research survey outputs (permanent; never deleted)
+                         #   literature.md, github-landscape.md, gap-analysis.md,
+                         #   candidate-gaps.md (backlog of the gaps GATE 1 did NOT pick)
   airflow/               # Airflow-on-Podman stack + the research DAG [P5]
   paper/                 # LaTeX (AASTeX) sources; figures/ + generated/ are produced [P7]
   containers/            # paper (tectonic) build image
