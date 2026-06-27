@@ -45,3 +45,14 @@ highest jansky reuse; choose it if a tooling/usability contribution is preferred
 distribution-fitting finding.
 
 **GATE 1 is the human's call** — the choice is presented for sign-off before any tooling is built.
+
+## DECISION (GATE 1 — approved)
+
+**Chosen: #1 — FRB burst-statistics on the CHIME/FRB Catalog 1 CSV.**
+- **Tool:** `jansky_research.frbstats` — Weibull wait-time clustering (bootstrap CI on *k*),
+  Clauset/Hill power-law fluence index, repeater-vs-non-repeater KS tests.
+- **Dataset:** `chime-frb-catalog` (registered in `data.py`); synthetic fallback
+  `frbstats.synthetic_catalog` for offline tests/CI.
+- **jansky reuse:** `jansky.transients` / `jansky.plotting` (+ numpy/scipy); no extra needed.
+- **Built:** P3 tool + `pipeline.py` + `report.py` + tests (94% coverage) — committed.
+
