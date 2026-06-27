@@ -10,6 +10,20 @@ Every gap below is CPU-only, offline-reproducible, lightweight-data, and compose
 tested `jansky` helper. Datasets and packages were URL-verified in the survey (see
 `literature.md`, `github-landscape.md`).
 
+## ✅ Completed slices (built, reviewed, merged)
+
+1. **FRB burst-statistics** → `jansky_research.frbstats` — reproduced the CHIME width result.
+2. **Multi-survey spectral-index / USS hunt** → `jansky_research.spectra` — candidates did not
+   survive the de Gasperin cross-check (honest negative).
+3. **FRB repeater periodicity** → `jansky_research.frbperiod` — recovered FRB 20180916B's 16.35-day
+   period.
+4. **SETI injection-recovery benchmark** → `jansky_research.driftsearch` — benchmark built; the
+   Voyager real-data check is an honest negative (DC-spike, not the carrier).
+5. **HI tangent-point rotation curve** → `jansky_research.hi` — recovered the flat Milky Way curve
+   (dark-matter signature).
+
+The remaining gaps below are unbuilt.
+
 ---
 
 ## FRBs & transients (chosen domain — non-chosen gaps)
