@@ -131,11 +131,11 @@ def _hill(tail: np.ndarray, f_min: float) -> float:
 
 
 def _ks_distance(tail: np.ndarray, f_min: float, gamma: float) -> float:
-    """KS distance between the empirical CCDF of ``tail`` and the fitted power law."""
+    """KS distance between the empirical and fitted CCDF (Clauset et al. 2009 convention)."""
     x = np.sort(tail)
-    cdf_emp = np.arange(1, x.size + 1) / x.size
-    cdf_fit = 1.0 - (x / f_min) ** (-(gamma - 1.0))
-    return float(np.max(np.abs(cdf_emp - cdf_fit)))
+    ccdf_emp = np.arange(x.size, 0, -1) / x.size
+    ccdf_fit = (x / f_min) ** (-(gamma - 1.0))
+    return float(np.max(np.abs(ccdf_emp - ccdf_fit)))
 
 
 def select_xmin(fluences: np.ndarray, *, min_tail: int = 30) -> float:

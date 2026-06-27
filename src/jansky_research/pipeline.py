@@ -29,6 +29,7 @@ _COLUMN_ALIASES = {
     "dm": ("dm_fitb", "dm_exc_ne2001", "dm", "dm_obs"),
     "width": ("width_fitb", "bc_width", "width", "width_ms"),
     "repeater_name": ("repeater_name", "repeater_of", "previous_name"),
+    "sub_num": ("sub_num", "sub_burst"),
 }
 
 
@@ -74,7 +75,7 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
         else np.array([""] * len(rows))
     )
     repeater = np.array([nm not in sentinels for nm in names])
-    return {
+    cat = {
         "mjd": _floats(cols["mjd"]),
         "fluence": _floats(cols["fluence"]),
         "dm": _floats(cols["dm"]),
@@ -82,6 +83,14 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
         "repeater": repeater,
         "repeater_name": names,
     }
+    # One row per *event*: the CHIME catalogue stores each multi-component burst as several
+    # sub_num rows (600 rows = 536 events). Treating sub-bursts as independent would
+    # pseudo-replicate near-identical DMs and inflate KS significance, so keep sub_num == 0.
+    if cols["sub_num"] is not None:
+        sub = _floats(cols["sub_num"])
+        keep = ~(sub > 0)  # sub_num == 0 or missing
+        cat = {k: v[keep] for k, v in cat.items()}
+    return cat
 
 
 def build_catalog(*, offline: bool = False) -> tuple[dict[str, np.ndarray], str]:

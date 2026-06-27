@@ -1,53 +1,58 @@
-# Findings — FRB burst-statistics on CHIME/FRB Catalog 1 (pre-GATE-2)
+# Findings — FRB burst-statistics on CHIME/FRB Catalog 1 (post GATE-2 review)
 
-Run of `jansky_research.pipeline` on the real **CHIME/FRB Catalog 1** (600 bursts: 94 from 18
-repeaters + 506 non-repeaters; CHIME/FRB Collaboration 2021, ApJS 257, 59). Numbers are the
-machine output in `results/metrics.json`; this document is the **honest interpretation** that
-GATE 2 (science-reviewer + human) must sign off before any paper drafting.
+Run of `jansky_research.pipeline` on the real **CHIME/FRB Catalog 1** (CHIME/FRB Collaboration
+2021, ApJS 257, 59; arXiv:2106.04352). The public CSV has 600 rows; these are **536 independent
+events** stored as multiple `sub_num` components per multi-part burst, so the pipeline keeps one
+row per event (`sub_num == 0`) — **62 repeater bursts from 18 sources + 474 non-repeaters**.
+Treating sub-bursts as independent would pseudo-replicate near-identical DMs and inflate
+significance, so it is avoided. Numbers below are `results/metrics.json`; this is the honest
+interpretation, revised after the GATE-2 science review.
 
-## Result 1 — Repeater vs non-repeater differences (robust; reproduces the literature)
+## Result 1 — Burst width: repeaters are wider (reproduces the literature)
 
-Two-sample KS tests show repeaters and non-repeaters differ significantly in every measured
-property:
+KS test on temporal width: **D = 0.45, p ≈ 2e-10**; repeater median **2.0 ms** vs non-repeater
+**0.94 ms**. Repeaters being **wider** is the established CHIME Cat 1 morphology result
+(**Pleunis et al. 2021**, ApJ 923, 1; arXiv:2106.04356). Recovering it independently from the
+public CSV is the tool's **validation finding**.
 
-| property | KS *D* | *p* | direction (median) |
-|----------|:------:|-----|--------------------|
-| width    | 0.39   | 1.9e-11 | repeaters **wider** (2.0 ms vs 1.0 ms) |
-| DM       | 0.46   | 5.7e-16 | repeaters **lower** (349 vs 563 pc cm⁻³) |
-| fluence  | 0.29   | 1.4e-6  | repeaters **higher** (5.7 vs 3.8 Jy ms) |
+## Result 2 — Fluence/energy power law (defensible measurement)
 
-The **larger temporal width of repeaters** is the well-established CHIME Cat 1 result (Pleunis et
-al. 2021; CHIME/FRB 2021). Recovering it from the public CSV with this independent tool is the
-**validation finding** — it shows the pipeline reproduces a known, peer-reviewed result. *Honesty
-note:* these are catalogue-level differences subject to CHIME's selection function (e.g. the
-lower repeater DM partly reflects that nearer sources are easier to re-detect); we report them as
-*observed catalogue differences*, not intrinsic population claims.
+Differential fluence distribution dN/dF ∝ F^(−γ) via the Clauset–Shalizi–Newman / Hill MLE with
+KS-based x_min selection: **γ = 2.54 ± 0.13** above **f_min = 7.8 Jy ms** (138-event tail). This
+matches the Cat 1 paper's reported cumulative slope α = −1.40 ± 0.11 (differential γ = 1 + |α| =
+2.40) within ~1σ. *Caveats:* the auto-selected f_min = 7.8 Jy ms sits **above** CHIME's nominal
+~5 Jy ms peak-sensitivity threshold — expected, since the effective completeness of a population
+spanning many DMs/widths/transit positions is higher than the peak figure; the fit is a single
+power law not corrected for the DM/sky-dependent selection function.
 
-## Result 2 — Fluence/energy power law (robust with a proper completeness cut)
+## Result 3 — Wait-time clustering (caveated; not a headline result)
 
-Differential fluence distribution dN/dF ∝ F^(−γ): **γ = 2.38 ± 0.10** above a Clauset-selected
-lower bound **f_min = 7.7 Jy ms** (183-burst tail). The automatic x_min selection matters — fitting
-from the global minimum instead gives a spuriously low γ ≈ 1.41 by including the incomplete faint
-end. γ ≈ 2.4 (cumulative slope ≈ 1.4) is consistent with published CHIME source-count analyses.
-*Honesty note:* a single power law above one completeness cut; not corrected for the
-DM/sky-dependent selection function.
+Pooled **within-source** inter-burst waits (44 waits across 18 repeaters) fit a Weibull with
+shape **k = 0.41 (95% CI 0.32–0.56)** — i.e. clustered (k < 1), broadly consistent with
+dense-monitoring estimates for FRB 121102 (k ≈ 0.34; Oppermann et al. 2018). **Reported with a
+caution, not as a measurement:** CHIME is a transit instrument (~one look/source/day), so the
+waits remain cadence-biased (bimodal short/long structure). Note that removing the sub-burst
+pseudoreplication moved k from a spurious 0.14 to this plausible 0.41 — itself a lesson in why the
+event-level treatment matters. The k value and CI appear **only** in the methods/pitfalls
+discussion, never in an abstract or summary table.
 
-## Result 3 — Wait-time clustering (caveated; a methodological illustration, not a claim)
+## Additional observed differences (exploratory; selection-affected)
 
-Pooled **within-source** inter-burst waiting times (76 waits across 18 repeaters) fit a Weibull
-with shape **k = 0.14** (95% CI 0.12–0.16) — formally "highly clustered". **This is dominated by
-CHIME's transit-instrument cadence, not intrinsic clustering:** each source is seen ~once per
-sidereal day for minutes, so waits are bimodal (short intra-transit vs long inter-day), which
-drives any single-Weibull fit to k ≪ 1. We therefore present this **not** as a clustering
-measurement but as an illustration of why dense, single-source monitoring (à la FRB 121102) is
-required to measure burst clustering — and as a caution the tool surfaces honestly.
+- **DM:** KS D = 0.47, p ≈ 1e-11; repeaters **lower** (350 vs 565 pc cm⁻³). *Not* a reproduction
+  of Pleunis et al. 2021, who found the Cat 1 repeater/non-repeater DM distributions statistically
+  **consistent**. A significant difference at larger samples was later reported by **CHIME/FRB
+  Collaboration 2023** (ApJ 947, 83; arXiv:2301.08762), which attributes the lower repeater DM
+  partly to selection (nearer sources are easier to re-detect). We present this as exploratory.
+- **Fluence:** KS D = 0.23, **p ≈ 6e-3** (marginal); repeaters slightly higher (4.9 vs 3.6 Jy ms).
+  Plausibly a selection effect (repeaters identified via multiple detections); not literature-
+  validated. Reported as a weak difference.
 
-## Overall assessment for GATE 2
+## Assessment for GATE 2
 
-- **Non-trivial & honest:** yes — Result 1 reproduces a known peer-reviewed result (tool
-  validation); Result 2 is a defensible measurement with the right completeness treatment.
-- **No overclaiming:** the wait-time result is explicitly downgraded to a cadence-bias
-  illustration; population differences are framed as catalogue-level/selection-affected.
-- **Framing of the paper:** a *reproducibility / tooling* contribution — "a lightweight, tested,
+- **Honest & non-trivial:** Result 1 reproduces a peer-reviewed result (tool validation); Result 2
+  is a defensible measurement matching the catalogue paper; the wait-time and DM/fluence results
+  are explicitly downgraded with their selection/cadence caveats and correct citations.
+- **Paper framing:** a **reproducibility / tooling contribution** — "a lightweight, tested,
   CPU-only, offline-reproducible FRB burst-statistics tool, validated by recovering the CHIME
-  Cat 1 repeater/non-repeater differences" — **not** a discovery claim.
+  Cat 1 width result" — **not** a discovery claim. Only **width** carries "reproduces the
+  literature"; DM/fluence are "additional observed, selection-affected differences."
