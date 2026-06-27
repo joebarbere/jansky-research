@@ -5,7 +5,7 @@
 
 \newcommand{\code}[1]{\texttt{#1}}
 \shorttitle{A reproducible FRB burst-statistics tool}
-\shortauthors{Barbere \& Claude}
+\shortauthors{Barbere}
 
 \begin{document}
 
@@ -14,9 +14,6 @@ Validated on the First CHIME/FRB Catalog}
 
 \author{Joe Barbere}
 \affiliation{Independent researcher}
-
-\author{Claude}
-\affiliation{Anthropic}
 
 \begin{abstract}
 Fast-radio-burst (FRB) population statistics --- wait-time clustering, energy
@@ -179,8 +176,22 @@ validated it by reproducing the CHIME repeater width result, and automated it wi
 reproducible Airflow-on-Podman pipeline. The non-chosen survey candidates (pulsar-timing,
 HI, RFI/ML, and SETI tools) are recorded as future work.
 
-\software{Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib, Apache Airflow
-\citep{airflow}, jansky \citep{jansky}}
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the
+open-source and literature survey, the design, implementation, and testing of the
+\code{frbstats} module and the Airflow-on-Podman pipeline, the data analysis, and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified
+all code, results, figures, and citations, and takes full responsibility for the content.
+
+\begin{acknowledgments}
+The author gratefully acknowledges the substantial collaborative contribution of Anthropic's
+Claude throughout the conception, analysis, and writing of this paper, and the \code{jansky}
+project whose tested helpers this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy,
+Matplotlib, Apache Airflow \citep{airflow}, jansky \citep{jansky}}
 
 \bibliographystyle{aasjournal}
 \bibliography{refs}
