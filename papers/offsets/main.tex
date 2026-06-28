@@ -1,0 +1,115 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline — none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\xnorm}{\ensuremath{X}}
+\shorttitle{Radio--optical offsets of AGN (ICRF3 $\times$ Gaia DR3)}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Reproducing the Radio--Optical Position-Offset Excess of AGN with a Small Tested Tool:
+ICRF3 $\times$ Gaia DR3}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The VLBI radio position of an active galactic nucleus marks the synchrotron self-absorbed jet base,
+while its Gaia optical position can be pulled toward optical jet or host structure; the two do not
+coincide. Across the population the \emph{normalised} radio--optical offset
+$\xnorm=\sqrt{(\Delta\alpha^*/\sigma_\alpha)^2+(\Delta\delta/\sigma_\delta)^2}$ shows a heavy tail far
+beyond the Rayleigh expectation for pure Gaussian astrometric noise --- a well-established result
+\citep{mignard2016,petrovkovalev2017,kovalev2017,lindegren2018,plavin2019}. We reproduce it with a
+small, tested, CPU-only tool: ICRF3 \citep{icrf3} cross-matched to Gaia DR3 \citep{gaiadr3} via the CDS
+X-Match service \citep{cdsxmatch} (\offN\ matched AGN). The median raw offset is \offMedian~mas, and
+\offFracTail\% of sources have $\xnorm>3$ --- against a Rayleigh expectation of just \offRayleigh\%, a
+\offExcess$\times$ excess. The excess is the signature of real milliarcsecond-scale structure, not
+astrometric noise. This is a reproducibility and tooling contribution --- a validated offset
+statistic and a reproducible matched catalogue --- not a new discovery.
+\end{abstract}
+
+\keywords{Active galactic nuclei (16) --- Astrometry (80) --- Reference systems (1366) ---
+Very long baseline interferometry (1769) --- Open source software (1866)}
+
+\section{Introduction}
+Gaia and VLBI measure the same AGN to sub-milliarcsecond precision but at different wavelengths, and
+their positions differ systematically. \citet{mignard2016} first showed the radio--optical offsets of
+ICRF sources exceed what formal errors allow; \citet{petrovkovalev2017} and \citet{kovalev2017}
+attributed the excess to optical structure and showed the offsets align preferentially with the
+parsec-scale jet. This is now a standard diagnostic of the AGN disk--jet system \citep{plavin2019}. We
+ask the weakest, most reproducible version: with the public catalogues and a $\sim$hundred-line tool,
+can one recover the offset excess cleanly, and how large is it?
+
+\section{Methods}
+\code{offsets} is a pure-NumPy module (on the \code{jansky} helpers; \citealt{jansky}). For each
+matched AGN it forms the offset components $\Delta\alpha^*=(\alpha_o-\alpha_r)\cos\delta_r$ and
+$\Delta\delta=\delta_o-\delta_r$, the separation, and the position angle, then the normalised offset
+\xnorm\ with per-axis errors combined in quadrature,
+$\sigma_\alpha^2=\sigma_{\alpha,\mathrm{radio}}^2+\sigma_{\alpha,\mathrm{Gaia}}^2$ (and likewise in
+$\delta$). For pure Gaussian astrometric noise \xnorm\ follows a two-dimensional Rayleigh, so
+$P(\xnorm>x)=e^{-x^2/2}$ (1.11\% at $x=3$); a heavier observed tail is real structure. Every function
+is tested against a synthetic field in which most offsets are Gaussian noise and an injected minority
+carry a structural offset, so the suite runs offline.
+
+\section{Data}
+ICRF3 \citep{icrf3} (the VLBI reference frame; positions and formal errors at radio wavelengths) is
+cross-matched to Gaia DR3 \citep{gaiadr3} through the CDS X-Match service \citep{cdsxmatch} within a
+sub-arcsecond radius, taking the Gaia ``ra\_error''/``dec\_error'' as the optical uncertainties. The
+match yields \offN\ AGN with both a radio and an optical position.
+
+\section{Results}
+The median raw radio--optical separation is \offMedian~mas. Crucially, \offFracTail\% of the matched
+AGN have a normalised offset $\xnorm>3$, against the Rayleigh expectation of \offRayleigh\% for pure
+Gaussian errors --- a factor of \offExcess\ excess (Figure~\ref{fig:xnorm}). The $\xnorm$ distribution
+tracks the Rayleigh curve at small $\xnorm$ and departs from it sharply in the tail, exactly the
+behaviour reported by \citet{mignard2016} and \citet{lindegren2018}: a population of AGN whose optical
+photocentre is displaced from the VLBI core by milliarcsecond-scale structure, well beyond the formal
+astrometric errors. The exact $\xnorm>3$ fraction depends on the error model --- Gaia and VLBI formal
+errors are mildly underestimated, which inflates $\xnorm$, so \offFracTail\% is an upper bound on the
+structurally-offset fraction (structure-only estimates are nearer $\sim$9\%; \citealt{petrovkovalev2017})
+--- but the excess over Rayleigh is robust to any plausible error inflation.
+
+\begin{figure}
+\plotone{figures/xnorm.pdf}
+\caption{Distribution of the normalised radio--optical offset \xnorm\ for ICRF3$\times$Gaia~DR3 AGN
+(grey), with the Rayleigh expectation for pure Gaussian astrometric noise (red). The data follow
+Rayleigh at small \xnorm\ and show a heavy excess tail beyond $\xnorm=3$ (dotted) --- the structural
+offset signature.}
+\label{fig:xnorm}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The radio--optical offset excess is recovered cleanly from public catalogues with a small tested tool,
+reproducing the literature result that AGN optical positions are systematically displaced from their
+VLBI cores by real structure. The contribution is reproducibility and tooling --- a validated offset
+and normalised-offset statistic, a reproducible matched catalogue, and a clean excess-vs-Rayleigh
+figure --- not a new astrophysical claim. The natural extensions, all in the literature, are to
+correlate the offset direction with the VLBI jet position angle \citep{kovalev2017} and to model the
+disk--jet contributions \citep{plavin2019}; both need VLBI jet PAs beyond this catalogue-only scope.
+Every number above is written by the pipeline into the macros this paper \code{\textbackslash input}s,
+and the analysis regenerates from a clean checkout on public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{offsets} tool, the ICRF3$\times$Gaia cross-match and the
+offset statistics, and the drafting of this manuscript. The author directed the work, independently
+reviewed and verified all code, results, figures, and citations, and takes full responsibility for the
+content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the IVS/ICRF3, Gaia/DPAC, and CDS (VizieR, X-Match) teams for the public data and services
+this work builds on. This work has made use of data from the European Space Agency mission Gaia.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, Matplotlib, astroquery,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
