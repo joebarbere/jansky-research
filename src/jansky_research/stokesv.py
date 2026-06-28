@@ -35,6 +35,7 @@ __all__ = [
     "handedness",
     "leakage_floor",
     "match_targets_to_radio",
+    "measure_circular_pol",
     "proper_motion_confirm",
     "run",
     "select_circular_pol",
@@ -235,6 +236,61 @@ def fetch_racs_i(center, radius_deg: float) -> dict[str, np.ndarray]:  # pragma:
         "i_flux": _np.concatenate(fpk),
         "e_i": _np.concatenate(efpk),
         "noise": _np.concatenate(noise),
+    }
+
+
+def measure_circular_pol(
+    image_i: np.ndarray,
+    image_v: np.ndarray,
+    wcs,
+    ra: float,
+    dec: float,
+    *,
+    search_arcsec: float = 12.0,
+    rms_annulus_arcsec: tuple[float, float] = (30.0, 90.0),
+) -> dict[str, float]:
+    r"""Forced Stokes-I & V photometry at a locked ``(ra, dec)`` (mirrors ``vlass.measure_image_flux``).
+
+    Finds the Stokes-I peak within ``search_arcsec`` of the target, then reads Stokes V **at that same
+    pixel** (V can be either sign) --- the physically correct forced measurement for a point-like
+    coherent emitter, where the circular-polarization peak coincides with the total-intensity peak.
+    Local RMS for each Stokes comes from an annulus. Returns ``i_peak``, ``v_peak`` (signed),
+    ``i_rms``, ``v_rms``, ``frac_pol`` ($|V|/I$), and ``offset_arcsec`` (I-peak vs target). Measuring
+    at the locked position reaches *below* the blind extraction threshold and turns a non-detection
+    into an honest upper limit, rather than missing the source.
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    from astropy.wcs.utils import proj_plane_pixel_scales
+
+    image_i = np.asarray(image_i, dtype=float)
+    image_v = np.asarray(image_v, dtype=float)
+    px, py = wcs.world_to_pixel(SkyCoord(ra * u.deg, dec * u.deg))
+    scale = float(np.mean(proj_plane_pixel_scales(wcs)) * 3600.0)  # arcsec/pixel
+    ny, nx = image_i.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    rr = np.hypot(xx - float(px), yy - float(py)) * scale
+    nan = float("nan")
+    near = (rr <= search_arcsec) & np.isfinite(image_i)
+    if not near.any():
+        return dict.fromkeys(
+            ("i_peak", "v_peak", "i_rms", "v_rms", "frac_pol", "offset_arcsec"), nan
+        )
+    region = np.where(near, image_i, -np.inf)
+    iy, ix = np.unravel_index(int(np.argmax(region)), region.shape)
+    i_peak = float(image_i[iy, ix])
+    v_peak = float(image_v[iy, ix])  # Stokes V at the I-peak pixel (signed)
+    offset = float(np.hypot(ix - float(px), iy - float(py)) * scale)
+    ann = (rr > rms_annulus_arcsec[0]) & (rr < rms_annulus_arcsec[1])
+    i_ann = image_i[ann & np.isfinite(image_i)]
+    v_ann = image_v[ann & np.isfinite(image_v)]
+    return {
+        "i_peak": i_peak,
+        "v_peak": v_peak,
+        "i_rms": float(np.std(i_ann)) if i_ann.size > 20 else nan,
+        "v_rms": float(np.std(v_ann)) if v_ann.size > 20 else nan,
+        "frac_pol": abs(v_peak) / i_peak if i_peak > 0 else nan,
+        "offset_arcsec": offset,
     }
 
 

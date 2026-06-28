@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from jansky_research import stokesv
-from jansky_research.stokesv import match_targets_to_radio
+from jansky_research.stokesv import match_targets_to_radio, measure_circular_pol
 
 
 def test_fractional_circular_pol():
@@ -94,6 +94,35 @@ def test_match_targets_to_radio():
         t_ra, t_dec, np.array([]), np.array([]), np.array([]), np.array([])
     )
     assert not empty["matched"].any()
+
+
+def test_measure_circular_pol():
+    from astropy.wcs import WCS
+
+    # a 2.5"/pixel SIN-projection image centred on the target
+    ra0, dec0 = 45.0, -30.0
+    w = WCS(naxis=2)
+    w.wcs.crpix = [50.0, 50.0]
+    w.wcs.cdelt = [-2.5 / 3600.0, 2.5 / 3600.0]
+    w.wcs.crval = [ra0, dec0]
+    w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
+    ny = nx = 100
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    sig = 2.0  # beam sigma in pixels
+    gauss = np.exp(-((xx - 49.0) ** 2 + (yy - 49.0) ** 2) / (2 * sig**2))
+    image_i = 20.0 * gauss  # 20 mJy point source at the target
+    image_v = -0.4 * image_i  # 40% circularly polarized, LCP (negative V)
+    rng = np.random.default_rng(0)
+    image_i = image_i + rng.normal(0, 0.05, (ny, nx))
+    image_v = image_v + rng.normal(0, 0.05, (ny, nx))
+    m = measure_circular_pol(image_i, image_v, w, ra0, dec0, search_arcsec=12.0)
+    assert abs(m["i_peak"] - 20.0) < 0.5
+    assert m["v_peak"] < 0  # recovers the LCP sign
+    assert abs(m["frac_pol"] - 0.4) < 0.05  # recovers injected |V|/I
+    assert m["offset_arcsec"] < 3.0
+    # a target off the image returns all-NaN, no crash
+    off = measure_circular_pol(image_i, image_v, w, ra0 + 5.0, dec0, search_arcsec=12.0)
+    assert np.isnan(off["frac_pol"])
 
 
 def test_run_offline(tmp_path):

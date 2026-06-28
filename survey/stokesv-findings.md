@@ -41,17 +41,42 @@ emitters (`validate_srsc`). It is a *positive-set* check — the SRSC radio tabl
 so the complementary purity test (rejecting the unpolarised + leakage population) needs the
 forced-photometry leg below.
 
+## Forced Stokes-V/I photometry (the science core, tested offline)
+
+`measure_circular_pol` performs the forced measurement at a locked target position: it finds the
+Stokes-I peak within a small search box, then reads Stokes V **at that same pixel** (V is signed) —
+the physically correct measurement for a point-like coherent emitter, where the circular-polarization
+peak coincides with the total-intensity peak. It returns $I$, $V$ (signed), per-Stokes annulus RMS,
+$|V|/I$, and the I-peak offset, so a non-detection becomes an honest upper limit rather than a miss.
+Tested on a synthetic SIN-projection image: recovers an injected $|V|/I=0.4$ and the LCP sign. It is
+archive-agnostic — it runs on a cutout array + WCS from whichever service serves the RACS images.
+
+## CASDA VO-service outage (blocks the live cutout fetch right now)
+
+The authenticated login works (`Authentication successful`), but **every CASDA programmatic query
+service is erroring** as of this run, so the standard `query_region` → `cutout` discovery flow cannot
+run:
+
+| CASDA service | endpoint | result |
+|---|---|---|
+| catalogue TAP | `casda_vo_tools/tap` | `relation "..." does not exist` (sync + async, authed + not) |
+| ObsCore TAP | `ivoa.obscore` | same `relation does not exist` |
+| SIA2 image query | `casda_vo_tools/sia2/query` | HTTP 500 NPE: `Cannot invoke "java.util.Map.size()" because "m" is null` |
+| `*/availability` | — | report `available=true` (the front ends are up; the query backend is not) |
+
+So the live image fetch is blocked by **CASDA infrastructure, not credentials or our code**. Options
+when it recovers (or as alternates): retry CASDA SODA; or **Data Central** (`datacentral.org.au`), the
+other RACS host, which has its own cutout service.
+
 ## Status and what's next
 
-- **Done (this step, credential-free):** tested helpers (leakage floor, $|V|/I$ selection, PM
-  confirmation, classification); VizieR fetchers (`fetch_radio_stars`, `fetch_racs_i`,
-  `fetch_radio_star_measurements`); the pure `match_targets_to_radio` cross-match; the `validate_srsc`
-  recover-a-known above.
-- **Next (authenticated):** forced photometry of a curated late-type-star / UCD target list in RACS
-  Stokes-V CASDA SODA cutouts — measure $|V|/I$ (or a $3$–$4\sigma$ upper limit) *below* the blind
-  extraction threshold, estimate the per-beam leakage floor from local field sources, apply the V-SNR
-  and proper-motion gates, and vet with SIMBAD. This is the new-findings arm: candidates the blind
-  RACS V catalogues miss. Then GATE-2 and `papers/stokesv/`.
+- **Done (credential-free):** tested helpers (leakage floor, $|V|/I$ selection, PM confirmation,
+  classification, `measure_circular_pol`); VizieR fetchers; the pure `match_targets_to_radio`
+  cross-match; the `validate_srsc` recover-a-known.
+- **Blocked on CASDA recovery:** wire `fetch_racs_cutout` (CASDA SODA / Data Central) behind
+  `measure_circular_pol`, run forced photometry over a curated late-type-star / UCD target list,
+  estimate the per-beam leakage floor from local field sources, apply the V-SNR + PM gates, vet with
+  SIMBAD. This is the new-findings arm. Then GATE-2 and `papers/stokesv/`.
 
 ## Honest caveats so far
 
