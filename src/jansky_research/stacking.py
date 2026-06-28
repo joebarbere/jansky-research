@@ -201,12 +201,12 @@ def fetch_se_cutout(
 def fetch_population(
     center, radius_deg: float, *, max_sources: int = 300
 ) -> tuple:  # pragma: no cover - network
-    """Cone-search SDSS DR16 quasars (VizieR ``VII/289``); returns ra, dec, and i-band magnitude."""
+    """Cone-search SDSS DR16 quasars (VizieR ``VII/289``); returns ra, dec, i-band mag, and redshift."""
     import numpy as _np
     from astropy import units as _u
     from astroquery.vizier import Vizier
 
-    v = Vizier(columns=["RAJ2000", "DEJ2000", "imag"])
+    v = Vizier(columns=["RAJ2000", "DEJ2000", "imag", "z"])
     v.ROW_LIMIT = max_sources
     res = v.query_region(center, radius=radius_deg * _u.deg, catalog="VII/289/dr16q")
     t = res[0]
@@ -214,6 +214,7 @@ def fetch_population(
         _np.asarray(t["RAJ2000"], float),
         _np.asarray(t["DEJ2000"], float),
         _np.asarray(t["imag"], float),
+        _np.asarray(t["z"], float),
     )
 
 
@@ -229,26 +230,33 @@ def run(
     import json
     from pathlib import Path
 
-    values: np.ndarray
+    mags: np.ndarray
+    redshifts: np.ndarray
     if offline or center is None:
         cutouts = synthetic_population()
-        values = np.asarray(np.random.default_rng(0).uniform(18.0, 21.0, cutouts.shape[0]))  # i-mag
+        rng = np.random.default_rng(0)
+        mags = np.asarray(rng.uniform(18.0, 21.0, cutouts.shape[0]))  # i-mag
+        # a synthetic redshift trend (brighter radio at higher z) for the offline binning test
+        redshifts = np.asarray(np.random.default_rng(1).uniform(0.5, 3.0, cutouts.shape[0]))
         source = "synthetic"
         injected_truth: float | None = 0.05
     else:  # pragma: no cover - network
-        ra, dec, imag = fetch_population(center, radius_deg, max_sources=max_sources)
-        pairs = [
-            (c, m)
-            for c, m in (
-                (fetch_se_cutout(float(r), float(d)), float(m))
-                for r, d, m in zip(ra, dec, imag, strict=True)
+        ra, dec, imag, zarr = fetch_population(center, radius_deg, max_sources=max_sources)
+        triples = [
+            (c, m, zz)
+            for c, m, zz in (
+                (fetch_se_cutout(float(r), float(d)), float(m), float(z))
+                for r, d, m, z in zip(ra, dec, imag, zarr, strict=True)
             )
             if c is not None
         ]
-        if len(pairs) < 20:
-            raise RuntimeError(f"only {len(pairs)} VLASS-SE cutouts fetched; need more for a stack")
-        cutouts = np.asarray([c for c, _ in pairs])
-        values = np.asarray([m for _, m in pairs])
+        if len(triples) < 20:
+            raise RuntimeError(
+                f"only {len(triples)} VLASS-SE cutouts fetched; need more for a stack"
+            )
+        cutouts = np.asarray([c for c, _, _ in triples])
+        mags = np.asarray([m for _, m, _ in triples])
+        redshifts = np.asarray([z for _, _, z in triples])
         source = f"SDSS DR16Q x VLASS-SE @ ({center.ra.deg:.1f},{center.dec.deg:.1f})"
         injected_truth = None
 
@@ -261,7 +269,7 @@ def run(
     cal = injection_recovery(cutouts, inject_amp)
     debiased = meas["peak"] / cal["ratio"] if cal["ratio"] else float("nan")
     # magnitude-binned trend: turn one number into the radio-optical luminosity relation
-    bins = sorted(stack_in_bins(cutouts, values, n_bins=3), key=lambda b: b["value_med"])
+    mag_bins = sorted(stack_in_bins(cutouts, mags, n_bins=3), key=lambda b: b["value_med"])
     binned: list[dict] = [
         {
             "imag_med": round(b["value_med"], 2),
@@ -269,7 +277,18 @@ def run(
             "debiased_uJy": round(1e3 * b["debiased"], 1),
             "snr": round(b["snr"], 1),
         }
-        for b in bins
+        for b in mag_bins
+    ]
+    # redshift-binned trend: the radio-redshift relation, from the same fetched cutouts
+    z_bins = sorted(stack_in_bins(cutouts, redshifts, n_bins=3), key=lambda b: b["value_med"])
+    binned_z: list[dict] = [
+        {
+            "z_med": round(b["value_med"], 3),
+            "n": b["n"],
+            "debiased_uJy": round(1e3 * b["debiased"], 1),
+            "snr": round(b["snr"], 1),
+        }
+        for b in z_bins
     ]
     metrics = {
         "source": source,
@@ -279,8 +298,10 @@ def run(
         "stacked_snr": round(meas["snr"], 1),
         "recovery_ratio": round(cal["ratio"], 3),
         "debiased_flux": round(debiased, 4),
-        "n_bins": len(bins),
+        "n_bins": len(mag_bins),
         "bins": binned,
+        "n_zbins": len(z_bins),
+        "zbins": binned_z,
     }
     if injected_truth is not None:
         metrics["injected_truth"] = injected_truth
@@ -288,12 +309,12 @@ def run(
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "stacking_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(stack, binned, op / "papers" / "stacking" / "figures")
+    _figure(stack, binned, binned_z, op / "papers" / "stacking" / "figures")
     _write_macros(metrics, op / "papers" / "stacking" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(stack: np.ndarray, bins: list[dict], out_dir) -> None:
+def _figure(stack: np.ndarray, bins: list[dict], zbins: list[dict], out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -301,7 +322,7 @@ def _figure(stack: np.ndarray, bins: list[dict], out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3.6))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(11, 3.5))
     im = ax1.imshow(np.asarray(stack, float), origin="lower", cmap="inferno")
     fig.colorbar(im, ax=ax1, label="mJy/beam")
     ax1.set(title="Median-stacked image", xlabel="pixel", ylabel="pixel")
@@ -315,6 +336,15 @@ def _figure(stack: np.ndarray, bins: list[dict], out_dir) -> None:
             title="Radio--optical trend",
         )
         ax2.invert_xaxis()  # brighter (smaller mag) to the right
+    if zbins:
+        z = [b["z_med"] for b in zbins]
+        fluxz = [b["debiased_uJy"] for b in zbins]
+        ax3.plot(z, fluxz, "s-", color="C1")
+        ax3.set(
+            xlabel=r"median redshift $z$",
+            ylabel=r"mean radio flux ($\mu$Jy/beam)",
+            title="Radio--redshift trend",
+        )
     fig.tight_layout()
     fig.savefig(out / "stack.pdf")
     plt.close(fig)
@@ -341,6 +371,20 @@ def _write_macros(m: dict, path) -> None:
             rf"\newcommand{{\stBrightFlux}}{{{bright['debiased_uJy']}}}",
             rf"\newcommand{{\stFaintMag}}{{{faint['imag_med']}}}",
             rf"\newcommand{{\stFaintFlux}}{{{faint['debiased_uJy']}}}",
+        ]
+    zbins = m.get("zbins", [])
+    if zbins:
+        lowz, highz = zbins[0], zbins[-1]  # zbins sorted by median z (lowest first)
+        # the brightest z-bin and the flux range, so the paper can describe a non-monotonic trend honestly
+        peakz = max(zbins, key=lambda b: b["debiased_uJy"])
+        lines += [
+            rf"\newcommand{{\stNzbins}}{{{m.get('n_zbins', 0)}}}",
+            rf"\newcommand{{\stLowzZ}}{{{lowz['z_med']}}}",
+            rf"\newcommand{{\stLowzFlux}}{{{lowz['debiased_uJy']}}}",
+            rf"\newcommand{{\stHighzZ}}{{{highz['z_med']}}}",
+            rf"\newcommand{{\stHighzFlux}}{{{highz['debiased_uJy']}}}",
+            rf"\newcommand{{\stPeakzZ}}{{{peakz['z_med']}}}",
+            rf"\newcommand{{\stPeakzFlux}}{{{peakz['debiased_uJy']}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

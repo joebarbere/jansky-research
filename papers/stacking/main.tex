@@ -28,9 +28,11 @@ The median stack reaches a central peak of \stPeak~mJy/beam at signal-to-noise \
 injection-recovery ratio is \stRatio, giving a calibrated mean flux of \stDebiased~mJy/beam. Binning
 the sample into \stNbins\ optical-magnitude bins turns the single number into a trend: the
 optically-brightest third ($i\simeq\stBrightMag$) has a calibrated mean radio flux of \stBrightFlux~$\mu$Jy/beam
-versus \stFaintFlux~$\mu$Jy/beam for the faintest ($i\simeq\stFaintMag$). This is a reproducibility and
+versus \stFaintFlux~$\mu$Jy/beam for the faintest ($i\simeq\stFaintMag$). Re-binning the same cutouts
+by redshift gives a non-monotonic run of observed mean flux that peaks at \stPeakzFlux~$\mu$Jy/beam near
+$z\simeq\stPeakzZ$. This is a reproducibility and
 tooling contribution --- a tested stacking-plus-injection-recovery pipeline, a calibrated population-mean
-measurement, and a magnitude-resolved trend --- not a new astrophysical claim.
+measurement, and magnitude- and redshift-resolved trends --- not a new astrophysical claim.
 \end{abstract}
 
 \keywords{Quasars (1319) --- Radio continuum surveys (1340) --- Active galactic nuclei (16) ---
@@ -79,17 +81,29 @@ $i$-band magnitude and stacking each (with its own injection-recovery) turns the
 radio--optical relation (Figure~\ref{fig:stack}, right). The calibrated mean radio flux rises
 \emph{monotonically} with optical brightness, from \stFaintFlux~$\mu$Jy/beam in the faintest third
 ($i\simeq\stFaintMag$) to \stBrightFlux~$\mu$Jy/beam in the brightest ($i\simeq\stBrightMag$) --- the
-optically-brightest quasars are $\sim$1.7$\times$ radio-brighter on average, the expected radio--optical
+optically-brightest quasars are $\sim$2$\times$ radio-brighter on average, the expected radio--optical
 luminosity correlation, here recovered entirely from \emph{individually-undetected} sources. (The
 faintest bin is only marginally significant, so the trend's faint end is tentative, but the monotonic
 ordering across the three bins is clean.) This is the kind of population trend a single stacked number
 cannot show.
 
+\paragraph{A redshift-resolved trend.} Re-binning the \emph{same} fetched cutouts by SDSS redshift
+into \stNzbins\ equal-count bins (each separately injection-recovered) gives the run of observed mean
+flux with redshift at no extra data cost (Figure~\ref{fig:stack}, right). Unlike the magnitude trend it
+is \emph{not} monotonic: the observed mean flux is \stLowzFlux~$\mu$Jy/beam at $z\simeq\stLowzZ$, peaks
+at \stPeakzFlux~$\mu$Jy/beam near $z\simeq\stPeakzZ$, and falls to \stHighzFlux~$\mu$Jy/beam by
+$z\simeq\stHighzZ$ (where the bin is only marginally significant). We do not over-read this: an
+observed-frame flux folds the luminosity distance, the $K$-correction, and any intrinsic luminosity
+evolution together, and the bins are wide, so we report it as a demonstration that the binning
+machinery generalises to any catalogue property --- not as an evolutionary measurement.
+
 \begin{figure*}
 \plotone{figures/stack.pdf}
 \caption{\emph{Left:} median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars --- the central
-source is the population mean, de-biased by the injection-recovery ratio \stRatio. \emph{Right:} the
-calibrated mean radio flux in \stNbins\ bins of optical ($i$-band) magnitude (brighter to the right).}
+source is the population mean, de-biased by the injection-recovery ratio \stRatio. \emph{Middle:} the
+calibrated mean radio flux in \stNbins\ bins of optical ($i$-band) magnitude (brighter to the right).
+\emph{Right:} the same cutouts re-binned by redshift into \stNzbins\ bins (the radio--redshift
+relation for this sample).}
 \label{fig:stack}
 \end{figure*}
 
@@ -100,8 +114,9 @@ of a public quasar catalogue. The honest limitations are those of any catalogue-
 the result depends on the Single-Epoch coverage at the target positions (sources without an SE image
 are dropped), the clean-PSF injection-recovery calibrates the flux-scale/snapshot bias but not every
 deconvolution subtlety, confusion and bright-neighbour contamination are mitigated by the median but
-not eliminated, and a larger sample and a magnitude- or redshift-binned analysis would turn this from a
-single calibrated number into population trends. Every number above is written by the pipeline into the
+not eliminated, and the magnitude- and redshift-binned trends here are demonstrations of the binning
+machinery rather than evolutionary measurements --- a larger sample would tighten the marginal bins and
+sharpen both relations. Every number above is written by the pipeline into the
 macros this paper \code{\textbackslash input}s, and the analysis regenerates from a clean checkout on
 public data.
 

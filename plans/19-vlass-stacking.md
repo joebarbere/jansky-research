@@ -1,6 +1,6 @@
 # 19 — Sub-threshold radio stacking of a population in VLASS (with injection-recovery)
 
-Status: ✅ done (tooling + real VLASS-SE stack + magnitude-binned radio-optical trend + paper)
+Status: ✅ done (tooling + real VLASS-SE stack + magnitude- and redshift-binned trends + paper)
 
 ## Context
 

@@ -72,7 +72,10 @@ def test_run_offline(tmp_path):
     assert abs(m["debiased_flux"] - m["injected_truth"]) < 0.02  # recovers the injected mean
     assert 0.7 < m["recovery_ratio"] < 1.3
     assert m["n_bins"] == 3 and len(m["bins"]) == 3  # magnitude-binned trend produced
+    assert m["n_zbins"] == 3 and len(m["zbins"]) == 3  # redshift-binned trend produced
+    assert all("z_med" in b for b in m["zbins"])
     assert (tmp_path / "results" / "stacking_metrics.json").exists()
     assert (tmp_path / "papers" / "stacking" / "figures" / "stack.pdf").exists()
     macros = (tmp_path / "papers" / "stacking" / "generated" / "macros.tex").read_text()
     assert r"\stDebiased" in macros and r"\stRatio" in macros
+    assert r"\stLowzFlux" in macros and r"\stHighzFlux" in macros and r"\stPeakzFlux" in macros
