@@ -55,29 +55,60 @@ without manual inspection.
 3. **Peak-flux vs image inconsistency.** PyBDSF peak flux for a blended/extended component can differ
    from the image peak by a factor of a few, inflating η.
 
+## A larger census (50 deg², with completeness)
+
+Scaling to a 4° cone (≈50 deg², RA 190°, Dec +20°): **3139** sources, 2826 detected in ≥2 epochs, 107
+dropped as crowded, **2719 usable**. The selection flags **3** catalogue candidates — and forced
+photometry **auto-rejects all three** (forced V = 0.10, 0.25, 0.16; one is a steady ~8.5 mJy NVSS
+source with a missing-Epoch-2 cross-match, one a ~250 mJy source with QL high-flux scatter). So
+**zero confirmed variables in 2719 sources.**
+
+The data-driven completeness (`injection_recovery` — inject a single-epoch flare of known factor into
+the real steady light curves and re-run the cut) explains why the yield is so low and bounds the
+result honestly:
+
+| flare factor | 1.25 | 1.5 | 2 | 3 | 5 | 10 |
+|---|---|---|---|---|---|---|
+| recovered | 0.00 | 0.00 | 0.01 | 0.04 | 0.42 | ~0.50 |
+
+The selection is **severely incomplete and saturates near 50%**: with only three epochs, a
+single-epoch flare's coefficient of variation $V$ tops out at $1/\sqrt{3}\,/\,(1/3)=1.73$ as the
+factor → ∞, and the noisy 3-epoch $V$ threshold (≈1.3) sits just below that ceiling, so even extreme
+flares are recovered only ~half the time. The **0 confirmed variables** is therefore an *upper limit*,
+not a measured rate: at ~50% completeness for strong flares, the 95% upper limit on the
+strong-single-epoch-variable fraction is of order $\lesssim10^{-3}$ — consistent with, but far less
+constraining than, the few-percent variable fractions the professional 2-epoch censuses report at
+lower thresholds over thousands of deg².
+
+The practical lesson: the standard 3σ-in-both-metrics cut is too stringent for 3-epoch QL data.
+Because forced-photometry confirmation removes false positives downstream, a **looser** catalogue cut
+(or more epochs) would raise completeness without sacrificing purity — the natural next step.
+
 ## Honest conclusion
 
 This is a **cautionary / negative result**, in the spirit of the USS and SETI slices: catalogue-only
 VLASS QL multi-epoch variability selection is **dominated by source-extraction artefacts**, and every
-statistical candidate must be confirmed against the actual images before it can be believed. On this
-field, **zero candidates survive image vetting**. The deliverable is the reproducible tool plus the
-QL-systematic-aware methodology — per-epoch flux-scale correction, the deblending isolation filter,
-and the **mandatory `image_lightcurve` ground-truth check** — not a discovery.
+statistical candidate must be confirmed against the actual images before it can be believed. Across a
+50 deg² census, **zero candidates survive forced-photometry confirmation**, and the selection's ~50%
+completeness ceiling makes that an upper limit ($\lesssim10^{-3}$ strong variables) rather than a
+measurement. The deliverable is the reproducible tool plus the QL-systematic-aware methodology —
+per-epoch flux-scale correction, the deblending isolation filter, automatic forced-photometry
+confirmation, and the data-driven completeness — not a discovery.
 
 ## Honest limitations
 
-- **One field, conservative cut.** A 2.5° cone with a strict 3σ-in-both-metrics selection; this is a
-  pipeline + methodology validation, not a population census.
+- **50 deg², single cone.** A pilot-scale census, not the thousands of deg² of the professional
+  surveys; the upper limit is correspondingly weak.
+- **Selection saturates at ~50%** for single-epoch flares (3-epoch ceiling). A looser cut — viable now
+  that forced photometry cleans up false positives — or more epochs is needed for a real rate.
 - **Isolation is anchor-epoch only.** A source isolated in Epoch 1 but blended in a later epoch is
   not yet caught; a full treatment checks isolation per epoch and detects ambiguous matches.
-- Forced photometry confirms the *candidates* but is not yet run over the whole field, so the
-  catalogue-level selection (which feeds it) can still miss real variables whose catalogue light curve
-  was flattened by extraction issues — a full census would forced-photometer every source.
-- **`image_lightcurve` uses the cutout peak**, adequate to confirm flatness but not a calibrated
-  light curve.
+- **Completeness is candidate-driven, not all-source.** Forced photometry runs on the candidates, so a
+  real variable whose *catalogue* light curve was flattened by extraction issues can still be missed
+  before it ever reaches confirmation; forced-photometering every source would close this.
 - A genuine variable population almost certainly exists at this depth (the literature reports a few
-  percent at 2σ over larger areas); a real census needs much more sky, completeness vs amplitude, and
-  forced photometry — future work.
+  percent at 2σ over larger areas); reaching it needs much more sky and a looser, completeness-aware
+  cut — future work.
 
 ## Bottom line
 
