@@ -26,9 +26,11 @@ import numpy as np
 
 __all__ = [
     "VariabilityMetrics",
+    "apply_flux_scale",
     "crossmatch_epochs",
     "debiased_modulation_index",
     "eta_metric",
+    "fetch_vlass_epoch",
     "run",
     "select_candidates",
     "synthetic_epochs",
@@ -37,6 +39,29 @@ __all__ = [
 ]
 
 VLASS_MATCH_ARCSEC = 2.5  # one VLASS resolution element; the default cross-epoch match radius
+
+# Real-data access. There is no single TAP for all epochs: Epoch 1 is on VizieR TAP
+# (Gordon et al. 2021, ApJS 255, 30); Epochs 2-3 are bulk files on the NRAO server with a
+# different schema. See survey/data-source-scan.md and VLASS Memos 13 & 22.
+VLASS_TAP_URL = "https://tapvizier.cds.unistra.fr/TAPVizieR/tap"
+VLASS_E1_TABLE = '"J/ApJS/255/30/comp"'
+VLASS_BULK_URLS: dict[int, list[str]] = {
+    2: [
+        "https://vlass-dl.nrao.edu/vlass/quicklook/catalogs/epoch2/CIRADA_VLASS2QLv2_table1_components.csv.gz"
+    ],
+    3: [
+        "https://vlass-dl.nrao.edu/vlass/quicklook/catalogs/epoch3/QL3.1_components.fits",
+        "https://vlass-dl.nrao.edu/vlass/quicklook/catalogs/epoch3/QL3.2_components.fits",
+    ],
+}
+# Multiplicative peak-flux corrections onto the Perley-Butler 2017 scale (VLASS Memos 13/22):
+# the Quick-Look images *underestimate* peak flux, epoch-dependently. Epoch 1 is the mean of the
+# 1.1 (~15% low) and 1.2 (~8% low) campaigns. WITHOUT this, the epoch-to-epoch offset alone makes
+# every source look variable -- the single most important systematic for VLASS variability.
+VLASS_PEAK_CORRECTION: dict[int, float] = {1: 1.13, 2: 1.075, 3: 1.031}
+# Residual epoch-to-epoch flux-scale scatter for bright point sources after correction (~7%, Memo
+# 22). Added in quadrature to the catalogue errors so it does not masquerade as variability.
+VLASS_SYS_FRAC = 0.07
 
 
 def _weighted_mean(flux: np.ndarray, err: np.ndarray) -> float:
@@ -85,6 +110,25 @@ def debiased_modulation_index(flux: np.ndarray, err: np.ndarray) -> float:
         return 0.0
     excess = np.var(flux, ddof=1) - float(np.mean(np.square(err)))
     return float(np.sqrt(max(excess, 0.0)) / mean)
+
+
+def apply_flux_scale(
+    epoch: int, flux: np.ndarray, err: np.ndarray, *, sys_frac: float = VLASS_SYS_FRAC
+) -> tuple[np.ndarray, np.ndarray]:
+    """Put one epoch's Quick-Look peak fluxes on the common Perley-Butler scale and add the systematic floor.
+
+    Multiplies ``flux`` and ``err`` by the per-epoch correction (:data:`VLASS_PEAK_CORRECTION`), then
+    adds the residual cross-epoch scale scatter ``sys_frac``$\\times S$ in quadrature to the error.
+    This is the GATE-2-critical step: without the correction the epochs sit on different flux scales
+    and every source looks variable; without the systematic floor $\\eta$ is inflated and steady
+    sources cross the threshold.
+    """
+    flux = np.asarray(flux, dtype=float)
+    err = np.asarray(err, dtype=float)
+    corr = VLASS_PEAK_CORRECTION.get(epoch, 1.0)
+    cflux = flux * corr
+    cerr = np.hypot(err * corr, sys_frac * cflux)
+    return cflux, cerr
 
 
 @dataclass(frozen=True)
@@ -225,8 +269,22 @@ def synthetic_epochs(
     return ra, dec, flux, err, is_var
 
 
-def run(out: str = ".", *, offline: bool = False, sigma: float = 3.0) -> dict:
-    """Build the multi-epoch variability catalogue (synthetic offline, or real CIRADA). Writes a figure."""
+def run(
+    out: str = ".",
+    *,
+    offline: bool = False,
+    center: tuple[float, float] | None = None,
+    radius_deg: float = 1.0,
+    epochs: tuple[int, ...] = (1, 2, 3),
+    sigma: float = 3.0,
+) -> dict:
+    """Build the multi-epoch variability catalogue (synthetic offline, or real VLASS). Writes a figure.
+
+    Real-data run: pass ``center=(ra_deg, dec_deg)`` and a ``radius_deg`` cone; the requested VLASS
+    ``epochs`` are fetched (Epoch 1 via VizieR TAP, Epochs 2-3 via the NRAO bulk catalogues), put on a
+    common flux scale (:func:`apply_flux_scale`), cross-matched, and run through the variability
+    selection. Needs the ``vlass`` extra (``uv sync --extra vlass``) for ``pyvo``.
+    """
     import json
     from pathlib import Path
 
@@ -234,9 +292,13 @@ def run(out: str = ".", *, offline: bool = False, sigma: float = 3.0) -> dict:
         ra, dec, flux, err, truth = synthetic_epochs()
         source = "synthetic"
     else:  # pragma: no cover - network
-        ra, dec, flux, err = _fetch_and_match()
+        if center is None:
+            raise ValueError("real-data run needs center=(ra_deg, dec_deg); or pass offline=True")
+        ra, dec, flux, err = _fetch_and_match(center, radius_deg, epochs)
         truth = None
-        source = "VLASS CIRADA Quick-Look (Epochs 1-3)"
+        source = (
+            f"VLASS Quick-Look epochs {','.join(map(str, epochs))} @ {center} r={radius_deg}deg"
+        )
 
     # per-source metrics across the available epochs
     detected = np.sum(np.isfinite(flux), axis=1) >= 2
@@ -272,16 +334,122 @@ def run(out: str = ".", *, offline: bool = False, sigma: float = 3.0) -> dict:
     return metrics
 
 
-def _fetch_and_match():  # pragma: no cover - network
-    """Fetch the three CIRADA VLASS epoch catalogues for a region and cross-match them.
+def _cached_download(url: str):  # pragma: no cover - network
+    """Download ``url`` into the dataset cache (idempotent); return the local path."""
+    from . import data as _data
 
-    Placeholder for the real-data path: a CADC/CIRADA TAP cone query per epoch
-    (``https://cirada.ca`` / CADC ``ivo://cadc.nrc.ca/vlass``), returning per-epoch
-    ``(ra, dec, peak_flux, peak_flux_err)`` arrays passed through :func:`crossmatch_epochs`.
+    target = _data.data_dir() / url.rsplit("/", 1)[-1]
+    if not target.exists():
+        _data._download(url, target)
+    return target
+
+
+def _cone_mask(ra, dec, center, radius_deg):
+    """Boolean mask of ``(ra, dec)`` within ``radius_deg`` of ``center`` (great-circle)."""
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+
+    c = SkyCoord(center[0] * u.deg, center[1] * u.deg)
+    pts = SkyCoord(np.asarray(ra, float) * u.deg, np.asarray(dec, float) * u.deg)
+    return c.separation(pts).deg <= radius_deg
+
+
+def _fetch_e1_tap(center, radius_deg):  # pragma: no cover - network
+    """Epoch 1 peak fluxes via the VizieR TAP cone search, with the standard quality cuts."""
+    import pyvo
+
+    ra0, dec0 = center
+    query = f"""
+        SELECT "RAJ2000", "DEJ2000", "Fpeak", "e_Fpeak"
+        FROM {VLASS_E1_TABLE}
+        WHERE 1=CONTAINS(POINT('ICRS', "RAJ2000", "DEJ2000"),
+                         CIRCLE('ICRS', {ra0}, {dec0}, {radius_deg}))
+          AND "DupFlag" < 2 AND "QualFlag" IN (0, 4) AND "SCode" != 'E'
     """
-    raise NotImplementedError(
-        "Real CIRADA fetch is not wired yet; use run(offline=True) for the synthetic fixture."
+    t = pyvo.dal.TAPService(VLASS_TAP_URL).search(query).to_table()
+    return (
+        np.asarray(t["RAJ2000"], float),
+        np.asarray(t["DEJ2000"], float),
+        np.asarray(t["Fpeak"], float),
+        np.asarray(t["e_Fpeak"], float),
     )
+
+
+def _fetch_e2_csv(center, radius_deg):  # pragma: no cover - network
+    """Epoch 2 peak fluxes: stream-filter the bulk CIRADA CSV (no pandas) to the region + quality cuts."""
+    import csv
+    import gzip
+
+    path = _cached_download(VLASS_BULK_URLS[2][0])
+    ra, dec, fp, efp = [], [], [], []
+    dlo, dhi = center[1] - radius_deg - 0.1, center[1] + radius_deg + 0.1
+    with gzip.open(path, "rt") as fh:
+        for r in csv.DictReader(fh):
+            try:
+                d = float(r["DEC"])
+                if not (dlo <= d <= dhi):  # cheap Dec pre-filter before the cone test
+                    continue
+                if int(r["Duplicate_flag"]) >= 2 or int(r["Quality_flag"]) not in (0, 4):
+                    continue
+                if r["S_Code"] == "E":
+                    continue
+                ra.append(float(r["RA"]))
+                dec.append(d)
+                fp.append(float(r["Peak_flux"]))
+                efp.append(float(r["E_Peak_flux"]))
+            except (KeyError, ValueError):
+                continue
+    ra, dec, fp, efp = (np.asarray(x, float) for x in (ra, dec, fp, efp))
+    m = _cone_mask(ra, dec, center, radius_deg)
+    return ra[m], dec[m], fp[m], efp[m]
+
+
+def _fetch_e3_fits(center, radius_deg):  # pragma: no cover - network
+    """Epoch 3 peak fluxes: read the NRAO QL3.1 + QL3.2 FITS catalogues, region + sidelobe cuts."""
+    from astropy.io import fits
+
+    ras, decs, fps, efps = [], [], [], []
+    for url in VLASS_BULK_URLS[3]:
+        with fits.open(_cached_download(url)) as hd:
+            d = hd[1].data
+            scode = np.asarray(d["S_Code"]).astype(str)
+            keep = (np.asarray(d["Flag"]) == 0) & (scode != "E")
+            ras.append(np.asarray(d["RA"], float)[keep])
+            decs.append(np.asarray(d["DEC"], float)[keep])
+            fps.append(np.asarray(d["Peak_flux"], float)[keep])
+            efps.append(np.asarray(d["E_Peak_flux"], float)[keep])
+    ra, dec, fp, efp = (np.concatenate(x) for x in (ras, decs, fps, efps))
+    m = _cone_mask(ra, dec, center, radius_deg)
+    return ra[m], dec[m], fp[m], efp[m]
+
+
+_EPOCH_FETCHERS = {1: _fetch_e1_tap, 2: _fetch_e2_csv, 3: _fetch_e3_fits}
+
+
+def fetch_vlass_epoch(epoch: int, center: tuple[float, float], radius_deg: float):
+    """Fetch one VLASS epoch's quality-cut peak fluxes in a cone: ``(ra, dec, peak_mJy, e_peak_mJy)``.
+
+    Epoch 1 via VizieR TAP; Epochs 2-3 via the cached NRAO bulk catalogues. Fluxes are the raw
+    Quick-Look values (mJy/beam) before the per-epoch scale correction (:func:`apply_flux_scale`).
+    """
+    if epoch not in _EPOCH_FETCHERS:
+        raise ValueError(f"unsupported VLASS epoch {epoch!r}; supported: {sorted(_EPOCH_FETCHERS)}")
+    return _EPOCH_FETCHERS[epoch](center, radius_deg)  # pragma: no cover - network
+
+
+def _fetch_and_match(
+    center: tuple[float, float], radius_deg: float, epochs: tuple[int, ...]
+):  # pragma: no cover - network
+    """Fetch each requested epoch, flux-correct it, and cross-match onto the first epoch."""
+    ra_l, dec_l, flux_l, err_l = [], [], [], []
+    for e in epochs:
+        ra, dec, fp, efp = fetch_vlass_epoch(e, center, radius_deg)
+        fp, efp = apply_flux_scale(e, fp, efp)
+        ra_l.append(ra)
+        dec_l.append(dec)
+        flux_l.append(fp)
+        err_l.append(efp)
+    return crossmatch_epochs(ra_l, dec_l, flux_l, err_l)
 
 
 def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:
@@ -316,8 +484,25 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p = argparse.ArgumentParser(description="Build the VLASS multi-epoch variability catalogue.")
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true", help="use the synthetic fixture (no network)")
+    p.add_argument("--ra", type=float, help="cone-centre RA (deg) for a real-data run")
+    p.add_argument("--dec", type=float, help="cone-centre Dec (deg) for a real-data run")
+    p.add_argument("--radius", type=float, default=1.0, help="cone radius (deg)")
+    p.add_argument("--epochs", default="1,2,3", help="comma-separated VLASS epochs, e.g. 1,2,3")
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=args.offline), indent=2))
+    center = None if (args.offline or args.ra is None) else (args.ra, args.dec)
+    epochs = tuple(int(e) for e in args.epochs.split(","))
+    print(
+        json.dumps(
+            run(
+                args.out,
+                offline=args.offline,
+                center=center,
+                radius_deg=args.radius,
+                epochs=epochs,
+            ),
+            indent=2,
+        )
+    )
     return 0
 
 

@@ -2162,6 +2162,9 @@ dependencies = [
 airflow = [
     { name = "apache-airflow" },
 ]
+vlass = [
+    { name = "pyvo" },
+]
 voyager = [
     { name = "h5py" },
     { name = "hdf5plugin" },
@@ -2186,11 +2189,12 @@ requires-dist = [
     { name = "jansky", editable = "../jansky" },
     { name = "matplotlib", specifier = ">=3.8" },
     { name = "numpy", specifier = ">=1.26" },
+    { name = "pyvo", marker = "extra == 'vlass'", specifier = ">=1.4" },
     { name = "requests", specifier = ">=2.31" },
     { name = "scipy", specifier = ">=1.11" },
     { name = "tqdm", specifier = ">=4.66" },
 ]
-provides-extras = ["airflow", "voyager"]
+provides-extras = ["airflow", "voyager", "vlass"]
 
 [package.metadata.requires-dev]
 dev = [

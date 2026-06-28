@@ -71,6 +71,30 @@ def test_select_candidates_separates_injected():
     assert contamination < 0.2
 
 
+def test_apply_flux_scale_corrects_and_floors():
+    f, e = vlass.apply_flux_scale(1, np.array([10.0]), np.array([0.5]))
+    assert np.isclose(f[0], 11.3)  # epoch-1 peak-flux correction = 1.13
+    assert e[0] > 0.5 * 1.13  # systematic floor added in quadrature
+    f2, e2 = vlass.apply_flux_scale(3, np.array([10.0]), np.array([0.4]), sys_frac=0.0)
+    assert np.isclose(f2[0], 10.31) and np.isclose(e2[0], 0.4 * 1.031)  # no floor -> just scaling
+
+
+def test_flux_correction_removes_epoch_scale_offset():
+    # a STEADY source whose raw per-epoch fluxes differ ONLY by the Quick-Look scale offset
+    true = 10.0
+    raw = np.array([true / vlass.VLASS_PEAK_CORRECTION[e] for e in (1, 2, 3)])
+    err = 0.01 * raw
+    eta_raw = vlass.eta_metric(raw, err)  # uncorrected: the scale offset masquerades as variability
+    cf, ce = [], []
+    for ep, fr, er in zip((1, 2, 3), raw, err, strict=True):
+        a, b = vlass.apply_flux_scale(ep, np.array([fr]), np.array([er]), sys_frac=0.0)
+        cf.append(a[0])
+        ce.append(b[0])
+    eta_corr = vlass.eta_metric(np.array(cf), np.array(ce))
+    assert eta_raw > 10.0  # a steady source would be wrongly flagged without the correction
+    assert eta_corr < 1e-6  # the correction collapses it back to a constant
+
+
 def test_run_offline(tmp_path):
     m = vlass.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"

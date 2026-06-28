@@ -37,10 +37,16 @@ shortlisted directions).
 1. **Tooling (this step).** Pure-NumPy/SciPy metrics + astropy cross-match + the 2-D selection,
    validated on a synthetic 3-epoch population (steady sources at η≈1, V≈measurement error;
    injected variables at high η and high V). Offline `run` recovers the injected variables.
-2. **Real data (next).** Fetch the three CIRADA epoch catalogues for a manageable sky region via a
-   CADC/CIRADA TAP cone query, cross-match within 2.5″, compute metrics, select candidates, and
-   cross-check survivors against known variable classes (AGN, stars, pulsars) and artefacts
-   (sidelobes near bright sources, the QL flux-scale and deconvolution systematics).
+2. **Real-data fetch (done).** `run(center=(ra,dec), radius_deg=...)` fetches each epoch and
+   cross-matches within 2.5″. There is **no single TAP** for all epochs: Epoch 1 is queried by cone
+   from VizieR TAP (`J/ApJS/255/30/comp`, Gordon et al. 2021); Epochs 2–3 are the bulk NRAO
+   catalogues (CSV.gz / FITS), cached and region-filtered locally, with the per-version schema and
+   quality cuts (`Duplicate_flag<2, Quality_flag∈{0,4}, S_Code≠E` for E1/E2; `Flag=0, S_Code≠E` for
+   E3). Each epoch's peak flux is put on the common Perley-Butler scale by `apply_flux_scale`
+   (VLASS Memos 13/22) with the ~7% residual scale scatter folded into the errors — without this the
+   epoch offset alone manufactures variables. Needs the `vlass` extra (`pyvo`).
+   **Still to run:** execute on a real field and cross-check survivors against known variable classes
+   (AGN, stars, pulsars) and artefacts (sidelobes near bright sources, ghosts).
 3. **GATE-2 science review** before any write-up — the candidate list must survive the known VLASS
    QL caveats (the ~10–15% QL peak-flux underestimate in early epochs, CLEAN/snapshot bias,
    component-vs-source blending) before a single source is called variable.
