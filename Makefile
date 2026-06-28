@@ -60,11 +60,14 @@ dag-test: ## Run the research DAG once without the scheduler loop
 paper-image: ## Build the tectonic image used to compile the papers
 	podman build -t jansky-research-paper:latest -f containers/paper.Dockerfile .
 
-paper: paper-image ## Build every papers/<slice>/main.pdf in the tectonic container (keeps the .bbl)
+paper: paper-image ## Build every papers/<slice>/*.tex (main + e.g. rnaas) in the tectonic container
 	@for s in $(SLICES); do \
-		echo "==> building papers/$$s"; \
-		podman run --rm -v "$(CURDIR)/papers/$$s":/paper:z -w /paper jansky-research-paper:latest \
-			tectonic --keep-intermediates --keep-logs main.tex || exit 1; \
+		for tex in papers/$$s/*.tex; do \
+			grep -ql '\\documentclass' "$$tex" || continue; \
+			echo "==> building $$tex"; \
+			podman run --rm -v "$(CURDIR)/papers/$$s":/paper:z -w /paper jansky-research-paper:latest \
+				tectonic --keep-intermediates --keep-logs "$$(basename $$tex)" || exit 1; \
+		done; \
 	done
 
 arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/arxiv-submission/)

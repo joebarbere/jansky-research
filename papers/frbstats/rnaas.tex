@@ -1,0 +1,76 @@
+\documentclass[RNAAS]{aastex631}
+
+% Numbers are \input from the pipeline-generated macros — none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{A Lightweight, Reproducible Recovery of the CHIME/FRB Repeater--Width
+Difference from the First CHIME/FRB Catalog}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Using a small, tested, CPU-only tool (\code{frbstats}), I recompute repeater versus
+non-repeater burst statistics from the public First CHIME/FRB Catalog and recover the
+established result that repeating sources have broader temporal widths than apparent
+non-repeaters (Kolmogorov--Smirnov $D=\ksWidthD$, $p=\ksWidthP$). This is a
+reproducibility and tooling note, not a new measurement.
+\end{abstract}
+
+\section{Result}
+
+Fast-radio-burst population studies routinely recompute wait-time, energy, and
+repeater/non-repeater statistics from scratch, with no maintained, installable,
+CPU-only library to do so reproducibly. \code{frbstats} \citep{jansky} is such a tool:
+a pure-NumPy/SciPy module that loads a public CHIME/FRB catalogue, collapses
+multi-component bursts to one row per event, and returns Weibull wait-time fits, a
+Clauset--Hill power-law energy fit with a Kolmogorov--Smirnov-selected lower bound,
+and two-sample comparisons of the repeater and non-repeater populations, each with
+uncertainties. Every routine is tested against a synthetic catalogue with known
+ground truth, so the suite runs offline.
+
+Run on the \nBursts\ independent events of the First CHIME/FRB Catalog
+\citep{chimecat1} (\nRepeaterBursts\ repeater bursts from \nRepeaterSources\ sources),
+the tool recovers the established morphological result that repeater bursts have
+significantly larger temporal widths than apparent non-repeaters: a two-sample
+Kolmogorov--Smirnov test gives $D=\ksWidthD$ ($p=\ksWidthP$), with median widths
+$\medWidthRep$~ms versus $\medWidthOne$~ms (Figure~\ref{fig:dm} shows the companion
+dispersion-measure split). This reproduces the peer-reviewed CHIME finding and is the
+validation that the implementation is correct. The differential fluence distribution
+follows a power law of index $\gamma=\energyGamma\pm\energyGammaErr$ above an
+automatically selected completeness bound of $\energyFmin$~Jy~ms, consistent with the
+catalogue's published source counts.
+
+The result is presented as a reproduction, not a discovery: the catalogue-level
+differences are subject to CHIME's selection function and are not corrected for it,
+and within-source wait-time clustering is cadence-dominated for a transit instrument
+and is therefore not interpreted here. The full analysis, including this note,
+regenerates from a clean checkout with one command, and every number above is
+\code{\textbackslash input} from a pipeline-generated macro file, so the text always
+matches the pipeline.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/dm_by_class.pdf}
+\caption{Dispersion-measure distributions of repeater and non-repeater bursts in the
+First CHIME/FRB Catalog, computed by \code{frbstats}. The companion width comparison
+(KS $D=\ksWidthD$, $p=\ksWidthP$) reproduces the established repeater--width result.}
+\label{fig:dm}
+\end{figure}
+
+\begin{acknowledgments}
+Developed collaboratively with Anthropic's Claude (a large language model); the author
+directed and verified the work, and an AI assistant is not an eligible author. Thanks
+to the CHIME/FRB Collaboration for the public catalogue.
+\end{acknowledgments}
+
+\software{Astropy \citep{astropy2022}, NumPy, SciPy, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

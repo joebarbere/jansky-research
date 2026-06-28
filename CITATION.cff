@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software or its analyses, please cite it as below."
+title: "jansky-research: A CPU-only, reproducible toolkit for amateur radio-astronomy analyses"
+abstract: >-
+  A tested, CPU-only Python toolkit for amateur, reproducible radio-astronomy
+  analyses, built on the jansky course library. It bundles five public-data
+  research slices — FRB burst statistics, FRB activity-periodicity, the Milky Way
+  HI tangent-point rotation curve, a SETI Doppler-drift injection-recovery
+  benchmark, and ultra-steep-spectrum source selection — each run on real public
+  data, put through an adversarial science-review gate, and written up honestly
+  (three validations and two negative/cautionary results).
+type: software
+authors:
+  - given-names: Joseph
+    family-names: Barbere
+    orcid: "https://orcid.org/0009-0008-3289-4447"
+    affiliation: "Independent researcher"
+version: "0.0.1"
+date-released: "2026-06-27"
+license: MIT
+repository-code: "https://github.com/joebarbere/jansky-research"
+url: "https://github.com/joebarbere/jansky-research"
+keywords:
+  - radio astronomy
+  - fast radio bursts
+  - HI 21 cm
+  - SETI
+  - reproducibility
+  - open-source software
