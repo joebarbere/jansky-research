@@ -29,6 +29,7 @@ __all__ = [
     "run",
     "synthetic_field",
     "two_point_indices",
+    "validate_hfp",
     "validate_known",
 ]
 
@@ -147,12 +148,19 @@ def find_peaked(
             tgss_det[k] = True
         else:  # TGSS non-detection -> S_150 < limit -> lower bound on alpha_low
             alpha_low[k] = np.log(s_n[k] / tgss_limit_mjy) / lnr
-    is_peaked = (alpha_low > up) & (alpha_high < dn) & (alpha_high > a_high_floor)
+    rising = (
+        alpha_low > up
+    )  # optically-thick rise (TGSS-faint, NVSS-bright) -- the GPS/HFP signature
+    is_peaked = (
+        rising & (alpha_high < dn) & (alpha_high > a_high_floor)
+    )  # turnover in 0.7-2 GHz band
+    is_ghz_peaked = rising & (alpha_high > up)  # still rising at 3 GHz -> peak above the band (HFP)
     cls = np.array(
         [classify_sed(lo, hi) for lo, hi in zip(alpha_low, alpha_high, strict=True)], dtype=object
     )
     cls[(alpha_high <= a_high_floor)] = "extended"  # resolution artefact (NVSS>>VLASS)
     cls[is_peaked] = "peaked"
+    cls[is_ghz_peaked] = "ghz_peaked"
     return {
         "ra": ra_n[iN_v],
         "dec": dec_n[iN_v],
@@ -165,6 +173,8 @@ def find_peaked(
         "tgss_detected": tgss_det,
         "cls": cls.astype(str),
         "is_peaked": is_peaked,
+        "is_ghz_peaked": is_ghz_peaked,
+        "is_rising": rising,  # peaked OR ghz_peaked: the full optically-thick-rising candidate set
     }
 
 
@@ -224,6 +234,61 @@ def validate_known(*, max_sources: int = 120) -> dict:  # pragma: no cover - net
         "n_validated": int(npk.size),
         "false_positive_rate_below_250MHz": fp,
         "recovery_by_nupk": recovery,
+    }
+
+
+def validate_hfp(*, max_sources: int = 120) -> dict:  # pragma: no cover - network
+    """Recover-a-known test against the Dallacasa et al. (2000) High-Frequency-Peaker catalogue.
+
+    The Callingham (2017) GLEAM sample is MHz-peaked (turnover below the 150 MHz floor), so this
+    method correctly leaves it in the ``steep`` class (see :func:`validate_known`). The *classical*
+    GHz-peaked / HFP population peaks at $\\gtrsim$few GHz, so across 150 MHz, 1.4 GHz, 3 GHz it is
+    **rising throughout** and lands in this method's ``ghz_peaked`` class. This fetches the Dallacasa
+    bright HFP sample (``J/A+A/363/887``, NVSS 1.4 GHz fluxes), adds VLASS 3 GHz per source, and
+    reports the fraction recovered as *rising* (optically thick at low frequency, the GPS/HFP
+    signature) and as *GHz-peaked* (still rising at 3 GHz). A clean recover-a-known, complementing the
+    Callingham purity test.
+    """
+    import numpy as _np
+    from astropy import units as _u
+    from astropy.coordinates import SkyCoord as _SkyCoord
+    from astroquery.vizier import Vizier
+
+    from . import vlass as _vlass
+
+    v = Vizier(columns=["*"])
+    v.ROW_LIMIT = -1
+    t = v.get_catalogs("J/A+A/363/887/table1")[0]
+    coo = _SkyCoord(t["RAJ2000"], t["DEJ2000"], unit=(_u.hourangle, _u.deg))
+    ra = _np.asarray(coo.ra.deg, float)
+    dec = _np.asarray(coo.dec.deg, float)
+    snvss = _np.asarray(t["NVSS"], float)  # already mJy
+    sel = _np.where((dec > -39) & (snvss > 30) & _np.isfinite(snvss))[0]
+    sel = sel[_np.argsort(-snvss[sel])][:max_sources]
+
+    a_low_l: list[float] = []
+    a_high_l: list[float] = []
+    for i in sel:
+        try:
+            vr, vd, vf, _ = _vlass._fetch_e1_tap((ra[i], dec[i]), 0.02)  # ~70" cone
+            if vr.size == 0:
+                continue
+            sv = vf[int(_np.argmin((vr - ra[i]) ** 2 + (vd - dec[i]) ** 2))]
+        except Exception:
+            continue
+        a_low_l.append(float(_np.log(snvss[i] / TGSS_LIMIT_MJY) / _np.log(1.4 / 0.1475)))
+        a_high_l.append(float(_np.log(sv / snvss[i]) / _np.log(3.0 / 1.4)))
+    a_low = _np.asarray(a_low_l)
+    a_high = _np.asarray(a_high_l)
+    n = int(a_low.size)
+    rising = (a_low > 0.1).sum() if n else 0
+    ghz_peaked = ((a_low > 0.1) & (a_high > 0.1)).sum() if n else 0
+    return {
+        "n_validated": n,
+        "median_alpha_low": float(_np.median(a_low)) if n else float("nan"),
+        "median_alpha_high": float(_np.median(a_high)) if n else float("nan"),
+        "frac_rising": float(rising) / n if n else 0.0,
+        "frac_ghz_peaked": float(ghz_peaked) / n if n else 0.0,
     }
 
 
@@ -293,10 +358,13 @@ def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool =
     res = find_peaked(tgss, nvss, vlass)
     cls = res.get("cls", np.array([]))
     peaked = res.get("is_peaked", cls == "peaked")
+    ghz_peaked = res.get("is_ghz_peaked", cls == "ghz_peaked")
     metrics = {
         "source": source,
         "n_nvss_vlass": int(cls.size),
         "n_peaked": int(peaked.sum()),
+        "n_ghz_peaked": int(ghz_peaked.sum()),
+        "n_rising": int(np.sum(res.get("is_rising", peaked | ghz_peaked))),
         "n_extended_artefact": int(np.sum(cls == "extended")),
         "n_tgss_detected": int(np.sum(res.get("tgss_detected", np.zeros(cls.size, bool)))),
     }
@@ -329,15 +397,18 @@ def _figure(res: dict, out_dir) -> None:
     al = res.get("alpha_low", np.array([]))
     ah = res.get("alpha_high", np.array([]))
     peaked = res.get("is_peaked", np.zeros(al.size, bool))
+    ghz = res.get("is_ghz_peaked", np.zeros(al.size, bool))
     is_lim = res.get("alpha_low_is_limit", np.zeros(al.size, bool))
+    other = ~(peaked | ghz)
     fig, ax = plt.subplots(figsize=(5, 4))
-    ax.scatter(al[~peaked], ah[~peaked], s=6, color="0.6", label="other")
+    ax.scatter(al[other], ah[other], s=6, color="0.6", label="other")
     # TGSS non-detections: alpha_low is a lower limit (shown with rightward arrows)
     ax.scatter(al[peaked], ah[peaked], s=34, color="r", marker="*", label="peaked (GPS/CSS)")
-    if peaked.any():
-        for x, y in zip(al[peaked & is_lim], ah[peaked & is_lim], strict=True):
+    ax.scatter(al[ghz], ah[ghz], s=34, color="b", marker="^", label="GHz-peaked (HFP)")
+    if (peaked | ghz).any():
+        for x, y in zip(al[(peaked | ghz) & is_lim], ah[(peaked | ghz) & is_lim], strict=True):
             ax.annotate(
-                "", xy=(x + 0.15, y), xytext=(x, y), arrowprops=dict(arrowstyle="->", color="r")
+                "", xy=(x + 0.15, y), xytext=(x, y), arrowprops=dict(arrowstyle="->", color="0.4")
             )
     ax.axhline(0.0, color="k", lw=0.5)
     ax.axvline(0.0, color="k", lw=0.5)
@@ -360,6 +431,8 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\pkSource}}{{{m['source']}}}",
         rf"\newcommand{{\pkNnvssvlass}}{{{m['n_nvss_vlass']}}}",
         rf"\newcommand{{\pkNpeaked}}{{{m['n_peaked']}}}",
+        rf"\newcommand{{\pkNghzpeaked}}{{{m.get('n_ghz_peaked', 0)}}}",
+        rf"\newcommand{{\pkNrising}}{{{m.get('n_rising', 0)}}}",
         rf"\newcommand{{\pkNextended}}{{{m['n_extended_artefact']}}}",
         rf"\newcommand{{\pkNtgssdet}}{{{m['n_tgss_detected']}}}",
     ]

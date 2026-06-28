@@ -55,14 +55,45 @@ def test_find_peaked_upper_limit_recovers_injected():
     assert j.size / pk.sum() > 0.7
 
 
+def test_find_peaked_classifies_ghz_peaked():
+    # A TGSS-faint, NVSS-bright, VLASS-brighter source rises throughout -> ghz_peaked (HFP).
+    nvss = {
+        "ra": np.array([180.0]),
+        "dec": np.array([30.0]),
+        "flux": np.array([80.0]),  # bright at 1.4 GHz, > TGSS limit -> alpha_low lower bound rises
+        "eflux": np.array([8.0]),
+    }
+    vlass = {
+        "ra": np.array([180.0]),
+        "dec": np.array([30.0]),
+        "flux": np.array([120.0]),  # still rising at 3 GHz
+        "eflux": np.array([12.0]),
+    }
+    # a single, distant TGSS source (no match) -> our target is a TGSS non-detection (upper limit)
+    tgss = {
+        "ra": np.array([10.0]),
+        "dec": np.array([10.0]),
+        "flux": np.array([50.0]),
+        "eflux": np.array([5.0]),
+    }
+    res = peaked.find_peaked(tgss, nvss, vlass)
+    assert res["is_ghz_peaked"][0]
+    assert not res["is_peaked"][0]
+    assert res["is_rising"][0]
+    assert res["cls"][0] == "ghz_peaked"
+
+
 def test_run_offline(tmp_path):
     m = peaked.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"
     assert m["n_nvss_vlass"] > 1000  # most of the field is NVSS+VLASS detected
     assert m["n_peaked"] >= 1
+    assert m["n_ghz_peaked"] >= 0
+    assert m["n_rising"] >= m["n_peaked"]  # rising = peaked OR ghz_peaked
     assert m["n_peaked_recovered"] >= 1
     assert m["n_peaked_recovered"] <= m["n_injected_peaked"]
     assert (tmp_path / "results" / "peaked_metrics.json").exists()
     assert (tmp_path / "papers" / "peaked" / "figures" / "curvature.pdf").exists()
     macros = (tmp_path / "papers" / "peaked" / "generated" / "macros.tex").read_text()
     assert r"\pkNpeaked" in macros
+    assert r"\pkNghzpeaked" in macros
