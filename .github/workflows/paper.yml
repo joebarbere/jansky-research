@@ -30,6 +30,7 @@ jobs:
           uv run python -m jansky_research.driftsearch --out .
           uv run python -m jansky_research.spectra --out . --offline
           uv run python -m jansky_research.hi --out . --offline
+          uv run python -m jansky_research.vlass --out . --offline
       - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3
       - name: Compile every paper (main + any extra, e.g. the RNAAS note)

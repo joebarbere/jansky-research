@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — five slices, honestly tallied
+## Status — six slices, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -19,11 +19,14 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | FRB repeater periodicity | `jansky_research.frbperiod` | ✅ recovered FRB 20180916B's **16.35-day** period |
 | SETI drift-search benchmark | `jansky_research.driftsearch` | ➖ benchmark built; the "Voyager detection" was a **DC-spike artifact** (retracted) |
 | HI rotation curve | `jansky_research.hi` | ✅ recovered the **flat** (non-Keplerian) inner Milky Way curve |
+| VLASS multi-epoch variability | `jansky_research.vlass` | ✅/➖ 703 deg² census: catalogue variability is **artifact-dominated**, but image-confirms **FK Comae Berenices** |
 
-Three clean validations, two honest negatives, **zero overclaims that survived review** — the
+Four validations and two honest negatives, **zero overclaims that survived review** — the
 science-reviewer caught the USS candidates evaporating against the authoritative catalog and the
-SETI "detection" being an instrument artifact. The negatives are arguably the most instructive part.
-Each slice's honest assessment is in `survey/*-findings.md`.
+SETI "detection" being an instrument artifact, and image-confirmation caught VLASS catalogue
+"variables" being extraction artifacts (while still recovering one genuine variable star). The
+negatives are arguably the most instructive part. Each slice's honest assessment is in
+`survey/*-findings.md`.
 
 ### Papers
 
@@ -31,7 +34,7 @@ Every slice is written up as its own **AASTeX paper** under `papers/<slice>/` (a
 Barbere, with Claude credited via an AI-use disclosure + a `\software{}` citation — an AI/LLM is not
 an eligible author). Each is built reproducibly with containerized tectonic, takes every headline
 number from a pipeline-generated `generated/macros.tex` (no figure typed by hand), and is honest
-about what it is — three validations and two negatives:
+about what it is — four validations and two negatives:
 
 | Paper | `papers/…` | Framing |
 |-------|-----------|---------|
@@ -40,6 +43,7 @@ about what it is — three validations and two negatives:
 | The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation |
 | A CPU-only SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
 | TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative |
+| VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) |
 
 `make paper` builds all five PDFs; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -57,10 +61,11 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 - **A short note in the literature:** the frbstats validation is condensed to a
   [Research Note of the AAS](https://journals.aas.org/research-notes/) (`papers/frbstats/rnaas.tex`,
   built by `make paper`).
-- **arXiv:** reserved for at most the frbstats paper (the only one with a genuinely fresh angle, the
-  Airflow-on-Podman reproducibility pattern). The validation/negative slices are **not** posted as a
-  preprint batch — arXiv moderation expects a contribution, and "I reproduced a known result" or "my
-  candidates didn't survive a cross-check" belongs in the repo + Zenodo, not as standalone preprints.
+- **arXiv:** reserved for the two papers with a genuinely fresh angle — `frbstats/` (the
+  Airflow-on-Podman reproducibility pattern) and `vlass/` (a 703 deg² census with a real recovery, FK
+  Comae Berenices, plus the QL-systematics methodology). The pure reproductions/negatives are **not**
+  posted as a preprint batch — arXiv moderation expects a contribution, and "I reproduced a known
+  result" or "my candidates didn't survive a cross-check" belongs in the repo + Zenodo.
 
 ## How it relates to `jansky`
 
@@ -85,6 +90,7 @@ uv run python -m jansky_research.frbperiod    # FRB repeater periodicity
 uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3   # USS hunt
 uv run python -m jansky_research.driftsearch  # SETI injection-recovery benchmark
 uv run python -m jansky_research.hi           # Milky Way HI rotation curve
+uv run python -m jansky_research.vlass --ra 190 --dec 20 --radius 15  # VLASS variability census (needs --extra vlass)
 # (append --offline to run any slice on its synthetic fixture, no network)
 
 # The papers + automation:

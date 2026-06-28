@@ -147,3 +147,6 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "results" / "vlass_metrics.json").exists()
     assert (tmp_path / "papers" / "vlass" / "figures" / "eta_v.pdf").exists()
     assert (tmp_path / "papers" / "vlass" / "figures" / "completeness.pdf").exists()
+    assert (tmp_path / "papers" / "vlass" / "figures" / "confirmed.pdf").exists()
+    macros = (tmp_path / "papers" / "vlass" / "generated" / "macros.tex").read_text()
+    assert r"\vlassNsources" in macros and r"\vlassNconfirmed" in macros

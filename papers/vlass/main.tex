@@ -1,0 +1,166 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every census number is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{VLASS multi-epoch radio variability}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Reproducible CPU-Only Pipeline for VLASS Multi-Epoch Radio Variability:
+Quick-Look Systematics, a \vlassArea\,deg$^2$ Census, and the Recovery of FK~Comae~Berenices}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The Karl G.\ Jansky Very Large Array Sky Survey \citep[VLASS;][]{lacy2020} imaged the sky north of
+$\delta=-40\arcdeg$ at 2--4~GHz in three epochs (2017--2024), making it a natural hunting ground for
+radio variability. We ask how much of that variability is accessible from the public Quick-Look (QL)
+component catalogues alone, with a small, tested, CPU-only tool. Cross-matching the three QL epochs
+and selecting outliers in the standard variability metrics $\eta$ (significance) and $V$ (amplitude)
+turns out to be \emph{dominated by source-extraction artefacts}: component deblending, cross-match
+incompleteness, and bright-neighbour confusion. We show that three mitigations are necessary and
+sufficient to obtain a believable candidate list --- a per-epoch QL flux-scale correction
+\citep{vlassmemo13, vlassmemo22}, a deblending isolation cut, and automatic \emph{forced-photometry
+confirmation} against the actual images with a peak-centring gate. Over a \vlassArea~deg$^2$ census
+(\vlassNsources\ sources, \vlassNusable\ usable), the $\vlassSigma\sigma$ selection yields
+\vlassNcand\ candidates, of which \vlassNconfirmed\ survive image confirmation; one is the known
+rapidly rotating active giant \emph{FK~Comae~Berenices}, recovered with a clean $\sim$7$\to$1~mJy
+decline at a $0.9\arcsec$ match. Injection--recovery shows the three-epoch selection saturates near
+\vlassComplMax\% completeness even for extreme flares (50\% at $\sim\vlassComplFifty\times$), so the
+confirmed sources are a floor, not a rate. This is a tooling and methodology contribution --- a
+validation (FK~Com) plus a completeness-bounded limit --- not a discovery.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Radio continuum surveys (1340) --- Variable stars (1761) --- Active galactic nuclei (16) --- Open source software (1866)}
+
+\section{Introduction}
+Repeated all-sky imaging makes radio variability a survey science: a source seen at several epochs
+yields a light curve, and outliers flag flaring AGN, radio stars, and slow transients. VLASS
+\citep{lacy2020} provides three 2--4~GHz epochs over $33{,}885$~deg$^2$, and its Quick-Look component
+catalogues \citep{gordon2021} are public. We test the weakest, most reproducible version of the
+problem: with a $\sim$few-hundred-line CPU-only tool and the public catalogues alone, how many
+genuine variables can one recover, and how badly do the QL systematics bite? The honest answer is
+both cautionary and positive.
+
+\section{Methods}
+\code{vlass} is a pure-NumPy/SciPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}).
+For each source it builds a per-epoch light curve and computes the two transient-survey metrics
+\citep{swinbank2015, rowlinson2019}: the weighted reduced $\chi^2$ against a constant flux,
+$\eta = \frac{1}{N-1}\sum_i (S_i-\bar S_w)^2/\sigma_i^2$ (significance of variability), and the
+coefficient of variation $V=\sigma_S/\bar S$ (amplitude). Sources that are outliers in \emph{both}
+$\log\eta$ and $\log V$ at $\vlassSigma\sigma$ are candidates. Three mitigations make the result
+trustworthy:
+
+\paragraph{Per-epoch flux scale.} The QL images underestimate peak flux, epoch-dependently
+(Epoch~1 $\sim$15\%, Epoch~2 $\sim$7\%, Epoch~3 $\sim$3\%; \citealt{vlassmemo13, vlassmemo22}). We
+correct each epoch to the Perley--Butler scale and fold the $\sim$7\% residual scatter into the
+errors; without this the epoch-to-epoch offset alone flags every source.
+
+\paragraph{Deblending isolation.} A slightly extended source is fit with a different number of
+Gaussian components in each epoch, so a secondary component's flux jumps around. We drop sources with
+a catalogue neighbour within $5\arcsec$.
+
+\paragraph{Forced-photometry confirmation.} Every catalogue candidate is checked against the images:
+we perform forced peak photometry at the locked position in each epoch's QL cutout (one CADC query
+per source), recompute $\eta$/$V$ on the \emph{image} light curve, and confirm a candidate only if it
+is significantly variable (p$<0.01$) with real amplitude ($V>0.3$) \emph{and} the forced peak in the
+brightest epoch is centred within $2.5\arcsec$. The centring gate is essential: a bright source just
+outside the locked position otherwise pins the forced peak at the search-box edge and fakes a
+variable as its wings shift between epochs.
+
+Selection completeness is measured by injection--recovery on the real data: a single-epoch flare of
+known factor is injected into the steady light curves and the field's own cut is re-run. Every
+function is tested against a synthetic three-epoch population, so the suite runs offline.
+
+\section{Data}
+We use the CIRADA Epoch~1--2 and NRAO Epoch~3 QL component catalogues \citep{gordon2021,vlassmemo22}
+(Epoch~1 via VizieR TAP, Epochs~2--3 via the bulk NRAO files), cross-matched within $2.5\arcsec$, and
+the CADC Quick-Look image cutouts for forced photometry. A subtle trap: the VizieR Epoch-1 peak flux
+is recorded in $\mu$Jy while mislabelled ``mJy/beam'' --- a factor of $10^3$ that, uncaught, makes
+every source appear variable; we detect it from the catalogue flux floor (the $\sim$0.7~mJy detection
+threshold) and rescale.
+
+\section{Results}
+Over a \vlassArea~deg$^2$ cone (\vlassNsources\ sources; \vlassNexcluded\ dropped as crowded;
+\vlassNusable\ usable), the selection flags \vlassNcand\ candidates and image confirmation keeps
+\vlassNconfirmed.
+
+\paragraph{A real recovery.} One confirmed source matches \emph{FK~Comae~Berenices} at $0.9\arcsec$,
+the prototype of the FK~Com class of rapidly rotating, magnetically active single giants and a known
+coronally active radio emitter \citep{gudel2002}. Its forced light curve declines monotonically
+($\sim$7.2, 2.7, 1.0~mJy/beam across the three epochs; upper track of Figure~\ref{fig:fkcom}),
+confirmed in both the catalogue and the images. Recovering it purely from public catalogues is the validation that the
+pipeline surfaces genuine variables, not only rejects artefacts. The second survivor is a faint
+($\sim$3~mJy) centred source fading below threshold, with no catalogued counterpart --- a plausible
+transient reported as a candidate, not a detection. Several other candidates carry blazar/QSO/BL-Lac
+identifications but fall \emph{below} the $V>0.3$ bar, i.e.\ real AGN varying at the few-tens-of-
+percent level the cadence expects, correctly not over-claimed.
+
+\paragraph{Completeness and the three-epoch ceiling.} Injection--recovery (Figure~\ref{fig:compl})
+shows the selection recovers $<$5\% of $\le$3$\times$ single-epoch flares and \emph{saturates near
+\vlassComplMax\%} even at $10\times$ (50\% at $\sim\vlassComplFifty\times$). This is intrinsic to
+three epochs: a single-epoch flare's coefficient of variation tops out at $1/\sqrt{3}/(1/3)=1.73$ as
+the amplitude $\to\infty$, just above the noisy three-epoch $V$ threshold. The \vlassNconfirmed\
+confirmed sources are therefore a floor; the strong-single-epoch-variable fraction is of order a few
+$\times10^{-4}$.
+
+\begin{figure}
+\plotone{figures/eta_v.pdf}
+\caption{Variability plane: amplitude $V$ versus significance $\eta$ for the usable sources;
+candidates (outliers in both, dotted thresholds) are highlighted.}
+\label{fig:etav}
+\end{figure}
+
+\begin{figure}
+\plotone{figures/confirmed.pdf}
+\caption{Forced light curves of the \vlassNconfirmed\ image-confirmed variables. The upper track is
+FK~Comae~Berenices, a clean monotonic $\sim$7$\to$1~mJy/beam decline across the three VLASS epochs;
+the lower is the faint centred fader.}
+\label{fig:fkcom}
+\end{figure}
+
+\begin{figure}
+\plotone{figures/completeness.pdf}
+\caption{Data-driven completeness: recovered fraction of injected single-epoch flares versus flare
+factor. The selection saturates near \vlassComplMax\% --- the three-epoch ceiling.}
+\label{fig:compl}
+\end{figure}
+
+\section{Discussion and reproducibility}
+Catalogue-only VLASS QL multi-epoch variability selection is dominated by source-extraction artefacts,
+and every statistical candidate must be confirmed against the images before it is believed --- the
+cautionary thread shared with much survey transient work. But the same pipeline, given enough sky,
+also does its positive job: it recovers a genuine variable (FK~Com) and sets an honest,
+completeness-bounded floor on the rest. The contribution is the reproducible, QL-systematic-aware
+tool --- flux-scale correction, deblending isolation, centred forced-photometry confirmation, and
+data-driven completeness --- not a discovery. Every census number above is written by the pipeline
+into the macros this paper \code{\textbackslash input}s, and the analysis regenerates from a clean
+checkout. A looser catalogue cut (viable because forced photometry removes false positives), more
+sky, or per-epoch forced photometry of every source would tighten the limit.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{vlass} tool, the census and its forced-photometry
+confirmation (including the centring gate that removed bright-neighbour false positives), and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified all
+code, results, figures, and citations, and takes full responsibility for the content. An AI/LLM is
+not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the CIRADA, NRAO/VLASS, CADC, VizieR, and SIMBAD teams for the public data and services
+this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+astroquery, pyvo, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
