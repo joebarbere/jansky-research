@@ -64,9 +64,18 @@ run:
 | SIA2 image query | `casda_vo_tools/sia2/query` | HTTP 500 NPE: `Cannot invoke "java.util.Map.size()" because "m" is null` |
 | `*/availability` | — | report `available=true` (the front ends are up; the query backend is not) |
 
-So the live image fetch is blocked by **CASDA infrastructure, not credentials or our code**. Options
-when it recovers (or as alternates): retry CASDA SODA; or **Data Central** (`datacentral.org.au`), the
-other RACS host, which has its own cutout service.
+So the live image fetch is blocked by **CASDA infrastructure, not credentials or our code**.
+
+### Data Central is not a Stokes-V alternative (investigated)
+
+`datacentral.org.au` hosts RACS and has a working POST cutout API
+(`/api/services/cutout/`, FITS output via `fits:true`, band selection by integer PK), but its RACS
+holdings are **RACS Low1 / Low3 Data Release 1 — Stokes I total intensity only**. There is **no
+Stokes V** in any of its 186 imaging bands (the only radio bands are GLEAM/GLEAM-X; RACS data releases
+73/74 carry no Stokes-V band, and RACS bands aren't even enumerated in the cutout schema). So Data
+Central cannot supply the V images this slice needs. (It *is* a clean GLEAM/GLEAM-X Stokes-I cutout
+source — relevant to the queued southern-curvature runner-up, not here.) **CASDA remains the only
+public RACS Stokes-V image source**, and it must recover before the forced-photometry leg can run.
 
 ## Status and what's next
 
