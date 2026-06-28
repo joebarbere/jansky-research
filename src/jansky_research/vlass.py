@@ -30,7 +30,10 @@ __all__ = [
     "crossmatch_epochs",
     "debiased_modulation_index",
     "eta_metric",
+    "fetch_vlass_cutout",
     "fetch_vlass_epoch",
+    "image_lightcurve",
+    "isolated_mask",
     "run",
     "select_candidates",
     "synthetic_epochs",
@@ -235,6 +238,25 @@ def select_candidates(
     return mask, float(10.0**eta_thr), float(10.0**v_thr)
 
 
+def isolated_mask(ra: np.ndarray, dec: np.ndarray, *, radius_arcsec: float = 5.0) -> np.ndarray:
+    """True for sources with no catalogue neighbour within ``radius_arcsec`` (deblending-safe).
+
+    Multi-epoch "variability" in component catalogues is frequently spurious: a single slightly
+    extended source is deblended into a different number of Gaussian components in each epoch, so a
+    secondary component's flux jumps around. Image vetting of the first real candidate showed exactly
+    this. Requiring isolation drops the crowded sources whose per-epoch deblending is unreliable.
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+
+    ra = np.asarray(ra, dtype=float)
+    if ra.size < 2:
+        return np.ones(ra.size, dtype=bool)
+    sc = SkyCoord(ra * u.deg, np.asarray(dec, float) * u.deg)
+    _, sep, _ = sc.match_to_catalog_sky(sc, nthneighbor=2)  # distance to the nearest *other* source
+    return np.asarray(sep.arcsec > radius_arcsec)
+
+
 def synthetic_epochs(
     n_sources: int = 2000,
     *,
@@ -278,6 +300,7 @@ def run(
     radius_deg: float = 1.0,
     epochs: tuple[int, ...] = (1, 2, 3),
     sigma: float = 3.0,
+    isolation_arcsec: float = 5.0,
 ) -> dict:
     """Build the multi-epoch variability catalogue (synthetic offline, or real VLASS). Writes a figure.
 
@@ -307,14 +330,19 @@ def run(
         [eta_metric(f[np.isfinite(f)], e[np.isfinite(f)]) for f, e in zip(flux, err, strict=True)]
     )
     v = np.array([v_metric(f[np.isfinite(f)]) for f in flux])
-    eta[~detected] = np.nan
-    v[~detected] = np.nan
+    # Drop deblending-prone crowded sources: their per-epoch component fluxes are unreliable and are
+    # the dominant false-positive in QL multi-epoch variability (confirmed by image vetting).
+    isolated = isolated_mask(ra, dec, radius_arcsec=isolation_arcsec)
+    usable = detected & isolated
+    eta[~usable] = np.nan
+    v[~usable] = np.nan
     mask, eta_thr, v_thr = select_candidates(eta, v, sigma=sigma)
 
     metrics = {
         "source": source,
         "n_sources": int(ra.size),
         "n_detected_multi_epoch": int(detected.sum()),
+        "n_excluded_crowded": int(np.sum(detected & ~isolated)),
         "n_candidates": int(mask.sum()),
         "eta_threshold": eta_thr,
         "v_threshold": v_thr,
@@ -579,6 +607,62 @@ def vet_candidates(
         rec.update(_ned_nearest(c, radius_arcsec))
         out.append(rec)
     return out
+
+
+def fetch_vlass_cutout(
+    ra: float, dec: float, epoch: int, *, size_arcmin: float = 1.5
+):  # pragma: no cover - network
+    """VLASS Quick-Look image cutout for one epoch around ``(ra, dec)``: returns ``(image_mJy, wcs)``.
+
+    Uses the CADC SODA cutout service (collection ``VLASS``). The data is peak brightness in
+    mJy/beam. This is the ground truth for vetting catalogue variability candidates.
+    """
+    import io
+    import re
+
+    import requests
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.nddata import Cutout2D
+    from astropy.wcs import WCS
+    from astroquery.cadc import Cadc
+
+    c = SkyCoord(ra * u.deg, dec * u.deg)
+    rad = (size_arcmin / 60.0) * u.deg
+    cadc = Cadc()
+    res = cadc.query_region(c, radius=rad, collection="VLASS")
+    ql = [
+        u_
+        for u_ in cadc.get_image_list(res, c, rad)
+        if ".ql." in u_ and re.search(rf"VLASS{epoch}\.", u_)
+    ]
+    if not ql:
+        raise ValueError(f"no VLASS Quick-Look image for epoch {epoch} at ({ra}, {dec})")
+    with fits.open(io.BytesIO(requests.get(ql[0], timeout=180).content)) as hd:
+        img = np.squeeze(np.asarray(hd[0].data, float)) * 1e3  # Jy/beam -> mJy/beam
+        w = WCS(hd[0].header).celestial
+    cut = Cutout2D(img, c, size_arcmin * u.arcmin, wcs=w)
+    return cut.data, cut.wcs
+
+
+def image_lightcurve(
+    ra: float, dec: float, *, epochs: tuple[int, ...] = (1, 2, 3)
+) -> np.ndarray:  # pragma: no cover - network
+    """Peak image brightness (mJy/beam) at ``(ra, dec)`` per epoch — the ground-truth variability check.
+
+    A genuine variable varies in these *image* peaks; a flat image light curve under a varying
+    *catalogue* light curve means the catalogue "variability" is a component-extraction artefact
+    (deblending, cross-match miss, fit inconsistency), not real. ``nan`` where no image is available.
+    """
+    out = []
+    for e in epochs:
+        try:
+            data, _ = fetch_vlass_cutout(ra, dec, e, size_arcmin=0.5)
+            out.append(float(np.nanmax(data)))
+        except Exception:
+            out.append(float("nan"))
+    return np.asarray(out)
 
 
 def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:

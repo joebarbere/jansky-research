@@ -95,6 +95,16 @@ def test_flux_correction_removes_epoch_scale_offset():
     assert eta_corr < 1e-6  # the correction collapses it back to a constant
 
 
+def test_isolated_mask_flags_crowded():
+    # three well-separated sources + one 4" neighbour pair (deblending-prone)
+    ra = np.array([150.0, 150.5, 151.0, 151.0 + 4.0 / 3600.0])
+    dec = np.array([20.0, 20.5, 21.0, 21.0])
+    iso = vlass.isolated_mask(ra, dec, radius_arcsec=5.0)
+    assert iso[0] and iso[1]  # isolated
+    assert not iso[2] and not iso[3]  # the 4" pair is flagged crowded
+    assert vlass.isolated_mask(np.array([1.0]), np.array([1.0]))[0]  # single source is isolated
+
+
 def test_run_offline(tmp_path):
     m = vlass.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"

@@ -57,10 +57,16 @@ shortlisted directions).
    yields a **single candidate** (1.3→5.3→0.7 mJy, a one-epoch ×4 spike) with **no SIMBAD/NED
    counterpart** — which for a single-epoch brightening points to a Quick-Look imaging artefact, not a
    transient. Honest first-field outcome: the pipeline works; this candidate does not survive vetting.
-   **Next:** run over a much larger sky area for a *population* census with completeness-vs-amplitude
-   characterisation (à la the driftsearch benchmark), add image-level vetting of survivors (inspect the
-   QL cutouts), then write `papers/vlass/` — framed as a tool + methodology + honest census, not a
-   discovery.
+4. **Image vetting (done).** `fetch_vlass_cutout` + `image_lightcurve` read the actual QL image peak
+   per epoch (CADC SODA, collection VLASS) as the ground truth. On the first field, **all** candidates
+   are catalogue artefacts: image light curves are flat (cand 1 catalogue 1.3/5.3/0.7 → image
+   4.6/4.7/4.6; cand 2 catalogue 5.5/0.9/– → image 5.3/5.0/4.6). Failure modes: component deblending
+   (fixed by `isolated_mask`), cross-match incompleteness, and PyBDSF-vs-image flux inconsistency. See
+   `survey/vlass-findings.md` — an honest negative: catalogue-only QL variability is artefact-dominated
+   and image vetting is mandatory.
+   **Next:** larger-area population census with completeness-vs-amplitude + forced photometry on
+   apparent non-detections (failure mode 2), then write `papers/vlass/` — framed as tool + methodology
+   + honest negative, not a discovery.
 3. **GATE-2 science review** before any write-up — the candidate list must survive the known VLASS
    QL caveats (the ~10–15% QL peak-flux underestimate in early epochs, CLEAN/snapshot bias,
    component-vs-source blending) before a single source is called variable.
