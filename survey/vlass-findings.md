@@ -76,11 +76,31 @@ sources (offsets 0.3–0.4″).
 | position | catalogue (mJy) | forced (mJy) | offset | SIMBAD | verdict |
 |----------|-----------------|--------------|--------|--------|---------|
 | 202.695 +24.233 | 9.0 → 3.1 → 1.1 | 7.2 → 2.7 → 1.0 | 0.3″ | **V* FK Com** (0.9″) | known radio-active star, clean decline — **a real recovery** |
-| 184.668 +21.817 | 3.2 → – → 0.6 | 2.9 → 0.7 → 0.6 | 0.4″ | none | a faint (~3 mJy) centred source fading below threshold — a plausible transient |
+| 184.668 +21.817 | 3.2 → – → 0.6 | 2.9 → 0.7 → 0.6 | 0.4″ | none | single-epoch detection — **fails archival follow-up (artefact)** |
 
 **FK Comae Berenices** — a famously active, rapidly rotating giant and known radio flarer — is
 recovered purely from the public catalogues with a clean monotonic ~7→1 mJy decline at a 0.9″ match.
 That is the **validation**: the pipeline does surface genuine variables, not only reject artefacts.
+
+### Archival follow-up — the confirmation ladder, and the second survivor falls
+
+Image confirmation (forced photometry + centring) is necessary but not sufficient; the decisive gate
+is the *next survey epoch plus archival cross-match*. Running it on the two survivors:
+
+- **FK Com** stands: a known active star, clean decline, $0.9\arcsec$ match — confirmed.
+- **184.668 +21.817 fails.** It is a single-epoch detection: forced photometry through the
+  independent **VLASS Epoch 4** (2026 release) reads 2.9 mJy in Epoch~1 but only noise (0.7, 0.6,
+  0.55 mJy at growing $1.7$--$3.9\arcsec$ offsets) in Epochs 2--4, i.e.\ absent for ~9 years. Its
+  Epoch-1 QL entry is a blended component (`S_Code=C`) with a very low peak-to-ring ratio (0.07, a
+  sidelobe signature), and every archival counterpart (NVSS~1998, FIRST, TGSS, AllWISE, PanSTARRS)
+  sits at $\sim8\arcsec$ — a persistent multi-wavelength source that is *not* at the candidate
+  position (which has no Gaia/optical counterpart of its own). The weight of evidence is an Epoch-1
+  sidelobe/deconvolution artefact of the nearby source, not a transient.
+
+So after the full ladder, **FK Com is the one genuine variable**; the second image-confirmed
+candidate does not survive. Catalogue selection $\to$ image confirmation $\to$ archival + next-epoch
+follow-up: each stage is necessary, and only the last one separated a real variable from a
+single-epoch imaging artefact.
 Several other candidates carry blazar/QSO/BL-Lac SIMBAD identifications but fall *below* the V > 0.3
 confirmation bar — i.e. real AGN varying at the few-tens-of-percent level the VLASS cadence expects,
 correctly *not* over-claimed as strong variables.
