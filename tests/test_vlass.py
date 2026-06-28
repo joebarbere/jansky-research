@@ -105,6 +105,26 @@ def test_isolated_mask_flags_crowded():
     assert vlass.isolated_mask(np.array([1.0]), np.array([1.0]))[0]  # single source is isolated
 
 
+def test_measure_image_flux_forced_photometry():
+    from astropy.wcs import WCS
+
+    w = WCS(naxis=2)
+    w.wcs.crpix = [50, 50]
+    w.wcs.cdelt = [-1 / 3600.0, 1 / 3600.0]  # 1 arcsec/pixel
+    w.wcs.crval = [150.0, 20.0]
+    w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+    yy, xx = np.mgrid[0:100, 0:100]
+    img = 5.0 * np.exp(-((xx - 49) ** 2 + (yy - 49) ** 2) / (2 * 1.5**2))  # 5 mJy source at crval
+    img = img + np.random.default_rng(0).normal(0.0, 0.1, img.shape)
+    peak, rms, off = vlass.measure_image_flux(img, w, 150.0, 20.0, search_arcsec=4.0)
+    assert abs(peak - 5.0) < 0.4  # recovers the source peak
+    assert off < 2.5  # peak found at the locked position
+    assert 0.05 < rms < 0.2  # local noise estimated from the annulus
+    # off-source position (no source within the search box) -> only noise, no 5 mJy peak
+    p2, _, _ = vlass.measure_image_flux(img, w, 150.0 + 20 / 3600.0, 20.0, search_arcsec=3.0)
+    assert p2 < 1.0
+
+
 def test_run_offline(tmp_path):
     m = vlass.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"

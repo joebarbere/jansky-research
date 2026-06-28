@@ -27,13 +27,16 @@ import numpy as np
 __all__ = [
     "VariabilityMetrics",
     "apply_flux_scale",
+    "confirm_candidates",
     "crossmatch_epochs",
     "debiased_modulation_index",
     "eta_metric",
     "fetch_vlass_cutout",
     "fetch_vlass_epoch",
+    "forced_photometry",
     "image_lightcurve",
     "isolated_mask",
+    "measure_image_flux",
     "run",
     "select_candidates",
     "synthetic_epochs",
@@ -356,28 +359,47 @@ def run(
             float(np.sum(mask & ~truth) / max(int(mask.sum()), 1)) if mask.any() else 0.0
         )
 
+    # On a real-data run, automatically image-vet each survivor: forced photometry confirms (or
+    # rejects) the catalogue variability against the images, and SIMBAD/NED give any counterpart.
+    conf = (
+        confirm_candidates(ra[mask], dec[mask], epochs=epochs)
+        if (not offline and mask.any())
+        else None
+    )
+    vet = vet_candidates(ra[mask], dec[mask]) if (not offline and mask.any()) else None
+    if conf is not None:
+        metrics["n_image_confirmed"] = int(sum(c["confirmed"] for c in conf))
+
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "vlass_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
     _figure(eta, v, mask, eta_thr, v_thr, op / "papers" / "vlass" / "figures")
-    # candidate table; on a real-data run, cross-check each survivor against SIMBAD + NED (GATE-2)
-    vet = vet_candidates(ra[mask], dec[mask]) if (not offline and mask.any()) else None
-    _write_candidates(op / "results" / "vlass_candidates.csv", ra, dec, flux, eta, v, mask, vet)
+    _write_candidates(
+        op / "results" / "vlass_candidates.csv", ra, dec, flux, eta, v, mask, conf, vet
+    )
     return metrics
 
 
-def _write_candidates(path, ra, dec, flux, eta, v, mask, vet) -> None:
-    """Write the variable candidates (position, per-epoch flux, eta, V, and any catalogued counterpart)."""
+def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
+    """Write the candidates: catalogue light curve, forced-photometry confirmation, and any counterpart."""
     import csv as _csv
 
     n_epochs = flux.shape[1]
-    vmap = {(round(r["ra"], 6), round(r["dec"], 6)): r for r in (vet or [])}
+    key = lambda r: (round(r["ra"], 6), round(r["dec"], 6))  # noqa: E731
+    cmap = {key(r): r for r in (conf or [])}
+    vmap = {key(r): r for r in (vet or [])}
     idx = np.where(mask)[0]
     idx = idx[np.argsort(-eta[idx])]
     with open(path, "w", newline="") as fh:
         w = _csv.writer(fh)
         w.writerow(
             ["ra", "dec", *[f"flux_e{e + 1}" for e in range(n_epochs)], "eta", "v"]
+            + [
+                "image_confirmed",
+                *[f"forced_e{e + 1}" for e in range(n_epochs)],
+                "forced_eta",
+                "forced_v",
+            ]
             + [
                 "simbad_name",
                 "simbad_type",
@@ -389,11 +411,17 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, vet) -> None:
             ]
         )
         for i in idx:
-            m = vmap.get((round(float(ra[i]), 6), round(float(dec[i]), 6)), {})
+            k = (round(float(ra[i]), 6), round(float(dec[i]), 6))
+            c = cmap.get(k, {})
+            m = vmap.get(k, {})
+            fphot = c.get("forced_flux") or [None] * n_epochs
             w.writerow(
                 [f"{ra[i]:.6f}", f"{dec[i]:.6f}"]
                 + [f"{flux[i, e]:.3f}" if np.isfinite(flux[i, e]) else "" for e in range(n_epochs)]
                 + [f"{eta[i]:.2f}", f"{v[i]:.3f}"]
+                + [c.get("confirmed", "")]
+                + [("" if fphot[e] is None else fphot[e]) for e in range(n_epochs)]
+                + [c.get("forced_eta", ""), c.get("forced_v", "")]
                 + [
                     m.get("simbad_name", ""),
                     m.get("simbad_type", ""),
@@ -663,6 +691,98 @@ def image_lightcurve(
         except Exception:
             out.append(float("nan"))
     return np.asarray(out)
+
+
+def measure_image_flux(
+    image: np.ndarray,
+    wcs,
+    ra: float,
+    dec: float,
+    *,
+    search_arcsec: float = 4.0,
+    rms_annulus_arcsec: tuple[float, float] = (15.0, 45.0),
+) -> tuple[float, float, float]:
+    """Forced peak photometry at a fixed ``(ra, dec)``: brightest pixel within ``search_arcsec``.
+
+    Returns ``(peak, rms, offset_arcsec)`` in the image's units. The small search box absorbs
+    sub-beam astrometric shifts without grabbing a neighbour; ``rms`` (local noise from an annulus)
+    is the per-epoch error. Measuring at the *same locked position* in every epoch is forced
+    photometry: it is immune to the deblending and cross-match failures that corrupt the catalogue
+    light curve, so a flat forced light curve exposes a spurious catalogue "variable".
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    from astropy.wcs.utils import proj_plane_pixel_scales
+
+    image = np.asarray(image, dtype=float)
+    px, py = wcs.world_to_pixel(SkyCoord(ra * u.deg, dec * u.deg))
+    scale = float(np.mean(proj_plane_pixel_scales(wcs)) * 3600.0)  # arcsec/pixel
+    ny, nx = image.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    rr = np.hypot(xx - float(px), yy - float(py)) * scale
+    near = (rr <= search_arcsec) & np.isfinite(image)
+    if not near.any():
+        return float("nan"), float("nan"), float("nan")
+    region = np.where(near, image, -np.inf)
+    iy, ix = np.unravel_index(int(np.argmax(region)), region.shape)
+    peak = float(image[iy, ix])
+    offset = float(np.hypot(ix - float(px), iy - float(py)) * scale)
+    ann = image[(rr > rms_annulus_arcsec[0]) & (rr < rms_annulus_arcsec[1]) & np.isfinite(image)]
+    rms = float(np.std(ann)) if ann.size > 20 else float("nan")
+    return peak, rms, offset
+
+
+def forced_photometry(
+    ra: float, dec: float, *, epochs: tuple[int, ...] = (1, 2, 3), search_arcsec: float = 4.0
+) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover - network
+    """Per-epoch forced peak flux + error (mJy/beam) at a locked position; nan where no image."""
+    flux, err = [], []
+    for e in epochs:
+        try:
+            data, w = fetch_vlass_cutout(ra, dec, e, size_arcmin=1.5)
+            f, r, _ = measure_image_flux(data, w, ra, dec, search_arcsec=search_arcsec)
+            flux.append(f)
+            err.append(r if (np.isfinite(r) and r > 0) else 0.1 * abs(f))
+        except Exception:
+            flux.append(float("nan"))
+            err.append(float("nan"))
+    return np.asarray(flux), np.asarray(err)
+
+
+def confirm_candidates(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    *,
+    epochs: tuple[int, ...] = (1, 2, 3),
+    p_max: float = 0.01,
+    v_min: float = 0.3,
+) -> list[dict]:  # pragma: no cover - network
+    """Forced-photometry confirmation of variability candidates against the images (auto image-vetting).
+
+    For each candidate, measures the forced light curve, recomputes $\\eta$/$V$ on it, and marks it
+    ``confirmed`` only if the *image* light curve is significantly variable (p < ``p_max``) with real
+    amplitude ($V$ > ``v_min``). Rejects the catalogue artefacts (flat forced light curve) automatically.
+    """
+    out = []
+    for r, d in zip(np.asarray(ra, float), np.asarray(dec, float), strict=True):
+        flux, err = forced_photometry(r, d, epochs=epochs)
+        good = np.isfinite(flux) & np.isfinite(err) & (err > 0)
+        if good.sum() >= 2:
+            m = variability_metrics(flux[good], err[good])
+            confirmed = bool(m.p_value < p_max and m.v > v_min)
+            rec = {
+                "ra": float(r),
+                "dec": float(d),
+                "forced_flux": [round(float(x), 3) if np.isfinite(x) else None for x in flux],
+                "forced_eta": round(m.eta, 2),
+                "forced_v": round(m.v, 3),
+                "forced_p": m.p_value,
+                "confirmed": confirmed,
+            }
+        else:
+            rec = {"ra": float(r), "dec": float(d), "forced_flux": None, "confirmed": False}
+        out.append(rec)
+    return out
 
 
 def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:

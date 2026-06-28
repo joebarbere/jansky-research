@@ -64,9 +64,15 @@ shortlisted directions).
    (fixed by `isolated_mask`), cross-match incompleteness, and PyBDSF-vs-image flux inconsistency. See
    `survey/vlass-findings.md` — an honest negative: catalogue-only QL variability is artefact-dominated
    and image vetting is mandatory.
-   **Next:** larger-area population census with completeness-vs-amplitude + forced photometry on
-   apparent non-detections (failure mode 2), then write `papers/vlass/` — framed as tool + methodology
-   + honest negative, not a discovery.
+5. **Forced-photometry confirmation (done).** `run` now auto-vets each candidate: `confirm_candidates`
+   does forced peak photometry (`measure_image_flux`) at the locked position in every epoch's image,
+   recomputes η/V on the image light curve, and flags `image_confirmed` only for genuinely variable
+   ones (p<0.01, V>0.3) — reported as `n_image_confirmed` and written to the candidate CSV. Both
+   first-field candidates are auto-rejected (forced V = 0.11, 0.16). The candidate list is now
+   trustworthy without manual inspection.
+   **Next:** a larger-area census with completeness-vs-amplitude (and ideally forced photometry over
+   *every* source, not just candidates), then write `papers/vlass/` — tool + methodology + honest
+   negative, not a discovery.
 3. **GATE-2 science review** before any write-up — the candidate list must survive the known VLASS
    QL caveats (the ~10–15% QL peak-flux underestimate in early epochs, CLEAN/snapshot bias,
    component-vs-source blending) before a single source is called variable.

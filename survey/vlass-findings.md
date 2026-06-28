@@ -30,6 +30,17 @@ compares it to the catalogue light curve:
 
 The images show **steady sources in all three epochs**; the catalogue "variability" is spurious.
 
+### Automatic confirmation by forced photometry
+
+This vetting is now automatic. `run` calls `confirm_candidates`, which does **forced peak photometry**
+(`measure_image_flux`) at the locked candidate position in every epoch's image, recomputes η/V on that
+*image* light curve, and marks a candidate `image_confirmed` only if it is significantly variable
+(p < 0.01) with real amplitude (V > 0.3). On this field both candidates are **auto-rejected**: forced
+light curves [4.28, 3.54, 4.32] (V = 0.11) and [2.32, 1.69, 1.95] (V = 0.16) — far below the catalogue
+V ≈ 1.0 and well under the threshold. Forced photometry at a fixed position is immune to the deblending
+*and* cross-match failures, so the surviving candidate list (`n_image_confirmed`) is trustworthy
+without manual inspection.
+
 ### The failure modes (why catalogue-only QL variability is unreliable)
 
 1. **Component deblending.** A single slightly extended source is fit with a different number of
@@ -59,8 +70,9 @@ and the **mandatory `image_lightcurve` ground-truth check** — not a discovery.
   pipeline + methodology validation, not a population census.
 - **Isolation is anchor-epoch only.** A source isolated in Epoch 1 but blended in a later epoch is
   not yet caught; a full treatment checks isolation per epoch and detects ambiguous matches.
-- **Non-detections are not yet forced-photometered**, so real sources missed by the cross-match
-  (failure mode 2) still leak in until image-vetted.
+- Forced photometry confirms the *candidates* but is not yet run over the whole field, so the
+  catalogue-level selection (which feeds it) can still miss real variables whose catalogue light curve
+  was flattened by extraction issues — a full census would forced-photometer every source.
 - **`image_lightcurve` uses the cutout peak**, adequate to confirm flatness but not a calibrated
   light curve.
 - A genuine variable population almost certainly exists at this depth (the literature reports a few
