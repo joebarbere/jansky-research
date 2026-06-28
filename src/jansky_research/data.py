@@ -87,6 +87,18 @@ DATASETS: dict[str, Dataset] = {
         size_hint="~GB per epoch",
         category="large",
     ),
+    "astrogeo-vlbi": Dataset(
+        name="astrogeo-vlbi",
+        # The Astrogeo VLBI archive is per-source pages, not one bulk table; the slice fetches each
+        # source's S/X flux-density history over HTTP (no auth). Listed here for provenance.
+        url="https://astrogeo.smce.nasa.gov/vlbi_images",
+        filename="astrogeo_vlbi_index.html",
+        description="Astrogeo VLBI image database (Petrov) — ~139k dual-band S/X (2.3/8.4 GHz) "
+        "images of ~21k compact sources from decades of geodetic/astrometric VLBI. Per-source "
+        "multi-decade flux histories drive the VLBI variability slice (jansky_research.vlbi).",
+        size_hint="per-source pages",
+        category="large",
+    ),
     "voyager1-h5": Dataset(
         name="voyager1-h5",
         url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",
