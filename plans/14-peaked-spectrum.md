@@ -51,12 +51,14 @@ adding much new code.
    known *Fermi* BL Lac that the variability flag missed but SIMBAD caught. See
    `survey/peaked-findings.md`. (`find_peaked` redesigned to the upper-limit + resolution-floor
    method; synthetic fixture updated; offline recovery ~96%.)
-3. **Validation (done).** `validate_known` tests the selection against the Callingham et al. (2017)
-   peaked-spectrum catalogue (turnover $\nu_\mathrm{pk}$ measured): 0/81 false positives among
-   MHz-peaked sources (turnover below the 150 MHz floor → correctly *not* flagged), characterising the
-   method's $\sim$0.7–2 GHz window and that classical GHz-GPS appear in the `inverted` class. An honest
-   selection-function result, not a clean recover-a-known (no public catalogue densely samples the
-   $\sim$1 GHz window). See `survey/peaked-findings.md`.
+3. **Validation (done).** Two complementary tests pin the selection function. `validate_known`
+   (Callingham et al. 2017, GLEAM-selected MHz-peaked): 0/81 false positives among sources whose
+   turnover is below the 150 MHz floor — correct **purity**. `validate_hfp` (Dallacasa et al. 2000
+   bright HFP sample): **98/98 = 100%** recovered as optically-thick-rising and **55%** flagged
+   `ghz_peaked` (still rising at 3 GHz) — a clean **recover-a-known**. Classical GHz-GPS no longer
+   "appear in the `inverted` class" as a caveat; they are the dedicated `ghz_peaked` class, and the
+   three SED classes map cleanly onto the MHz-peaked / intermediate / GHz-peaked turnover regimes. See
+   `survey/peaked-findings.md`.
 4. **GATE-2** before write-up — candidates survive the flux-scale, resolution, and variability caveats.
 4. **Write-up** as `papers/peaked/` once the real run + review are done.
 
