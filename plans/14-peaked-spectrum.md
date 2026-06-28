@@ -51,8 +51,13 @@ adding much new code.
    known *Fermi* BL Lac that the variability flag missed but SIMBAD caught. See
    `survey/peaked-findings.md`. (`find_peaked` redesigned to the upper-limit + resolution-floor
    method; synthetic fixture updated; offline recovery ~96%.)
-3. **GATE-2** before write-up — the candidates must survive the TGSS flux-scale caveat (curvature
-   robustness), the known-GPS cross-check, and the variability flag.
+3. **Validation (done).** `validate_known` tests the selection against the Callingham et al. (2017)
+   peaked-spectrum catalogue (turnover $\nu_\mathrm{pk}$ measured): 0/81 false positives among
+   MHz-peaked sources (turnover below the 150 MHz floor → correctly *not* flagged), characterising the
+   method's $\sim$0.7–2 GHz window and that classical GHz-GPS appear in the `inverted` class. An honest
+   selection-function result, not a clean recover-a-known (no public catalogue densely samples the
+   $\sim$1 GHz window). See `survey/peaked-findings.md`.
+4. **GATE-2** before write-up — candidates survive the flux-scale, resolution, and variability caveats.
 4. **Write-up** as `papers/peaked/` once the real run + review are done.
 
 ## Verification
