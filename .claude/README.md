@@ -20,6 +20,10 @@ Plus copies of the `jansky` course's reusable agents (kept here so they work wit
 - `arxiv-submit` — assemble + validate an arXiv submission package per paper (`make arxiv` uses it).
 - `casda-cutout-fetch` — best-effort Playwright download of RACS Stokes-V FITS cutouts from the CASDA
   web Cutout Service when the VO APIs misbehave (prefer `astroquery.casda`; see its `SKILL.md`).
+- `radio-cutout` — fetch a radio-survey FITS cutout at a position, routing to the right archive (CADC
+  SODA for VLASS — working; Data Central / CASDA notes for GLEAM-X / RACS).
+- `research-publish` — static readiness check + walkthrough for Zenodo → JOSS → RNAAS → arXiv (the
+  whole publishing flow; complements `arxiv-submit`).
 - `find-radio-papers` — literature search (ADS/arXiv), ported from the course and adapted to cite
   this repo's `survey/`/`refs.bib` first.
 - `radio-source-lookup` — source/position profile (SIMBAD/NED + VizieR), ported and adapted to reuse
