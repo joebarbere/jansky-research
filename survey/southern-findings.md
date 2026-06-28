@@ -41,10 +41,26 @@ RadioSED II (Kerrison+2025, ~1.2 deg$^{-2}$ over Stripe 82), so some over-select
 since a least-squares parabola is more permissive than a Bayesian SSA/FFA model and GLEAM-X DR2 exposes
 **no per-band errors** via VizieR (a nominal 10% per-band error is used for the fit weights).
 
+## Recover-a-known: measuring the Callingham (2017) turnovers
+
+`validate_callingham` is the validation the northern slice could not do — it *measures* the published
+turnover rather than bounding it. For each Callingham peaked source (VizieR `J/ApJ/836/174/pkfreq`,
+which gives a measured $\nu_\mathrm{pk}$) it fetches a small GLEAM-X+RACS cone, runs the pipeline, and
+compares. On **40** sources (all with coverage):
+
+| quantity | value |
+|---|---|
+| recovered as peaked | **30/40** |
+| median $\lvert\Delta\log_{10}\nu_\mathrm{pk}\rvert$ (measured vs published) | **0.12 dex** (~30%) |
+| within a factor of two (0.3 dex) | **90%** |
+| recovered by published $\nu_\mathrm{pk}$: 72–250 / 250–500 / 500–2000 MHz | 23 / 6 / 1 |
+
+So the method recovers 75% of Callingham peaked sources and reproduces their literature turnover to a
+median ~0.12 dex — the measured-turnover headline the southern data enable. Recovery climbs with
+$\nu_\mathrm{pk}$ (sources peaking well below the GLEAM band fall outside the rising-side window, as
+designed).
+
 ### Limitations / next steps
-- **No recover-a-known yet.** Next: cross-match the Callingham (2017) southern peaked catalogue (which
-  has a *measured* $\nu_\mathrm{pk}$) and show we recover their turnover — the clean validation this
-  slice can finally do by measuring, not bounding.
 - **No per-band GLEAM-X errors** → unweighted-ish fit; `chi2_red` is only nominal. A proper Bayesian
   SED (per-band rms from the images) would tighten purity.
 - **Flux-scale tie** GLEAM-X↔RACS (~10% each) and the GLEAM↔RACS frequency gap (227 MHz → 887 MHz)

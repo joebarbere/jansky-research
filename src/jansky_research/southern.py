@@ -29,6 +29,7 @@ __all__ = [
     "fit_log_parabola",
     "run",
     "synthetic_field",
+    "validate_callingham",
 ]
 
 # GLEAM-X DR2 sub-band centres (MHz): the real ``Fint###`` columns of VizieR VIII/113/catalog2
@@ -336,8 +337,90 @@ def fetch_racs_bands(
     return {"ra": lra, "dec": ldec, "flux": flux, "eflux": rel_err * flux}
 
 
-def run(center=None, radius_deg: float = 3.0, out: str = ".", *, offline: bool = True) -> dict:
-    """Full slice: synthesise (or fetch) GLEAM-X×RACS, fit curvature, classify, write artifacts."""
+def validate_callingham(
+    *, max_sources: int = 50, cone_deg: float = 0.06
+) -> dict:  # pragma: no cover - network
+    r"""Recover-a-known: do we *measure* the Callingham et al. (2017) published turnover $\nu_\mathrm{pk}$?
+
+    The northern slice could only show purity against Callingham (it bounded, never measured, the
+    turnover). Here we test the southern method's headline ability: for each Callingham peaked source
+    (VizieR ``J/ApJ/836/174/pkfreq``, which gives a measured $\nu_\mathrm{pk}$) we fetch a small
+    GLEAM-X$+$RACS cone, run :func:`find_peaked_south`, and compare *our* measured $\nu_\mathrm{pk}$ to
+    theirs. Reports the recovery binned by published $\nu_\mathrm{pk}$ and the agreement (median
+    $|\Delta\log_{10}\nu_\mathrm{pk}|$ and the fraction within 0.3 dex) for the recovered sources.
+    Because Callingham is GLEAM-selected and MHz-peaked-dominated, sources peaking below the GLEAM band
+    fall (correctly) outside this method's rising-side window --- the recovery is expected to climb with
+    $\nu_\mathrm{pk}$.
+    """
+    import numpy as _np
+    from astropy.coordinates import SkyCoord
+    from astroquery.vizier import Vizier
+
+    from .spectra import crossmatch
+
+    v = Vizier(columns=["RAJ2000", "DEJ2000", "nuPk"])
+    v.ROW_LIMIT = -1
+    t = v.get_catalogs("J/ApJ/836/174/pkfreq")[0]
+    ra = _np.asarray(t["RAJ2000"], float)
+    dec = _np.asarray(t["DEJ2000"], float)
+    nupk = _np.asarray(t["nuPk"], float)  # MHz, published
+    # GLEAM-X footprint: Dec < +30, and RA in the GLEAM-X DR2 strip (20h40m-6h40m -> >310 or <100 deg)
+    sel = _np.where((dec < 28) & _np.isfinite(nupk) & ((ra > 310) | (ra < 100)))[0]
+    sel = sel[:max_sources]  # bound the per-source fetches; report how many are recovered
+
+    pub: list[float] = []
+    meas: list[float] = []
+    n_covered = 0
+    for i in sel:
+        center = SkyCoord(ra[i], dec[i], unit="deg")
+        try:
+            gleamx = fetch_gleamx(center, cone_deg)
+            if gleamx["ra"].size == 0:
+                continue
+            racs = fetch_racs_bands(center, cone_deg)
+            res = find_peaked_south(gleamx, racs, radius_arcsec=30.0)
+        except Exception:
+            continue
+        if res["ra"].size == 0:
+            continue
+        _, jr, _ = crossmatch(_np.array([ra[i]]), _np.array([dec[i]]), res["ra"], res["dec"], 30.0)
+        if jr.size == 0:
+            continue
+        n_covered += 1
+        ridx = int(jr[0])  # the matched source index in res for this Callingham position
+        if res["is_peaked"][ridx] and _np.isfinite(res["nu_pk_ghz"][ridx]):
+            pub.append(float(nupk[i]))
+            meas.append(float(res["nu_pk_ghz"][ridx] * 1e3))  # GHz -> MHz
+
+    pub_a = _np.asarray(pub)
+    meas_a = _np.asarray(meas)
+    n = int(pub_a.size)
+    bins = [(72, 250), (250, 500), (500, 2000)]
+    recovery = {f"{lo}-{hi}MHz": int(((pub_a >= lo) & (pub_a < hi)).sum()) for lo, hi in bins}
+    dlog = _np.abs(_np.log10(meas_a / pub_a)) if n else _np.array([])
+    return {
+        "n_tried": int(sel.size),
+        "n_with_coverage": n_covered,
+        "n_recovered_peaked": n,
+        "recovered_by_published_nupk": recovery,
+        "median_abs_dlog_nupk": float(_np.median(dlog)) if n else float("nan"),
+        "frac_within_0p3dex": float((dlog < 0.3).mean()) if n else 0.0,
+    }
+
+
+def run(
+    center=None,
+    radius_deg: float = 3.0,
+    out: str = ".",
+    *,
+    offline: bool = True,
+    validate: bool = False,
+) -> dict:
+    """Full slice: synthesise (or fetch) GLEAM-X×RACS, fit curvature, classify, write artifacts.
+
+    With ``validate`` (real data only), also runs the Callingham (2017) recover-a-known
+    (:func:`validate_callingham`) and folds its headline numbers into the metrics and macros.
+    """
     import json
     from pathlib import Path
 
@@ -383,6 +466,13 @@ def run(center=None, radius_deg: float = 3.0, out: str = ".", *, offline: bool =
             else:
                 metrics[f"n_{key}_recovered"] = 0
             metrics[f"n_injected_{key}"] = int(truth.sum())
+
+    if validate and not offline and center is not None:  # pragma: no cover - network
+        cal = validate_callingham()
+        metrics["call_tried"] = int(cal["n_tried"])
+        metrics["call_recovered"] = int(cal["n_recovered_peaked"])
+        metrics["call_dlog"] = round(float(cal["median_abs_dlog_nupk"]), 3)
+        metrics["call_within_pct"] = round(100.0 * float(cal["frac_within_0p3dex"]))
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -433,6 +523,10 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\soNuss}}{{{m['n_uss']}}}",
         rf"\newcommand{{\soNextended}}{{{m.get('n_extended', 0)}}}",
         rf"\newcommand{{\soMedianNupk}}{{{m['median_nu_pk_mhz']}}}",
+        rf"\newcommand{{\soCallTried}}{{{m.get('call_tried', 0)}}}",
+        rf"\newcommand{{\soCallRecovered}}{{{m.get('call_recovered', 0)}}}",
+        rf"\newcommand{{\soCallDlog}}{{{m.get('call_dlog', 0)}}}",
+        rf"\newcommand{{\soCallWithin}}{{{m.get('call_within_pct', 0)}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -451,9 +545,13 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--radius", type=float, default=3.0, help="cone radius (deg)")
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
+    p.add_argument(
+        "--validate", action="store_true", help="also run the Callingham recover-a-known"
+    )
     args = p.parse_args(argv)
     center = None if (args.offline or args.ra is None) else SkyCoord(args.ra, args.dec, unit="deg")
-    print(json.dumps(run(center, args.radius, args.out, offline=args.offline), indent=2))
+    metrics = run(center, args.radius, args.out, offline=args.offline, validate=args.validate)
+    print(json.dumps(metrics, indent=2))
     return 0
 
 
