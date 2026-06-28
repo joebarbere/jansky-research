@@ -1,0 +1,30 @@
+{
+  "title": "jansky-research: A CPU-only, reproducible toolkit for amateur radio-astronomy analyses",
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "description": "<p>A tested, CPU-only Python toolkit for amateur, reproducible radio-astronomy analyses, built on the <a href=\"https://github.com/joebarbere/jansky\">jansky</a> course library. It bundles five public-data research slices, each run on real public data, put through an adversarial science-review gate, and written up honestly as an AASTeX paper:</p><ul><li><strong>frbstats</strong> &mdash; FRB burst statistics (validates the CHIME repeater width result), automated with an Apache Airflow pipeline on rootless Podman;</li><li><strong>frbperiod</strong> &mdash; recovers FRB 20180916B's 16.35-day activity period from the public CHIME/FRB catalogue;</li><li><strong>hi</strong> &mdash; recovers the flat inner Milky Way rotation curve from LAB HI 21 cm data;</li><li><strong>driftsearch</strong> &mdash; a reproducible SETI Doppler-drift injection-recovery benchmark, with an honest Voyager-1 null;</li><li><strong>spectra</strong> &mdash; shows that raw TGSS&times;NVSS ultra-steep-spectrum selection is dominated by the TGSS flux-scale systematic (a cautionary negative).</li></ul><p>Three validations and two negative/cautionary results; every reported number regenerates from the pipeline. Developed collaboratively with Anthropic's Claude; an AI assistant is not an eligible author and is credited in the acknowledgements only.</p>",
+  "creators": [
+    {
+      "name": "Barbere, Joseph",
+      "orcid": "0009-0008-3289-4447",
+      "affiliation": "Independent researcher"
+    }
+  ],
+  "keywords": [
+    "radio astronomy",
+    "fast radio bursts",
+    "HI 21 cm",
+    "SETI",
+    "reproducibility",
+    "open-source software"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/joebarbere/jansky",
+      "relation": "isDerivedFrom",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Developed collaboratively with Anthropic's Claude (large language model). An AI assistant is not an eligible author; it is credited in the acknowledgements and as a software citation, not in the author list."
+}

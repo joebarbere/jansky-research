@@ -47,6 +47,21 @@ about what it is — three validations and two negatives:
 capturing every arXiv submission property and a `CHECKLIST.md`). The first slice is also automated by
 an **Apache Airflow pipeline on rootless Podman** (`airflow/`).
 
+### Where to publish (and where not to)
+
+These papers are mostly **reproductions and honest negatives**, so the venue is matched to the actual
+contribution — the *tooling and reproducibility*, not a novelty claim:
+
+- **Software / citable archive:** the toolkit is meant for [JOSS](https://joss.theoj.org) (see
+  `joss/paper.md`) and a [Zenodo](https://zenodo.org) DOI on release (`.zenodo.json`, `CITATION.cff`).
+- **A short note in the literature:** the frbstats validation is condensed to a
+  [Research Note of the AAS](https://journals.aas.org/research-notes/) (`papers/frbstats/rnaas.tex`,
+  built by `make paper`).
+- **arXiv:** reserved for at most the frbstats paper (the only one with a genuinely fresh angle, the
+  Airflow-on-Podman reproducibility pattern). The validation/negative slices are **not** posted as a
+  preprint batch — arXiv moderation expects a contribution, and "I reproduced a known result" or "my
+  candidates didn't survive a cross-check" belongs in the repo + Zenodo, not as standalone preprints.
+
 ## How it relates to `jansky`
 
 This repo **depends on `jansky` as a library** and reuses its tested helpers (`jansky.transients`,
@@ -100,6 +115,9 @@ jansky-research/
   airflow/               # Airflow-on-Podman stack + the research DAG
   papers/<slice>/        # one AASTeX paper per slice (main.tex + refs.bib tracked;
                          #   figures/, generated/, arxiv-submission/ are produced by make)
+                         #   frbstats/ also has rnaas.tex (a Research Note of the AAS)
+  joss/                  # JOSS software paper (paper.md + paper.bib)
+  CITATION.cff           # "Cite this repository"; .zenodo.json drives Zenodo archival
   containers/            # tectonic paper-build image
   .claude/skills/        # arxiv-submit (assemble + validate an arXiv upload package)
   .claude/agents/        # dataset-analyst, pipeline-runner, results-interpreter (+ reused jansky)
