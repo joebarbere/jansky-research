@@ -1,6 +1,6 @@
 # 19 — Sub-threshold radio stacking of a population in VLASS (with injection-recovery)
 
-Status: 🚧 in progress (tooling step)
+Status: ✅ done (tooling + real VLASS-SE stacking of 236 SDSS quasars + paper)
 
 ## Context
 

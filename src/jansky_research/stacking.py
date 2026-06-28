@@ -17,6 +17,8 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
+    "fetch_population",
+    "fetch_se_cutout",
     "gaussian_psf",
     "injection_recovery",
     "measure_stacked_flux",
@@ -71,14 +73,21 @@ def injection_recovery(
     """Calibrate the stacking bias: inject a known PSF into each background cutout, stack, measure.
 
     Injects a ``gaussian_psf`` of peak ``inject_amp`` at the centre of every ``(N, H, W)`` background
-    cutout, median-stacks, and measures the recovered central peak. Returns the injected amplitude, the
-    recovered peak, and the **ratio** ``recovered/injected`` --- the multiplicative bias to divide a
-    measured stacked flux by. (On real VLASS cutouts this absorbs the CLEAN/residual flux bias.)
+    cutout, median-stacks, and measures the recovered central peak **above the no-injection baseline**
+    (so it works on real cutouts that already hold the faint population signal). Returns the injected
+    amplitude, the recovered excess, and the **ratio** ``recovered/injected`` --- the multiplicative
+    bias to divide a measured stacked flux by. (On real VLASS cutouts this absorbs the flux-scale bias.)
     """
     bg = np.asarray(background, float)
+
+    # measure at the exact centre (the injected source is centred), so the common noise cancels
+    def _centre(a: np.ndarray) -> float:
+        ny, nx = a.shape
+        return float(a[ny // 2, nx // 2])
+
     psf = gaussian_psf(bg.shape[1], fwhm_pix, inject_amp)
-    stack = median_stack(bg + psf[None, :, :], sigma=sigma)
-    rec = measure_stacked_flux(stack)["peak"]
+    base = _centre(median_stack(bg, sigma=sigma))
+    rec = _centre(median_stack(bg + psf[None, :, :], sigma=sigma)) - base
     return {
         "injected": float(inject_amp),
         "recovered": float(rec),
@@ -106,25 +115,99 @@ def synthetic_population(
     return psf[None, :, :] + rng.normal(0.0, noise, (n_sources, size, size))
 
 
-def run(out: str = ".", *, offline: bool = True) -> dict:
+def fetch_se_cutout(
+    ra: float, dec: float, *, size_pix: int = 51, search_deg: float = 0.006
+) -> np.ndarray | None:  # pragma: no cover - network
+    """One VLASS Single-Epoch Stokes-I cutout (mJy/beam) at ``(ra, dec)`` via CADC SODA, or None.
+
+    ``get_image_list`` returns server-side **cutout** URLs; we pick the SE Stokes-I ``tt0`` product and
+    download it (a small stamp), then trim to a fixed ``size_pix`` square centred on the source so all
+    cutouts stack on a common grid. None if there is no SE image or the download fails.
+    """
+    import io
+
+    import numpy as _np
+    import requests
+    from astropy import units as _u
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.nddata import Cutout2D
+    from astropy.wcs import WCS
+    from astroquery.cadc import Cadc
+
+    pos = SkyCoord(ra, dec, unit="deg")
+    rad = search_deg * _u.deg
+    try:
+        cadc = Cadc()
+        urls = cadc.get_image_list(cadc.query_region(pos, radius=rad, collection="VLASS"), pos, rad)
+        se = [u for u in urls if ".se." in u and ".I." in u and "tt0" in u]
+        if not se:
+            return None
+        data = requests.get(se[0], timeout=120).content
+        if b"SIMPLE" not in data[:80]:
+            return None
+        with fits.open(io.BytesIO(data)) as hd:
+            img = _np.squeeze(_np.asarray(hd[0].data, float)) * 1e3  # Jy/beam -> mJy/beam
+            w = WCS(hd[0].header).celestial
+        cut = Cutout2D(img, pos, (size_pix, size_pix), wcs=w, mode="partial", fill_value=_np.nan)
+        return cut.data if cut.data.shape == (size_pix, size_pix) else None
+    except Exception:
+        return None
+
+
+def fetch_population(
+    center, radius_deg: float, *, max_sources: int = 300
+) -> tuple:  # pragma: no cover - network
+    """Cone-search optically-selected quasars (SDSS DR16Q, VizieR ``VII/289``) for a target list."""
+    import numpy as _np
+    from astropy import units as _u
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["RAJ2000", "DEJ2000"])
+    v.ROW_LIMIT = max_sources
+    res = v.query_region(center, radius=radius_deg * _u.deg, catalog="VII/289/dr16q")
+    t = res[0]
+    return _np.asarray(t["RAJ2000"], float), _np.asarray(t["DEJ2000"], float)
+
+
+def run(
+    center=None,
+    radius_deg: float = 3.0,
+    out: str = ".",
+    *,
+    offline: bool = True,
+    max_sources: int = 300,
+) -> dict:
     """Full slice: stack a (synthetic or fetched) population, calibrate with injection-recovery, write."""
     import json
     from pathlib import Path
 
-    if offline:
+    if offline or center is None:
         cutouts = synthetic_population()
         source = "synthetic"
-        injected_truth = 0.05
+        injected_truth: float | None = 0.05
     else:  # pragma: no cover - network
-        raise NotImplementedError("real VLASS-SE fetch + target list is wired in the next step")
+        ra, dec = fetch_population(center, radius_deg, max_sources=max_sources)
+        stamps = [
+            c
+            for c in (fetch_se_cutout(float(r), float(d)) for r, d in zip(ra, dec, strict=True))
+            if c is not None
+        ]
+        if len(stamps) < 20:
+            raise RuntimeError(
+                f"only {len(stamps)} VLASS-SE cutouts fetched; need more for a stack"
+            )
+        cutouts = np.asarray(stamps)
+        source = f"SDSS DR16Q x VLASS-SE @ ({center.ra.deg:.1f},{center.dec.deg:.1f})"
+        injected_truth = None
 
     stack = median_stack(cutouts)
     meas = measure_stacked_flux(stack)
-    # injection-recovery: inject the measured-level flux into background (noise-only) cutouts
-    bg = (
-        cutouts - np.nanmedian(cutouts, axis=0)[None, :, :]
-    )  # remove the stacked signal -> background
-    cal = injection_recovery(bg, meas["peak"])
+    # injection-recovery on the actual cutouts (baseline-subtracted): inject at a clean detectable level
+    inject_amp = (
+        5.0 * meas["rms"] if (meas["rms"] and meas["rms"] > 0) else 5.0 * float(np.nanstd(cutouts))
+    )
+    cal = injection_recovery(cutouts, inject_amp)
     debiased = meas["peak"] / cal["ratio"] if cal["ratio"] else float("nan")
     metrics = {
         "source": source,
@@ -135,7 +218,7 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "recovery_ratio": round(cal["ratio"], 3),
         "debiased_flux": round(debiased, 4),
     }
-    if offline:
+    if injected_truth is not None:
         metrics["injected_truth"] = injected_truth
 
     op = Path(out)
@@ -184,11 +267,19 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import json
 
+    from astropy.coordinates import SkyCoord
+
     p = argparse.ArgumentParser(description="Sub-threshold radio stacking with injection-recovery.")
+    p.add_argument("--ra", type=float, help="field-centre RA (deg)")
+    p.add_argument("--dec", type=float, help="field-centre Dec (deg)")
+    p.add_argument("--radius", type=float, default=3.0, help="cone radius (deg)")
+    p.add_argument("--max-sources", type=int, default=300)
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=args.offline), indent=2))
+    center = None if (args.offline or args.ra is None) else SkyCoord(args.ra, args.dec, unit="deg")
+    metrics = run(center, args.radius, args.out, offline=args.offline, max_sources=args.max_sources)
+    print(json.dumps(metrics, indent=2))
     return 0
 
 

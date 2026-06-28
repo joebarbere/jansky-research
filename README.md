@@ -24,6 +24,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | Southern peaked-spectrum (GLEAM-X×RACS) | `jansky_research.southern` | ✅ multi-band curvature that **measures** the turnover ν_pk; 90 candidates over a 3° cone, two systematic fixes |
 | Radio–optical offsets (ICRF3 × Gaia DR3) | `jansky_research.offsets` | ✅ reproduces the AGN radio–optical offset **excess tail** (≫ Rayleigh) from public catalogues |
 | Pulsar radio spectral indices (ATNF) | `jansky_research.pulsarspec` | ✅ reproduces the **steep** mean pulsar spectrum (α≈−1.8); MSPs ≈ normal pulsars |
+| Sub-threshold radio stacking (SDSS quasars × VLASS-SE) | `jansky_research.stacking` | ✅ image-plane stacking with **injection-recovery** bias calibration; mean flux of undetected quasars |
 
 Four validations and two honest negatives, **zero overclaims that survived review** — the
 science-reviewer caught the USS candidates evaporating against the authoritative catalog and the
@@ -52,6 +53,7 @@ about what it is — four validations and two negatives:
 | Measuring the turnover: southern peaked sources from GLEAM-X + RACS | `southern/` | methodology + measured-turnover candidate list |
 | Reproducing the AGN radio–optical offset excess (ICRF3 × Gaia DR3) | `offsets/` | reproduction + reproducible offset catalogue |
 | The steep radio spectra of pulsars from the ATNF catalogue | `pulsarspec/` | reproduction + MSP/normal comparison |
+| Image-plane stacking with injection-recovery: SDSS quasars in VLASS-SE | `stacking/` | methodology + calibrated population-mean flux |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
