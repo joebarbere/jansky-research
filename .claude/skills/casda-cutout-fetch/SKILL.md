@@ -14,6 +14,18 @@ when CASDA's discovery backend is itself down, the *web* service also returns ze
 position (verified against the service's own example target), and no automation can download what the
 backend won't surface — the skill detects this and exits cleanly with code 5.
 
+## Prefer the API first (when to use this skill)
+
+**Try `astroquery.casda` (`query_region` → `cutout`) before this skill.** When CASDA's backend is
+healthy, the programmatic API is the proper, robust tool and needs no browser. This skill exists as a
+**fallback** for the case we actually hit: the VO services (TAP/SIA2) misbehaving while the web portal
+still authenticates. Honest caveat: its **download step has never been exercised end-to-end** — the
+CASDA outage has so far prevented any cutout from being produced — so login + navigation + parsing are
+verified but the final download/validation is not. It is kept because (a) it encodes the full working
+CASDA web-login + cutout-form flow, (b) it's a genuinely independent access path, and (c) it costs
+nothing when unused (not imported by the package; no CI/test impact). Remove it if a future CASDA where
+the API is reliable makes the redundancy pointless.
+
 ## Prerequisites
 
 - **Playwright + Chromium** (vendored deps; install once):
