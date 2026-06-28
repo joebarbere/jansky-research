@@ -1,0 +1,105 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline — none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Pulsar radio spectral indices from the ATNF catalogue}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{The Steep Radio Spectra of Pulsars, Reproduced from the ATNF Catalogue, and the
+Millisecond--Normal Comparison}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Pulsars are among the steepest-spectrum radio sources: their flux density falls as
+$S_\nu\propto\nu^\alpha$ with a mean two-frequency index near $-1.8$, far steeper than the $\sim-0.7$
+of ordinary synchrotron sources (Maron et al.\ 2000; Bates et al.\ 2013; Jankowski et al.\ 2018). We
+reproduce this from the public ATNF Pulsar Catalogue \citep{atnf} with a small, tested, CPU-only tool,
+forming the 400$\to$1400~MHz spectral index from the catalogue's tabulated S400 and S1400 flux
+densities. For the \psrN\ pulsars detected at both frequencies, the mean index is
+$\langle\alpha\rangle=\psrMeanAlpha$ (median \psrMedianAlpha, scatter \psrStdAlpha) --- squarely in
+the literature range. Splitting at the standard $P<30$~ms boundary, the \psrNmsp\ millisecond pulsars
+have mean $\alpha=\psrMeanAlphaMsp$ versus \psrMeanAlphaNormal\ for normal pulsars: the two are
+indistinguishable, i.e.\ millisecond pulsars are not significantly flatter, consistent with
+\citet{kramer1998} and \citet{jankowski2018}. This is a reproducibility and tooling contribution, not
+a new result.
+\end{abstract}
+
+\keywords{Pulsars (1306) --- Radio pulsars (1353) --- Spectral index (1553) --- Millisecond pulsars
+(1062) --- Open source software (1866)}
+
+\section{Introduction}
+A pulsar's radio spectrum is one of its defining bulk properties, and pulsars are notably
+steep-spectrum: surveys recover far more of them at low frequencies, and the population mean
+two-frequency index sits near $-1.6$ to $-1.8$ \citep{maron2000,bates2013,jankowski2018}. Whether
+millisecond pulsars differ from the normal population has been studied repeatedly, with the consensus
+being little or no difference \citep{kramer1998,jankowski2018}. We ask the most reproducible version:
+with the public ATNF catalogue and a $\sim$hundred-line tool, can one recover the steep mean and the
+millisecond--normal comparison cleanly?
+
+\section{Methods}
+\code{pulsarspec} is a pure-NumPy module (on the \code{jansky} helpers; \citealt{jansky}) that composes
+the project's two-point spectral-index helper: for every catalogued pulsar with both an S400 and an
+S1400 flux density it computes $\alpha=\ln(S_{1400}/S_{400})/\ln(1400/400)$ and classifies it as
+millisecond ($P<30$~ms) or normal. Every function is tested against a synthetic pulsar population with
+injected steep spectra and a flatter-millisecond sub-population, so the suite runs offline.
+
+\section{Data}
+The ATNF Pulsar Catalogue \citep{atnf} (VizieR \code{B/psr}) tabulates heterogeneous literature flux
+densities S400 (400~MHz) and S1400 (1400~MHz) in mJy and the spin period $P$. Of the catalogued
+pulsars, \psrN\ have both fluxes and enter the spectral-index sample.
+
+\section{Results}
+The \psrN\ pulsars have a mean spectral index $\langle\alpha\rangle=\psrMeanAlpha$, median
+\psrMedianAlpha, with a broad scatter (\psrStdAlpha; Figure~\ref{fig:spectra}, left), reproducing the
+steep-spectrum result of \citet{bates2013} and \citet{jankowski2018}. Splitting the sample, the
+\psrNmsp\ millisecond pulsars have mean $\alpha=\psrMeanAlphaMsp$ against \psrMeanAlphaNormal\ for the
+normal pulsars --- essentially identical, so the millisecond population is not measurably flatter. The
+$\alpha$--period plane (Figure~\ref{fig:spectra}, right) shows no strong trend across three decades in
+period.
+
+\begin{figure*}
+\plotone{figures/spectra.pdf}
+\caption{\emph{Left:} distribution of the 400$\to$1400~MHz spectral index $\alpha$ for normal (grey)
+and millisecond (red) pulsars, with the sample median (dashed). \emph{Right:} $\alpha$ versus spin
+period --- no strong trend, and the millisecond population (red) overlaps the normal one.}
+\label{fig:spectra}
+\end{figure*}
+
+\section{Discussion and reproducibility}
+The steep mean pulsar spectrum and the absence of a millisecond--normal difference are both recovered
+cleanly from public data with a small tested tool. The contribution is reproducibility and tooling ---
+a validated pulsar spectral-index statistic over the whole catalogue --- not a new result. The honest
+limitations are intrinsic to a two-frequency index from a heterogeneous catalogue: it misses the
+spectral curvature and low-frequency turnovers that multi-frequency fits resolve \citep{jankowski2018},
+the sample is flux-limited (only the brighter, both-band-detected pulsars), and the broad scatter
+reflects the $\sim$tens-of-percent catalogue flux-scale and scintillation uncertainties as much as
+intrinsic spread. Every number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, and the analysis regenerates from a clean checkout on public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{pulsarspec} tool, the ATNF spectral-index analysis, and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified all
+code, results, figures, and citations, and takes full responsibility for the content. An AI/LLM is not
+an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the ATNF/CSIRO Pulsar Catalogue and CDS/VizieR teams for the public data and services
+this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, Matplotlib, astroquery,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
