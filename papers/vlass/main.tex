@@ -27,9 +27,12 @@ sufficient to obtain a believable candidate list --- a per-epoch QL flux-scale c
 \citep{vlassmemo13, vlassmemo22}, a deblending isolation cut, and automatic \emph{forced-photometry
 confirmation} against the actual images with a peak-centring gate. Over a \vlassArea~deg$^2$ census
 (\vlassNsources\ sources, \vlassNusable\ usable), the $\vlassSigma\sigma$ selection yields
-\vlassNcand\ candidates, of which \vlassNconfirmed\ survive image confirmation; one is the known
-rapidly rotating active giant \emph{FK~Comae~Berenices}, recovered with a clean $\sim$7$\to$1~mJy
-decline at a $0.9\arcsec$ match. Injection--recovery shows the three-epoch selection saturates near
+\vlassNcand\ candidates, of which \vlassNconfirmed\ survive image confirmation. Archival follow-up
+--- the independent VLASS Epoch~4 release plus NVSS/FIRST/optical cross-matches --- then leaves
+\emph{one} genuine variable: the known rapidly rotating active giant \emph{FK~Comae~Berenices},
+recovered with a clean $\sim$7$\to$1~mJy decline at a $0.9\arcsec$ match; the other image-confirmed
+candidate is a single-epoch imaging artefact. Injection--recovery shows the three-epoch selection
+saturates near
 \vlassComplMax\% completeness even for extreme flares (50\% at $\sim\vlassComplFifty\times$), so the
 confirmed sources are a floor, not a rate. This is a tooling and methodology contribution --- a
 validation (FK~Com) plus a completeness-bounded limit --- not a discovery.
@@ -93,12 +96,20 @@ Over a \vlassArea~deg$^2$ cone (\vlassNsources\ sources; \vlassNexcluded\ droppe
 the prototype of the FK~Com class of rapidly rotating, magnetically active single giants and a known
 coronally active radio emitter \citep{gudel2002}. Its forced light curve declines monotonically
 ($\sim$7.2, 2.7, 1.0~mJy/beam across the three epochs; upper track of Figure~\ref{fig:fkcom}),
-confirmed in both the catalogue and the images. Recovering it purely from public catalogues is the validation that the
-pipeline surfaces genuine variables, not only rejects artefacts. The second survivor is a faint
-($\sim$3~mJy) centred source fading below threshold, with no catalogued counterpart --- a plausible
-transient reported as a candidate, not a detection. Several other candidates carry blazar/QSO/BL-Lac
-identifications but fall \emph{below} the $V>0.3$ bar, i.e.\ real AGN varying at the few-tens-of-
-percent level the cadence expects, correctly not over-claimed.
+confirmed in both the catalogue and the images. Recovering it purely from public catalogues is the
+validation that the pipeline surfaces genuine variables, not only rejects artefacts.
+
+\paragraph{Image confirmation is not the final word.} The second image-confirmed survivor is a
+single-epoch detection ($\sim$3~mJy in Epoch~1). Forced photometry through the \emph{independent}
+VLASS Epoch~4 release finds only noise in Epochs~2--4; its Epoch-1 Quick-Look entry is a blended
+component with a low peak-to-ring ratio (a sidelobe signature); and every archival counterpart
+(NVSS, FIRST, WISE, PanSTARRS) lies $8\arcsec$ away at a persistent source rather than at the
+candidate position. It is therefore an Epoch-1 imaging artefact, not a transient --- separated from
+the real variable only by the next-epoch and archival follow-up. The confirmation ladder is thus
+catalogue selection $\to$ image confirmation $\to$ archival/next-epoch vetting, each stage necessary.
+Several other candidates carry blazar/QSO/BL-Lac identifications but fall \emph{below} the $V>0.3$
+bar, i.e.\ real AGN varying at the few-tens-of-percent level the cadence expects, correctly not
+over-claimed.
 
 \paragraph{Completeness and the three-epoch ceiling.} Injection--recovery (Figure~\ref{fig:compl})
 shows the selection recovers $<$5\% of $\le$3$\times$ single-epoch flares and \emph{saturates near
