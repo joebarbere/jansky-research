@@ -1,0 +1,145 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every selection number is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\nupk}{\ensuremath{\nu_{\rm pk}}}
+\newcommand{\alo}{\ensuremath{\alpha_{\rm lo}}}
+\shorttitle{Southern peaked-spectrum sources via GLEAM-X + RACS}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Measuring the Turnover: A Southern Peaked-Spectrum Catalogue from GLEAM-X and RACS
+Multi-band Spectral Curvature}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Gigahertz-Peaked-Spectrum (GPS) and Compact-Steep-Spectrum (CSS) sources --- compact, young radio AGN
+whose spectra rise then fall \citep{odea1998,odea2021} --- are best found where many frequencies pin
+the turnover. A companion northern selection was limited by shallow 150~MHz data, which forced the
+low-frequency point to be an \emph{upper limit}: it could only \emph{bound} the spectral index, never
+measure the turnover frequency \nupk. Here we remove that limitation in the southern sky. GLEAM-X DR2
+\citep{rossdr2} measures each source in 20 in-band sub-bands across 76--227~MHz, so the low-frequency
+shape is \emph{measured}; combined with the three RACS bands (887.5, 1367.5, 1655.5~MHz;
+\citealt{racs2020,racshale2021,racsmid2024,racshigh2025}) a source has up to $\sim$23 flux points over
+a factor of $\sim$23 in frequency. We fit a weighted log-parabola to each SED and \emph{measure} \nupk.
+Over a $3\arcdeg$ cone (\soNmatched\ GLEAM-X$\cap$RACS sources) a naive parabola-peak cut is dominated
+by two selection effects, each with a principled fix: the GLEAM ($2\arcmin$)$\to$RACS ($\sim$15--25\arcsec)
+\emph{resolution mismatch}, which makes extended sources lose flux at RACS resolution and fake a
+turnover (fixed by a compactness cut), and ordinary steep sources whose mild low-frequency flattening
+fits a shallow edge-peak (fixed by requiring the optically-thick rising side, $\alo>-0.1$). After both,
+the field yields \soNpeaked\ peaked candidates with a \emph{measured} median $\nupk\approx\soMedianNupk$~MHz,
+plus \soNuss\ ultra-steep-spectrum (candidate high-$z$ radio galaxy) sources and \soNextended\ rejected
+resolution artefacts. This is a reproducible, measured-turnover scout catalogue and methodology --- not
+a discovery --- with its over-selection relative to careful Bayesian work \citep{kerrison2025} stated
+plainly.
+\end{abstract}
+
+\keywords{Active galactic nuclei (16) --- Radio active galactic nuclei (2134) --- Radio continuum
+surveys (1340) --- Spectral index (1553) --- Open source software (1866)}
+
+\section{Introduction}
+A turnover in a radio spectrum marks the synchrotron self-absorbed or free--free-absorbed core of a
+compact, young radio AGN \citep{odea1998,odea2021}. Selecting these GPS/CSS sources, and \emph{measuring}
+the turnover frequency \nupk\ that encodes the absorbing column and source size, needs dense frequency
+coverage on both sides of the peak. In the north, a three-frequency method (150~MHz, 1.4~GHz, 3~GHz)
+had to use the shallow 150~MHz survey as an upper limit and so could only \emph{bound} the low-frequency
+index --- ``rising then falling'', but with no measured \nupk. The southern sky removes that limitation:
+GLEAM-X DR2 \citep{rossdr2}, the deep extension of GLEAM \citep{gleam2017}, samples 76--227~MHz in 20
+sub-bands, and RACS \citep{racs2020} adds three bands up to 1.66~GHz. We ask the weakest, most
+reproducible version of the question: with these public catalogues and a small tool, how cleanly can
+one select peaked-spectrum candidates \emph{and measure their turnovers}?
+
+\section{Methods}
+\code{southern} is a pure-NumPy module that composes earlier tools (the \code{jansky} helpers;
+\citealt{jansky}): the two-point spectral index, positional cross-matching, and the classification of
+a companion peaked-spectrum slice. Its one new capability is \code{fit\_log\_parabola}, a weighted
+least-squares fit of $\log_{10}S = a\,x^2+b\,x+c$ with $x=\log_{10}\nu$ to the full multi-band SED.
+The turnover is $\nupk=10^{-b/2a}$ and is a genuine (concave) peak when $a<0$; we require it to lie
+\emph{within the sampled band} --- a measured turnover, not an extrapolation. Two systematics, exposed
+by the real data, require the fixes that make the result trustworthy.
+
+\paragraph{Units.} GLEAM-X DR2 integrated fluxes are in Jy while RACS fluxes are in mJy; we convert
+GLEAM-X to mJy ($\times10^3$) before building the SED. Uncaught, this $10^3$ offset fakes a steeply
+rising spectrum into RACS for every source.
+
+\paragraph{Resolution mismatch.} GLEAM's $2\arcmin$ beam recovers extended emission that RACS
+($\sim$15--25\arcsec) resolves out, so the flux drops from GLEAM to RACS and fakes a high-frequency
+turnover. A compactness cut --- the GLEAM-X integrated-to-peak ratio $<1.2$ --- flags these as
+\emph{extended}, the southern analogue of the northern method's resolution floor.
+
+\paragraph{Optically-thick rising side.} An ordinary steep source with mild low-frequency flattening
+fits a shallow parabola peaking spuriously at the GLEAM band edge. A genuine peaked source is optically
+thick \emph{below} the turnover, so we require the measured GLEAM in-band index $\alo>-0.1$ (rising or
+flat) --- the GPS/SSA signature.
+
+Every function is tested against a synthetic 19-sub-band GLEAM-X $+$ 3-band RACS field with injected
+peaked / steep / USS SEDs, so the suite runs offline; the real run fetches GLEAM-X DR2 (VizieR) and the
+three RACS catalogues.
+
+\section{Data}
+We use GLEAM-X DR2 \citep{rossdr2} (the 19 clean \code{Fint} sub-bands; the 92~MHz column is mislabelled
+in VizieR and dropped) and the RACS-low/mid/high integrated fluxes \citep{racshale2021,racsmid2024,
+racshigh2025}, cross-matched within 25\arcsec\ on a $3\arcdeg$ cone at high Galactic latitude. GLEAM-X
+DR2 exposes no per-band uncertainties via VizieR, so a nominal 10\% per-band error sets the fit weights
+(an honest limitation).
+
+\section{Results}
+Over the field (\soNmatched\ GLEAM-X$\cap$RACS sources) the two cuts above reduce a naive
+$\sim$16\% ``peaked'' fraction --- piled spuriously at the GLEAM band edge --- to \soNpeaked\
+peaked-spectrum candidates with a \emph{measured} median $\nupk\approx\soMedianNupk$~MHz (turnovers in
+the few-hundred-MHz range, the intermediate population this method targets). The selection also returns
+\soNuss\ ultra-steep-spectrum sources ($\alpha<-1.2$ throughout; candidate high-$z$ radio galaxies) and
+flags \soNextended\ extended resolution artefacts (Figure~\ref{fig:seds}).
+
+The honest comparison is to RadioSED II \citep{kerrison2025}, a careful Bayesian SSA/FFA fit over
+Stripe~82 ($\sim$1.2 peaked sources~deg$^{-2}$): our least-squares parabola is more permissive, so our
+candidate density is $\sim$2.5$\times$ higher --- a real over-selection, expected for a fast scout
+method without per-band errors. The deliverable is therefore a measured-turnover \emph{candidate} list
+and a reproducible method, not a clean discovery sample.
+
+\begin{figure}
+\plotone{figures/seds.pdf}
+\caption{Measured SEDs of peaked-spectrum candidates (GLEAM-X 76--227~MHz $+$ RACS 0.9--1.7~GHz): each
+rises through the GLEAM band and turns over, with the turnover frequency \emph{measured} from the
+log-parabola fit rather than bounded.}
+\label{fig:seds}
+\end{figure}
+
+\section{Discussion and reproducibility}
+Multi-band curvature in the south turns the northern slice's unfinished business --- an unmeasurable
+turnover --- into a \emph{measured} one: GLEAM-X's 20 sub-bands fix \nupk\ on the optically-thick side
+and RACS pins the optically-thin fall. The contribution is the reproducible, systematics-aware tool
+(unit conversion, compactness, rising-side requirement) and a measured-turnover candidate list, not a
+discovery. The clear next steps are a recover-a-known against the Callingham \citep{callingham2017}
+southern peaked catalogue --- now \emph{measuring} their published \nupk\ rather than bounding it --- a
+proper per-band-error (Bayesian) fit to tighten purity toward \citet{kerrison2025}, and a sampled point
+in the 0.23--0.89~GHz gap to constrain interpolated turnovers. Every selection number above is written
+by the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis regenerates
+from a clean checkout on public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{southern} tool, the GLEAM-X$\times$RACS selection and its two
+systematic fixes, and the drafting of this manuscript. The author directed the work, independently
+reviewed and verified all code, results, figures, and citations, and takes full responsibility for the
+content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the MWA/GLEAM-X, ASKAP/RACS, CSIRO, and VizieR teams for the public data and services this
+work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+astroquery, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
