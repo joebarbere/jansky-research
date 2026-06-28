@@ -5,7 +5,7 @@ description = "Amateur radio-astronomy research: survey, new tooling, automated 
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = { file = "LICENSE" }
-authors = [{ name = "Joe Barbere" }, { name = "Claude" }]
+authors = [{ name = "Joe Barbere" }]
 keywords = ["radio-astronomy", "astronomy", "research", "reproducibility", "pipeline"]
 
 # Core deps are deliberately lean. The project depends on the `jansky` package
