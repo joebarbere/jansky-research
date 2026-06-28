@@ -1,11 +1,43 @@
 # Publishing TODO — jansky-research
 
 The manual, account-bound steps to get the papers and software out. Nothing here can be
-automated by the repo; each needs you signed in to an external service. Ordered so that
-earlier steps unblock later ones (Zenodo DOI is needed for JOSS).
+automated by the repo; each needs you signed in to an external service.
 
 Identity to use everywhere: **Joe / Joseph Barbere**, ORCID **0009-0008-3289-4447**
 (the papers and `CITATION.cff` use "Joseph"; keep the name consistent on each account).
+
+---
+
+## Recommended order (and why) — read this first
+
+The steps are ordered by **dependency** (each unblocks the next) and by **effort/payoff** (start with
+the one permanent, low-friction win). Do them top to bottom:
+
+| # | Step | Why it's in this slot | Blocks |
+|---|------|----------------------|--------|
+| 0 | One-time setup (ORCID, affiliation) | Every downstream account wants these | everything |
+| 1 | **Zenodo** DOI for the repo | A permanent citable DOI. **JOSS requires it.** Quick: flip a switch + cut a release | step 2 |
+| 2 | **JOSS** software paper | Reviews the *software* (not novelty) — the natural home for the toolkit. Needs the step-1 DOI | — |
+| 3 | **RNAAS** note (frbstats) | A short citable note; editorial screening only (no peer review). Independent of 1–2 | — |
+| 4 | **arXiv** (frbstats, vlass, peaked) | Preprints for the 3 papers with a fresh angle. Needs endorsement (lead time) | — |
+
+**Plain-English walkthrough:**
+
+1. **Do Zenodo first.** It's the only hard dependency in the chain (JOSS asks for the DOI at
+   acceptance) and it's the fastest: connect Zenodo to the GitHub repo, cut a `v0.0.1` release, copy
+   the DOI. One permanent, citable artifact for the whole toolkit.
+2. **Then JOSS**, because you now have the DOI it needs. JOSS judges whether the *software* is a real
+   scholarly tool — so lead with the validated analyses + the Airflow/Podman reproducibility layer,
+   not a novelty claim.
+3. **RNAAS and arXiv are independent of 1–2** and of each other — do them whenever. RNAAS is the
+   quickest (no peer review); start arXiv early because the **endorsement** step has multi-day lead
+   time on a first `astro-ph` submission.
+4. **Order among the arXiv papers doesn't matter**, but if you submit only one first, make it
+   `vlass` or `peaked` (the strongest methodology + recover-a-known stories).
+
+**Not ready yet:** the `stokesv` (RACS Stokes-V) slice is still in progress — its live forced-photometry
+run is blocked on a CASDA outage (see `survey/stokesv-findings.md`). It is **not** in the table above;
+add it once the slice merges a paper.
 
 ---
 
