@@ -28,19 +28,28 @@ __all__ = [
     "LEAKAGE_NSIGMA",
     "RACS_NU_GHZ",
     "classify_emitter",
+    "fetch_racs_i",
+    "fetch_radio_star_measurements",
+    "fetch_radio_stars",
     "fractional_circular_pol",
     "handedness",
     "leakage_floor",
+    "match_targets_to_radio",
     "proper_motion_confirm",
     "run",
     "select_circular_pol",
     "synthetic_field",
+    "validate_srsc",
 ]
 
 # RACS band reference frequencies (GHz): RACS-low, RACS-mid, RACS-high.
 RACS_NU_GHZ = {"low": 0.8875, "mid": 1.3675, "high": 1.6555}
 # Candidate threshold in units of the median field |V/I| (the RACS-low2 / Pritchard convention).
 LEAKAGE_NSIGMA = 7.0
+# VizieR catalogue IDs. RACS-low DR1 Stokes-I (Hale+2021, split into the extragalactic |b| cut and the
+# galactic region) and the Sydney Radio Star Catalogue (Driessen+2024) for the recover-a-known.
+VIZIER_RACS_LOW_I = ("J/other/PASA/38.58/galcut", "J/other/PASA/38.58/galreg")
+VIZIER_SRSC = "J/other/PASA/41.84/stars"
 
 
 def fractional_circular_pol(
@@ -142,6 +151,151 @@ def proper_motion_confirm(
     ddec = np.asarray(dec_radio, float) - dec_prop
     sep = np.sqrt(dra**2 + ddec**2) * 3600.0
     return sep <= match_arcsec, sep
+
+
+def match_targets_to_radio(
+    target_ra: np.ndarray,
+    target_dec: np.ndarray,
+    radio_ra: np.ndarray,
+    radio_dec: np.ndarray,
+    radio_i: np.ndarray,
+    radio_ei: np.ndarray,
+    *,
+    radius_arcsec: float = 15.0,
+) -> dict[str, np.ndarray]:
+    """Attach each target star's nearest radio Stokes-I component (reuses ``spectra.crossmatch``).
+
+    Returns per-target arrays: ``matched`` (a radio component within ``radius_arcsec``), the matched
+    ``i_flux``/``e_i`` (NaN where unmatched), and ``sep_arcsec``. A target with no match is a radio
+    non-detection in this catalogue --- where forced photometry on the images then sets an upper limit.
+    """
+    from .spectra import crossmatch
+
+    n = np.asarray(target_ra).size
+    out = {
+        "matched": np.zeros(n, dtype=bool),
+        "i_flux": np.full(n, np.nan),
+        "e_i": np.full(n, np.nan),
+        "sep_arcsec": np.full(n, np.nan),
+    }
+    if np.asarray(radio_ra).size == 0:
+        return out
+    it, ir, sep = crossmatch(target_ra, target_dec, radio_ra, radio_dec, radius_arcsec)
+    out["matched"][it] = True
+    out["i_flux"][it] = np.asarray(radio_i, float)[ir]
+    out["e_i"][it] = np.asarray(radio_ei, float)[ir]
+    out["sep_arcsec"][it] = sep
+    return out
+
+
+def fetch_radio_stars() -> dict[str, np.ndarray]:  # pragma: no cover - network
+    """Fetch the Sydney Radio Star Catalogue (Driessen+2024) from VizieR (the recover-a-known target list).
+
+    Returns positions, Gaia proper motions, the detection ``method`` (which flags Stokes-V detections),
+    and the SIMBAD identifier per star.
+    """
+    import numpy as _np
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["RAJ2000", "DEJ2000", "pmRA", "pmDE", "Method", "Survey", "Simbad"])
+    v.ROW_LIMIT = -1
+    t = v.get_catalogs(VIZIER_SRSC)[0]
+    return {
+        "ra": _np.asarray(t["RAJ2000"], float),
+        "dec": _np.asarray(t["DEJ2000"], float),
+        "pmra": _np.asarray(t["pmRA"], float),
+        "pmdec": _np.asarray(t["pmDE"], float),
+        "method": _np.asarray([str(x) for x in t["Method"]], dtype=object),
+        "survey": _np.asarray([str(x) for x in t["Survey"]], dtype=object),
+        "simbad": _np.asarray([str(x) for x in t["Simbad"]], dtype=object),
+    }
+
+
+def fetch_racs_i(center, radius_deg: float) -> dict[str, np.ndarray]:  # pragma: no cover - network
+    """Cone-search RACS-low DR1 Stokes-I (Hale+2021) on VizieR; returns ra/dec/i_flux/e_i/noise (mJy)."""
+    import numpy as _np
+    from astropy import units as _u
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["RAJ2000", "DEJ2000", "Fpk", "e_Fpk", "Noise"])
+    v.ROW_LIMIT = -1
+    res = v.query_region(center, radius=radius_deg * _u.deg, catalog=list(VIZIER_RACS_LOW_I))
+    if not res:
+        return {k: _np.array([]) for k in ("ra", "dec", "i_flux", "e_i", "noise")}
+    ra, dec, fpk, efpk, noise = [], [], [], [], []
+    for t in res:
+        ra.append(_np.asarray(t["RAJ2000"], float))
+        dec.append(_np.asarray(t["DEJ2000"], float))
+        fpk.append(_np.asarray(t["Fpk"], float))
+        efpk.append(_np.asarray(t["e_Fpk"], float))
+        noise.append(_np.asarray(t["Noise"], float))
+    return {
+        "ra": _np.concatenate(ra),
+        "dec": _np.concatenate(dec),
+        "i_flux": _np.concatenate(fpk),
+        "e_i": _np.concatenate(efpk),
+        "noise": _np.concatenate(noise),
+    }
+
+
+def fetch_radio_star_measurements() -> dict[str, np.ndarray]:  # pragma: no cover - network
+    """Fetch the SRSC per-detection radio table (Driessen+2024): Stokes I & V peak fluxes per survey.
+
+    Returns ra/dec, ``freq`` (MHz), ``survey``, ``i_flux``/``e_i`` (SpeakI), ``v_flux``/``e_v``
+    (SpeakV), and ``rms_v`` (localrmsV) --- the real coherent-emitter measurements used by
+    :func:`validate_srsc`.
+    """
+    import numpy as _np
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["*"])
+    v.ROW_LIMIT = -1
+    cats = v.get_catalogs("J/other/PASA/41.84")
+    t = [c for c in cats if c.meta["name"].endswith("/radio")][0]
+    return {
+        "ra": _np.asarray(t["RAJ2000"], float),
+        "dec": _np.asarray(t["DEJ2000"], float),
+        "freq": _np.asarray(t["Freq"], float),
+        "survey": _np.asarray([str(x) for x in t["Survey"]], dtype=object),
+        "i_flux": _np.asarray(t["SpeakI"], float),
+        "e_i": _np.asarray(t["e_SpeakI"], float),
+        "v_flux": _np.asarray(t["SpeakV"], float),
+        "e_v": _np.asarray(t["e_SpeakV"], float),
+        "rms_v": _np.asarray(t["localrmsV"], float),
+    }
+
+
+def validate_srsc(*, survey_prefix: str = "RACS") -> dict:  # pragma: no cover - network
+    """Recover-a-known: do the SRSC's known V-detected radio stars classify as circular emitters?
+
+    Pulls the SRSC radio measurements (:func:`fetch_radio_star_measurements`), keeps detections from
+    surveys whose name starts with ``survey_prefix`` (default the three RACS bands) that have both a
+    Stokes I and a Stokes V peak flux, and runs :func:`fractional_circular_pol` /
+    :func:`classify_emitter` on them. Coherent emitters should be strongly circularly polarized, so
+    the fraction classified ``circular``/``highly_circular`` is the recovery. (This validates the
+    selection logic on real data; the leakage-floor + forced-photometry path is exercised separately.)
+    """
+    import numpy as _np
+
+    m = fetch_radio_star_measurements()
+    sel = (
+        _np.asarray([str(s).startswith(survey_prefix) for s in m["survey"]])
+        & _np.isfinite(m["i_flux"])
+        & (m["i_flux"] > 0)
+        & _np.isfinite(m["v_flux"])
+    )
+    frac, _ = fractional_circular_pol(m["v_flux"][sel], m["i_flux"][sel])
+    cls = [
+        classify_emitter(vv, ii) for vv, ii in zip(m["v_flux"][sel], m["i_flux"][sel], strict=True)
+    ]
+    n = int(sel.sum())
+    circ = sum(c in ("circular", "highly_circular") for c in cls)
+    return {
+        "n_detections": n,
+        "median_frac_pol": float(_np.median(frac)) if n else float("nan"),
+        "frac_circular": circ / n if n else 0.0,
+        "n_highly_circular": sum(c == "highly_circular" for c in cls),
+    }
 
 
 def classify_emitter(

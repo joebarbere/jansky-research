@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from jansky_research import stokesv
+from jansky_research.stokesv import match_targets_to_radio
 
 
 def test_fractional_circular_pol():
@@ -74,6 +75,25 @@ def test_synthetic_field_shapes():
     frac = np.abs(stars["v_flux"]) / stars["i_flux"]
     assert frac[stars["is_emitter"]].mean() > 0.15
     assert np.median(frac[~stars["is_emitter"]]) < 0.05
+
+
+def test_match_targets_to_radio():
+    # target 0 has a RACS-I component 3" away; target 1 has none within 15"
+    t_ra = np.array([45.0, 50.0])
+    t_dec = np.array([-30.0, -30.0])
+    r_ra = np.array([45.0 + 3.0 / 3600.0 / np.cos(np.radians(-30.0)), 10.0])
+    r_dec = np.array([-30.0, 10.0])
+    r_i = np.array([12.0, 99.0])
+    r_ei = np.array([0.5, 0.5])
+    out = match_targets_to_radio(t_ra, t_dec, r_ra, r_dec, r_i, r_ei, radius_arcsec=15.0)
+    assert out["matched"].tolist() == [True, False]
+    assert np.isclose(out["i_flux"][0], 12.0) and np.isnan(out["i_flux"][1])
+    assert out["sep_arcsec"][0] < 4.0
+    # empty radio catalogue -> all unmatched, no crash
+    empty = match_targets_to_radio(
+        t_ra, t_dec, np.array([]), np.array([]), np.array([]), np.array([])
+    )
+    assert not empty["matched"].any()
 
 
 def test_run_offline(tmp_path):
