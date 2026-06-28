@@ -35,6 +35,19 @@ make paper                                # tectonic -> every papers/<slice>/mai
 make arxiv                                # assemble + validate an arXiv package per paper
 ```
 
+### VLASS multi-epoch variability (real data)
+
+The VLASS slice queries real survey catalogues over a sky region (Epoch 1 via VizieR TAP; Epochs
+2–3 are bulk NRAO files of ~0.3–1 GB each, cached under `data/`):
+
+```bash
+uv sync --extra vlass                                         # adds pyvo
+uv run python -m jansky_research.vlass --ra 180 --dec 30 --radius 1.0 --epochs 1,2,3
+```
+
+It applies the per-epoch Quick-Look flux-scale corrections (VLASS Memos 13/22) before computing
+variability, so the epoch-to-epoch scale offset is not mistaken for variability.
+
 ## Via the Airflow automation layer
 
 The same pipeline, orchestrated. Identical artifacts to `make pipeline`.
