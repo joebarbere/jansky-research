@@ -29,11 +29,37 @@ __all__ = [
     "select_variable",
     "sx_index",
     "synthetic_lightcurves",
+    "variability_floor",
 ]
 
 NU_S_GHZ = 2.3  # Astrogeo S band
 NU_X_GHZ = 8.4  # Astrogeo X band
 MIN_EPOCHS = 4  # a light curve needs at least this many finite epochs to be tested
+
+# A curated *validation* set (not a blind survey): well-known, well-observed compact AGN whose
+# variability is documented, so the run is a recover-a-known. Most are Doppler-boosted blazars expected
+# to vary strongly; the four CSOs (compact symmetric objects) have no boosted core and are the steady
+# negative controls -- OQ 208 is the textbook stable VLBI source. J2000 name -> common name.
+VALIDATION_SOURCES: dict[str, str] = {
+    "J2202+4216": "BL Lac",
+    "J0854+2006": "OJ 287",
+    "J2253+1608": "3C 454.3",
+    "J1256-0547": "3C 279",
+    "J2232+1143": "CTA 102",
+    "J0238+1636": "AO 0235+164",
+    "J1512-0905": "PKS 1510-089",
+    "J1224+2122": "4C 21.35",
+    "J0841+7053": "4C 71.07",
+    "J0006-0623": "PKS 0003-066",
+    "J0433+0521": "3C 120",
+    "J0319+4130": "3C 84",
+    "J1642+3948": "3C 345",
+    "J1229+0203": "3C 273",
+    "J1407+2827": "OQ 208 (CSO)",
+    "J2022+6136": "2021+614 (CSO)",
+    "J0111+3906": "0108+388 (CSO)",
+    "J1148+5924": "NGC 3894 (CSO)",
+}
 
 
 def lightcurve_metrics(
@@ -114,6 +140,29 @@ def select_variable(
     return mask, eta_thr, v_thr
 
 
+def variability_floor(
+    v: np.ndarray, n_epochs: np.ndarray, is_control: np.ndarray, *, min_epochs: int = MIN_EPOCHS
+) -> tuple[float, np.ndarray]:
+    """Empirical amplitude-variability floor set by intrinsically steady control sources.
+
+    For VLBI total flux density, the per-session $V$ (coefficient of variation) of a genuinely steady
+    source is *not* zero: it is set by amplitude-calibration scatter and by $(u,v)$-coverage /
+    resolved-structure differences between sessions. Compact symmetric objects (CSOs), which lack a
+    Doppler-boosted core, are such steady controls. Their median $V$ is therefore the floor below which
+    $V$ is consistent with non-variability; testable non-control sources with $V$ **above** the floor
+    are the amplitude-selected variables. Returns ``(floor, mask_above)`` aligned to the input length.
+    """
+    v = np.asarray(v, float)
+    nep = np.asarray(n_epochs)
+    ctrl = np.asarray(is_control, bool)
+    okc = ctrl & (nep >= min_epochs) & np.isfinite(v)
+    if not okc.any():
+        return float("nan"), np.zeros(v.shape, dtype=bool)
+    floor = float(np.median(v[okc]))
+    above = (~ctrl) & (nep >= min_epochs) & np.isfinite(v) & (v > floor)
+    return floor, above
+
+
 def synthetic_lightcurves(
     n_sources: int = 400,
     n_epochs: int = 10,
@@ -169,60 +218,134 @@ def synthetic_lightcurves(
     }
 
 
-def fetch_astrogeo(sources: list[str], *, band: str = "X") -> dict:  # pragma: no cover - network
-    """Per-source flux-density histories from the Astrogeo VLBI database (S or X band).
+ASTROGEO_BASE = "http://astrogeo.org/images"
+# Geodetic/absolute-astrometry VLBI has no per-observation flux error; the dominant uncertainty is
+# amplitude calibration, ~5% for these programs (Petrov & Kovalev 2025). We use it as a fractional
+# floor added in quadrature with the image noise. This is THE assumption the variability rests on:
+# too small a floor manufactures variables, so it is a documented, tunable parameter.
+VLBI_CAL_FRAC = 0.05
 
-    For each source name/coordinate, retrieves the per-session total flux densities from Astrogeo
-    (astrogeo.org) and returns aligned ``(n_sources, n_epochs)`` flux/error matrices padded with
-    ``nan``. Network-gated; the offline tests use :func:`synthetic_lightcurves` instead.
+
+def _parse_cfd_tab(text: str) -> tuple[float, float] | None:  # pragma: no cover - network
+    """Pull (Fl_int, Fl_noi) in Jy from a one-row Astrogeo ``_cfd.tab`` correlated-flux file."""
+    for line in text.splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        c = line.split()
+        if len(c) >= 8:
+            return float(c[3]), float(c[7])  # Fl_int (total correlated flux), Fl_noi (image noise)
+    return None
+
+
+def fetch_astrogeo(
+    sources: list[str],
+    *,
+    bands: tuple[str, ...] = ("S", "X"),
+    cal_frac: float = VLBI_CAL_FRAC,
+    pause: float = 0.15,
+) -> dict:  # pragma: no cover - network
+    """Per-source, per-epoch VLBI flux histories from Astrogeo (Petrov), keyed by band.
+
+    For each J2000 source name (e.g. ``"J2202+4216"``) we read the source's image directory listing,
+    pick out the per-epoch ``_cfd.tab`` correlated-flux files for each requested band, and read each
+    one's integrated flux density ``Fl_int`` (Jy). The per-point error is
+    ``sqrt((cal_frac*Fl_int)^2 + Fl_noi^2)`` --- a calibration-fraction floor (see :data:`VLBI_CAL_FRAC`)
+    in quadrature with the image noise. Returns ``{band: (flux, err)}`` with each an aligned
+    ``(n_sources, n_epochs)`` matrix padded with ``nan``. Network-gated; tests use the synthetic fixture.
     """
+    import re
+    import time
+
     import requests
 
-    base = "https://astrogeo.smce.nasa.gov/vlbi_images"
-    histories: list[tuple[np.ndarray, np.ndarray]] = []
-    max_ep = 0
+    sess = requests.Session()
+    sess.headers["User-Agent"] = "jansky-research (amateur radio-astronomy research)"
+    per: dict[str, list[tuple[np.ndarray, np.ndarray]]] = {b: [] for b in bands}
+    max_ep: dict[str, int] = {b: 0 for b in bands}
     for name in sources:
         try:
-            url = f"{base}/{name}/{name}_{band.lower()}_flux.txt"
-            txt = requests.get(url, timeout=120).text
-            rows = [r.split() for r in txt.splitlines() if r and not r.startswith("#")]
-            flux = np.array([float(r[1]) for r in rows], float)
-            err = np.array([float(r[2]) for r in rows], float)
+            idx = sess.get(f"{ASTROGEO_BASE}/{name}/", timeout=60).text
         except Exception:
-            flux, err = np.array([]), np.array([])
-        histories.append((flux, err))
-        max_ep = max(max_ep, flux.size)
+            idx = ""
+        files = sorted(set(re.findall(rf"{re.escape(name)}_[A-Z]_[0-9_]+[a-z]+_cfd\.tab", idx)))
+        for b in bands:
+            flux: list[float] = []
+            err: list[float] = []
+            for fn in (f for f in files if f"_{b}_" in f):
+                try:
+                    parsed = _parse_cfd_tab(
+                        sess.get(f"{ASTROGEO_BASE}/{name}/{fn}", timeout=60).text
+                    )
+                except Exception:
+                    parsed = None
+                if parsed is not None:
+                    fl, noi = parsed
+                    flux.append(fl)
+                    err.append(float(np.hypot(cal_frac * fl, noi)))
+                if pause:
+                    time.sleep(pause)
+            per[b].append((np.asarray(flux, float), np.asarray(err, float)))
+            max_ep[b] = max(max_ep[b], len(flux))
     n = len(sources)
-    fmat = np.full((n, max_ep), np.nan)
-    emat = np.full((n, max_ep), np.nan)
-    for i, (flux, err) in enumerate(histories):
-        fmat[i, : flux.size] = flux
-        emat[i, : err.size] = err
-    return {"flux": fmat, "err": emat}
+    out: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for b in bands:
+        fmat = np.full((n, max(max_ep[b], 1)), np.nan)
+        emat = np.full((n, max(max_ep[b], 1)), np.nan)
+        for i, (farr, earr) in enumerate(per[b]):
+            fmat[i, : farr.size] = farr
+            emat[i, : earr.size] = earr
+        out[b] = (fmat, emat)
+    return out
 
 
-def run(out: str = ".", *, offline: bool = True, sources: list[str] | None = None) -> dict:
-    """Full slice: variability-rank a (synthetic or fetched) VLBI population and write outputs."""
+def run(
+    out: str = ".",
+    *,
+    offline: bool = True,
+    sources: list[str] | None = None,
+    controls: list[str] | None = None,
+) -> dict:
+    """Full slice: variability-rank a (synthetic or fetched) VLBI population and write outputs.
+
+    ``controls`` names a subset of ``sources`` known to be intrinsically steady (e.g. CSOs); their
+    median $V$ sets the empirical variability floor (:func:`variability_floor`) above which non-control
+    sources are the amplitude-selected variables.
+    """
     import json
     from pathlib import Path
 
+    names: list[str] | None
     if offline or sources is None:
         pop = synthetic_lightcurves()
         source = "synthetic"
         truth: np.ndarray | None = pop["is_variable"]
+        names = None
     else:  # pragma: no cover - network
-        fx = fetch_astrogeo(sources, band="X")
-        fs = fetch_astrogeo(sources, band="S")
-        pop = {"flux_x": fx["flux"], "err_x": fx["err"], "flux_s": fs["flux"], "err_s": fs["err"]}
+        data = fetch_astrogeo(sources)
+        fx, ex = data["X"]
+        fs, es = data["S"]
+        pop = {"flux_x": fx, "err_x": ex, "flux_s": fs, "err_s": es}
         source = f"Astrogeo VLBI ({len(sources)} sources)"
         truth = None
+        names = list(sources)
 
-    eta, v, _pval, nep, _mean = lightcurve_metrics(pop["flux_x"], pop["err_x"])
+    eta, v, pval, nep, mean = lightcurve_metrics(pop["flux_x"], pop["err_x"])
     alpha, _aerr = sx_index(pop["flux_s"], pop["flux_x"], pop["err_s"], pop["err_x"])
     mask, eta_thr, v_thr = select_variable(eta, v, nep)
 
-    n_testable = int(((nep >= MIN_EPOCHS) & np.isfinite(eta)).sum())
-    cand_alpha = alpha[mask]
+    testable = (nep >= MIN_EPOCHS) & np.isfinite(eta)
+    n_testable = int(testable.sum())
+    # control-floor analysis (the meaningful selector for a calibrator-dominated set; the relative
+    # outlier cut above is for blind fields and returns ~nothing when most sources vary)
+    ctrl_set = set(controls or [])
+    is_control = (
+        np.array([nm in ctrl_set for nm in names], dtype=bool)
+        if names
+        else np.zeros(eta.shape, dtype=bool)
+    )
+    v_floor, above = variability_floor(v, nep, is_control)
+    # the recover-a-known anchor: the single most significant source by eta among testable ones
+    top = int(np.argmax(np.where(testable, eta, -np.inf))) if testable.any() else -1
     metrics: dict = {
         "source": source,
         "n_sources": int(pop["flux_x"].shape[0]),
@@ -233,10 +356,24 @@ def run(out: str = ".", *, offline: bool = True, sources: list[str] | None = Non
         "median_alpha_sx": round(float(np.nanmedian(alpha)), 3)
         if np.isfinite(alpha).any()
         else None,
-        "median_cand_alpha_sx": (
-            round(float(np.nanmedian(cand_alpha)), 3) if np.isfinite(cand_alpha).any() else None
-        ),
     }
+    if np.isfinite(v_floor):  # pragma: no cover - only with named controls (network run)
+        metrics["n_controls"] = int(is_control.sum())
+        metrics["v_floor"] = round(v_floor, 3)
+        metrics["n_above_floor"] = int(above.sum())
+        metrics["median_v_control"] = round(float(np.median(v[is_control & testable])), 3)
+        var_v = v[above]
+        metrics["median_v_variable"] = round(float(np.median(var_v)), 3) if var_v.size else None
+    if top >= 0:
+        metrics["top_variable"] = {
+            "name": names[top] if names else f"row{top}",
+            "n_epochs": int(nep[top]),
+            "eta": round(float(eta[top]), 1),
+            "v": round(float(v[top]), 3),
+            "p_value": float(f"{pval[top]:.2e}"),
+            "mean_flux_jy": round(float(mean[top]), 3),
+            "alpha_sx": round(float(alpha[top]), 2) if np.isfinite(alpha[top]) else None,
+        }
     if truth is not None:
         tp = int((mask & truth).sum())
         completeness = tp / int(truth.sum()) if truth.sum() else float("nan")
@@ -248,12 +385,68 @@ def run(out: str = ".", *, offline: bool = True, sources: list[str] | None = Non
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "vlbi_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(eta, v, mask, eta_thr, v_thr, op / "papers" / "vlbi" / "figures")
+    if names is not None:  # pragma: no cover - network
+        _write_candidates(
+            op / "results" / "vlbi_candidates.csv",
+            names,
+            eta,
+            v,
+            pval,
+            nep,
+            mean,
+            alpha,
+            above,
+            is_control,
+        )
+    _figure(eta, v, above, is_control, v_floor, op / "papers" / "vlbi" / "figures")
     _write_macros(metrics, op / "papers" / "vlbi" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:
+def _write_candidates(
+    path, names, eta, v, pval, nep, mean, alpha, above, is_control
+) -> None:  # pragma: no cover
+    """Write the full variability-ranked table (most significant first), tagging controls/variables."""
+    import csv
+    from pathlib import Path
+
+    rows = sorted(
+        range(len(names)), key=lambda i: eta[i] if np.isfinite(eta[i]) else -np.inf, reverse=True
+    )
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(
+            [
+                "name",
+                "control",
+                "above_floor",
+                "n_epochs",
+                "eta",
+                "v",
+                "p_value",
+                "mean_flux_jy",
+                "alpha_sx",
+            ]
+        )
+        for i in rows:
+            w.writerow(
+                [
+                    names[i],
+                    int(bool(is_control[i])),
+                    int(bool(above[i])),
+                    int(nep[i]),
+                    f"{eta[i]:.2f}" if np.isfinite(eta[i]) else "",
+                    f"{v[i]:.3f}" if np.isfinite(v[i]) else "",
+                    f"{pval[i]:.2e}" if np.isfinite(pval[i]) else "",
+                    f"{mean[i]:.3f}" if np.isfinite(mean[i]) else "",
+                    f"{alpha[i]:.2f}" if np.isfinite(alpha[i]) else "",
+                ]
+            )
+
+
+def _figure(eta, v, above, is_control, v_floor, out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -262,21 +455,30 @@ def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     ok = np.isfinite(eta) & np.isfinite(v) & (eta > 0) & (v > 0)
-    fig, ax = plt.subplots(figsize=(5.2, 4.2))
-    ax.scatter(eta[ok & ~mask], v[ok & ~mask], s=8, c="0.6", label="steady")
-    ax.scatter(eta[ok & mask], v[ok & mask], s=22, c="C3", label="candidate")
-    if np.isfinite(eta_thr):
-        ax.axvline(eta_thr, ls="--", c="0.4", lw=0.8)
-    if np.isfinite(v_thr):
-        ax.axhline(v_thr, ls="--", c="0.4", lw=0.8)
+    ctrl = np.asarray(is_control, bool)
+    fig, ax = plt.subplots(figsize=(5.4, 4.2))
+    rest = ok & ~ctrl & ~above
+    ax.scatter(eta[rest], v[rest], s=10, c="0.6", label="below floor")
+    ax.scatter(eta[ok & above], v[ok & above], s=26, c="C3", label="variable (above floor)")
+    if ctrl.any():  # pragma: no cover - only with named controls (network run)
+        ax.scatter(
+            eta[ok & ctrl],
+            v[ok & ctrl],
+            s=46,
+            marker="s",
+            facecolors="none",
+            edgecolors="C0",
+            label="steady control (CSO)",
+        )
+    if np.isfinite(v_floor):  # pragma: no cover - only with named controls (network run)
+        ax.axhline(v_floor, ls="--", c="C0", lw=0.9, label=f"floor V={v_floor:.2f}")
     ax.set(
         xscale="log",
-        yscale="log",
-        xlabel=r"$\eta$ (significance)",
-        ylabel=r"$V$ (amplitude)",
+        xlabel=r"$\eta$ (significance vs.\ constant)",
+        ylabel=r"$V$ (fractional amplitude)",
         title="VLBI variability (X band)",
     )
-    ax.legend(loc="lower right", fontsize=8)
+    ax.legend(loc="upper left", fontsize=7)
     fig.tight_layout()
     fig.savefig(out / "etav.pdf")
     plt.close(fig)
@@ -298,13 +500,29 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\viEtaThr}}{{{_fmt('eta_thr')}}}",
         rf"\newcommand{{\viVThr}}{{{_fmt('v_thr')}}}",
         rf"\newcommand{{\viMedAlpha}}{{{_fmt('median_alpha_sx')}}}",
-        rf"\newcommand{{\viCandAlpha}}{{{_fmt('median_cand_alpha_sx')}}}",
     ]
+    if "v_floor" in m:
+        lines += [
+            rf"\newcommand{{\viNctrl}}{{{m['n_controls']}}}",
+            rf"\newcommand{{\viFloor}}{{{m['v_floor']}}}",
+            rf"\newcommand{{\viNabove}}{{{m['n_above_floor']}}}",
+            rf"\newcommand{{\viMedVctrl}}{{{m['median_v_control']}}}",
+            rf"\newcommand{{\viMedVvar}}{{{_fmt('median_v_variable')}}}",
+        ]
     if "completeness" in m:
         lines += [
             rf"\newcommand{{\viInjected}}{{{m['n_injected_variable']}}}",
             rf"\newcommand{{\viCompleteness}}{{{m['completeness']}}}",
             rf"\newcommand{{\viPurity}}{{{m['purity']}}}",
+        ]
+    tv = m.get("top_variable")
+    if tv is not None:
+        lines += [
+            rf"\newcommand{{\viTopName}}{{{tv['name']}}}",
+            rf"\newcommand{{\viTopEpochs}}{{{tv['n_epochs']}}}",
+            rf"\newcommand{{\viTopEta}}{{{tv['eta']}}}",
+            rf"\newcommand{{\viTopV}}{{{tv['v']}}}",
+            rf"\newcommand{{\viTopFlux}}{{{tv['mean_flux_jy']}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -318,9 +536,17 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p = argparse.ArgumentParser(description="Multi-decade VLBI flux variability (Astrogeo).")
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
-    p.add_argument("--sources", nargs="*", help="Astrogeo source names for a real run")
+    p.add_argument(
+        "--online", action="store_true", help="run on the curated VALIDATION_SOURCES set"
+    )
+    p.add_argument("--sources", nargs="*", help="explicit Astrogeo J2000 source names")
     args = p.parse_args(argv)
-    metrics = run(args.out, offline=args.offline or not args.sources, sources=args.sources)
+    sources = args.sources or (list(VALIDATION_SOURCES) if args.online else None)
+    # the steady controls are the CSOs in the curated set
+    controls = (
+        [j for j, name in VALIDATION_SOURCES.items() if "CSO" in name] if args.online else None
+    )
+    metrics = run(args.out, offline=args.offline or not sources, sources=sources, controls=controls)
     print(json.dumps(metrics, indent=2))
     return 0
 
