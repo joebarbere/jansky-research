@@ -126,18 +126,19 @@ def analyze(catalog: dict[str, np.ndarray], source: str = "unknown") -> dict:
 def run(out_dir: str | Path = ".", *, offline: bool = False) -> dict:
     """Full pipeline: build the catalogue, analyse it, and write the paper inputs.
 
-    Writes ``results/metrics.json``, the figures under ``paper/figures/``, and
-    ``paper/generated/macros.tex``. Returns the metrics dict.
+    Writes ``results/metrics.json``, the figures under ``papers/frbstats/figures/``, and
+    ``papers/frbstats/generated/macros.tex``. Returns the metrics dict.
     """
     out = Path(out_dir)
     catalog, source = build_catalog(offline=offline)
     stats = frbstats.summarise(catalog)
     metrics = metrics_dict(stats, source)
 
+    paper = out / "papers" / "frbstats"
     (out / "results").mkdir(parents=True, exist_ok=True)
     (out / "results" / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    report.make_figures(catalog, stats, out / "paper" / "figures")
-    report.write_macros(metrics, out / "paper" / "generated" / "macros.tex")
+    report.make_figures(catalog, stats, paper / "figures")
+    report.write_macros(metrics, paper / "generated" / "macros.tex")
     return metrics
 
 

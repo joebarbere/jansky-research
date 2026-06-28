@@ -15,10 +15,13 @@ data/
 
 # Generated analysis artifacts
 results/*.json
-paper/figures/*
-paper/generated/*
-!paper/figures/.gitkeep
-!paper/generated/.gitkeep
+results/*.csv
+papers/*/figures/*
+papers/*/generated/*
+!papers/*/figures/.gitkeep
+!papers/*/generated/.gitkeep
+# arXiv packages are assembled from the generated figures + .bbl (regenerate with `make arxiv`).
+papers/*/arxiv-submission/
 
 # Airflow runtime
 airflow/logs/
@@ -27,13 +30,12 @@ airflow/*.db
 airflow/.env
 
 # LaTeX build aux
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.bbl
-paper/*.blg
-paper/*.pdf
-paper/main.pdf
+papers/*/*.aux
+papers/*/*.log
+papers/*/*.out
+papers/*/*.bbl
+papers/*/*.blg
+papers/*/*.pdf
 
 # OS / editors
 .DS_Store

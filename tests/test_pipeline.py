@@ -23,10 +23,10 @@ def test_run_offline_writes_all_artifacts(tmp_path):
     saved = json.loads((tmp_path / "results" / "metrics.json").read_text())
     assert saved["weibull"]["k"] == metrics["weibull"]["k"]
     # three figures
-    figs = sorted((tmp_path / "paper" / "figures").glob("*.pdf"))
+    figs = sorted((tmp_path / "papers" / "frbstats" / "figures").glob("*.pdf"))
     assert {f.name for f in figs} == {"wait_time_cdf.pdf", "fluence_ccdf.pdf", "dm_by_class.pdf"}
     # macros, with a headline command present
-    macros = (tmp_path / "paper" / "generated" / "macros.tex").read_text()
+    macros = (tmp_path / "papers" / "frbstats" / "generated" / "macros.tex").read_text()
     assert r"\weibullK" in macros and r"\energyGamma" in macros
 
 

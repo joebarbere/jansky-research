@@ -3,7 +3,10 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline airflow-up airflow-down dag-test paper reproduce clean
+.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test paper-image paper arxiv reproduce clean
+
+# The research slices, each with a paper under papers/<slice>/.
+SLICES ?= frbstats frbperiod driftsearch spectra hi
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -34,8 +37,15 @@ fmt: ## Auto-format with ruff
 fetch-data: ## List research datasets (use ARGS="--fetch NAME" to download)
 	uv run python -m jansky_research.data $(ARGS) --list
 
-pipeline: ## Run the analysis end-to-end WITHOUT Airflow (the shared code path)
+pipeline: ## Run the FRB burst-statistics analysis WITHOUT Airflow (the shared code path)
 	uv run python -m jansky_research.pipeline $(ARGS)
+
+figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offline synthetic; add ARGS= for real data per slice)
+	uv run python -m jansky_research.pipeline --out . --offline
+	uv run python -m jansky_research.frbperiod --out . --offline
+	uv run python -m jansky_research.driftsearch --out .
+	uv run python -m jansky_research.spectra --out . --offline
+	uv run python -m jansky_research.hi --out . --offline
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
@@ -47,11 +57,30 @@ dag-test: ## Run the research DAG once without the scheduler loop
 	$(COMPOSE) -f airflow/compose.yaml run --rm airflow-scheduler \
 		airflow dags test research_pipeline 2026-01-01
 
-paper: ## Build paper/main.pdf in the tectonic container
-	$(COMPOSE) -f containers/compose.yaml run --rm paper
+paper-image: ## Build the tectonic image used to compile the papers
+	podman build -t jansky-research-paper:latest -f containers/paper.Dockerfile .
 
-reproduce: ## Full reproduction: fetch data -> pipeline -> paper
-	$(MAKE) fetch-data && $(MAKE) pipeline && $(MAKE) paper
+paper: paper-image ## Build every papers/<slice>/main.pdf in the tectonic container (keeps the .bbl)
+	@for s in $(SLICES); do \
+		echo "==> building papers/$$s"; \
+		podman run --rm -v "$(CURDIR)/papers/$$s":/paper:z -w /paper jansky-research-paper:latest \
+			tectonic --keep-intermediates --keep-logs main.tex || exit 1; \
+	done
+
+arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/arxiv-submission/)
+	@for s in $(SLICES); do \
+		echo "==> packaging papers/$$s"; \
+		uv run python .claude/skills/arxiv-submit/assemble_arxiv.py \
+			--paper papers/$$s --out papers/$$s/arxiv-submission || exit 1; \
+	done
+
+reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers -> arXiv packages
+	uv run python -m jansky_research.pipeline --out .
+	uv run python -m jansky_research.frbperiod --out .
+	uv run python -m jansky_research.driftsearch --out .
+	uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3 --out .
+	uv run python -m jansky_research.hi --out .
+	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts
 	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/ site/

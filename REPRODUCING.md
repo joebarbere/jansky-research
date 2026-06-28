@@ -18,19 +18,21 @@ path — `jansky_research.pipeline`), plus the one-command full chain.
 make reproduce        # fetch data -> run the pipeline -> build the PDF
 ```
 
-This fetches the CHIME/FRB Catalog 1 CSV, runs the analysis, writes `results/metrics.json` +
-`paper/figures/*.pdf` + `paper/generated/macros.tex`, and compiles `paper/main.pdf` in the tectonic
-container. Every number in the paper is `\input` from `macros.tex`, so the PDF always matches the
-pipeline.
+This fetches the public datasets, runs every slice, writes `results/*.json` +
+`papers/<slice>/figures/*.pdf` + `papers/<slice>/generated/macros.tex`, compiles each
+`papers/<slice>/main.pdf` in the tectonic container, and assembles an arXiv package per paper. Every
+number in each paper is `\input` from its `macros.tex`, so the PDFs always match the pipeline.
 
 ## Step by step
 
 ```bash
 uv sync                                   # env + jansky
-make test                                 # 24 tests, offline, on synthetic fixtures
-make pipeline                             # real-data run -> results/ + paper/ artifacts
-#   (add ARGS="--offline" to use the synthetic fixture instead)
-make paper COMPOSE="uvx podman-compose"   # tectonic -> paper/main.pdf
+make test                                 # offline tests, on synthetic fixtures
+make figures                              # run every slice -> results/ + papers/<slice>/ artifacts
+#   (the `figures` target uses the synthetic fixtures; run a slice directly without --offline for
+#    real public data, e.g. `uv run python -m jansky_research.hi`)
+make paper                                # tectonic -> every papers/<slice>/main.pdf
+make arxiv                                # assemble + validate an arXiv package per paper
 ```
 
 ## Via the Airflow automation layer
@@ -49,8 +51,9 @@ Web UI at http://localhost:8080 (admin/admin) once `airflow-up` is running.
 
 ## Notes
 
-- `data/`, `results/`, `paper/figures/`, `paper/generated/`, and `paper/main.pdf` are generated and
-  git-ignored — they are products of the pipeline, never committed by hand.
+- `data/`, `results/`, and each `papers/<slice>/`'s `figures/`, `generated/`, `arxiv-submission/`,
+  and `main.pdf` are generated and git-ignored — products of the pipeline, never committed by hand
+  (only each paper's `main.tex` + `refs.bib` are tracked).
 - Offline: with no network, the pipeline falls back to a synthetic catalogue with known ground
   truth (so tests and CI never depend on the network); pass `--offline` to force it.
 - The non-chosen survey candidates are preserved in `survey/candidate-gaps.md` as future work.
