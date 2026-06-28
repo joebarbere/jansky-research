@@ -30,7 +30,9 @@ def test_fit_log_parabola_power_law_not_peaked():
 
 def test_classify_curved():
     peaked_fit = {"is_peaked": True}
-    assert southern.classify_curved(peaked_fit, -0.5, -0.7) == "peaked"
+    assert southern.classify_curved(peaked_fit, 0.5, -0.7) == "peaked"  # concave + rising low side
+    # a concave fit but a FALLING low side is a steep-source artefact, not a real peak
+    assert southern.classify_curved(peaked_fit, -0.8, -0.7) == "steep"
     flat_fit = {"is_peaked": False}
     assert southern.classify_curved(flat_fit, -1.4, -1.4) == "uss"  # ultra-steep throughout
     assert southern.classify_curved(flat_fit, -0.7, -0.7) == "steep"

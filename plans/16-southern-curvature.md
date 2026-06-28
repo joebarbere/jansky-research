@@ -1,6 +1,6 @@
 # 16 — Southern peaked-spectrum catalogue via GLEAM-X + RACS multi-band curvature
 
-Status: 🚧 in progress (tooling step)
+Status: 🚧 in progress (tooling + real GLEAM-X×RACS fetch + run done; recover-a-known + paper next)
 
 ## Context
 

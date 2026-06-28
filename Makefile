@@ -88,6 +88,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3 --out .
 	uv run python -m jansky_research.hi --out .
 	uv run python -m jansky_research.peaked --ra 180 --dec 30 --radius 2 --validate --out .
+	uv run python -m jansky_research.southern --ra 30 --dec -30 --radius 3 --out .
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts
