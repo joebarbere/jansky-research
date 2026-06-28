@@ -75,20 +75,22 @@ A short, citable Research Note of the AAS. Editorial screening, not peer review.
 
 ---
 
-## 4. arXiv — frbstats paper only (optional)
+## 4. arXiv — the frbstats and vlass papers (optional)
 
-Reserve arXiv for the one paper with a genuinely fresh angle (the Airflow-on-Podman
-reproducibility pattern). Do **not** post the reproductions/negatives as a preprint batch.
+Reserve arXiv for the **two** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
+reproducibility pattern) and **`vlass`** (a 703 deg² multi-epoch variability census with a real
+recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology). Do **not** post the
+pure reproductions/negatives as a preprint batch.
 
 - [ ] Register + verify email at <https://arxiv.org/user/register>; add affiliation,
       link ORCID.
 - [ ] **Endorsement:** a first submission to `astro-ph.*` usually needs an endorser.
       Submitting triggers the request; line up an established astro-ph author, or email
       the moderators. Plan for a few days.
-- [ ] `make arxiv` → use `papers/frbstats/arxiv-submission/`:
-  - [ ] Open `metadata.yaml`; fill the remaining TODOs (see the table below).
+- [ ] `make arxiv` → use `papers/frbstats/arxiv-submission/` and `papers/vlass/arxiv-submission/`:
+  - [ ] Open each `metadata.yaml`; fill the remaining TODOs (see the table below).
   - [ ] Upload `arxiv-source.tar.gz` (LaTeX source + `.bbl` included); check the AutoTeX
-        preview matches `papers/frbstats/main.pdf`.
+        preview matches the local `main.pdf`.
   - [ ] Set license (default in the file: CC BY 4.0) and categories; paste
         title/authors/abstract/comments from `metadata.yaml`.
 - [ ] Author list is **Joseph Barbere**; an AI/LLM is not an author (it's in the
@@ -105,6 +107,7 @@ reproducibility pattern). Do **not** post the reproductions/negatives as a prepr
 | `hi` | `astro-ph.GA` | `astro-ph.IM` |
 | `driftsearch` | `astro-ph.IM` | `astro-ph.EP` |
 | `spectra` | `astro-ph.GA` | `astro-ph.IM` |
+| `vlass` | `astro-ph.HE` | `astro-ph.SR`, `astro-ph.IM` |
 
 ---
 
@@ -115,4 +118,5 @@ reproducibility pattern). Do **not** post the reproductions/negatives as a prepr
 | Toolkit (the repo) | Zenodo DOI → JOSS | not submitted |
 | `papers/frbstats/rnaas.tex` | RNAAS | not submitted |
 | `papers/frbstats/main.tex` | arXiv (optional) | not submitted |
+| `papers/vlass/main.tex` | arXiv (optional) | not submitted |
 | `papers/{frbperiod,hi,driftsearch,spectra}/` | repo + Zenodo only | — keep in repo |
