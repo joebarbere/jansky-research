@@ -52,6 +52,7 @@ figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offl
 	uv run python -m jansky_research.southern --out . --offline
 	uv run python -m jansky_research.offsets --out . --offline
 	uv run python -m jansky_research.pulsarspec --out . --offline
+	uv run python -m jansky_research.stacking --out . --offline
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
