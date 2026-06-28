@@ -74,6 +74,19 @@ DATASETS: dict[str, Dataset] = {
         "burst-statistics analysis (CHIME/FRB Collaboration 2021, ApJS 257, 59).",
         size_hint="~216 KB",
     ),
+    "vlass-cirada-ql": Dataset(
+        name="vlass-cirada-ql",
+        # The full CIRADA VLASS Quick-Look component catalogues (~3.4M components/epoch) are bulk
+        # FITS products; in practice the slice queries a sky region per epoch via CADC/CIRADA TAP
+        # rather than downloading the whole table. Listed here for provenance.
+        url="https://cirada.ca/vlasscatalogueql0",
+        filename="CIRADA_VLASS_QL_catalogue.fits",
+        description="VLA Sky Survey (VLASS) Quick-Look component catalogues (CIRADA; Gordon et al. "
+        '2021), 2-4 GHz, 2.5", three epochs (2017-2024). Cross-matched across epochs for the '
+        "multi-epoch radio-variability slice (jansky_research.vlass).",
+        size_hint="~GB per epoch",
+        category="large",
+    ),
     "voyager1-h5": Dataset(
         name="voyager1-h5",
         url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",
