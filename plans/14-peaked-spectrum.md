@@ -1,6 +1,6 @@
 # 14 — Peaked-spectrum (GPS/CSS) radio sources via 3-frequency spectral curvature
 
-Status: 🚧 in progress (real-data run done; paper next)
+Status: ✅ done (real-data run + two validations + paper drafted; `papers/peaked/main.tex`)
 
 ## Context
 

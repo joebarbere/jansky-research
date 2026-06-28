@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -85,6 +85,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.driftsearch --out .
 	uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3 --out .
 	uv run python -m jansky_research.hi --out .
+	uv run python -m jansky_research.peaked --ra 180 --dec 30 --radius 2 --validate --out .
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts

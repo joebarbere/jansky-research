@@ -336,8 +336,20 @@ def synthetic_field(
     return tgss, survey(1), survey(2), is_peaked
 
 
-def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool = False) -> dict:
-    """Full slice: fetch (or synthesise) TGSS/NVSS/VLASS, find peaked sources, vet, write artifacts."""
+def run(
+    center=None,
+    radius_deg: float = 2.0,
+    out: str = ".",
+    *,
+    offline: bool = False,
+    validate: bool = False,
+) -> dict:
+    """Full slice: fetch (or synthesise) TGSS/NVSS/VLASS, find peaked sources, vet, write artifacts.
+
+    With ``validate`` (real data only), also runs the two recover-a-known tests --- ``validate_known``
+    (Callingham 2017 MHz-peaked purity) and ``validate_hfp`` (Dallacasa 2000 GHz-peaked recovery) ---
+    and folds their headline numbers into the metrics and macros the paper inputs.
+    """
     import json
     from pathlib import Path
 
@@ -377,6 +389,17 @@ def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool =
         ip, _, _ = crossmatch(ra_t, dec_t, res["ra"][peaked], res["dec"][peaked], 5.0)
         metrics["n_injected_peaked"] = int(truth.sum())
         metrics["n_peaked_recovered"] = int(ip.size)
+
+    if validate and not offline and center is not None:  # pragma: no cover - network
+        hfp = validate_hfp()
+        metrics["hfp_n"] = int(hfp["n_validated"])
+        metrics["hfp_rising_pct"] = round(100.0 * hfp["frac_rising"])
+        metrics["hfp_ghz_pct"] = round(100.0 * hfp["frac_ghz_peaked"])
+        cal = validate_known()
+        lo_flag, lo_tot = cal["recovery_by_nupk"].get("72-250MHz", (0, 0))
+        metrics["call_n"] = int(cal["n_validated"])
+        metrics["call_low_flagged"] = int(lo_flag)
+        metrics["call_low_total"] = int(lo_tot)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -435,6 +458,13 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\pkNrising}}{{{m.get('n_rising', 0)}}}",
         rf"\newcommand{{\pkNextended}}{{{m['n_extended_artefact']}}}",
         rf"\newcommand{{\pkNtgssdet}}{{{m['n_tgss_detected']}}}",
+        # Validation macros (populated by run(validate=True) on real data; 0 placeholders offline).
+        rf"\newcommand{{\pkHfpN}}{{{m.get('hfp_n', 0)}}}",
+        rf"\newcommand{{\pkHfpRising}}{{{m.get('hfp_rising_pct', 0)}}}",
+        rf"\newcommand{{\pkHfpGhz}}{{{m.get('hfp_ghz_pct', 0)}}}",
+        rf"\newcommand{{\pkCallN}}{{{m.get('call_n', 0)}}}",
+        rf"\newcommand{{\pkCallLowFlagged}}{{{m.get('call_low_flagged', 0)}}}",
+        rf"\newcommand{{\pkCallLowTotal}}{{{m.get('call_low_total', 0)}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -453,9 +483,13 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--radius", type=float, default=2.0, help="cone radius (deg)")
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
+    p.add_argument(
+        "--validate", action="store_true", help="also run the Callingham + Dallacasa tests"
+    )
     args = p.parse_args(argv)
     center = None if (args.offline or args.ra is None) else SkyCoord(args.ra, args.dec, unit="deg")
-    print(json.dumps(run(center, args.radius, args.out, offline=args.offline), indent=2))
+    metrics = run(center, args.radius, args.out, offline=args.offline, validate=args.validate)
+    print(json.dumps(metrics, indent=2))
     return 0
 
 

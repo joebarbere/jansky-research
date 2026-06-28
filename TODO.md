@@ -75,19 +75,21 @@ A short, citable Research Note of the AAS. Editorial screening, not peer review.
 
 ---
 
-## 4. arXiv — the frbstats and vlass papers (optional)
+## 4. arXiv — the frbstats, vlass, and peaked papers (optional)
 
-Reserve arXiv for the **two** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
-reproducibility pattern) and **`vlass`** (a 703 deg² multi-epoch variability census with a real
-recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology). Do **not** post the
-pure reproductions/negatives as a preprint batch.
+Reserve arXiv for the **three** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
+reproducibility pattern), **`vlass`** (a 703 deg² multi-epoch variability census with a real
+recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology), and **`peaked`** (a
+three-frequency curvature selector with the TGSS-upper-limit + resolution-floor method and two
+recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known HFP sample). Do
+**not** post the pure reproductions/negatives as a preprint batch.
 
 - [ ] Register + verify email at <https://arxiv.org/user/register>; add affiliation,
       link ORCID.
 - [ ] **Endorsement:** a first submission to `astro-ph.*` usually needs an endorser.
       Submitting triggers the request; line up an established astro-ph author, or email
       the moderators. Plan for a few days.
-- [ ] `make arxiv` → use `papers/frbstats/arxiv-submission/` and `papers/vlass/arxiv-submission/`:
+- [ ] `make arxiv` → use `papers/frbstats/`, `papers/vlass/`, and `papers/peaked/arxiv-submission/`:
   - [ ] Open each `metadata.yaml`; fill the remaining TODOs (see the table below).
   - [ ] Upload `arxiv-source.tar.gz` (LaTeX source + `.bbl` included); check the AutoTeX
         preview matches the local `main.pdf`.
@@ -108,6 +110,7 @@ pure reproductions/negatives as a preprint batch.
 | `driftsearch` | `astro-ph.IM` | `astro-ph.EP` |
 | `spectra` | `astro-ph.GA` | `astro-ph.IM` |
 | `vlass` | `astro-ph.HE` | `astro-ph.SR`, `astro-ph.IM` |
+| `peaked` | `astro-ph.GA` | `astro-ph.HE`, `astro-ph.IM` |
 
 ---
 
@@ -119,4 +122,5 @@ pure reproductions/negatives as a preprint batch.
 | `papers/frbstats/rnaas.tex` | RNAAS | not submitted |
 | `papers/frbstats/main.tex` | arXiv (optional) | not submitted |
 | `papers/vlass/main.tex` | arXiv (optional) | not submitted |
+| `papers/peaked/main.tex` | arXiv (optional) | not submitted |
 | `papers/{frbperiod,hi,driftsearch,spectra}/` | repo + Zenodo only | — keep in repo |
