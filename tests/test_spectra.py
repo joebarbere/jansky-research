@@ -64,5 +64,6 @@ def test_analyze_and_run_offline(tmp_path):
     assert metrics["source"] == "synthetic"
     assert (tmp_path / "results" / "uss_metrics.json").exists()
     assert (tmp_path / "results" / "uss_candidates.csv").exists()
-    figs = {p.name for p in (tmp_path / "paper" / "figures").glob("*.pdf")}
+    figs = {p.name for p in (tmp_path / "papers" / "spectra" / "figures").glob("*.pdf")}
     assert {"alpha_hist.pdf", "alpha_vs_flux.pdf"} <= figs
+    assert (tmp_path / "papers" / "spectra" / "generated" / "macros.tex").exists()

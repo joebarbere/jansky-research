@@ -21,18 +21,26 @@ jobs:
           path: jansky
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Generate figures + macros from the pipeline (offline)
+      - name: Generate every slice's figures + macros from the pipeline (offline)
         working-directory: jansky-research
         run: |
           uv sync
           uv run python -m jansky_research.pipeline --out . --offline
-      - name: Build the PDF with tectonic
+          uv run python -m jansky_research.frbperiod --out . --offline
+          uv run python -m jansky_research.driftsearch --out .
+          uv run python -m jansky_research.spectra --out . --offline
+          uv run python -m jansky_research.hi --out . --offline
+      - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3
-      - name: Compile
-        working-directory: jansky-research/paper
-        run: tectonic main.tex
-      - name: Upload paper.pdf
+      - name: Compile every paper
+        working-directory: jansky-research
+        run: |
+          for s in frbstats frbperiod driftsearch spectra hi; do
+            echo "==> building papers/$s"
+            (cd "papers/$s" && tectonic main.tex)
+          done
+      - name: Upload the PDFs
         uses: actions/upload-artifact@v4
         with:
-          name: paper
-          path: jansky-research/paper/main.pdf
+          name: papers
+          path: jansky-research/papers/*/main.pdf

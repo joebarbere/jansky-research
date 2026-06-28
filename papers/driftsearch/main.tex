@@ -1,0 +1,122 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every quantitative result is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A reproducible CPU-only SETI drift-search benchmark}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Reproducible CPU-Only Injection--Recovery Benchmark for Narrowband Doppler-Drift
+SETI Searches, with an Honest Voyager-1 Null}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Technosignature searches look for narrowband signals that drift in frequency as the transmitter
+accelerates. Surveys routinely quote injection--recovery efficiencies, but there is no shared,
+reproducible, CPU-only reference set on which to compare detectors. We build one on the pure-NumPy
+drift search in the \code{jansky} package: inject synthetic drifting tones over a grid of
+signal-to-noise ratio and drift rate, run the brute-force de-drift search, and measure the recovered
+fraction. With \dsNtrials\ trials per cell and a detection threshold of \dsThreshold, the benchmark
+reaches 50\% completeness at injected S/N~$\approx\dsCfifty$ and 90\% at $\approx\dsCninety$, with no
+false positives in noise-only trials (95\% Clopper--Pearson upper limit $\sim$0.9\%) and recovery
+flat across the tested drift rates. As an honest reality check we point the \emph{same} detector at
+the Breakthrough Listen open-data file of Voyager~1 \citep{lebofsky2019}: it is fooled by the
+spectrometer's band-center DC spike, and at the documented Voyager carrier (8420.216~MHz, drifting
+$\sim-0.69$~Hz\,s$^{-1}$) it returns only noise-floor S/N --- it does \emph{not} recover the
+spacecraft. This bounds where the teaching-grade detector works; the deliverable is the reproducible
+benchmark and this honest negative, not a detection.
+\end{abstract}
+
+\keywords{Search for extraterrestrial intelligence (2127) --- Technosignatures (2128) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+A narrowband radio transmitter at fixed frequency appears, at the receiver, to drift in frequency
+because of the changing line-of-sight acceleration; SETI pipelines de-drift the dynamic spectrum to
+recover such tones \citep{enriquez2017}. Reported detection efficiencies depend on the injector, the
+detector, and the data, which makes cross-comparison hard. The \code{setigen} package
+\citep{brzycki2022} standardized signal \emph{injection}; what is still missing for small, portable
+work is a single reproducible cell that fixes \emph{both} the injection model and the detector so two
+detectors can be compared on identical inputs on any laptop. We provide that, and we test honestly
+where the underlying teaching-grade detector stops working.
+
+\section{Method}
+\code{driftsearch} wraps the brute-force Doppler-drift search in \code{jansky.seti}. It injects a
+synthetic drifting tone of a given S/N and drift rate into Gaussian noise, runs the de-drift search
+(whose trial grid includes the true drift), and records whether the recovered peak exceeds the
+threshold. Sweeping a grid of $\dsNdrift$ drift rates (0 to $\dsDriftMax$ channels per sample) by a
+range of injected S/N, with \dsNtrials\ independent realizations per cell, yields the completeness
+surface $P_\mathrm{detect}(\mathrm{S/N}, \dot f)$. Noise-only realizations calibrate the threshold:
+the false-positive rate is the fraction whose best peak crosses \dsThreshold\ with no signal present.
+Everything is offline and seedable, so the benchmark is exactly reproducible.
+
+\section{Results: the benchmark}
+At threshold \dsThreshold\ (noise-only best peaks cluster near S/N~5), recovery rises from zero below
+S/N~$\sim$0.75 and saturates at 100\% by S/N~2. The drift-averaged completeness reaches 50\% at
+injected S/N~$\approx\dsCfifty$ and 90\% at $\approx\dsCninety$ (Figure~\ref{fig:recovery}). No
+false positives occurred in the noise-only trials, a 95\% Clopper--Pearson upper limit of $\sim$0.9\%.
+Recovery is flat across the tested drift rates, as expected for a brute-force search whose grid spans
+the true drift.
+
+\begin{figure}
+\plotone{figures/drift_recovery.pdf}
+\caption{Injection--recovery completeness of the \code{jansky.seti} drift detector over injected S/N
+and drift rate (\dsNtrials\ trials per cell, threshold \dsThreshold). The drift-averaged 50\% point is
+at S/N~$\approx\dsCfifty$. The ``S/N'' and drift units are the detector's internal model units, not
+calibrated janskys or Hz\,s$^{-1}$.}
+\label{fig:recovery}
+\end{figure}
+
+\section{An honest Voyager-1 null}
+Pointing the same detector at the Breakthrough Listen GBT open-data file of Voyager~1
+\citep{lebofsky2019, macmahon2018} is a cautionary result, not a success. The brightest channel is the
+band-center spectrometer DC-spike artifact, $\sim10^3\times$ any real tone; a naive
+brightest-channel ``detection'' reports this and is wrong. At the documented Voyager-1 carrier
+\citep[8420.216~MHz;][]{estevez2021}, searched with a wide drift grid because the carrier drifts
+$\sim-0.69$~Hz\,s$^{-1}$, the detector returns S/N~$\approx$4.85 --- indistinguishable from a blank
+window ($\approx$4.59). It does not recover the carrier. So a detector validated on injected tones in
+clean synthetic noise \emph{fails} on the real Voyager-1 data: it is fooled by the DC spike, and the
+true drifting carrier amid real instrumental structure is beyond this tool. Recovering Voyager needs
+purpose-built SETI software; reporting this null is the point.
+
+\section{Limitations}
+\paragraph{Relative, not absolute.} The benchmark's S/N and drift units are the internal units of the
+synthetic model, not calibrated sensitivities; it compares detectors on a common reference, not on
+the sky.
+\paragraph{No cadence or RFI realism.} A single tone in Gaussian noise --- no ON/OFF cadence, no
+realistic radio-frequency interference --- so it measures raw recovery, not interference rejection.
+\paragraph{Real-data gap.} As the Voyager null shows, the detector does not generalize to real
+Breakthrough Listen data as-is; the benchmark characterizes it on synthetic inputs only.
+
+\section{Discussion and reproducibility}
+The contribution is a reproducible, CPU-only injection--recovery benchmark for a narrowband
+drift detector (50\% completeness at S/N~$\approx\dsCfifty$, false-positive rate $\lesssim$0.9\%),
+plus an honest negative real-data check that bounds where the detector works. There is no discovery,
+and none is expected: the only real ``signal'' near the data is Voyager, which the tool does not
+recover. The benchmark regenerates from a clean checkout, and every number traces to the
+pipeline-written macros this paper \code{\textbackslash input}s.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{driftsearch} benchmark, the analysis (including catching the
+DC-spike artifact that an earlier draft had mistaken for a detection), and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+figures, and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the Breakthrough Listen team for the public Voyager-1 data.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

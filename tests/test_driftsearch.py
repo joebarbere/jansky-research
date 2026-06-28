@@ -41,4 +41,5 @@ def test_run_offline_writes_artifacts(tmp_path):
     assert 0.0 <= m["false_positive_rate"] < 0.1
     assert np.isfinite(m["completeness_snr_50"])  # the grid spans the transition
     assert (tmp_path / "results" / "drift_metrics.json").exists()
-    assert (tmp_path / "paper" / "figures" / "drift_recovery.pdf").exists()
+    assert (tmp_path / "papers" / "driftsearch" / "figures" / "drift_recovery.pdf").exists()
+    assert (tmp_path / "papers" / "driftsearch" / "generated" / "macros.tex").exists()

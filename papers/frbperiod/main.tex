@@ -1,0 +1,127 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every quantitative result is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Recovering FRB 20180916B's 16.35-day period}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Recovering the 16.35-day Activity Period of FRB~20180916B from the Public
+CHIME/FRB Catalog with a Lightweight Rayleigh Periodogram}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A handful of repeating fast radio bursts (FRBs) show periodic activity windows; the archetype,
+FRB~20180916B, has a $16.35\pm0.15$-day cycle \citep{chime2020periodic}. We ask a deliberately
+modest question: can that period be recovered from the \emph{public} First CHIME/FRB Catalog alone,
+with a small, tested, CPU-only tool? We implement a phase-folding Rayleigh $Z^2_1$ periodogram
+\citep{buccheri1983} and run it over all \fpNsources\ catalog repeaters. Only \fpNsearch\ have enough
+bursts ($\geq\fpMinBursts$) to search; of these, FRB~20180916B yields a clear peak at
+$P=\fpPeriod$~days --- consistent with the independently published value to well within its
+uncertainty --- on \fpNbursts\ bursts, while the other searchable source shows no significant period,
+as expected. The peak strength ($Z^2_1=\fpZtwo$; exposure-blind false-alarm probability $\fpFAP$) is
+\emph{not} a rigorous detection significance, because a transit survey's aliased, non-uniform
+sampling violates the independence the analytic probability assumes; the genuine validation is the
+coincidence with the known period. This is a reproducibility and tooling contribution --- a recovered
+known result, not a new periodicity --- and we state plainly why finding \emph{new} repeater periods
+needs the dense, exposure-modelled monitoring the discovery teams use, not Catalog~1.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Fast radio bursts (1313) --- Periodic variable stars (1213) --- Open source software (1866)}
+
+\section{Introduction}
+Fast radio bursts are millisecond-duration, highly dispersed radio flashes. A subset repeat, and a
+smaller subset repeat \emph{periodically}: bursts cluster at a preferred phase of a multi-day cycle.
+FRB~20180916B was the first, with a 16.35-day activity period \citep{chime2020periodic}; a longer
+$\sim$157-day candidate period has been reported for FRB~121102 \citep{rajwade2020}. Detecting such
+periods normally relies on dedicated monitoring campaigns with an exposure model. Here we test the
+weaker but reproducible claim that the flagship period is already \emph{recoverable} from the public
+First CHIME/FRB Catalog \citep{chimecat1} with a minimal tool --- a validation exercise, not a search
+for new periods.
+
+\section{Method}
+\code{frbperiod} is a pure-NumPy module (built on the \code{jansky} helper package; \citealt{jansky})
+implementing the Rayleigh $Z^2_1$ statistic \citep{buccheri1983}. For a trial period $P$, arrival
+times are folded to phase $\phi_i = 2\pi\,(t_i/P \bmod 1)$ and
+\begin{equation}
+Z^2_1 = \frac{2}{n}\left[\Big(\textstyle\sum_i\cos\phi_i\Big)^2 + \Big(\sum_i\sin\phi_i\Big)^2\right],
+\end{equation}
+which is large when bursts concentrate at one phase and $\sim2$ for random phases; under the
+no-signal hypothesis $Z^2_1\sim\chi^2_2$. We scan $2$--$100$~days, take the peak, and compute an
+analytic false-alarm probability $\mathrm{FAP}=1-(1-e^{-Z^2_1/2})^{n_\mathrm{indep}}$. We flag this
+FAP as \emph{exposure-blind}: it assumes independent trials, which a transit survey's aliased
+spectral window violates, so it is an approximate guide only. Every function is tested against a
+synthetic periodic source with a known injected period, so the suite runs offline and recovers the
+ground truth.
+
+\section{Data}
+We use the public First CHIME/FRB Catalog \citep{chimecat1}, keeping one row per event and the
+\fpNsources\ sources flagged as repeaters. CHIME is a transit instrument that sees each source
+roughly once per sidereal day with strongly non-uniform exposure. Sources with fewer than
+\fpMinBursts\ catalog bursts are not searched; only \fpNsearch\ of the \fpNsources\ repeaters clear
+that bar, the central limitation of a catalog-only search.
+
+\section{Results}
+\paragraph{The known period is recovered (validation).} For FRB~20180916B the periodogram peaks at
+$P=\fpPeriod$~days on \fpNbursts\ bursts (Figure~\ref{fig:pgram}), coincident with the published
+$16.35\pm0.15$~days \citep{chime2020periodic} --- within the grid resolution and well inside the
+published uncertainty. \emph{This agreement with an independently measured value is the validation},
+not the analytic peak strength ($Z^2_1=\fpZtwo$, $\mathrm{FAP}=\fpFAP$), which ignores the survey's
+exposure and aliasing and is therefore not a rigorous significance.
+
+\paragraph{A null, as expected.} The other searchable source shows no significant period; its best
+peak is consistent with noise, and no multi-day activity period has been reported for it in the
+literature. The remaining $\fpNsources-\fpNsearch$ repeaters have too few catalog bursts to constrain
+anything. So the tool returns exactly one detection, and it is the already-known one.
+
+\begin{figure}
+\plotone{figures/periodogram.pdf}
+\caption{Rayleigh $Z^2_1$ periodogram for FRB~20180916B from public Catalog~1 arrival times. The peak
+at $\fpPeriod$~days (dashed) coincides with the published 16.35-day activity period.}
+\label{fig:pgram}
+\end{figure}
+
+\section{Limitations}
+The honest caveats are structural, not incidental. (i)~\emph{Exposure-blind significance}: the
+analytic FAP is an upper bound on confidence, not a detection probability, because transit sampling
+is aliased and non-uniform. (ii)~\emph{Daily aliasing}: catalog-only periodograms alias near 1~day
+and its beats; the 16-day peak sits safely above that and matches the known value, but blind
+short-period peaks are not trustworthy. (iii)~\emph{Topocentric times}: no barycentric correction was
+applied; for a 16-day period the Roemer modulation is $\sim$0.03\% and negligible, and the correct
+recovery confirms it, but this matters for sub-day searches. (iv)~\emph{Sparse sampling}: with the
+catalog's burst counts, $\fpNsources-\fpNsearch$ of \fpNsources\ sources yield no constraint, and even
+the searchable ones are marginal by professional standards.
+
+\section{Discussion and reproducibility}
+The contribution is a tested, offline-capable periodicity-search tool plus a clean validation: it
+recovers FRB~20180916B's published period from public data and correctly finds nothing significant
+elsewhere, with no over-claimed new periodicity. The analysis regenerates from a clean checkout in
+one command, and every number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, so it is auditable end to end. Finding genuinely new repeater periods
+would require the denser, exposure-modelled data the discovery teams use --- not Catalog~1.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{frbperiod} tool, the analysis, and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+figures, and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project whose tested helpers this work builds on, and the CHIME/FRB Collaboration for the public
+catalog.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

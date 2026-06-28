@@ -1,0 +1,125 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every quantitative result is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{The flat inner Milky Way rotation curve from LAB HI}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Recovering the Flat Inner Milky Way Rotation Curve from Public LAB HI~21\,cm Data
+by the Tangent-Point Method}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The flat rotation curve of the Milky Way is a foundational piece of evidence for dark matter, and the
+classical way to measure its inner part is the HI~21\,cm tangent-point method. We ask whether that
+textbook result can be recovered from public survey data with a small, tested, CPU-only tool. We read
+\hiNlong\ Galactic-longitude $(b,v)$ slices from the Leiden/Argentine/Bonn (LAB) HI survey
+\citep{kalberla2005}, extract the terminal velocity of the $b=0$ profile, and apply
+$R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with the modern constants
+$R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$ \citep{reid2019}. Beyond the bar-dominated inner
+region, from $R\approx\hiRmin$ to $\hiRmax$~kpc the rotation speed stays at
+$V\approx\hiVflat\pm\hiVflatErr$~km\,s$^{-1}$: it does \emph{not} fall off in the Keplerian
+$V\propto R^{-1/2}$ way the visible mass alone would give. Recovering this approximately flat,
+non-Keplerian curve is the validation. We are explicit about the limits: the absolute level is
+$\sim\hiExcessPct$\% high because a fixed brightness-temperature threshold systematically
+\emph{overestimates} the terminal velocity \citep{mccluregriffiths2016}; the shape is robust but the
+normalization is soft; and an inner-Galaxy flat curve is, by itself, \emph{not} a standalone
+dark-matter detection. This is a tooling and reproducibility contribution.
+\end{abstract}
+
+\keywords{Milky Way rotation (1059) --- Milky Way dynamics (1051) --- Neutral hydrogen clouds (1099) --- Dark matter (353) --- Open source software (1866)}
+
+\section{Introduction}
+That spiral-galaxy rotation curves stay flat to large radii, rather than declining with the visible
+mass, is one of the cornerstones of the dark-matter case. For our own Galaxy the inner rotation curve
+is measured from the HI~21\,cm line by the tangent-point (terminal-velocity) method
+\citep{mccluregriffiths2007}: along an inner sightline the gas at the subcentral point moves fastest
+along the line of sight, marking the high-velocity edge of the profile. We test whether this classic
+measurement is reproducible from a public, sub-megabyte survey with a $\sim$30-line tool --- a
+validation, not a new measurement.
+
+\section{Method}
+\code{hi} is a pure-NumPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}). For each
+longitude $\ell$ it reads the LAB $(b,v)$ slice, takes the $b=0$ spectrum, and estimates the terminal
+velocity as the most positive LSR velocity with brightness temperature above a fixed threshold. The
+tangent point then gives
+\begin{equation}
+R = R_0\sin\ell, \qquad V(R) = v_\mathrm{term} + V_0\sin\ell,
+\end{equation}
+with $R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$ from \citet{reid2019} (their best-fit solar
+circular speed, not the older IAU 220~km\,s$^{-1}$). LAB velocities are already in the LSR frame, so
+no solar-motion correction is applied. A synthetic $(\ell,v)$ slice with a known injected flat curve
+lets the tests run offline and recover the input.
+
+\section{Data}
+We use the LAB survey \citep{kalberla2005}, the all-sky combination of the Leiden/Dwingeloo and
+Instituto Argentino de Radioastronom\'ia surveys with stray-radiation correction, retrieved as
+per-longitude $(b,v)$ FITS slices from VizieR. We sample \hiNlong\ longitudes from $\ell=10\arcdeg$ to
+$80\arcdeg$ in the first quadrant and read the mid-plane ($b=0$) spectrum of each.
+
+\section{Results}
+Table-style, the recovered curve rises gently across the inner disk and then flattens. Beyond the
+bar-dominated region ($R\lesssim\hiRmin$~kpc, dropped), from $R\approx\hiRmin$ to $\hiRmax$~kpc the
+rotation speed holds at $V\approx\hiVflat\pm\hiVflatErr$~km\,s$^{-1}$ (Figure~\ref{fig:rc}). It does
+not decline as the Keplerian $V\propto R^{-1/2}$ expected from the visible mass alone. Recovering this
+\emph{approximately flat, non-Keplerian} curve from public HI data with a tiny tool is the validation
+--- a known, foundational result.
+
+\begin{figure}
+\plotone{figures/rotation_curve.pdf}
+\caption{Inner Milky Way rotation curve from LAB HI tangent-point velocities. The curve is
+approximately flat from $R\approx\hiRmin$ to $\hiRmax$~kpc at
+$V\approx\hiVflat$~km\,s$^{-1}$ (dashed), well above a declining Keplerian expectation; the dotted
+line marks $V_0=\hiVzero$~km\,s$^{-1}$.}
+\label{fig:rc}
+\end{figure}
+
+\section{Limitations}
+\paragraph{Absolute level is $\sim\hiExcessPct$\% high.} At $\hiVflat$ versus $V_0=\hiVzero$, the main
+cause is the terminal-velocity estimator: a fixed brightness-temperature threshold
+\emph{overestimates} $v_\mathrm{term}$ relative to inflection-point / error-function fitting
+\citep[$\sim$7~km\,s$^{-1}$ higher;][]{mccluregriffiths2016}, which inflates $V$. The shape (flat,
+non-Keplerian) is robust; the normalization is the soft part.
+\paragraph{Circular orbits assumed.} $V = v_\mathrm{term} + V_0\sin\ell$ assumes the tangent-point gas
+is on a circular orbit; spiral-arm and bar-driven streaming biases individual points and cannot be
+removed without a model.
+\paragraph{Bar region excluded.} Points at $R\lesssim\hiRmin$~kpc are dominated by the bar's
+non-circular motions and are dropped from the mean.
+\paragraph{Not, by itself, a dark-matter detection.} An inner flat curve is \emph{consistent} with a
+dark halo but can also arise from the disk's own mass; the unambiguous case needs the curve beyond
+$R\approx R_0$, where the visible-mass contribution falls --- a regime requiring a different method
+and not covered here. The result is also first-quadrant, $b=0$ only, and the tangent-point method
+applies solely for $R<R_0$.
+
+\section{Discussion and reproducibility}
+This is a clean, honest validation: a small, tested, offline-capable tool recovers the approximately
+flat inner Milky Way rotation curve from public LAB HI data, with the non-Keplerian shape robust and
+the absolute normalization $\sim\hiExcessPct$\% high for a known, cited reason. The analysis
+regenerates from a clean checkout, and every number traces to the pipeline-written macros this paper
+\code{\textbackslash input}s.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{hi} tool, the analysis, and the drafting of this manuscript.
+The author directed the work, independently reviewed and verified all code, results, figures, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the LAB survey team for the public HI data.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

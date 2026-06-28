@@ -52,12 +52,38 @@ def _apply_macros(s: str, macros: dict[str, str]) -> str:
     return s
 
 
+# Common LaTeX macros -> plain-text/unicode, so the auto-extracted abstract stays readable
+# (arXiv stores the abstract as near-plain text). Applied before the generic macro strip.
+_SYMBOLS = {
+    r"\approx": "~", r"\simeq": "~", r"\sim": "~", r"\pm": "+/-", r"\mp": "-/+",
+    r"\times": "x", r"\cdot": ".", r"\propto": "~prop~", r"\equiv": "=",
+    r"\leq": "<=", r"\geq": ">=", r"\ll": "<<", r"\gg": ">>",
+    r"\lesssim": "<~", r"\gtrsim": ">~", r"\ell": "l", r"\odot": "sun",
+    r"\alpha": "alpha", r"\beta": "beta", r"\gamma": "gamma", r"\delta": "delta",
+    r"\mu": "mu", r"\nu": "nu", r"\sigma": "sigma", r"\chi": "chi", r"\phi": "phi",
+    r"\arcdeg": " deg", r"\degree": " deg", r"\arcsec": "arcsec", r"\arcmin": "arcmin",
+    r"\sin": "sin ", r"\cos": "cos ", r"\tan": "tan ", r"\log": "log ", r"\ln": "ln ",
+    r"\bmod": " mod ", r"\textbackslash": "\\",
+}
+
+
 def _latex_to_text(s: str) -> str:
-    s = re.sub(r"\\(emph|textit|textbf|code|texttt)\{([^}]*)\}", r"\2", s)
+    s = re.sub(r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s)
     s = re.sub(r"\\cite[tp]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
-    s = re.sub(r"\$([^$]*)\$", r"\1", s)
-    s = re.sub(r"\\[a-zA-Z]+", "", s)
-    s = s.replace("~", " ").replace("\\&", "&")
+    s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
+    # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
+    s = re.sub(r"_\{([^{}]*)\}", r"\1", s)
+    s = re.sub(r"\^\{([^{}]*)\}", r"^(\1)", s)
+    s = re.sub(r"_([A-Za-z0-9])", r"\1", s)
+    for macro, rep in _SYMBOLS.items():
+        s = s.replace(macro, rep)
+    s = re.sub(r"\\[,;:!> ]", " ", s)  # thin/medium spaces and \>
+    s = re.sub(r"\$([^$]*)\$", r"\1", s)  # drop math delimiters, keep contents
+    s = re.sub(r"\\[a-zA-Z]+", "", s)  # any remaining macros
+    s = s.replace("~", " ").replace("{", "").replace("}", "")
+    for esc in ("&", "%", "_", "#", "$"):  # unescape \& \% \_ \# \$
+        s = s.replace("\\" + esc, esc)
+    s = re.sub(r"\s+([,.;:])", r"\1", s)  # drop spaces left before punctuation by \cite removal
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -123,6 +149,13 @@ def main() -> int:
     files, warns = collect(paper, main_tex)
     errs = validate(paper, main_tex, abstract, files)
 
+    # Auto-fill what we can read from the source: the ORCID in \author[ORCID]{...}, and a
+    # comments line seeded from the figure count (page count still needs the human / the PDF).
+    om = re.search(r"\\author\[(\d{4}-\d{4}-\d{4}-[\dXx]{4})\]", text)
+    orcid = om.group(1) if om else "TODO"
+    n_fig = sum(1 for f in files if f.suffix == ".pdf")
+    comments = f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research"
+
     tar = out / "arxiv-source.tar.gz"
     with tarfile.open(tar, "w:gz") as tf:
         for f in files:
@@ -137,14 +170,14 @@ abstract: |
   {abstract}
 primary_category: TODO   # e.g. astro-ph.IM | astro-ph.GA | astro-ph.HE | astro-ph.CO
 cross_lists: []          # 0-3 secondary, e.g. [astro-ph.GA, astro-ph.HE]
-comments: TODO           # e.g. "4 pages, 3 figures. Code: github.com/joebarbere/jansky-research"
+comments: {comments!r}
 license: CC BY 4.0       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
 report_number: null
 journal_ref: null        # add after journal acceptance
 doi: null
 msc_class: null          # math.* only
 acm_class: null          # cs.* only
-orcid: TODO              # e.g. 0009-0008-3289-4447 (set on the arXiv account too)
+orcid: {orcid}              # set on the arXiv account/profile too
 """
     )
 

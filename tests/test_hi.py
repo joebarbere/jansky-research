@@ -36,7 +36,8 @@ def test_run_offline(tmp_path):
     assert abs(m["V_flat_mean_kms"] - 230.0) < 6.0
     assert m["V_flat_std_kms"] < 6.0  # flat
     assert (tmp_path / "results" / "rotation_curve.json").exists()
-    assert (tmp_path / "paper" / "figures" / "rotation_curve.pdf").exists()
+    assert (tmp_path / "papers" / "hi" / "figures" / "rotation_curve.pdf").exists()
+    assert (tmp_path / "papers" / "hi" / "generated" / "macros.tex").exists()
 
 
 def test_read_lab_slice_parses_wcs(tmp_path):
