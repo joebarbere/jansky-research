@@ -44,6 +44,30 @@ A nice methodological point: the BL Lac (a known $\gamma$-ray blazar) is **stead
 so the variability flag alone did *not* catch it — **SIMBAD did**. Blazar rejection needs the catalogue
 cross-ID (and ideally longer-baseline variability), not VLASS-epoch variability alone.
 
+## Validation against a known peaked-source catalogue (and the selection function it reveals)
+
+`validate_known` tests the selection against the **Callingham et al. (2017)** peaked-spectrum
+catalogue (1222 sources with a measured turnover frequency $\nu_\mathrm{pk}$), adding VLASS 3 GHz to
+each. Run on 113 bright ($S_{1.4}>60$ mJy), VLASS-accessible sources, the recovery as "peaked" is:
+
+| $\nu_\mathrm{pk}$ (MHz) | 72–250 | 250–500 | 500–1000 |
+|---|---|---|---|
+| recovered as peaked | 0/81 | 3/26 | 1/6 |
+
+This looks like a poor recovery but is the *correct* behaviour, and it pins down the method's
+selection function. Callingham is **GLEAM-selected** (70–230 MHz), so it is dominated by
+*MHz-peaked* sources (median $\nu_\mathrm{pk}=190$ MHz) whose turnover is **below the 150 MHz floor**
+of this method — across 150 MHz–3 GHz they are simply falling, i.e.\ *steep*, and the method
+**correctly does not flag a single one** (0/81 false positives below 250 MHz: high purity). A
+three-point 150 MHz / 1.4 GHz / 3 GHz method has a narrow **peaked window of $\sim$0.7–2 GHz**:
+sources peaking below it look steep, and classical bright GHz-peaked GPS (turnover $\gtrsim$3 GHz)
+are still rising at 3 GHz and land in this method's **`inverted`** class, not `peaked`. So the slice
+does not "recover" the GLEAM MHz-peaked population (a different sub-population), and there is no large
+public catalogue that densely samples the $\sim$1 GHz window to give a clean high-recovery number.
+The honest validation result is: **correct purity against the MHz-peaked majority, a well-characterised
+$\sim$0.7–2 GHz sensitivity window, and the recognition that classical GHz-GPS appear in the `inverted`
+class** — a frequency-coverage limitation, stated plainly.
+
 ## Honest assessment
 
 This is a **methodology + candidate-list** result, not a discovery: a reproducible three-frequency
@@ -59,9 +83,10 @@ uncatalogued. Confirming any as a true GPS source needs higher-resolution / more
   sources brighter than $\sim$30 mJy at 1.4 GHz, so the sample is the bright tail.
 - **Curvature via a lower limit.** For TGSS non-detections $\alpha_\mathrm{low}$ is a bound, not a
   measurement, so the turnover frequency is not pinned (only "rising then falling").
-- **No known GPS to recover here.** This field has no catalogued GPS source, so the validation is the
-  method's behaviour (compact, steady, artefact-free) rather than recovering a known one — a targeted
-  field with catalogued GPS sources would strengthen it.
+- **Narrow $\sim$0.7–2 GHz peaked window** (see the validation above): the method is insensitive to
+  MHz-peaked/CSS sources (turnover below the 150 MHz floor → look steep) and to classical GHz-GPS
+  (turnover above 3 GHz → land in the `inverted` class). It probes a specific intermediate-turnover
+  sub-population, and no large public catalogue densely samples that window for a clean recovery test.
 - **NVSS$\to$VLASS resolution** biases $\alpha_\mathrm{high}$ for any non-point source; the floor cut is
   blunt. Matched-resolution fluxes (or a compactness cut) would be cleaner.
 
@@ -70,4 +95,6 @@ uncatalogued. Confirming any as a true GPS source needs higher-resolution / more
 A reproducible, maximal-reuse three-frequency peaked-spectrum selector that turns the USS slice's
 unfinished business into a clean candidate list — robust to the flux-scale and resolution systematics,
 honestly bounded, with three uncatalogued GPS/CSS candidates and a worked demonstration that blazar
-contamination needs catalogue cross-ID, not just variability.
+contamination needs catalogue cross-ID, not just variability. Validation against the Callingham (2017)
+catalogue confirms its purity against the MHz-peaked majority and characterises its $\sim$0.7–2 GHz
+sensitivity window — the result is a well-understood selection method, not a discovery.

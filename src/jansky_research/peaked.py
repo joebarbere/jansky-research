@@ -29,6 +29,7 @@ __all__ = [
     "run",
     "synthetic_field",
     "two_point_indices",
+    "validate_known",
 ]
 
 # Survey reference frequencies (GHz).
@@ -164,6 +165,65 @@ def find_peaked(
         "tgss_detected": tgss_det,
         "cls": cls.astype(str),
         "is_peaked": is_peaked,
+    }
+
+
+def validate_known(*, max_sources: int = 120) -> dict:  # pragma: no cover - network
+    """Validate the selection against the Callingham et al. (2017) peaked-spectrum catalogue.
+
+    Fetches known peaked sources (with measured turnover ``nuPk``) and their TGSS/NVSS fluxes from
+    VizieR (``J/ApJ/836/174``), adds VLASS 3 GHz per source (reusing ``vlass``), classifies each, and
+    reports the recovery as ``peaked`` binned by ``nuPk``. The three-point (150 MHz, 1.4 GHz, 3 GHz)
+    method has a narrow ~0.7--2 GHz peaked window: it should reject the GLEAM-dominated
+    *MHz-peaked* sources (turnover below the 150 MHz floor -> they look steep), not the other way
+    round. So a low recovery at low ``nuPk`` is correct purity, not a miss.
+    """
+    import numpy as _np
+    from astroquery.vizier import Vizier
+
+    from . import vlass as _vlass
+
+    v = Vizier(columns=["*"])
+    v.ROW_LIMIT = -1
+    t = v.get_catalogs("J/ApJ/836/174/pkfreq")[0]
+    ra = _np.asarray(t["RAJ2000"], float)
+    dec = _np.asarray(t["DEJ2000"], float)
+    nupk = _np.asarray(t["nuPk"], float)  # MHz
+    snvss = _np.asarray(t["SNVSS"], float) * 1e3  # Jy -> mJy
+    stgss = _np.asarray(t["STGSS"], float) * 1e3
+    sel = _np.where((dec > -39) & (snvss > 60) & _np.isfinite(snvss))[0]
+    sel = sel[_np.argsort(-snvss[sel])][:max_sources]
+
+    npk_l: list[float] = []
+    pk_l: list[bool] = []
+    for i in sel:
+        try:
+            vr, vd, vf, _ = _vlass._fetch_e1_tap((ra[i], dec[i]), 0.02)  # ~70" cone
+            if vr.size == 0:
+                continue
+            sv = vf[int(_np.argmin((vr - ra[i]) ** 2 + (vd - dec[i]) ** 2))]
+        except Exception:
+            continue
+        st = stgss[i] if _np.isfinite(stgss[i]) else TGSS_LIMIT_MJY
+        a_low = _np.log(snvss[i] / st) / _np.log(NU_GHZ["nvss"] / NU_GHZ["tgss"])
+        a_high = _np.log(sv / snvss[i]) / _np.log(NU_GHZ["vlass"] / NU_GHZ["nvss"])
+        npk_l.append(float(nupk[i]))
+        pk_l.append(bool((a_low > 0.1) and (A_HIGH_FLOOR < a_high < -0.1)))
+    npk = _np.asarray(npk_l)
+    ispk = _np.asarray(pk_l, bool)
+    bins = [(72, 250), (250, 500), (500, 1000)]
+    recovery = {
+        f"{lo}-{hi}MHz": (
+            int(ispk[(npk >= lo) & (npk < hi)].sum()),
+            int(((npk >= lo) & (npk < hi)).sum()),
+        )
+        for lo, hi in bins
+    }
+    fp = float(ispk[npk < 250].mean()) if bool((npk < 250).any()) else 0.0
+    return {
+        "n_validated": int(npk.size),
+        "false_positive_rate_below_250MHz": fp,
+        "recovery_by_nupk": recovery,
     }
 
 
