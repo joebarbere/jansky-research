@@ -1,6 +1,6 @@
 # 20 — Multi-decade VLBI flux variability of compact AGN (Astrogeo)
 
-Status: 🚧 in progress (tooling)
+Status: 🚧 in progress (tooling + real Astrogeo fetch + recover-a-known done; GATE-2 + paper next)
 
 ## Context
 
@@ -48,16 +48,19 @@ recover-a-known validation on a famously variable blazar — not a discovery cla
 1. **Tooling (this step).** Pure-NumPy metrics composing the `vlass`/`spectra` helpers, validated on a
    synthetic dual-band population (steady sources at η≈1; injected variables at high η and high V).
    Offline `run` recovers the injected variables at low contamination.
-2. **Real-data fetch (next).** `run(offline=False)` pulls a curated source list's Astrogeo flux
-   histories (S and X separately), assembles per-band light curves, applies the variability cut, and
-   computes the mean S/X index. Honest systematics: VLBI total flux density depends on `(u,v)` coverage
-   and resolved-out flux per session, so an apparent change can be structural, not intrinsic — guard
-   with a per-session-quality / minimum-epoch cut and report it as a caveat.
-3. **Recover-a-known validation.** Reproduce the known strong variability of a well-studied blazar
-   (e.g. a CGRaBS/3C blazar with published VLBI flares) from its Astrogeo history — the slice's
-   ground-truth check, like FK Com for #13.
-4. **GATE-2** before write-up — candidates survive the `(u,v)`-coverage / resolution caveats and a
-   literature cross-check.
+2. **Real-data fetch (done).** `run(offline=False)` / `--online` reads each source's per-epoch Astrogeo
+   `_cfd.tab` correlated-flux files (`Fl_int`, Jy) for S and X via the public HTTP tree (no auth),
+   assembles per-band light curves, and computes η/V + the mean S/X index. The flux error is a 5%
+   calibration floor in quadrature with the image noise (`VLBI_CAL_FRAC`).
+3. **Recover-a-known validation (done).** A curated 18-source set (14 famous variable blazars + 4 steady
+   CSO controls). **OJ 287 and BL Lac are recovered as the most variable** (η = 209, 48); all blazars
+   flat/inverted-spectrum. **Crucial honest finding:** the absolute χ²/η over-rejects (even the steady
+   CSO OQ 208 gets η = 80) because the per-session flux error is ~19% (the CSO floor), not 5% — so the
+   trustworthy discriminant is **V above the steady-control floor** (V = 0.193): 13/14 non-controls
+   exceed it, blazars ~1.7× more variable in amplitude. See `survey/vlbi-findings.md`; the
+   `variability_floor` helper encodes the method.
+4. **GATE-2** before write-up — the control-floor result and the structural-variability caveat survive a
+   science review and literature cross-check.
 5. **Write-up** as `papers/vlbi/`.
 
 ## Verification

@@ -60,6 +60,28 @@ def test_select_variable_excludes_short_curves():
     assert np.isfinite(eta_thr) and np.isfinite(v_thr)
 
 
+def test_variability_floor_from_controls():
+    # controls (steady) have low V; their median sets the floor; non-controls above it are flagged
+    v = np.array([0.20, 0.18, 0.22, 0.55, 0.40, 0.10])
+    nep = np.array([10, 10, 10, 10, 10, 10])
+    is_control = np.array([True, True, True, False, False, False])
+    floor, above = vlbi.variability_floor(v, nep, is_control)
+    assert abs(floor - 0.20) < 1e-9  # median of the three controls
+    assert above.tolist() == [False, False, False, True, True, False]  # 0.55/0.40 above, 0.10 below
+    # controls themselves are never flagged, and short curves are excluded
+    nep2 = np.array([10, 10, 10, 2, 10, 10])
+    _, above2 = vlbi.variability_floor(v, nep2, is_control)
+    assert not above2[3]  # too few epochs
+
+
+def test_variability_floor_no_controls_returns_nan():
+    v = np.array([0.2, 0.5, 0.3])
+    floor, above = vlbi.variability_floor(
+        v, np.array([10, 10, 10]), np.array([False, False, False])
+    )
+    assert np.isnan(floor) and not above.any()
+
+
 def test_synthetic_population_recovers_injected_variables():
     pop = vlbi.synthetic_lightcurves(n_sources=500, seed=1)
     assert pop["flux_x"].shape[0] == 500
