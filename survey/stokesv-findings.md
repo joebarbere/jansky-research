@@ -77,6 +77,18 @@ Central cannot supply the V images this slice needs. (It *is* a clean GLEAM/GLEA
 source — relevant to the queued southern-curvature runner-up, not here.) **CASDA remains the only
 public RACS Stokes-V image source**, and it must recover before the forced-photometry leg can run.
 
+### Browser-automation skill (`.claude/skills/casda-cutout-fetch/`): works, but the outage reaches the web service too
+
+As a route around the broken VO APIs, a Playwright skill drives the **web** CASDA Cutout Service with
+the OPAL login. Verified live: the **OPAL login, modal handling, navigation, results-URL construction,
+results parsing, and all the guards work** — the script authenticates and reaches the results page
+correctly. But it **could not download a FITS**, because the CASDA Cutout Service returns
+**`RACS-low DR1 0  RACS-mid DR1 0  RACS-high DR1 0` for every position — including the service's own
+example target, PSR B1919+21**. So the discovery-backend outage that takes down TAP/SIA2 also takes
+down the web cutout service; no automation can download what the backend won't surface. The skill is
+kept (it exits with a distinct code 5 for "outage" vs 8 for "broken automation") and should succeed
+once CASDA recovers — the honest "best-effort: kept the working skill, recorded the blocking finding".
+
 ## Status and what's next
 
 - **Done (credential-free):** tested helpers (leakage floor, $|V|/I$ selection, PM confirmation,

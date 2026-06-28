@@ -1,0 +1,6 @@
+# Dependencies for the casda-cutout-fetch skill (browser automation of the CASDA web Cutout Service).
+# Install once into the project venv:
+#   uv pip install -r .claude/skills/casda-cutout-fetch/requirements.txt
+#   uv run playwright install chromium      # downloads the browser (~150 MB, into ~/.cache/ms-playwright)
+#   uv run playwright install-deps          # only on a bare server; needs root (dnf/apt)
+playwright>=1.60
