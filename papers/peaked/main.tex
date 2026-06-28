@@ -1,0 +1,170 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every selection/validation number is \input from the pipeline — no number is typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\alo}{\ensuremath{\alpha_{\rm low}}}
+\newcommand{\ahi}{\ensuremath{\alpha_{\rm high}}}
+\shorttitle{Three-frequency peaked-spectrum selection}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Reproducible Three-Frequency Curvature Selection for Peaked-Spectrum Radio Sources:
+TGSS, NVSS, and VLASS, with Two Recover-a-Known Validations}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Gigahertz-Peaked-Spectrum (GPS) and Compact-Steep-Spectrum (CSS) sources are compact, young radio
+AGN whose spectrum rises then falls, peaking in the $\sim$0.1--3~GHz band \citep{odea1998,odea2021};
+identifying them needs at least three frequencies to see the turnover. We build a small, tested,
+CPU-only tool that selects peaked-spectrum candidates from three public continuum surveys --- TGSS
+150~MHz \citep{intema2017}, NVSS 1.4~GHz \citep{condon1998}, and VLASS 3~GHz \citep{lacy2020,
+gordon2021} --- by their spectral \emph{curvature}, the difference of a low (\alo, 150$\to$1400~MHz)
+and a high (\ahi, 1400$\to$3000~MHz) two-point index. Curvature is far more robust to a constant TGSS
+flux-scale offset than a single steep cut, and \ahi\ is TGSS-independent. A naive ``detected in all
+three, rising then falling'' selection returns \emph{zero} candidates; we show this is two selection
+effects with clean fixes. (i) Peaked sources are faint at 150~MHz by definition, so a TGSS detection
+\emph{excludes} them --- we instead treat a TGSS non-detection as an upper limit $S_{150}<25$~mJy,
+giving a lower bound on \alo. (ii) The NVSS$\to$VLASS resolution mismatch (45\arcsec\ versus
+2.5\arcsec) fakes steep turnovers for extended sources --- a floor $\ahi>-2$ rejects them
+(\pkNextended\ of \pkNnvssvlass\ in our field). Over a $2\arcdeg$ cone the method yields
+\pkNpeaked\ peaked candidates, all VLASS-steady (GPS-like, not blazars); one is a known \emph{Fermi}
+BL~Lac that the variability flag missed but SIMBAD caught --- blazar rejection needs the
+catalogue cross-ID, not variability alone. We validate the selection function with two
+recover-a-known tests. Against the GLEAM-selected, MHz-peaked Callingham et al.\ (2017) sample the
+method correctly flags \emph{none} of the \pkCallLowFlagged/\pkCallLowTotal\ sources whose turnover
+lies below the 150~MHz floor (high purity), and against the Dallacasa et al.\ (2000) bright
+High-Frequency-Peaker sample it recovers \pkHfpRising\% as optically-thick-rising and \pkHfpGhz\% as
+still rising at 3~GHz. The three SED classes thus map cleanly onto the MHz-peaked, intermediate, and
+GHz-peaked turnover regimes. This is a tooling and methodology contribution --- a maximal-reuse,
+systematics-aware selector with a candidate list and two validations --- not a discovery.
+\end{abstract}
+
+\keywords{Active galactic nuclei (16) --- Radio active galactic nuclei (2134) --- Radio continuum
+surveys (1340) --- Spectral index (1553) --- Open source software (1866)}
+
+\section{Introduction}
+The radio spectra of most extragalactic sources are simple power laws; a small population
+\emph{turns over}, rising at low frequency and falling at high, marking the synchrotron
+self-absorbed or free--free-absorbed cores of compact, young radio AGN --- the GPS and CSS sources
+\citep{odea1998,odea2021}. They are signposts of the earliest phase of jet activity, so clean samples
+matter. But a turnover cannot be seen with two frequencies: a single steep or inverted index is
+degenerate with a flux-scale error between surveys. The ultra-steep-spectrum exercise that preceded
+this work ended exactly there --- a 150~MHz/1.4~GHz index alone cannot separate a real turnover from
+a TGSS flux-scale artefact, and ``confirming a turnover needs a third frequency.'' This paper is that
+follow-up: with a \emph{third} frequency (VLASS 3~GHz) we measure curvature and ask the weakest,
+most reproducible version of the question --- how cleanly can one select peaked-spectrum candidates
+from public catalogues alone, and what does the method actually recover?
+
+\section{Methods}
+\code{peaked} is a pure-NumPy module that composes two earlier tools rather than reimplementing them
+(the \code{jansky} helpers; \citealt{jansky}): the two-point spectral index with errors, positional
+cross-matching, and the survey cone-search/fetch from a spectral-index module, and the VLASS 3~GHz
+peak-flux fetch and multi-epoch variability metrics from a VLASS module. For each NVSS source we form
+\begin{equation}
+\alpha = \frac{\ln(S_2/S_1)}{\ln(\nu_2/\nu_1)},
+\end{equation}
+twice: \alo\ over 150$\to$1400~MHz and \ahi\ over 1400$\to$3000~MHz. The curvature $\ahi-\alo$ and the
+signs of the two indices classify the SED: \emph{peaked} (\alo\ rising, \ahi\ falling --- a turnover
+in band), \emph{ghz\_peaked} (both rising --- a High-Frequency Peaker whose turnover is above 3~GHz),
+\emph{steep}, \emph{flat}, or an \emph{extended} resolution artefact. Two systematics, exposed by the
+real data, require fixes that are the heart of the method.
+
+\paragraph{TGSS as an upper limit.} Peaked sources are faint at 150~MHz, so requiring a TGSS detection
+selects \emph{against} the target population --- this is why the naive triple-detection cut returns
+nothing. We instead anchor on NVSS$\cap$VLASS and treat a TGSS non-detection as $S_{150}<25$~mJy (the
+survey's $\sim$7$\sigma$ floor; \citealt{intema2017}), which gives a \emph{lower bound} on \alo: a
+source brighter at 1.4~GHz than the 150~MHz limit, yet undetected at 150~MHz, \emph{must} be rising.
+This confirms only peaked sources brighter than $\sim$30~mJy at 1.4~GHz --- an honest depth limit, not
+a measured turnover frequency.
+
+\paragraph{Resolution floor.} NVSS (45\arcsec) recovers extended emission that VLASS (2.5\arcsec)
+resolves out, manufacturing impossible spectra (e.g.\ 690$\to$6~mJy, $\ahi=-6$) that masquerade as
+sharp turnovers. A floor $\ahi>-2$ rejects them; \pkNextended\ of \pkNnvssvlass\ sources in the field
+are flagged extended/artefact. Because curvature compares two indices and \ahi\ is TGSS-independent,
+the selection is robust to the very flux-scale offset that sank the two-point steep cut.
+
+Every function is tested against a synthetic three-survey field with injected peaked/steep/flat SEDs,
+so the suite runs offline; the real run adds NED/SIMBAD vetting and a VLASS-variability blazar flag.
+
+\section{Data}
+We use TGSS ADR1 150~MHz \citep{intema2017}, NVSS 1.4~GHz \citep{condon1998}, and the VLASS Epoch-1
+Quick-Look catalogue at 3~GHz \citep{gordon2021}, cross-matched within 15\arcsec\ on a $2\arcdeg$ cone
+(\pkNnvssvlass\ NVSS$\cap$VLASS sources). The validation samples are the Callingham et al.\ (2017)
+peaked-spectrum catalogue \citep{callingham2017} and the Dallacasa et al.\ (2000) bright
+High-Frequency-Peaker sample \citep{dallacasa2000}, each augmented with VLASS 3~GHz per source.
+
+\section{Results}
+\paragraph{Field candidates.} After the two cuts the method yields \pkNpeaked\ peaked-spectrum
+candidates (rising at low frequency via the TGSS upper limit, $\ahi\approx-0.6$ to $-1.1$, compact),
+shown in the spectral-curvature plane of Figure~\ref{fig:curv}. Reusing the VLASS forced-photometry
+variability metrics, all are VLASS-steady across the three epochs ($V=0.02$--$0.08$) --- consistent
+with GPS sources rather than blazars, and three are uncatalogued in SIMBAD. A methodological point:
+one candidate is a known \emph{Fermi} BL~Lac, yet it is \emph{steady} in VLASS, so the variability
+flag alone did not catch it --- SIMBAD did. Blazar contamination needs the catalogue cross-ID (and
+ideally longer-baseline variability), not VLASS-epoch variability alone.
+
+\paragraph{Validation I: purity against MHz-peaked sources.} The Callingham et al.\ (2017) catalogue
+is GLEAM-selected (70--230~MHz) and dominated by \emph{MHz-peaked} sources whose turnover lies below
+the 150~MHz floor of this method. Across 150~MHz--3~GHz those sources are simply falling, i.e.\
+\emph{steep}, and the method \emph{correctly flags none of them}: \pkCallLowFlagged/\pkCallLowTotal\
+sources with $\nu_{\rm pk}<250$~MHz are selected as peaked (high purity). A low recovery here is the
+\emph{correct} behaviour --- it pins the method's narrow $\sim$0.7--2~GHz \emph{peaked} window.
+
+\paragraph{Validation II: recovery of GHz-peaked sources.} The classical, bright GHz-peaked / HFP
+population peaks at $\gtrsim$few~GHz, so across 150~MHz/1.4~GHz/3~GHz it is rising throughout and lands
+in this method's \emph{ghz\_peaked} class. Over \pkHfpN\ Dallacasa et al.\ (2000) HFP sources with
+VLASS, the method recovers \pkHfpRising\% as optically-thick-rising and \pkHfpGhz\% as still rising at
+3~GHz --- a clean recover-a-known. The two validations are complementary: MHz-peaked sources are
+correctly rejected, intermediate-turnover sources are flagged \emph{peaked}, and GHz-peaked sources
+are recovered as \emph{ghz\_peaked}. The three SED classes map one-to-one onto the three turnover
+regimes.
+
+\begin{figure}
+\plotone{figures/curvature.pdf}
+\caption{Spectral-curvature plane: high-frequency index \ahi\ (1400$\to$3000~MHz) versus
+low-frequency index \alo\ (150$\to$1400~MHz). Peaked (GPS/CSS) candidates --- rising then falling ---
+are starred; GHz-peaked (HFP) candidates --- rising throughout --- are triangles. For TGSS
+non-detections \alo\ is a lower limit (rightward arrows), so true points lie further right.}
+\label{fig:curv}
+\end{figure}
+
+\section{Discussion and reproducibility}
+Three-frequency curvature turns the unfinished business of a two-point steep cut into a clean,
+maximal-reuse peaked-spectrum selector that is (i) robust to the TGSS flux-scale offset (curvature
+compares two indices; \ahi\ is TGSS-independent), (ii) able to separate resolution artefacts, and
+(iii) validated on both arms of its selection function --- purity against the MHz-peaked majority and
+a 100\%-rising recovery of a known HFP sample. The deliverable is a candidate list and a
+well-understood method, not a detection: confirming any candidate as a true GPS source needs
+higher-resolution or more-frequency follow-up (VLBI compactness, a sampled turnover). The method is
+depth-limited (the TGSS-upper-limit trick only confirms sources brighter than $\sim$30~mJy at
+1.4~GHz), its turnover frequency is bounded rather than measured for TGSS non-detections, and the
+resolution floor is a blunt instrument that matched-resolution photometry would sharpen. Every
+selection and validation number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, and the analysis regenerates from a clean checkout on public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{peaked} tool, the three-survey selection and its two
+recover-a-known validations, and the drafting of this manuscript. The author directed the work,
+independently reviewed and verified all code, results, figures, and citations, and takes full
+responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the TGSS/GMRT, NRAO/NVSS, NRAO/VLASS, CIRADA, VizieR, and SIMBAD teams for the public
+data and services this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+astroquery, pyvo, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

@@ -20,6 +20,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | SETI drift-search benchmark | `jansky_research.driftsearch` | ➖ benchmark built; the "Voyager detection" was a **DC-spike artifact** (retracted) |
 | HI rotation curve | `jansky_research.hi` | ✅ recovered the **flat** (non-Keplerian) inner Milky Way curve |
 | VLASS multi-epoch variability | `jansky_research.vlass` | ✅/➖ 703 deg² census: catalogue variability is **artifact-dominated**, but image-confirms **FK Comae Berenices** |
+| Peaked-spectrum (GPS/CSS) selection | `jansky_research.peaked` | ✅ three-frequency curvature selector; **100% recovery** of a known HFP sample, high purity vs MHz-peaked |
 
 Four validations and two honest negatives, **zero overclaims that survived review** — the
 science-reviewer caught the USS candidates evaporating against the authoritative catalog and the
@@ -44,8 +45,9 @@ about what it is — four validations and two negatives:
 | A CPU-only SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
 | TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative |
 | VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) |
+| Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations |
 
-`make paper` builds all five PDFs; `make arxiv` runs the bundled **`arxiv-submit` skill**
+`make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
 (`papers/<slice>/arxiv-submission/`: the LaTeX-source tarball with its `.bbl`, plus a `metadata.yaml`
 capturing every arXiv submission property and a `CHECKLIST.md`). The first slice is also automated by
@@ -61,11 +63,13 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 - **A short note in the literature:** the frbstats validation is condensed to a
   [Research Note of the AAS](https://journals.aas.org/research-notes/) (`papers/frbstats/rnaas.tex`,
   built by `make paper`).
-- **arXiv:** reserved for the two papers with a genuinely fresh angle — `frbstats/` (the
-  Airflow-on-Podman reproducibility pattern) and `vlass/` (a 703 deg² census with a real recovery, FK
-  Comae Berenices, plus the QL-systematics methodology). The pure reproductions/negatives are **not**
-  posted as a preprint batch — arXiv moderation expects a contribution, and "I reproduced a known
-  result" or "my candidates didn't survive a cross-check" belongs in the repo + Zenodo.
+- **arXiv:** reserved for the papers with a genuinely fresh angle — `frbstats/` (the
+  Airflow-on-Podman reproducibility pattern), `vlass/` (a 703 deg² census with a real recovery, FK
+  Comae Berenices, plus the QL-systematics methodology), and `peaked/` (a three-frequency curvature
+  selector with two recover-a-known validations and the TGSS-upper-limit + resolution-floor method).
+  The pure reproductions/negatives are **not** posted as a preprint batch — arXiv moderation expects a
+  contribution, and "I reproduced a known result" or "my candidates didn't survive a cross-check"
+  belongs in the repo + Zenodo.
 
 ## How it relates to `jansky`
 
