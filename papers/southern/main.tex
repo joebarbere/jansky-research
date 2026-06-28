@@ -34,9 +34,12 @@ turnover (fixed by a compactness cut), and ordinary steep sources whose mild low
 fits a shallow edge-peak (fixed by requiring the optically-thick rising side, $\alo>-0.1$). After both,
 the field yields \soNpeaked\ peaked candidates with a \emph{measured} median $\nupk\approx\soMedianNupk$~MHz,
 plus \soNuss\ ultra-steep-spectrum (candidate high-$z$ radio galaxy) sources and \soNextended\ rejected
-resolution artefacts. This is a reproducible, measured-turnover scout catalogue and methodology --- not
-a discovery --- with its over-selection relative to careful Bayesian work \citep{kerrison2025} stated
-plainly.
+resolution artefacts. As a recover-a-known, we re-derive the turnover of Callingham et al.\ (2017)
+peaked sources: of \soCallTried\ tested, \soCallRecovered\ are recovered as peaked and our
+\emph{measured} \nupk\ agrees with their published value to a median $\soCallDlog$~dex, with
+\soCallWithin\% within a factor of two --- the literature turnover, measured rather than bounded. This
+is a reproducible, measured-turnover scout catalogue and methodology --- not a discovery --- with its
+over-selection relative to careful Bayesian work \citep{kerrison2025} stated plainly.
 \end{abstract}
 
 \keywords{Active galactic nuclei (16) --- Radio active galactic nuclei (2134) --- Radio continuum
@@ -102,6 +105,16 @@ candidate density is $\sim$2.5$\times$ higher --- a real over-selection, expecte
 method without per-band errors. The deliverable is therefore a measured-turnover \emph{candidate} list
 and a reproducible method, not a clean discovery sample.
 
+\paragraph{Recover-a-known.} As a validation we re-derive the turnover of Callingham et al.\ (2017)
+\citep{callingham2017} peaked sources --- the catalogue against which the northern slice could only
+demonstrate \emph{purity} (it bounded, never measured, \nupk). Of \soCallTried\ Callingham sources with
+GLEAM-X$+$RACS coverage, \soCallRecovered\ are recovered as peaked, and our \emph{measured} \nupk\
+agrees with their published value to a median $\soCallDlog$~dex (\soCallWithin\% within a factor of
+two). The recovery climbs with published \nupk, as expected for a rising-side-gated method: sources
+peaking well below the GLEAM band fall outside the window, while those peaking in or above it are both
+recovered \emph{and} have their turnover measured. This is the headline the southern data enable ---
+the literature turnover, measured rather than bounded.
+
 \begin{figure}
 \plotone{figures/seds.pdf}
 \caption{Measured SEDs of peaked-spectrum candidates (GLEAM-X 76--227~MHz $+$ RACS 0.9--1.7~GHz): each
@@ -115,10 +128,9 @@ Multi-band curvature in the south turns the northern slice's unfinished business
 turnover --- into a \emph{measured} one: GLEAM-X's 20 sub-bands fix \nupk\ on the optically-thick side
 and RACS pins the optically-thin fall. The contribution is the reproducible, systematics-aware tool
 (unit conversion, compactness, rising-side requirement) and a measured-turnover candidate list, not a
-discovery. The clear next steps are a recover-a-known against the Callingham \citep{callingham2017}
-southern peaked catalogue --- now \emph{measuring} their published \nupk\ rather than bounding it --- a
-proper per-band-error (Bayesian) fit to tighten purity toward \citet{kerrison2025}, and a sampled point
-in the 0.23--0.89~GHz gap to constrain interpolated turnovers. Every selection number above is written
+discovery, validated by recovering the Callingham \citep{callingham2017} turnovers above. The clear
+next steps are a proper per-band-error (Bayesian) fit to tighten purity toward \citet{kerrison2025} and
+a sampled point in the 0.23--0.89~GHz gap to constrain interpolated turnovers. Every selection number above is written
 by the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis regenerates
 from a clean checkout on public data.
 

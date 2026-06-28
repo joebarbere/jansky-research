@@ -77,6 +77,13 @@ Central cannot supply the V images this slice needs. (It *is* a clean GLEAM/GLEA
 source — relevant to the queued southern-curvature runner-up, not here.) **CASDA remains the only
 public RACS Stokes-V image source**, and it must recover before the forced-photometry leg can run.
 
+### CADC mirror also checked — RACS Stokes I only (no V)
+
+CADC *does* host a `RACS` collection (799 planes), but a CAOM2 TAP query shows it is **`polarization_states = /I/` only — Stokes I, no V**. So neither public mirror (CADC, Data Central)
+carries RACS Stokes V; CASDA is the sole source, confirmed from three independent archives. (Bonus:
+CADC RACS-I *is* usable via the `radio-cutout` skill's CADC SODA path if a slice ever needs RACS total
+intensity.)
+
 ### Browser-automation skill (`.claude/skills/casda-cutout-fetch/`): works, but the outage reaches the web service too
 
 As a route around the broken VO APIs, a Playwright skill drives the **web** CASDA Cutout Service with
