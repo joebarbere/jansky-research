@@ -35,6 +35,7 @@ __all__ = [
     "fetch_vlass_epoch",
     "forced_photometry",
     "image_lightcurve",
+    "injection_recovery",
     "isolated_mask",
     "measure_image_flux",
     "run",
@@ -260,6 +261,51 @@ def isolated_mask(ra: np.ndarray, dec: np.ndarray, *, radius_arcsec: float = 5.0
     return np.asarray(sep.arcsec > radius_arcsec)
 
 
+def injection_recovery(
+    flux: np.ndarray,
+    err: np.ndarray,
+    *,
+    factors: tuple[float, ...] = (1.25, 1.5, 2.0, 3.0, 5.0, 10.0),
+    sigma: float = 3.0,
+    n_per_factor: int = 400,
+    seed: int = 0,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Selection completeness vs single-epoch flare amplitude, by injection into the real light curves.
+
+    For each flare ``factor``, takes steady (all-epoch-detected) light curves, multiplies one random
+    epoch by the factor (scaling that epoch's error with it, preserving the fractional error), and
+    measures the fraction that cross the field's own 2-D $(\\eta, V)$ threshold. This is the honest,
+    data-driven completeness: it uses the real per-source noise and the real selection cut, so the
+    observed variable fraction can be corrected for what the selection actually sees. Returns
+    ``(factors, recovered_fraction)``.
+    """
+    flux = np.asarray(flux, dtype=float)
+    err = np.asarray(err, dtype=float)
+    steady = np.all(np.isfinite(flux), axis=1) & np.all(np.isfinite(err) & (err > 0), axis=1)
+    fs, es = flux[steady], err[steady]
+    factors = tuple(float(f) for f in factors)
+    if fs.shape[0] < 20:
+        return np.asarray(factors), np.zeros(len(factors))
+    eta = np.array([eta_metric(f, e) for f, e in zip(fs, es, strict=True)])
+    v = np.array([v_metric(f) for f in fs])
+    _, eta_thr, v_thr = select_candidates(eta, v, sigma=sigma)
+    rng = np.random.default_rng(seed)
+    recovered = []
+    for fac in factors:
+        hits = 0
+        for _ in range(n_per_factor):
+            j = int(rng.integers(fs.shape[0]))
+            f = fs[j].copy()
+            e = es[j].copy()
+            k = int(rng.integers(f.size))
+            f[k] *= fac
+            e[k] *= fac  # error scales with flux -> fractional error preserved
+            if eta_metric(f, e) > eta_thr and v_metric(f) > v_thr:
+                hits += 1
+        recovered.append(hits / n_per_factor)
+    return np.asarray(factors), np.asarray(recovered)
+
+
 def synthetic_epochs(
     n_sources: int = 2000,
     *,
@@ -341,15 +387,29 @@ def run(
     v[~usable] = np.nan
     mask, eta_thr, v_thr = select_candidates(eta, v, sigma=sigma)
 
+    # Census statistics: variable fraction + data-driven completeness vs flare amplitude (so the
+    # observed fraction can be corrected for what the selection actually sees).
+    n_usable = int(usable.sum())
+    factors, recovered = injection_recovery(flux, err, sigma=sigma)
+    c50 = float(np.interp(0.5, recovered, factors)) if recovered.max() >= 0.5 else float("nan")
+    c90 = float(np.interp(0.9, recovered, factors)) if recovered.max() >= 0.9 else float("nan")
+
     metrics = {
         "source": source,
         "n_sources": int(ra.size),
         "n_detected_multi_epoch": int(detected.sum()),
         "n_excluded_crowded": int(np.sum(detected & ~isolated)),
+        "n_usable": n_usable,
         "n_candidates": int(mask.sum()),
+        "variable_fraction": float(mask.sum() / n_usable) if n_usable else 0.0,
         "eta_threshold": eta_thr,
         "v_threshold": v_thr,
         "sigma": sigma,
+        "completeness_factors": factors.tolist(),
+        "completeness_recovered": recovered.tolist(),
+        "completeness_50_factor": c50,
+        "completeness_90_factor": c90,
+        "completeness_max": float(recovered.max()),
     }
     if truth is not None:  # synthetic: report recovery of the injected variables
         n_true = int(truth.sum())
@@ -373,11 +433,38 @@ def run(
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "vlass_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(eta, v, mask, eta_thr, v_thr, op / "papers" / "vlass" / "figures")
+    figs = op / "papers" / "vlass" / "figures"
+    _figure(eta, v, mask, eta_thr, v_thr, figs)
+    _completeness_figure(factors, recovered, c50, figs)
     _write_candidates(
         op / "results" / "vlass_candidates.csv", ra, dec, flux, eta, v, mask, conf, vet
     )
     return metrics
+
+
+def _completeness_figure(factors, recovered, c50, out_dir) -> None:
+    from pathlib import Path
+
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    ax.semilogx(factors, recovered, "o-", lw=1, label="recovered")
+    ax.axhline(0.5, color="0.6", ls=":")
+    if np.isfinite(c50):
+        ax.axvline(c50, color="r", ls="--", label=f"50% at {c50:.1f}x")
+    ax.set(
+        xlabel="injected single-epoch flare factor",
+        ylabel="recovered fraction",
+        title="VLASS variability selection completeness",
+        ylim=(0, 1.02),
+    )
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out / "completeness.pdf")
+    plt.close(fig)
 
 
 def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:

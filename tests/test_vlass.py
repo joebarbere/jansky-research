@@ -125,11 +125,25 @@ def test_measure_image_flux_forced_photometry():
     assert p2 < 1.0
 
 
+def test_injection_recovery_completeness_rises_with_amplitude():
+    _, _, flux, err, _ = vlass.synthetic_epochs(n_sources=1500, var_fraction=0.0, seed=3)
+    factors, recovered = vlass.injection_recovery(
+        flux, err, factors=(1.25, 2.0, 5.0, 10.0), n_per_factor=300, seed=0
+    )
+    assert factors.shape == recovered.shape == (4,)
+    assert np.all(np.diff(recovered) >= -0.05)  # completeness increases with flare amplitude
+    assert recovered[0] < 0.3  # a weak 1.25x flare is mostly missed
+    assert recovered[-1] > 0.8  # a strong 10x flare is almost always recovered
+
+
 def test_run_offline(tmp_path):
     m = vlass.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"
     assert m["n_candidates"] >= 1
     assert m["recovered_fraction"] > 0.55
     assert m["false_positive_fraction"] < 0.2
+    assert 0.0 <= m["variable_fraction"] <= 1.0
+    assert len(m["completeness_factors"]) == len(m["completeness_recovered"])
     assert (tmp_path / "results" / "vlass_metrics.json").exists()
     assert (tmp_path / "papers" / "vlass" / "figures" / "eta_v.pdf").exists()
+    assert (tmp_path / "papers" / "vlass" / "figures" / "completeness.pdf").exists()

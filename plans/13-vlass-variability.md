@@ -70,9 +70,14 @@ shortlisted directions).
    ones (p<0.01, V>0.3) — reported as `n_image_confirmed` and written to the candidate CSV. Both
    first-field candidates are auto-rejected (forced V = 0.11, 0.16). The candidate list is now
    trustworthy without manual inspection.
-   **Next:** a larger-area census with completeness-vs-amplitude (and ideally forced photometry over
-   *every* source, not just candidates), then write `papers/vlass/` — tool + methodology + honest
-   negative, not a discovery.
+6. **Census + completeness (done).** `injection_recovery` measures data-driven completeness vs flare
+   amplitude (inject a single-epoch flare into the real steady light curves, re-run the cut); `run`
+   reports the curve, the variable fraction, and `n_image_confirmed`, and writes a completeness figure.
+   A 50 deg² census (3139 sources, 2719 usable) gives **0 confirmed variables**, with the selection
+   saturating at ~50% completeness even for 10× flares — a 3-epoch ceiling — so the result is an
+   upper limit ($\lesssim10^{-3}$), not a rate. See `survey/vlass-findings.md`.
+   **Next:** write `papers/vlass/` (tool + QL-systematic-aware methodology + honest-negative census).
+   A looser, forced-photometry-cleaned cut and/or much more sky would tighten the limit — future work.
 3. **GATE-2 science review** before any write-up — the candidate list must survive the known VLASS
    QL caveats (the ~10–15% QL peak-flux underestimate in early epochs, CLEAN/snapshot bias,
    component-vs-source blending) before a single source is called variable.
