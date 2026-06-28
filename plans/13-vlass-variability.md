@@ -45,8 +45,22 @@ shortlisted directions).
    E3). Each epoch's peak flux is put on the common Perley-Butler scale by `apply_flux_scale`
    (VLASS Memos 13/22) with the ~7% residual scale scatter folded into the errors — without this the
    epoch offset alone manufactures variables. Needs the `vlass` extra (`pyvo`).
-   **Still to run:** execute on a real field and cross-check survivors against known variable classes
-   (AGN, stars, pulsars) and artefacts (sidelobes near bright sources, ghosts).
+   **Validated on real data.** A live run (RA 190°, Dec +20°, b≈+80°; Epochs 1–3) exposed and fixed
+   two real bugs that live verification caught (the agent's notes had them wrong): the VizieR Epoch-1
+   `Fpeak` is **µJy** mislabelled "mJy/beam" (×1000 off → would flag every source variable), and the
+   CIRADA flags are stored as floats (`"0.0"`) so `int()` silently dropped all 3.4M rows. After the
+   fixes, all three epochs read consistent ~mJy medians (1.8/1.9/1.7) and cross-match cleanly (1022
+   of 1148 sources in ≥2 epochs over a 2.5° cone). Loud guards now reject an empty epoch or an
+   implausible per-epoch median flux.
+3. **GATE-2 vetting (built + run).** `vet_candidates` cross-checks each survivor against SIMBAD + NED;
+   `run` writes `results/vlass_candidates.csv`. On this field the conservative 3σ-in-both-metrics cut
+   yields a **single candidate** (1.3→5.3→0.7 mJy, a one-epoch ×4 spike) with **no SIMBAD/NED
+   counterpart** — which for a single-epoch brightening points to a Quick-Look imaging artefact, not a
+   transient. Honest first-field outcome: the pipeline works; this candidate does not survive vetting.
+   **Next:** run over a much larger sky area for a *population* census with completeness-vs-amplitude
+   characterisation (à la the driftsearch benchmark), add image-level vetting of survivors (inspect the
+   QL cutouts), then write `papers/vlass/` — framed as a tool + methodology + honest census, not a
+   discovery.
 3. **GATE-2 science review** before any write-up — the candidate list must survive the known VLASS
    QL caveats (the ~10–15% QL peak-flux underestimate in early epochs, CLEAN/snapshot bias,
    component-vs-source blending) before a single source is called variable.

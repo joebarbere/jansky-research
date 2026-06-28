@@ -36,6 +36,7 @@ __all__ = [
     "synthetic_epochs",
     "v_metric",
     "variability_metrics",
+    "vet_candidates",
 ]
 
 VLASS_MATCH_ARCSEC = 2.5  # one VLASS resolution element; the default cross-epoch match radius
@@ -331,7 +332,50 @@ def run(
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "vlass_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
     _figure(eta, v, mask, eta_thr, v_thr, op / "papers" / "vlass" / "figures")
+    # candidate table; on a real-data run, cross-check each survivor against SIMBAD + NED (GATE-2)
+    vet = vet_candidates(ra[mask], dec[mask]) if (not offline and mask.any()) else None
+    _write_candidates(op / "results" / "vlass_candidates.csv", ra, dec, flux, eta, v, mask, vet)
     return metrics
+
+
+def _write_candidates(path, ra, dec, flux, eta, v, mask, vet) -> None:
+    """Write the variable candidates (position, per-epoch flux, eta, V, and any catalogued counterpart)."""
+    import csv as _csv
+
+    n_epochs = flux.shape[1]
+    vmap = {(round(r["ra"], 6), round(r["dec"], 6)): r for r in (vet or [])}
+    idx = np.where(mask)[0]
+    idx = idx[np.argsort(-eta[idx])]
+    with open(path, "w", newline="") as fh:
+        w = _csv.writer(fh)
+        w.writerow(
+            ["ra", "dec", *[f"flux_e{e + 1}" for e in range(n_epochs)], "eta", "v"]
+            + [
+                "simbad_name",
+                "simbad_type",
+                "simbad_sep",
+                "ned_name",
+                "ned_type",
+                "ned_z",
+                "ned_sep",
+            ]
+        )
+        for i in idx:
+            m = vmap.get((round(float(ra[i]), 6), round(float(dec[i]), 6)), {})
+            w.writerow(
+                [f"{ra[i]:.6f}", f"{dec[i]:.6f}"]
+                + [f"{flux[i, e]:.3f}" if np.isfinite(flux[i, e]) else "" for e in range(n_epochs)]
+                + [f"{eta[i]:.2f}", f"{v[i]:.3f}"]
+                + [
+                    m.get("simbad_name", ""),
+                    m.get("simbad_type", ""),
+                    m.get("simbad_sep", ""),
+                    m.get("ned_name", ""),
+                    m.get("ned_type", ""),
+                    m.get("ned_z", ""),
+                    m.get("ned_sep", ""),
+                ]
+            )
 
 
 def _cached_download(url: str):  # pragma: no cover - network
@@ -367,11 +411,14 @@ def _fetch_e1_tap(center, radius_deg):  # pragma: no cover - network
           AND "DupFlag" < 2 AND "QualFlag" IN (0, 4) AND "SCode" != 'E'
     """
     t = pyvo.dal.TAPService(VLASS_TAP_URL).search(query).to_table()
+    # The VizieR table labels Fpeak "mJy/beam" but the values are actually micro-Jy (verified
+    # empirically: the catalogue's flux floor is ~600-800, i.e. the ~0.7 mJy VLASS detection
+    # threshold). Epochs 2-3 (NRAO bulk files) are genuine mJy, so scale Epoch 1 to mJy to match.
     return (
         np.asarray(t["RAJ2000"], float),
         np.asarray(t["DEJ2000"], float),
-        np.asarray(t["Fpeak"], float),
-        np.asarray(t["e_Fpeak"], float),
+        np.asarray(t["Fpeak"], float) * 1e-3,
+        np.asarray(t["e_Fpeak"], float) * 1e-3,
     )
 
 
@@ -389,9 +436,13 @@ def _fetch_e2_csv(center, radius_deg):  # pragma: no cover - network
                 d = float(r["DEC"])
                 if not (dlo <= d <= dhi):  # cheap Dec pre-filter before the cone test
                     continue
-                if int(r["Duplicate_flag"]) >= 2 or int(r["Quality_flag"]) not in (0, 4):
+                # flags are stored as floats ("0.0", "2.0") -> parse via float, not int()
+                if int(float(r["Duplicate_flag"])) >= 2 or int(float(r["Quality_flag"])) not in (
+                    0,
+                    4,
+                ):
                     continue
-                if r["S_Code"] == "E":
+                if r["S_Code"].strip() == "E":
                     continue
                 ra.append(float(r["RA"]))
                 dec.append(d)
@@ -444,12 +495,90 @@ def _fetch_and_match(
     ra_l, dec_l, flux_l, err_l = [], [], [], []
     for e in epochs:
         ra, dec, fp, efp = fetch_vlass_epoch(e, center, radius_deg)
+        # An empty epoch means a schema/filter mismatch silently dropped everything (not a real
+        # empty sky), which would yield zero candidates with no error -- fail loudly instead.
+        if ra.size == 0:
+            raise ValueError(f"epoch {e}: no components fetched in cone (schema/filter mismatch?)")
+        # Guard against a per-epoch flux-unit error (e.g. micro-Jy vs mJy): a flux-limited VLASS
+        # catalogue has a median peak flux of order 1 mJy, so a median far outside [0.01, 1000] mJy
+        # means the units are wrong and any cross-epoch comparison would be meaningless.
+        med = float(np.nanmedian(fp))
+        if not (1e-2 < med < 1e3):
+            raise ValueError(f"epoch {e}: implausible median peak flux {med:.3g} mJy (unit error?)")
         fp, efp = apply_flux_scale(e, fp, efp)
         ra_l.append(ra)
         dec_l.append(dec)
         flux_l.append(fp)
         err_l.append(efp)
     return crossmatch_epochs(ra_l, dec_l, flux_l, err_l)
+
+
+def _simbad_nearest(c, radius_arcsec: float) -> dict:  # pragma: no cover - network
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+
+    try:
+        from astroquery.simbad import Simbad
+
+        s = Simbad()
+        s.add_votable_fields("otype")
+        t = s.query_region(c, radius=radius_arcsec * u.arcsec)
+        if t is None or not len(t):
+            return {}
+        mc = SkyCoord(np.asarray(t["ra"], float) * u.deg, np.asarray(t["dec"], float) * u.deg)
+        seps = c.separation(mc).arcsec
+        i = int(np.argmin(seps))
+        return {
+            "simbad_name": str(t["main_id"][i]),
+            "simbad_type": str(t["otype"][i]),
+            "simbad_sep": round(float(seps[i]), 2),
+        }
+    except Exception:
+        return {}
+
+
+def _ned_nearest(c, radius_arcsec: float) -> dict:  # pragma: no cover - network
+    from astropy import units as u
+
+    try:
+        from astroquery.ipac.ned import Ned
+
+        t = Ned.query_region(c, radius=radius_arcsec * u.arcsec)
+        if t is None or not len(t):
+            return {}
+        sep = np.asarray(t["Separation"], float) * 60.0  # NED Separation is arcmin -> arcsec
+        i = int(np.argmin(sep))
+        z = t["Redshift"][i]
+        return {
+            "ned_name": str(t["Object Name"][i]),
+            "ned_type": str(t["Type"][i]),
+            "ned_z": float(z) if z is not None and np.isfinite(float(z)) else float("nan"),
+            "ned_sep": round(float(sep[i]), 2),
+        }
+    except Exception:
+        return {}
+
+
+def vet_candidates(
+    ra: np.ndarray, dec: np.ndarray, *, radius_arcsec: float = 5.0
+) -> list[dict]:  # pragma: no cover - network
+    """Nearest SIMBAD + NED counterpart for each candidate position (the GATE-2 cross-check).
+
+    A known AGN/blazar/quasar/radio-star counterpart supports a real variable; *no* catalogued
+    counterpart for a single-epoch brightening is a red flag for a Quick-Look artefact, not evidence
+    of a new transient. Returns one dict per candidate (name/type/redshift/separation, blank if none).
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+
+    out = []
+    for r, d in zip(np.asarray(ra, float), np.asarray(dec, float), strict=True):
+        c = SkyCoord(r * u.deg, d * u.deg)
+        rec = {"ra": float(r), "dec": float(d)}
+        rec.update(_simbad_nearest(c, radius_arcsec))
+        rec.update(_ned_nearest(c, radius_arcsec))
+        out.append(rec)
+    return out
 
 
 def _figure(eta, v, mask, eta_thr, v_thr, out_dir) -> None:
