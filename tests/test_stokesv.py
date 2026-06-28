@@ -1,0 +1,93 @@
+"""Tests for jansky_research.stokesv — Stokes-V coherent-emitter selection. No network."""
+
+from __future__ import annotations
+
+import numpy as np
+
+from jansky_research import stokesv
+
+
+def test_fractional_circular_pol():
+    frac, err = stokesv.fractional_circular_pol(
+        np.array([-3.0, 0.5]), np.array([10.0, 10.0]), np.array([0.2, 0.2]), np.array([0.5, 0.5])
+    )
+    # |V|/I uses the magnitude, so a negative V gives a positive fraction
+    assert np.allclose(frac, [0.3, 0.05])
+    # error never divides by V: sqrt((e_v/I)^2 + (frac*e_i/I)^2)
+    expect0 = np.sqrt((0.2 / 10) ** 2 + (0.3 * 0.5 / 10) ** 2)
+    assert np.isclose(err[0], expect0)
+
+
+def test_handedness():
+    assert stokesv.handedness(2.0) == "RCP"
+    assert stokesv.handedness(-2.0) == "LCP"
+
+
+def test_leakage_floor():
+    frac = np.array([0.01, 0.02, 0.03, np.nan])  # median (ignoring nan) = 0.02
+    assert np.isclose(stokesv.leakage_floor(frac, n_sigma=7.0), 0.14)
+    assert np.isnan(stokesv.leakage_floor(np.array([np.nan])))
+
+
+def test_select_circular_pol():
+    i_flux = np.array([10.0, 10.0, 10.0])
+    v_flux = np.array([3.0, 0.05, 4.0])  # frac = 0.3, 0.005, 0.4
+    e_i = np.array([0.5, 0.5, 0.5])
+    e_v = np.array([0.2, 0.2, 2.0])  # last has low V SNR (4/2 = 2)
+    mask, frac = stokesv.select_circular_pol(
+        i_flux, v_flux, e_i, e_v, leakage_threshold=0.05, v_snr_min=5.0
+    )
+    assert mask.tolist() == [True, False, False]  # #1 passes; #2 below floor; #3 fails SNR
+    assert np.isclose(frac[0], 0.3)
+
+
+def test_proper_motion_confirm():
+    # a high-PM star: 200 mas/yr over 20 yr = 4" shift. Radio at the propagated position confirms.
+    ra, dec = np.array([45.0]), np.array([-30.0])
+    pmra, pmdec = np.array([200.0]), np.array([0.0])
+    dt = 20.0
+    cosd = np.cos(np.radians(-30.0))
+    ra_prop = 45.0 + (200.0 * dt / 1000 / 3600) / cosd
+    ok, sep = stokesv.proper_motion_confirm(
+        np.array([ra_prop]), dec, ra, dec, pmra, pmdec, dt, match_arcsec=2.5
+    )
+    assert ok[0] and sep[0] < 0.1
+    # radio at the (static) catalogue position fails — it does not track the proper motion
+    ok2, sep2 = stokesv.proper_motion_confirm(ra, dec, ra, dec, pmra, pmdec, dt, match_arcsec=2.5)
+    assert not ok2[0] and sep2[0] > 3.0
+
+
+def test_classify_emitter():
+    assert stokesv.classify_emitter(4.0, 10.0) == "highly_circular"  # 0.4
+    assert stokesv.classify_emitter(1.0, 10.0) == "circular"  # 0.1
+    assert stokesv.classify_emitter(0.1, 10.0) == "weak"  # 0.01
+    assert stokesv.classify_emitter(np.nan, 10.0) == "nan"
+
+
+def test_synthetic_field_shapes():
+    stars, dt = stokesv.synthetic_field(n_stars=300, pol_fraction=0.1, seed=2)
+    assert dt > 0
+    assert stars["is_emitter"].sum() >= 1
+    for k in ("ra", "dec", "pmra", "pmdec", "ra_radio", "dec_radio", "i_flux", "v_flux"):
+        assert stars[k].shape == (300,)
+    # injected emitters have deep circular polarization; the leakage population does not
+    frac = np.abs(stars["v_flux"]) / stars["i_flux"]
+    assert frac[stars["is_emitter"]].mean() > 0.15
+    assert np.median(frac[~stars["is_emitter"]]) < 0.05
+
+
+def test_run_offline(tmp_path):
+    m = stokesv.run(out=str(tmp_path), offline=True)
+    assert m["source"] == "synthetic"
+    assert m["n_injected"] >= 1
+    assert m["n_recovered"] / m["n_injected"] > 0.8  # recovers most injected emitters
+    assert m["purity"] > 0.8  # candidates are mostly genuine (leakage + PM cuts work)
+    # the floor is estimated from bright sources, so it sits at a physical few-% leakage level,
+    # not the tens-of-% a noise-dominated faint-source median would give
+    assert 0.0 < m["leakage_floor_pct"] < 12.0
+    assert m["n_bright_ref"] > 0
+    assert (tmp_path / "results" / "stokesv_metrics.json").exists()
+    assert (tmp_path / "papers" / "stokesv" / "figures" / "circular_pol.pdf").exists()
+    macros = (tmp_path / "papers" / "stokesv" / "generated" / "macros.tex").read_text()
+    assert r"\svNcandidates" in macros
+    assert r"\svLeakFloorPct" in macros
