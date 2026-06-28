@@ -1,0 +1,113 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline — none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Sub-threshold radio stacking with injection-recovery}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Reproducible Image-Plane Stacking Tool with Injection-Recovery Calibration, Applied to
+SDSS Quasars in VLASS Single-Epoch Imaging}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Most members of an optically-selected quasar sample are fainter than the single-source detection limit
+of a radio survey, but their \emph{average} radio flux is measurable by image-plane stacking: at $N$
+known positions thermal noise averages down as $N^{-1/2}$ while a coherent signal adds (White et al.\
+2007; Karim et al.\ 2011). A stacked flux is only believable once the bias is calibrated --- snapshot,
+CLEAN, and residual-versus-restored effects corrupt raw stacks --- so we pair a robust sigma-clipped
+median stack with an \emph{injection-recovery} step that measures the recovered/injected ratio and
+de-biases the result. We apply the tool to \stN\ SDSS DR16 quasars \citep{lyke2020} that lack an
+individual VLASS detection, using VLASS Single-Epoch \citep{lacy2020} 3~GHz cutouts from the CADC.
+The median stack reaches a central peak of \stPeak~mJy/beam at signal-to-noise \stSNR; the
+injection-recovery ratio is \stRatio, giving a calibrated mean flux of \stDebiased~mJy/beam. This is a
+reproducibility and tooling contribution --- a tested stacking-plus-injection-recovery pipeline and a
+calibrated population-mean measurement --- not a new astrophysical claim.
+\end{abstract}
+
+\keywords{Quasars (1319) --- Radio continuum surveys (1340) --- Active galactic nuclei (16) ---
+Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Stacking turns a non-detection into a measurement of the population mean, and has long been used to
+probe the sub-microjansky radio sky behind optically/IR-selected samples (White et al.\ 2007; Karim
+et al.\ 2011; Lindroos et al.\ 2015). Its Achilles' heel is calibration: the flux a stack returns for
+genuinely sub-threshold sources is biased by the snapshot/CLEAN deconvolution and, in Quick-Look
+imaging, by the residual-versus-restored flux scale --- so a raw stacked flux is not trustworthy
+without an injection-recovery test, and the deeper, self-calibrated VLASS Single-Epoch images are the
+right substrate \citep{lacy2020,gordon2021}. We ask the most reproducible version: with the public
+catalogues, the public images, and a small tested tool, can one measure a population's mean radio flux
+\emph{with the bias calibrated}?
+
+\section{Methods}
+\code{stacking} is a pure-NumPy module (on the \code{jansky} helpers; \citealt{jansky}). It
+(i) median-stacks $N$ centred cutout stamps with a per-pixel sigma-clip, which rejects the rare bright
+neighbour or imaging artefact (White et al.\ preferred the median over the mean for this reason) and
+averages the thermal noise down by $\sqrt{N}$; (ii) measures the stacked central peak, an annulus RMS,
+and the signal-to-noise; and (iii) runs \emph{injection-recovery} --- it injects a point source of
+known flux at the centre of every (background) cutout, re-stacks, and measures the recovered central
+excess, returning the recovered/injected ratio that the measured stacked flux is divided by. Every
+function is tested against a synthetic population whose individually-undetectable sources are recovered
+at high stacked SNR with the injection-recovery ratio near unity, so the suite runs offline.
+
+\section{Data}
+The target list is SDSS DR16 quasars \citep{lyke2020} (VizieR) over a VLASS-covered field. For each we
+fetch a VLASS Single-Epoch \citep{lacy2020} 3~GHz Stokes-I cutout from the CADC SODA service (the same
+access path used elsewhere in this project), trimmed to a common-grid stamp; \stN\ have an SE image and
+enter the stack. A robust median makes an explicit bright-source mask unnecessary for this sample size.
+
+\section{Results}
+The median stack of the \stN\ cutouts has a central peak of \stPeak~mJy/beam at signal-to-noise \stSNR\
+--- a marginal-to-solid stacked detection of a population far below the VLASS single-source limit. The
+injection-recovery calibration returns a recovered/injected ratio of \stRatio\ (consistent with unity:
+the Single-Epoch flux scale is unbiased for these centred sub-threshold sources, unlike Quick-Look
+would be), so the de-biased population-mean flux is \stDebiased~mJy/beam (Figure~\ref{fig:stack}). The point of the exercise is the
+\emph{calibrated} number: the same stack without the injection-recovery step would quote a biased flux,
+and on Quick-Look imaging the bias would be larger and harder to model --- which is why the
+Single-Epoch images and the injection-recovery test are both necessary.
+
+\begin{figure}
+\plotone{figures/stack.pdf}
+\caption{Median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars. The central source is the
+population mean; the flux quoted in the text is de-biased by the injection-recovery ratio \stRatio.}
+\label{fig:stack}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is reproducibility and tooling: a tested image-plane stacking pipeline whose stacked
+flux is calibrated by injection-recovery, demonstrated end-to-end on public VLASS Single-Epoch images
+of a public quasar catalogue. The honest limitations are those of any catalogue-and-cutout stacking:
+the result depends on the Single-Epoch coverage at the target positions (sources without an SE image
+are dropped), the clean-PSF injection-recovery calibrates the flux-scale/snapshot bias but not every
+deconvolution subtlety, confusion and bright-neighbour contamination are mitigated by the median but
+not eliminated, and a larger sample and a magnitude- or redshift-binned analysis would turn this from a
+single calibrated number into population trends. Every number above is written by the pipeline into the
+macros this paper \code{\textbackslash input}s, and the analysis regenerates from a clean checkout on
+public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{stacking} tool (the median stack, the injection-recovery
+calibration, and the VLASS-SE cutout fetch), the analysis, and the drafting of this manuscript. The
+author directed the work, independently reviewed and verified all code, results, figures, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}
+project, and the NRAO/VLASS, CIRADA, CADC, SDSS, and CDS/VizieR teams for the public data and services
+this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, Matplotlib, astroquery,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
