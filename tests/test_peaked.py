@@ -36,25 +36,32 @@ def test_peak_frequency_recovers_turnover():
     assert not is_peak2
 
 
-def test_find_peaked_recovers_injected():
+def test_find_peaked_upper_limit_recovers_injected():
+    from jansky_research.spectra import crossmatch
+
     tgss, nvss, vlass, truth = peaked.synthetic_field(n_sources=2000, peaked_fraction=0.05, seed=1)
+    # the injected peaked sources are faint at 150 MHz -> below the TGSS limit
+    assert tgss["ra"].size < nvss["ra"].size  # TGSS is shallower than NVSS
     res = peaked.find_peaked(tgss, nvss, vlass)
-    assert res["ra"].size > 1500  # most sources triple-matched
-    peaked_mask = res["cls"] == "peaked"
-    # the peaked class is enriched and not dominated by the steep majority
-    assert peaked_mask.sum() >= 1
-    frac_peaked = peaked_mask.mean()
-    assert frac_peaked < 0.2  # selection is selective, not flagging everything
-    # curvature of peaked candidates is negative (concave: rises then falls)
-    assert np.median(res["curvature"][peaked_mask]) < 0.0
+    pk = res["is_peaked"]
+    assert pk.sum() >= 1
+    assert res["alpha_low_is_limit"][pk].mean() > 0.9  # recovered chiefly via the TGSS upper limit
+    # recovery: injected-peaked positions that land on a flagged candidate
+    rp = np.flatnonzero(truth)
+    i, _, _ = crossmatch(nvss["ra"][rp], nvss["dec"][rp], res["ra"][pk], res["dec"][pk], 5.0)
+    assert i.size / truth.sum() > 0.6  # most bright injected peaked sources recovered
+    # purity: flagged candidates are mostly truly peaked
+    j, _, _ = crossmatch(res["ra"][pk], res["dec"][pk], nvss["ra"][rp], nvss["dec"][rp], 5.0)
+    assert j.size / pk.sum() > 0.7
 
 
 def test_run_offline(tmp_path):
     m = peaked.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"
-    assert m["n_matched"] > 1000  # most of the synthetic field triple-matches
+    assert m["n_nvss_vlass"] > 1000  # most of the field is NVSS+VLASS detected
     assert m["n_peaked"] >= 1
-    assert m["n_injected_peaked"] >= 1
+    assert m["n_peaked_recovered"] >= 1
+    assert m["n_peaked_recovered"] <= m["n_injected_peaked"]
     assert (tmp_path / "results" / "peaked_metrics.json").exists()
     assert (tmp_path / "papers" / "peaked" / "figures" / "curvature.pdf").exists()
     macros = (tmp_path / "papers" / "peaked" / "generated" / "macros.tex").read_text()

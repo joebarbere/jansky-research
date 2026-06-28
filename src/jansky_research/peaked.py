@@ -33,6 +33,12 @@ __all__ = [
 
 # Survey reference frequencies (GHz).
 NU_GHZ = {"tgss": 0.1475, "nvss": 1.4, "vlass": 3.0}
+# TGSS 150 MHz ~7-sigma detection limit (mJy). Peaked/GPS sources are faint at 150 MHz and often
+# below it, so a TGSS *non-detection* is used as an upper limit S_150 < this (see find_peaked).
+TGSS_LIMIT_MJY = 25.0
+# Floor on the NVSS->VLASS index. A drop steeper than this between 1.4 and 3 GHz is not a real
+# spectrum but NVSS (45") extended emission resolved out by VLASS (2.5"): a resolution artefact.
+A_HIGH_FLOOR = -2.0
 
 
 def two_point_indices(
@@ -97,52 +103,67 @@ def find_peaked(
     vlass: dict[str, np.ndarray],
     *,
     radius_arcsec: float = 15.0,
+    tgss_limit_mjy: float = TGSS_LIMIT_MJY,
+    up: float = 0.1,
+    dn: float = -0.1,
+    a_high_floor: float = A_HIGH_FLOOR,
 ) -> dict[str, np.ndarray]:
-    """Triple cross-match (anchored on NVSS) + spectral classification. Reuses ``spectra.crossmatch``.
+    """NVSS-anchored peaked-spectrum selection, using TGSS as an UPPER LIMIT. Reuses ``spectra``.
 
-    Each survey is a ``{ra, dec, flux, eflux}`` dict (mJy). Returns per-matched-source arrays:
-    positions, the three fluxes, the two indices, the curvature, the SED class, and the turnover
-    frequency.
+    Anchors on NVSS (1.4 GHz) sources detected by VLASS (3 GHz). Requiring a TGSS detection would
+    *exclude* peaked sources, which are faint at 150 MHz; instead a TGSS non-detection is treated as
+    $S_{150}<$ ``tgss_limit_mjy``, giving a lower bound on $\\alpha_\\mathrm{low}$. A source is
+    ``peaked`` when it is rising at low frequency ($\\alpha_\\mathrm{low}$, or its lower bound,
+    $>$ ``up``), falling at high frequency ($\\alpha_\\mathrm{high}<$ ``dn``), and *not* a resolution
+    artefact ($\\alpha_\\mathrm{high}>$ ``a_high_floor``: a steeper 1.4$\\to$3 GHz drop is NVSS
+    extended emission resolved out by VLASS). Returns per-(NVSS$\\cap$VLASS)-source arrays incl.
+    ``tgss_detected`` and ``alpha_low_is_limit``.
     """
     from .spectra import crossmatch
 
     ra_n, dec_n = np.asarray(nvss["ra"], float), np.asarray(nvss["dec"], float)
-    # NVSS rows that have BOTH a TGSS and a VLASS counterpart.
-    it_n, it_t, _ = crossmatch(ra_n, dec_n, tgss["ra"], tgss["dec"], radius_arcsec)
-    iv_n, iv_v, _ = crossmatch(ra_n, dec_n, vlass["ra"], vlass["dec"], radius_arcsec)
-    t_of = dict(zip(it_n.tolist(), it_t.tolist(), strict=True))
-    v_of = dict(zip(iv_n.tolist(), iv_v.tolist(), strict=True))
-    common = sorted(set(t_of) & set(v_of))
-    if not common:
-        empty = np.array([])
-        return {k: empty for k in ("ra", "dec", "s_tgss", "s_nvss", "s_vlass")}
+    iN_v, iv, _ = crossmatch(ra_n, dec_n, vlass["ra"], vlass["dec"], radius_arcsec)
+    iN_t, it, _ = crossmatch(ra_n, dec_n, tgss["ra"], tgss["dec"], radius_arcsec)
+    if iN_v.size == 0:
+        return {k: np.array([]) for k in ("ra", "dec", "s_nvss", "s_vlass", "cls")}
+    t_of = dict(zip(iN_t.tolist(), it.tolist(), strict=True))
 
-    idx = np.asarray(common, dtype=int)
-    ti = np.array([t_of[i] for i in common])
-    vi = np.array([v_of[i] for i in common])
-    s_t = np.asarray(tgss["flux"], float)[ti]
-    s_n = np.asarray(nvss["flux"], float)[idx]
-    s_v = np.asarray(vlass["flux"], float)[vi]
-    e_t = np.asarray(tgss["eflux"], float)[ti]
-    e_n = np.asarray(nvss["eflux"], float)[idx]
-    e_v = np.asarray(vlass["eflux"], float)[vi]
-    alpha_low, alpha_high = two_point_indices(s_t, s_n, s_v, e_tgss=e_t, e_nvss=e_n, e_vlass=e_v)
-    cls = np.array([classify_sed(lo, hi) for lo, hi in zip(alpha_low, alpha_high, strict=True)])
-    nu = np.array([NU_GHZ["tgss"], NU_GHZ["nvss"], NU_GHZ["vlass"]])
-    nu_peak = np.array(
-        [peak_frequency(np.array([a, b, c]), nu)[0] for a, b, c in zip(s_t, s_n, s_v, strict=True)]
+    s_n = np.asarray(nvss["flux"], float)[iN_v]
+    s_v = np.asarray(vlass["flux"], float)[iv]
+    e_n = np.asarray(nvss["eflux"], float)[iN_v]
+    e_v = np.asarray(vlass["eflux"], float)[iv]
+    alpha_high, _ = spectral_index(s_n, NU_GHZ["nvss"], s_v, NU_GHZ["vlass"], e_n, e_v)
+
+    lnr = np.log(NU_GHZ["nvss"] / NU_GHZ["tgss"])
+    s_t = np.full(iN_v.size, np.nan)
+    alpha_low = np.empty(iN_v.size)
+    tgss_det = np.zeros(iN_v.size, dtype=bool)
+    tflux = np.asarray(tgss["flux"], float)
+    for k, nidx in enumerate(iN_v.tolist()):
+        if nidx in t_of:  # TGSS-detected -> measured alpha_low
+            s_t[k] = tflux[t_of[nidx]]
+            alpha_low[k] = np.log(s_n[k] / s_t[k]) / lnr
+            tgss_det[k] = True
+        else:  # TGSS non-detection -> S_150 < limit -> lower bound on alpha_low
+            alpha_low[k] = np.log(s_n[k] / tgss_limit_mjy) / lnr
+    is_peaked = (alpha_low > up) & (alpha_high < dn) & (alpha_high > a_high_floor)
+    cls = np.array(
+        [classify_sed(lo, hi) for lo, hi in zip(alpha_low, alpha_high, strict=True)], dtype=object
     )
+    cls[(alpha_high <= a_high_floor)] = "extended"  # resolution artefact (NVSS>>VLASS)
+    cls[is_peaked] = "peaked"
     return {
-        "ra": ra_n[idx],
-        "dec": dec_n[idx],
+        "ra": ra_n[iN_v],
+        "dec": dec_n[iN_v],
         "s_tgss": s_t,
         "s_nvss": s_n,
         "s_vlass": s_v,
         "alpha_low": alpha_low,
         "alpha_high": alpha_high,
-        "curvature": alpha_high - alpha_low,
-        "cls": cls,
-        "nu_peak_ghz": nu_peak,
+        "alpha_low_is_limit": ~tgss_det,
+        "tgss_detected": tgss_det,
+        "cls": cls.astype(str),
+        "is_peaked": is_peaked,
     }
 
 
@@ -160,6 +181,9 @@ def synthetic_field(
     nu = np.array([NU_GHZ["tgss"], NU_GHZ["nvss"], NU_GHZ["vlass"]])
     s_nvss = 10.0 ** rng.uniform(0.3, 1.5, n_sources)  # ~2-30 mJy at 1.4 GHz
     is_peaked = rng.random(n_sources) < peaked_fraction
+    # the upper-limit method can only confirm peaked sources brighter than the TGSS limit at 1.4 GHz
+    # (so that a TGSS non-detection forces alpha_low > 0); make the injected peaked ones bright.
+    s_nvss[is_peaked] = 10.0 ** rng.uniform(1.6, 2.3, int(is_peaked.sum()))  # ~40-200 mJy
     alpha = rng.uniform(-1.1, -0.5, n_sources)  # steep/flat power-law index for the rest
     flux = np.empty((n_sources, 3))
     for i in range(n_sources):
@@ -172,15 +196,19 @@ def synthetic_field(
     flux = np.clip(flux, 1e-3, None)
     jit = lambda: rng.normal(0.0, 1.0 / 3600.0, n_sources)  # noqa: E731  (~1" position jitter)
 
-    def survey(col):
+    def survey(col, *, mask=None):
+        m = np.ones(n_sources, bool) if mask is None else mask  # apply a survey's depth
         return {
-            "ra": ra + jit(),
-            "dec": dec + jit(),
-            "flux": flux[:, col],
-            "eflux": rel_err * flux[:, col],
+            "ra": (ra + jit())[m],
+            "dec": (dec + jit())[m],
+            "flux": flux[m, col],
+            "eflux": rel_err * flux[m, col],
         }
 
-    return survey(0), survey(1), survey(2), is_peaked
+    # TGSS is shallow: only sources above its 150 MHz limit are detected. Peaked sources (faint at
+    # 150 MHz) fall below it, so they are TGSS-non-detected -- exactly as on the real sky.
+    tgss = survey(0, mask=flux[:, 0] > TGSS_LIMIT_MJY)
+    return tgss, survey(1), survey(2), is_peaked
 
 
 def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool = False) -> dict:
@@ -200,21 +228,27 @@ def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool =
         vra, vdec, vflux, veflux = _fetch_e1_tap((center.ra.deg, center.dec.deg), radius_deg)
         vlass = {"ra": vra, "dec": vdec, "flux": vflux, "eflux": veflux}
         truth = None
+        source = f"TGSSxNVSSxVLASS @ ({center.ra.deg:.1f}, {center.dec.deg:.1f}) r={radius_deg}deg"
 
     res = find_peaked(tgss, nvss, vlass)
     cls = res.get("cls", np.array([]))
-    peaked = cls == "peaked"
+    peaked = res.get("is_peaked", cls == "peaked")
     metrics = {
         "source": source,
-        "n_matched": int(cls.size),
+        "n_nvss_vlass": int(cls.size),
         "n_peaked": int(peaked.sum()),
-        "n_inverted": int(np.sum(cls == "inverted")),
-        "n_steep": int(np.sum(cls == "steep")),
+        "n_extended_artefact": int(np.sum(cls == "extended")),
+        "n_tgss_detected": int(np.sum(res.get("tgss_detected", np.zeros(cls.size, bool)))),
     }
-    if truth is not None:  # synthetic: recovery of the injected peaked sources
-        # match recovered peaked back to the truth by position is overkill here; report the rates
+    if truth is not None:  # synthetic: recovery + purity of the injected peaked sources
+        from .spectra import crossmatch
+
+        ra_t = np.asarray(nvss["ra"], float)[np.flatnonzero(truth)]
+        dec_t = np.asarray(nvss["dec"], float)[np.flatnonzero(truth)]
+        # which injected-peaked positions land on a recovered "peaked" candidate
+        ip, _, _ = crossmatch(ra_t, dec_t, res["ra"][peaked], res["dec"][peaked], 5.0)
         metrics["n_injected_peaked"] = int(truth.sum())
-        metrics["n_peaked_recovered"] = int(peaked.sum())
+        metrics["n_peaked_recovered"] = int(ip.size)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -234,15 +268,21 @@ def _figure(res: dict, out_dir) -> None:
     out.mkdir(parents=True, exist_ok=True)
     al = res.get("alpha_low", np.array([]))
     ah = res.get("alpha_high", np.array([]))
-    cls = res.get("cls", np.array([]))
-    peaked = cls == "peaked"
+    peaked = res.get("is_peaked", np.zeros(al.size, bool))
+    is_lim = res.get("alpha_low_is_limit", np.zeros(al.size, bool))
     fig, ax = plt.subplots(figsize=(5, 4))
     ax.scatter(al[~peaked], ah[~peaked], s=6, color="0.6", label="other")
-    ax.scatter(al[peaked], ah[peaked], s=28, color="r", marker="*", label="peaked (GPS/CSS)")
+    # TGSS non-detections: alpha_low is a lower limit (shown with rightward arrows)
+    ax.scatter(al[peaked], ah[peaked], s=34, color="r", marker="*", label="peaked (GPS/CSS)")
+    if peaked.any():
+        for x, y in zip(al[peaked & is_lim], ah[peaked & is_lim], strict=True):
+            ax.annotate(
+                "", xy=(x + 0.15, y), xytext=(x, y), arrowprops=dict(arrowstyle="->", color="r")
+            )
     ax.axhline(0.0, color="k", lw=0.5)
     ax.axvline(0.0, color="k", lw=0.5)
     ax.set(
-        xlabel=r"$\alpha_{\rm low}$ (150$\to$1400 MHz)",
+        xlabel=r"$\alpha_{\rm low}$ (150$\to$1400 MHz; $\to$ = TGSS lower limit)",
         ylabel=r"$\alpha_{\rm high}$ (1400$\to$3000 MHz)",
         title="Spectral-curvature plane",
     )
@@ -258,10 +298,10 @@ def _write_macros(m: dict, path) -> None:
     lines = [
         "% Auto-generated by jansky_research.peaked._write_macros — do not edit by hand.",
         rf"\newcommand{{\pkSource}}{{{m['source']}}}",
-        rf"\newcommand{{\pkNmatched}}{{{m['n_matched']}}}",
+        rf"\newcommand{{\pkNnvssvlass}}{{{m['n_nvss_vlass']}}}",
         rf"\newcommand{{\pkNpeaked}}{{{m['n_peaked']}}}",
-        rf"\newcommand{{\pkNinverted}}{{{m['n_inverted']}}}",
-        rf"\newcommand{{\pkNsteep}}{{{m['n_steep']}}}",
+        rf"\newcommand{{\pkNextended}}{{{m['n_extended_artefact']}}}",
+        rf"\newcommand{{\pkNtgssdet}}{{{m['n_tgss_detected']}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

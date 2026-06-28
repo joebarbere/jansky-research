@@ -1,6 +1,6 @@
 # 14 — Peaked-spectrum (GPS/CSS) radio sources via 3-frequency spectral curvature
 
-Status: 🚧 in progress (tooling)
+Status: 🚧 in progress (real-data run done; paper next)
 
 ## Context
 
@@ -44,9 +44,13 @@ adding much new code.
 
 1. **Tooling (this step).** The curvature classification + 3-survey orchestration, validated on a
    synthetic field that recovers the injected peaked sources with low contamination.
-2. **Real data (next).** A cone on a field with known GPS/CSS sources; recover them as the validation,
-   re-examine the `spectra` slice's "inverted" sources with the third frequency, and flag variable
-   (blazar) contaminants via VLASS multi-epoch.
+2. **Real data (done).** A 2° cone at RA 180°, Dec +30° (the USS field) exposed two systematics and
+   their fixes — TGSS depth (use it as an **upper limit**, since peaked sources are faint at 150 MHz)
+   and NVSS$\to$VLASS **resolution mismatch** (a floor on $\alpha_\mathrm{high}$ rejects 110 extended
+   artefacts). Result: 6 peaked candidates, all VLASS-steady (GPS-like), three uncatalogued; one is a
+   known *Fermi* BL Lac that the variability flag missed but SIMBAD caught. See
+   `survey/peaked-findings.md`. (`find_peaked` redesigned to the upper-limit + resolution-floor
+   method; synthetic fixture updated; offline recovery ~96%.)
 3. **GATE-2** before write-up — the candidates must survive the TGSS flux-scale caveat (curvature
    robustness), the known-GPS cross-check, and the variability flag.
 4. **Write-up** as `papers/peaked/` once the real run + review are done.
