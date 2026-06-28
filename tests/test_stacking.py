@@ -49,6 +49,21 @@ def test_synthetic_population_stack_beats_noise():
     assert abs(m["peak"] - 0.05) < 0.02 and m["snr"] > 5
 
 
+def test_stack_in_bins_recovers_trend():
+    # a faint and a bright sub-population, tagged by a binning value
+    faint = stacking.synthetic_population(400, source_flux=0.04, seed=1)
+    bright = stacking.synthetic_population(400, source_flux=0.10, seed=2)
+    cube = np.concatenate([faint, bright])
+    values = np.concatenate(
+        [np.full(400, 20.5), np.full(400, 18.5)]
+    )  # mags: faint=20.5, bright=18.5
+    bins = stacking.stack_in_bins(cube, values, n_bins=2)
+    assert len(bins) == 2
+    bybright = sorted(bins, key=lambda b: b["value_med"])  # brightest (low mag) first
+    assert bybright[0]["debiased"] > bybright[1]["debiased"]  # bright bin has more radio flux
+    assert abs(bybright[0]["debiased"] - 0.10) < 0.03 and abs(bybright[1]["debiased"] - 0.04) < 0.02
+
+
 def test_run_offline(tmp_path):
     m = stacking.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"
@@ -56,6 +71,7 @@ def test_run_offline(tmp_path):
     assert m["stacked_snr"] > 5
     assert abs(m["debiased_flux"] - m["injected_truth"]) < 0.02  # recovers the injected mean
     assert 0.7 < m["recovery_ratio"] < 1.3
+    assert m["n_bins"] == 3 and len(m["bins"]) == 3  # magnitude-binned trend produced
     assert (tmp_path / "results" / "stacking_metrics.json").exists()
     assert (tmp_path / "papers" / "stacking" / "figures" / "stack.pdf").exists()
     macros = (tmp_path / "papers" / "stacking" / "generated" / "macros.tex").read_text()

@@ -37,6 +37,25 @@ population. The injection-recovery ratio of **1.00** is itself a result: the VLA
 **unbiased** for these centred sub-threshold sources (unlike Quick-Look would be) — vindicating the
 choice of SE and confirming the de-biasing step is honest, not a fudge.
 
+## Magnitude-binned: the radio--optical trend recovered
+
+Binning the sample into three equal-count bins of SDSS $i$-band magnitude and stacking each (with its
+own injection-recovery) turns the single number into a **trend** (261 quasars, 87 per bin):
+
+| $i$-band bin | median $i$ | mean radio flux | SNR |
+|---|---|---|---|
+| bright | 18.81 | **77.0 µJy/beam** | 4.5 |
+| mid | 19.95 | 62.6 µJy/beam | 3.9 |
+| faint | 20.92 | 44.9 µJy/beam | 2.9 |
+
+The mean radio flux **rises monotonically with optical brightness** — the optically-brightest third is
+$\sim$1.7$\times$ radio-brighter than the faintest. This is the expected radio--optical luminosity
+correlation (more optically-luminous quasars are radio-brighter on average), recovered by stacking from
+*individually-undetected* sources, with each bin separately bias-calibrated (injection-recovery ratio
+$\approx$1 throughout). The faintest bin is only 2.9$\sigma$, so the trend's faint end is marginal, but
+the monotonic ordering across the three bins is clean. This is exactly the step a single stacked number
+cannot provide.
+
 ## Honest assessment & caveats
 
 - **Methodology + a calibrated measurement, not a discovery.** The contribution is a tested

@@ -25,9 +25,12 @@ median stack with an \emph{injection-recovery} step that measures the recovered/
 de-biases the result. We apply the tool to \stN\ SDSS DR16 quasars \citep{lyke2020} that lack an
 individual VLASS detection, using VLASS Single-Epoch \citep{lacy2020} 3~GHz cutouts from the CADC.
 The median stack reaches a central peak of \stPeak~mJy/beam at signal-to-noise \stSNR; the
-injection-recovery ratio is \stRatio, giving a calibrated mean flux of \stDebiased~mJy/beam. This is a
-reproducibility and tooling contribution --- a tested stacking-plus-injection-recovery pipeline and a
-calibrated population-mean measurement --- not a new astrophysical claim.
+injection-recovery ratio is \stRatio, giving a calibrated mean flux of \stDebiased~mJy/beam. Binning
+the sample into \stNbins\ optical-magnitude bins turns the single number into a trend: the
+optically-brightest third ($i\simeq\stBrightMag$) has a calibrated mean radio flux of \stBrightFlux~$\mu$Jy/beam
+versus \stFaintFlux~$\mu$Jy/beam for the faintest ($i\simeq\stFaintMag$). This is a reproducibility and
+tooling contribution --- a tested stacking-plus-injection-recovery pipeline, a calibrated population-mean
+measurement, and a magnitude-resolved trend --- not a new astrophysical claim.
 \end{abstract}
 
 \keywords{Quasars (1319) --- Radio continuum surveys (1340) --- Active galactic nuclei (16) ---
@@ -71,12 +74,24 @@ would be), so the de-biased population-mean flux is \stDebiased~mJy/beam (Figure
 and on Quick-Look imaging the bias would be larger and harder to model --- which is why the
 Single-Epoch images and the injection-recovery test are both necessary.
 
-\begin{figure}
+\paragraph{A magnitude-resolved trend.} Splitting the sample into \stNbins\ equal-count bins of SDSS
+$i$-band magnitude and stacking each (with its own injection-recovery) turns the single number into the
+radio--optical relation (Figure~\ref{fig:stack}, right). The calibrated mean radio flux rises
+\emph{monotonically} with optical brightness, from \stFaintFlux~$\mu$Jy/beam in the faintest third
+($i\simeq\stFaintMag$) to \stBrightFlux~$\mu$Jy/beam in the brightest ($i\simeq\stBrightMag$) --- the
+optically-brightest quasars are $\sim$1.7$\times$ radio-brighter on average, the expected radio--optical
+luminosity correlation, here recovered entirely from \emph{individually-undetected} sources. (The
+faintest bin is only marginally significant, so the trend's faint end is tentative, but the monotonic
+ordering across the three bins is clean.) This is the kind of population trend a single stacked number
+cannot show.
+
+\begin{figure*}
 \plotone{figures/stack.pdf}
-\caption{Median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars. The central source is the
-population mean; the flux quoted in the text is de-biased by the injection-recovery ratio \stRatio.}
+\caption{\emph{Left:} median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars --- the central
+source is the population mean, de-biased by the injection-recovery ratio \stRatio. \emph{Right:} the
+calibrated mean radio flux in \stNbins\ bins of optical ($i$-band) magnitude (brighter to the right).}
 \label{fig:stack}
-\end{figure}
+\end{figure*}
 
 \section{Discussion and reproducibility}
 The contribution is reproducibility and tooling: a tested image-plane stacking pipeline whose stacked

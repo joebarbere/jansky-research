@@ -24,6 +24,7 @@ __all__ = [
     "measure_stacked_flux",
     "median_stack",
     "run",
+    "stack_in_bins",
     "synthetic_population",
 ]
 
@@ -95,6 +96,48 @@ def injection_recovery(
     }
 
 
+def stack_in_bins(
+    cutouts: np.ndarray, values: np.ndarray, *, n_bins: int = 3, min_per_bin: int = 10
+) -> list[dict]:
+    """Stack the cutouts in ``n_bins`` quantile bins of ``values``, injection-recovering each bin.
+
+    Turns one stacked number into a population *trend*: split the cube into equal-count bins of the
+    binning property (e.g. optical magnitude), median-stack and injection-recover each, and return a
+    per-bin dict with ``n``, the value range/median, the stacked peak/SNR, the recovery ratio, and the
+    de-biased flux. Bins with fewer than ``min_per_bin`` sources are skipped.
+    """
+    arr = np.asarray(cutouts, float)
+    vals = np.asarray(values, float)
+    good = np.isfinite(vals)
+    arr, vals = arr[good], vals[good]
+    edges = np.quantile(vals, np.linspace(0.0, 1.0, n_bins + 1))
+    out: list[dict] = []
+    for b in range(n_bins):
+        lo, hi = edges[b], edges[b + 1]
+        mask = (vals >= lo) & (vals <= hi) if b == n_bins - 1 else (vals >= lo) & (vals < hi)
+        if int(mask.sum()) < min_per_bin:
+            continue
+        sub = arr[mask]
+        meas = measure_stacked_flux(median_stack(sub))
+        amp = (
+            5.0 * meas["rms"] if (meas["rms"] and meas["rms"] > 0) else 5.0 * float(np.nanstd(sub))
+        )
+        cal = injection_recovery(sub, amp)
+        out.append(
+            {
+                "n": int(mask.sum()),
+                "value_lo": float(lo),
+                "value_hi": float(hi),
+                "value_med": float(np.median(vals[mask])),
+                "peak": meas["peak"],
+                "snr": meas["snr"],
+                "ratio": cal["ratio"],
+                "debiased": meas["peak"] / cal["ratio"] if cal["ratio"] else float("nan"),
+            }
+        )
+    return out
+
+
 def synthetic_population(
     n_sources: int = 600,
     *,
@@ -158,16 +201,20 @@ def fetch_se_cutout(
 def fetch_population(
     center, radius_deg: float, *, max_sources: int = 300
 ) -> tuple:  # pragma: no cover - network
-    """Cone-search optically-selected quasars (SDSS DR16Q, VizieR ``VII/289``) for a target list."""
+    """Cone-search SDSS DR16 quasars (VizieR ``VII/289``); returns ra, dec, and i-band magnitude."""
     import numpy as _np
     from astropy import units as _u
     from astroquery.vizier import Vizier
 
-    v = Vizier(columns=["RAJ2000", "DEJ2000"])
+    v = Vizier(columns=["RAJ2000", "DEJ2000", "imag"])
     v.ROW_LIMIT = max_sources
     res = v.query_region(center, radius=radius_deg * _u.deg, catalog="VII/289/dr16q")
     t = res[0]
-    return _np.asarray(t["RAJ2000"], float), _np.asarray(t["DEJ2000"], float)
+    return (
+        _np.asarray(t["RAJ2000"], float),
+        _np.asarray(t["DEJ2000"], float),
+        _np.asarray(t["imag"], float),
+    )
 
 
 def run(
@@ -182,22 +229,26 @@ def run(
     import json
     from pathlib import Path
 
+    values: np.ndarray
     if offline or center is None:
         cutouts = synthetic_population()
+        values = np.asarray(np.random.default_rng(0).uniform(18.0, 21.0, cutouts.shape[0]))  # i-mag
         source = "synthetic"
         injected_truth: float | None = 0.05
     else:  # pragma: no cover - network
-        ra, dec = fetch_population(center, radius_deg, max_sources=max_sources)
-        stamps = [
-            c
-            for c in (fetch_se_cutout(float(r), float(d)) for r, d in zip(ra, dec, strict=True))
+        ra, dec, imag = fetch_population(center, radius_deg, max_sources=max_sources)
+        pairs = [
+            (c, m)
+            for c, m in (
+                (fetch_se_cutout(float(r), float(d)), float(m))
+                for r, d, m in zip(ra, dec, imag, strict=True)
+            )
             if c is not None
         ]
-        if len(stamps) < 20:
-            raise RuntimeError(
-                f"only {len(stamps)} VLASS-SE cutouts fetched; need more for a stack"
-            )
-        cutouts = np.asarray(stamps)
+        if len(pairs) < 20:
+            raise RuntimeError(f"only {len(pairs)} VLASS-SE cutouts fetched; need more for a stack")
+        cutouts = np.asarray([c for c, _ in pairs])
+        values = np.asarray([m for _, m in pairs])
         source = f"SDSS DR16Q x VLASS-SE @ ({center.ra.deg:.1f},{center.dec.deg:.1f})"
         injected_truth = None
 
@@ -209,6 +260,17 @@ def run(
     )
     cal = injection_recovery(cutouts, inject_amp)
     debiased = meas["peak"] / cal["ratio"] if cal["ratio"] else float("nan")
+    # magnitude-binned trend: turn one number into the radio-optical luminosity relation
+    bins = sorted(stack_in_bins(cutouts, values, n_bins=3), key=lambda b: b["value_med"])
+    binned: list[dict] = [
+        {
+            "imag_med": round(b["value_med"], 2),
+            "n": b["n"],
+            "debiased_uJy": round(1e3 * b["debiased"], 1),
+            "snr": round(b["snr"], 1),
+        }
+        for b in bins
+    ]
     metrics = {
         "source": source,
         "n_stacked": int(cutouts.shape[0]),
@@ -217,6 +279,8 @@ def run(
         "stacked_snr": round(meas["snr"], 1),
         "recovery_ratio": round(cal["ratio"], 3),
         "debiased_flux": round(debiased, 4),
+        "n_bins": len(bins),
+        "bins": binned,
     }
     if injected_truth is not None:
         metrics["injected_truth"] = injected_truth
@@ -224,12 +288,12 @@ def run(
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "stacking_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(stack, op / "papers" / "stacking" / "figures")
+    _figure(stack, binned, op / "papers" / "stacking" / "figures")
     _write_macros(metrics, op / "papers" / "stacking" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(stack: np.ndarray, out_dir) -> None:
+def _figure(stack: np.ndarray, bins: list[dict], out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -237,10 +301,20 @@ def _figure(stack: np.ndarray, out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(4, 3.6))
-    im = ax.imshow(np.asarray(stack, float), origin="lower", cmap="inferno")
-    fig.colorbar(im, ax=ax, label="stacked brightness")
-    ax.set(title="Median-stacked image", xlabel="pixel", ylabel="pixel")
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3.6))
+    im = ax1.imshow(np.asarray(stack, float), origin="lower", cmap="inferno")
+    fig.colorbar(im, ax=ax1, label="mJy/beam")
+    ax1.set(title="Median-stacked image", xlabel="pixel", ylabel="pixel")
+    if bins:
+        mag = [b["imag_med"] for b in bins]
+        flux = [b["debiased_uJy"] for b in bins]
+        ax2.plot(mag, flux, "o-", color="C0")
+        ax2.set(
+            xlabel=r"median $i$ magnitude",
+            ylabel=r"mean radio flux ($\mu$Jy/beam)",
+            title="Radio--optical trend",
+        )
+        ax2.invert_xaxis()  # brighter (smaller mag) to the right
     fig.tight_layout()
     fig.savefig(out / "stack.pdf")
     plt.close(fig)
@@ -257,7 +331,17 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\stSNR}}{{{m['stacked_snr']}}}",
         rf"\newcommand{{\stRatio}}{{{m['recovery_ratio']}}}",
         rf"\newcommand{{\stDebiased}}{{{m['debiased_flux']}}}",
+        rf"\newcommand{{\stNbins}}{{{m.get('n_bins', 0)}}}",
     ]
+    bins = m.get("bins", [])
+    if bins:
+        bright, faint = bins[0], bins[-1]  # bins sorted by median i-mag (brightest first)
+        lines += [
+            rf"\newcommand{{\stBrightMag}}{{{bright['imag_med']}}}",
+            rf"\newcommand{{\stBrightFlux}}{{{bright['debiased_uJy']}}}",
+            rf"\newcommand{{\stFaintMag}}{{{faint['imag_med']}}}",
+            rf"\newcommand{{\stFaintFlux}}{{{faint['debiased_uJy']}}}",
+        ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text("\n".join(lines) + "\n")
