@@ -55,50 +55,77 @@ without manual inspection.
 3. **Peak-flux vs image inconsistency.** PyBDSF peak flux for a blended/extended component can differ
    from the image peak by a factor of a few, inflating η.
 
-## A larger census (50 deg², with completeness)
+## The census (703 deg²) — and a real variable
 
-Scaling to a 4° cone (≈50 deg², RA 190°, Dec +20°): **3139** sources, 2826 detected in ≥2 epochs, 107
-dropped as crowded, **2719 usable**. The selection flags **3** catalogue candidates — and forced
-photometry **auto-rejects all three** (forced V = 0.10, 0.25, 0.16; one is a steady ~8.5 mJy NVSS
-source with a missing-Epoch-2 cross-match, one a ~250 mJy source with QL high-flux scatter). So
-**zero confirmed variables in 2719 sources.**
+Scaling to a 15° cone (≈**703 deg²**, RA 190°, Dec +20°, ~14× the pilot): **42 721** sources, 38 999
+detected in ≥2 epochs, 2043 dropped as crowded, **36 956 usable**. The 3σ selection flags **40**
+catalogue candidates; forced photometry (top-100 by η, run in ~10 min) confirms **2** of them.
 
-The data-driven completeness (`injection_recovery` — inject a single-epoch flare of known factor into
-the real steady light curves and re-run the cut) explains why the yield is so low and bounds the
-result honestly:
+### The forced-peak centring gate (5 → 2)
+
+Image montages of the first five "confirmed" candidates exposed a residual false positive: forced
+photometry took the brightest pixel anywhere in a 4″ box, so a bright source *just outside* the
+locked position pinned the peak at the box edge (offset ≈ 3.9–4.0″) and faked a variable as its
+sidelobe/wings shifted between epochs. Adding a **centring gate** — the forced peak in the brightest
+epoch must lie within `center_arcsec` (2.5″, ~1 beam) of the position — drops the count from 5 to **2**,
+removing exactly the three box-edge artefacts (offsets ~4″) and keeping the two genuinely centred
+sources (offsets 0.3–0.4″).
+
+### The two survivors
+
+| position | catalogue (mJy) | forced (mJy) | offset | SIMBAD | verdict |
+|----------|-----------------|--------------|--------|--------|---------|
+| 202.695 +24.233 | 9.0 → 3.1 → 1.1 | 7.2 → 2.7 → 1.0 | 0.3″ | **V* FK Com** (0.9″) | known radio-active star, clean decline — **a real recovery** |
+| 184.668 +21.817 | 3.2 → – → 0.6 | 2.9 → 0.7 → 0.6 | 0.4″ | none | a faint (~3 mJy) centred source fading below threshold — a plausible transient |
+
+**FK Comae Berenices** — a famously active, rapidly rotating giant and known radio flarer — is
+recovered purely from the public catalogues with a clean monotonic ~7→1 mJy decline at a 0.9″ match.
+That is the **validation**: the pipeline does surface genuine variables, not only reject artefacts.
+Several other candidates carry blazar/QSO/BL-Lac SIMBAD identifications but fall *below* the V > 0.3
+confirmation bar — i.e. real AGN varying at the few-tens-of-percent level the VLASS cadence expects,
+correctly *not* over-claimed as strong variables.
+
+### Completeness (data-driven)
+
+`injection_recovery` (inject a single-epoch flare of known factor into the real steady light curves,
+re-run the cut) bounds the result honestly:
 
 | flare factor | 1.25 | 1.5 | 2 | 3 | 5 | 10 |
 |---|---|---|---|---|---|---|
-| recovered | 0.00 | 0.00 | 0.01 | 0.04 | 0.42 | ~0.50 |
+| recovered | 0.00 | 0.00 | 0.005 | 0.03 | 0.34 | ~0.52 |
 
-The selection is **severely incomplete and saturates near 50%**: with only three epochs, a
-single-epoch flare's coefficient of variation $V$ tops out at $1/\sqrt{3}\,/\,(1/3)=1.73$ as the
-factor → ∞, and the noisy 3-epoch $V$ threshold (≈1.3) sits just below that ceiling, so even extreme
-flares are recovered only ~half the time. The **0 confirmed variables** is therefore an *upper limit*,
-not a measured rate: at ~50% completeness for strong flares, the 95% upper limit on the
-strong-single-epoch-variable fraction is of order $\lesssim10^{-3}$ — consistent with, but far less
-constraining than, the few-percent variable fractions the professional 2-epoch censuses report at
-lower thresholds over thousands of deg².
+The selection **saturates near 50%**: with only three epochs a single-epoch flare's $V$ tops out at
+$1/\sqrt{3}\,/\,(1/3)=1.73$ as the factor → ∞, and the noisy 3-epoch $V$ threshold (≈0.9–1.3) sits just
+below that ceiling, so even 10× flares are recovered only ~half the time (50% at ~9×). So the two
+confirmed variables are a **floor**, not a complete census: the strong-single-epoch-variable fraction
+is of order a few ×10⁻⁴, with completeness ~50% for the strongest flares — much less constraining than
+the professional thousands-of-deg² 2-epoch censuses, but a genuine, reproducible result with one
+identified real source.
 
-The practical lesson: the standard 3σ-in-both-metrics cut is too stringent for 3-epoch QL data.
-Because forced-photometry confirmation removes false positives downstream, a **looser** catalogue cut
-(or more epochs) would raise completeness without sacrificing purity — the natural next step.
+The practical lesson stands: the 3σ-in-both-metrics cut is too stringent for 3-epoch QL data. Because
+forced photometry (now with the centring gate) cleanly removes false positives, a **looser** catalogue
+cut, more sky, or more epochs would raise completeness without sacrificing purity — the next step.
 
 ## Honest conclusion
 
-This is a **cautionary / negative result**, in the spirit of the USS and SETI slices: catalogue-only
-VLASS QL multi-epoch variability selection is **dominated by source-extraction artefacts**, and every
-statistical candidate must be confirmed against the actual images before it can be believed. Across a
-50 deg² census, **zero candidates survive forced-photometry confirmation**, and the selection's ~50%
-completeness ceiling makes that an upper limit ($\lesssim10^{-3}$ strong variables) rather than a
-measurement. The deliverable is the reproducible tool plus the QL-systematic-aware methodology —
-per-epoch flux-scale correction, the deblending isolation filter, automatic forced-photometry
-confirmation, and the data-driven completeness — not a discovery.
+Catalogue-only VLASS QL multi-epoch variability selection is **dominated by source-extraction
+artefacts** (deblending, cross-match misses, and bright-neighbour box-edge confusion), and every
+statistical candidate must be confirmed against the actual images before it can be believed — the
+cautionary thread shared with the USS and SETI slices. But over 703 deg² the method also does its
+positive job: of 40 catalogue candidates, **2 survive forced-photometry confirmation with the centring
+gate**, and one is the known radio-active star **FK Comae Berenices**, recovered with a clean ~7→1 mJy
+decline purely from public catalogues. So the result is **not** a pure negative: it is a reproducible,
+QL-systematic-aware pipeline (per-epoch flux-scale correction, deblending isolation, centred
+forced-photometry confirmation, data-driven completeness) that recovers a genuine variable and sets an
+honest, completeness-bounded floor on the rest — not a discovery, but a validation plus a limit.
 
 ## Honest limitations
 
-- **50 deg², single cone.** A pilot-scale census, not the thousands of deg² of the professional
-  surveys; the upper limit is correspondingly weak.
+- **703 deg², single cone.** Larger than the pilot but far from the thousands of deg² of the
+  professional surveys; the limit is correspondingly weak and the two confirmed sources are a floor.
+- **FK Com aside, the second survivor is unvetted beyond the image.** A ~3 mJy centred fader with no
+  catalogued counterpart is a plausible transient but needs multi-wavelength follow-up before any
+  claim; it is reported as a candidate, not a detection.
 - **Selection saturates at ~50%** for single-epoch flares (3-epoch ceiling). A looser cut — viable now
   that forced photometry cleans up false positives — or more epochs is needed for a real rate.
 - **Isolation is anchor-epoch only.** A source isolated in Epoch 1 but blended in a later epoch is

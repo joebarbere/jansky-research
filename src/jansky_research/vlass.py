@@ -32,6 +32,7 @@ __all__ = [
     "debiased_modulation_index",
     "eta_metric",
     "fetch_vlass_cutout",
+    "fetch_vlass_cutouts",
     "fetch_vlass_epoch",
     "forced_photometry",
     "image_lightcurve",
@@ -350,6 +351,8 @@ def run(
     epochs: tuple[int, ...] = (1, 2, 3),
     sigma: float = 3.0,
     isolation_arcsec: float = 5.0,
+    max_confirm: int = 200,
+    use_ned: bool = True,
 ) -> dict:
     """Build the multi-epoch variability catalogue (synthetic offline, or real VLASS). Writes a figure.
 
@@ -421,13 +424,14 @@ def run(
 
     # On a real-data run, automatically image-vet each survivor: forced photometry confirms (or
     # rejects) the catalogue variability against the images, and SIMBAD/NED give any counterpart.
-    conf = (
-        confirm_candidates(ra[mask], dec[mask], epochs=epochs)
-        if (not offline and mask.any())
-        else None
-    )
-    vet = vet_candidates(ra[mask], dec[mask]) if (not offline and mask.any()) else None
-    if conf is not None:
+    # Confirmation is per-candidate network, so cap it at the ``max_confirm`` most significant (by eta).
+    conf = vet = None
+    if not offline and mask.any():
+        cand_idx = np.where(mask)[0]
+        cand_idx = cand_idx[np.argsort(-eta[cand_idx])][:max_confirm]
+        conf = confirm_candidates(ra[cand_idx], dec[cand_idx], epochs=epochs)
+        vet = vet_candidates(ra[cand_idx], dec[cand_idx], use_ned=use_ned)
+        metrics["n_confirm_attempted"] = int(cand_idx.size)
         metrics["n_image_confirmed"] = int(sum(c["confirmed"] for c in conf))
 
     op = Path(out)
@@ -486,6 +490,7 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
                 *[f"forced_e{e + 1}" for e in range(n_epochs)],
                 "forced_eta",
                 "forced_v",
+                "forced_offset",
             ]
             + [
                 "simbad_name",
@@ -508,7 +513,7 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
                 + [f"{eta[i]:.2f}", f"{v[i]:.3f}"]
                 + [c.get("confirmed", "")]
                 + [("" if fphot[e] is None else fphot[e]) for e in range(n_epochs)]
-                + [c.get("forced_eta", ""), c.get("forced_v", "")]
+                + [c.get("forced_eta", ""), c.get("forced_v", ""), c.get("forced_offset", "")]
                 + [
                     m.get("simbad_name", ""),
                     m.get("simbad_type", ""),
@@ -686,6 +691,7 @@ def _ned_nearest(c, radius_arcsec: float) -> dict:  # pragma: no cover - network
     try:
         from astroquery.ipac.ned import Ned
 
+        Ned.TIMEOUT = 20  # NED can otherwise hang indefinitely; cap it (it is optional annotation)
         t = Ned.query_region(c, radius=radius_arcsec * u.arcsec)
         if t is None or not len(t):
             return {}
@@ -703,13 +709,15 @@ def _ned_nearest(c, radius_arcsec: float) -> dict:  # pragma: no cover - network
 
 
 def vet_candidates(
-    ra: np.ndarray, dec: np.ndarray, *, radius_arcsec: float = 5.0
+    ra: np.ndarray, dec: np.ndarray, *, radius_arcsec: float = 5.0, use_ned: bool = True
 ) -> list[dict]:  # pragma: no cover - network
-    """Nearest SIMBAD + NED counterpart for each candidate position (the GATE-2 cross-check).
+    """Nearest SIMBAD (and optionally NED) counterpart for each candidate position (GATE-2 cross-check).
 
     A known AGN/blazar/quasar/radio-star counterpart supports a real variable; *no* catalogued
     counterpart for a single-epoch brightening is a red flag for a Quick-Look artefact, not evidence
     of a new transient. Returns one dict per candidate (name/type/redshift/separation, blank if none).
+    ``use_ned=False`` skips NED (which can be very slow/flaky at scale); SIMBAD alone still flags
+    known versus uncatalogued sources.
     """
     from astropy import units as u
     from astropy.coordinates import SkyCoord
@@ -719,18 +727,19 @@ def vet_candidates(
         c = SkyCoord(r * u.deg, d * u.deg)
         rec = {"ra": float(r), "dec": float(d)}
         rec.update(_simbad_nearest(c, radius_arcsec))
-        rec.update(_ned_nearest(c, radius_arcsec))
+        if use_ned:
+            rec.update(_ned_nearest(c, radius_arcsec))
         out.append(rec)
     return out
 
 
-def fetch_vlass_cutout(
-    ra: float, dec: float, epoch: int, *, size_arcmin: float = 1.5
-):  # pragma: no cover - network
-    """VLASS Quick-Look image cutout for one epoch around ``(ra, dec)``: returns ``(image_mJy, wcs)``.
+def fetch_vlass_cutouts(
+    ra: float, dec: float, *, epochs: tuple[int, ...] = (1, 2, 3), size_arcmin: float = 1.5
+) -> dict:  # pragma: no cover - network
+    """Quick-Look image cutouts for several epochs from a SINGLE CADC query: ``{epoch: (image_mJy, wcs)}``.
 
-    Uses the CADC SODA cutout service (collection ``VLASS``). The data is peak brightness in
-    mJy/beam. This is the ground truth for vetting catalogue variability candidates.
+    One ``query_region``/``get_image_list`` round-trip serves all requested epochs (the dominant cost
+    per candidate), then each epoch's SODA cutout is downloaded. Missing epochs are simply absent.
     """
     import io
     import re
@@ -746,19 +755,35 @@ def fetch_vlass_cutout(
     c = SkyCoord(ra * u.deg, dec * u.deg)
     rad = (size_arcmin / 60.0) * u.deg
     cadc = Cadc()
-    res = cadc.query_region(c, radius=rad, collection="VLASS")
-    ql = [
+    urls = [
         u_
-        for u_ in cadc.get_image_list(res, c, rad)
-        if ".ql." in u_ and re.search(rf"VLASS{epoch}\.", u_)
+        for u_ in cadc.get_image_list(cadc.query_region(c, radius=rad, collection="VLASS"), c, rad)
+        if ".ql." in u_
     ]
-    if not ql:
+    out: dict = {}
+    for ep in epochs:
+        ql = [u_ for u_ in urls if re.search(rf"VLASS{ep}\.", u_)]
+        if not ql:
+            continue
+        try:
+            with fits.open(io.BytesIO(requests.get(ql[0], timeout=180).content)) as hd:
+                img = np.squeeze(np.asarray(hd[0].data, float)) * 1e3  # Jy/beam -> mJy/beam
+                w = WCS(hd[0].header).celestial
+            cut = Cutout2D(img, c, size_arcmin * u.arcmin, wcs=w)
+            out[ep] = (cut.data, cut.wcs)
+        except Exception:
+            continue
+    return out
+
+
+def fetch_vlass_cutout(
+    ra: float, dec: float, epoch: int, *, size_arcmin: float = 1.5
+):  # pragma: no cover - network
+    """VLASS Quick-Look image cutout for one epoch around ``(ra, dec)``: ``(image_mJy, wcs)``."""
+    cuts = fetch_vlass_cutouts(ra, dec, epochs=(epoch,), size_arcmin=size_arcmin)
+    if epoch not in cuts:
         raise ValueError(f"no VLASS Quick-Look image for epoch {epoch} at ({ra}, {dec})")
-    with fits.open(io.BytesIO(requests.get(ql[0], timeout=180).content)) as hd:
-        img = np.squeeze(np.asarray(hd[0].data, float)) * 1e3  # Jy/beam -> mJy/beam
-        w = WCS(hd[0].header).celestial
-    cut = Cutout2D(img, c, size_arcmin * u.arcmin, wcs=w)
-    return cut.data, cut.wcs
+    return cuts[epoch]
 
 
 def image_lightcurve(
@@ -770,14 +795,8 @@ def image_lightcurve(
     *catalogue* light curve means the catalogue "variability" is a component-extraction artefact
     (deblending, cross-match miss, fit inconsistency), not real. ``nan`` where no image is available.
     """
-    out = []
-    for e in epochs:
-        try:
-            data, _ = fetch_vlass_cutout(ra, dec, e, size_arcmin=0.5)
-            out.append(float(np.nanmax(data)))
-        except Exception:
-            out.append(float("nan"))
-    return np.asarray(out)
+    cuts = fetch_vlass_cutouts(ra, dec, epochs=epochs, size_arcmin=0.5)
+    return np.asarray([float(np.nanmax(cuts[e][0])) if e in cuts else float("nan") for e in epochs])
 
 
 def measure_image_flux(
@@ -821,19 +840,24 @@ def measure_image_flux(
 
 def forced_photometry(
     ra: float, dec: float, *, epochs: tuple[int, ...] = (1, 2, 3), search_arcsec: float = 4.0
-) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover - network
-    """Per-epoch forced peak flux + error (mJy/beam) at a locked position; nan where no image."""
-    flux, err = [], []
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # pragma: no cover - network
+    """Per-epoch forced peak flux, error, and peak offset (mJy/beam, arcsec) at a locked position."""
+    cuts = fetch_vlass_cutouts(
+        ra, dec, epochs=epochs, size_arcmin=1.5
+    )  # one CADC query for all epochs
+    flux, err, off = [], [], []
     for e in epochs:
-        try:
-            data, w = fetch_vlass_cutout(ra, dec, e, size_arcmin=1.5)
-            f, r, _ = measure_image_flux(data, w, ra, dec, search_arcsec=search_arcsec)
-            flux.append(f)
-            err.append(r if (np.isfinite(r) and r > 0) else 0.1 * abs(f))
-        except Exception:
+        if e not in cuts:
             flux.append(float("nan"))
             err.append(float("nan"))
-    return np.asarray(flux), np.asarray(err)
+            off.append(float("nan"))
+            continue
+        data, w = cuts[e]
+        f, r, o = measure_image_flux(data, w, ra, dec, search_arcsec=search_arcsec)
+        flux.append(f)
+        err.append(r if (np.isfinite(r) and r > 0) else 0.1 * abs(f))
+        off.append(o)
+    return np.asarray(flux), np.asarray(err), np.asarray(off)
 
 
 def confirm_candidates(
@@ -843,20 +867,26 @@ def confirm_candidates(
     epochs: tuple[int, ...] = (1, 2, 3),
     p_max: float = 0.01,
     v_min: float = 0.3,
+    center_arcsec: float = 2.5,
 ) -> list[dict]:  # pragma: no cover - network
     """Forced-photometry confirmation of variability candidates against the images (auto image-vetting).
 
     For each candidate, measures the forced light curve, recomputes $\\eta$/$V$ on it, and marks it
     ``confirmed`` only if the *image* light curve is significantly variable (p < ``p_max``) with real
-    amplitude ($V$ > ``v_min``). Rejects the catalogue artefacts (flat forced light curve) automatically.
+    amplitude ($V$ > ``v_min``) **and** the forced peak in the brightest epoch is centred on the
+    position (offset < ``center_arcsec``). The centring gate is essential: without it, a bright source
+    just outside the locked position pins the forced peak at the search-box edge and fakes a
+    "variable" as its wings shift between epochs (the dominant false positive after deblending).
     """
     out = []
     for r, d in zip(np.asarray(ra, float), np.asarray(dec, float), strict=True):
-        flux, err = forced_photometry(r, d, epochs=epochs)
+        flux, err, off = forced_photometry(r, d, epochs=epochs)
         good = np.isfinite(flux) & np.isfinite(err) & (err > 0)
         if good.sum() >= 2:
             m = variability_metrics(flux[good], err[good])
-            confirmed = bool(m.p_value < p_max and m.v > v_min)
+            bright = int(np.nanargmax(np.where(good, flux, -np.inf)))  # the best-detected epoch
+            centred = bool(np.isfinite(off[bright]) and off[bright] < center_arcsec)
+            confirmed = bool(m.p_value < p_max and m.v > v_min and centred)
             rec = {
                 "ra": float(r),
                 "dec": float(d),
@@ -864,6 +894,7 @@ def confirm_candidates(
                 "forced_eta": round(m.eta, 2),
                 "forced_v": round(m.v, 3),
                 "forced_p": m.p_value,
+                "forced_offset": round(float(off[bright]), 2) if np.isfinite(off[bright]) else None,
                 "confirmed": confirmed,
             }
         else:
