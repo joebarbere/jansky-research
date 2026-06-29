@@ -1,6 +1,6 @@
 # 21 — Solar type III radio bursts: drift rate → exciter (electron-beam) speed (e-Callisto)
 
-Status: 🚧 in progress (tooling)
+Status: 🚧 in progress (tooling + real e-Callisto fetch + recover-a-known done; GATE-2 + paper next)
 
 ## Context
 
@@ -58,8 +58,12 @@ burst's drift in an e-Callisto spectrum and converts it to an exciter speed, reu
    recover-a-known needs an *isolated* type III event and RFI-aware single-burst isolation. Honest
    systematics to report: fundamental-vs-harmonic (a factor of 2 in density → height), the Newkirk fold
    factor (1× quiet → up to ~4× over active regions), and projection.
-3. **Recover-a-known.** The recovered beam speed lands in the established ~0.1–0.5 c range; ideally
-   reproduce a published value for a specific well-studied event.
+3. **Recover-a-known (done).** Picked clean, isolated, quality-1 type III bursts from the Monstein SGD
+   burst lists (a flare interval is a *storm* the fit R² correctly flags at <0.3). The 2011-09-14 11:50
+   UT BIR burst is clean (R² = 0.90, drift −3.3 MHz/s, 10–79 MHz) and gives an exciter speed of
+   0.09 c (fundamental) → 0.14 c (harmonic) → 0.27 c (harmonic, 4× Newkirk) — squarely in the canonical
+   0.1–0.5 c range. All four isolated test events land in-band. The R² metric, the robust sigma-clipped
+   fit, and the `--recover` reproducible event were added in this leg. See `survey/solarbursts-findings.md`.
 4. **GATE-2** before write-up — the speed survives the density-model / harmonic caveats and a
    literature cross-check.
 5. **Write-up** as `papers/solarbursts/`.
