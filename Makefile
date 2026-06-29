@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -53,6 +53,7 @@ figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offl
 	uv run python -m jansky_research.offsets --out . --offline
 	uv run python -m jansky_research.pulsarspec --out . --offline
 	uv run python -m jansky_research.stacking --out . --offline
+	uv run python -m jansky_research.vlbi --out . --offline
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
@@ -95,6 +96,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.offsets --out .
 	uv run python -m jansky_research.pulsarspec --out .
 	uv run python -m jansky_research.stacking --ra 180 --dec 25 --radius 2.5 --max-sources 250 --out .
+	uv run python -m jansky_research.vlbi --online --out .
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts

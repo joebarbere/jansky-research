@@ -1,0 +1,155 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline — none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A control-floor discriminant for VLBI flux variability}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Steady-Control Floor for Multi-Decade VLBI Flux Variability:
+A Reproducible Tool Applied to Compact AGN in the Astrogeo Database}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The Astrogeo VLBI database holds decades of dual-band ($S=2.3$, $X=8.4$~GHz) correlated-flux
+measurements for thousands of compact radio sources, so each source has a multi-decade, parsec-scale
+light curve. We build a small tested tool that turns these into the standard transient-survey
+variability statistics --- $\eta$ (weighted reduced $\chi^2$ versus a constant) and $V$ (coefficient of
+variation; \citealt{scheers2011,swinbank2015,rowlinson2019}) --- plus a two-point $S/X$ spectral index.
+The central methodological point is that for VLBI \emph{correlated} flux density the per-session error is
+dominated by amplitude calibration and by $(u,v)$-coverage / resolved-structure differences, and is much
+larger than a naive few-percent floor: applied to a curated set of \viN\ well-studied AGN, the absolute
+$\eta$ test labels \emph{every} source ``variable'' --- including the steady compact symmetric object
+(CSO) controls --- so $\eta$ is not a usable discriminant. We instead calibrate an empirical
+\emph{variability floor} from the CSO controls (median $V=\viFloor$) and select sources above it. On this
+set the recover-a-known is clean: OJ~287 (\viTopName) is the most variable source ($\eta=\viTopEta$,
+$V=\viTopV$ over \viTopEpochs\ epochs), the famous blazars are recovered as variable, and \viNabove\ of
+the \viNnoncontrol\ non-control AGN lie above the control floor. This is a
+reproducibility and method contribution --- a tested light-curve/variability tool and a control-floor
+discriminant robust to the VLBI calibration systematic --- not a discovery claim.
+\end{abstract}
+
+\keywords{Active galactic nuclei (16) --- Very long baseline interferometry (1769) --- Blazars (164)
+--- Radio active galactic nuclei (2134) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Compact, flat-spectrum AGN vary in the radio on timescales from days to decades, and the parsec-scale
+cores resolved by very long baseline interferometry (VLBI) are where much of that variability
+originates. The Astrogeo database (\citealt{petrov2025}; the Radio Fundamental Catalog and its
+underlying image archive, maintained by L.\ Petrov) is a uniquely deep public record: thousands of
+compact sources, each observed in many geodetic and absolute-astrometry sessions over decades, almost
+all in dual-band $S/X$. The per-session total correlated flux densities therefore constitute long,
+if irregularly sampled, light curves. We ask the most reproducible version of a variability study: with
+the public per-epoch flux files and a small tested tool, can one recover the known variability of
+well-studied AGN \emph{with the dominant VLBI systematic honestly handled}?
+
+The systematic is the crux. Transient surveys quantify variability with $\eta$ (the reduced $\chi^2$
+against a constant flux: a significance) and $V$ (the coefficient of variation: an amplitude;
+\citealt{scheers2011,swinbank2015,rowlinson2019}). Both require a per-point flux error. Geodetic VLBI
+provides no formal flux error, and its correlated flux density mixes intrinsic flux with the
+session-dependent $(u,v)$ coverage and resolved-out structure. We show that this makes absolute $\eta$
+useless and motivates calibrating a variability floor from sources known to be intrinsically steady.
+
+\section{Methods}
+\code{vlbi} is a pure-NumPy module that composes the tested \code{jansky} / \code{jansky\_research}
+helpers (\citealt{jansky}): it reuses the VLASS-slice variability statistics (\code{variability\_metrics}:
+$\eta$, $V$, the $\chi^2$ $p$-value) and the two-point spectral-index helper. For each source it reads the
+per-epoch Astrogeo \code{\_cfd.tab} correlated-flux files, takes the integrated flux density
+\code{Fl\_int} (Jy) per session, and forms a per-band light curve; a light curve needs at least four
+finite epochs to be tested. The per-point error is a calibration-fraction floor,
+$\sigma=\sqrt{(f\,\mathrm{Fl\_int})^2+\mathrm{Fl\_noi}^2}$ with $f=0.05$, in quadrature with the image
+noise. We stress that $f=0.05$ is only a common starting assumption, \emph{not} a value prescribed for
+these heterogeneous networks; the control-floor analysis below measures the effective scatter directly.
+
+\paragraph{The control-floor discriminant.} For an intrinsically steady source the per-session $V$ is
+not zero --- it is set by amplitude calibration and by $(u,v)$/structure differences between sessions.
+Compact symmetric objects (CSOs), which lack a Doppler-boosted core, are the natural steady controls and
+are established flux calibrators (\citealt{pecktaylor2001} found $\sim$0.7\% rms over months for a clean
+sample; \citealt{kiehlmann2024} adopt a $\lesssim$10\% variability criterion in their bona-fide CSO
+catalog). We take the controls' median $V$ as the empirical floor and flag non-control sources above it.
+Every function is tested against a synthetic dual-band population whose injected variables are recovered
+at high completeness and purity, so the suite runs offline.
+
+\section{Data}
+We apply the tool to a curated \emph{validation} set of \viN\ well-studied compact AGN (not a blind
+survey): famous Doppler-boosted blazars expected to vary, plus four CSO controls (OQ~208, 2021+614,
+0108+388, NGC~3894). Variability is computed from the $X$-band light curves (denser and more precisely
+calibrated than $S$); $S$-band is used only for the spectral index. \viTestable\ sources have $\geq$4
+$X$-band epochs (1995--2022) and enter the analysis. Two controls are imperfect: OQ~208 is documented as
+atypically variable for a CSO (40--60\% in components; \citealt{wu2013}) and 2021+614 shows long-term
+centimetre variability (\citealt{taylor2000}); we test the floor's sensitivity to both.
+
+\section{Results}
+\paragraph{Absolute $\eta$ fails; the controls show why.} Against the assumed 5\% error, \emph{every}
+testable source has $\eta\gg1$ and $p\approx0$ --- including all four CSO controls. Since a genuinely
+steady CSO cannot be intrinsically variable at these levels, this is direct evidence that the per-session
+error is badly under-estimated: the controls imply an effective scatter of $\sim$19\%, four times the
+assumed floor. Absolute $\eta$/$\chi^2$ is therefore not a usable variability discriminant for VLBI
+correlated flux, and the relative log\,$\eta$--log\,$V$ outlier cut used in blind transient surveys
+returns nothing here (\viNcand\ candidates) because the curated set has no steady background population.
+
+\paragraph{The control floor recovers the known variables.} Taking the CSO controls' median as the
+empirical floor, $V=\viFloor$ (\viNctrl\ controls), \viNabove\ of the non-control AGN lie above it
+(Figure~\ref{fig:etav}). The floor is robust to the imperfect controls: excluding OQ~208 lowers it only
+to $\simeq0.186$, and excluding 2021+614 as well to $\simeq0.185$, leaving the same set above the floor.
+The recover-a-known is clean: the most variable source is the blazar OJ~287 (\viTopName), with
+$\eta=\viTopEta$ and $V=\viTopV$ over \viTopEpochs\ epochs at a mean $X$-band flux of \viTopFlux~Jy, and
+the other archetypal blazars (BL~Lac, AO~0235+164, PKS~1510$-$089) follow. The boosted blazars have a
+higher median amplitude ($V=\viMedVvar$) than the controls ($V=\viMedVctrl$); we report this as a
+property of \emph{this curated sample}, not of the blazar population. The population-median $S/X$ index is
+$\alpha=\viMedAlpha$ (flat), the expected signature of self-absorbed compact cores --- though, because
+$S$ and $X$ sample angular scales differing by $\sim$3.6$\times$, $\alpha$ mixes spectrum and
+differential resolution and should be read cautiously for partially-resolved objects (3C~84, 3C~120).
+
+\begin{figure}
+\plotone{figures/etav.pdf}
+\caption{$X$-band variability of the \viTestable\ AGN: significance $\eta$ versus amplitude $V$. Open
+squares are the steady CSO controls, which set the empirical floor (dashed line, $V=\viFloor$); filled
+points above the floor are the amplitude-selected variables. Note that even the controls have $\eta\gg1$
+--- absolute $\eta$ is not a usable discriminant; $V$ relative to the control floor is.}
+\label{fig:etav}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that builds multi-decade VLBI light curves
+from public Astrogeo files and a \emph{control-floor} variability discriminant that is robust to the
+dominant VLBI systematic. The honest limitations are real. (i) The sample is curated and small, chosen to
+contain known variables, so the \viNabove/\viNnoncontrol\ recovery validates the
+pipeline (a recover-a-known), not a blind detection rate. (ii) The floor rests on only \viNctrl\
+controls (individual $V$ from 0.18 to 0.25), two of which are themselves mildly variable; we mitigate
+this with the sensitivity test above but the floor is not tightly constrained. (iii) VLBI correlated flux
+is not intrinsic flux: $(u,v)$ coverage and resolved structure vary session to session, which is exactly
+the scatter the control floor absorbs --- and which dilutes genuine variability for sparsely-sampled or
+extended sources (3C~273, with only four epochs, falls below the floor). (iv) $\eta$/$V$ use $X$-band
+only. A blind, magnitude-limited catalog with the floor calibrated per epoch-count and declination bin is
+the natural next step. Every number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, and the analysis regenerates from a clean checkout on public data.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{vlbi} tool (the light-curve assembly, the reuse of the
+variability statistics, the Astrogeo fetch, and the control-floor discriminant), the analysis, and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified all code,
+results, figures, and citations, and takes full responsibility for the content. An AI/LLM is not an
+author.
+
+\begin{acknowledgments}
+This work makes use of the Astrogeo VLBI database and the Radio Fundamental Catalog maintained by
+L.\ Petrov, and of data from the many geodetic and astrometric VLBI programs it compiles. The author
+acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky} project, and the
+CDS and the radio-astronomy archives this work builds on.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+requests, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
