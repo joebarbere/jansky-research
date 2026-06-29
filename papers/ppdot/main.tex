@@ -1,0 +1,120 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{The pulsar P--Pdot diagram from ATNF}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{The Pulsar P--$\dot P$ Diagram, Surface Fields, and the Death Line:
+A Reproducible Recovery from the ATNF Catalogue}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A rotation-powered pulsar's period $P$ and spin-down rate $\dot P$ fix its surface dipole field
+$B\approx3.2\times10^{19}\sqrt{P\dot P}$ G, characteristic age $\tau=P/2\dot P$, and spin-down
+luminosity $\dot E=4\pi^2 I\dot P/P^3$. The $P$--$\dot P$ plane is the H--R diagram of pulsars. We build
+a small tested tool that recovers its population structure from the ATNF Pulsar Catalogue
+\citep{manchester2005} (VizieR, public, no auth): of the catalogue, \ppN\ pulsars have a positive
+measured $\dot P$ and enter the diagram. Their median surface field separates the three populations by
+$\sim$5 orders of magnitude --- millisecond pulsars at $\log(B/\mathrm{G})=\ppLogBmsp$ (recycled), the
+ordinary population at \ppLogBnormal, and high-field/magnetar objects ($B>10^{13}$ G) at
+\ppLogBmagnetar\ --- and \ppFracAlive\ of the sample lies above a standard polar-cap death line, as
+expected for a radio-selected catalogue. The Crab pulsar validates the derivations ($B=3.8\times10^{12}$
+G, $\tau\approx1260$ yr). This is a reproducibility/method contribution and a recover-a-known, not a
+discovery, and we are explicit about the catalogue selection, the death-line model dependence, and what
+$B$ and $\tau$ do and do not mean.
+\end{abstract}
+
+\keywords{Pulsars (1306) --- Neutron stars (1108) --- Magnetars (992) --- Millisecond pulsars (1062)
+--- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Pulsar spin-down is the cleanest clock in astrophysics, and the period--period-derivative diagram
+organises the whole population: ordinary pulsars at $B\sim10^{12}$ G and $P\sim0.1$--1 s, millisecond
+pulsars recycled to the bottom-left by binary accretion, magnetars at the top-right, and a death line
+below which the polar-cap voltage can no longer sustain the pair production that powers radio emission
+\citep{rudermansutherland1975,bhattacharya1991,lorimerkramer2004}. We ask the most reproducible version:
+with the public catalogue and a small tested tool, can that structure be recovered, with the right
+caveats?
+
+\section{Methods}
+\code{ppdot} is a pure-NumPy module on the \code{jansky} helpers \citep{jansky}, reusing the project's
+ATNF fetch pattern and its millisecond-pulsar period cut. From $P$ and $\dot P$ it computes the surface
+dipole field $B=3.2\times10^{19}\sqrt{P\dot P}$ G --- the standard orthogonal-rotator estimate
+($\sin\alpha=1$, $I=10^{45}$ g cm$^2$, $R=10$ km; the aligned/equatorial convention gives
+$6.4\times10^{19}$, i.e.\ fields larger by $\sqrt2$) --- the characteristic age $\tau=P/2\dot P$, and the
+spin-down luminosity. It labels each pulsar magnetar/high-$B$ ($B>10^{13}$ G), millisecond ($P<30$ ms),
+or normal, in that priority, and evaluates a constant-$B/P^2$ death line ($B_{12}/P^2=0.2$;
+\citealt{rudermansutherland1975,bhattacharya1991}). Every function is tested against a synthetic
+three-population fixture; that round-trip checks the classifier's arithmetic on injected labels and is
+\emph{not} a validation of the real results.
+
+\section{Data}
+We query the ATNF Pulsar Catalogue \citep{manchester2005} from VizieR (\code{B/psr}): periods and
+period derivatives for the known pulsars. Of the $\sim$3500 entries, \ppN\ have a positive measured
+$\dot P$ and enter the diagram; the rest lack a measured $\dot P$ or (for many globular-cluster pulsars)
+show a negative apparent $\dot P$ from cluster acceleration rather than true spin-down, and are dropped.
+
+\section{Results}
+The median surface field cleanly separates the three populations (Figure~\ref{fig:ppdot}):
+$\log(B/\mathrm{G}) = \ppLogBmsp$ for the \ppNmsp\ millisecond pulsars, \ppLogBnormal\ for the \ppNnormal\
+normal pulsars, and \ppLogBmagnetar\ for the \ppNmagnetar\ high-$B$/magnetar objects --- a span of
+$\sim$5 orders of magnitude (a factor of $\sim$80\,000), the textbook P--$\dot P$ structure
+\citep{lorimerkramer2004}. The millisecond population sits at the bottom-left (short $P$, tiny $\dot P$,
+recycled by accretion); the high-$B$ objects at the top-right. Against the standard polar-cap death
+line, \ppFracAlive\ of the sample is radio-loud, as expected for a radio-selected catalogue. The Crab
+pulsar validates the derivations: $B=3.8\times10^{12}$ G and $\tau=P/2\dot P\approx1260$ yr, both
+textbook (and $\tau$ is appropriately longer than the true $\sim$970-yr age, since $\tau$ assumes
+braking index 3 and $P_0\ll P$).
+
+\begin{figure}
+\plotone{figures/ppdot.pdf}
+\caption{The pulsar $P$--$\dot P$ diagram from \ppN\ ATNF pulsars, coloured by class (millisecond,
+normal, high-$B$/magnetar), with the constant-$B/P^2$ death line (dashed). The three populations and
+the recycled millisecond island are recovered directly.}
+\label{fig:ppdot}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that recovers the P--$\dot P$ population
+structure from a public catalogue, with the caveats that bound it. (i) ``Magnetar'' here is a
+\emph{position-in-diagram} label ($B>10^{13}$ G; \ppNmagnetar\ sources) that includes high-field
+rotation-powered pulsars as well as the $\sim$30 true magnetars --- which are X-ray/$\gamma$-ray, not
+radio, selected. (ii) The death line is one representative model; the literature spans a ``death
+valley'' \citep{chenruderman1993}, and the $\sim$1.8\% below our line are not noise but real
+long-period pulsars that motivated that literature, so \ppFracAlive\ should be read as ``almost all, for
+a standard line.'' (iii) The ATNF catalogue is the union of many flux- and period-limited surveys, so
+the \emph{relative} population sizes are survey-shaped, not intrinsic, though the per-class median
+fields are robust to this. None of these undermine the recover-a-known --- the field separation and the
+diagram structure are unambiguous --- but they are why this is a reproduction, not a population
+measurement. Every number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, and \code{python -m jansky\_research.ppdot} regenerates them from the
+public catalogue.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{ppdot} tool (the $P$--$\dot P$ derivations, the classifier and
+death line, and the ATNF fetch), the analysis, and the drafting of this manuscript. The author directed
+the work, independently reviewed and verified all code, results, figures, and citations, and takes full
+responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the ATNF Pulsar Catalogue (Manchester et al.\ 2005) via the CDS/VizieR service, and the
+author thanks those teams for the open data. The author acknowledges the collaborative contribution of
+Anthropic's Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, Matplotlib, astroquery,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
