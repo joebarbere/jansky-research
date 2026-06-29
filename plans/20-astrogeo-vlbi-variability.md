@@ -1,6 +1,6 @@
 # 20 — Multi-decade VLBI flux variability of compact AGN (Astrogeo)
 
-Status: 🚧 in progress (tooling + real Astrogeo fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real Astrogeo fetch + recover-a-known + GATE-2 + paper `papers/vlbi/`)
 
 ## Context
 
@@ -59,9 +59,13 @@ recover-a-known validation on a famously variable blazar — not a discovery cla
    trustworthy discriminant is **V above the steady-control floor** (V = 0.193): 13/14 non-controls
    exceed it, blazars ~1.7× more variable in amplitude. See `survey/vlbi-findings.md`; the
    `variability_floor` helper encodes the method.
-4. **GATE-2** before write-up — the control-floor result and the structural-variability caveat survive a
-   science review and literature cross-check.
-5. **Write-up** as `papers/vlbi/`.
+4. **GATE-2 (done).** science-reviewer verdict PASS-WITH-FIXES. It caught a factual error — OQ 208 is
+   *not* "textbook stable" but an atypically variable CSO (Wu et al. 2013) — now fixed in the code
+   comment and findings, with a floor-sensitivity test added (dropping OQ 208 / 2021+614 leaves the same
+   13/14 above floor). Also fixed: the 5% floor is no longer attributed to Petrov & Kovalev; the
+   ~1.7×/V-ratio is framed as curated-sample-only; the S/X differential-resolution caveat is added.
+5. **Write-up (done)** as `papers/vlbi/main.tex` + `refs.bib` — compiles in both the CI offline-synthetic
+   macro build and the real `make reproduce` build; every number `\input` from the pipeline macros.
 
 ## Verification
 

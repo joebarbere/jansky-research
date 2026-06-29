@@ -21,8 +21,12 @@ variability significance rests on hangs on this number — see the central cavea
 
 18 well-known, well-observed compact AGN (`VALIDATION_SOURCES`): 14 Doppler-boosted blazars expected to
 vary strongly, plus **4 compact symmetric objects (CSOs)** — OQ 208, 2021+614, 0108+388, NGC 3894 —
-which lack a boosted core and are the **steady negative controls** (OQ 208 is the textbook stable VLBI
-source). X-band light curves span 1995–2022 with 4–123 epochs each.
+which lack a boosted core and serve as **steady negative controls**. CSOs are established radio flux
+calibrators (Taylor & Peck 2003 measured ~0.7% rms over 8 months for a clean sample), but two of ours
+are imperfect: **OQ 208 is documented as atypically variable** (40–60% in components; Wu et al. 2013)
+and **2021+614 shows long-term cm variability** (Taylor et al. 2000), so we treat the floor's
+sensitivity to them explicitly below; 0108+388 and NGC 3894 are the cleaner controls. X-band light
+curves span 1995–2022 with 4–123 epochs each.
 
 ## Result 1 — the known variables are recovered
 
@@ -42,18 +46,24 @@ compact cores. The population median α$_{SX}$ = +0.03 (flat), the compact-core 
 
 ## Result 2 — the steady controls expose the central caveat
 
-The 4 CSO controls are **also** formally "variable" by the absolute χ² test — OQ 208 has η = 79.6,
-p ≈ 0. That is **not** intrinsic variability: a CSO is steady, so its apparent scatter is amplitude
-calibration + (u,v)-coverage / resolved-structure differences between sessions. This is the smoking gun
-that **the 5% error floor is too optimistic** and the absolute η/χ² massively over-rejects — *every*
-source, steady or not, is "significantly variable" against a 5% error.
+The 4 CSO controls are **also** formally "variable" by the absolute χ² test — even the steadiest, NGC
+3894, has η = 21, p ≈ 0. For a genuinely steady source this apparent scatter is *not* intrinsic: it is
+amplitude calibration + (u,v)-coverage / resolved-structure differences between the heterogeneous
+geodetic sessions (the baseline set, and hence the (u,v) sampling, changes session to session). This is
+the signal that **the assumed 5% error is far too small** — the controls imply an effective per-session
+scatter of ~19%, so absolute η/χ² is **uninformative as a discriminant**: against a 5%-too-small error
+*every* source, steady or not, comes out "significant". (For OQ 208 specifically, η = 80 partly reflects
+genuine variability — Wu et al. 2013 — so it is the least clean control.)
 
-**What survives is the amplitude V, benchmarked against the controls.** The CSOs set an empirical
-variability floor **V = 0.193** (their median); above it sit **13 of the 14** non-control AGN. The
-boosted blazars have median V = 0.32 vs the controls' 0.19 — **~1.7× more variable in amplitude** — the
-genuine, calibration-robust signal. The one non-control below the floor is **3C 273** (V = 0.13): bright
-but resolved, with only 4 epochs, so its core variability is diluted in the total flux — an honest edge
-case, not a failure.
+**What survives is the amplitude V, benchmarked against the controls.** The CSOs set an empirical floor
+**V ≈ 0.19** (4-control median 0.193; control V range 0.183–0.250); above it sit **13 of the 14**
+non-control AGN. The floor is **robust to the imperfect controls**: dropping OQ 208 gives 0.186, and
+dropping both OQ 208 and 2021+614 gives 0.185 — the same 13/14 pass either way (the marginal source,
+CTA 102 at V = 0.193, stays above). The boosted blazars have median V = 0.32 vs the controls' 0.19
+(roughly twice as variable in amplitude) — but this ratio describes *this curated sample*, not the
+blazar population, and the floor rests on only 4 controls. The one non-control below the floor is **3C
+273** (V = 0.13, only 4 epochs): with so few epochs and differing (u,v) coverage, plus its extended
+S/X jet, its core variability is not captured — an honest small-N edge case, not a failure.
 
 ## Honest assessment
 
@@ -63,6 +73,14 @@ case, not a failure.
   trustworthy discriminant**, not absolute η. The tool reports both and the figure draws the floor.
 - **VLBI total flux ≠ intrinsic flux.** `Fl_int` folds (u,v) coverage and resolved structure; the CSO
   controls quantify how large that structural floor is (V ≈ 0.19). Any "variability" below it is noise.
+- **η/V are X-band only;** S-band (sparser, less precisely calibrated) is used only for the index.
+- **α$_{SX}$ mixes spectrum and resolution.** S (2.3 GHz) and X (8.4 GHz) correlated fluxes sample
+  different angular scales (resolution differs ~3.6×), so α$_{SX}$ reflects both the intrinsic spectrum
+  and differential resolution; small for core-dominated blazars, but interpret partially-resolved
+  objects (3C 84, 3C 120) cautiously.
+- **Imperfect controls / small N.** The floor is the median of 4 controls (range 0.183–0.250), two of
+  which (OQ 208, 2021+614) are themselves mildly variable; the result is robust to dropping them but the
+  floor is not tightly constrained.
 - **A curated validation set, not a survey.** 18 hand-picked sources demonstrate the pipeline and the
   recover-a-known; a blind catalogue would need a large, magnitude-limited input list and the
   control-floor calibration applied per declination/epoch-count bin.
