@@ -1,6 +1,6 @@
 # 24 — Interplanetary type III bursts: tracking the beam into the heliosphere (Wind/WAVES)
 
-Status: 🚧 in progress (tooling + real Wind/WAVES fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real Wind/WAVES fetch + recover-a-known + GATE-2 + paper `papers/windwaves/`)
 
 ## Context
 

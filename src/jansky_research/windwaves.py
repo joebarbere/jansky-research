@@ -1,12 +1,14 @@
-"""Interplanetary type III bursts: tracking the electron beam into the heliosphere (Wind/WAVES).
+"""Inner-heliosphere type III bursts: tracking the electron beam beyond the corona (Wind/WAVES).
 
 A type III electron beam does not stop at the top of the corona --- it streams out along the open
-field into interplanetary space, exciting radio emission at the falling plasma frequency all the way
-toward 1 AU. Space-based receivers see this as a slow drift from a few MHz down to tens of kHz over
-tens of minutes. This slice fits that drift in a Wind/WAVES dynamic spectrum and inverts it, via a
-**heliospheric** density model (Leblanc, Dulk & Bougeret 1998), to the beam's outward speed and the
-heliocentric distance it reaches --- the interplanetary companion to the coronal ``solarbursts`` slice
-(which used the Newkirk corona, valid only to a few solar radii).
+field, exciting radio emission at the falling plasma frequency as it goes. Space-based receivers see
+this as a slow drift from a few MHz down to tens of kHz over tens of minutes; the high-frequency
+(RAD2, ~1--14 MHz) part traces the beam through the **inner heliosphere** (a few to ~10 R_sun, near
+the Alfven surface), and RAD1 (down to ~20 kHz) would follow it on toward 1 AU. This slice fits the
+drift in a Wind/WAVES dynamic spectrum and inverts it, via a **heliospheric** density model (Leblanc,
+Dulk & Bougeret 1998), to the beam's outward radial speed and the heliocentric distance it reaches ---
+the wider-distance companion to the coronal ``solarbursts`` slice (which used the Newkirk corona, valid
+only to a few solar radii).
 
 Reuses ``solarbursts``' dynamic-spectrum tools (background subtraction, burst windowing, the
 per-channel ridge detector, the robust fit) and ``jansky.solar.density_from_plasma_frequency``; adds

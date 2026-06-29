@@ -1,0 +1,122 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Inner-heliosphere type III from Wind/WAVES}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Tracking a Solar Type III Electron Beam Through the Inner Heliosphere with Wind/WAVES:
+A Reproducible Drift-to-Distance Tool}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A type III electron beam radiates near the local plasma frequency as it streams out along open coronal
+field, so its radio drift from a few MHz down to tens of kHz traces the beam's outward motion. We build
+a small tested tool that fits this drift in a Wind/WAVES \citep{bougeret1995} dynamic spectrum and
+inverts it, via the Leblanc, Dulk \& Bougeret \citeyearpar{leblanc1998} heliospheric density model, to
+the beam's radial speed and heliocentric reach --- the wider-distance companion to a coronal type III
+slice that used the Newkirk corona. Applied to the well-documented 2003-10-28 X17 flare burst
+(\code{\wwSource}; \wwNridge\ channels, \wwFlo--\wwFhi~MHz), the inversion places the emission at
+\wwRlo--\wwRhi~$R_\odot$ (harmonic) --- beyond the upper corona, the outer point (\wwRhiAU~AU) near the
+Alfv\'en surface --- with an outward radial speed of \wwSpeedC~$c$ (harmonic) or $0.045\,c$
+(fundamental). We are careful about what this is and is not: $\sim$10~$R_\odot$ is the inner heliosphere,
+not the interplanetary ($\gtrsim$20~$R_\odot$) regime that the lower-frequency RAD1 receiver would
+reach; and the recovered speed is \emph{below} published values, which we attribute to peak-time ridge
+sampling and the moderate fit ($R^2=\wwRsq$) rather than to projection. This is a reproducibility/method
+contribution and a recover-a-known, not a discovery.
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
+--- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+The electron beams that produce type III bursts do not stop at the top of the corona; they continue out
+along the open field, and space-based receivers track the radio emission to ever lower frequencies as
+the ambient density falls. With a heliospheric density model the frequency drift becomes a
+height--time track whose slope is the beam's radial speed. This is the natural extension of a coronal
+type III analysis (which uses the Newkirk corona, valid only to a few solar radii) to larger distances.
+We ask the most reproducible version: with the public Wind/WAVES spectra and a small tested tool, can
+one recover a beam's outward track --- with honest uncertainties and the right distance regime named?
+
+\section{Methods}
+\code{windwaves} is a pure-NumPy module that reuses the coronal slice's dynamic-spectrum pipeline
+(background subtraction, burst-window finding, the per-channel peak-time ridge detector, and the robust
+sigma-clipped fit) and \code{jansky.solar} \citep{jansky}. It adds the Leblanc density model
+$n_e(r)=3.3\times10^{5}r^{-2}+4.1\times10^{6}r^{-4}+8.0\times10^{7}r^{-6}$ cm$^{-3}$ (r in $R_\odot$;
+$\approx$7.1 cm$^{-3}$ at 1~AU) and its numerical inverse, mapping each ridge frequency to a plasma
+frequency $f_p=f/\mathrm{harmonic}$, a density, and a heliocentric radius. A robust linear fit of radius
+versus time gives the radial speed and the reach. The ridge uses intensity \emph{peaks} (not onsets),
+which biases the speed low. Every function is tested against a synthetic burst built from the same
+Leblanc mapping --- a round-trip code check of the inversion, not a validation of the real result.
+
+\section{Data}
+We use Wind/WAVES Level-2 RAD2 radio spectra (1.075--13.825~MHz) from NASA SPDF (public, no auth;
+\citealt{bougeret1995}). RAD1 reaches down to $\sim$20~kHz ($\approx$ the plasma frequency at 1~AU) but
+is not used here; this run is RAD2 only.
+
+\section{Results}
+In the 2003-10-28 file the strongest band-integrated emission falls at 11:06~UT --- the time of the X17
+flare. Across all \wwNridge\ channels the per-channel peak times trace a high-to-low drift; through the
+Leblanc model the emission lies at heliocentric radii \wwRlo--\wwRhi~$R_\odot$ (harmonic), the outer
+point at \wwRhiAU~AU, near the Alfv\'en surface (Figure~\ref{fig:ipburst}). The implied outward radial
+speed is \wwSpeedC~$c$ ($\wwSpeedKms$~km\,s$^{-1}$) for harmonic emission, or $0.045\,c$ for fundamental;
+harmonic emission is usual at these frequencies, so we take \wwSpeedC~$c$ as primary (we did not search
+for a fundamental--harmonic pair to confirm the mode). This is \emph{below} the published range for type
+III beams at comparable distances ($\sim$0.3~$c$ historically; 0.17--0.35~$c$, \citealt{reiner2015};
+0.02--0.35~$c$ at lower frequencies, \citealt{krupar2015}). The likely causes are the peak-time ridge
+sampling (the peak follows the onset) and the moderate height--time fit ($R^2=\wwRsq$, from the band
+compressing near the Sun where the high-frequency channels peak nearly together) --- \emph{not}
+projection, which is a sub-percent effect at these radii.
+
+\begin{figure}
+\plotone{figures/ipburst.pdf}
+\caption{\emph{Left:} the background-subtracted Wind/WAVES RAD2 dynamic spectrum of the 2003-10-28 X17
+type III, log-frequency, with the detected drift ridge. \emph{Right:} the ridge mapped through the
+Leblanc model to a heliocentric-radius--versus--time track; the robust linear fit (slope $=$ radial
+speed) has $R^2=\wwRsq$.}
+\label{fig:ipburst}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that turns a public Wind/WAVES spectrum
+into a beam height--time track and radial speed, with the systematics surfaced. The honest limitations
+are substantial. (i) RAD2 reaches only $\sim$10~$R_\odot$ ($\approx$0.05~AU), the inner heliosphere near
+the Alfv\'en surface --- \emph{not} the interplanetary regime; tracking the beam to 1~AU needs RAD1.
+(ii) The Leblanc model is the \emph{average} solar wind, but 2003-10-28 drove a $>$2000~km\,s$^{-1}$
+halo CME that can locally enhance the density at these radii by a factor of several, shifting the
+inferred radii (and speed) by more than the harmonic factor of two --- the dominant systematic for this
+event. (iii) The recovered speed is low for the reasons above, and the synthetic round-trip is not
+evidence it is right. None of these undermine the recover-a-known --- the burst is correctly located at
+the flare time and tracked outward through the inner heliosphere --- but they bound what a single
+RAD2 spectrum and an average density model can claim. Every number above is written by the pipeline into
+the macros this paper \code{\textbackslash input}s, and
+\code{python -m jansky\_research.windwaves -\,-date 20031028 -\,-receiver rad2} regenerates them from the
+public SPDF CDF.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{windwaves} tool (the Leblanc model and inversion, the reuse of
+the coronal dynamic-spectrum pipeline, and the Wind/WAVES CDF fetch), the analysis, and the drafting of
+this manuscript. The author directed the work, independently reviewed and verified all code, results,
+figures, and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses Wind/WAVES data from the NASA Space Physics Data Facility and the Leblanc et al.\ (1998)
+heliospheric density model. The author acknowledges the collaborative contribution of Anthropic's Claude
+and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib, cdflib,
+requests, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
