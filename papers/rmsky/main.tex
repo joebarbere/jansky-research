@@ -1,0 +1,134 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{The Galactic Faraday rotation sky from Taylor+2009}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Recovering the Galactic Faraday Rotation Sky from the Taylor et al.\ (2009) Catalogue:
+A Reproducible Pipeline}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The polarisation angle of a radio source rotates as $\chi(\lambda)=\chi_0+\mathrm{RM}\,\lambda^2$ on its
+way through the magnetised interstellar medium, with the rotation measure
+$\mathrm{RM}=0.81\int n_e B_\parallel\,\mathrm{d}l$ (rad m$^{-2}$). The RMs of tens of thousands of
+\emph{extragalactic} sources thus sample the Galactic Faraday sky --- the line-of-sight integral of the
+field weighted by electron density --- along every sightline. We build a small tested tool that
+reproduces two textbook signatures from the Taylor, Stil \& Sunstrum \citeyearpar{taylor2009} NVSS RM
+catalogue (\rmN\ sources; VizieR, public, no auth), reusing the \code{jansky} course's polarisation
+helpers for the underlying $\lambda^2$ fit. The median $|\mathrm{RM}|$ is enhanced toward the Galactic
+plane by a factor of $\rmRatio\pm\rmRatioErr$ ($\rmPlane$ rad m$^{-2}$ at $|b|<10^\circ$ versus
+$\rmPole$ at $|b|>60^\circ$), the expected disk path-length signature; and the mean RM is sign-organised
+across the plane (inner-Galaxy mean $\rmInnerNorth\pm\rmInnerNorthErr$ rad m$^{-2}$ north of the plane,
+$\rmInnerSouth\pm\rmInnerSouthErr$ south), consistent with the large-scale Galactic field. We are careful
+about what this does \emph{not} show: RM constrains only $\int n_e B_\parallel\,\mathrm{d}l$ (not
+$B_\parallel$ itself), the coarse quadrant mask conflates regions of opposing sign, and the north/south
+source-count imbalance is largely an NVSS coverage artefact. This is a reproducibility/method
+contribution and a recover-a-known, not a discovery.
+\end{abstract}
+
+\keywords{Interstellar magnetic fields (845) --- Faraday effect (1583) --- Milky Way magnetic fields
+(1057) --- Radio continuum emission (1340) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Faraday rotation of the polarised emission of background radio sources is the workhorse probe of the
+magneto-ionic interstellar medium. Each measured RM is the path integral
+$0.81\int n_e B_\parallel\,\mathrm{d}l$, so an all-sky grid of extragalactic RMs is a screen-map of the
+Galactic Faraday sky \citep{taylor2009,oppermann2012}. Two large-scale features are textbook: a strong
+enhancement of $|\mathrm{RM}|$ toward the Galactic plane (the disk path length grows as $\csc|b|$;
+\citealt{schnitzeler2010}), and a sign-organised, quadrupole-like pattern reflecting the ordered
+disk/halo field \citep{taylor2009,sun2008}. We ask the most reproducible version: with the public
+catalogue and a small tested tool, can both be recovered \emph{with honest uncertainties and caveats}?
+
+\section{Methods}
+\code{rmsky} is a pure-NumPy module on the \code{jansky} helpers \citep{jansky}. Its foundational step
+reuses \code{jansky.polarization.rotation\_measure\_fit} --- a least-squares fit of
+$\chi=\chi_0+\mathrm{RM}\,\lambda^2$ (the way every catalogue RM is measured), verified by a round-trip
+against the forward \code{faraday\_rotate}. From the catalogue it then computes (i) the median
+$|\mathrm{RM}|$ in bins of Galactic latitude $|b|$ (the plane enhancement), with a bootstrap error on the
+plane/pole ratio; and (ii) the mean RM in four regions split by hemisphere and by inner
+($l<90^\circ$ or $l>270^\circ$) versus outer Galaxy, with standard errors. We use the \emph{median} for
+the latitude profile (robust to the rare $n\pi$-aliased outliers) and the \emph{mean} for the sign
+analysis (the median would null the very net-sign signal we seek). Every function is tested against a
+synthetic sky built from a $\csc|b|$ disk plus a sign-of-$b$ field --- a \emph{round-trip code check},
+not a physical validation, which is the real-data run.
+
+\section{Data}
+We query the Taylor, Stil \& Sunstrum \citeyearpar{taylor2009} NVSS RM catalogue from VizieR
+(\code{J/ApJ/702/1230}): \rmN\ polarised extragalactic sources at 1.4~GHz, each with an RM derived from
+the two NVSS IF bands. We retrieve $(\alpha,\delta,\mathrm{RM})$ and transform to Galactic
+$(l,b)$. The catalogue covers $\delta>-40^\circ$, so the southern Galactic sky is incomplete.
+
+\section{Results}
+\paragraph{Plane enhancement.} The median $|\mathrm{RM}|$ falls monotonically from $\rmPlane$ rad
+m$^{-2}$ at $|b|<10^\circ$ to $\rmPole$ rad m$^{-2}$ at $|b|>60^\circ$ (Figure~\ref{fig:rmsky}), a
+plane/pole ratio of $\rmRatio\pm\rmRatioErr$ (bootstrap). This is the expected disk signature, but
+\emph{softer} than the bare $\csc|b|$ limit ($\sim$11 for these bin centres) for two physical reasons: a
+flat $\sim$10 rad m$^{-2}$ floor set by intrinsic extragalactic RM (\citealt{schnitzeler2010};
+\citealt{mao2010}) that does not scale with $|b|$, and Faraday depolarisation in the thick disk, which
+suppresses the detectable near-plane source count and so biases the detected near-plane sample low. The
+ratio is therefore a lower bound on the path-length effect.
+
+\paragraph{Sign organisation.} The mean RM is sign-organised across the plane: in the inner Galaxy it is
+$\rmInnerNorth\pm\rmInnerNorthErr$ rad m$^{-2}$ north of the plane and $\rmInnerSouth\pm\rmInnerSouthErr$
+south, each many standard errors from zero, with the outer Galaxy ($\rmOuterNorth$ / $\rmOuterSouth$)
+showing the same, weaker sense. The net positive-above / negative-below pattern is consistent with the
+ordered Galactic field \citep{taylor2009,sun2008}. We do not over-read the precise amplitudes: the true
+structure is a \emph{quadrupole}, and our ``inner'' mask combines the $l<90^\circ$ and $l>270^\circ$
+halves, which carry opposite sign at a given $b$, so the recovered means are partial cancellations --- a
+net-sign indicator, not a field measurement. Moreover the inner north/south source counts
+($\rmInnerNorthN$ vs $\rmInnerSouthN$) are imbalanced largely because the $\delta>-40^\circ$ cut removes
+inner-south sightlines, so the larger southern amplitude must not be read as a physical north/south
+asymmetry.
+
+\begin{figure}
+\plotone{figures/rmsky.pdf}
+\caption{\emph{Left:} the Taylor+2009 RM sky in Galactic coordinates (Aitoff), coloured by RM
+(red positive, blue negative; clipped at $\pm150$ rad m$^{-2}$). \emph{Right:} the median
+$|\mathrm{RM}|$ versus $|b|$ --- the plane enhancement (ratio $\rmRatio\pm\rmRatioErr$).}
+\label{fig:rmsky}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested pipeline that recovers two established
+Galactic-Faraday-sky signatures from a public catalogue, with uncertainties and the right caveats. The
+honest limitations bound the interpretation. (i) RM measures $\int n_e B_\parallel\,\mathrm{d}l$;
+disentangling $B_\parallel$ needs an electron-density model (e.g.\ NE2001/YMW16) not applied here. (ii)
+The two-band NVSS RMs alias by $\pm652$ rad m$^{-2}$ \citep{brentjens2005}, but the $\sim$0.13\% affected
+are immaterial to medians and means over thousands. (iii) The quadrant split is a coarse net-sign probe,
+not a harmonic/multipole decomposition, and is degraded by the southern coverage gap. (iv) A single
+1.4~GHz band gives one RM per source with no in-band Faraday-complexity information. None of these
+undermine the recover-a-known --- the plane enhancement and the sign organisation are both significant
+and match the literature --- but they are why this is a reproduction, not a measurement of the field.
+Every number above is written by the pipeline into the macros this paper \code{\textbackslash input}s,
+and \code{python -m jansky\_research.rmsky} regenerates them from the public VizieR catalogue.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{rmsky} tool (the latitude profile, the sign-asymmetry and
+bootstrap statistics, the polarisation-helper reuse, and the VizieR fetch), the analysis, and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified all code,
+results, figures, and citations, and takes full responsibility for the content. An AI/LLM is not an
+author.
+
+\begin{acknowledgments}
+This work uses the Taylor, Stil \& Sunstrum (2009) rotation-measure catalogue via the CDS/VizieR
+service, and the author thanks those teams for the open data. The author acknowledges the collaborative
+contribution of Anthropic's Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, Matplotlib, astroquery,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

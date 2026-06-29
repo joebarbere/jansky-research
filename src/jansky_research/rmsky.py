@@ -3,10 +3,12 @@
 The polarisation angle of a radio source rotates as :math:`\\chi(\\lambda)=\\chi_0+\\mathrm{RM}\\lambda^2`
 on its way through the magnetised interstellar medium, with
 :math:`\\mathrm{RM}=0.81\\int n_e B_\\parallel\\,\\mathrm{d}l` (rad m⁻²). The RMs of tens of thousands of
-*extragalactic* sources therefore map the **Galactic magnetic field** along every sightline. Two
-large-scale signatures are textbook (Taylor, Stil & Sunstrum 2009): :math:`|\\mathrm{RM}|` is enhanced
-toward the Galactic **plane** (the disk path length grows as :math:`\\csc|b|`), and the inner-Galaxy RM
-sky is **sign-organised** (positive above the plane, negative below).
+*extragalactic* sources therefore map the **Galactic Faraday rotation sky** (tracing the line-of-sight
+integral :math:`\\int n_e B_\\parallel\\,\\mathrm{d}l`; isolating :math:`B_\\parallel` would need an
+electron-density model, not applied here). Two large-scale signatures are textbook (Taylor, Stil &
+Sunstrum 2009): :math:`|\\mathrm{RM}|` is enhanced toward the Galactic **plane** (the disk path length
+grows as :math:`\\csc|b|`), and the RM sky is **sign-organised** with a quadrupole-like antisymmetry
+(the disk/halo field).
 
 This module reproduces both from the Taylor+2009 NVSS RM catalogue (VizieR ``J/ApJ/702/1230``, public,
 no auth), reusing ``jansky.polarization`` for the underlying :math:`\\lambda^2` measurement. Pure
@@ -91,11 +93,12 @@ def enhancement_ratio(
 
 
 def sign_asymmetry(rm: np.ndarray, gal_l_deg: np.ndarray, gal_b_deg: np.ndarray) -> dict:
-    """Mean RM in the four (north/south × inner/outer-Galaxy) quadrants — the field antisymmetry.
+    """Mean RM in the four (north/south × inner/outer-Galaxy) regions — a coarse antisymmetry probe.
 
-    Inner Galaxy is :math:`l<90°` or :math:`l>270°`. The hallmark of the large-scale field is a sign
-    flip across the plane in the inner Galaxy (mean RM positive for :math:`b>0`, negative for
-    :math:`b<0`). Returns the four quadrant means (rad m⁻²) and counts.
+    Inner Galaxy is :math:`l<90°` or :math:`l>270°`. The true large-scale structure is a *quadrupole*:
+    the :math:`l<90°` and :math:`l>270°` halves carry opposite sign at a given :math:`b`, so this mask
+    **conflates** them and the recovered means are partial cancellations — a coarse net-sign indicator,
+    not a harmonic decomposition. Returns each region's mean RM (rad m⁻²), its standard error, and count.
     """
     rm = np.asarray(rm, float)
     gl = np.asarray(gal_l_deg, float)
@@ -109,9 +112,36 @@ def sign_asymmetry(rm: np.ndarray, gal_l_deg: np.ndarray, gal_b_deg: np.ndarray)
         ("outer_south", (~inner) & (gb < 0)),
     ]:
         m = mask & np.isfinite(rm)
-        out[name] = float(np.mean(rm[m])) if m.any() else float("nan")
-        out[f"{name}_n"] = int(m.sum())
+        n = int(m.sum())
+        out[name] = float(np.mean(rm[m])) if n else float("nan")
+        out[f"{name}_se"] = float(np.std(rm[m]) / np.sqrt(n)) if n > 1 else float("nan")
+        out[f"{name}_n"] = n
     return out
+
+
+def _ratio_bootstrap_se(
+    rm: np.ndarray,
+    gal_b_deg: np.ndarray,
+    *,
+    plane_deg: float = 10.0,
+    pole_deg: float = 60.0,
+    n_boot: int = 500,
+    seed: int = 0,
+) -> float:
+    """Bootstrap standard error on the plane/pole :func:`enhancement_ratio` (median-based)."""
+    rm = np.asarray(rm, float)
+    absb = np.abs(np.asarray(gal_b_deg, float))
+    near = np.abs(rm[(absb < plane_deg) & np.isfinite(rm)])
+    far = np.abs(rm[(absb > pole_deg) & np.isfinite(rm)])
+    if near.size < 2 or far.size < 2:
+        return float("nan")
+    rng = np.random.default_rng(seed)
+    ratios = []
+    for _ in range(n_boot):
+        lo = np.median(rng.choice(far, far.size))
+        if lo > 0:
+            ratios.append(np.median(rng.choice(near, near.size)) / lo)
+    return float(np.std(ratios)) if ratios else float("nan")
 
 
 def synthetic_rm_sky(
@@ -180,16 +210,22 @@ def run(out: str = ".", *, offline: bool = True, max_sources: int = 0) -> dict:
     rm, gl, gb = sky["rm"], sky["l"], sky["b"]
     prof = latitude_profile(rm, gb)
     ratio = enhancement_ratio(rm, gb)
+    ratio_se = _ratio_bootstrap_se(rm, gb)
     asym = sign_asymmetry(rm, gl, gb)
 
     metrics: dict = {
         "source": source,
         "n_sources": int(np.isfinite(rm).sum()),
         "enhancement_ratio": round(ratio, 2) if np.isfinite(ratio) else None,
+        "enhancement_ratio_se": round(ratio_se, 2) if np.isfinite(ratio_se) else None,
         "median_abs_rm_plane": round(prof[0]["median_abs_rm"], 1),
         "median_abs_rm_pole": round(prof[-1]["median_abs_rm"], 1),
         "inner_north_rm": round(asym["inner_north"], 1),
+        "inner_north_se": round(asym["inner_north_se"], 1),
         "inner_south_rm": round(asym["inner_south"], 1),
+        "inner_south_se": round(asym["inner_south_se"], 1),
+        "inner_north_n": asym["inner_north_n"],
+        "inner_south_n": asym["inner_south_n"],
         "outer_north_rm": round(asym["outer_north"], 1),
         "outer_south_rm": round(asym["outer_south"], 1),
         "profile": [
@@ -257,10 +293,15 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\rmSource}}{{{m['source']}}}",
         rf"\newcommand{{\rmN}}{{{m['n_sources']}}}",
         rf"\newcommand{{\rmRatio}}{{{_fmt('enhancement_ratio')}}}",
+        rf"\newcommand{{\rmRatioErr}}{{{_fmt('enhancement_ratio_se')}}}",
         rf"\newcommand{{\rmPlane}}{{{m['median_abs_rm_plane']}}}",
         rf"\newcommand{{\rmPole}}{{{m['median_abs_rm_pole']}}}",
         rf"\newcommand{{\rmInnerNorth}}{{{m['inner_north_rm']}}}",
+        rf"\newcommand{{\rmInnerNorthErr}}{{{_fmt('inner_north_se')}}}",
         rf"\newcommand{{\rmInnerSouth}}{{{m['inner_south_rm']}}}",
+        rf"\newcommand{{\rmInnerSouthErr}}{{{_fmt('inner_south_se')}}}",
+        rf"\newcommand{{\rmInnerNorthN}}{{{m['inner_north_n']}}}",
+        rf"\newcommand{{\rmInnerSouthN}}{{{m['inner_south_n']}}}",
         rf"\newcommand{{\rmOuterNorth}}{{{m['outer_north_rm']}}}",
         rf"\newcommand{{\rmOuterSouth}}{{{m['outer_south_rm']}}}",
         rf"\newcommand{{\rmTruth}}{{{_fmt('truth_disk_amp')}}}",

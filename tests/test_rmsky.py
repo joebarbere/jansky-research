@@ -35,6 +35,7 @@ def test_sign_asymmetry_recovers_antisymmetry():
     a = rmsky.sign_asymmetry(sky["rm"], sky["l"], sky["b"])
     assert a["inner_north"] > 0 and a["inner_south"] < 0  # north +, south - in the inner Galaxy
     assert a["inner_north_n"] > 0 and a["inner_south_n"] > 0
+    assert a["inner_north_se"] > 0 and np.isfinite(a["inner_south_se"])  # standard errors reported
 
 
 def test_synthetic_sky_shape_and_truth():
@@ -49,6 +50,7 @@ def test_run_offline(tmp_path):
     assert m["source"] == "synthetic"
     assert m["n_sources"] > 1000
     assert m["enhancement_ratio"] > 3.0
+    assert m["enhancement_ratio_se"] is not None and m["enhancement_ratio_se"] > 0
     assert m["median_abs_rm_plane"] > m["median_abs_rm_pole"]
     assert m["inner_north_rm"] > 0 and m["inner_south_rm"] < 0
     assert len(m["profile"]) == 4
