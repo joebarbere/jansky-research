@@ -23,16 +23,23 @@ From the May 2013 active period (AR 11748, X-class flares), STEREO-A/WAVES HFR. 
 |---|---|
 | frequency span | 0.125–16.025 MHz |
 | heliocentric range (harmonic) | **2.3 → 82.6 R⊙** (0.011 → **0.38 AU**) |
-| outward radial speed (harmonic, 2f_p) | **0.150 c** (45 100 km s⁻¹) |
+| outward radial speed (harmonic, 2f_p) | **0.150 c** (45 100 km s⁻¹), *mean over 2–82 R⊙* |
 | outward radial speed (fundamental) | 0.075 c (to 0.19 AU) |
-| height–time fit R² | **0.906** |
+| height–time fit R² | 0.906 (over 310 ridge points but only **11 independent 1-min time bins**) |
 
-The beam is tracked from the corona out to **~0.38 AU — about halfway to Earth, genuinely
-interplanetary** (well beyond the Alfvén surface). This is exactly the regime the Wind/WAVES slice
-flagged as out of reach. Two things improve markedly over that RAD2-only run: the speed is **0.150 c
-(harmonic), squarely in the canonical type III range** (0.1–0.5 c), rather than the low 0.083 c; and the
-much wider distance baseline gives a **tight fit, R² = 0.906** (vs 0.65 for RAD2). The synthetic fixture
-confirms the inversion round-trips (injected speed recovered within 15%).
+The beam is tracked from the corona out to **~0.38 AU (≈0.4 of the way to Earth), genuinely
+interplanetary** (well past the Alfvén-surface region, ~10–20 R⊙) — exactly the regime the Wind/WAVES
+slice flagged as out of reach. The recovered **0.150 c is a *mean* radial speed averaged over 2–82 R⊙**,
+not a speed at any one radius: IP type III beams **decelerate** (Krupar et al. 2015 measure
+−12 km s⁻² over 0.1–1 MHz), so the true trajectory is concave — faster near the corona (~0.3–0.5 c) and
+slower far out (~0.05–0.1 c) — and 0.150 c sits at the high end of the purely-interplanetary range
+(median 0.09–0.16 c harmonic, Krupar 2015) precisely because the fit also spans the faster coronal part.
+What the wide 0.125–16 MHz baseline robustly constrains is the **slope (the mean speed)**, *not* the
+R²: the latter is high mostly because the points span two decades in distance, and it rests on only 11
+unique time samples (the 1-min cadence bins ~280 high-frequency channels into ~2 timestamps), so it is
+an indicative goodness-of-fit, not evidence of 310 independent measurements. The synthetic fixture
+confirms the inversion round-trips for a *constant-speed* beam (within 15%); it does not test robustness
+to deceleration.
 
 ## Honest assessment & caveats
 
@@ -43,10 +50,16 @@ confirms the inversion round-trips (injected speed recovered within 15%).
   0.38 AU); IP type III emission is commonly harmonic, so we take 0.150 c / 0.38 AU as primary, but did
   not search for a fundamental–harmonic pair to confirm the mode.
 - **Average density model.** The Leblanc model is the *mean* solar wind; a specific event's density can
-  differ, shifting the inferred radii. (This event is less extreme than the X17+CME used in the
-  Wind/WAVES slice, so the average model is a better approximation here.)
+  differ, shifting the inferred radii. This event is less extreme than the X17+halo-CME used in the
+  Wind/WAVES slice, so the average model is a *better* (not perfect) approximation — X-class events can
+  still drive factor-~2 density excursions.
+- **A burst-storm period.** May 2013 (AR 11748) produced several X-class flares on May 13–15, so the
+  spectrum could in principle hold overlapping bursts; the clean single-ridge fit (310 of 319 channels
+  kept after sigma-clipping, no double ridge) indicates one dominant drift track, but this is the main
+  qualitative uncertainty.
 - **Peak-time, radial speed.** The ridge uses intensity peaks (biases the speed low vs onset), and the
-  result is the *radial* speed (a lower bound on the field-aligned speed — though at these larger radii
-  the Parker-spiral projection, ~10–20° by 0.4 AU, is no longer negligible, unlike the inner heliosphere).
+  result is the *radial* speed. At 0.4 AU the Parker-spiral angle is **~16–23°** (for 600–400 km s⁻¹
+  wind), so the field-aligned speed exceeds the radial value by ~6–9% — a modest, no-longer-negligible
+  correction (it *was* negligible at the inner-heliosphere radii of the Wind/WAVES slice).
 - **Reproducible:** `python -m jansky_research.swaves --date 20130515 --spacecraft a` regenerates the
   metrics, the dynamic-spectrum + beam-track (in AU) figure, and the macros from the public SPDF ASCII.

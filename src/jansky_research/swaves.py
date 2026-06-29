@@ -126,10 +126,14 @@ def run(
         burst["data"], burst["freqs"], burst["times"], window=window
     )
     spd = windwaves.beam_speed(rf, rt, harmonic=harmonic)
+    # the one-minute cadence makes many high-frequency channels share a timestamp, so the *effective*
+    # number of independent time samples (and hence the weight behind R^2) is the unique-time count
+    n_time_bins = int(np.unique(np.round(rt / 60.0)).size) if rt.size else 0
     metrics: dict = {
         "source": source,
         "n_ridge": int(rf.size),
         "n_used": spd["n_used"],
+        "n_time_bins": n_time_bins,
         "r2": round(spd["r2"], 3) if np.isfinite(spd["r2"]) else None,
         "f_lo_mhz": round(float(np.min(rf)), 4) if rf.size else None,
         "f_hi_mhz": round(float(np.max(rf)), 3) if rf.size else None,
@@ -193,6 +197,7 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\swSource}}{{{m['source']}}}",
         rf"\newcommand{{\swNridge}}{{{m['n_ridge']}}}",
         rf"\newcommand{{\swNused}}{{{_fmt('n_used')}}}",
+        rf"\newcommand{{\swNtime}}{{{_fmt('n_time_bins')}}}",
         rf"\newcommand{{\swRsq}}{{{_fmt('r2')}}}",
         rf"\newcommand{{\swFlo}}{{{_fmt('f_lo_mhz')}}}",
         rf"\newcommand{{\swFhi}}{{{_fmt('f_hi_mhz')}}}",
