@@ -99,6 +99,18 @@ DATASETS: dict[str, Dataset] = {
         size_hint="per-source pages",
         category="large",
     ),
+    "ecallisto": Dataset(
+        name="ecallisto",
+        # The e-Callisto archive is per-station, per-15-minute gzipped FITS, not one table; the slice
+        # fetches a file covering an event over HTTP (no auth). Listed here for provenance.
+        url="http://soleil.i4ds.ch/solarradio/data/2002-20yy_Callisto",
+        filename="ecallisto_index.html",
+        description="e-Callisto network (i4ds/FHNW; Benz et al. 2009) — ground-based solar radio "
+        "dynamic spectra (~20-900 MHz, 15-min FITS) from a global station network. Drives the "
+        "type III burst drift / exciter-speed slice (jansky_research.solarbursts).",
+        size_hint="per-station 15-min FITS",
+        category="large",
+    ),
     "voyager1-h5": Dataset(
         name="voyager1-h5",
         url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",
