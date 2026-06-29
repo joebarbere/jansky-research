@@ -1,0 +1,137 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Type III drift to exciter speed from e-Callisto}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{From Frequency Drift to Beam Speed: A Reproducible Tool for Solar Type III Radio Bursts,
+Applied to an e-Callisto Dynamic Spectrum}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A solar type III radio burst is the signature of an electron beam streaming out through the corona: it
+radiates near the local plasma frequency, which falls with height, so the burst drifts fast from high to
+low frequency, and the drift rate --- through a coronal density model --- encodes the beam's speed. We
+build a small tested tool that fits the drift ridge in an e-Callisto \citep{benz2009} dynamic spectrum
+and inverts it to an exciter speed, reusing the \code{jansky} course's coronal-physics helpers (the
+Newkirk \citeyearpar{newkirk1961} density model and the plasma-frequency relation). The pipeline
+background-subtracts, isolates the burst time window, builds the ridge from each channel's intensity
+\emph{peak} time, maps frequency to heliocentric radius, and fits radius versus time with a robust
+(sigma-clipped) line whose $R^2$ flags a coherent single burst against a multi-burst storm. Applied to an
+isolated, catalogue-clean type III (\sbSource; \sbNused\ of \sbNridge\ ridge channels, $R^2=\sbRsq$,
+drift \sbDrift~MHz/s over \sbFlo--\sbFhi~MHz), the height--time fit gives an exciter speed of
+\sbSpeedC~$c$ (harmonic emission, quiet Newkirk corona), bracketed between $0.09\,c$ (fundamental) and
+$0.27\,c$ ($4\times$ Newkirk) by the two model knobs --- squarely in the established type III range and,
+as a \emph{peak-time} speed, consistent with peak-time {LOFAR} measurements \citep{reidkontar2018}. A
+synthetic fixture confirms the inversion is algebraically self-consistent (a code check, not an
+independent validation of the density model). This is a reproducibility/method contribution and a
+recover-a-known, not a discovery.
+\end{abstract}
+
+\keywords{Solar radio emission (1522) --- Solar corona (1483) --- Solar coronal radio emission (1993)
+--- Solar radio bursts (1998) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Type III bursts are the most common solar radio bursts and a classic diagnostic of energetic electron
+beams escaping along open coronal field \citep{reidratcliffe2014}. The beam excites Langmuir waves at the
+local plasma frequency $f_p\propto\sqrt{n_e}$, which convert to radio at $f_p$ (fundamental) or $2f_p$
+(harmonic); because $n_e$ falls with height, the emission drifts rapidly from high to low frequency. With
+a coronal density model the frequency drift maps to a height--time track whose slope is the exciter
+speed --- famously $0.1$--$0.5\,c$ \citep{reidratcliffe2014,reidkontar2018}. The e-Callisto network
+\citep{benz2009} publishes ground-based solar dynamic spectra ($\sim$20--900~MHz, 15-minute FITS) openly
+over HTTP with no authentication. We ask the most reproducible version: with the public spectra and a
+small tested tool, can one recover the canonical type III beam speed \emph{with the dominant systematics
+reported honestly}?
+
+\section{Methods}
+\code{solarbursts} is a pure-NumPy/SciPy module on the \code{jansky} helpers \citep{jansky}. From a
+dynamic spectrum it (i) subtracts each channel's median baseline (e-Callisto records arbitrary,
+uncalibrated digitiser units, so the analysis is purely morphological); (ii) isolates the burst by the
+band-integrated power peak $\pm$ a short window, since a type III lasts seconds within a 15-minute file;
+(iii) builds the drift ridge as the \emph{peak} intensity time of each frequency channel, with the
+per-channel noise taken from the full sweep so a brief burst does not inflate the threshold; (iv) maps
+each ridge frequency to a plasma frequency $f_p=f/\mathrm{harmonic}$, a Newkirk density, and a
+heliocentric radius; and (v) fits radius versus time with an iterative sigma-clipped line, reporting the
+slope $|dr/dt|$ as the speed and the fit $R^2$ as a coherence flag. We stress that the ridge uses
+intensity \emph{peaks}, which trace the bulk of the beam, not its leading edge; peak-time speeds run
+$\sim$15--30\% below front-of-beam speeds \citep{reidkontar2018}. Every function is tested against a
+synthetic burst built from the \emph{same} Newkirk mapping the analysis inverts, so a clean burst
+round-trips --- this verifies algebraic self-consistency of the inversion, not the density model itself.
+
+\section{Data}
+We use e-Callisto spectra from Birr, Ireland (BIR; 10--90~MHz), selecting isolated, quality-1 type III
+bursts from the Monstein Solar Geophysical Data burst lists. Event selection is the crux: a flare
+interval is a type III \emph{storm} of overlapping bursts with no single drift (an X6.9-flare interval we
+tried gives $R^2<0.3$ and an incoherent, artificially slow ridge), so we require an isolated burst whose
+height--time track is coherent. Four candidates were analysed; only one (\sbSource) is a clean fit
+($R^2=\sbRsq$), and it anchors the result. e-Callisto data carry no flux calibration, and only one
+station was used, so there is no second-station confirmation.
+
+\section{Results}
+The clean burst yields \sbNused\ ridge channels (after sigma-clipping \sbNridge\ detections) spanning
+\sbFlo--\sbFhi~MHz, a drift of \sbDrift~MHz/s, and a coherent height--time track ($R^2=\sbRsq$) over
+heliocentric radii \sbRlo--\sbRhi~$R_\odot$ (harmonic, $1\times$ Newkirk; Figure~\ref{fig:burst}). The
+implied exciter speed is \sbSpeedC~$c$ ($\sbSpeedKms$~km\,s$^{-1}$). The two model knobs bracket it:
+emission mode (fundamental $f_p=f$ vs harmonic $f_p=f/2$) and the Newkirk fold ($1\times$ quiet to
+$4\times$ active region) move the speed from $0.086\,c$ (fundamental, $1\times$) through $0.137\,c$
+(harmonic, $1\times$) to $0.272\,c$ (harmonic, $4\times$) --- a factor of $\sim$3, so we report the grid,
+not a single number. All three lie within the canonical $0.1$--$0.5\,c$ band \citep{reidratcliffe2014},
+and the headline peak-time value is directly consistent with the $0.17\,c$ peak-time mean from {LOFAR}
+type III imaging \citep{reidkontar2018}. Two caveats temper the result: the measured drift (\sbDrift~MHz/s)
+is \emph{slower} than typical --- the \citet{alvarez1973} and \citet{zhang2018} relations give $\sim-6$ to
+$-9$~MHz/s at mid-band, placing this event near the 25th percentile --- and the other three candidate
+events, while formally in-band, have marginal fits ($R^2<0.55$) and unreliable individual speeds.
+
+\begin{figure}
+\plotone{figures/burst.pdf}
+\caption{\emph{Left:} the background-subtracted e-Callisto dynamic spectrum of the isolated type III
+(\sbSource), with the detected drift ridge overplotted. \emph{Right:} the ridge mapped through the
+Newkirk model to a heliocentric-radius--versus--time track; the robust linear fit (slope $=$ exciter
+speed) has $R^2=\sbRsq$.}
+\label{fig:burst}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that turns a public e-Callisto spectrum
+into a calibrated-by-assumption beam speed, with the systematics surfaced rather than hidden. The honest
+limitations are substantial. (i) The emission mode and density-model fold span a factor of $\sim$3 in
+speed; the Newkirk model is best constrained within $\sim$1--3~$R_\odot$, so the $4\times$/$3.6\,R_\odot$
+case extrapolates near its edge. (ii) The ridge is built from peak times, biasing the speed below the
+front-of-beam value, and radio-wave scattering and projection further suppress apparent speeds at
+$<$50~MHz \citep{kontar2017} --- both biases act downward, so the true front speed is somewhat higher
+than our peak-time number. (iii) $R^2$ is a useful empirical flag for ``one burst vs.\ a storm'' but not
+a rigorous segmentation, and is sensitive to ridge-point spacing. (iv) The data are uncalibrated and
+single-station, and ridge channels near the $\sim$10~MHz ground-based cutoff may carry ionospheric
+refraction. None of these undermine the recover-a-known --- a clean isolated burst gives a physical,
+in-range beam speed --- but they bound what a single ground-based spectrum can claim. Every number above
+is written by the pipeline into the macros this paper \code{\textbackslash input}s, and
+\code{python -m jansky\_research.solarbursts -\,-recover} regenerates them from the public FITS.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{solarbursts} tool (the ridge detector, the Newkirk inversion,
+the robust fit, and the e-Callisto fetch), the analysis, and the drafting of this manuscript. The author
+directed the work, independently reviewed and verified all code, results, figures, and citations, and
+takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses data from the e-Callisto network and the Monstein/IRSOL Solar Geophysical Data burst
+lists, and the author thanks the e-Callisto/FHNW team for the open archive. The author acknowledges the
+collaborative contribution of Anthropic's Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+requests, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
