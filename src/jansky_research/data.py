@@ -111,6 +111,19 @@ DATASETS: dict[str, Dataset] = {
         size_hint="per-station 15-min FITS",
         category="large",
     ),
+    "wind-waves": Dataset(
+        name="wind-waves",
+        # Wind/WAVES Level-2 radio CDFs on SPDF, one file per day per receiver; the slice fetches by
+        # date and parses with cdflib. Listed here for provenance.
+        url="https://spdf.gsfc.nasa.gov/pub/data/wind/waves/rad2_l2",
+        filename="wi_l2_wav_rad2.cdf",
+        description="Wind/WAVES Level-2 radio dynamic spectra (Bougeret et al. 1995) — RAD1 "
+        "(0.02-1.04 MHz) and RAD2 (1.075-13.825 MHz), space-based, public over SPDF (no auth). "
+        "Drives the interplanetary type III slice (jansky_research.windwaves; needs the windwaves "
+        "extra, cdflib).",
+        size_hint="~1 MB per day per receiver",
+        category="large",
+    ),
     "atnf-psrcat": Dataset(
         name="atnf-psrcat",
         # The ATNF Pulsar Catalogue is on VizieR (B/psr); the pulsar slices query it directly.

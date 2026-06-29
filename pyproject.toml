@@ -30,6 +30,8 @@ airflow = ["apache-airflow>=2.9,<3.0"]
 voyager = ["h5py>=3.0", "hdf5plugin>=4.0"]
 # Querying the VLASS catalogues for the multi-epoch variability slice (Epoch 1 via VizieR TAP).
 vlass = ["pyvo>=1.4"]
+# Reading Wind/WAVES Level-2 CDF radio spectra for the interplanetary type III slice.
+windwaves = ["cdflib>=1.0"]
 
 # The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
 # analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.
