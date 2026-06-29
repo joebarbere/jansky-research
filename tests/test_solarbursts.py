@@ -69,6 +69,24 @@ def test_harmonic_assumption_changes_the_speed():
     assert abs(mismatched - matched) > 0.02  # the factor-2 systematic is real
 
 
+def test_robust_linfit_rejects_outliers():
+    x = np.linspace(0.0, 10.0, 50)
+    y = 2.0 * x + 1.0
+    y[5] += 50.0  # two gross outliers (e.g. RFI-corrupted ridge points)
+    y[30] -= 40.0
+    m, b, keep = solarbursts._robust_linfit(x, y)
+    assert abs(m - 2.0) < 0.05 and abs(b - 1.0) < 0.2  # slope/intercept recovered
+    assert not keep[5] and not keep[30]  # the outliers are rejected
+
+
+def test_exciter_speed_reports_quality():
+    b = solarbursts.synthetic_burst(speed_c=0.3, seed=7)
+    rf, rt = solarbursts.detect_burst_ridge(b["data"], b["freqs"], b["times"])
+    spd = solarbursts.exciter_speed(rf, rt, harmonic=2)
+    assert spd["r2"] > 0.9  # a clean single burst is a tight straight height-time track
+    assert 0 < spd["n_used"] <= spd["n_points"]
+
+
 def test_run_offline(tmp_path):
     m = solarbursts.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic"
@@ -76,6 +94,7 @@ def test_run_offline(tmp_path):
     assert m["drift_mhz_per_s"] < 0
     assert 0.1 < m["speed_c"] < 0.5  # canonical type III exciter speed
     assert 0.85 < m["recovery_ratio"] < 1.15
+    assert m["r2"] > 0.9 and m["n_used"] > 50  # clean, coherent ridge
     assert (tmp_path / "results" / "solarbursts_metrics.json").exists()
     assert (tmp_path / "papers" / "solarbursts" / "figures" / "burst.pdf").exists()
     macros = (tmp_path / "papers" / "solarbursts" / "generated" / "macros.tex").read_text()
