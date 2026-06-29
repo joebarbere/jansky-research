@@ -1,6 +1,6 @@
 # 23 — The pulsar P–Ṗ diagram: B-fields, ages, populations, and the death line (ATNF)
 
-Status: 🚧 in progress (tooling + real ATNF fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real ATNF fetch + recover-a-known + GATE-2 + paper `papers/ppdot/`)
 
 ## Context
 

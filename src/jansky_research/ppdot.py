@@ -36,8 +36,10 @@ __all__ = [
 B_COEFF = 3.2e19
 #: A pulsar with surface field above this is taken to be a magnetar / high-B object (G).
 MAGNETAR_B_GAUSS = 1.0e13
-#: Polar-cap death-line threshold in B/P^2 (G s^-2): a source emits while B/P^2 exceeds it.
-DEATH_B_OVER_P2 = 1.7e11
+#: Polar-cap death-line threshold in B/P^2 (G s^-2): a source emits while B/P^2 exceeds it. The value
+#: corresponds to B_12/P^2 = 0.2 (Bhattacharya & van den Heuvel 1991), adopting the Ruderman &
+#: Sutherland (1975) polar-cap pair-production criterion.
+DEATH_B_OVER_P2 = 2.0e11
 _SECONDS_PER_YEAR = 3.155693e7
 _MOMENT_OF_INERTIA = 1.0e45  # g cm^2
 
@@ -72,7 +74,9 @@ def death_line(period_s: np.ndarray, *, b_over_p2: float = DEATH_B_OVER_P2) -> n
     drops too low, i.e. :math:`B/P^2 < ` ``b_over_p2`` (G s⁻²). Substituting
     :math:`B=3.2\\times10^{19}\\sqrt{P\\dot P}` gives the threshold spin-down rate
     :math:`\\dot P_\\mathrm{death}=(b_\\mathrm{over\\,p2}/3.2\\times10^{19})^2\\,P^3`; pulsars with
-    :math:`\\dot P` above this line are radio-loud (Bhattacharya & van den Heuvel 1991).
+    :math:`\\dot P` above this line are radio-loud (the polar-cap pair-production criterion of Ruderman
+    & Sutherland 1975, in the :math:`B/P^2` form of Bhattacharya & van den Heuvel 1991). This is one
+    representative line; the literature spans a "death valley" (Chen & Ruderman 1993).
     """
     p = np.asarray(period_s, float)
     return (b_over_p2 / B_COEFF) ** 2 * p**3
