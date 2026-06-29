@@ -1,6 +1,6 @@
 # 22 — The Galactic Faraday rotation sky (Taylor+2009 RM catalogue)
 
-Status: 🚧 in progress (tooling + real Taylor+2009 fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real Taylor+2009 fetch + recover-a-known + GATE-2 + paper `papers/rmsky/`)
 
 ## Context
 
