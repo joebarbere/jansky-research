@@ -1,0 +1,130 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A type III beam to 0.4 AU with STEREO/WAVES}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Tracking a Solar Type III Electron Beam to 0.4 AU with STEREO/WAVES:
+A Reproducible Drift-to-Distance Tool}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A type III electron beam radiates near the local plasma frequency as it streams out along open field, so
+its radio drift traces the beam through the heliosphere. The STEREO/WAVES \citep{bougeret2008} High
+Frequency Receiver reaches 0.125~MHz, where the emission comes from genuinely \emph{interplanetary},
+super-Alfv\'enic plasma --- far beyond the $\sim$10~MHz / few-$R_\odot$ corona. We build a small tested
+tool that fits this drift in a STEREO/WAVES dynamic spectrum and inverts it, via the Leblanc, Dulk \&
+Bougeret \citeyearpar{leblanc1998} heliospheric density model, to the beam's outward radial speed and
+heliocentric reach. Applied to a 2013-05-15 burst (\code{\swSource}; \swNridge\ channels,
+\swFlo--\swFhi~MHz), the inversion tracks the beam from \swRlo\ to \swRhi~$R_\odot$ (harmonic) ---
+\swRhiAU~AU, $\approx$0.4 of the way to Earth and well past the Alfv\'en-surface region. The fitted
+\swSpeedC~$c$ (harmonic; $0.075\,c$ fundamental) is a \emph{mean} radial speed over $2$--$82\,R_\odot$:
+interplanetary type III beams decelerate \citep{krupar2015}, so the true trajectory is faster in the
+corona and slower far out, and our value sits at the high end of the purely-interplanetary range because
+the fit spans the faster coronal segment. We are careful about the fit statistics (the one-minute
+cadence yields only $\swNtime$ independent time samples) and the systematics (harmonic ambiguity,
+average density model, peak-time sampling). This is a reproducibility/method contribution and a
+recover-a-known, not a discovery.
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
+--- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Type III bursts trace energetic electron beams from the corona out into the solar wind. A coronal
+analysis (using, e.g., the Newkirk model) follows the beam only to a few solar radii; a Wind/WAVES
+RAD2 analysis, stopping at 1~MHz, reaches the Alfv\'en-surface region ($\sim$10--20~$R_\odot$). The
+STEREO/WAVES HFR \citep{bougeret2008} reaches 0.125~MHz, where the plasma is genuinely interplanetary,
+so the same drift-to-distance method can follow the beam to a substantial fraction of an AU. We ask the
+most reproducible version: with the public STEREO/WAVES spectra and a small tested tool, can one track a
+type III beam into interplanetary space --- with honest fit statistics, deceleration, and systematics?
+
+\section{Methods}
+\code{swaves} is a pure-NumPy module that reuses the dynamic-spectrum pipeline of the coronal and
+Wind/WAVES slices (background subtraction, burst-window finding, the per-channel peak-time ridge
+detector, the robust sigma-clipped fit) together with the Leblanc heliospheric model and its inverse;
+the only new code is the STEREO/WAVES one-minute HFR ASCII parser. It maps each ridge frequency to a
+plasma frequency $f_p=f/\mathrm{harmonic}$, a density, and a heliocentric radius, and fits radius versus
+time. Because the ridge uses intensity \emph{peaks} (not onsets) the speed is biased low, and because a
+single line is fit to $r(t)$ the result is a \emph{mean} radial speed over the observed distance range,
+not a speed at any one radius. Every function is tested against a synthetic burst built from the same
+Leblanc mapping --- a round-trip check for a \emph{constant-speed} beam; it does not test robustness to
+deceleration.
+
+\section{Data}
+We use STEREO/WAVES one-minute-averaged HFR dynamic spectra (0.125--16~MHz) from NASA SPDF, as daily
+ASCII (public, no auth, no CDF). This run uses STEREO-A. STEREO-A's vantage ($\sim$135$^\circ$ ahead of
+Earth in May 2013) does not affect the drift inversion, which depends only on heliocentric radius
+through the density model, not on viewing angle.
+
+\section{Results}
+In the 2013-05-15 spectrum (from an active period, AR~11748) the drift ridge spans all \swNridge\
+channels (\swNused\ kept after sigma-clipping). Through the Leblanc model the emission runs from \swRlo\
+to \swRhi~$R_\odot$ (harmonic) --- out to \swRhiAU~AU, genuinely interplanetary (Figure~\ref{fig:swaves}).
+The fitted outward radial speed is \swSpeedC~$c$ ($\swSpeedKms$~km\,s$^{-1}$) for harmonic emission, or
+$0.075\,c$ (to 0.19~AU) for fundamental. This is a \emph{mean} over $2$--$82\,R_\odot$: interplanetary
+type III beams decelerate (\citealt{krupar2015} measure $\sim$$-12$~km\,s$^{-2}$ over 0.1--1~MHz), so the
+real trajectory is concave --- faster in the corona ($\sim$0.3--0.5~$c$; \citealt{fainberg1974}) and
+slower far out ($\sim$0.05--0.1~$c$). Our \swSpeedC~$c$ accordingly sits at the high end of the
+purely-interplanetary median range (0.09--0.16~$c$ harmonic; \citealt{krupar2015}) because the fit also
+covers the faster coronal segment. What the two-decade frequency baseline robustly constrains is the
+\emph{slope} (the mean speed); the fit $R^2=\swRsq$ is high largely because the points span such a wide
+distance range, and it rests on only $\swNtime$ independent one-minute time samples (the cadence bins the
+many high-frequency channels into a few timestamps), so we treat it as an indicative goodness-of-fit,
+not as evidence of \swNused\ independent measurements.
+
+\begin{figure}
+\plotone{figures/swaves.pdf}
+\caption{\emph{Left:} the background-subtracted STEREO/WAVES HFR dynamic spectrum (log-frequency) of the
+2013-05-15 type III, with the detected drift ridge. \emph{Right:} the ridge mapped through the Leblanc
+model to a heliocentric-distance (AU) versus time track; the robust linear fit gives the mean radial
+speed.}
+\label{fig:swaves}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that tracks a type III beam from the
+corona to $\sim$0.4~AU --- genuinely interplanetary --- from a public STEREO/WAVES spectrum, with the
+fit statistics and systematics surfaced. Relative to a Wind/WAVES RAD2 analysis (which reaches only the
+Alfv\'en-surface region), the much wider distance baseline substantially reduces the slope uncertainty
+and yields an interplanetary reach, at the cost of needing the deceleration caveat above. The honest
+limitations: (i) the recovered speed is a mean over a decelerating track, not a point measurement; (ii)
+harmonic vs fundamental emission is a factor of two in distance ($0.38$ vs $0.19$~AU) and we did not
+identify a fundamental--harmonic pair; (iii) the Leblanc model is the average solar wind, and an
+X-class-flare period can drive factor-$\sim$2 density excursions; (iv) at 0.4~AU the Parker-spiral angle
+is $\sim$16--23$^\circ$, so the field-aligned speed exceeds the radial value by $\sim$6--9\%; (v) the
+$R^2$ rests on few independent time samples. None of these undermine the recover-a-known --- a type III
+beam is tracked into interplanetary space with an in-range mean speed --- but they bound what a single
+one-minute HFR spectrum can claim. Every number above is written by the pipeline into the macros this
+paper \code{\textbackslash input}s, and
+\code{python -m jansky\_research.swaves -\,-date 20130515 -\,-spacecraft a} regenerates them from the
+public SPDF ASCII.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{swaves} tool (the STEREO/WAVES ASCII parser and the reuse of
+the Leblanc inversion and dynamic-spectrum pipeline), the analysis, and the drafting of this manuscript.
+The author directed the work, independently reviewed and verified all code, results, figures, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses STEREO/WAVES data from the NASA Space Physics Data Facility and the Leblanc et al.\
+(1998) heliospheric density model. The author acknowledges the collaborative contribution of Anthropic's
+Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+requests, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

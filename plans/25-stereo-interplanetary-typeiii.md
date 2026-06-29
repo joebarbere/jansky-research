@@ -1,6 +1,6 @@
 # 25 — Type III to true interplanetary distances (STEREO/WAVES HFR)
 
-Status: 🚧 in progress (tooling + real STEREO/WAVES fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real STEREO/WAVES fetch + recover-a-known + GATE-2 + paper `papers/swaves/`)
 
 ## Context
 
