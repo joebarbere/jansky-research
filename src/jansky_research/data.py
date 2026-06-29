@@ -111,6 +111,17 @@ DATASETS: dict[str, Dataset] = {
         size_hint="per-station 15-min FITS",
         category="large",
     ),
+    "stereo-swaves": Dataset(
+        name="stereo-swaves",
+        # STEREO/WAVES one-minute HFR dynamic spectra on SPDF as daily ASCII; the slice fetches by date.
+        url="https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/swaves/one-minute/ascii/hfr",
+        filename="stereo-a_swaves_hfr_average.txt",
+        description="STEREO/WAVES (SWAVES; Bougeret et al. 2008) one-minute HFR radio dynamic spectra "
+        "(0.125-16 MHz), space-based, public over SPDF as ASCII (no auth). Drives the interplanetary "
+        "type III slice (jansky_research.swaves), reaching ~0.4 AU.",
+        size_hint="~3.5 MB per day per spacecraft",
+        category="large",
+    ),
     "wind-waves": Dataset(
         name="wind-waves",
         # Wind/WAVES Level-2 radio CDFs on SPDF, one file per day per receiver; the slice fetches by
