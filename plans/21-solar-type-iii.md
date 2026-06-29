@@ -1,6 +1,6 @@
 # 21 — Solar type III radio bursts: drift rate → exciter (electron-beam) speed (e-Callisto)
 
-Status: 🚧 in progress (tooling + real e-Callisto fetch + recover-a-known done; GATE-2 + paper next)
+Status: ✅ done (tooling + real e-Callisto fetch + recover-a-known + GATE-2 + paper `papers/solarbursts/`)
 
 ## Context
 
@@ -64,9 +64,15 @@ burst's drift in an e-Callisto spectrum and converts it to an exciter speed, reu
    0.09 c (fundamental) → 0.14 c (harmonic) → 0.27 c (harmonic, 4× Newkirk) — squarely in the canonical
    0.1–0.5 c range. All four isolated test events land in-band. The R² metric, the robust sigma-clipped
    fit, and the `--recover` reproducible event were added in this leg. See `survey/solarbursts-findings.md`.
-4. **GATE-2** before write-up — the speed survives the density-model / harmonic caveats and a
-   literature cross-check.
-5. **Write-up** as `papers/solarbursts/`.
+4. **GATE-2 (done).** science-reviewer verdict PASS-WITH-FIXES. Fixed: Zhang et al. 2018 is A&A 618
+   **A165** (not A33); the synthetic fixture is a round-trip *algebraic consistency* check, not an
+   "independent" validation; dropped the hand-wavy "true speed ~0.2 c de-biasing" (the peak-time
+   0.137 c is already consistent with peak-time LOFAR 0.17 c); acknowledged the **peak-time vs onset**
+   bias (~15–30% low); anchored the claim on the one clean event (R²=0.90) rather than "all four"
+   (events 1–2 have R²<0.55); noted the slow drift (~25th percentile), the Newkirk 1–3 R⊙ range, the
+   uncalibrated single-station data, and the ~10 MHz ionospheric cutoff.
+5. **Write-up (done)** as `papers/solarbursts/main.tex` + `refs.bib` — compiles in both the CI
+   offline-synthetic macro build and the real `make reproduce` build; every number `\input` from macros.
 
 ## Verification
 
