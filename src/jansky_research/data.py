@@ -111,6 +111,17 @@ DATASETS: dict[str, Dataset] = {
         size_hint="per-station 15-min FITS",
         category="large",
     ),
+    "taylor2009-rm": Dataset(
+        name="taylor2009-rm",
+        # The Taylor+2009 NVSS RM catalogue is on VizieR; the slice queries it directly rather than
+        # caching the file. Listed here for provenance.
+        url="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=J/ApJ/702/1230",
+        filename="taylor2009_rm.vot",
+        description="Taylor, Stil & Sunstrum (2009) NVSS rotation-measure catalogue — RM for 37,543 "
+        "polarised extragalactic sources (VizieR J/ApJ/702/1230). Drives the Galactic Faraday "
+        "rotation-sky slice (jansky_research.rmsky).",
+        size_hint="37,543 rows",
+    ),
     "voyager1-h5": Dataset(
         name="voyager1-h5",
         url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",
