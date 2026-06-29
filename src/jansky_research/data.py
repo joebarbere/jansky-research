@@ -111,6 +111,16 @@ DATASETS: dict[str, Dataset] = {
         size_hint="per-station 15-min FITS",
         category="large",
     ),
+    "atnf-psrcat": Dataset(
+        name="atnf-psrcat",
+        # The ATNF Pulsar Catalogue is on VizieR (B/psr); the pulsar slices query it directly.
+        url="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=B/psr",
+        filename="atnf_psrcat.vot",
+        description="ATNF Pulsar Catalogue (Manchester et al. 2005) via VizieR B/psr — periods, "
+        "period derivatives, and flux densities for the known pulsars. Drives the pulsar spectral "
+        "(jansky_research.pulsarspec) and P-Pdot (jansky_research.ppdot) slices.",
+        size_hint="~3,500 rows",
+    ),
     "taylor2009-rm": Dataset(
         name="taylor2009-rm",
         # The Taylor+2009 NVSS RM catalogue is on VizieR; the slice queries it directly rather than
