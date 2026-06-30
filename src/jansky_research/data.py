@@ -181,6 +181,17 @@ DATASETS: dict[str, Dataset] = {
         "rotation-sky slice (jansky_research.rmsky).",
         size_hint="37,543 rows",
     ),
+    "mojave18": Dataset(
+        name="mojave18",
+        # MOJAVE XVIII parsec-scale jet position angles on VizieR; the offsets slice queries it directly
+        # to test radio-optical offset / jet alignment.
+        url="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=J/ApJ/923/30",
+        filename="mojave18.vot",
+        description="MOJAVE XVIII (Lister et al. 2021) — mean innermost parsec-scale jet position "
+        "angles for bright radio-loud AGN at 15 GHz (VizieR J/ApJ/923/30/mojave18). Drives the "
+        "radio-optical offset / jet-alignment test in jansky_research.offsets.",
+        size_hint="~447 AGN",
+    ),
     "voyager1-h5": Dataset(
         name="voyager1-h5",
         url="http://blpd0.ssl.berkeley.edu/Voyager_data/Voyager1.single_coarse.fine_res.h5",

@@ -22,7 +22,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | VLASS multi-epoch variability | `jansky_research.vlass` | ✅/➖ 703 deg² census: catalogue variability is **artifact-dominated**, but image-confirms **FK Comae Berenices** |
 | Peaked-spectrum (GPS/CSS) selection | `jansky_research.peaked` | ✅ three-frequency curvature selector; **100% recovery** of a known HFP sample, high purity vs MHz-peaked |
 | Southern peaked-spectrum (GLEAM-X×RACS) | `jansky_research.southern` | ✅ multi-band curvature that **measures** the turnover ν_pk; 90 candidates over a 3° cone, two systematic fixes |
-| Radio–optical offsets (ICRF3 × Gaia DR3) | `jansky_research.offsets` | ✅ reproduces the AGN radio–optical offset **excess tail** (≫ Rayleigh) from public catalogues |
+| Radio–optical offsets (ICRF3 × Gaia × MOJAVE) | `jansky_research.offsets` | ✅ reproduces the AGN offset **excess tail** (≫ Rayleigh) **and its alignment with the parsec-scale jet** (KS p=3×10⁻²²) |
 | Pulsar radio spectral indices (ATNF) | `jansky_research.pulsarspec` | ✅ reproduces the **steep** mean pulsar spectrum (α≈−1.8); MSPs ≈ normal pulsars |
 | Sub-threshold radio stacking (SDSS quasars × VLASS-SE) | `jansky_research.stacking` | ✅ image-plane stacking with **injection-recovery** bias calibration; mean flux of undetected quasars |
 | Multi-decade VLBI variability (Astrogeo) | `jansky_research.vlbi` | ✅ **control-floor** method recovers OJ 287 & BL Lac; blazars ~1.7× more variable than steady CSO controls |
@@ -72,7 +72,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) |
 | Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations |
 | Measuring the turnover: southern peaked sources from GLEAM-X + RACS | `southern/` | methodology + measured-turnover candidate list |
-| Reproducing the AGN radio–optical offset excess (ICRF3 × Gaia DR3) | `offsets/` | reproduction + reproducible offset catalogue |
+| The AGN radio–optical offset excess and its alignment with the jet (ICRF3 × Gaia × MOJAVE) | `offsets/` | reproduction (excess + jet alignment) + reproducible catalogue |
 | The steep radio spectra of pulsars from the ATNF catalogue | `pulsarspec/` | reproduction + MSP/normal comparison |
 | Image-plane stacking with injection-recovery: SDSS quasars in VLASS-SE | `stacking/` | methodology + calibrated population-mean flux |
 | Multi-decade parsec-scale VLBI variability from Astrogeo | `vlbi/` | control-floor method + recover-a-known (OJ 287, BL Lac) |

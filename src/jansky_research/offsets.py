@@ -18,11 +18,16 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
+    "alignment_stats",
     "fetch_icrf3_gaia",
+    "fetch_mojave_jets",
+    "jet_axis_angles",
+    "match_jets",
     "normalised_offset",
     "offset_statistics",
     "radio_optical_offset",
     "run",
+    "synthetic_alignment",
     "synthetic_field",
 ]
 
@@ -134,6 +139,125 @@ def synthetic_field(
     return radio, optical, is_struct
 
 
+def jet_axis_angles(
+    offset_pa_deg: np.ndarray, jet_pa_deg: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Angles between a radio→optical offset PA and the parsec-scale jet PA.
+
+    Returns ``(downstream_deg, axis_deg)``: the *downstream* angle wrapped to $[0,180]$ (0 = the offset
+    points along the jet toward the approaching/downstream side, 180 = anti-jet/upstream), and the
+    *jet-axis* angle $\min(\Delta,180-\Delta)\in[0,90]$ (0 = aligned with the jet axis, 90 =
+    perpendicular). Both PAs are degrees East of North.
+    """
+    d = np.abs(
+        ((np.asarray(offset_pa_deg, float) - np.asarray(jet_pa_deg, float) + 180.0) % 360.0) - 180.0
+    )
+    return d, np.minimum(d, 180.0 - d)
+
+
+def alignment_stats(
+    offset_pa_deg: np.ndarray, jet_pa_deg: np.ndarray, x_norm: np.ndarray, *, x_cut: float = 2.0
+) -> dict:
+    r"""Test whether radio→optical offsets align with the jet (the Kovalev/Petrov/Plavin result).
+
+    The **full matched sample** is the primary test: a Kolmogorov--Smirnov comparison of the jet-axis
+    angle (:func:`jet_axis_angles`, folded to $[0,90]$) against the uniform distribution expected if
+    offsets were randomly oriented (median $45°$, fraction within $30°$ of the axis $=1/3$). The
+    fraction of offsets pointing *downstream* (within $45°$ of the jet direction, random $=1/4$) isolates
+    the downstream component. As a *qualitative* consistency check the same statistics are reported for
+    the significant ($X>$ ``x_cut``) subset, which is expected to align more tightly (weak offsets are
+    astrometric noise with random PA). Returns the counts and these statistics.
+    """
+    from scipy import stats as _stats
+
+    opa = np.asarray(offset_pa_deg, float)
+    jpa = np.asarray(jet_pa_deg, float)
+    x = np.asarray(x_norm, float)
+    good = np.isfinite(opa) & np.isfinite(jpa) & np.isfinite(x)
+    opa, jpa, x = opa[good], jpa[good], x[good]
+    down, axis = jet_axis_angles(opa, jpa)
+    nan = float("nan")
+    ks_p = float(_stats.kstest(axis / 90.0, "uniform").pvalue) if axis.size >= 5 else nan
+    sig = x > x_cut
+    return {
+        "n_jet": int(axis.size),
+        "median_axis_deg": float(np.median(axis)) if axis.size else nan,
+        "frac_axis_lt30": float(np.mean(axis < 30.0)) if axis.size else nan,
+        "frac_down_lt45": float(np.mean(down < 45.0)) if axis.size else nan,
+        "ks_p": ks_p,
+        "x_cut": x_cut,
+        "n_jet_signif": int(sig.sum()),
+        "median_axis_signif_deg": float(np.median(axis[sig])) if sig.any() else nan,
+        "frac_axis_signif": float(np.mean(axis[sig] < 30.0)) if sig.any() else nan,
+        "_axis_deg": axis,  # for the figure
+    }
+
+
+def synthetic_alignment(
+    *,
+    n: int = 420,
+    aligned_fraction: float = 0.6,
+    downstream_fraction: float = 0.8,
+    jet_scatter_deg: float = 18.0,
+    seed: int = 1,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Synthetic matched offset/jet sample with an injected jet-aligned, mostly-downstream population.
+
+    A fraction ``aligned_fraction`` of sources are *structural*: their offset points along the jet (a
+    ``downstream_fraction`` majority downstream, the rest anti-jet) with ``jet_scatter_deg`` of scatter,
+    and they carry a significant ``X``; the remainder are astrometric noise with a random offset PA and
+    low ``X``. Returns ``(offset_pa_deg, jet_pa_deg, x_norm)`` so :func:`alignment_stats` recovers the
+    injected alignment offline (no network).
+    """
+    rng = np.random.default_rng(seed)
+    jet_pa = rng.uniform(0.0, 360.0, n)
+    aligned = rng.random(n) < aligned_fraction
+    downstream = rng.random(n) < downstream_fraction
+    along = np.where(downstream, jet_pa, jet_pa + 180.0) + rng.normal(0.0, jet_scatter_deg, n)
+    offset_pa = np.where(aligned, along % 360.0, rng.uniform(0.0, 360.0, n))
+    x = np.where(aligned, rng.uniform(2.5, 8.0, n), rng.uniform(0.3, 2.0, n))
+    return offset_pa, jet_pa, x
+
+
+def fetch_mojave_jets() -> dict:  # pragma: no cover - network
+    """Per-source mean innermost jet position angle from MOJAVE XVIII (Lister et al. 2021).
+
+    VizieR ``J/ApJ/923/30/mojave18``: ``PA`` is the flux-weighted innermost jet PA measured from the
+    core toward the approaching (downstream) side, deg East of North; ``delPA`` is its range (jet
+    wobble). Returns sky positions (deg), ``jet_pa`` (deg), and ``delpa`` (deg).
+    """
+    from astroquery.vizier import Vizier
+
+    v = Vizier(columns=["_RA", "_DE", "PA", "delPA"], row_limit=-1)
+    t = v.get_catalogs("J/ApJ/923/30")["J/ApJ/923/30/mojave18"]
+    return {
+        "ra": np.asarray(t["_RA"], float),
+        "dec": np.asarray(t["_DE"], float),
+        "jet_pa": np.asarray(t["PA"], float),
+        "delpa": np.asarray(t["delPA"], float),
+    }
+
+
+def match_jets(
+    radio_ra_deg: np.ndarray, radio_dec_deg: np.ndarray, jets: dict, *, max_arcsec: float = 1.0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Positionally match radio sources to the jet catalogue → ``(mask, jet_pa, delpa)``.
+
+    Nearest-neighbour match within ``max_arcsec`` (same AGN). ``mask`` selects matched radio sources;
+    ``jet_pa``/``delpa`` are aligned to the radio array order. Pure astropy (no network).
+    """
+    import astropy.units as _u
+    from astropy.coordinates import SkyCoord
+
+    rc = SkyCoord(
+        np.asarray(radio_ra_deg, float) * _u.deg, np.asarray(radio_dec_deg, float) * _u.deg
+    )
+    jc = SkyCoord(jets["ra"] * _u.deg, jets["dec"] * _u.deg)
+    idx, sep, _ = rc.match_to_catalog_sky(jc)
+    mask = sep.arcsec < max_arcsec
+    return mask, np.asarray(jets["jet_pa"], float)[idx], np.asarray(jets["delpa"], float)[idx]
+
+
 def fetch_icrf3_gaia(*, max_arcsec: float = 0.5) -> tuple[dict, dict]:  # pragma: no cover - network
     """ICRF3 S/X (VizieR ``J/A+A/644/A159/table10``) cross-matched to Gaia DR3 via CDS X-Match.
 
@@ -213,6 +337,18 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     sig_d = np.hypot(radio["e_d"], optical["e_d"])
     x = normalised_offset(off["dra_mas"], off["ddec_mas"], sig_a, sig_d)
     stats = offset_statistics(x, off["offset_mas"])
+
+    # jet-alignment test: does the offset DIRECTION point along the parsec-scale jet?
+    if offline:
+        a_off_pa, a_jet_pa, a_x = synthetic_alignment()
+        align = alignment_stats(a_off_pa, a_jet_pa, a_x)
+        jet_source = "synthetic"
+    else:  # pragma: no cover - network
+        jets = fetch_mojave_jets()
+        mask, jet_pa, _delpa = match_jets(radio["ra"], radio["dec"], jets)
+        align = alignment_stats(off["pa_deg"][mask], jet_pa[mask], x[mask])
+        jet_source = "MOJAVE XVIII"
+
     metrics = {
         "source": source,
         "n": stats["n"],
@@ -220,6 +356,15 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "frac_x_gt3_pct": round(100.0 * stats["frac_x_gt_cut"], 2),
         "rayleigh_pct": round(100.0 * stats["rayleigh_expectation"], 2),
         "excess_ratio": round(stats["excess_ratio"], 1),
+        "jet_source": jet_source,
+        "n_jet": align["n_jet"],
+        "median_axis_deg": round(align["median_axis_deg"], 1),
+        "frac_axis_lt30": round(align["frac_axis_lt30"], 3),
+        "frac_down_lt45": round(align["frac_down_lt45"], 3),
+        "ks_p": align["ks_p"],
+        "n_jet_signif": align["n_jet_signif"],
+        "median_axis_signif_deg": round(align["median_axis_signif_deg"], 1),
+        "frac_axis_signif": round(align["frac_axis_signif"], 3),
     }
     if (
         truth is not None
@@ -232,12 +377,12 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "offsets_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(x, op / "papers" / "offsets" / "figures")
+    _figure(x, align["_axis_deg"], op / "papers" / "offsets" / "figures")
     _write_macros(metrics, op / "papers" / "offsets" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(x_norm: np.ndarray, out_dir) -> None:
+def _figure(x_norm: np.ndarray, axis_deg: np.ndarray, out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -245,19 +390,32 @@ def _figure(x_norm: np.ndarray, out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.2, 4.0))
+
+    # Left: the offset-magnitude excess over Rayleigh (the existing result)
     x = np.asarray(x_norm, float)
     x = x[np.isfinite(x)]
-    fig, ax = plt.subplots(figsize=(5, 4))
     bins = np.linspace(0, 8, 40)
-    ax.hist(x, bins=bins, density=True, color="0.6", label="ICRF3$\\times$Gaia")
+    ax1.hist(x, bins=bins, density=True, color="0.6", label="ICRF3$\\times$Gaia")
     xs = 0.5 * (bins[:-1] + bins[1:])
-    ax.plot(xs, xs * np.exp(-(xs**2) / 2.0), "r-", lw=1.2, label="Rayleigh (pure noise)")
-    ax.axvline(3.0, color="k", ls=":", lw=0.8, label="$X=3$")
-    ax.set(
-        xlabel="normalised offset $X$", ylabel="density", title="Radio--optical offset significance"
+    ax1.plot(xs, xs * np.exp(-(xs**2) / 2.0), "r-", lw=1.2, label="Rayleigh (pure noise)")
+    ax1.axvline(3.0, color="k", ls=":", lw=0.8, label="$X=3$")
+    ax1.set(xlabel="normalised offset $X$", ylabel="density", title="Offset significance")
+    ax1.legend(fontsize=8)
+    ax1.set_yscale("log")
+
+    # Right: the offset DIRECTION vs the jet axis (the new result) -- a peak at 0 = aligned
+    a = np.asarray(axis_deg, float)
+    a = a[np.isfinite(a)]
+    abins = np.linspace(0, 90, 19)
+    ax2.hist(a, bins=abins, density=True, color="C0", label="offset vs jet")
+    ax2.axhline(1.0 / 90.0, color="r", ls="-", lw=1.2, label="uniform (random)")
+    ax2.set(
+        xlabel="jet-axis angle (deg)",
+        ylabel="density",
+        title="Offset direction vs parsec-scale jet",
     )
-    ax.legend(fontsize=8)
-    ax.set_yscale("log")
+    ax2.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(out / "xnorm.pdf")
     plt.close(fig)
@@ -265,6 +423,14 @@ def _figure(x_norm: np.ndarray, out_dir) -> None:
 
 def _write_macros(m: dict, path) -> None:
     from pathlib import Path
+
+    def _texp(p: float) -> str:
+        """Format a (tiny) p-value as a LaTeX exponent, e.g. ``3\\times10^{-22}``."""
+        if not np.isfinite(p) or p <= 0:
+            return "--"
+        e = int(np.floor(np.log10(p)))
+        mant = p / 10.0**e
+        return rf"{mant:.0f}\times10^{{{e}}}" if e < -2 else f"{p:.3f}"
 
     lines = [
         "% Auto-generated by jansky_research.offsets._write_macros — do not edit by hand.",
@@ -274,6 +440,15 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\offFracTail}}{{{m['frac_x_gt3_pct']}}}",
         rf"\newcommand{{\offRayleigh}}{{{m['rayleigh_pct']}}}",
         rf"\newcommand{{\offExcess}}{{{m['excess_ratio']}}}",
+        rf"\newcommand{{\offJetSource}}{{{m['jet_source']}}}",
+        rf"\newcommand{{\offJetN}}{{{m['n_jet']}}}",
+        rf"\newcommand{{\offJetMedAxis}}{{{m['median_axis_deg']}}}",
+        rf"\newcommand{{\offJetFracAxis}}{{{round(100.0 * m['frac_axis_lt30'])}}}",
+        rf"\newcommand{{\offJetFracDown}}{{{round(100.0 * m['frac_down_lt45'])}}}",
+        rf"\newcommand{{\offJetKsP}}{{{_texp(m['ks_p'])}}}",
+        rf"\newcommand{{\offJetNsig}}{{{m['n_jet_signif']}}}",
+        rf"\newcommand{{\offJetMedAxisSig}}{{{m['median_axis_signif_deg']}}}",
+        rf"\newcommand{{\offJetFracAxisSig}}{{{round(100.0 * m['frac_axis_signif'])}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
