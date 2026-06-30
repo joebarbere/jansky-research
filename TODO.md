@@ -124,8 +124,9 @@ check on the density-model distance (STEREO/WAVES and a STEREO-A+B triangulation
 the Quick-Look-systematics methodology), **`peaked`** (a three-frequency curvature selector with the
 TGSS-upper-limit + resolution-floor method and two recover-a-known validations), and **`triangulate`**
 (the 3D triangulation slice the synthesis builds on, standalone). **`frbstats` is removed** from the
-shortlist — its only fresh claim was the Airflow pattern, which is being re-homed on a streaming archive
-(`plans/31`); frbstats stays a JOSS/RNAAS tool. Do **not** post the pure reproductions/negatives as a
+shortlist — its only fresh claim was the Airflow pattern, now **re-homed** on a streaming archive as
+`ecallisto_pipeline` (`plans/31`: a daily-schedule, catchup-backfill, per-station-fan-out Airflow-on-Podman
+ingest of e-Callisto — a legitimate astro-ph.IM automation note); frbstats stays a JOSS/RNAAS tool. Do **not** post the pure reproductions/negatives as a
 preprint batch. **Before any upload, run `make reproduce`** so the paper macros hold real-data numbers,
 not the offline-synthetic CI values.
 
@@ -158,6 +159,7 @@ not the offline-synthetic CI values.
 | `peaked` | `astro-ph.GA` | `astro-ph.HE`, `astro-ph.IM` |
 | `triangulate` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
 | `type3synthesis` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
+| `ecallisto_pipeline` | `astro-ph.IM` | `astro-ph.SR` |
 
 ---
 
@@ -171,5 +173,6 @@ not the offline-synthetic CI values.
 | `papers/vlass/main.tex` | arXiv (optional) | not submitted |
 | `papers/peaked/main.tex` | arXiv (optional) | not submitted |
 | `papers/triangulate/main.tex` | arXiv (optional) | not submitted |
-| `papers/frbstats/main.tex` | repo + Zenodo only (Airflow re-homed; see plans/31) | — keep in repo |
+| `papers/ecallisto_pipeline/main.tex` | arXiv (optional, astro-ph.IM) | not submitted |
+| `papers/frbstats/main.tex` | repo + Zenodo only (Airflow re-homed → ecallisto_pipeline) | — keep in repo |
 | the other 14 `papers/<slice>/` (reproductions/negatives) | repo + Zenodo only | — keep in repo |

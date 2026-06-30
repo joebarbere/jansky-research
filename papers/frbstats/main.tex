@@ -30,10 +30,8 @@ differential fluence power-law index $\gamma=\energyGamma\pm\energyGammaErr$ abo
 automatically selected completeness bound of $\energyFmin$~Jy~ms, consistent with the
 catalog's published source counts. We deliberately frame the within-source wait-time
 clustering ($k=\weibullK$) as a cadence-biased illustration rather than a measurement.
-The entire analysis is automated with an Apache Airflow pipeline running on rootless
-Podman --- a combination with, to our knowledge, no prior use in radio astronomy --- and
-regenerates from a clean checkout in one command. This is a reproducibility and tooling
-contribution, not a discovery.
+The entire analysis regenerates from a clean checkout in one command. This is a
+reproducibility and tooling contribution, not a discovery.
 \end{abstract}
 
 \keywords{Radio transient sources (2008) --- Fast radio bursts (1313) --- Open source software (1866)}
@@ -56,10 +54,7 @@ We surveyed the open-source radio-astronomy ecosystem (detection suites such as 
 \emph{burst-statistics analysis} is not: Weibull wait-time fitting, power-law energy fits
 with principled lower bounds, and repeater/non-repeater hypothesis tests exist only as
 one-off scripts inside papers, while FRBSTATS exposes a web UI but no offline library.
-Separately, we found that workflow-orchestration tooling in radio astronomy assumes
-observatory HPC: the one published Airflow use \citep[CHIME/FRB baseband;][]{chime25repeaters}
-runs on Docker Swarm, and we found no prior pairing of Airflow with rootless Podman for
-laptop-scale, public-data analysis. Both gaps motivate this work.
+This gap motivates the tool.
 
 \section{Methods: the \code{frbstats} tool}
 \code{frbstats} is a pure-NumPy/SciPy module composing tested helpers from \code{jansky}
@@ -84,22 +79,8 @@ width, and fluence distributions of repeater versus non-repeater bursts.
 
 Every function is tested against a synthetic catalog with known ground truth, so the test
 suite runs offline and recovers the injected parameters. The same \code{pipeline} entry
-point is called by the command line, the notebooks, and the automation layer, guaranteeing
+point is called by the command line, the notebooks, and \code{make reproduce}, guaranteeing
 one code path.
-
-\section{Automation: Airflow on Podman}
-The analysis is wrapped in an Apache Airflow \citep{airflow} DAG with four stages,
-\begin{center}
-\code{fetch\_dataset} $\rightarrow$ \code{run\_analysis} $\rightarrow$ \\
-\code{make\_figures} $\rightarrow$ \code{assemble\_paper\_inputs},
-\end{center}
-run on a rootless-Podman stack (LocalExecutor with a single Postgres metadata database; no
-Celery or Redis). Each task is an in-process Python operator calling \code{frbstats}
-directly --- not a nested container --- so the DAG, the Makefile, and the notebooks execute
-identical code. Standing the stack up on Fedora required fully-qualified image names,
-installing \code{git} in the image, and SELinux \code{:z} bind-mount relabels; once
-resolved, the DAG runs to success and writes the same figures and macros as the command
-line.
 
 \section{Data}
 We use the First CHIME/FRB Catalog \citep{chimecat1}, retrieved as a public CSV. Its 600
@@ -162,25 +143,24 @@ to re-detect). We therefore present them as exploratory.
 
 \section{Discussion and reproducibility}
 The headline contribution is a tested, offline-capable tool that recovers a peer-reviewed
-result from public data, plus a reproducible automation pattern. Limitations are stated
+result from public data, reproducibly. Limitations are stated
 plainly: the catalog-level differences are subject to CHIME's selection function and are not
 corrected for it; the power law is a single fit above one completeness bound; the wait-time
 shape is cadence-dominated. None of the results is a discovery claim. The full chain ---
 fetch data, run the pipeline, build this document --- regenerates from a clean checkout with
-\code{make reproduce}, and the Airflow DAG produces byte-identical figures and macros, so
-every number above is auditable back to the pipeline.
+\code{make reproduce}, so every number above is auditable back to the pipeline.
 
 \section{Conclusions}
 We identified a real gap in open-source FRB tooling, filled it with a small tested module,
-validated it by reproducing the CHIME repeater width result, and automated it with a
-reproducible Airflow-on-Podman pipeline. The non-chosen survey candidates (pulsar-timing,
-HI, RFI/ML, and SETI tools) are recorded as future work.
+and validated it by reproducing the CHIME repeater width result, with a fully reproducible
+build. The non-chosen survey candidates (pulsar-timing, HI, RFI/ML, and SETI tools) are
+recorded as future work.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude
 \citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the
 open-source and literature survey, the design, implementation, and testing of the
-\code{frbstats} module and the Airflow-on-Podman pipeline, the data analysis, and the
+\code{frbstats} module, the data analysis, and the
 drafting of this manuscript. The author directed the work, independently reviewed and verified
 all code, results, figures, and citations, and takes full responsibility for the content.
 
@@ -191,7 +171,7 @@ project whose tested helpers this work builds on.
 \end{acknowledgments}
 
 \software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy,
-Matplotlib, Apache Airflow \citep{airflow}, jansky \citep{jansky}}
+Matplotlib, jansky \citep{jansky}}
 
 \bibliographystyle{aasjournal}
 \bibliography{refs}

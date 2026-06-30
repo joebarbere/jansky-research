@@ -1,0 +1,125 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A streaming e-Callisto burst-ingest pipeline on Airflow + Podman}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Scheduled, Backfilling Airflow-on-Podman Pipeline for Continuous Ingestion of the e-Callisto
+Solar-Radio Archive}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Workflow schedulers earn their keep on archives that are \emph{large} and \emph{frequently updated} ---
+not on a single static catalogue, where a scheduler is overhead. The e-Callisto network
+\citep{benz2009} is the former: 150+ ground stations append new gzipped-FITS dynamic spectra every day,
+twenty years deep. We present a small Apache Airflow \citep{airflow} pipeline, running on rootless
+Podman \citep{podman}, that ingests the archive day by day --- a daily schedule with \emph{catchup}
+backfill over an arbitrary date range, a directory \emph{sensor} that waits for each day to populate,
+and a per-station \emph{dynamic-task-mapping} fan-out --- and scans each spectrum for drifting type III
+candidates by reusing a tested dynamic-spectrum toolkit. The per-station scan and the day-reduce are
+in-process calls into the same \code{jansky\_research} worker that the command line uses, so the DAG and
+\code{make ecallisto-day} produce identical rows; the worker is unit-tested offline on a synthetic day
+(\ecNbursts/\ecNscanned\ injected bursts recovered) while the scheduler stack is exercised separately.
+The output is a rolling table of burst \emph{candidates} --- e-Callisto is uncalibrated and RFI-heavy,
+so these are detections to vet, not a finished census. This is a reproducible-automation contribution:
+the right tool (a scheduler) on the right kind of data (a streaming archive).
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Astronomy data analysis (1858)
+--- Open source software (1866) --- Astronomy software (1855)}
+
+\section{Introduction}
+The radio-astronomy reproducibility literature increasingly ships analysis pipelines, but workflow
+orchestration is easy to mis-apply: wrapping a one-shot analysis of a static file in a scheduler like
+Airflow adds a metadata database and a webserver to do what a shell script would, and exercises none of
+the features (scheduling, backfill, sensors, fan-out, retries) that justify the tool. A scheduler is the
+right choice when the data \emph{keep arriving}. The e-Callisto network \citep{benz2009} is exactly that
+case: a worldwide net of low-cost spectrometers that continuously adds 15-minute dynamic spectra from
+150+ stations to a public, no-authentication HTTP archive. Maintaining a catalogue over it is an
+ingestion problem --- ingest each new day, across stations, idempotently, with the ability to backfill
+history --- which is what Airflow is built for. We build that pipeline and keep the science it performs
+deliberately simple (type III candidate detection), so the contribution is the automation pattern.
+
+\section{The pipeline}
+The DAG \code{ecallisto\_ingest} has four stages,
+\begin{center}
+\code{wait\_for\_day} $\rightarrow$ \code{list\_stations} $\rightarrow$ \\
+\code{scan\_station.expand($\cdots$)} $\rightarrow$ \code{reduce\_day},
+\end{center}
+each using a feature that a static pipeline does not:
+\begin{itemize}
+\item \textbf{Schedule + catchup.} The DAG runs \code{@daily} with \code{catchup=True}, so triggering a
+date range backfills the archive one logical day per run --- the twenty-year history is reachable by
+backfill, not a bespoke loop.
+\item \textbf{Sensor.} \code{wait\_for\_day} is a reschedule-mode sensor that pokes the day's archive
+directory until it is populated, the hook for a still-filling current day.
+\item \textbf{Fan-out.} \code{scan\_station} is \emph{dynamically task-mapped} over the day's station
+files, so each station is fetched and scanned in its own parallel task and a slow or failed station does
+not block the others.
+\item \textbf{Idempotent reduce.} \code{reduce\_day} writes one CSV per day, so re-running a date
+overwrites rather than appends --- safe backfills and retries.
+\end{itemize}
+The stack is LocalExecutor with a single Postgres metadata database on rootless Podman (no Celery or
+Redis); the Fedora/Podman traps already solved for this repo's earlier pipeline (fully-qualified images,
+SELinux \code{:z} bind-mount relabels, \code{AIRFLOW\_UID=0}) carry over.
+
+\section{The worker, and why the DAG is thin}
+Every task is an in-process call into \code{jansky\_research.ecallisto\_catalog}, which reuses the tested
+\code{solarbursts} dynamic-spectrum tools (background subtraction, burst windowing, the per-channel ridge
+detector, the robust drift fit). A spectrum is flagged a candidate when its ridge spans enough channels,
+drifts the right way (frequency falling with time), and fits coherently --- the discriminant the
+\code{solarbursts} slice validated. Because the DAG calls the same worker as \code{make ecallisto-day},
+the scheduler adds orchestration, not a second code path; the worker is unit-tested offline against a
+synthetic observing day, on which it recovers exactly the injected bursts (\ecNbursts\ of \ecNscanned\
+stations; median drift $\ecMedDrift$~MHz\,s$^{-1}$; Figure~\ref{fig:ec}). CI never stands up the Airflow
+stack --- too heavy and flaky for continuous integration --- but tests the worker and the DAG is run with
+\code{make dag-test}.
+
+\begin{figure}
+\plotone{figures/ecallisto.pdf}
+\caption{A scanned observing day: stations flagged as type III candidates versus quiet, from the
+synthetic offline fixture (\ecNbursts\ of \ecNscanned). The real pipeline produces the same row schema
+per archive day.}
+\label{fig:ec}
+\end{figure}
+
+\section{Discussion}
+The contribution is matching the tool to the data: a scheduler for a streaming archive. The honest
+limitations: (i) the detected bursts are \emph{candidates} --- e-Callisto is uncalibrated, RFI-heavy,
+and station-heterogeneous, so a vetted occurrence census needs cross-station coincidence and
+RFI-excision this pipeline does not perform; (ii) the per-day fan-out is capped for a bounded backfill
+demonstration, not run over all stations or all twenty years; (iii) the science is intentionally minimal
+so that the automation, not a new burst catalogue, is what is on offer. The pattern --- in-process
+worker, daily schedule, catchup, sensor, dynamic-mapping fan-out, idempotent reduce, all on rootless
+Podman --- transfers to any frequently-updated public radio archive. Every number above is written by the
+pipeline into the macros this paper \code{\textbackslash input}s; \code{make ecallisto-day DATE=...}
+reproduces a day's rows without Airflow, and \code{make dag-test DATE=...} runs the same through the
+scheduler.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{ecallisto\_catalog} worker and the \code{ecallisto\_ingest}
+Airflow DAG, and the drafting of this manuscript. The author directed the work, independently reviewed
+and verified all code, results, and citations, and takes full responsibility for the content. An AI/LLM
+is not an author.
+
+\begin{acknowledgments}
+This work uses public data from the e-Callisto network and builds on the \code{jansky} project. The
+author acknowledges the collaborative contribution of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Apache Airflow \citep{airflow}, Astropy \citep{astropy2022},
+NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

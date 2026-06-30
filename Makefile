@@ -3,10 +3,10 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test paper-image paper arxiv reproduce clean
+.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -62,6 +62,7 @@ figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offl
 	uv run python -m jansky_research.triangulate --out . --offline
 	uv run python -m jansky_research.sourcecounts --out . --offline
 	uv run python -m jansky_research.type3synthesis --out . --offline
+	uv run python -m jansky_research.ecallisto_catalog --out . --offline
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
@@ -69,9 +70,12 @@ airflow-up: ## Stand up the local Airflow stack (podman compose)
 airflow-down: ## Tear down the local Airflow stack
 	$(COMPOSE) -f airflow/compose.yaml down
 
-dag-test: ## Run the research DAG once without the scheduler loop
+dag-test: ## Backfill one day of the e-Callisto ingest DAG under Podman (DATE=YYYY-MM-DD)
 	$(COMPOSE) -f airflow/compose.yaml run --rm airflow-scheduler \
-		airflow dags test research_pipeline 2026-01-01
+		airflow dags test ecallisto_ingest $(or $(DATE),2011-09-14)
+
+ecallisto-day: ## Scan one day of e-Callisto for type III candidates WITHOUT Airflow (DATE=YYYYMMDD)
+	uv run python -m jansky_research.ecallisto_catalog --date $(or $(DATE),20110914) --out .
 
 paper-image: ## Build the tectonic image used to compile the papers
 	podman build -t jansky-research-paper:latest -f containers/paper.Dockerfile .
@@ -113,6 +117,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.triangulate --date 20130515 --out .
 	uv run python -m jansky_research.sourcecounts --ra 180 --dec 30 --radius 8 --out .
 	uv run python -m jansky_research.type3synthesis --out .
+	uv run python -m jansky_research.ecallisto_catalog --date 20110914 --out .
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts
