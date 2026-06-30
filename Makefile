@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -60,6 +60,7 @@ figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offl
 	uv run python -m jansky_research.windwaves --out . --offline
 	uv run python -m jansky_research.swaves --out . --offline
 	uv run python -m jansky_research.triangulate --out . --offline
+	uv run python -m jansky_research.sourcecounts --out . --offline
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
@@ -109,6 +110,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.windwaves --date 20031028 --receiver rad2 --out .
 	uv run python -m jansky_research.swaves --date 20130515 --spacecraft a --out .
 	uv run python -m jansky_research.triangulate --date 20130515 --out .
+	uv run python -m jansky_research.sourcecounts --ra 180 --dec 30 --radius 8 --out .
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts

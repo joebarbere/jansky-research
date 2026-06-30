@@ -74,6 +74,17 @@ DATASETS: dict[str, Dataset] = {
         "burst-statistics analysis (CHIME/FRB Collaboration 2021, ApJS 257, 59).",
         size_hint="~216 KB",
     ),
+    "nvss": Dataset(
+        name="nvss",
+        # The NVSS catalogue is on VizieR (VIII/65); the source-counts slice cone-searches it directly.
+        url="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=VIII/65/nvss",
+        filename="nvss.vot",
+        description="NRAO VLA Sky Survey (Condon et al. 1998) via VizieR VIII/65 — 1.4 GHz integrated "
+        "flux densities for ~1.8M radio sources north of Dec -40, complete to ~2.5 mJy at 45 arcsec. "
+        "Drives the Euclidean-normalised source-counts slice (jansky_research.sourcecounts).",
+        size_hint="~1.8M rows (cone-searched)",
+        category="large",
+    ),
     "vlass-cirada-ql": Dataset(
         name="vlass-cirada-ql",
         # The full CIRADA VLASS Quick-Look component catalogues (~3.4M components/epoch) are bulk
