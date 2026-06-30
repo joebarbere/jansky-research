@@ -1,0 +1,126 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{NVSS 1.4 GHz Euclidean-normalised source counts}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Recovering the Canonical 1.4\,GHz Euclidean-Normalised Source Counts from {NVSS}:
+A Reproducible Pipeline}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The differential source count $\mathrm{d}N/\mathrm{d}S$ --- how many radio sources there are per unit
+flux per unit sky --- is one of the oldest cosmological tests in radio astronomy: a static Euclidean
+universe gives $\mathrm{d}N/\mathrm{d}S\propto S^{-5/2}$, and the departures of the real counts from
+that law trace the cosmological evolution of the radio-source population. We build a small tested tool
+that forms the Euclidean-normalised count $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$ from a public NVSS
+\citep{condon1998} region and compares it, bin by bin, to the canonical 1.4~GHz counts (the
+\citealt{hopkins2003} polynomial fit). Applied to an \scArea~sr cone at high Galactic latitude
+(\scNsrc\ NVSS sources above \scSmin~mJy), the measured counts reproduce the Hopkins fit over
+$\sim$2.5 decades in flux (\scSmin~mJy--1~Jy, \scNbins\ bins) at a median ratio of \scRatio\ with
+\scScatter~dex of scatter. The differential slope over that range, \scSlope, is shallower than the
+Euclidean $-2.5$ --- the well-known sub-Euclidean behaviour of the 1.4~GHz counts first measured by
+\citet{condon1984}. This is a reproducibility/method contribution and a recover-a-known --- the
+pipeline and the NVSS data agree with the published counts --- not a new measurement.
+\end{abstract}
+
+\keywords{Radio source counts (1358) --- Extragalactic radio sources (508) --- Surveys (1671)
+--- Observational cosmology (1146) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Source counts were the first radio evidence for cosmological evolution: \citet{condon1984} showed that
+the 1.4~GHz differential counts are \emph{sub-Euclidean} (a log--log slope shallower than $-5/2$) over
+the sub-Jy range, requiring a population of radio galaxies and quasars more numerous or luminous in the
+past. The modern compilation \citep{dezotti2010} traces the counts from microjansky star-forming
+galaxies to the bright radio-loud AGN. The standard way to display them is the
+\emph{Euclidean-normalised} count $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$, which divides out the steep
+Euclidean slope so a non-evolving population is a flat horizontal line and the real structure stands
+out. We ask the most reproducible version of the classic exercise: with the public NVSS catalogue and a
+small tested tool, can one recover the canonical 1.4~GHz Euclidean-normalised counts, with the
+statistics handled honestly?
+
+\section{Methods}
+\code{sourcecounts} is a pure-NumPy/astropy module that reuses the \code{jansky.sourcecounts} helpers
+(\code{differential\_counts}, \code{euclidean\_normalised\_counts}, \code{count\_slope}) wholesale; the
+new code is the NVSS region fetch, the solid-angle normalisation, and the published reference curve. It
+cuts the sample at a completeness limit, bins it logarithmically, forms $\mathrm{d}N/\mathrm{d}S$ with
+Poisson errors, divides by the cone solid angle $2\pi(1-\cos\theta)$ to get a count per steradian, and
+Euclidean-normalises. The differential slope and the ratio to the \citet{hopkins2003} polynomial are
+computed only over bins with at least five sources \emph{and} below 1~Jy --- the published validity
+limit of that fit --- so neither is contaminated by the Poisson-starved, extrapolated bright end. A
+slope shallower than $-2.5$ is equivalent to a Euclidean-normalised count that \emph{rises} with $S$,
+so the sub-Euclidean counts climb from faint fluxes toward the $\sim$1~Jy bright-end peak. Every
+function is tested against a synthetic sky whose fluxes are drawn from the Hopkins differential count,
+so the pipeline round-trips to a ratio of unity.
+
+\section{Data}
+We use the NRAO VLA Sky Survey \citep{condon1998} via VizieR (VIII/65): 1.4~GHz integrated flux
+densities for the radio sources north of Dec~$-40^\circ$, complete to $\sim$2.5~mJy at $45''$
+resolution. We query a cone at $(180^\circ, +30^\circ)$, $b\approx+80^\circ$ --- high Galactic latitude,
+so the sample is extragalactic --- and cut at \scSmin~mJy to stay above the worst of the completeness
+roll-off.
+
+\section{Results}
+The cone holds \scNsrc\ NVSS sources above \scSmin~mJy over \scArea~sr (Figure~\ref{fig:counts}). The
+Euclidean-normalised counts reproduce the canonical Hopkins fit over \scNbins\ bins spanning
+\scSmin~mJy to 1~Jy at a median ratio of \scRatio\ with only \scScatter~dex (${\sim}14\%$) of bin-to-bin
+scatter --- the pipeline and NVSS agree with the published 1.4~GHz counts to within the field-to-field
+scatter expected from cosmic variance and Poisson noise. The differential slope over that range is
+\scSlope, shallower than the Euclidean $-2.5$: this sub-Euclidean slope --- equivalently, the
+normalised counts rising toward the $\sim$1~Jy peak --- is the cosmological-evolution signature
+\citet{condon1984} first measured, recovered here from a single public catalogue.
+
+\begin{figure}
+\plotone{figures/sourcecounts.pdf}
+\caption{The 1.4~GHz Euclidean-normalised differential source counts $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$
+from the NVSS cone (points, with Poisson errors) against the \citet{hopkins2003} polynomial fit (line).
+The rising trend toward $\sim$1~Jy is the sub-Euclidean behaviour of the counts; the brightest sample
+sources lie above the 1~Jy validity limit of the fit and are excluded from the comparison.}
+\label{fig:counts}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that recovers the canonical 1.4~GHz
+Euclidean-normalised source counts from the public NVSS catalogue, with the statistics handled
+honestly. The honest limitations: (i) the Hopkins polynomial is itself a fit to a deeper multi-survey
+compilation, so the agreement validates the \emph{pipeline} and the \emph{NVSS data}, not new physics;
+(ii) a single \scArea~sr field carries cosmic variance from large-scale clustering on top of Poisson
+noise, so the \scScatter~dex scatter is a field-specific figure, not a global error; (iii) near the
+NVSS limit the $45''$ beam resolves some extended sources into multiple catalogue components and
+Eddington bias inflates the faintest bins, which is why we cut at \scSmin~mJy; (iv) above 1~Jy the
+cone is Poisson-starved and outside the Hopkins fit, so those bins are plotted but excluded from the
+comparison. None of these undermine the recover-a-known --- the canonical counts come straight back out
+of a public catalogue --- but they bound what a single NVSS cone can claim. Every number above is
+written by the pipeline into the macros this paper \code{\textbackslash input}s, and
+\code{python -m jansky\_research.sourcecounts -\,-ra 180 -\,-dec 30 -\,-radius 8} regenerates them from
+VizieR.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{sourcecounts} tool (the NVSS fetch, the solid-angle
+normalisation, the Hopkins reference, and the reuse of the \code{jansky.sourcecounts} helpers), the
+analysis, and the drafting of this manuscript. The author directed the work, independently reviewed and
+verified all code, results, figures, and citations, and takes full responsibility for the content. An
+AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the NRAO VLA Sky Survey (Condon et al.\ 1998) via the CDS VizieR service and the Hopkins
+et al.\ (2003) source-count fit. The author acknowledges the collaborative contribution of Anthropic's
+Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+astroquery, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
