@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — six slices, honestly tallied
+## Status — nineteen slices, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -25,13 +25,30 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | Radio–optical offsets (ICRF3 × Gaia DR3) | `jansky_research.offsets` | ✅ reproduces the AGN radio–optical offset **excess tail** (≫ Rayleigh) from public catalogues |
 | Pulsar radio spectral indices (ATNF) | `jansky_research.pulsarspec` | ✅ reproduces the **steep** mean pulsar spectrum (α≈−1.8); MSPs ≈ normal pulsars |
 | Sub-threshold radio stacking (SDSS quasars × VLASS-SE) | `jansky_research.stacking` | ✅ image-plane stacking with **injection-recovery** bias calibration; mean flux of undetected quasars |
+| Multi-decade VLBI variability (Astrogeo) | `jansky_research.vlbi` | ✅ **control-floor** method recovers OJ 287 & BL Lac; blazars ~1.7× more variable than steady CSO controls |
+| Solar type III exciter speed (e-Callisto) | `jansky_research.solarbursts` | ✅ drift→beam speed **~0.14 c** on a clean isolated burst (Newkirk inversion) |
+| Galactic Faraday rotation sky (Taylor+2009) | `jansky_research.rmsky` | ✅ plane enhancement ratio **5.4**, inner-Galaxy RM **sign antisymmetry** recovered |
+| Pulsar P–Ṗ diagram (ATNF) | `jansky_research.ppdot` | ✅ three classes over ~5 orders in B, 98% above the death line; Crab validates |
+| Inner-heliosphere type III (Wind/WAVES) | `jansky_research.windwaves` | ✅ beam tracked to **~10 R⊙** (Alfvén surface); honest peak-time/R² caveats |
+| Interplanetary type III (STEREO/WAVES HFR) | `jansky_research.swaves` | ✅ beam tracked to **0.38 AU**; honest R²-inflation (few independent time samples) caveat |
+| 3D type III triangulation (STEREO-A+B DF) | `jansky_research.triangulate` | ✅ geometric vs plasma-frequency distance correlate at **r=0.989**; source localized in 3D |
+| Euclidean source counts (NVSS) | `jansky_research.sourcecounts` | ✅ recovers the canonical **Hopkins 2003** 1.4 GHz counts; sub-Euclidean slope −1.91 |
 
-Four validations and two honest negatives, **zero overclaims that survived review** — the
-science-reviewer caught the USS candidates evaporating against the authoritative catalog and the
-SETI "detection" being an instrument artifact, and image-confirmation caught VLASS catalogue
-"variables" being extraction artifacts (while still recovering one genuine variable star). The
-negatives are arguably the most instructive part. Each slice's honest assessment is in
-`survey/*-findings.md`.
+A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
+candidates and the SETI "Voyager detection"), one mixed result (VLASS catalogue variability is
+artifact-dominated but image-confirms a real variable star), and **zero overclaims that survived
+review** — the science-reviewer caught the USS candidates evaporating against the authoritative
+catalog, the SETI "detection" being an instrument artifact, and (every slice) at least one real
+physics/citation/statistics fix before write-up. The negatives are arguably the most instructive part.
+Each slice's honest assessment is in `survey/*-findings.md`.
+
+**Slice-building is currently paused** at nineteen slices: the reliable no-auth data sources (VizieR,
+SPDF, e-Callisto, Astrogeo, CIRADA/VLASS) and the clean recover-a-known method space are largely used
+up. Two *larger* efforts are scoped and grounded in `plans/28-breakthrough-listen-singlepulse.md`
+(single-pulse / pulsar dedispersion on Breakthrough Listen open data) and
+`plans/29-lotss-deep-144mhz-counts.md` (deep 144 MHz source counts from LoTSS DR2) for when the project
+takes the next domain on. The `stokesv` (RACS Stokes-V) slice has its tooling + a credential-free
+recover-a-known, but its forced-photometry leg is blocked on CASDA.
 
 ### Papers
 
@@ -39,7 +56,7 @@ Every slice is written up as its own **AASTeX paper** under `papers/<slice>/` (a
 Barbere, with Claude credited via an AI-use disclosure + a `\software{}` citation — an AI/LLM is not
 an eligible author). Each is built reproducibly with containerized tectonic, takes every headline
 number from a pipeline-generated `generated/macros.tex` (no figure typed by hand), and is honest
-about what it is — four validations and two negatives:
+about what it is — mostly recover-a-known validations and methodology, with two honest negatives:
 
 | Paper | `papers/…` | Framing |
 |-------|-----------|---------|
@@ -54,6 +71,14 @@ about what it is — four validations and two negatives:
 | Reproducing the AGN radio–optical offset excess (ICRF3 × Gaia DR3) | `offsets/` | reproduction + reproducible offset catalogue |
 | The steep radio spectra of pulsars from the ATNF catalogue | `pulsarspec/` | reproduction + MSP/normal comparison |
 | Image-plane stacking with injection-recovery: SDSS quasars in VLASS-SE | `stacking/` | methodology + calibrated population-mean flux |
+| Multi-decade parsec-scale VLBI variability from Astrogeo | `vlbi/` | control-floor method + recover-a-known (OJ 287, BL Lac) |
+| A solar type III exciter speed from an e-Callisto dynamic spectrum | `solarbursts/` | method + recover-a-known |
+| The Galactic Faraday rotation sky from the Taylor et al. 2009 RM catalogue | `rmsky/` | reproduction (plane enhancement + sign antisymmetry) |
+| The pulsar P–Ṗ diagram from the ATNF catalogue | `ppdot/` | reproduction + population classes |
+| Tracking an inner-heliosphere type III beam with Wind/WAVES | `windwaves/` | method + recover-a-known (to the Alfvén surface) |
+| Tracking a type III beam to 0.4 AU with STEREO/WAVES | `swaves/` | method + recover-a-known (genuinely interplanetary) |
+| 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check |
+| Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -119,17 +144,15 @@ See `REPRODUCING.md` for the full reproduction, the Airflow-on-Podman notes, and
 
 ```
 jansky-research/
-  src/jansky_research/   # the tooling package (tested-helper pattern, 85% floor)
+  src/jansky_research/   # the tooling package (tested-helper pattern, 85% floor) — one module per slice
     data.py              # dataset registry + offline synthetic fallback
-    frbstats.py          # FRB burst statistics (Weibull / power-law / KS)
-    spectra.py           # radio spectral index + ultra-steep-spectrum hunt
-    frbperiod.py         # FRB repeater activity-periodicity (Rayleigh periodogram)
-    driftsearch.py       # SETI Doppler-drift injection-recovery benchmark
-    hi.py                # Milky Way HI tangent-point rotation curve
+    frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
+    offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
+    windwaves.py swaves.py triangulate.py sourcecounts.py   # (+ stokesv.py, CASDA-blocked)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Airflow)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
-                         #   candidate-gaps.md (backlog), and each slice's *-findings.md
+                         #   candidate-gaps.md + *-scan.md (backlog), and each slice's *-findings.md
   airflow/               # Airflow-on-Podman stack + the research DAG
   papers/<slice>/        # one AASTeX paper per slice (main.tex + refs.bib tracked;
                          #   figures/, generated/, arxiv-submission/ are produced by make)
@@ -139,7 +162,8 @@ jansky-research/
   containers/            # tectonic paper-build image
   .claude/skills/        # arxiv-submit (assemble + validate an arXiv upload package)
   .claude/agents/        # dataset-analyst, pipeline-runner, results-interpreter (+ reused jansky)
-  plans/                 # numbered project plans (deleted after merge; survey/ is the keep-file)
+  plans/                 # numbered slice specs (00-29); the lasting record is each slice's
+                         #   survey/*-findings.md + papers/<slice>/. #28-29 are planned, not started
 ```
 
 ## Method & gates

@@ -19,7 +19,7 @@ the one permanent, low-friction win). Do them top to bottom:
 | 1 | **Zenodo** DOI for the repo | A permanent citable DOI. **JOSS requires it.** Quick: flip a switch + cut a release | step 2 |
 | 2 | **JOSS** software paper | Reviews the *software* (not novelty) — the natural home for the toolkit. Needs the step-1 DOI | — |
 | 3 | **RNAAS** note (frbstats) | A short citable note; editorial screening only (no peer review). Independent of 1–2 | — |
-| 4 | **arXiv** (frbstats, vlass, peaked) | Preprints for the 3 papers with a fresh angle. Needs endorsement (lead time) | — |
+| 4 | **arXiv** (frbstats, vlass, peaked, triangulate) | Preprints for the papers with a fresh angle. Needs endorsement (lead time) | — |
 
 **Plain-English walkthrough:**
 
@@ -35,9 +35,15 @@ the one permanent, low-friction win). Do them top to bottom:
 4. **Order among the arXiv papers doesn't matter**, but if you submit only one first, make it
    `vlass` or `peaked` (the strongest methodology + recover-a-known stories).
 
-**Not ready yet:** the `stokesv` (RACS Stokes-V) slice is still in progress — its live forced-photometry
-run is blocked on a CASDA outage (see `survey/stokesv-findings.md`). It is **not** in the table above;
-add it once the slice merges a paper.
+**Scope as of now:** the repo has **nineteen** completed slices, each with a tested tool + an AASTeX
+paper under `papers/<slice>/` (the full list is in `README.md`). Slice-building is **paused** — the
+reliable no-auth data sources are largely used up; two larger efforts are scoped in
+`plans/28-breakthrough-listen-singlepulse.md` and `plans/29-lotss-deep-144mhz-counts.md`. The
+publishing steps below operate on the current nineteen; revisit the arXiv shortlist if #28/#29 land.
+
+**Not ready yet:** the `stokesv` (RACS Stokes-V) slice has its tooling + a credential-free recover-a-known,
+but its live forced-photometry run is blocked on CASDA (see `survey/stokesv-findings.md`). It is **not**
+in the table above; add it once the slice merges a real-data paper.
 
 ---
 
@@ -79,8 +85,8 @@ Pre-submission checklist (JOSS will check these):
 - [ ] **Archive the software** (the Zenodo DOI from step 1) — JOSS asks for it.
 - [ ] Skim the JOSS "substantial scholarly effort" bar
       (<https://joss.readthedocs.io/en/latest/submitting.html>) — a thin wrapper can be
-      desk-rejected; lead the submission notes with the five validated analyses + the
-      Airflow/Podman reproducibility layer.
+      desk-rejected; lead the submission notes with the nineteen slices (recover-a-known
+      validations + methodology contributions) + the Airflow/Podman reproducibility layer.
 - [ ] Submit at <https://joss.theoj.org/papers/new>: give the repo URL, the branch/tag,
       `joss/paper.md`'s path, and the Zenodo DOI.
 - [ ] Respond to the editor/reviewers in the public review issue; expect requests for
@@ -107,21 +113,23 @@ A short, citable Research Note of the AAS. Editorial screening, not peer review.
 
 ---
 
-## 4. arXiv — the frbstats, vlass, and peaked papers (optional)
+## 4. arXiv — the frbstats, vlass, peaked, and triangulate papers (optional)
 
-Reserve arXiv for the **three** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
+Reserve arXiv for the **four** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
 reproducibility pattern), **`vlass`** (a 703 deg² multi-epoch variability census with a real
-recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology), and **`peaked`** (a
+recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology), **`peaked`** (a
 three-frequency curvature selector with the TGSS-upper-limit + resolution-floor method and two
-recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known HFP sample). Do
-**not** post the pure reproductions/negatives as a preprint batch.
+recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known HFP sample), and
+**`triangulate`** (the first amateur 3D triangulation of a type III radio source from STEREO-A+B
+direction-finding, with an *independent* geometric-vs-plasma-frequency distance cross-check at
+r=0.989). Do **not** post the pure reproductions/negatives as a preprint batch.
 
 - [ ] Register + verify email at <https://arxiv.org/user/register>; add affiliation,
       link ORCID.
 - [ ] **Endorsement:** a first submission to `astro-ph.*` usually needs an endorser.
       Submitting triggers the request; line up an established astro-ph author, or email
       the moderators. Plan for a few days.
-- [ ] `make arxiv` → use `papers/frbstats/`, `papers/vlass/`, and `papers/peaked/arxiv-submission/`:
+- [ ] `make arxiv` → use the `arxiv-submission/` package under `papers/{frbstats,vlass,peaked,triangulate}/`:
   - [ ] Open each `metadata.yaml`; fill the remaining TODOs (see the table below).
   - [ ] Upload `arxiv-source.tar.gz` (LaTeX source + `.bbl` included); check the AutoTeX
         preview matches the local `main.pdf`.
@@ -143,6 +151,7 @@ recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known
 | `spectra` | `astro-ph.GA` | `astro-ph.IM` |
 | `vlass` | `astro-ph.HE` | `astro-ph.SR`, `astro-ph.IM` |
 | `peaked` | `astro-ph.GA` | `astro-ph.HE`, `astro-ph.IM` |
+| `triangulate` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
 
 ---
 
@@ -155,4 +164,5 @@ recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known
 | `papers/frbstats/main.tex` | arXiv (optional) | not submitted |
 | `papers/vlass/main.tex` | arXiv (optional) | not submitted |
 | `papers/peaked/main.tex` | arXiv (optional) | not submitted |
-| `papers/{frbperiod,hi,driftsearch,spectra}/` | repo + Zenodo only | — keep in repo |
+| `papers/triangulate/main.tex` | arXiv (optional) | not submitted |
+| the other 14 `papers/<slice>/` (reproductions/negatives) | repo + Zenodo only | — keep in repo |
