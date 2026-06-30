@@ -1,6 +1,6 @@
 # 13 — VLASS three-epoch radio variability catalogue
 
-Status: 🚧 in progress (tooling)
+Status: ✅ done (tooling + real fetch + vetting + paper merged)
 
 ## Context
 
