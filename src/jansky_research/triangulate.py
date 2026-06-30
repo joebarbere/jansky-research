@@ -83,9 +83,7 @@ def mean_direction(
     return m / n, int(good.sum())
 
 
-def triangulate_rays(
-    p1: np.ndarray, u1: np.ndarray, p2: np.ndarray, u2: np.ndarray
-) -> dict:
+def triangulate_rays(p1: np.ndarray, u1: np.ndarray, p2: np.ndarray, u2: np.ndarray) -> dict:
     """Least-squares intersection of two rays (spacecraft position + direction-to-source).
 
     Ray *i* is :math:`p_i + t_i\\,u_i`. The pair of parameters minimising the distance between the two
@@ -191,9 +189,7 @@ def triangulate_track(
     farr = np.asarray(freqs, float)
     order = np.argsort(farr)
     r_plasma = (
-        windwaves.emission_radius(farr[order], harmonic=harmonic)
-        if farr.size
-        else np.array([])
+        windwaves.emission_radius(farr[order], harmonic=harmonic) if farr.size else np.array([])
     )
     return {
         "freq_mhz": farr[order],
@@ -318,8 +314,7 @@ def fetch_stereo_df(
     sc = "sta" if spacecraft.lower() == "a" else "stb"
     yyyy = date_yyyymmdd[:4]
     base = (
-        f"https://spdf.gsfc.nasa.gov/pub/data/stereo/{side}/l3/waves/"
-        f"hfr-direction-finding/{yyyy}/"
+        f"https://spdf.gsfc.nasa.gov/pub/data/stereo/{side}/l3/waves/hfr-direction-finding/{yyyy}/"
     )
     idx = requests.get(base, timeout=60).text
     m = re.findall(rf"{sc}_l3_wav_hfr_{date_yyyymmdd}_v[0-9]+\.cdf", idx)
@@ -470,7 +465,9 @@ def _figure(track: dict, out_dir) -> None:
                 lw=0.6,
                 alpha=0.6,
             )
-    ax2.set(xlabel=r"$X_{\rm HEEQ}$ ($R_\odot$)", ylabel=r"$Y_{\rm HEEQ}$ ($R_\odot$)", title="Geometry")
+    ax2.set(
+        xlabel=r"$X_{\rm HEEQ}$ ($R_\odot$)", ylabel=r"$Y_{\rm HEEQ}$ ($R_\odot$)", title="Geometry"
+    )
     ax2.set_aspect("equal", "datalim")
     ax2.legend(fontsize=8, loc="best")
     fig.tight_layout()
