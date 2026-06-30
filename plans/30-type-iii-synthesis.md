@@ -1,6 +1,6 @@
 # 30 — Synthesis paper: a type III electron beam from the corona to 0.4 AU, geometrically validated
 
-Status: 📋 planned (not started) — a synthesis/capstone over four existing slices; the strongest arXiv candidate
+Status: ✅ done (module + figure + paper + GATE-2; real reproduce gives corr 0.989, ratio 2.18, reach 0.49 AU)
 
 ## Context
 
