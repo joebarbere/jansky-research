@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — nineteen slices, honestly tallied
+## Status — nineteen slices + a synthesis, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -33,6 +33,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | Interplanetary type III (STEREO/WAVES HFR) | `jansky_research.swaves` | ✅ beam tracked to **0.38 AU**; honest R²-inflation (few independent time samples) caveat |
 | 3D type III triangulation (STEREO-A+B DF) | `jansky_research.triangulate` | ✅ geometric vs plasma-frequency distance correlate at **r=0.989**; source localized in 3D |
 | Euclidean source counts (NVSS) | `jansky_research.sourcecounts` | ✅ recovers the canonical **Hopkins 2003** 1.4 GHz counts; sub-Euclidean slope −1.91 |
+| Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
 candidates and the SETI "Voyager detection"), one mixed result (VLASS catalogue variability is
@@ -42,13 +43,14 @@ catalog, the SETI "detection" being an instrument artifact, and (every slice) at
 physics/citation/statistics fix before write-up. The negatives are arguably the most instructive part.
 Each slice's honest assessment is in `survey/*-findings.md`.
 
-**Slice-building is currently paused** at nineteen slices: the reliable no-auth data sources (VizieR,
-SPDF, e-Callisto, Astrogeo, CIRADA/VLASS) and the clean recover-a-known method space are largely used
-up. Two *larger* efforts are scoped and grounded in `plans/28-breakthrough-listen-singlepulse.md`
-(single-pulse / pulsar dedispersion on Breakthrough Listen open data) and
-`plans/29-lotss-deep-144mhz-counts.md` (deep 144 MHz source counts from LoTSS DR2) for when the project
-takes the next domain on. The `stokesv` (RACS Stokes-V) slice has its tooling + a credential-free
-recover-a-known, but its forced-photometry leg is blocked on CASDA.
+New *data* slices are paused — the reliable no-auth sources (VizieR, SPDF, e-Callisto, Astrogeo,
+CIRADA/VLASS) and the clean recover-a-known method space are largely used up. Work has shifted to
+**synthesis and right-sized infrastructure**: the type III synthesis above (`plans/30`) is built; the
+automation story is being corrected so Airflow serves a *streaming* archive (e-Callisto daily ingest,
+`plans/31`) and a server-less file-DAG runner (Snakemake, `plans/32`) drives the static slices. Two
+larger new-domain efforts remain scoped in `plans/28-breakthrough-listen-singlepulse.md` and
+`plans/29-lotss-deep-144mhz-counts.md`. The `stokesv` (RACS Stokes-V) slice has its tooling + a
+credential-free recover-a-known, but its forced-photometry leg is blocked on CASDA.
 
 ### Papers
 
@@ -79,6 +81,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Tracking a type III beam to 0.4 AU with STEREO/WAVES | `swaves/` | method + recover-a-known (genuinely interplanetary) |
 | 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check |
 | Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
+| A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -148,7 +151,7 @@ jansky-research/
     data.py              # dataset registry + offline synthetic fallback
     frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
-    windwaves.py swaves.py triangulate.py sourcecounts.py   # (+ stokesv.py, CASDA-blocked)
+    windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py   # (+ stokesv.py, CASDA-blocked)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Airflow)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,

@@ -1,0 +1,141 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A type III beam from the corona to 0.4 AU, geometrically validated}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Solar Type III Electron Beam from the Corona to 0.4 AU Across Four Public Instruments,
+with an Independent Geometric Check on the Density-Model Distance}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A type III radio burst radiates near the local plasma frequency, so its high-to-low frequency drift,
+inverted through a coronal/heliospheric density model, traces an electron beam outward through the
+solar atmosphere. We unify four small, separately-validated tools into one reproducible
+\emph{drift-to-distance} framework that tracks the beam across more than three decades in frequency:
+ground-based e-Callisto \citep{benz2009} in the corona (Newkirk model; \citealt{newkirk1961}),
+Wind/WAVES \citep{bougeret1995} to the Alfv\'en-surface region, and STEREO/WAVES \citep{bougeret2008}
+to $\synIpRhiAU$~AU (both via the Leblanc heliospheric model; \citealt{leblanc1998}). The whole ladder
+rests on an \emph{assumed} density model --- and we check it independently: STEREO/WAVES and a
+STEREO-A$+$B \emph{direction-finding} triangulation \citep{cecconi2008,krupar2012} analyse the
+\emph{same} 2013-05-15 event, so the plasma-frequency distance can be compared to a purely
+\emph{geometric} one. The two track each other in shape (Pearson $r=\synGeomCorr$ over the triangulated
+channels, with a factor $\synGeomRatio$ offset in absolute scale), validating by geometry the
+\emph{shape} of the density-model distances the framework depends on. The unified ladder reaches
+$\synOverallRhiAU$~AU. This is a synthesis and reproducibility contribution --- each leg is a
+recover-a-known and the same-event, open-pipeline cross-check is the new element --- not a discovery.
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
+--- Direction finding (1947) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Type III bursts are the radio signature of suprathermal electron beams streaming out along open
+magnetic field. Because the emission is near the local plasma frequency $f_p\propto\sqrt{n_e}$, the
+observed drift from high to low frequency maps --- through a density model $n_e(r)$ --- to the beam's
+heliocentric distance and speed. The method is classic, but its reach is set by the receiver: a
+ground spectrometer stops at the ionospheric cutoff (a few R$_\odot$), Wind/WAVES reaches the
+Alfv\'en surface, and only a low-frequency space receiver like STEREO/WAVES follows the beam into
+genuinely interplanetary space, where multi-spacecraft observations of type III bursts have a long
+history \citep{reiner2009}. We have built and validated four such tools separately; here we unify them
+into one framework and confront its central assumption.
+
+That assumption is the density model. Every drift-to-distance result is only as good as the assumed
+$n_e(r)$ --- and it is almost never checked independently. Multi-spacecraft \emph{direction-finding}
+offers exactly that check: two spacecraft each measure the arrival direction of the emission, and the
+intersection of the two lines of sight fixes the source in 3D \emph{geometrically}, with no density
+model. When the same burst is seen both ways, the plasma-frequency distance and the geometric distance
+are independent estimates of the same quantity, and their agreement (or not) tests the model. We
+exploit a case where this is possible.
+
+\section{The unified framework}
+\code{type3synthesis} is a thin orchestration module (no new physics) over four tested slices, each a
+recover-a-known on public data:
+\begin{itemize}
+\item \textbf{Corona} --- e-Callisto dynamic spectra, inverted with the Newkirk model, reach
+$\synCoronaRlo$--$\synCoronaRhi$~R$_\odot$ (mean radial speed $\synCoronaSpeed\,c$).
+\item \textbf{Inner heliosphere} --- Wind/WAVES (RAD2), Leblanc model, to $\synHelioRhi$~R$_\odot$
+(the Alfv\'en-surface region; $\synHelioSpeed\,c$).
+\item \textbf{Interplanetary} --- STEREO/WAVES HFR, Leblanc model, to $\synIpRhi$~R$_\odot$
+$=\synIpRhiAU$~AU ($\synIpSpeed\,c$, a mean over a decelerating track).
+\item \textbf{Geometric} --- a STEREO-A$+$B direction-finding triangulation of the same interplanetary
+event, reaching $\synGeomRhi$~R$_\odot$ with \emph{no} density model.
+\end{itemize}
+The same module emits the unified distance ladder (Figure~\ref{fig:synth}, left): heliocentric distance
+versus emission frequency for all four, over the Newkirk and Leblanc model curves, spanning
+$\synFhi$~MHz in the corona down to $\synFlo$~MHz at $\synOverallRhiAU$~AU.
+
+\section{The geometric cross-check}
+The interplanetary leg and the triangulation are the \emph{same} burst (2013-05-15), so the
+STEREO/WAVES plasma-frequency distance $r_{\rm plasma}(f)$ and the STEREO-A$+$B geometric distance
+$r_{\rm geom}$ are two independent measurements (Figure~\ref{fig:synth}, right). Across the triangulated
+channels they correlate at $r=\synGeomCorr$. Both estimators decrease with frequency by construction,
+so a nonzero correlation is expected; what the measured value adds is agreement in the log--log
+\emph{curvature} of the density-model track across two decades of distance, not merely a shared monotone
+trend. The absolute geometric scale runs a factor $\synGeomRatio$ high, which we do not over-interpret:
+direction-finding on a degrees-wide source biases the closest-point of two noisy rays outward, an
+active-region density enhancement pushes the same way, and radio-wave scattering shifts the apparent
+interplanetary source outward of the plasma level \citep{krupar2015} --- all in the same direction. The
+robust statement is therefore that the two \emph{independent} estimators track each other in shape, not
+that they agree in absolute calibration. This is the element this reproducible framework adds: a
+same-event, model-free check on the distances the method assumes, from public data and open code.
+
+\begin{figure*}
+\plotone{figures/type3synthesis.pdf}
+\caption{\emph{Left:} the unified type III distance ladder --- heliocentric distance versus emission
+frequency for e-Callisto (corona), Wind/WAVES, and STEREO/WAVES, with the independent STEREO-A$+$B
+geometric points, over the Newkirk and Leblanc density-model curves; the dotted line marks 1~AU.
+\emph{Right:} the 2013-05-15 cross-check --- the STEREO/WAVES plasma-frequency distance against the
+STEREO-A$+$B geometric (triangulated) distance for the same burst, with the 1:1 line.}
+\label{fig:synth}
+\end{figure*}
+
+\section{Discussion and reproducibility}
+The contribution is a synthesis: one reproducible drift-to-distance framework that tracks a type III
+beam from the corona to $\synOverallRhiAU$~AU across four public instruments, and --- the new part ---
+an \emph{independent geometric validation} of the density-model distance the framework rests on. The
+honest limitations: (i) the corona, inner-heliosphere, and interplanetary legs are \emph{different
+events}, so this is one method validated across four regimes, not one beam tracked end to end --- a
+single event caught simultaneously by all three receivers would be the stronger demonstration and is
+the natural next step; (ii) the geometric cross-check is therefore event-specific (2013-05-15), and its
+absolute scale is direction-finding--biased, so it validates the distance \emph{shape}, not the
+calibration; (iii) the per-leg systematics (harmonic vs fundamental emission, peak-time vs onset speed
+bias, and the coarse-cadence fit statistics) are inherited from the component slices and bound each leg
+there; and (iv) the Newkirk and Leblanc models are not designed to join continuously --- at the
+$\sim$15--20~MHz handoff they differ in heliocentric radius by $\sim$50\%, reflecting their different
+observational bases (white-light active corona vs Wind type III drifts) --- so the ladder is two
+stitched regimes, not one calibrated model. None of these undermine the synthesis --- a type III beam is
+tracked corona-to-interplanetary and its model distance is geometrically checked --- but they bound what
+four single events can claim. Every number above is written by the pipeline into the macros this paper
+\code{\textbackslash input}s, and \code{python -m jansky\_research.type3synthesis} regenerates them;
+\code{make reproduce} runs the four recover-a-known events on the public archives.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the four component tools and the \code{type3synthesis} orchestration,
+the analysis, and the drafting of this manuscript. The author directed the work, independently reviewed
+and verified all code, results, figures, and citations, and takes full responsibility for the content.
+An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses data from e-Callisto, the NASA Space Physics Data Facility (Wind/WAVES and STEREO/WAVES,
+including the STEREO/Waves L3 goniopolarimetric direction-finding product), the Newkirk and Leblanc
+density models, and the \code{jansky} project. The author acknowledges the collaborative contribution
+of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

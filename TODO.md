@@ -19,7 +19,7 @@ the one permanent, low-friction win). Do them top to bottom:
 | 1 | **Zenodo** DOI for the repo | A permanent citable DOI. **JOSS requires it.** Quick: flip a switch + cut a release | step 2 |
 | 2 | **JOSS** software paper | Reviews the *software* (not novelty) — the natural home for the toolkit. Needs the step-1 DOI | — |
 | 3 | **RNAAS** note (frbstats) | A short citable note; editorial screening only (no peer review). Independent of 1–2 | — |
-| 4 | **arXiv** (frbstats, vlass, peaked, triangulate) | Preprints for the papers with a fresh angle. Needs endorsement (lead time) | — |
+| 4 | **arXiv** (type3synthesis, vlass, peaked, triangulate) | Preprints for the papers with a fresh angle; `type3synthesis` leads. Needs endorsement (lead time) | — |
 
 **Plain-English walkthrough:**
 
@@ -113,16 +113,21 @@ A short, citable Research Note of the AAS. Editorial screening, not peer review.
 
 ---
 
-## 4. arXiv — the frbstats, vlass, peaked, and triangulate papers (optional)
+## 4. arXiv — the type3synthesis, vlass, peaked, and triangulate papers (optional)
 
-Reserve arXiv for the **four** papers with a genuinely fresh angle: `frbstats` (the Airflow-on-Podman
-reproducibility pattern), **`vlass`** (a 703 deg² multi-epoch variability census with a real
-recovery — FK Comae Berenices — plus the Quick-Look-systematics methodology), **`peaked`** (a
-three-frequency curvature selector with the TGSS-upper-limit + resolution-floor method and two
-recover-a-known validations: high purity vs MHz-peaked, 100% recovery of a known HFP sample), and
-**`triangulate`** (the first amateur 3D triangulation of a type III radio source from STEREO-A+B
-direction-finding, with an *independent* geometric-vs-plasma-frequency distance cross-check at
-r=0.989). Do **not** post the pure reproductions/negatives as a preprint batch.
+Reserve arXiv for the papers with a genuinely fresh angle. **`type3synthesis` is the lead candidate**: a
+solar type III electron beam tracked across four public instruments from the corona to 0.4 AU in one
+reproducible drift-to-distance framework, with the genuinely new element being an *independent geometric*
+check on the density-model distance (STEREO/WAVES and a STEREO-A+B triangulation analyse the **same
+2013-05-15 event**; the plasma-frequency and geometric distances track in shape at r=0.989). The others:
+**`vlass`** (a 703 deg² multi-epoch variability census with a real recovery — FK Comae Berenices — plus
+the Quick-Look-systematics methodology), **`peaked`** (a three-frequency curvature selector with the
+TGSS-upper-limit + resolution-floor method and two recover-a-known validations), and **`triangulate`**
+(the 3D triangulation slice the synthesis builds on, standalone). **`frbstats` is removed** from the
+shortlist — its only fresh claim was the Airflow pattern, which is being re-homed on a streaming archive
+(`plans/31`); frbstats stays a JOSS/RNAAS tool. Do **not** post the pure reproductions/negatives as a
+preprint batch. **Before any upload, run `make reproduce`** so the paper macros hold real-data numbers,
+not the offline-synthetic CI values.
 
 - [ ] Register + verify email at <https://arxiv.org/user/register>; add affiliation,
       link ORCID.
@@ -152,6 +157,7 @@ r=0.989). Do **not** post the pure reproductions/negatives as a preprint batch.
 | `vlass` | `astro-ph.HE` | `astro-ph.SR`, `astro-ph.IM` |
 | `peaked` | `astro-ph.GA` | `astro-ph.HE`, `astro-ph.IM` |
 | `triangulate` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
+| `type3synthesis` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
 
 ---
 
@@ -161,8 +167,9 @@ r=0.989). Do **not** post the pure reproductions/negatives as a preprint batch.
 |----------|-------|--------|
 | Toolkit (the repo) | Zenodo DOI → JOSS | not submitted |
 | `papers/frbstats/rnaas.tex` | RNAAS | not submitted |
-| `papers/frbstats/main.tex` | arXiv (optional) | not submitted |
+| `papers/type3synthesis/main.tex` | arXiv (optional, lead) | not submitted |
 | `papers/vlass/main.tex` | arXiv (optional) | not submitted |
 | `papers/peaked/main.tex` | arXiv (optional) | not submitted |
 | `papers/triangulate/main.tex` | arXiv (optional) | not submitted |
+| `papers/frbstats/main.tex` | repo + Zenodo only (Airflow re-homed; see plans/31) | — keep in repo |
 | the other 14 `papers/<slice>/` (reproductions/negatives) | repo + Zenodo only | — keep in repo |
