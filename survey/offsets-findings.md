@@ -4,8 +4,9 @@
 positions of AGN are systematically displaced: the *normalised* offset
 $X=\sqrt{(\Delta\alpha^*/\sigma_\alpha)^2+(\Delta\delta/\sigma_\delta)^2}$ has a heavy tail far beyond
 the Rayleigh expectation for pure Gaussian astrometric noise (Mignard et al. 2016; Petrov & Kovalev
-2017; Kovalev et al. 2017; Lindegren et al. 2018; Plavin et al. 2019). It is catalogue-only and
-maximal-reuse (cross-match + the project conventions), with no blocked archives.
+2017; Kovalev et al. 2017; Lindegren et al. 2018; Plavin et al. 2019) — and reproduces the deeper
+result that the offset *direction* aligns with the parsec-scale jet (adding MOJAVE jet PAs). It is
+catalogue-only and maximal-reuse (cross-match + the project conventions), with no blocked archives.
 
 ## Data path (and the traps)
 
@@ -32,6 +33,26 @@ The $X$ distribution tracks the Rayleigh curve at small $X$ and departs sharply 
 the structural-offset signature of Mignard et al. (2016) and Lindegren et al. (2018): a large AGN
 population whose optical photocentre is displaced from the VLBI core by milliarcsecond-scale structure.
 
+## Result: the offset direction aligns with the parsec-scale jet (Kovalev+2017 / Plavin+2019)
+
+The magnitude excess shows the offsets are real; their **direction** shows what they trace. Adding
+**MOJAVE XVIII** (Lister et al. 2021; VizieR `J/ApJ/923/30/mojave18`, "mean innermost jet position
+angle"), positionally matched within 1″ to the ICRF3×Gaia AGN → **414 sources** with both an offset and
+a jet PA. Jet-axis angle = `min(Δ, 180−Δ)` between offset PA and jet PA (0° = along the jet axis;
+random median 45°, random frac<30° = 1/3):
+
+| sample | n | median jet-axis angle | frac within 30° of jet | frac downstream (<45°) | KS p vs uniform |
+|---|---|---|---|---|---|
+| **all matched (primary)** | 414 | **24.3°** | **0.57** (rand 0.33) | **0.50** (rand 0.25) | **3.2×10⁻²²** |
+| X>2 (consistency check) | 252 | 18.9° | 0.66 | 0.57 | 4×10⁻²⁵ |
+| delPA<45° (sensitivity) | 318 | 22.3° | 0.60 | — | 1.1×10⁻²² |
+
+The offsets point **along the jet axis, predominantly downstream** — exactly Kovalev, Petrov & Plavin
+(2017) and Plavin, Kovalev & Petrov (2019): the VLBI core sits upstream (opacity/core-shift), the
+optical centroid downstream along the extended optical jet. The alignment **tightens with offset
+significance** (weak offsets are noise with random PA) and **survives the jet-wobble cut** (delPA<45°),
+so it is not a tunable-cut artefact. Three independent datasets (ICRF3 / Gaia / MOJAVE) — no circularity.
+
 ## Honest assessment & caveats
 
 - **Reproduction, not discovery.** This recovers a known, much-studied result with a small tested
@@ -42,7 +63,14 @@ population whose optical photocentre is displaced from the VLBI core by milliarc
   26.7% is an **upper bound** on the structurally-offset fraction (the literature's structure-only
   estimates are nearer $\sim$9%; Petrov & Kovalev 2017). The **excess over Rayleigh is robust**
   regardless — no error inflation turns a 24× excess into none.
-- **Catalogue-only scope.** The established physical interpretation — offsets aligning with the
-  parsec-scale VLBI jet (Kovalev et al. 2017) and the disk–jet decomposition (Plavin et al. 2019) —
-  needs VLBI jet position angles beyond this match; the module records the offset PA for that future
-  step. A magnitude-resolved error-inflation model would tighten the significant fraction.
+- **MOJAVE selection bounds the alignment claim.** MOJAVE is flux-limited (>1.5 Jy at 15 GHz) — strongly
+  beamed blazars with well-defined jets near the line of sight, the population where the alignment is
+  strongest. The result applies to that population, not AGN in general (the source papers are likewise
+  scoped). The jet PA is 15 GHz; the radio position is the ICRF3 S/X core — standard to combine, and the
+  inner jet is essentially straight on parsec scales.
+- **Two reproductions, framed as such.** Both the excess (Mignard/Lindegren) and the jet alignment
+  (Kovalev/Plavin) are recovered, not discovered; the value added is a fully open, end-to-end
+  ICRF3×Gaia×MOJAVE pipeline. The full 414-source sample is the primary test; the X-cut rows are a
+  qualitative "strengthens with significance" check (nested subsets), not independent confirmations.
+- A magnitude-resolved error-inflation model would tighten the significant-offset fraction (a future
+  refinement on the magnitude side).
