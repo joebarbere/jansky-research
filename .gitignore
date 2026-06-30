@@ -39,3 +39,6 @@ papers/*/*.pdf
 
 # OS / editors
 .DS_Store
+
+# Snakemake workflow state
+.snakemake/

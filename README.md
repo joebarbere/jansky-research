@@ -48,8 +48,9 @@ CIRADA/VLASS) and the clean recover-a-known method space are largely used up. Wo
 **synthesis and right-sized infrastructure**: the type III synthesis above (`plans/30`) and the
 streaming **e-Callisto Airflow-on-Podman ingest pipeline** (`plans/31`) are built — Airflow now serves a
 *frequently-updated* archive (daily schedule, catchup/backfill, per-station fan-out) instead of a static
-CSV, and a server-less file-DAG runner (Snakemake, `plans/32`) is slated to drive the static slices. Two
-larger new-domain efforts remain scoped in `plans/28-breakthrough-listen-singlepulse.md` and
+CSV, and a server-less file-DAG runner (**Snakemake**, `workflow/Snakefile`, `plans/32`) drives the
+static slices (`make figures`). Two larger new-domain efforts remain scoped in
+`plans/28-breakthrough-listen-singlepulse.md` and
 `plans/29-lotss-deep-144mhz-counts.md`. The `stokesv` (RACS Stokes-V) slice has its tooling + a
 credential-free recover-a-known, but its forced-photometry leg is blocked on CASDA.
 
@@ -162,6 +163,7 @@ jansky-research/
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
                          #   candidate-gaps.md + *-scan.md (backlog), and each slice's *-findings.md
+  workflow/              # Snakefile: the server-less file-DAG that builds the static slices' inputs
   airflow/               # Airflow-on-Podman stack + the streaming e-Callisto ingest DAG
   papers/<slice>/        # one AASTeX paper per slice (main.tex + refs.bib tracked;
                          #   figures/, generated/, arxiv-submission/ are produced by make)

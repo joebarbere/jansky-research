@@ -1,6 +1,6 @@
 # 32 — Right-size the orchestration: Snakemake for the static slices, Airflow only for streaming
 
-Status: 📋 planned (not started) — pairs with #31; removes the "Airflow on a 216 KB CSV" mismatch
+Status: ✅ done (workflow/Snakefile drives all static slices; make figures + paper.yml rewired; byte-identical verified)
 
 ## Context
 

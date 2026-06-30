@@ -1,0 +1,59 @@
+# Right-sized orchestration for the STATIC slices.
+#
+# Airflow is the wrong tool for a one-shot analysis of a single static input (a VizieR catalogue, one
+# CDF, a 216 KB CSV) -- a scheduler + metadata DB to run a four-step chain a shell loop would do. The
+# right tool is a *file-target workflow runner*: declarative input->output rules, a dependency DAG built
+# from the files, parallel execution, dry-run/provenance, and no server. Each slice is one rule that runs
+# its offline pipeline and produces its `generated/macros.tex` (every headline number) plus its figure
+# and `results/` JSON. The streaming e-Callisto *ingest* stays Airflow's job (it is a frequently-updated
+# archive); here we only build the static, offline-synthetic paper inputs -- the same artifacts CI builds.
+#
+# Run:  uv run --extra workflow snakemake -j        # build every slice's paper inputs
+#       uv run --extra workflow snakemake -n        # dry-run: show the DAG without running
+# Make drives this for you:  make figures  /  make pipeline
+
+# paper-dir -> (jansky_research module, extra CLI args). Most modules write to papers/<module>/, except
+# `pipeline` -> papers/frbstats/ and `ecallisto_catalog` -> papers/ecallisto_pipeline/.
+SLICES = {
+    "frbstats": ("pipeline", "--offline"),
+    "frbperiod": ("frbperiod", "--offline"),
+    "driftsearch": ("driftsearch", ""),
+    "spectra": ("spectra", "--offline"),
+    "hi": ("hi", "--offline"),
+    "vlass": ("vlass", "--offline"),
+    "peaked": ("peaked", "--offline"),
+    "stokesv": ("stokesv", "--offline"),
+    "southern": ("southern", "--offline"),
+    "offsets": ("offsets", "--offline"),
+    "pulsarspec": ("pulsarspec", "--offline"),
+    "stacking": ("stacking", "--offline"),
+    "vlbi": ("vlbi", "--offline"),
+    "solarbursts": ("solarbursts", "--offline"),
+    "rmsky": ("rmsky", "--offline"),
+    "ppdot": ("ppdot", "--offline"),
+    "windwaves": ("windwaves", "--offline"),
+    "swaves": ("swaves", "--offline"),
+    "triangulate": ("triangulate", "--offline"),
+    "sourcecounts": ("sourcecounts", "--offline"),
+    "type3synthesis": ("type3synthesis", "--offline"),
+    "ecallisto_pipeline": ("ecallisto_catalog", "--offline"),
+}
+
+
+rule all:
+    input:
+        expand("papers/{slice}/generated/macros.tex", slice=SLICES),
+
+
+for _slice, (_module, _args) in SLICES.items():
+
+    rule:
+        name:
+            f"inputs_{_slice}"
+        output:
+            f"papers/{_slice}/generated/macros.tex",
+        params:
+            module=_module,
+            args=_args,
+        shell:
+            "python -m jansky_research.{params.module} --out . {params.args}"

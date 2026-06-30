@@ -28,9 +28,11 @@ number in each paper is `\input` from its `macros.tex`, so the PDFs always match
 ```bash
 uv sync                                   # env + jansky
 make test                                 # offline tests, on synthetic fixtures
-make figures                              # run every slice -> results/ + papers/<slice>/ artifacts
-#   (the `figures` target uses the synthetic fixtures; run a slice directly without --offline for
-#    real public data, e.g. `uv run python -m jansky_research.hi`)
+make figures                              # build every static slice's artifacts via the Snakemake DAG
+#   (a server-less file-target DAG, workflow/Snakefile; uses the synthetic fixtures and rebuilds only
+#    what changed. Needs the `workflow` extra: `uv sync --extra workflow`, Python >=3.11. Run a slice
+#    directly without --offline for real public data, e.g. `uv run python -m jansky_research.hi`)
+make figures-dry                          # show the static-slice DAG without running it
 make paper                                # tectonic -> every papers/<slice>/main.pdf
 make arxiv                                # assemble + validate an arXiv package per paper
 ```
@@ -48,15 +50,25 @@ uv run python -m jansky_research.vlass --ra 180 --dec 30 --radius 1.0 --epochs 1
 It applies the per-epoch Quick-Look flux-scale corrections (VLASS Memos 13/22) before computing
 variability, so the epoch-to-epoch scale offset is not mistaken for variability.
 
-## Via the Airflow automation layer
+## Right-sized orchestration: Snakemake for static slices, Airflow for streaming
 
-The same pipeline, orchestrated. Identical artifacts to `make pipeline`.
+The orchestration is matched to the data. The **static** slices (one catalogue / CDF / CSV each, run
+once) are a file-target dependency graph, driven by **Snakemake** (`workflow/Snakefile`, server-less,
+parallel, rebuilds only what changed) — this is what `make figures` runs. A **frequently-updated**
+archive — e-Callisto, new spectra every day across 150+ stations — is an ingestion problem, and that is
+**Airflow**'s job: a daily-scheduled, backfilling, per-station fan-out DAG.
 
 ```bash
-cp airflow/.env.example airflow/.env      # AIRFLOW_UID=0 (rootless), JR_OFFLINE
+# static slices (Snakemake)
+uv sync --extra workflow                  # adds snakemake (Python >=3.11)
+make figures                              # = snakemake -j over workflow/Snakefile
+
+# streaming ingest (Airflow on rootless Podman)
+cp airflow/.env.example airflow/.env      # AIRFLOW_UID=0 (rootless)
 export COMPOSE="uvx podman-compose"
 make airflow-up                           # build + start postgres/scheduler/webserver
-make dag-test                             # run research_pipeline once -> success
+make dag-test DATE=2011-09-14             # backfill one day of ecallisto_ingest -> success
+make ecallisto-day DATE=20110914          # the same day's scan WITHOUT Airflow (the shared worker)
 make airflow-down
 ```
 

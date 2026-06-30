@@ -3,7 +3,7 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
+.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline
@@ -40,29 +40,11 @@ fetch-data: ## List research datasets (use ARGS="--fetch NAME" to download)
 pipeline: ## Run the FRB burst-statistics analysis WITHOUT Airflow (the shared code path)
 	uv run python -m jansky_research.pipeline $(ARGS)
 
-figures: ## Regenerate every slice's figures + macros into papers/<slice>/ (offline synthetic; add ARGS= for real data per slice)
-	uv run python -m jansky_research.pipeline --out . --offline
-	uv run python -m jansky_research.frbperiod --out . --offline
-	uv run python -m jansky_research.driftsearch --out .
-	uv run python -m jansky_research.spectra --out . --offline
-	uv run python -m jansky_research.hi --out . --offline
-	uv run python -m jansky_research.vlass --out . --offline
-	uv run python -m jansky_research.peaked --out . --offline
-	uv run python -m jansky_research.stokesv --out . --offline
-	uv run python -m jansky_research.southern --out . --offline
-	uv run python -m jansky_research.offsets --out . --offline
-	uv run python -m jansky_research.pulsarspec --out . --offline
-	uv run python -m jansky_research.stacking --out . --offline
-	uv run python -m jansky_research.vlbi --out . --offline
-	uv run python -m jansky_research.solarbursts --out . --offline
-	uv run python -m jansky_research.rmsky --out . --offline
-	uv run python -m jansky_research.ppdot --out . --offline
-	uv run python -m jansky_research.windwaves --out . --offline
-	uv run python -m jansky_research.swaves --out . --offline
-	uv run python -m jansky_research.triangulate --out . --offline
-	uv run python -m jansky_research.sourcecounts --out . --offline
-	uv run python -m jansky_research.type3synthesis --out . --offline
-	uv run python -m jansky_research.ecallisto_catalog --out . --offline
+figures: ## Regenerate every static slice's figures + macros via the Snakemake DAG (offline synthetic)
+	uv run --extra workflow snakemake -s workflow/Snakefile -j$(or $(J),4)
+
+figures-dry: ## Show the static-slice DAG without running it (snakemake dry-run)
+	uv run --extra workflow snakemake -s workflow/Snakefile -n
 
 airflow-up: ## Stand up the local Airflow stack (podman compose)
 	$(COMPOSE) -f airflow/compose.yaml up -d
@@ -121,5 +103,5 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts
-	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/ site/
+	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/ .snakemake/ site/
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
