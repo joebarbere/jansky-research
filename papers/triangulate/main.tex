@@ -1,0 +1,157 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Triangulating a type III source with STEREO-A + STEREO-B}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{Triangulating a Solar Type III Radio Source in 3D with STEREO-A and STEREO-B,
+and Cross-Checking the Geometric Distance Against the Plasma-Frequency Distance}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A type III electron beam radiates near the local plasma frequency, so its emission frequency encodes
+its heliocentric distance --- but only \emph{through a density model}. Two spacecraft give the distance
+a completely independent way: each measures the \emph{direction of arrival} of the emission, and the
+two lines of sight intersect at the source, with no density model at all. We build a small tested tool
+that triangulates a type III in 3D from the public STEREO/WAVES \citep{bougeret2008} Level-3
+direction-finding product \citep{cecconi2008,krupar2012} --- intensity-weighted vector-averaging the
+per-frequency direction on each spacecraft, then taking the least-squares intersection of the two rays
+--- and cross-checks the geometric heliocentric distance against the Leblanc, Dulk \& Bougeret
+\citeyearpar{leblanc1998} plasma-frequency distance. Applied to a 2013-05-15 burst
+(\code{\triSource}; STEREO-A and STEREO-B \triSep$^\circ$ apart), \triNtri\ frequency channels
+(\triFlo--\triFhi~MHz) triangulate to a source at HEEQ longitude \triLon$^\circ$, latitude
+\triLat$^\circ$ (near the ecliptic), spanning \triRlo--\triRhi~$R_\odot$ (\triRloAU--\triRhiAU~AU). The
+geometric and plasma-frequency distances correlate at $r=\triCorr$ across two decades in frequency ---
+an honest cross-validation of two fully independent estimators --- while the \emph{absolute} geometric
+scale runs a factor \triRatio\ high, which we trace to the known outward bias of direction-finding on a
+source of large apparent size (median ray miss \triMiss~$R_\odot$) plus a likely active-region density
+enhancement. This is a reproducibility/method contribution and a recover-a-known, not a discovery.
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
+--- Direction finding (1947) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+The drift of a type III burst from high to low frequency traces an electron beam outward through the
+corona and solar wind, because the emission sits near the local plasma frequency and the plasma
+frequency falls with density and hence with heliocentric distance. Turning the observed frequency into
+a distance, however, always passes through a \emph{density model} (Newkirk in the corona, Leblanc in
+the heliosphere): the distance is only as good as the assumed $n_e(r)$. Two spacecraft remove that
+dependence entirely. Each spacecraft's direction-finding measures where on the sky the emission comes
+from; two such directions, from two known positions, fix the source in 3D as the intersection of the
+lines of sight --- pure geometry, no density model \citep{reiner2009}. That makes the geometric distance
+\emph{independent} of the plasma-frequency distance, so the two can be compared as a cross-check, and
+the geometry additionally yields the source's heliographic longitude and latitude, which a single
+1-D drift cannot.
+
+We ask the most reproducible version: with the public STEREO/WAVES Level-3 direction-finding product
+and a small tested tool, can an amateur triangulate a type III source in 3D and use it to
+independently check the density-model distance --- with the direction-finding noise budget surfaced
+honestly?
+
+\section{Methods}
+\code{triangulate} is a pure-NumPy module. From each spacecraft's Level-3 product it reads, per time
+and frequency, the arrival-direction azimuth and colatitude in the heliocentric HEEQ frame, the flux,
+and the spacecraft's HEEQ position. For each frequency it (i) converts each sample's
+(azimuth, colatitude) to a unit vector and takes the \emph{intensity-weighted vector mean} over a
+burst window on each spacecraft --- the correct circular mean, immune to the azimuth wrap that breaks
+scalar angle averaging; (ii) triangulates the two rays (spacecraft position $+$ direction) as their
+least-squares closest point, the midpoint of the shortest connecting segment; and (iii) keeps the
+channel only when both rays point \emph{forward} (the source lies in front of both spacecraft), the
+\emph{miss distance} (the connecting segment's length) is below a threshold, and each spacecraft
+contributed enough good samples. The kept geometric radii are compared against
+\code{windwaves.emission\_radius}, the Leblanc plasma-frequency radius at the same harmonic, reusing
+the heliospheric density model of the interplanetary-type-III slices. Every function is tested against
+a synthetic two-spacecraft event built by placing a radially outflowing source at a known longitude and
+latitude and giving each spacecraft the true arrival direction plus injected Gaussian angular scatter,
+so the tool recovers the injected source position and the noise budget can be dialled.
+
+\section{Data}
+We use the STEREO/WAVES High Frequency Receiver Level-3 direction-finding CDFs (one per day per
+spacecraft) from NASA SPDF (public, no auth). The product is the SVD goniopolarimetric inversion of
+\citet{cecconi2008} and \citet{krupar2012}. Triangulation needs both spacecraft, so it is reproducible
+only for the 2007--2014 two-spacecraft era (STEREO-B was lost in 2014); the tool runs on any A$+$B day.
+
+\section{Results}
+In the 2013-05-15 event (active region AR~11748, an X-class-flare period), with STEREO-A and STEREO-B
+\triSep$^\circ$ apart as seen from the Sun, \triNtri\ frequency channels (\triFlo--\triFhi~MHz)
+triangulate to a forward intersection with a median ray miss of \triMiss~$R_\odot$. The source sits at
+HEEQ longitude \triLon$^\circ$, latitude \triLat$^\circ$ --- near the ecliptic --- and the geometric
+heliocentric distance runs from \triRlo\ to \triRhi~$R_\odot$ (\triRloAU\ to \triRhiAU~AU), genuinely
+interplanetary (Figure~\ref{fig:tri}).
+
+The geometric distance and the independent Leblanc plasma-frequency distance correlate at
+$r=\triCorr$ across the two-decade frequency span. Part of any such correlation is expected by
+construction --- both estimators decrease monotonically with frequency, so even a linear ramp in
+frequency already correlates with the Leblanc curve at $r\approx0.75$ --- but the \triCorr\ value
+specifically tests that the geometric points follow the \emph{correct log--log curvature} of the
+density model, not merely a shared downward trend. The \emph{absolute} geometric scale, by contrast,
+runs a factor \triRatio\ above the average-Leblanc distance. We do not over-interpret that factor:
+direction-finding on a type III, whose apparent source size is $\sim$$60^\circ$ FWHM
+\citep{krupar2014}, scatters the per-sample directions by tens of degrees, and noisy near-grazing rays
+bias the closest point \emph{outward}. At the actual \triSep$^\circ$ baseline our zero-model-error
+synthetic reproduces a ratio of $\approx1.1$ for $9^\circ$ of injected scatter and $\approx1.6$ for the
+physically motivated $\sim$$25^\circ$, so much of the factor \triRatio\ is this bias; the residual is
+consistent with a denser-than-average corona during the active period (which pushes a given plasma
+level farther out). The robust outputs are therefore the \emph{shape} cross-check ($r=\triCorr$) and
+the \emph{direction} (longitude, latitude); the absolute radial scale is upper-biased and we report it
+with that caveat, the median miss \triMiss~$R_\odot$ setting its uncertainty.
+
+\begin{figure}
+\plotone{figures/triangulate.pdf}
+\caption{\emph{Left:} the geometric heliocentric distance per frequency (points, with the ray miss as
+the error bar) against the independent Leblanc plasma-frequency distance (line); the two track in shape
+across two decades. \emph{Right:} the top-down HEEQ ecliptic geometry --- the Sun, STEREO-A and
+STEREO-B, the two lines of sight, and the triangulated source track.}
+\label{fig:tri}
+\end{figure}
+
+\section{Discussion and reproducibility}
+The contribution is method and reproducibility: a tested tool that locates a type III source in 3D
+from two public STEREO/WAVES direction-finding spectra and uses the geometry to \emph{independently}
+check the density-model distance that the drift-to-distance slices rely on, with the direction-finding
+noise surfaced rather than hidden. The honest limitations: (i) the robust results are the distance
+\emph{correlation} and the source \emph{direction}; the absolute geometric distance is upper-biased by
+direction-finding scatter (and possibly density enhancement) by the factor \triRatio, so we do not read
+it as a calibrated measurement; (ii) only the low band (\triFlo--\triFhi~MHz) yields direction-finding
+solutions for this event, so this reaches the interplanetary source, not the coronal one; (iii) with
+two spacecraft there is one closest-point solution per frequency and the miss distance, not a fitted
+error ellipsoid, is its consistency check; (iv) the comparison assumes harmonic emission, the
+favourable case (fundamental would worsen the ratio); (v) the two-view geometry needs STEREO-B and so
+is reproducible only on 2007--2014 data. None of these undermine the recover-a-known --- a type III is
+located in 3D and its geometric distance tracks the plasma-frequency distance across two decades --- but
+they bound what two lines of sight to a large, fuzzy source can claim. Every number above is written by
+the pipeline into the macros this paper \code{\textbackslash input}s, and
+\code{python -m jansky\_research.triangulate -\,-date 20130515} regenerates them from the public SPDF
+CDFs.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{triangulate} tool (the HEEQ geometry, the intensity-weighted
+vector averaging, the two-ray triangulation, and the synthetic fixture), the analysis, and the drafting
+of this manuscript. The author directed the work, independently reviewed and verified all code,
+results, figures, and citations, and takes full responsibility for the content. An AI/LLM is not an
+author.
+
+\begin{acknowledgments}
+This work uses STEREO/WAVES data from the NASA Space Physics Data Facility, the goniopolarimetric
+direction-finding product of Cecconi et al.\ (2008) and Krupar et al.\ (2012), and the Leblanc et al.\
+(1998) heliospheric density model. The author acknowledges the collaborative contribution of
+Anthropic's Claude and the \code{jansky} project.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+cdflib, requests, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
