@@ -135,6 +135,20 @@ DATASETS: dict[str, Dataset] = {
         size_hint="~1 MB per day per receiver",
         category="large",
     ),
+    "stereo-l3-df": Dataset(
+        name="stereo-l3-df",
+        # STEREO/WAVES Level-3 HFR direction-finding CDFs on SPDF, one file per day per spacecraft;
+        # the triangulation slice fetches A and B by date and parses with cdflib.
+        url="https://spdf.gsfc.nasa.gov/pub/data/stereo/ahead/l3/waves/hfr-direction-finding",
+        filename="sta_l3_wav_hfr.cdf",
+        description="STEREO/WAVES Level-3 HFR direction-finding (Krupar et al. 2012; goniopolarimetry) "
+        "— per-sample wave-vector azimuth/colatitude in HEEQ, flux (SFU), and spacecraft position, "
+        "public over SPDF (no auth). Two spacecraft (A ahead, B behind) give two lines of sight to a "
+        "type III source; drives the 3D triangulation slice (jansky_research.triangulate; needs the "
+        "windwaves extra, cdflib).",
+        size_hint="~30 MB per day per spacecraft",
+        category="large",
+    ),
     "atnf-psrcat": Dataset(
         name="atnf-psrcat",
         # The ATNF Pulsar Catalogue is on VizieR (B/psr); the pulsar slices query it directly.
