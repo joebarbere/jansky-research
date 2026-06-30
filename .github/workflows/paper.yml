@@ -21,31 +21,13 @@ jobs:
           path: jansky
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Generate every slice's figures + macros from the pipeline (offline)
+      - name: Generate every slice's figures + macros via the static-slice DAG (Snakemake, offline)
         working-directory: jansky-research
+        env:
+          UV_PYTHON: "3.12" # the `workflow` extra (Snakemake) needs Python >=3.11
         run: |
-          uv sync
-          uv run python -m jansky_research.pipeline --out . --offline
-          uv run python -m jansky_research.frbperiod --out . --offline
-          uv run python -m jansky_research.driftsearch --out .
-          uv run python -m jansky_research.spectra --out . --offline
-          uv run python -m jansky_research.hi --out . --offline
-          uv run python -m jansky_research.vlass --out . --offline
-          uv run python -m jansky_research.peaked --out . --offline
-          uv run python -m jansky_research.southern --out . --offline
-          uv run python -m jansky_research.offsets --out . --offline
-          uv run python -m jansky_research.pulsarspec --out . --offline
-          uv run python -m jansky_research.stacking --out . --offline
-          uv run python -m jansky_research.vlbi --out . --offline
-          uv run python -m jansky_research.solarbursts --out . --offline
-          uv run python -m jansky_research.rmsky --out . --offline
-          uv run python -m jansky_research.ppdot --out . --offline
-          uv run python -m jansky_research.windwaves --out . --offline
-          uv run python -m jansky_research.swaves --out . --offline
-          uv run python -m jansky_research.triangulate --out . --offline
-          uv run python -m jansky_research.sourcecounts --out . --offline
-          uv run python -m jansky_research.type3synthesis --out . --offline
-          uv run python -m jansky_research.ecallisto_catalog --out . --offline
+          uv sync --extra workflow
+          uv run --extra workflow snakemake -s workflow/Snakefile -j4
       - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3
       - name: Compile every paper (main + any extra, e.g. the RNAAS note)
