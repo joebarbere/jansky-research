@@ -173,12 +173,23 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
     import json
     from pathlib import Path
 
+    example: dict | None = (
+        None  # a representative detected-burst spectrum, for the illustration panel
+    )
     if offline or date is None:
-        rows = scan_day_specs(synthetic_day(), **kw)
+        specs = synthetic_day()
+        rows = scan_day_specs(specs, **kw)
         source = "synthetic-day"
+        by_station = dict(specs)
+        example = next((by_station[r["station"]] for r in rows if r.get("is_burst")), None)
     else:  # pragma: no cover - network
         rows = ingest_day(date, **kw)
         source = f"e-Callisto {date}"
+        hit = next((r for r in rows if r.get("is_burst")), None)
+        if hit is not None:
+            example = solarbursts.fetch_ecallisto(
+                hit["station"], date, hit["file"].split("_")[2][:4]
+            )
 
     metrics = _metrics(rows, source)
     op = Path(out)
@@ -190,12 +201,12 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
             w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
             w.writerows(rows)
-    _figure(rows, op / "papers" / "ecallisto_pipeline" / "figures")
+    _figure(rows, example, op / "papers" / "ecallisto_pipeline" / "figures")
     _write_macros(metrics, op / "papers" / "ecallisto_pipeline" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(rows: list[dict], out_dir) -> None:
+def _figure(rows: list[dict], example: dict | None, out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -203,11 +214,26 @@ def _figure(rows: list[dict], out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(5.0, 3.6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.0, 3.6))
+
+    # Left: a representative detected burst -- the dynamic spectrum with the ridge the worker fits
+    if example is not None:
+        data, freqs, times = example["data"], example["freqs"], example["times"]
+        clean = solarbursts.background_subtract(data)
+        window = solarbursts.find_burst_window(data, times)
+        rf, rt = solarbursts.detect_burst_ridge(data, freqs, times, window=window)
+        ax1.pcolormesh(times, freqs, clean, cmap="inferno", shading="auto")
+        ax1.plot(rt, rf, ".", color="cyan", ms=2, label="detected ridge")
+        ax1.set(xlabel="time (s)", ylabel="frequency (MHz)", title="Example type III detection")
+        ax1.legend(loc="upper right", fontsize=8)
+    else:
+        ax1.set_axis_off()
+
+    # Right: the day's scan summary -- candidates vs quiet stations
     n_burst = sum(1 for r in rows if r.get("is_burst"))
     n_quiet = len(rows) - n_burst
-    ax.bar(["burst candidate", "quiet"], [n_burst, n_quiet], color=["C3", "0.6"])
-    ax.set(ylabel="stations", title="e-Callisto day scan")
+    ax2.bar(["burst\ncandidate", "quiet"], [n_burst, n_quiet], color=["C3", "0.6"])
+    ax2.set(ylabel="stations", title="Day scan summary")
     fig.tight_layout()
     fig.savefig(out / "ecallisto.pdf")
     plt.close(fig)
