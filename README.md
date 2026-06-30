@@ -5,7 +5,7 @@
 astronomy, this repo *does* original amateur research — surveys the landscape, builds tested
 tooling, analyzes public data, automates it, and writes it up — with honesty as the first rule.
 
-It began as a single vertical slice (survey → gap → tool → Airflow pipeline → reproducible paper)
+It began as a single vertical slice (survey → gap → tool → automated pipeline → reproducible paper)
 and has grown into a **deep-research survey plus a set of self-contained research slices**, each:
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
@@ -89,8 +89,10 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
 (`papers/<slice>/arxiv-submission/`: the LaTeX-source tarball with its `.bbl`, plus a `metadata.yaml`
-capturing every arXiv submission property and a `CHECKLIST.md`). The first slice is also automated by
-an **Apache Airflow pipeline on rootless Podman** (`airflow/`).
+capturing every arXiv submission property and a `CHECKLIST.md`). The orchestration is right-sized: the
+static slices build through a server-less **Snakemake** file-DAG (`workflow/Snakefile`, run by
+`make figures`), while a **streaming Apache Airflow pipeline on rootless Podman** (`airflow/`) ingests
+the frequently-updated e-Callisto archive.
 
 ### Where to publish (and where not to)
 
@@ -139,15 +141,19 @@ uv run python -m jansky_research.hi           # Milky Way HI rotation curve
 uv run python -m jansky_research.vlass --ra 190 --dec 20 --radius 15  # VLASS variability census (needs --extra vlass)
 # (append --offline to run any slice on its synthetic fixture, no network)
 
-# The papers + automation:
-make figures                              # regenerate every slice's figures + macros (offline)
+# The papers + orchestration:
+make figures                              # build every static slice via the Snakemake DAG (offline; needs --extra workflow)
 make paper                                # tectonic -> all papers/<slice>/main.pdf (in a container)
 make arxiv                                # assemble + validate an arXiv package per paper
-make airflow-up COMPOSE="uvx podman-compose" && make dag-test   # run the DAG under Podman
 make reproduce                            # fetch -> figures -> papers -> arXiv packages, end to end
+
+# Streaming ingest (the e-Callisto archive) runs on Airflow + Podman:
+make airflow-up COMPOSE="uvx podman-compose" && make dag-test DATE=2011-09-14
+make ecallisto-day DATE=20110914          # the same day's scan WITHOUT Airflow (the shared worker)
 ```
 
-See `REPRODUCING.md` for the full reproduction, the Airflow-on-Podman notes, and offline mode.
+See `REPRODUCING.md` for the full reproduction, the right-sized-orchestration notes
+(Snakemake static / Airflow streaming), and offline mode.
 
 ## Layout
 
@@ -159,7 +165,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py # e-Callisto day-scan worker (drives the streaming DAG)  (+ stokesv.py, CASDA-blocked)
-    pipeline.py          # the FRB pipeline (shared by Make / notebook / Airflow)
+    pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
                          #   candidate-gaps.md + *-scan.md (backlog), and each slice's *-findings.md

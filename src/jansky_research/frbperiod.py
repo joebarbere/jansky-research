@@ -168,8 +168,10 @@ def search_repeaters(
 def run(out: str = ".", *, offline: bool = False, min_bursts: int = 8) -> dict:
     """Search every catalogue repeater for activity periodicity; write results + a periodogram.
 
-    Writes ``results/period_metrics.json``, ``survey/period_results.csv`` (per source), and a
-    periodogram figure for the most significant detection. Returns the metrics dict.
+    Writes ``results/period_metrics.json`` and a periodogram figure for the most significant
+    detection. The per-source CSV goes to ``survey/period_results.csv`` on a real run (the committed,
+    showcased real-data table) but to ``results/period_results.csv`` (git-ignored) when ``offline`` ---
+    so a synthetic run never clobbers the tracked real results. Returns the metrics dict.
     """
     import csv
     import json
@@ -210,8 +212,11 @@ def run(out: str = ".", *, offline: bool = False, min_bursts: int = 8) -> dict:
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "period_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    (op / "survey").mkdir(parents=True, exist_ok=True)
-    with open(op / "survey" / "period_results.csv", "w", newline="") as fh:
+    # real run -> the committed showcase CSV under survey/; offline -> results/ (git-ignored) so the
+    # synthetic run cannot overwrite the tracked real-data table
+    csv_dir = op / ("results" if offline else "survey")
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    with open(csv_dir / "period_results.csv", "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["repeater", "n_bursts", "searched", "best_period_days", "z2", "fap"])
         for r in sorted(rows, key=lambda r: -r["n"]):

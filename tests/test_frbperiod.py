@@ -64,6 +64,8 @@ def test_run_offline_recovers_periodic_repeater(tmp_path):
     assert det["name"] == "SYN-PER"
     assert abs(det["period_days"] - 16.35) < 0.2
     assert (tmp_path / "results" / "period_metrics.json").exists()
-    assert (tmp_path / "survey" / "period_results.csv").exists()
+    # offline writes the per-source CSV to results/ (git-ignored), never the tracked survey/ showcase
+    assert (tmp_path / "results" / "period_results.csv").exists()
+    assert not (tmp_path / "survey" / "period_results.csv").exists()
     assert (tmp_path / "papers" / "frbperiod" / "figures" / "periodogram.pdf").exists()
     assert (tmp_path / "papers" / "frbperiod" / "generated" / "macros.tex").exists()
