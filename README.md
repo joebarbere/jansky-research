@@ -45,9 +45,10 @@ Each slice's honest assessment is in `survey/*-findings.md`.
 
 New *data* slices are paused — the reliable no-auth sources (VizieR, SPDF, e-Callisto, Astrogeo,
 CIRADA/VLASS) and the clean recover-a-known method space are largely used up. Work has shifted to
-**synthesis and right-sized infrastructure**: the type III synthesis above (`plans/30`) is built; the
-automation story is being corrected so Airflow serves a *streaming* archive (e-Callisto daily ingest,
-`plans/31`) and a server-less file-DAG runner (Snakemake, `plans/32`) drives the static slices. Two
+**synthesis and right-sized infrastructure**: the type III synthesis above (`plans/30`) and the
+streaming **e-Callisto Airflow-on-Podman ingest pipeline** (`plans/31`) are built — Airflow now serves a
+*frequently-updated* archive (daily schedule, catchup/backfill, per-station fan-out) instead of a static
+CSV, and a server-less file-DAG runner (Snakemake, `plans/32`) is slated to drive the static slices. Two
 larger new-domain efforts remain scoped in `plans/28-breakthrough-listen-singlepulse.md` and
 `plans/29-lotss-deep-144mhz-counts.md`. The `stokesv` (RACS Stokes-V) slice has its tooling + a
 credential-free recover-a-known, but its forced-photometry leg is blocked on CASDA.
@@ -62,7 +63,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 
 | Paper | `papers/…` | Framing |
 |-------|-----------|---------|
-| FRB burst statistics, validated on CHIME/FRB Cat 1 | `frbstats/` | validation + Airflow-on-Podman automation |
+| FRB burst statistics, validated on CHIME/FRB Cat 1 | `frbstats/` | validation (tested, reproducible tool) |
 | Recovering FRB 20180916B's 16.35-day period | `frbperiod/` | validation |
 | The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation |
 | A CPU-only SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
@@ -82,6 +83,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check |
 | Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
 | A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance |
+| A streaming e-Callisto burst-ingest pipeline on Airflow + Podman | `ecallisto_pipeline/` | automation pattern (the right tool on a frequently-updated archive) |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -99,13 +101,16 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 - **A short note in the literature:** the frbstats validation is condensed to a
   [Research Note of the AAS](https://journals.aas.org/research-notes/) (`papers/frbstats/rnaas.tex`,
   built by `make paper`).
-- **arXiv:** reserved for the papers with a genuinely fresh angle — `frbstats/` (the
-  Airflow-on-Podman reproducibility pattern), `vlass/` (a 703 deg² census with a real recovery, FK
-  Comae Berenices, plus the QL-systematics methodology), and `peaked/` (a three-frequency curvature
-  selector with two recover-a-known validations and the TGSS-upper-limit + resolution-floor method).
-  The pure reproductions/negatives are **not** posted as a preprint batch — arXiv moderation expects a
-  contribution, and "I reproduced a known result" or "my candidates didn't survive a cross-check"
-  belongs in the repo + Zenodo.
+- **arXiv:** reserved for the papers with a genuinely fresh angle — `type3synthesis/` (the lead: a
+  type III beam tracked corona→0.4 AU across four instruments with an independent geometric check on the
+  density-model distance), `vlass/` (a 703 deg² census with a real recovery, FK Comae Berenices, plus
+  the QL-systematics methodology), `peaked/` (a three-frequency curvature selector with two
+  recover-a-known validations and the TGSS-upper-limit + resolution-floor method), `triangulate/` (the
+  3D triangulation it builds on), and `ecallisto_pipeline/` (the streaming Airflow-on-Podman ingest
+  pattern, astro-ph.IM). `frbstats/` is **not** an arXiv target — its only fresh angle was the Airflow
+  pattern, now re-homed on the streaming archive; it stays a JOSS/RNAAS tool. The pure
+  reproductions/negatives are **not** posted as a preprint batch — arXiv moderation expects a
+  contribution, and "I reproduced a known result" belongs in the repo + Zenodo.
 
 ## How it relates to `jansky`
 
@@ -151,12 +156,13 @@ jansky-research/
     data.py              # dataset registry + offline synthetic fallback
     frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
-    windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py   # (+ stokesv.py, CASDA-blocked)
+    windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
+    ecallisto_catalog.py # e-Callisto day-scan worker (drives the streaming DAG)  (+ stokesv.py, CASDA-blocked)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Airflow)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
                          #   candidate-gaps.md + *-scan.md (backlog), and each slice's *-findings.md
-  airflow/               # Airflow-on-Podman stack + the research DAG
+  airflow/               # Airflow-on-Podman stack + the streaming e-Callisto ingest DAG
   papers/<slice>/        # one AASTeX paper per slice (main.tex + refs.bib tracked;
                          #   figures/, generated/, arxiv-submission/ are produced by make)
                          #   frbstats/ also has rnaas.tex (a Research Note of the AAS)

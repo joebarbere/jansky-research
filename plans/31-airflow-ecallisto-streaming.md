@@ -1,6 +1,6 @@
 # 31 — Repoint Airflow at a frequently-updated archive: an e-Callisto daily burst-ingest pipeline
 
-Status: 📋 planned (not started) — fixes the central weakness of the frbstats automation story
+Status: ✅ done (worker + streaming DAG + paper + frbstats Airflow claim dropped; CI tests the worker, not the stack)
 
 ## Context
 
