@@ -60,17 +60,23 @@ def ecallisto_ingest():
         """Fetch + scan one station's spectrum (one mapped task per station --- the fan-out)."""
         from jansky_research import ecallisto_catalog, solarbursts
 
-        hhmm = item["file"].split("_")[2][:4]
-        spec = solarbursts.fetch_ecallisto(item["station"], item["date"], hhmm)
+        hhmmss = item["file"].split("_")[2]
+        spec = solarbursts.fetch_ecallisto(item["station"], item["date"], hhmmss[:4])
         row = ecallisto_catalog.scan_spectrum(spec)
         row["station"] = item["station"]
         row["date"] = item["date"]
+        # peak time as universal time-of-day (file start + local peak) so coincidence compares one clock
+        if row.get("t_peak_s") is not None:
+            start = int(hhmmss[:2]) * 3600 + int(hhmmss[2:4]) * 60 + int(hhmmss[4:6])
+            row["t_peak_s"] = round(start + row["t_peak_s"], 1)
         return row
 
     @task()
     def reduce_day(rows: list[dict], date: str) -> str:
-        """Idempotently write this day's candidate rows into the rolling catalogue (one CSV per day)."""
+        """Idempotently write this day's candidate rows + cross-station-coincident events (one CSV each)."""
         import csv
+
+        from jansky_research import ecallisto_catalog
 
         out = OUT / "results" / "ecallisto_catalog"
         out.mkdir(parents=True, exist_ok=True)
@@ -80,8 +86,15 @@ def ecallisto_ingest():
             w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
             w.writerows(rows)
+        # coincidence QC: promote multi-station candidates to confirmed events (idempotent per day)
+        events = ecallisto_catalog.coincident_events(rows)
+        epath = out / f"{date}_events.csv"
+        with epath.open("w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["t_peak_s", "n_stations", "median_drift_mhz_s"])
+            w.writeheader()
+            w.writerows({k: e[k] for k in ("t_peak_s", "n_stations", "median_drift_mhz_s")} for e in events)
         n_burst = sum(1 for r in rows if r.get("is_burst"))
-        return f"{date}: {n_burst}/{len(rows)} burst candidates -> {path}"
+        return f"{date}: {len(events)} confirmed events from {n_burst}/{len(rows)} candidates -> {path}"
 
     date = wait_for_day()
     items = list_stations(date)

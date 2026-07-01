@@ -20,11 +20,13 @@ import numpy as np
 from . import solarbursts
 
 __all__ = [
+    "coincident_events",
     "ingest_day",
     "list_day_files",
     "run",
     "scan_day_specs",
     "scan_spectrum",
+    "synthetic_coincident_day",
     "synthetic_day",
 ]
 
@@ -108,6 +110,88 @@ def synthetic_day(
     return specs
 
 
+def coincident_events(
+    rows: list[dict], *, dt_tol_s: float = 60.0, min_stations: int = 2
+) -> list[dict]:
+    """Cluster per-station burst candidates into cross-station-**coincident** events.
+
+    A real solar radio burst is seen at (near) the same universal time by every station on the sunlit
+    side; RFI and local artefacts are single-station. So a candidate confirmed at ``>= min_stations``
+    distinct stations within ``dt_tol_s`` of each other is a real burst, while an isolated single-station
+    candidate is rejected --- the coincidence QC that turns raw candidates into a trustworthy catalogue.
+    Groups the ``is_burst`` rows by peak time (single-linkage in time) and returns the confirmed events:
+    mean peak time, the number and list of stations, and the median drift rate.
+    """
+    bursts = sorted(
+        (r for r in rows if r.get("is_burst") and r.get("t_peak_s") is not None),
+        key=lambda r: r["t_peak_s"],
+    )
+    clusters: list[list[dict]] = []
+    for r in bursts:
+        if clusters and r["t_peak_s"] - clusters[-1][-1]["t_peak_s"] <= dt_tol_s:
+            clusters[-1].append(r)
+        else:
+            clusters.append([r])
+    events = []
+    for c in clusters:
+        stations = sorted({r["station"] for r in c})
+        if len(stations) < min_stations:
+            continue
+        drifts = [r["drift_mhz_s"] for r in c if r.get("drift_mhz_s") is not None]
+        events.append(
+            {
+                "t_peak_s": round(float(np.mean([r["t_peak_s"] for r in c])), 1),
+                "n_stations": len(stations),
+                "stations": stations,
+                "median_drift_mhz_s": round(float(np.median(drifts)), 3) if drifts else None,
+            }
+        )
+    return events
+
+
+def synthetic_coincident_day(
+    *,
+    n_coincident: int = 4,
+    n_rfi: int = 3,
+    n_quiet: int = 3,
+    t_burst_s: float = 300.0,
+    seed: int = 0,
+) -> list[tuple[str, dict]]:
+    """A synthetic observing day with one real (multi-station) burst plus single-station RFI.
+
+    ``n_coincident`` stations see the **same** type III at the common time ``t_burst_s`` (real burst;
+    independent noise); ``n_rfi`` stations each carry a spurious burst at a *distinct* time well outside
+    the coincidence window (local interference); ``n_quiet`` stations are pure noise. The burst UT is set
+    by shifting each spectrum's time axis. So :func:`coincident_events` recovers exactly one confirmed
+    event (the real burst) and rejects the single-station RFI --- the offline recover-a-known.
+    """
+    rng = np.random.default_rng(seed)
+    template = solarbursts.synthetic_burst(seed=seed)
+    specs: list[tuple[str, dict]] = []
+    idx = 0
+    for i in range(n_coincident):
+        b = solarbursts.synthetic_burst(seed=seed + i)
+        specs.append((f"STATION{idx:02d}", {**b, "times": b["times"] + t_burst_s}))
+        idx += 1
+    for i in range(n_rfi):
+        b = solarbursts.synthetic_burst(seed=seed + 100 + i)
+        t_rfi = (
+            t_burst_s + 200.0 + i * 150.0
+        )  # distinct, > dt_tol from the burst and from each other
+        specs.append((f"STATION{idx:02d}", {**b, "times": b["times"] + t_rfi}))
+        idx += 1
+    for _ in range(n_quiet):
+        noise = rng.normal(0.0, 1.0, template["data"].shape)
+        specs.append(
+            (
+                f"STATION{idx:02d}",
+                {"data": noise, "freqs": template["freqs"], "times": template["times"]},
+            )
+        )
+        idx += 1
+    return specs
+
+
 def list_day_files(date_yyyymmdd: str) -> list[tuple[str, str]]:  # pragma: no cover - network
     """List the e-Callisto archive files for one day → ``(station, filename)`` pairs.
 
@@ -150,20 +234,31 @@ def ingest_day(
         row = scan_spectrum(spec, **kw)
         row["station"] = station
         row["file"] = fname
+        # convert the local (from-file-start) peak time to universal time-of-day so coincidence
+        # compares the same clock across stations whose 15-min files begin at different UTs
+        if row.get("t_peak_s") is not None:
+            hhmmss = fname.split("_")[2]
+            start_sod = int(hhmmss[:2]) * 3600 + int(hhmmss[2:4]) * 60 + int(hhmmss[4:6])
+            row["t_peak_s"] = round(start_sod + row["t_peak_s"], 1)
         rows.append(row)
     return rows
 
 
-def _metrics(rows: list[dict], source: str) -> dict:
+def _metrics(rows: list[dict], events: list[dict], source: str) -> dict:
     n = len(rows)
     bursts = [r for r in rows if r.get("is_burst")]
     drifts = [r["drift_mhz_s"] for r in bursts if r.get("drift_mhz_s") is not None]
+    n_confirmed_det = sum(e["n_stations"] for e in events)
     return {
         "source": source,
         "n_scanned": n,
         "n_bursts": len(bursts),
         "burst_fraction": round(len(bursts) / n, 3) if n else None,
         "median_drift_mhz_s": round(float(np.median(drifts)), 3) if drifts else None,
+        # cross-station coincidence QC
+        "n_events": len(events),
+        "max_event_stations": max((e["n_stations"] for e in events), default=0),
+        "n_rfi_rejected": len(bursts) - n_confirmed_det,
     }
 
 
@@ -177,7 +272,7 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
         None  # a representative detected-burst spectrum, for the illustration panel
     )
     if offline or date is None:
-        specs = synthetic_day()
+        specs = synthetic_coincident_day()
         rows = scan_day_specs(specs, **kw)
         source = "synthetic-day"
         by_station = dict(specs)
@@ -191,7 +286,8 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
                 hit["station"], date, hit["file"].split("_")[2][:4]
             )
 
-    metrics = _metrics(rows, source)
+    events = coincident_events(rows)  # cross-station coincidence QC -> confirmed events
+    metrics = _metrics(rows, events, source)
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "ecallisto_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
@@ -201,12 +297,12 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
             w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
             w.writerows(rows)
-    _figure(rows, example, op / "papers" / "ecallisto_pipeline" / "figures")
+    _figure(rows, example, events, op / "papers" / "ecallisto_pipeline" / "figures")
     _write_macros(metrics, op / "papers" / "ecallisto_pipeline" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(rows: list[dict], example: dict | None, out_dir) -> None:
+def _figure(rows: list[dict], example: dict | None, events: list[dict], out_dir) -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -214,7 +310,7 @@ def _figure(rows: list[dict], example: dict | None, out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.0, 3.6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.2, 3.8))
 
     # Left: a representative detected burst -- the dynamic spectrum with the ridge the worker fits
     if example is not None:
@@ -222,18 +318,36 @@ def _figure(rows: list[dict], example: dict | None, out_dir) -> None:
         clean = solarbursts.background_subtract(data)
         window = solarbursts.find_burst_window(data, times)
         rf, rt = solarbursts.detect_burst_ridge(data, freqs, times, window=window)
-        ax1.pcolormesh(times, freqs, clean, cmap="inferno", shading="auto")
-        ax1.plot(rt, rf, ".", color="cyan", ms=2, label="detected ridge")
+        ax1.pcolormesh(times - times[0], freqs, clean, cmap="inferno", shading="auto")
+        ax1.plot(rt - times[0], rf, ".", color="cyan", ms=2, label="detected ridge")
         ax1.set(xlabel="time (s)", ylabel="frequency (MHz)", title="Example type III detection")
         ax1.legend(loc="upper right", fontsize=8)
     else:
         ax1.set_axis_off()
 
-    # Right: the day's scan summary -- candidates vs quiet stations
-    n_burst = sum(1 for r in rows if r.get("is_burst"))
-    n_quiet = len(rows) - n_burst
-    ax2.bar(["burst\ncandidate", "quiet"], [n_burst, n_quiet], color=["C3", "0.6"])
-    ax2.set(ylabel="stations", title="Day scan summary")
+    # Right: the coincidence timeline -- each candidate's peak time, confirmed (multi-station) vs single
+    confirmed_t = {round(e["t_peak_s"], 1) for e in events}
+    bursts = [r for r in rows if r.get("is_burst") and r.get("t_peak_s") is not None]
+    stations = sorted({r["station"] for r in bursts})
+    ymap = {s: k for k, s in enumerate(stations)}
+    for r in bursts:
+        near = any(abs(r["t_peak_s"] - t) <= 60.0 for t in confirmed_t)
+        ax2.scatter(
+            r["t_peak_s"],
+            ymap[r["station"]],
+            color="C3" if near else "0.6",
+            s=40,
+            marker="o" if near else "x",
+        )
+    for e in events:
+        ax2.axvline(e["t_peak_s"], color="C3", ls="--", lw=0.6, alpha=0.6)
+    ax2.set(
+        xlabel="burst peak time (s)",
+        ylabel="station",
+        yticks=range(len(stations)),
+        title=f"Coincidence QC: {len(events)} confirmed",
+    )
+    ax2.set_yticklabels(stations, fontsize=6)
     fig.tight_layout()
     fig.savefig(out / "ecallisto.pdf")
     plt.close(fig)
@@ -253,6 +367,9 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\ecNbursts}}{{{_fmt('n_bursts')}}}",
         rf"\newcommand{{\ecBurstFrac}}{{{_fmt('burst_fraction')}}}",
         rf"\newcommand{{\ecMedDrift}}{{{_fmt('median_drift_mhz_s')}}}",
+        rf"\newcommand{{\ecNevents}}{{{_fmt('n_events')}}}",
+        rf"\newcommand{{\ecMaxEventStations}}{{{_fmt('max_event_stations')}}}",
+        rf"\newcommand{{\ecNrfiRejected}}{{{_fmt('n_rfi_rejected')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

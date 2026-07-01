@@ -86,7 +86,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
 | A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance |
 | A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result |
-| A streaming e-Callisto burst-ingest pipeline on Airflow + Podman | `ecallisto_pipeline/` | automation pattern (the right tool on a frequently-updated archive) |
+| A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper

@@ -25,11 +25,15 @@ backfill over an arbitrary date range, a directory \emph{sensor} that waits for 
 and a per-station \emph{dynamic-task-mapping} fan-out --- and scans each spectrum for drifting type III
 candidates by reusing a tested dynamic-spectrum toolkit. The per-station scan and the day-reduce are
 in-process calls into the same \code{jansky\_research} worker that the command line uses, so the DAG and
-\code{make ecallisto-day} produce identical rows; the worker is unit-tested offline on a synthetic day
-(\ecNbursts/\ecNscanned\ injected bursts recovered) while the scheduler stack is exercised separately.
-The output is a rolling table of burst \emph{candidates} --- e-Callisto is uncalibrated and RFI-heavy,
-so these are detections to vet, not a finished census. This is a reproducible-automation contribution:
-the right tool (a scheduler) on the right kind of data (a streaming archive).
+\code{make ecallisto-day} produce identical rows; the worker is unit-tested offline while the scheduler
+stack is exercised separately. Crucially, e-Callisto is uncalibrated and RFI-heavy, so a single
+station's detections are candidates, not events --- we vet them by \emph{cross-station coincidence}: a
+real solar burst is seen at the same universal time by every sunlit station, while RFI and local
+artefacts are single-station. On a synthetic day (a real burst at \ecMaxEventStations\ stations plus
+single-station interference), the coincidence step confirms exactly \ecNevents\ event and rejects
+\ecNrfiRejected\ single-station candidates. This is a reproducible-automation contribution --- the right
+tool (a scheduler) on the right kind of data (a streaming archive), producing coincidence-vetted burst
+events rather than raw candidates.
 \end{abstract}
 
 \keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Astronomy data analysis (1858)
@@ -78,27 +82,44 @@ drifts the right way (frequency falling with time), and fits coherently --- the 
 \code{solarbursts} slice validated. Because the DAG calls the same worker as \code{make ecallisto-day},
 the scheduler adds orchestration, not a second code path; the worker is unit-tested offline against a
 synthetic observing day, on which it recovers exactly the injected bursts (\ecNbursts\ of \ecNscanned\
-stations; median drift $\ecMedDrift$~MHz\,s$^{-1}$; Figure~\ref{fig:ec}). CI never stands up the Airflow
-stack --- too heavy and flaky for continuous integration --- but tests the worker and the DAG is run with
-\code{make dag-test}.
+stations flagged; median drift $\ecMedDrift$~MHz\,s$^{-1}$; Figure~\ref{fig:ec}). CI never stands up the
+Airflow stack --- too heavy and flaky for continuous integration --- but tests the worker and the DAG is
+run with \code{make dag-test}.
+
+\section{Cross-station coincidence: from candidates to events}
+Per-station detections are not yet a catalogue: e-Callisto stations differ in RFI environment, gain, and
+sky coverage, so any single station produces spurious ridges. The physical discriminant is that a
+\emph{real} solar burst radiates to the whole sunlit hemisphere and is therefore recorded at the same
+universal time by many stations, whereas interference is local to one. The worker's
+\code{coincident\_events} clusters the day's candidate rows in peak time (single-linkage, a
+$60$-second tolerance for clock offsets and burst duration) and confirms a cluster spanning at least two
+distinct stations. On the synthetic day --- a real type III injected at \ecMaxEventStations\ stations at a
+common time, plus \ecNrfiRejected\ single-station interference events at other times --- the step confirms
+exactly \ecNevents\ event (the real burst, at \ecMaxEventStations\ stations) and rejects all
+\ecNrfiRejected\ single-station candidates (Figure~\ref{fig:ec}, right). This is the quality control that
+turns the streaming ingest into a trustworthy burst catalogue, and it scales for free on the DAG's
+per-day reduce; a multi-cycle occurrence census with completeness corrections is the natural next step.
 
 \begin{figure}
 \plotone{figures/ecallisto.pdf}
 \caption{\emph{Left:} a representative detected burst --- the background-subtracted dynamic spectrum
-with the drifting type III ridge the worker fits (the discriminant for a candidate). \emph{Right:} the
-day's scan summary, stations flagged as candidates versus quiet, from the synthetic offline fixture
-(\ecNbursts\ of \ecNscanned). The real pipeline produces the same per-station ridge fit and row schema
-for every archive day.}
+with the drifting type III ridge the worker fits (the candidate discriminant). \emph{Right:} the
+cross-station coincidence timeline --- each candidate's peak time per station; the \ecMaxEventStations\
+detections at a common time (red, dashed line) are confirmed as one event, while the single-station
+candidates (grey $\times$) are rejected as interference. The real pipeline produces the same per-station
+ridge fit and coincidence vetting for every archive day.}
 \label{fig:ec}
 \end{figure}
 
 \section{Discussion}
-The contribution is matching the tool to the data: a scheduler for a streaming archive. The honest
-limitations: (i) the detected bursts are \emph{candidates} --- e-Callisto is uncalibrated, RFI-heavy,
-and station-heterogeneous, so a vetted occurrence census needs cross-station coincidence and
-RFI-excision this pipeline does not perform; (ii) the per-day fan-out is capped for a bounded backfill
-demonstration, not run over all stations or all twenty years; (iii) the science is intentionally minimal
-so that the automation, not a new burst catalogue, is what is on offer. The pattern --- in-process
+The contribution is matching the tool to the data: a scheduler for a streaming archive, with
+cross-station coincidence as the quality control. The honest limitations: (i) single-station detections
+are candidates, promoted to events only by the coincidence step --- which is validated here on a
+synthetic day, and whose real-data performance depends on how many stations observe a given burst;
+(ii) the per-day fan-out is capped for a bounded backfill demonstration, not run over all stations or all
+twenty years, so a full multi-cycle occurrence census (with completeness corrections and calibration
+caveats) remains the natural next step; (iii) the drift-based detector targets type III bursts --- type
+II (shock) detection would need a second, slower-drift template. The pattern --- in-process
 worker, daily schedule, catchup, sensor, dynamic-mapping fan-out, idempotent reduce, all on rootless
 Podman --- transfers to any frequently-updated public radio archive. Every number above is written by the
 pipeline into the macros this paper \code{\textbackslash input}s; \code{make ecallisto-day DATE=...}
