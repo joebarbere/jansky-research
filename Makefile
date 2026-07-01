@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline stokesv
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census stokesv
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -100,6 +100,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.sourcecounts --ra 180 --dec 30 --radius 8 --out .
 	uv run python -m jansky_research.type3synthesis --out .
 	uv run python -m jansky_research.ecallisto_catalog --date 20110914 --out .
+	uv run python -m jansky_research.ecallisto_census --offline --out .  # synthetic census; real multi-cycle e-Callisto ingest is future work (coverage-limited, see survey/)
 	CASDA_USERNAME=$${CASDA_USERNAME:?set CASDA_USERNAME for the stokesv Stokes-V leg} uv run python -m jansky_research.stokesv --out .
 	$(MAKE) paper && $(MAKE) arxiv
 

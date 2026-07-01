@@ -47,6 +47,13 @@ variability-limited), so it belongs in the **repo + Zenodo** bucket, not the arX
 result is an honest limitation, not a fresh discovery. Real numbers come from `make reproduce` with
 `CASDA_USERNAME` set (the leg needs an OPAL login + `~/.casda_pw`).
 
+**`ecallisto_census` is now complete** — the coverage-corrected type III occurrence census
+(`rate = N_events / C` vs the SILSO sunspot number). It builds and *recover-a-known* validates the
+census statistic (Pearson r=0.97, recovers the injected k=0.03), but the event stream is synthetic and
+the SILSO series is the only real data; the real multi-cycle e-Callisto ingest is coverage-limited
+future work (`survey/ecallisto-census-findings.md`). So it is a **repo + Zenodo** method paper, not an
+arXiv discovery. GATE-2 passed with no blockers.
+
 ---
 
 ## 0. One-time setup
@@ -180,6 +187,7 @@ a first independent-researcher arXiv paper are the **endorsement** (long lead ti
 | `triangulate` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
 | `type3synthesis` | `astro-ph.SR` | `astro-ph.IM`, `physics.space-ph` |
 | `ecallisto_pipeline` | `astro-ph.IM` | `astro-ph.SR` |
+| `ecallisto_census` | `astro-ph.SR` | `astro-ph.IM` |
 
 ---
 
@@ -196,4 +204,5 @@ a first independent-researcher arXiv paper are the **endorsement** (long lead ti
 | `papers/ecallisto_pipeline/main.tex` | arXiv (optional, astro-ph.IM) | not submitted |
 | `papers/frbstats/main.tex` | repo + Zenodo only (Airflow re-homed → ecallisto_pipeline) | — keep in repo |
 | `papers/stokesv/main.tex` | repo + Zenodo only (methods + honest single-epoch limits) | — keep in repo |
+| `papers/ecallisto_census/main.tex` | repo + Zenodo (method + recover-a-known; real census is future work) | — keep in repo |
 | the other 14 `papers/<slice>/` (reproductions/negatives) | repo + Zenodo only | — keep in repo |
