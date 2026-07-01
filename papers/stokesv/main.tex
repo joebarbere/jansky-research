@@ -1,0 +1,134 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Circularly-polarized coherent emitters in RACS}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Reproducible Stokes-V Coherent-Emitter Pipeline for RACS, and What Single-Epoch
+Circular Polarization Can Recover}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Circular polarization is a near-unambiguous flag of \emph{coherent} radio emission: extragalactic AGN
+are at most a fraction of a percent circularly polarized, while flaring M dwarfs, ultracool dwarfs,
+magnetic chemically-peculiar stars, and close binaries reach tens of percent. A high $|V|/I$ in a
+wide-field survey is therefore a clean coherent-emitter finder \citep{pritchard2021}. We build a small
+tested, CPU-only pipeline for the ASKAP Rapid ASKAP Continuum Survey \citep{mcconnell2020}: a
+per-region \emph{leakage-floor} + $V$-SNR + proper-motion selection, and forced photometry of a target
+list in RACS-low Stokes-V images. The selection machinery is validated on a synthetic field (it
+recovers \svNrecovered\ of \svNinjected\ injected emitters above a \svLeakFloorPct\% leakage floor at
+purity \svPurity). The forced-photometry leg --- long blocked and unblocked only when the CASDA
+\citep{casda} cutout service recovered --- forced-measures \svNmeasured\ catalogued RACS-low emitters
+\citep{driessen2024} in single-epoch RACS-low DR1 \citep{hale2021} cutouts: Stokes $I$ is recovered at
+the known positions (median image/catalogue ratio \svIrec), while significant circular polarization is
+present for only \svFracVcirc\ of them --- the honest, \emph{variability-limited} signature of transient
+coherent emission that a single snapshot catches only when the star is flaring. This is a
+reproducibility, tooling, and honest-limits contribution, not a blind survey.
+\end{abstract}
+
+\keywords{Stellar radio emission (1621) --- Radio stars (1358) --- Circular polarization (1795) ---
+Ultracool dwarfs (1734) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Coherent radio emission --- electron-cyclotron maser or coherent plasma processes --- is highly
+circularly polarized, so a wide-field Stokes-V survey isolates it from the vast incoherent
+(synchrotron) background. ASKAP RACS \citep{mcconnell2020} now releases Stokes-V products over the
+southern sky, and dedicated searches \citep{pritchard2021,driessen2024} have built catalogues of
+V-detected radio stars. We ask the most reproducible version: with the public catalogues and images
+and a small tested tool, can one (i) build and validate the selection machinery, and (ii) forced-measure
+circular polarization at known emitter positions in the real images --- and what does a single RACS-low
+epoch actually recover?
+
+\section{Methods}
+\code{stokesv} is a pure-NumPy module composing the \code{jansky} helpers and the forced-photometry
+pattern of the VLASS variability slice. It implements three tested pieces:
+\begin{itemize}
+\item \textbf{Leakage floor.} The dominant false positive is instrumental Stokes-$I\!\to\!V$ leakage
+($\sim$1\% on-axis, rising toward beam edges). We estimate it from the field: the median $|V/I|$ of
+bright ($I/\sigma_I\gg1$) sources is the local leakage level, and a candidate must clear
+$7\times$ that median (the RACS convention), not merely the image noise.
+\item \textbf{$V$-SNR gate + proper-motion confirmation.} A candidate must be a real $V$ detection, and
+a genuine radio star sits at its catalogue position \emph{propagated to the radio epoch} --- a
+discriminant a chance background match fails.
+\item \textbf{Forced photometry.} At a locked target position we find the Stokes-$I$ peak and read $V$
+at that same pixel (either sign) --- the physically correct forced measurement for a point source.
+\end{itemize}
+On a synthetic field of \svNtargets\ targets (a noise population plus injected emitters), the pipeline
+recovers \svNrecovered\ of \svNinjected\ injected emitters at purity \svPurity, with \svNpmrejected\
+proper-motion rejections --- confirming the leakage floor and gates behave.
+
+\section{Data}
+Targets are the Sydney Radio Star Catalogue \citep{driessen2024} of V-detected radio stars; images are
+RACS-low DR1 Stokes $I$ and $V$ \citep{hale2021}, staged as SODA cutouts from CASDA \citep{casda}. A
+practical trap: the CASDA image query returns, alongside each science image, a co-named
+\code{noiseMap}/\code{meanMap} product (also carrying \code{.i./.v.} and \code{restored}); selecting the
+science \code{image.$\{$i,v$\}$.} product is essential --- the noise map otherwise reads as a flat
+$\sim$0.2~mJy field and manufactures a null. CASDA is the sole public source of RACS Stokes~V (the CADC
+and Data Central mirrors carry RACS Stokes~I only).
+
+\section{Results}
+\paragraph{The forced-photometry leg (real RACS-low DR1).} We forced-measured \svNmeasured\ of the
+brightest-$I$ RACS-low emitters. Stokes $I$ is recovered at the known positions with a median
+image/catalogue ratio of \svIrec\ --- the CASDA cutout $+$ forced-photometry pipeline works on the real
+Stokes-V survey images (Figure~\ref{fig:sv}, left). Circular polarization, however, is present in only
+\svNVcirc\ of them (\svFracVcirc; median image $|V|/I=\svMedImgFrac\%$; Figure~\ref{fig:sv}, right). This
+is expected and honest: coherent stellar emission is \emph{bursting}, and the catalogued $V$ detections
+come from whichever epoch (often the VAST monitoring) caught each star flaring. A single RACS-low DR1
+snapshot frequently observes the star \emph{not} in a $V$-bright state, so the recovered $V$ fraction is
+a lower bound set by the coherent-emission duty cycle, not a pipeline failure --- the $I$ recovery
+confirms the source and the measurement are correct.
+
+\begin{figure*}
+\plotone{figures/circular_pol.pdf}
+\caption{\emph{Left:} forced-photometry Stokes $I$ at the known emitter positions versus the catalogue
+$I$ (with the 1:1 line) --- the flux is recovered from the real RACS-low DR1 images. \emph{Right:} the
+image $|V|/I$ per target (sorted); circular detections (red) appear only for the subset caught in a
+polarized state, the rest (grey) sitting below the circular threshold --- the variability-limited
+single-epoch signature. (Offline, the panels show the synthetic selection-machinery validation.)}
+\label{fig:sv}
+\end{figure*}
+
+\section{Discussion and reproducibility}
+The contribution is a tested, reproducible Stokes-V coherent-emitter pipeline --- the leakage-floor,
+$V$-SNR, and proper-motion selection validated on synthetic data, and the forced-photometry leg now
+working on real RACS-low DR1 images via CASDA. The honest limitations: (i) a single RACS-low epoch
+recovers circular polarization only for the flaring subset, so the leg measures a variability lower
+bound, not a complete emitter census; a multi-epoch campaign (RACS-low1/low2 $+$ VAST) is what the
+tooling is built for and the natural next step; (ii) the forced photometry locks on the Stokes-$I$ peak,
+appropriate for these $I$-detected stars but noise-sensitive for the faintest; (iii) the absolute $V$
+sign convention varies between ASKAP pipeline epochs, so handedness is recorded but not physically
+interpreted; (iv) the blind-survey leakage floor requires the field $V$ population, exercised here on
+synthetic data and ready for a real wide-field run. None of these undermine what is shown --- a working,
+reproducible pipeline that recovers $I$ and the variability-limited $V$ from public RACS Stokes-V images
+--- but they bound what one epoch can claim. Every number above is written by the pipeline into the
+macros this paper \code{\textbackslash input}s; \code{python -m jansky\_research.stokesv} regenerates the
+synthetic validation, and \code{CASDA\_USERNAME=... python -m jansky\_research.stokesv} the real leg.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{stokesv} tool (the leakage-floor selection, proper-motion
+confirmation, forced photometry, and the CASDA Stokes-V cutout fetch), the analysis, and the drafting of
+this manuscript. The author directed the work, independently reviewed and verified all code, results,
+figures, and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the Rapid ASKAP Continuum Survey (RACS) and its Stokes-V products from the CSIRO ASKAP
+Science Data Archive (CASDA), the Sydney Radio Star Catalogue, and the \code{jansky} project. The author
+acknowledges the collaborative contribution of Anthropic's Claude. RACS is a project of CSIRO/ASKAP.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+astroquery, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

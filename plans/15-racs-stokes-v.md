@@ -1,6 +1,6 @@
 # 15 — RACS Stokes-V coherent radio emitters (radio stars / UCDs / pulsars)
 
-Status: 🚧 in progress (tooling + credential-free catalogue path + SRSC recover-a-known done; forced-photometry leg next)
+Status: ✅ done (tooling + SRSC recover-a-known + CASDA forced-photometry leg unblocked; honest single-epoch/variability paper)
 
 ## Context
 

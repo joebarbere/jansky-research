@@ -41,9 +41,11 @@ reliable no-auth data sources are largely used up; two larger efforts are scoped
 `plans/28-breakthrough-listen-singlepulse.md` and `plans/29-lotss-deep-144mhz-counts.md`. The
 publishing steps below operate on the current nineteen; revisit the arXiv shortlist if #28/#29 land.
 
-**Not ready yet:** the `stokesv` (RACS Stokes-V) slice has its tooling + a credential-free recover-a-known,
-but its live forced-photometry run is blocked on CASDA (see `survey/stokesv-findings.md`). It is **not**
-in the table above; add it once the slice merges a real-data paper.
+**`stokesv` is now complete** (CASDA recovered; the forced-photometry leg is wired). It is a
+methods + honest-limits paper (I recovered from real RACS-low V images; single-epoch V is
+variability-limited), so it belongs in the **repo + Zenodo** bucket, not the arXiv shortlist — its
+result is an honest limitation, not a fresh discovery. Real numbers come from `make reproduce` with
+`CASDA_USERNAME` set (the leg needs an OPAL login + `~/.casda_pw`).
 
 ---
 
@@ -193,4 +195,5 @@ a first independent-researcher arXiv paper are the **endorsement** (long lead ti
 | `papers/triangulate/main.tex` | arXiv (optional) | not submitted |
 | `papers/ecallisto_pipeline/main.tex` | arXiv (optional, astro-ph.IM) | not submitted |
 | `papers/frbstats/main.tex` | repo + Zenodo only (Airflow re-homed → ecallisto_pipeline) | — keep in repo |
+| `papers/stokesv/main.tex` | repo + Zenodo only (methods + honest single-epoch limits) | — keep in repo |
 | the other 14 `papers/<slice>/` (reproductions/negatives) | repo + Zenodo only | — keep in repo |

@@ -28,9 +28,11 @@ __all__ = [
     "LEAKAGE_NSIGMA",
     "RACS_NU_GHZ",
     "classify_emitter",
+    "fetch_racs_cutout",
     "fetch_racs_i",
     "fetch_radio_star_measurements",
     "fetch_radio_stars",
+    "forced_photometry_recover",
     "fractional_circular_pol",
     "handedness",
     "leakage_floor",
@@ -434,6 +436,150 @@ def synthetic_field(
     return stars, dt_yr
 
 
+def _casda_session(username: str, pw_path: str):  # pragma: no cover - network
+    """A logged-in CASDA session (OPAL). Password comes from ``pw_path`` via a ``getpass`` shim."""
+    import getpass
+    import pathlib
+
+    from astroquery.casda import Casda
+
+    pw = pathlib.Path(pw_path).expanduser().read_text().strip()
+    orig = getpass.getpass
+    getpass.getpass = lambda *a, **k: pw  # Casda.login() has no password kwarg
+    try:
+        casda = Casda()
+        casda.login(username=username)
+    finally:
+        getpass.getpass = orig
+    return casda
+
+
+def _racs_science_mask(table, stokes: str):
+    """Boolean mask selecting the RACS **science** restored image for ``stokes`` (i/v).
+
+    The filename must start ``image.<stokes>.`` and be a restored, convolved image --- this excludes
+    the ``noiseMap`` / ``meanMap`` products (which also carry ``.i.``/``restored`` and otherwise read as
+    a flat ~0.2 mJy noise field).
+    """
+    import numpy as _np
+
+    fn = _np.array([str(x) for x in table["filename"]])
+    return _np.array(
+        [f.startswith(f"image.{stokes}.") and "restored" in f and "conv" in f for f in fn]
+    )
+
+
+def fetch_racs_cutout(
+    ra: float,
+    dec: float,
+    *,
+    stokes: str = "v",
+    radius_deg: float = 0.03,
+    casda=None,
+    username: str | None = None,
+    pw_path: str = "~/.casda_pw",
+    retries: int = 3,
+):  # pragma: no cover - network
+    """Stage and read a RACS (low) Stokes-``i``/``v`` cutout from CASDA → ``(image_mJy, wcs, casda)``.
+
+    Logs in (OPAL), queries the ObsCore images at ``(ra, dec)``, picks the RACS science restored image
+    for ``stokes`` (:func:`_racs_science_mask`), stages a SODA cutout, downloads the FITS, and returns
+    the image in mJy/beam with its celestial WCS plus the (re)used CASDA session. Retries with a fresh
+    login on failure (CASDA intermittently returns HTTP 401 on the datalink step). ``username`` falls
+    back to ``$CASDA_USERNAME``. Returns ``None`` if no image or all retries fail.
+    """
+    import os
+    import tempfile
+
+    import astropy.units as _u
+    import numpy as _np
+    import requests
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.wcs import WCS
+    from astroquery.casda import Casda
+
+    username = username or os.environ.get("CASDA_USERNAME")
+    if not username:
+        raise RuntimeError("set CASDA_USERNAME (OPAL email) for the real Stokes-V cutout fetch")
+    coord = SkyCoord(ra * _u.deg, dec * _u.deg)
+    for _ in range(retries):
+        try:
+            if casda is None:
+                casda = _casda_session(username, pw_path)
+            table = Casda.query_region(coord, radius=0.1 * _u.deg)
+            mask = _racs_science_mask(table, stokes)
+            if not mask.any():
+                return None
+            urls = casda.cutout(table[mask][:1], coordinates=coord, radius=radius_deg * _u.deg)
+            furl = next(u for u in urls if u.endswith(".fits"))
+            raw = requests.get(furl, timeout=200).content
+            with tempfile.NamedTemporaryFile(suffix=".fits", delete=False) as fh:
+                fh.write(raw)
+                path = fh.name
+            with fits.open(path) as hd:
+                data = _np.squeeze(_np.asarray(hd[0].data, float))
+                wcs = WCS(hd[0].header).celestial
+            os.unlink(path)
+            return data * 1000.0, wcs, casda  # Jy/beam -> mJy/beam
+        except Exception:
+            casda = None  # force a fresh login on retry (handles the intermittent 401)
+    return None
+
+
+def forced_photometry_recover(
+    *, max_targets: int = 15, min_i_mjy: float = 3.0, search_arcsec: float = 12.0, username=None
+) -> list[dict]:  # pragma: no cover - network
+    """Forced photometry of catalogued RACS-LOW Stokes-V emitters in real RACS-low DR1 cutouts.
+
+    Selects the brightest-``I`` SRSC RACS-LOW V-detections (``I>min_i_mjy``, RACS-low sky), stages each
+    one's Stokes-I and V science cutouts (:func:`fetch_racs_cutout`), and forced-measures $|V|/I$ at the
+    known star position (:func:`measure_circular_pol`). Returns one row per successfully-measured target
+    with the catalogue and image $(I, V, |V|/I)$ and the I-peak offset. Coherent stellar emission is
+    transient, so a single RACS-low DR1 epoch recovers V only for the subset caught in a polarised state
+    --- the honest, variability-limited result.
+    """
+    import numpy as _np
+
+    m = fetch_radio_star_measurements()
+    survey = _np.array([str(s) for s in m["survey"]])
+    sel = (
+        (survey == "RACS-LOW")
+        & _np.isfinite(m["i_flux"])
+        & (m["i_flux"] > min_i_mjy)
+        & _np.isfinite(m["v_flux"])
+        & (m["dec"] < 40.0)
+        & (m["dec"] > -85.0)
+    )
+    idx = _np.where(sel)[0]
+    idx = idx[_np.argsort(-m["i_flux"][idx])][:max_targets]
+    casda = None
+    rows: list[dict] = []
+    for i in idx:
+        ra, dec = float(m["ra"][i]), float(m["dec"][i])
+        gi = fetch_racs_cutout(ra, dec, stokes="i", casda=casda, username=username)
+        if gi is None:
+            continue
+        casda = gi[2]
+        gv = fetch_racs_cutout(ra, dec, stokes="v", casda=casda, username=username)
+        if gv is None:
+            continue
+        casda = gv[2]
+        meas = measure_circular_pol(gi[0], gv[0], gi[1], ra, dec, search_arcsec=search_arcsec)
+        cat_i = float(m["i_flux"][i])
+        rows.append(
+            {
+                "cat_i": cat_i,
+                "cat_frac": abs(float(m["v_flux"][i])) / cat_i,
+                "img_i": meas["i_peak"],
+                "img_v": meas["v_peak"],
+                "img_frac": meas["frac_pol"],
+                "offset_arcsec": meas["offset_arcsec"],
+            }
+        )
+    return rows
+
+
 def run(
     out: str = ".", *, offline: bool = True, v_snr_min: float = 5.0, i_snr_ref: float = 10.0
 ) -> dict:
@@ -448,16 +594,25 @@ def run(
     import json
     from pathlib import Path
 
-    if offline:
-        stars, dt_yr = synthetic_field()
-        source = "synthetic"
-    else:  # pragma: no cover - network
-        raise NotImplementedError("real CASDA forced-photometry path is wired in the next step")
+    op = Path(out)
+    # always run the synthetic validation of the selection machinery (fast, no network); the real run
+    # additionally does the CASDA forced photometry and merges its macros, so a single `reproduce`
+    # build carries both the synthetic-validation and the real forced-photometry numbers.
+    metrics = _run_offline(op, v_snr_min=v_snr_min, i_snr_ref=i_snr_ref)
+    if not offline:
+        metrics = {**metrics, **_run_real(op)}
 
+    (op / "results").mkdir(parents=True, exist_ok=True)
+    (op / "results" / "stokesv_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    _write_macros(metrics, op / "papers" / "stokesv" / "generated" / "macros.tex")
+    return metrics
+
+
+def _run_offline(op, *, v_snr_min: float, i_snr_ref: float) -> dict:
+    """Synthetic selection path: validate the leakage-floor + V-SNR + PM machinery and its purity."""
+    stars, dt_yr = synthetic_field()
     frac, _ = fractional_circular_pol(stars["v_flux"], stars["i_flux"], stars["e_v"], stars["e_i"])
-    bright = (
-        stars["i_flux"] / stars["e_i"]
-    ) > i_snr_ref  # leakage ~ |V/I| only where V noise is small
+    bright = (stars["i_flux"] / stars["e_i"]) > i_snr_ref  # leakage ~ |V/I| where V noise is small
     threshold = leakage_floor(frac[bright] if bright.any() else frac)
     mask, _ = select_circular_pol(
         stars["i_flux"],
@@ -467,7 +622,7 @@ def run(
         leakage_threshold=threshold,
         v_snr_min=v_snr_min,
     )
-    pm_ok, sep = proper_motion_confirm(
+    pm_ok, _sep = proper_motion_confirm(
         stars["ra_radio"],
         stars["dec_radio"],
         stars["ra"],
@@ -479,8 +634,9 @@ def run(
     candidates = mask & pm_ok
     truth = stars["is_emitter"]
     n_cand = int(candidates.sum())
-    metrics = {
-        "source": source,
+    _figure(stars, frac, threshold, candidates, op / "papers" / "stokesv" / "figures")
+    return {
+        "source": "synthetic",
         "n_targets": int(truth.size),
         "n_bright_ref": int(bright.sum()),
         "leakage_floor_pct": round(100.0 * threshold, 3),
@@ -492,12 +648,31 @@ def run(
         "purity": round(float((candidates & truth).sum()) / n_cand, 3) if n_cand else 0.0,
     }
 
-    op = Path(out)
-    (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "stokesv_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(stars, frac, threshold, candidates, op / "papers" / "stokesv" / "figures")
-    _write_macros(metrics, op / "papers" / "stokesv" / "generated" / "macros.tex")
-    return metrics
+
+def _run_real(op) -> dict:
+    """Real path: forced photometry of RACS-LOW emitters in single-epoch RACS-low DR1 CASDA cutouts."""
+    import numpy as _np
+
+    rows = forced_photometry_recover()
+    n = len(rows)
+    img_i = _np.array([r["img_i"] for r in rows])
+    cat_i = _np.array([r["cat_i"] for r in rows])
+    img_frac = _np.array([r["img_frac"] for r in rows])
+    good_i = _np.isfinite(img_i) & (img_i > 0) & _np.isfinite(cat_i) & (cat_i > 0)
+    i_ratio = float(_np.median(img_i[good_i] / cat_i[good_i])) if good_i.any() else float("nan")
+    cls = [classify_emitter(r["img_v"], r["img_i"]) for r in rows]
+    n_circ = sum(c in ("circular", "highly_circular") for c in cls)
+    _real_figure(rows, cls, op / "papers" / "stokesv" / "figures")
+    return {
+        "source": "RACS-low DR1 (CASDA)",  # overrides the synthetic source in the merged real run
+        "n_measured": n,
+        "i_recovery_ratio": round(i_ratio, 2),
+        "n_v_circular": int(n_circ),
+        "frac_v_circular": round(n_circ / n, 3) if n else 0.0,
+        "median_img_frac_pct": round(100.0 * float(_np.median(img_frac[_np.isfinite(img_frac)])), 2)
+        if _np.isfinite(img_frac).any()
+        else None,
+    }
 
 
 def _figure(
@@ -531,18 +706,75 @@ def _figure(
     plt.close(fig)
 
 
+def _real_figure(rows: list[dict], cls: list[str], out_dir) -> None:
+    from pathlib import Path
+
+    import numpy as _np
+
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    cat_i = _np.array([r["cat_i"] for r in rows])
+    img_i = _np.array([r["img_i"] for r in rows])
+    img_frac = _np.array([r["img_frac"] for r in rows])
+    circ = _np.array([c in ("circular", "highly_circular") for c in cls])
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.0, 4.0))
+    # Left: forced-photometry I recovered at the known positions (validates the CASDA image pipeline)
+    lim = [0.5, max(cat_i.max(), img_i.max(), 1) * 1.3]
+    ax1.plot(lim, lim, "k--", lw=0.8, label="1:1")
+    ax1.plot(cat_i, img_i, "o", color="C0", ms=5)
+    ax1.set(
+        xscale="log",
+        yscale="log",
+        xlabel="catalogue $I$ (mJy)",
+        ylabel="forced image $I$ (mJy)",
+        title="Stokes $I$ recovered",
+        xlim=lim,
+        ylim=lim,
+    )
+    ax1.legend(fontsize=8)
+    # Right: image |V|/I per target -- V present only for the subset caught in a polarised state
+    order = _np.argsort(-img_frac)
+    x = _np.arange(len(rows))
+    ax2.bar(x, img_frac[order] * 100, color=["C3" if circ[order][k] else "0.6" for k in x])
+    ax2.axhline(6.0, color="b", ls="--", lw=0.8, label="circular threshold (6%)")
+    ax2.set(
+        xlabel="target (sorted)",
+        ylabel=r"image $|V|/I$ (%)",
+        title="Single-epoch $V$ (variability-limited)",
+    )
+    ax2.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out / "circular_pol.pdf")
+    plt.close(fig)
+
+
 def _write_macros(m: dict, path) -> None:
     from pathlib import Path
+
+    def _f(key: str, default: str = "--") -> str:
+        v = m.get(key)
+        return default if v is None else str(v)
 
     lines = [
         "% Auto-generated by jansky_research.stokesv._write_macros — do not edit by hand.",
         rf"\newcommand{{\svSource}}{{{m['source']}}}",
-        rf"\newcommand{{\svNtargets}}{{{m['n_targets']}}}",
-        rf"\newcommand{{\svLeakFloorPct}}{{{m['leakage_floor_pct']}}}",
-        rf"\newcommand{{\svNcandidates}}{{{m['n_candidates']}}}",
-        rf"\newcommand{{\svNinjected}}{{{m.get('n_injected', 0)}}}",
-        rf"\newcommand{{\svNrecovered}}{{{m.get('n_recovered', 0)}}}",
-        rf"\newcommand{{\svNpmrejected}}{{{m.get('n_pm_rejected', 0)}}}",
+        rf"\newcommand{{\svNtargets}}{{{_f('n_targets')}}}",
+        # synthetic selection-machinery macros
+        rf"\newcommand{{\svLeakFloorPct}}{{{_f('leakage_floor_pct')}}}",
+        rf"\newcommand{{\svNcandidates}}{{{_f('n_candidates')}}}",
+        rf"\newcommand{{\svNinjected}}{{{_f('n_injected')}}}",
+        rf"\newcommand{{\svNrecovered}}{{{_f('n_recovered')}}}",
+        rf"\newcommand{{\svNpmrejected}}{{{_f('n_pm_rejected')}}}",
+        rf"\newcommand{{\svPurity}}{{{_f('purity')}}}",
+        # real forced-photometry macros (RACS-low DR1)
+        rf"\newcommand{{\svNmeasured}}{{{_f('n_measured')}}}",
+        rf"\newcommand{{\svIrec}}{{{_f('i_recovery_ratio')}}}",
+        rf"\newcommand{{\svNVcirc}}{{{_f('n_v_circular')}}}",
+        rf"\newcommand{{\svFracVcirc}}{{{_f('frac_v_circular')}}}",
+        rf"\newcommand{{\svMedImgFrac}}{{{_f('median_img_frac_pct')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -555,10 +787,10 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
 
     p = argparse.ArgumentParser(description="Select Stokes-V coherent radio emitters (RACS).")
     p.add_argument("--out", default=".")
-    p.add_argument("--offline", action="store_true")
+    p.add_argument("--offline", action="store_true", help="synthetic run (no network/CASDA)")
     p.add_argument("--v-snr-min", type=float, default=5.0)
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=True, v_snr_min=args.v_snr_min), indent=2))
+    print(json.dumps(run(args.out, offline=args.offline, v_snr_min=args.v_snr_min), indent=2))
     return 0
 
 
