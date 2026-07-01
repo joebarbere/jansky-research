@@ -70,7 +70,9 @@ def census_correlation(rate: np.ndarray, sunspot: np.ndarray) -> dict:
     }
 
 
-def synthetic_sunspots(n_months: int = 180, *, amplitude: float = 140.0, seed: int = 0) -> np.ndarray:
+def synthetic_sunspots(
+    n_months: int = 180, *, amplitude: float = 140.0, seed: int = 0
+) -> np.ndarray:
     """A synthetic monthly sunspot-number series: a ~11-year cycle with realistic asymmetry + noise.
 
     Models the sunspot number as a raised, fast-rise/slow-decay cycle (period 132 months) so the
@@ -79,7 +81,9 @@ def synthetic_sunspots(n_months: int = 180, *, amplitude: float = 140.0, seed: i
     rng = np.random.default_rng(seed)
     t = np.arange(n_months, dtype=float)
     phase = (t % 132.0) / 132.0
-    cycle = np.exp(-3.0 * phase) * (1.0 - np.cos(2.0 * np.pi * phase)) / 2.0  # fast rise, slow decay
+    cycle = (
+        np.exp(-3.0 * phase) * (1.0 - np.cos(2.0 * np.pi * phase)) / 2.0
+    )  # fast rise, slow decay
     base = amplitude * cycle / cycle.max()
     return np.clip(base + rng.normal(0.0, 5.0, n_months), 0.0, None)
 
@@ -149,9 +153,7 @@ def sample_real_days(
     h0, h1 = window_hours
     for date in dates:
         files = [
-            (s, f)
-            for (s, f) in ec.list_day_files(date)
-            if h0 <= int(f.split("_")[2][:2]) < h1
+            (s, f) for (s, f) in ec.list_day_files(date) if h0 <= int(f.split("_")[2][:2]) < h1
         ]
         rows = []
         for station, fname in files:
@@ -210,7 +212,9 @@ def run(out: str = ".", *, offline: bool = True, dates: list[str] | None = None)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "ecallisto_census_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    (op / "results" / "ecallisto_census_metrics.json").write_text(
+        json.dumps(metrics, indent=2) + "\n"
+    )
     _figure(xlabel, rate, sunspot, op / "papers" / "ecallisto_census" / "figures")
     _write_macros(metrics, op / "papers" / "ecallisto_census" / "generated" / "macros.tex")
     return metrics
@@ -241,7 +245,9 @@ def _figure(x: np.ndarray, rate: np.ndarray, sunspot: np.ndarray, out_dir) -> No
         m, b = np.polyfit(sunspot[good], rate[good], 1)
         xs = np.linspace(sunspot[good].min(), sunspot[good].max(), 20)
         ax2.plot(xs, m * xs + b, "-", color="C3", lw=1)
-    ax2.set(xlabel="sunspot number", ylabel="burst rate (events / station)", title="Rate vs activity")
+    ax2.set(
+        xlabel="sunspot number", ylabel="burst rate (events / station)", title="Rate vs activity"
+    )
     fig.tight_layout()
     fig.savefig(out / "census.pdf")
     plt.close(fig)
@@ -272,7 +278,9 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import json
 
-    p = argparse.ArgumentParser(description="e-Callisto type III occurrence census vs the solar cycle.")
+    p = argparse.ArgumentParser(
+        description="e-Callisto type III occurrence census vs the solar cycle."
+    )
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
     p.add_argument("--dates", help="comma-separated YYYYMMDD days for the real run")
