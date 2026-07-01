@@ -37,12 +37,40 @@ def test_scan_day_recovers_injected_bursts():
     assert flagged == {"STATION00", "STATION01", "STATION02"}
 
 
+def test_synthetic_coincident_day_and_coincidence():
+    # a real burst at 4 stations (same UT) + 3 single-station RFI (distinct times) + 3 quiet
+    specs = ec.synthetic_coincident_day(n_coincident=4, n_rfi=3, n_quiet=3, seed=0)
+    assert len(specs) == 10
+    rows = ec.scan_day_specs(specs)
+    assert sum(r["is_burst"] for r in rows) == 7  # 4 real + 3 RFI detected as candidates
+    events = ec.coincident_events(rows, dt_tol_s=60.0, min_stations=2)
+    # coincidence confirms exactly the real burst and rejects the single-station RFI
+    assert len(events) == 1
+    assert events[0]["n_stations"] == 4
+    assert events[0]["median_drift_mhz_s"] < 0
+
+
+def test_coincident_events_on_rows():
+    # two stations at ~the same time -> 1 event; an isolated single-station candidate -> rejected
+    rows = [
+        {"station": "A", "is_burst": True, "t_peak_s": 300.0, "drift_mhz_s": -6.0},
+        {"station": "B", "is_burst": True, "t_peak_s": 320.0, "drift_mhz_s": -6.5},
+        {"station": "C", "is_burst": True, "t_peak_s": 700.0, "drift_mhz_s": -7.0},  # lone RFI
+        {"station": "D", "is_burst": False, "t_peak_s": 305.0, "drift_mhz_s": None},  # not a burst
+    ]
+    events = ec.coincident_events(rows, dt_tol_s=60.0, min_stations=2)
+    assert len(events) == 1 and events[0]["n_stations"] == 2
+    assert sorted(events[0]["stations"]) == ["A", "B"]
+
+
 def test_run_offline_writes_catalogue(tmp_path):
     m = ec.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic-day"
-    assert m["n_scanned"] == 8 and m["n_bursts"] == 3
+    assert m["n_scanned"] == 10 and m["n_bursts"] == 7
+    # the coincidence QC confirms one real burst and rejects the single-station RFI
+    assert m["n_events"] == 1 and m["max_event_stations"] == 4 and m["n_rfi_rejected"] == 3
     assert (tmp_path / "results" / "ecallisto_catalog.csv").exists()
     assert (tmp_path / "results" / "ecallisto_metrics.json").exists()
     assert (tmp_path / "papers" / "ecallisto_pipeline" / "figures" / "ecallisto.pdf").exists()
     macros = (tmp_path / "papers" / "ecallisto_pipeline" / "generated" / "macros.tex").read_text()
-    assert r"\ecNbursts" in macros
+    assert r"\ecNbursts" in macros and r"\ecNevents" in macros
