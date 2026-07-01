@@ -96,15 +96,32 @@ down the web cutout service; no automation can download what the backend won't s
 kept (it exits with a distinct code 5 for "outage" vs 8 for "broken automation") and should succeed
 once CASDA recovers — the honest "best-effort: kept the working skill, recorded the blocking finding".
 
-## Status and what's next
+## CASDA RECOVERED (2026-06) — the forced-photometry leg is now unblocked
 
-- **Done (credential-free):** tested helpers (leakage floor, $|V|/I$ selection, PM confirmation,
-  classification, `measure_circular_pol`); VizieR fetchers; the pure `match_targets_to_radio`
-  cross-match; the `validate_srsc` recover-a-known.
-- **Blocked on CASDA recovery:** wire `fetch_racs_cutout` (CASDA SODA / Data Central) behind
-  `measure_circular_pol`, run forced photometry over a curated late-type-star / UCD target list,
-  estimate the per-beam leakage floor from local field sources, apply the V-SNR + PM gates, vet with
-  SIMBAD. This is the new-findings arm. Then GATE-2 and `papers/stokesv/`.
+Re-tested live: the CASDA query backend is up (`query_region` returns RACS products), the OPAL login
+works, and — the thing that was ERROR-ing — **SODA cutout staging now succeeds** (returns real
+`cutout-*.fits` download URLs). So `fetch_racs_cutout` is wired and the forced-photometry leg runs.
+
+### Two real complications, and the honest finish
+
+1. **The `noiseMap`/`meanMap` trap.** The CASDA image query returns, per field, a `noiseMap.image.i.…`
+   and `meanMap.image.i.…` alongside the science `image.i.…` (all carry `.i.`/`.v.` + `restored`).
+   Selecting the science `image.{i,v}.` product is essential — the noise map otherwise reads as a flat
+   ~0.2 mJy field and manufactures a null (`_racs_science_mask` handles this).
+2. **Single-epoch V is variability-limited.** Coherent stellar emission is *bursting*; the catalogued
+   RACS-LOW V detections come from whichever epoch caught each star flaring. Forced photometry on a
+   single RACS-low DR1 snapshot **recovers Stokes I well at the known position** (validating the CASDA
+   cutout + forced-photometry pipeline) but recovers significant **V only for the subset caught in a
+   polarised state** — an honest lower bound set by the duty cycle, not a pipeline failure. (Example:
+   a catalogued |V/I|=0.90 emitter with I=19 mJy → image I=10.5 mJy recovered, image |V/I|=0.03.)
+3. **CASDA auth is intermittently flaky** — the datalink step occasionally returns HTTP 401; the fetch
+   retries with a fresh login.
+
+**Finish (chosen: honest single-epoch):** `fetch_racs_cutout` (CASDA SODA, science-image filter, retry)
++ `forced_photometry_recover` over the brightest RACS-LOW emitters → report I recovered (median
+image/catalogue ratio) and the variability-limited V fraction. Framed as methods + tooling + honest
+limits; the multi-epoch blind survey (leakage floor over the field, VAST+RACS epochs) is the natural
+next step the tooling is ready for. Paper at `papers/stokesv/`.
 
 ## Honest caveats so far
 

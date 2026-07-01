@@ -140,3 +140,71 @@ def test_run_offline(tmp_path):
     macros = (tmp_path / "papers" / "stokesv" / "generated" / "macros.tex").read_text()
     assert r"\svNcandidates" in macros
     assert r"\svLeakFloorPct" in macros
+    # the real forced-photometry macros are present (placeholders offline) so the paper compiles
+    assert r"\svIrec" in macros and r"\svFracVcirc" in macros
+
+
+def test_racs_science_mask_excludes_noisemap():
+    from astropy.table import Table
+
+    from jansky_research.stokesv import _racs_science_mask
+
+    t = Table(
+        {
+            "filename": [
+                "image.v.RACS_0141-18.SB1.cont.taylor.0.restored.conv.fits",  # science V
+                "noiseMap.image.v.RACS_0141-18.SB1.cont.taylor.0.restored.conv.fits",  # noise map
+                "meanMap.image.v.RACS_0141-18.SB1.cont.taylor.0.restored.conv.fits",  # mean map
+                "image.i.RACS_0141-18.SB1.cont.taylor.0.restored.conv.fits",  # science I (wrong stokes)
+            ]
+        }
+    )
+    assert _racs_science_mask(t, "v").tolist() == [True, False, False, False]
+
+
+def test_run_real_merges_forced_photometry(monkeypatch, tmp_path):
+    # mock the CASDA forced-photometry (network) with representative rows: I recovered, V variability-limited
+    rows = [
+        {
+            "cat_i": 19.2,
+            "cat_frac": 0.90,
+            "img_i": 10.5,
+            "img_v": 0.35,
+            "img_frac": 0.03,
+            "offset_arcsec": 8,
+        },
+        {
+            "cat_i": 16.7,
+            "cat_frac": 0.59,
+            "img_i": 9.1,
+            "img_v": 4.2,
+            "img_frac": 0.46,
+            "offset_arcsec": 5,
+        },
+        {
+            "cat_i": 14.2,
+            "cat_frac": 0.42,
+            "img_i": 11.0,
+            "img_v": 0.2,
+            "img_frac": 0.02,
+            "offset_arcsec": 6,
+        },
+        {
+            "cat_i": 12.4,
+            "cat_frac": 0.77,
+            "img_i": 7.0,
+            "img_v": 2.4,
+            "img_frac": 0.34,
+            "offset_arcsec": 4,
+        },
+    ]
+    monkeypatch.setattr(stokesv, "forced_photometry_recover", lambda **k: rows)
+    m = stokesv.run(out=str(tmp_path), offline=False)
+    # merged metrics carry BOTH the synthetic-validation and the real forced-photometry results
+    assert m["source"] == "RACS-low DR1 (CASDA)"
+    assert m["purity"] > 0.8  # synthetic selection machinery still ran
+    assert m["n_measured"] == 4
+    assert 0.3 < m["i_recovery_ratio"] < 1.0  # Stokes I recovered at the known positions
+    assert m["n_v_circular"] == 2 and m["frac_v_circular"] == 0.5  # variability-limited V
+    macros = (tmp_path / "papers" / "stokesv" / "generated" / "macros.tex").read_text()
+    assert r"\svNmeasured}{4}" in macros and r"\svIrec" in macros

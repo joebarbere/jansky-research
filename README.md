@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — nineteen slices + a synthesis, honestly tallied
+## Status — twenty slices + a synthesis, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -33,6 +33,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | Interplanetary type III (STEREO/WAVES HFR) | `jansky_research.swaves` | ✅ beam tracked to **0.38 AU**; honest R²-inflation (few independent time samples) caveat |
 | 3D type III triangulation (STEREO-A+B DF) | `jansky_research.triangulate` | ✅ geometric vs plasma-frequency distance correlate at **r=0.989**; source localized in 3D |
 | Euclidean source counts (NVSS) | `jansky_research.sourcecounts` | ✅ recovers the canonical **Hopkins 2003** 1.4 GHz counts; sub-Euclidean slope −1.91 |
+| RACS Stokes-V coherent emitters (ASKAP via CASDA) | `jansky_research.stokesv` | ✅/➖ leakage-floor selection validated; forced photometry **recovers I**, but single-epoch **V is variability-limited** (honest) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -51,8 +52,8 @@ streaming **e-Callisto Airflow-on-Podman ingest pipeline** (`plans/31`) are buil
 CSV, and a server-less file-DAG runner (**Snakemake**, `workflow/Snakefile`, `plans/32`) drives the
 static slices (`make figures`). Two larger new-domain efforts remain scoped in
 `plans/28-breakthrough-listen-singlepulse.md` and
-`plans/29-lotss-deep-144mhz-counts.md`. The `stokesv` (RACS Stokes-V) slice has its tooling + a
-credential-free recover-a-known, but its forced-photometry leg is blocked on CASDA.
+`plans/29-lotss-deep-144mhz-counts.md`. (The `stokesv` RACS Stokes-V slice, once CASDA-blocked, is now
+complete — CASDA's cutout service recovered and the forced-photometry leg is wired.)
 
 ### Papers
 
@@ -84,6 +85,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check |
 | Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
 | A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance |
+| A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result |
 | A streaming e-Callisto burst-ingest pipeline on Airflow + Podman | `ecallisto_pipeline/` | automation pattern (the right tool on a frequently-updated archive) |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
@@ -164,7 +166,7 @@ jansky-research/
     frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
-    ecallisto_catalog.py # e-Callisto day-scan worker (drives the streaming DAG)  (+ stokesv.py, CASDA-blocked)
+    ecallisto_catalog.py stokesv.py   # e-Callisto streaming worker; RACS Stokes-V coherent emitters
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
