@@ -1,0 +1,160 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A coverage-corrected type III occurrence census}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Coverage-Corrected Occurrence Census for Type~III Solar Radio Bursts:
+Method and Recover-a-Known Validation Toward a Multi-Cycle e-Callisto Census}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Type~III solar radio bursts trace flare-accelerated electron beams, and their occurrence rate is
+expected to rise and fall with solar activity over the $\sim$11-year cycle
+\citep{sainthilaire2013,reid2014}. Turning a stream of coincidence-vetted e-Callisto \citep{benz2009}
+burst detections into an \emph{occurrence census} that can be compared across epochs is not just
+counting: a burst is confirmed only when enough stations observe it, and the active-station count
+varies with time, so the raw count must be normalised by observing coverage before rates from
+different epochs can be compared. We build that census as a tested tool --- a coverage-corrected rate,
+$\mathrm{rate}=N_\mathrm{events}/C$, correlated against the SILSO monthly sunspot number
+\citep{clette2014,silso2015} --- and validate it with a recover-a-known: a synthetic monthly event
+stream whose true rate is Poisson with mean proportional to a realistic fast-rise/slow-decay activity
+cycle. Over \ecsNperiods\ synthetic months (\ecsNevents\ events) the census recovers the injected
+solar-cycle signal cleanly --- Pearson $r=\ecsPearson$, Spearman $\rho=\ecsSpearman$, and an
+ordinary-least-squares slope of $\ecsSlope$ events\,station$^{-1}$ per unit sunspot number,
+recovering the injected proportionality constant. This is a methods-and-tooling contribution: the
+coverage correction and the census statistic are validated here on synthetic data with a real sunspot
+driver, so that the streaming, coincidence-vetting e-Callisto ingest we built previously can be run
+over many years to produce the real multi-cycle census --- a data-volume task, not a method gap,
+which the honest coverage limits below make explicit.
+\end{abstract}
+
+\keywords{Solar radio bursts (1998) --- Solar cycle (1487) --- Sunspot number (1652) ---
+Solar corona (1483) --- Astronomy data analysis (1858) --- Open source software (1866)}
+
+\section{Introduction}
+Type~III bursts are the radio signature of semi-relativistic electron beams escaping the corona along
+open magnetic field lines; they are among the most common solar radio phenomena and were among the
+first spectral burst types classified \citep{wildmccready1950,reid2014}. Because the beams are
+accelerated in flares and jets, the type~III occurrence rate is a proxy for active-region activity and
+is observed to track the solar cycle \citep{sainthilaire2013}. The e-Callisto network \citep{benz2009}
+--- 150+ low-cost spectrometers feeding a public, two-decade archive --- is in principle an excellent
+instrument for measuring that occurrence rate over multiple cycles, and in earlier work we built a
+scheduled Airflow-on-Podman pipeline that ingests the archive day by day and, crucially, promotes
+single-station candidates to confirmed events by \emph{cross-station coincidence} (a real burst is
+seen at the same universal time by many sunlit stations; interference is local to one).
+
+What that pipeline produces is a stream of confirmed events per day. Converting that stream into an
+\emph{occurrence census} --- a rate that can be compared honestly across epochs and against a solar
+activity index --- requires one more step that is easy to get wrong: a completeness correction. A
+burst is confirmed only if enough of the network observed it, and the number of active e-Callisto
+stations grew over the network's history and varies day to day; the \emph{raw} confirmed-event count
+therefore conflates real activity with how many stations happened to be watching. This paper builds
+the census statistic that removes that confound, and validates it end-to-end on a synthetic
+observing history before it is turned on the real archive.
+
+\section{The census statistic}
+For each period (here a month) with a confirmed-event count $N_\mathrm{events}$ and an observing
+coverage $C$ (the number of active stations contributing that period), the coverage-corrected
+occurrence rate is
+\begin{equation}
+\mathrm{rate} = \frac{N_\mathrm{events}}{C},
+\label{eq:rate}
+\end{equation}
+with periods of zero coverage left undefined rather than counted as zero. Equation~(\ref{eq:rate}) is
+the minimal correction: if a burst's confirmation probability scales with how many stations are
+watching, then $N_\mathrm{events}\propto R\,C$ for an underlying rate $R$, and dividing by $C$ returns
+an estimator of $R$ that is comparable across epochs with different network sizes. We then correlate
+the corrected rate against the SILSO monthly sunspot number \citep{clette2014,silso2015}, reporting the
+Pearson $r$ (linear association), the Spearman $\rho$ (rank association, robust to a non-linear
+activity--rate relation), and the ordinary-least-squares slope of rate on sunspot number. The census
+is a small, tested \code{jansky\_research.ecallisto\_census} module (pure NumPy/SciPy); the sunspot
+series is parsed directly from the public SILSO CSV.
+
+\section{Recover-a-known validation}
+Because a full multi-cycle real ingest is a large data-collection task (Section~\ref{sec:disc}), we
+validate the census statistic on a synthetic observing history for which the true relationship is
+known. To be explicit about what is real here: \emph{all event counts in this paper are synthetic}; the
+only real data ingested is the SILSO sunspot series, parsed by the same code path the real pipeline
+uses. We generate a realistic monthly sunspot series --- a raised, fast-rise/slow-decay activity
+cycle plus noise, matching the qualitative shape of a real Schwabe cycle --- and, for each month with
+sunspot number $S$ and a randomly varying active-station coverage $C$, draw the confirmed-event count
+from a Poisson distribution with mean $k\,S\,C$. By construction the coverage-corrected rate $N/C$ then
+has expectation $k\,S$: proportional to activity, with a known slope $k$ and known coverage
+confound that the census must undo.
+
+Over \ecsNperiods\ synthetic months (\ecsNevents\ total events; source: \ecsSource), the census
+recovers the injected proportionality cleanly (Figure~\ref{fig:census}): the coverage-corrected rate tracks the
+synthetic cycle with Pearson $r=\ecsPearson$ and Spearman $\rho=\ecsSpearman$, and the fitted slope of
+rate on sunspot number is $\ecsSlope$ events\,station$^{-1}$ per unit sunspot number, recovering the
+injected proportionality constant. Critically, the recovery works \emph{through} the coverage
+variation: the raw event count is contaminated by the fluctuating station count, and only after the
+Equation~(\ref{eq:rate}) correction does the clean activity correlation emerge. The census statistic
+and its implementation are therefore validated; what remains is data.
+
+\begin{figure}
+\plotone{figures/census.pdf}
+\caption{Recover-a-known validation of the occurrence census. \emph{Left:} the coverage-corrected
+type~III rate (red) and the driving sunspot number (grey) over the synthetic observing history --- the
+rate tracks the activity cycle after the per-period station-coverage correction. \emph{Right:} the
+corrected rate against sunspot number with the ordinary-least-squares fit; the recovered slope
+$\ecsSlope$ (events\,station$^{-1}$ per unit sunspot number) matches the injected proportionality
+(Pearson $r=\ecsPearson$). The same statistic is applied unchanged to the real e-Callisto event stream;
+here the event stream is synthetic with a realistic activity driver so the ground truth is known.}
+\label{fig:census}
+\end{figure}
+
+\section{Discussion}
+\label{sec:disc}
+The contribution is the census statistic and its validation: a coverage correction that makes
+type~III event counts comparable across epochs with different e-Callisto network sizes, and a
+recover-a-known demonstration that the corrected rate cleanly reproduces a known solar-cycle
+proportionality. The honest limitations are specific and were quantified in the coincidence-QC work
+that precedes this:
+\begin{itemize}
+\item \textbf{The event stream here is synthetic.} The sunspot driver is a realistic cycle (and the
+real SILSO series is parsed by the same code for the real run), but the monthly \emph{event counts}
+are drawn from a model, not measured. This paper validates the method; it does not report a measured
+solar-cycle correlation.
+\item \textbf{The real census is coverage- and detection-limited.} A real multi-station coincidence
+needs the full active-station set for each window and event-tuned detection thresholds; a small
+station subset with the synthetic-tuned thresholds yields a coverage-limited lower bound (a six-station
+snapshot of a known burst day produced zero confirmed events in the coincidence study). Producing the
+real multi-cycle census is therefore a large ingest --- many years $\times$ full station coverage ---
+which is exactly what the scheduled, backfilling Airflow pipeline was built to run, not a method gap.
+\item \textbf{Type~III only.} The underlying detector targets fast negative-drift ridges; a type~II
+census would need a second, slower-drift template.
+\item \textbf{Coverage correction is first-order.} Dividing by the active-station count assumes
+confirmation probability scales with coverage; a fuller treatment would model per-station sensitivity
+and sky coverage. Equation~(\ref{eq:rate}) is the minimal, transparent correction, not the last word.
+\end{itemize}
+Every number above is written by the census tool into the macros this paper \code{\textbackslash
+input}s; \code{python -m jansky\_research.ecallisto\_census --offline} reproduces the validation, and
+the same statistic runs on a real event stream once the multi-year ingest is collected.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{ecallisto\_census} module and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the sunspot data from the World Data Center SILSO, Royal Observatory of Belgium,
+Brussels, and the public e-Callisto network archive, and builds on the \code{jansky} project. The
+author acknowledges the collaborative contribution of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
