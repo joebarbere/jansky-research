@@ -1,0 +1,102 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{RM structure functions from SPICE-RACS}
+\shortauthors{Barbere}
+\begin{document}
+\title{Noise-Debiased Rotation-Measure Structure Functions from SPICE-RACS DR1:
+Method, Recover-a-Known, and a First High-Latitude Coherence Measurement}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The SPICE-RACS programme has multiplied the Faraday rotation-measure (RM) grid: DR1 provides
+24,758 RMs over $\sim$1300~deg$^2$ \citep{thomson2023} and DR2 $\sim$2.5--3.4$\times$10$^5$ over
+87.5\% of the sky \citep{spiceracs_dr2} --- released without a systematic Galactic
+structure-function analysis. We supply the tooling and its validation: a second-order RM
+structure function, \emph{noise-debiased} by subtracting the per-pair measurement variance
+\citep[the convention of][]{haverkorn2004}, with source-level bootstrap errors and recorded pair
+subsampling. On a synthetic RM screen with a known coherence scale and a known plane enhancement
+the pipeline recovers both (enhancement ratio \rmsRatio$\pm$\rmsRatioSe\ for an injected
+amplitude boost of 5; SF break tracking the injected 2$^\circ$ scale within the Gaussian-ACF
+geometric factor), and a pure-noise sky debiases to SF $\approx 0$ rather than the
+$2\sigma^2$ floor. Applied to the public DR1 catalogue (\rmsN\ RMs at S/N $\ge 8$, CASDA TAP, no
+auth), the high-latitude structure function plateaus at \rmsPlatHi~rad$^2$\,m$^{-4}$ with a
+half-plateau scale of \rmsBreakHi$^\circ$. DR1's catalogue excludes the Galactic plane, so the
+disc--halo comparison this method is built for awaits the DR2 table (public, 4.97~GB, CSIRO DAP)
+--- this paper validates the method and stakes the bounded first measurement, not the full
+census.
+\end{abstract}
+
+\keywords{Interstellar magnetic fields (845) --- Galactic radio sources (571) ---
+Astronomy data analysis (1858)}
+
+\section{Introduction}
+RM grids sample the integral $\int n_e B_\parallel\,dl$ along every extragalactic sightline; the
+\emph{spatial structure} of the RM sky --- how RM decorrelates with angular separation --- encodes
+the outer scale and amplitude of magneto-ionic turbulence \citep{haverkorn2004}. Our earlier
+slice recovered the Taylor et al. (2009) latitude profile and quadrant signs from 37,543 NVSS RMs
+\citep{taylor2009}; SPICE-RACS raises the areal density to 6.7~deg$^{-2}$
+\citep{spiceracs_dr2}, making per-latitude-bin structure functions newly measurable. The DR2
+release paper provides the catalogue but not this analysis; we build the reproducible tool.
+
+\section{Method and recover-a-known}
+For all source pairs in angular-separation bins,
+$\mathrm{SF}(\delta\theta)=\langle(\mathrm{RM}_1-\mathrm{RM}_2)^2\rangle-\langle\sigma_1^2+
+\sigma_2^2\rangle$: the second term removes the measurement-noise floor that otherwise dominates
+faint-grid SFs. Errors come from bootstrap resampling of \emph{sources} (pairs are correlated);
+pair counts are capped with the subsample fraction recorded. Validation: (i) a pure-noise sky
+debiases to $\mathrm{SF}\approx0$; (ii) a synthetic Gaussian-blob screen with a 2$^\circ$
+coherence scale and a 5$\times$ plane amplitude boost returns an enhancement ratio of
+\rmsRatio$\pm$\rmsRatioSe, a low-$|b|$/high-$|b|$ SF plateau ratio $\gg$1
+(\rmsPlatLo\ vs \rmsPlatHi\ rad$^2$\,m$^{-4}$ in the fixture), and a half-plateau break
+consistent with the injected scale times the Gaussian-ACF factor ($\approx$1.7).
+
+\section{First real leg: SPICE-RACS DR1}
+The DR1 catalogue is queryable unauthenticated from CASDA TAP
+(\code{AS110.spice\_racs\_dr1\_corrected\_cut\_v02}; 24,758 rows verified). At S/N $\ge 8$
+(\rmsN\ RMs) the high-latitude structure function plateaus at \rmsPlatHi~rad$^2$\,m$^{-4}$
+(RM dispersion $\sim\sqrt{\mathrm{SF}/2}\approx54$~rad\,m$^{-2}$ over the DR1 footprint) with a
+half-plateau scale of \rmsBreakHi$^\circ$. Two honest qualifications frame this number: the DR1
+\emph{corrected-cut} catalogue excludes the Galactic plane, so the low-$|b|$ column of the method
+is empty at DR1 (the disc--halo comparison awaits DR2); and the plateau mixes Galactic
+fluctuation power with the intrinsic + extragalactic RM scatter of the background sources, so it
+is an upper bound on the Galactic term at these latitudes.
+
+\begin{figure}
+\plotone{figures/rmstructure.pdf}
+\caption{\emph{Left:} the RM sky used (synthetic screen in the CI build; SPICE-RACS DR1 via
+\code{make reproduce}). \emph{Right:} noise-debiased RM structure functions per latitude bin with
+bootstrap errors; the plateau sets the RM dispersion and the half-plateau scale tracks the
+coherence length.}
+\label{fig:rms}
+\end{figure}
+
+\section{Honest limits}
+(i) DR1 has no plane coverage --- the headline disc--halo SF contrast is validated on synthetics
+only until the DR2 run. (ii) The SF plateau includes intrinsic/extragalactic RM scatter
+(tens of rad$^2$\,m$^{-4}$); without a compact-double or DEFROST-style separation the Galactic
+amplitude is an upper bound. (iii) The two-band nature of RM catalogues leaves $n\pi$ ambiguity
+to the upstream pipeline; we inherit SPICE-RACS' resolution of it. (iv) The half-plateau break
+statistic is a crude scale estimator, validated against the fixture's known scale, not a fitted
+turbulence model.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{rmstructure} module and the drafting of this manuscript.
+The author directed the work, independently reviewed and verified all code, results, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses public data from CASDA and the CSIRO Data Access Portal (SPICE-RACS), and builds
+on the \code{jansky} project. The author acknowledges the collaborative contribution of
+Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, astropy, astroquery, NumPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}
