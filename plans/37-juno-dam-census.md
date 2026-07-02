@@ -1,6 +1,6 @@
 # 37 — Jovian DAM occurrence census from Juno/Waves: the Io-controlled emission zones from orbit
 
-Status: 🔨 in progress — GATE 0 PASSED (2026-07-02, live-verified)
+Status: ✅ done — tooling + real 2017-02 month + paper merged PR #87; GATE-2 caught the Io-phase convention BLOCKER (Φ_Io = CML+180−Λ_Io), re-measured contrast 1.38→2.22; multi-orbit v02 census is the scoped follow-on
 
 ## Context
 

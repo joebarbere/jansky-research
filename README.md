@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — twenty-five slices + a synthesis, honestly tallied
+## Status — twenty-six slices + a synthesis, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -39,6 +39,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | RACS Stokes-V discovery: two-epoch forced photometry | `jansky_research.stokesv_discovery` | ✅/➖ recovers **GJ 65 (BL+UV Cet)** with a **10σ 4.2-yr V change**; all else quiescent (median 5σ limit 0.83 mJy); no new detections survived the novelty bar (honest) |
 | LPT population catalogue (13 objects, provenance-typed) | `jansky_research.lpt` | ✅/➖ 9/9 Ṗ-constrained members below the death line; the hinted ~78-min binary boundary **not significant at N=13** (honest, with demonstrated test power); caught a typo in the review's own data file |
 | RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per |b| bin; high-|b| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
+| Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ proximity dominates duty cycle ~25×; canonical Io regions persist at reduced contrast (2.2) from orbit; GATE-2 caught an Io-phase convention blocker (disclosed) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -97,6 +98,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census |
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) |
 | RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-|b| estimate |
+| Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
