@@ -10,7 +10,7 @@ and has grown into a **deep-research survey plus a set of self-contained researc
 a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
 adversarial science-review gate, and written up — wins *and* negatives reported plainly.
 
-## Status — twenty-one slices + a synthesis, honestly tallied
+## Status — twenty-three slices + a synthesis, honestly tallied
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -35,6 +35,8 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | Euclidean source counts (NVSS) | `jansky_research.sourcecounts` | ✅ recovers the canonical **Hopkins 2003** 1.4 GHz counts; sub-Euclidean slope −1.91 |
 | RACS Stokes-V coherent emitters (ASKAP via CASDA) | `jansky_research.stokesv` | ✅/➖ leakage-floor selection validated; forced photometry **recovers I**, but single-epoch **V is variability-limited** (honest) |
 | Type III occurrence census vs the solar cycle (e-Callisto × SILSO) | `jansky_research.ecallisto_census` | ✅/➖ coverage-corrected census statistic **recovers an injected solar-cycle proportionality** (r=0.97); SILSO is real, event stream is synthetic — real multi-cycle ingest is future work (honest) |
+| torch-fdmt: device-portable Fast DM Transform | `jansky_research.fdmt`+`singlepulse` | ✅ oracle-validated pure-PyTorch FDMT; **real Crab DM recovered to 0.3%** (giant pulse S/N 14); honest benchmark: FDMT-on-CPU beats brute-on-GPU 3.6× |
+| RACS Stokes-V discovery: two-epoch forced photometry | `jansky_research.stokesv_discovery` | ✅/➖ recovers **GJ 65 (BL+UV Cet)** with a **10σ 4.2-yr V change**; all else quiescent (median 5σ limit 0.83 mJy); no new detections survived the novelty bar (honest) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -89,6 +91,8 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result |
 | A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) |
 | A coverage-corrected type III occurrence census (method + recover-a-known) | `ecallisto_census/` | census statistic + recover-a-known validation toward a multi-cycle census |
+| A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark |
+| Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper

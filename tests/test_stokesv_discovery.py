@@ -80,3 +80,22 @@ def test_write_macros_placeholder(tmp_path):
     path = tmp_path / "macros.tex"
     svd._write_macros({"source": "x", "completeness": None}, path)
     assert r"\newcommand{\svdComp}{--}" in path.read_text()
+
+
+def test_summarize_real_from_csv(tmp_path):
+    csv_text = (
+        "name,gaia_id,epoch,ra_prop,dec_prop,epoch_mjd,band_mhz,i_mjy,e_i,v_mjy,e_v,n_products,note\n"
+        "A,1,mid1,10,-20,59233,1367.5,9.0,0.2,9.26,0.15,4,\n"
+        "A,1,mid2,10,-20,60769,1367.5,7.0,0.2,7.11,0.15,4,\n"
+        "B,2,mid1,11,-21,59233,1367.5,0.4,0.2,0.05,0.20,4,\n"
+        "B,2,mid2,11,-21,60769,1367.5,0.3,0.2,-0.10,0.20,4,\n"
+        "C,3,mid1,12,-22,59233,1367.5,nan,nan,nan,nan,0,fail\n"
+    )
+    f = tmp_path / "real.csv"
+    f.write_text(csv_text)
+    m = svd.summarize_real(str(f))
+    assert m["n_targets_measured"] == 2
+    assert m["n_pairs_complete"] == 2
+    assert m["n_v_detections_5sig"] == 1  # A only
+    assert m["n_var_pairs_4sig"] == 1 and m["var_names"] == "A"
+    assert m["median_5sig_vlim_mjy"] > 0

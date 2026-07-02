@@ -30,6 +30,7 @@ from .stokesv import (
 
 __all__ = [
     "epoch_position",
+    "summarize_real",
     "select_epoch_candidates",
     "synthetic_epoch_pair",
     "two_epoch_variability",
@@ -166,6 +167,46 @@ def synthetic_epoch_pair(
     }
 
 
+def summarize_real(csv_path: str) -> dict:
+    """Summarise the real-leg CSV (written by ``scripts/stokesv_discovery_real.py``).
+
+    Returns per-run metrics: how many targets/epochs measured, 5-sigma V detections, 4-sigma
+    two-epoch variability pairs, and the median 5-sigma V upper limit for the quiescent majority.
+    """
+    import csv as _csv
+
+    rows = [r for r in _csv.DictReader(open(csv_path)) if r.get("i_mjy") not in (None, "", "nan")]
+    names = sorted({r["name"] for r in rows})
+    by: dict[str, dict[str, dict]] = {}
+    for r in rows:
+        by.setdefault(r["name"], {})[r["epoch"]] = r
+    det = []
+    for r in rows:
+        v, ev = float(r["v_mjy"]), float(r["e_v"])
+        if abs(v) / ev >= 5.0:
+            det.append(r["name"])
+    var_pairs = []
+    dvs = []
+    for name, eps in by.items():
+        if "mid1" in eps and "mid2" in eps:
+            v1, e1 = float(eps["mid1"]["v_mjy"]), float(eps["mid1"]["e_v"])
+            v2, e2 = float(eps["mid2"]["v_mjy"]), float(eps["mid2"]["e_v"])
+            sig = abs(v2 - v1) / float(np.sqrt(e1 * e1 + e2 * e2))
+            dvs.append(sig)
+            if sig >= 4.0:
+                var_pairs.append(name)
+    e_vs = np.array([float(r["e_v"]) for r in rows])
+    return {
+        "n_targets_measured": len(names),
+        "n_epoch_rows": len(rows),
+        "n_pairs_complete": len(dvs),
+        "n_v_detections_5sig": len(sorted(set(det))),
+        "n_var_pairs_4sig": len(var_pairs),
+        "median_5sig_vlim_mjy": round(float(5.0 * np.median(e_vs)), 2),
+        "var_names": ";".join(sorted(set(var_pairs))),
+    }
+
+
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline slice: epoch-pair selection + variability recover-a-known (real leg is next PR)."""
     import json
@@ -197,6 +238,13 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "var_purity": round(var_purity, 3),
         "single_epoch_miss_frac": round(single_epoch_miss, 3),
     }
+    if not offline:  # pragma: no cover - needs the real-leg CSV
+        real_csv = Path(out) / "results" / "stokesv_discovery_realtargets.csv"
+        if real_csv.exists():
+            rs = summarize_real(str(real_csv))
+            metrics.update({f"real_{k}": v for k, v in rs.items()})
+            metrics["source"] = "synthetic recover-a-known + real RACS-mid epoch pair (CNS5)"
+
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "stokesv_discovery_metrics.json").write_text(
@@ -261,6 +309,11 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\svdVarComp}}{{{_fmt('var_completeness')}}}",
         rf"\newcommand{{\svdVarPur}}{{{_fmt('var_purity')}}}",
         rf"\newcommand{{\svdMissFrac}}{{{_fmt('single_epoch_miss_frac')}}}",
+        rf"\newcommand{{\svdRealN}}{{{_fmt('real_n_targets_measured')}}}",
+        rf"\newcommand{{\svdRealPairs}}{{{_fmt('real_n_pairs_complete')}}}",
+        rf"\newcommand{{\svdRealDet}}{{{_fmt('real_n_v_detections_5sig')}}}",
+        rf"\newcommand{{\svdRealVar}}{{{_fmt('real_n_var_pairs_4sig')}}}",
+        rf"\newcommand{{\svdRealVlim}}{{{_fmt('real_median_5sig_vlim_mjy')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -277,7 +330,7 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=True), indent=2))
+    print(json.dumps(run(args.out, offline=args.offline), indent=2))
     return 0
 
 
