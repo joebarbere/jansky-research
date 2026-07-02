@@ -5,7 +5,7 @@
 \shortauthors{Barbere}
 \begin{document}
 \title{Noise-Debiased Rotation-Measure Structure Functions from SPICE-RACS DR1:
-Method, Recover-a-Known, and a Bounded High-Latitude Coherence-Scale Estimate}
+Method, Recover-a-Known, and the Full-Sky Disc--Halo Contrast from DR2}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
@@ -56,7 +56,7 @@ coherence scale and a 5$\times$ plane amplitude boost returns an enhancement rat
 consistent with the injected scale times the Gaussian-ACF factor $2\sqrt{\ln 2}\approx1.67$
 (the binned estimator resolves this only to the log-bin width, $\sim$30\% at that scale).
 
-\section{First real leg: SPICE-RACS DR1}
+\section{The real legs: DR1, then the full-sky DR2}
 The DR1 catalogue is queryable unauthenticated from CASDA TAP
 (\code{AS110.spice\_racs\_dr1\_corrected\_cut\_v02}; 24,758 rows verified). At S/N $\ge 8$
 (\rmsN\ RMs) the high-latitude structure function plateaus at \rmsPlatHi~rad$^2$\,m$^{-4}$
@@ -89,7 +89,11 @@ to the upstream pipeline; we inherit SPICE-RACS' resolution of it. (iv) The half
 0.54$^\circ$ value may reflect source clustering induced by the S/N cut or DR1 tile geometry
 rather than ISM coherence --- a tile-offset null test or the DR2 run is needed to discriminate.
 (v) Bootstrap errors use a unique-set source resample and are conservatively inflated by
-$\sim$30\% relative to the standard bootstrap.
+$\sim$30\% relative to the standard bootstrap. (vi) At DR2 scale ($>3\times10^5$ sources) pairs
+are drawn by random sampling rather than exhaustively (an unbiased SF estimator; the sampled
+fraction is recorded), and the plateau-difference argument assumes the intrinsic-scatter floor
+is latitude-independent --- true for extragalactic sources, but disc sightlines also gain
+depolarisation-selected populations, which a DEFROST-style separation would tighten.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

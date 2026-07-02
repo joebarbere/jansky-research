@@ -18,6 +18,8 @@ known latitude enhancement drives the recover-a-known.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 
 from .rmsky import _ratio_bootstrap_se, enhancement_ratio
@@ -65,12 +67,20 @@ def structure_function(
         bins_deg = np.logspace(-1, 1.3, 12)  # 0.1 -- 20 deg
     bins = np.radians(np.asarray(bins_deg, float))
 
-    # all pairs (i<j), subsampled if needed
-    i_idx, j_idx = np.triu_indices(n, k=1)
-    n_pairs_all = i_idx.size
-    if n_pairs_all > max_pairs:
-        keep = rng.choice(n_pairs_all, max_pairs, replace=False)
-        i_idx, j_idx = i_idx[keep], j_idx[keep]
+    # all pairs (i<j) when tractable; RANDOM pair draws for large n (triu at n~2.5e5 would
+    # need ~3e10 index entries -- hundreds of GB). Random pairs are an unbiased SF estimator.
+    n_pairs_all = n * (n - 1) // 2
+    if n <= 3000:
+        i_idx, j_idx = np.triu_indices(n, k=1)
+        if n_pairs_all > max_pairs:
+            keep = rng.choice(n_pairs_all, max_pairs, replace=False)
+            i_idx, j_idx = i_idx[keep], j_idx[keep]
+    else:
+        n_draw = int(min(max_pairs, n_pairs_all))
+        i_idx = rng.integers(0, n, n_draw)
+        j_idx = rng.integers(0, n, n_draw)
+        good = i_idx != j_idx
+        i_idx, j_idx = i_idx[good], j_idx[good]
 
     # angular separation via the haversine formula (stable at small angles)
     sdlat = np.sin((dec[j_idx] - dec[i_idx]) / 2.0)
@@ -178,6 +188,48 @@ def fetch_spice_racs_dr1(
     }
 
 
+DR2_LOCAL = Path("data/spice-racs.dr2.fits")  # gunzipped from the DAP .gz so astropy can memmap
+
+
+def load_spice_racs_dr2(
+    path: str | Path = DR2_LOCAL, *, snr_min: float = 8.0
+) -> dict:  # pragma: no cover - needs the 5 GB DAP file
+    """Load the public SPICE-RACS DR2 catalogue FITS (CSIRO DAP csiro:64891, no auth).
+
+    Column names follow the DR1 convention (rm, rm_err, snr_polint, l, b); any variant casing is
+    resolved by lookup. Applies the S/N cut and finite-error filter used throughout.
+    """
+    from astropy.io import fits
+    from astropy.table import Table
+
+    with fits.open(path, memmap=True) as hdul:
+        t = Table(hdul[1].data)
+    cols = {c.lower(): c for c in t.colnames}
+
+    def col(*names):
+        for nm in names:
+            if nm in cols:
+                return np.asarray(t[cols[nm]], float)
+        raise KeyError(f"none of {names} in DR2 table (has: {sorted(cols)[:40]}...)")
+
+    rm = col("rm")
+    rm_err = col("rm_err", "e_rm", "rm_err_obs")
+    snr = col("snr_polint", "snr_pi", "snr")
+    gl = col("l", "gal_l", "glon")
+    gb = col("b", "gal_b", "glat")
+    ra = col("ra", "ra_deg")
+    dec = col("dec", "dec_deg")
+    m = (snr >= snr_min) & np.isfinite(rm) & (rm_err > 0)
+    return {
+        "ra": ra[m],
+        "dec": dec[m],
+        "gal_l": gl[m],
+        "gal_b": gb[m],
+        "rm": rm[m],
+        "rm_err": rm_err[m],
+    }
+
+
 def _sf_break(sep_deg: np.ndarray, sf: np.ndarray) -> float:
     """Crude coherence-scale estimate: separation where the SF first reaches half its plateau."""
     good = np.isfinite(sf) & (sf > 0)
@@ -188,7 +240,7 @@ def _sf_break(sep_deg: np.ndarray, sf: np.ndarray) -> float:
     return float(sep_deg[rising[0]]) if rising.size else float("nan")
 
 
-def run(out: str = ".", *, offline: bool = True) -> dict:
+def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     """Offline: SF + latitude recover-a-known on the synthetic screen; real: SPICE-RACS DR1."""
     import json
     from pathlib import Path
@@ -196,6 +248,10 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     if offline:
         s = synthetic_rm_screen()
         source = "synthetic RM screen"
+    elif dr2:  # pragma: no cover - needs the local DAP file
+        s = load_spice_racs_dr2()
+        s["coherence_deg"] = float("nan")
+        source = "SPICE-RACS DR2 (CSIRO DAP csiro:64891)"
     else:  # pragma: no cover - network
         s = fetch_spice_racs_dr1()
         s["coherence_deg"] = float("nan")
@@ -297,8 +353,9 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p = argparse.ArgumentParser(description="SPICE-RACS RM structure functions by latitude.")
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
+    p.add_argument("--dr2", action="store_true")
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=args.offline), indent=2))
+    print(json.dumps(run(args.out, offline=args.offline, dr2=args.dr2), indent=2))
     return 0
 
 

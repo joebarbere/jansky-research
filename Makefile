@@ -103,7 +103,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.ecallisto_census --offline --out .  # synthetic census; real multi-cycle e-Callisto ingest is future work (coverage-limited, see survey/)
 	uv run python -m jansky_research.singlepulse --benchmark --out .  # real Crab recover-a-known + CPU benchmark (GPU: rerun with --device cuda in a ROCm venv)
 	CASDA_USERNAME=$${CASDA_USERNAME:?set CASDA_USERNAME for the stokesv Stokes-V leg} uv run python -m jansky_research.stokesv --out .
-	uv run python -m jansky_research.rmstructure --out .  # SPICE-RACS DR1 via CASDA TAP (no auth)
+	test -f data/spice-racs.dr2.fits && uv run python -m jansky_research.rmstructure --dr2 --out . || uv run python -m jansky_research.rmstructure --out .  # DR2 (local DAP file) else DR1 (CASDA TAP)
 	uv run python -m jansky_research.lpt --out .  # vendored verified LPT table (offline by design)
 	uv run python -m jansky_research.stokesv_discovery --out .  # summarises results/stokesv_discovery_realtargets.csv (regenerate: uv run python scripts/stokesv_discovery_real.py)
 	$(MAKE) paper && $(MAKE) arxiv
