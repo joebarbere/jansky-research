@@ -1,7 +1,8 @@
 """A pure-PyTorch Fast Dispersion Measure Transform (FDMT) --- GPU dedispersion without CUDA.
 
 The FDMT (Zackay & Ofek 2017, ApJ 835, 11) computes the full DM--time plane of a dynamic spectrum in
-:math:`O(N_f N_t \\log N_f)` operations instead of the brute-force :math:`O(N_f N_t N_\\mathrm{DM})`,
+:math:`O(N_t(N_f + N_\\Delta\\log N_f))` operations (Zackay & Ofek eq. form; :math:`N_\\Delta` DM trials)
+instead of the brute-force :math:`O(N_f N_t N_\\Delta)`,
 by recursively merging sub-band transforms (the dispersion curve :math:`t \\propto \\nu^{-2}` is
 additive across sub-bands). Every production GPU dedisperser (Heimdall/``dedisp``, astro-accelerate,
 FREDDA) ships CUDA kernels; this module instead expresses both the FDMT recursion and the brute-force
@@ -207,6 +208,10 @@ def brute_dedisperse(
     The torch twin of :func:`jansky.transients.dedisperse` (same per-channel integer shifts
     relative to the highest frequency), vectorised over all trial DMs --- the baseline the FDMT
     is benchmarked against, and the always-correct fallback engine.
+
+    Note: uses a CYCLIC roll (like the oracle), so the last ~max-delay samples wrap
+    post-observation data --- fine for peak-location checks, wrong for single-pulse
+    amplitudes near the end of the series (the FDMT zeros its boundaries instead).
     """
     torch = _require_torch()
     dynspec = np.asarray(dynspec, dtype=np.float32)

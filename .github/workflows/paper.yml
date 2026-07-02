@@ -26,7 +26,7 @@ jobs:
         env:
           UV_PYTHON: "3.12" # the `workflow` extra (Snakemake) needs Python >=3.11
         run: |
-          uv sync --extra workflow
+          uv sync --extra workflow --extra fdmt
           uv run --extra workflow snakemake -s workflow/Snakefile -j4
       - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3

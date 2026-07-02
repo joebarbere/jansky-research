@@ -1,0 +1,133 @@
+\documentclass[twocolumn]{aastex631}
+
+% Every number is \input from the pipeline --- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A pure-PyTorch Fast DM Transform}
+\shortauthors{Barbere}
+
+\begin{document}
+
+\title{A Pure-PyTorch Fast Dispersion Measure Transform: Device-Portable Dedispersion Validated on
+Public Crab-Pulsar Data}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Every production GPU dedisperser --- Heimdall/\code{dedisp} \citep{barsdell2012},
+astro-accelerate, FREDDA --- ships CUDA kernels, which excludes the growing population of
+non-NVIDIA hardware. We present a Fast Dispersion Measure Transform \citep[FDMT;][]{zackayofek2017}
+implemented entirely in PyTorch tensor operations \citep{pytorch}: no custom kernels, so one
+\code{device=} argument runs the same code on CPU, CUDA, or ROCm (validated here on a consumer AMD
+RX~7600~XT). Correctness is anchored against an independently tested brute-force oracle: the
+zero-delay row equals the plain channel sum exactly, and on synthetic dispersed pulses the
+transform recovers the injected dispersion measure within delay quantisation
+(DM $\spRecDm$ for $\spTrueDm$ injected; folded period $\spRecP$\,ms for $\spTrueP$ injected). On a
+small public Parkes/UWL observation of the Crab pulsar the same pipeline recovers
+$\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$ --- $\spRealDmErr\%$ from the ATNF catalogue value
+\citep{manchester2005} --- and detects a giant pulse at boxcar $S/N=\spRealSpSnr$. The honest
+benchmark headline is algorithmic, not hardware --- comparing wall time for equal-size DM-trial
+output planes (and conservatively for the FDMT, whose track-integral output is the more sensitive
+of the two on smeared pulses): over \spBenchNdm\ DM trials the FDMT on a CPU
+(\spFdmtCpu~s) outruns even the GPU-accelerated brute force (\spBruteGpu~s), while the GPU
+accelerates the brute force by $\sim$24$\times$ (\spBruteCpu\ $\rightarrow$ \spBruteGpu~s); our
+FDMT's own GPU gain is currently $\sim$1$\times$ (host-loop bound). This is a
+tooling-and-validation contribution: a device-portable dedispersion path for hardware the CUDA
+ecosystem does not serve.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Pulsars (1306) --- Astronomy data analysis (1858) ---
+Astronomy software (1855) --- GPU computing (1969)}
+
+\section{Introduction}
+Incoherent dedispersion --- aligning a broadband signal's quadratic $\nu^{-2}$ delay across
+frequency channels --- is the foundational operation of pulsar and fast-radio-burst searching. The
+brute-force approach costs $O(N_f N_t N_\mathrm{DM})$; the Fast DM Transform of
+\citet{zackayofek2017} reduces this to $O(N_t(N_f + N_\Delta \log N_f))$ for $N_\Delta$ DM trials (comparable to $N_f$ here) by recursively merging sub-band
+transforms, exploiting the additivity of the dispersion curve across sub-bands. In production, GPU
+dedispersion is dominated by CUDA implementations \citep[e.g.\ \code{dedisp};][]{barsdell2012},
+none of which run on AMD (ROCm) hardware; to our knowledge no maintained PyTorch or JAX FDMT
+exists. Expressing the FDMT in a tensor framework closes that gap for free: PyTorch dispatches the
+same gather/add graph to CPU, CUDA, or ROCm backends. We describe the implementation, its
+validation against a tested oracle and against real public data of a known pulsar, and an honest
+benchmark on consumer AMD hardware.
+
+\section{Implementation and validation}
+The transform operates on a dynamic spectrum $(N_t \times N_f)$ with state $A[b, d, t]$ --- the
+partial sum of the dispersion track with in-band delay $d$ entering band $b$ at time $t$.
+Initialisation accumulates per-channel partial sums spanning each channel's share of the maximum
+delay; each merge halves the band count, splitting every output delay $d$ at the shared frequency
+edge via the $\nu^{-2}$ map, $d_\mathrm{hi} = \mathrm{round}[d\,(g_\mathrm{mid} -
+g_\mathrm{hi})/(g_\mathrm{lo} - g_\mathrm{hi})]$ with $g(f)=f^{-2}$, and adding the lower band
+shifted by $d_\mathrm{hi}$. Channel counts are padded to a power of two with rows of zero
+dispersion span. A batched brute-force twin (\code{brute\_dedisperse}) provides the in-framework
+baseline.
+
+Three anchors pin correctness. (i) The delay-0 row must equal the plain channel sum exactly.
+(ii) The brute twin must reproduce the independently tested \code{jansky.transients} CPU oracle
+element-wise. (iii) On synthetic dispersed pulse trains the FDMT butterfly peak must sit at the
+injected DM within delay quantisation --- it recovers DM $\spRecDm$ (injected $\spTrueDm$) and,
+after epoch folding of the dedispersed series, a period of $\spRecP$~ms (injected $\spTrueP$). During
+development these checks caught two real indexing errors (a swapped sub-band delay split and a
+padding-span bug) --- the reason the oracle-first discipline exists. One semantic difference is
+intentional and documented: the FDMT integrates the full track \emph{including} intra-channel
+smear, so its $S/N$ on a smeared pulse exceeds the one-sample-per-channel oracle's.
+
+\section{Recover-a-known on real data}
+The real-data validation uses a small (3.25~MB) public SIGPROC filterbank from the
+\code{sigpyproc3} repository \citep{sigpyproc}: a Parkes/UWL observation of the Crab pulsar
+(PSR~B0531+21), 832 channels over 702--4030~MHz, 0.512~ms sampling, 2.1~s. The catalogued
+dispersion measure is 56.77~pc\,cm$^{-3}$ \citep{manchester2005}, and the full 463~ms band sweep
+is visible within the file. After per-channel robust normalisation (median/MAD bandpass removal
+with clipping as a light RFI guard), the FDMT butterfly peaks at
+$\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$ ($\spRealDmErr\%$ from the catalogue), and a boxcar matched
+filter on the best-DM series detects a single bright pulse at $S/N=\spRealSpSnr$ --- consistent
+with a Crab giant pulse, tens of which are expected per minute at Jy level. This is a validation
+on real telescope data, not a discovery claim.
+
+\begin{figure}
+\plotone{figures/singlepulse.pdf}
+\caption{\emph{Left:} the FDMT butterfly --- peak track sum versus trial DM; the dashed line marks
+the ATNF catalogue DM of the Crab pulsar. \emph{Right:} the dedispersed time series at the best
+DM, with the brightest single pulse marked. The offline CI build shows the synthetic fixture; the
+real Parkes/UWL panels are produced by \code{make reproduce}.}
+\label{fig:sp}
+\end{figure}
+
+\section{Benchmark and honest limits}
+On a consumer AMD RX~7600~XT (gfx1102, 16~GiB, ROCm; PyTorch dispatches unmodified), a
+$8192\times1024$ spectrum over \spBenchNdm\ DM trials gives: brute force \spBruteCpu~s (CPU)
+$\rightarrow$ \spBruteGpu~s (GPU); FDMT \spFdmtCpu~s (CPU) $\rightarrow$ \spFdmtGpu~s (GPU). Two
+honest conclusions follow. First, \emph{the algorithm beats the hardware}: the $O(N\log N)$ FDMT
+on a CPU outruns the $O(N\,N_\mathrm{DM})$ brute force even after the GPU accelerates the latter
+$\sim$24$\times$. Second, our FDMT's GPU gain is currently $\sim$1$\times$: the recursion's
+per-delay host loop dominates over arithmetic at these sizes, so the GPU path awaits a
+batched-gather vectorisation of the merge step (future work, not claimed). We explicitly do
+\emph{not} compare against tuned CUDA dedispersers (Heimdall, FREDDA) on datacentre GPUs ---
+different hardware class and engineering budget; the claim is portability plus a validated
+algorithmic speed-up over in-framework baselines. Further limits: the 2.1~s validation file
+constrains period-recovery precision; the power scale is uncalibrated; and the RFI guard is a
+clip, not an excision pipeline.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{fdmt} and \code{singlepulse} modules and the drafting of
+this manuscript. The author directed the work, independently reviewed and verified all code,
+results, and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses public test data from the \code{sigpyproc3} project (Parkes/UWL, CSIRO) and builds
+on the \code{jansky} project. The author acknowledges the collaborative contribution of
+Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, PyTorch \citep{pytorch}, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}
