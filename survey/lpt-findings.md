@@ -31,6 +31,21 @@ not the first diagram. Companion of GLEAM-X J0704-37 corrected to M3 (not M5).
 The 9/9 below-death-line fact is the class's central puzzle made quantitative; the hinted ~78-min
 binary boundary is genuinely open, not yet established.
 
+## Counterpart cross-match (live, 2026-07-02; `lpt.crossmatch_counterparts`)
+
+Per-object VLASS QL2 cone (20″, epoch 1) + LoTSS DR3 forced cutout peak at each LPT position:
+
+- **VLASS (10/13 in Dec>−40 coverage): no persistent 2–4 GHz counterpart above ~0.7 mJy (5σ QL)
+  for ANY object.**
+- **LoTSS DR3 (3/13 in returned coverage: ASKAP J1935+2148, ILT J1101+5521, CHIME J1634+44): all
+  undetected in the mosaic** (peak/rms mJy: 0.30/0.15, 0.01/0.008, −0.02/0.019). ILT J1101's
+  non-detection in the *mosaic* is consistent with its burst-only conjunction emission.
+- Remaining objects: outside VLASS dec range (3) / LoTSS returned HTTP 500 = no footprint (10).
+
+Reading: the class is burst-only at current survey depths — persistent emission ≲0.7 mJy at
+2–4 GHz and ≲0.04–0.76 mJy (5σ) at 144 MHz where covered. Kept in findings (not the paper) since
+these numbers don't flow through the macro pipeline yet.
+
 ## Honesty rails
 
 - Compilation, not discovery: every number is someone else's measurement with provenance.

@@ -53,6 +53,8 @@ def load_sample(path: str | Path = SAMPLE_CSV) -> dict:
     ptype = np.array([r["pdot_type"] for r in rows])
     return {
         "name": np.array([r["name"] for r in rows]),
+        "ra": np.array([float(r["ra_deg"]) for r in rows]),
+        "dec": np.array([float(r["dec_deg"]) for r in rows]),
         "period_s": period,
         "pdot": pdot,
         "pdot_is_limit": ptype == "upper_limit",
@@ -128,6 +130,63 @@ def synthetic_lpt_population(
     is_wd = np.zeros(n, bool)
     is_wd[:n_wd] = True
     return period, is_wd
+
+
+def crossmatch_counterparts(
+    s: dict, *, match_arcsec: float = 20.0
+) -> list[dict]:  # pragma: no cover - network
+    """Per-LPT continuum-counterpart check: VLASS QL2 cone + LoTSS DR3 forced cutout peak.
+
+    LPTs are burst emitters; a persistent continuum counterpart (or its absence) constrains any
+    steady emission component. VLASS covers Dec > -40 (2-4 GHz, ~0.7 mJy at 5 sigma QL); LoTSS
+    DR3 the northern sky (144 MHz). Returns one row per object with fluxes or 5-sigma limits.
+    """
+    import io
+
+    import requests
+    from astropy.io import fits as _fits
+
+    from .vlass import fetch_vlass_epoch
+
+    out = []
+    for i, name in enumerate(s["name"]):
+        ra, dec = float(s["ra"][i]), float(s["dec"][i])
+        row: dict = {"name": str(name), "ra": ra, "dec": dec}
+        if dec > -40.0:
+            try:
+                vra, vdec, pk, _ = fetch_vlass_epoch(1, (ra, dec), 0.02)
+                d = np.hypot((vra - ra) * np.cos(np.radians(dec)), vdec - dec) * 3600.0
+                j = int(np.argmin(d)) if d.size else -1
+                if d.size and d[j] < match_arcsec:
+                    row["vlass_mJy"] = round(float(pk[j]), 2)
+                    row["vlass_sep_as"] = round(float(d[j]), 1)
+                else:
+                    row["vlass_mJy"] = None  # < ~0.7 mJy (5 sigma QL)
+            except Exception as exc:
+                row["vlass_note"] = f"fetch failed: {type(exc).__name__}"
+        else:
+            row["vlass_note"] = "outside VLASS dec range"
+        try:
+            r = requests.get(
+                "https://lofar-surveys.org/dr3-cutout.fits",
+                params={"pos": f"{ra},{dec}", "size": "0.05"},
+                timeout=90,
+            )
+            if r.ok and r.headers.get("content-type", "").startswith("application/fits"):
+                with _fits.open(io.BytesIO(r.content)) as hdul:
+                    img = np.asarray(hdul[0].data, float).squeeze() * 1e3  # Jy->mJy
+                c = np.array(img.shape) // 2
+                peak = float(np.nanmax(img[c[0] - 2 : c[0] + 3, c[1] - 2 : c[1] + 3]))
+                rms = float(1.4826 * np.nanmedian(np.abs(img - np.nanmedian(img))))
+                row["lotss_peak_mJy"] = round(peak, 2)
+                row["lotss_rms_mJy"] = round(rms, 3)
+                row["lotss_detected"] = bool(peak > 5 * rms)
+            else:
+                row["lotss_note"] = f"no coverage (HTTP {r.status_code})"
+        except Exception as exc:
+            row["lotss_note"] = f"cutout failed: {type(exc).__name__}"
+        out.append(row)
+    return out
 
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
