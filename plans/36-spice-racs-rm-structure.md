@@ -1,6 +1,6 @@
 # 36 — Galactic RM structure vs latitude from SPICE-RACS (rmsky at 10× the data)
 
-Status: 📋 planned — Tier 1 #2 of the opportunity scan; GATE-0 table hunt running
+Status: ✅ done (DR1 leg) — SF tooling + recover-a-known + DR1 measurement + GATE-2-fixed paper merged PR #81; the DR2 full-sky disc–halo run is the scoped follow-on (public 4.97 GB DAP file, same code)
 
 ## Context
 

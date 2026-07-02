@@ -1,6 +1,6 @@
 # 35 — The first long-period-transient (LPT) population catalogue and P–Ṗ diagram
 
-Status: 📋 planned — the top new-findings pick from `survey/opportunity-scan-2026-07.md` Tier 1 #3; data compilation running
+Status: ✅ done — table compiled+verified (caught a typo in the review's own data file); tooling+stats+paper merged PR #82; GATE-2 fixes (novelty narrowed: the review's Fig. 3 already plots the class) + CI vendoring fix merged PR #83
 
 ## Context
 
