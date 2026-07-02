@@ -34,7 +34,21 @@ literature high-|b| Galactic dispersion is ~9–15 rad/m² (Mao+2010, Taylor+200
 is intrinsic-scatter-dominated. Prior art: Stil+2011 did NVSS per-region SFs; ours is the first
 from SPICE-RACS, not the first ever.
 
-## Next (the DR2 leg)
+## DR2 full-sky leg (DONE 2026-07-02)
 
-Download the DAP file once (~5 GB, disk fine), run the identical `structure_function` per |b| bin
-over ~2.5×10⁵ RMs — the full-sky disc–halo coherence comparison. CPU-friendly (pair sums).
+337,548 RMs (S/N≥8) from the local DAP file (`data/spice-racs.dr2.fits`, gunzipped for memmap):
+
+| quantity | DR2 value |
+|---|---|
+| plane enhancement ratio (|b|<10 / >60) | **11.11 ± 0.09** (Taylor 2009: ~5.4 from 37k RMs) |
+| SF plateau, disc (|b|<10°) | **60,846 rad²m⁻⁴** |
+| SF plateau, halo (|b|>10°) | **2,612 rad²m⁻⁴** (→ σ≈36 rad/m², still intrinsic-dominated) |
+| disc–halo fluctuation-power contrast | **~23×** |
+| break scales | 1.41° (disc) vs 0.87° (halo) |
+
+The intrinsic-scatter floor is latitude-independent, so the disc–halo DIFFERENCE (~58,000
+rad²m⁻⁴) is dominated by the Galactic magneto-ionic medium — the measurement the method paper
+staked out. Caveat added: disc sightlines also gain depolarisation-selected populations; a
+DEFROST-style separation would tighten the difference argument. Pairs at this scale are drawn by
+random sampling (unbiased; fraction recorded). Reproduce: download csiro:64891, gunzip, then
+`uv run python -m jansky_research.rmstructure --dr2 --out .`.
