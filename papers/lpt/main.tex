@@ -1,0 +1,116 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{An LPT population catalogue and P--$\dot P$ diagram}
+\shortauthors{Barbere}
+\begin{document}
+\title{A Verified, Provenance-Carrying Population Catalogue of the Long-Period Radio Transients,
+with Regenerable P--$\dot P$ Statistics}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The long-period radio transients (LPTs) grew from two objects in 2022 to \lptN\ by mid-2026, yet
+no published population catalogue of the class carries per-value provenance and regenerable
+statistics (the review of \citealt{rea2026} discusses population constraints and plots the class,
+but ships neither). We compile a verified,
+per-value-provenanced catalogue of all \lptN\ confirmed LPTs (periods \lptPmin~min to
+\lptPmax~hr; every value traced to its discovery paper --- a process that surfaced a period
+transcription error in the review's own machine-readable table, which we flag) and place the class on the P--$\dot P$ plane against the pulsar death line \citep{ruderman1975}
+and constant-field tracks. The review's own Figure~3 already plots the class; what this catalogue
+adds is per-value provenance, explicit measurement-vs-limit typing, the binary split marked, and
+population statistics that regenerate from one vendored table. The population facts the diagram makes quantitative: only
+\lptNmeas\ $\dot P$ \emph{measurements} exist in the class (one glitch-caveated spin-down, one
+firm spin-\emph{up} --- natural for a binary); all \lptNconstr\ objects with any $\dot P$
+constraint sit \emph{below} the pulsar death line (\lptNdeath/\lptNconstr), the class's central
+theoretical puzzle; \lptNwd\ of \lptN\ are confirmed or candidate white-dwarf binaries; and the
+hinted $\sim$78-minute period boundary between binary and no-companion LPTs is \emph{not yet
+statistically established} --- the binaries sit longer by $\Delta\log P=\lptSplitD$ but an exact
+permutation test gives $p=\lptSplitP$ at this sample size, while the same test applied to a
+synthetic population with a real split returns $p\approx0.02$, showing the non-detection is a
+sample-size statement, not a method failure. The catalogue, diagram, and statistics regenerate
+from one vendored CSV; this is a value-added compilation, not a discovery claim.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Neutron stars (1108) --- White dwarf stars (1799) ---
+Catalogs (205)}
+
+\section{Introduction}
+LPTs --- periodic radio emitters with periods of minutes to hours --- defy the standard pulsar
+picture: coherent radio emission should cease beyond the pair-cascade death line, yet
+GPM~J1839$-$10 has emitted for 35+ years at $P=22$~min with $\dot P<3.6\times10^{-13}$
+\citep{hurleywalker2023}. Interpretations split between ultra-long-period magnetars
+\citep[e.g.][]{caleb2024,dong2025a} and white-dwarf binaries, now unambiguously confirmed for
+several members \citep{deruiter2025}. The review of \citet{rea2026} synthesises the physics and plots the class; a verified,
+regenerable catalogue with typed $\dot P$ entries is the complementary piece, and with \lptN\
+objects it is worth doing carefully
+--- and is small enough that every number can be verified against its primary source.
+
+\section{The catalogue}
+The vendored table records, per object: position, period (all converted to seconds --- the step
+that caught a dropped leading digit in the review's machine-readable file for ASKAP~J1935+2148,
+2225.309~s vs the discovery paper's $3225.313\pm0.002$~s, \citealt{caleb2024}), $\dot P$ value or
+upper limit \emph{with its type flagged}, binary and X-ray status, and the discovery/measurement
+arXiv IDs. Two $\dot P$ entries need care: CHIME~J0630+25's $+5.2(1.1)\times10^{-12}$ is a
+measurement through a glitch (the review conservatively treats it as a limit; we carry both
+framings, \citealt{dong2025a}), and CHIME~J1634+44's $-9.03(0.11)\times10^{-12}$ is the
+class's only firm spin-\emph{up} \citep{dong2025b} --- physically natural if the period is
+orbital or the emitter is torqued in a binary.
+
+\section{The P--$\dot P$ diagram and population statistics}
+Figure~\ref{fig:lpt} places all \lptN\ objects on the P--$\dot P$ plane: measurements as filled
+symbols, upper limits as arrows, white-dwarf binaries distinguished --- and, deliberately,
+\emph{no} dipole $B$ or characteristic age is quoted for binary members, whose ``period'' is
+orbital and for whom neutron-star dipole formulae are meaningless. Every constrained object lies
+below the death line (\lptNdeath/\lptNconstr; a limit below the line is informative --- the true
+$\dot P$ is lower still. The count uses positive $\dot P$ constraints only: the spin-up
+measurement and the consistent-with-zero object cannot be placed on a spin-down criterion) --- for the no-companion members this is the
+standing theoretical challenge; for the binaries it is simply the wrong diagnostic, which is
+precisely why the diagram needs the class split marked. The period distribution spans
+\lptPmin~min--\lptPmax~hr (median \lptPmed~min). Binaries sit at longer periods
+($\Delta\log P=\lptSplitD$), consistent with the suggested $\sim$78-min boundary, but the exact
+permutation test returns $p=\lptSplitP$: \emph{the split is not yet significant at
+$N=\lptN$}. The same statistic applied to a synthetic two-class population of the same size
+returns $p\approx0.02$, so the test has power --- the boundary question is genuinely open, not
+untestable.
+
+\begin{figure}
+\plotone{figures/lpt_ppdot.pdf}
+\caption{The LPT class on the P--$\dot P$ plane: circles are no-companion LPTs, squares
+white-dwarf binaries/candidates; arrows are upper limits, red-ringed symbols the two
+measurements; CHIME~J1634+44's $\dot P$ is \emph{negative} (spin-up) and is plotted at
+$|\dot P|$ for reference only. Dotted lines are constant dipole field (meaningful only for neutron-star
+interpretations); the dashed line is the pulsar death line --- every constrained LPT sits below
+it.}
+\label{fig:lpt}
+\end{figure}
+
+\section{Honest limits}
+(i) This is a compilation: every number is someone else's measurement, carried with its arXiv
+provenance; our contribution is the verified table, the diagram, and the statistics. (ii) $N=\lptN$
+is small; the split test is reported with its exact $p$-value and a demonstrated-power synthetic,
+not as a detection or exclusion. (iii) Binary/no-companion labels follow the review plus two
+post-review updates and will move as follow-up lands; the CSV carries per-object flags for every
+disputed value. (iv) GCRT~J1745$-$3009 (never re-detected since 2004, no timing baseline) is the
+weakest member and is flagged as such. (v) Selection effects (survey cadence, image-plane vs
+time-domain discovery) shape the period distribution and are not modelled here.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the
+literature compilation, the design, implementation, and testing of the \code{lpt} module, and the
+drafting of this manuscript. The author directed the work, independently reviewed and verified
+all code, results, and citations, and takes full responsibility for the content. An AI/LLM is not
+an author.
+
+\begin{acknowledgments}
+This compilation rests on the discovery work of the GLEAM-X, GPM, ASKAP/VAST, CHIME, and LOFAR
+teams, and on the review of Rea, Hurley-Walker \& Caleb. The author acknowledges the
+collaborative contribution of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, NumPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}
