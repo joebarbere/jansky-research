@@ -1,0 +1,98 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Jovian DAM occurrence from Juno/Waves}
+\shortauthors{Barbere}
+\begin{document}
+\title{A Jovian Decametric Occurrence Census from Juno/Waves: Proximity Dominates, and the
+Canonical Io Source Regions Persist --- Reduced --- at the Orbital Vantage}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Ground-based Jovian decametric (DAM) emission is famously organised in the plane of observer
+central meridian longitude (CML) and Io orbital phase into the Io-A/B/C/D source regions
+\citep{bigg1964,carr1983,marques2017}. The public Juno/Waves calibrated flux-density dataset
+\citep{louis2021} allows the same census \emph{from orbit}: we build an occurrence map over one
+Juno orbit (2017 February; \jdNbins\ 15-s bins, \jdNact\ active) using the dataset's shipped
+per-channel background statistics for detection, JPL Horizons for the sub-Juno System~III CML
+(the naive IAU rotation formula errs by up to $\sim$40$^\circ$ at Juno, verified), and the Lieske
+ephemeris for Io phase \citep{lieske1987,archinal2018}. On a synthetic orbit with the canonical
+Io boxes injected the census recovers the enhancement within cell-edge smearing (and the
+synthetic round-trip is a machinery check only --- an earlier Io-phase convention error, caught
+in science review, passed it while displacing every box; the convention is now the standard
+$\Phi_{Io}=\mathrm{CML}+180^\circ-\Lambda_{Io}$ of Bigg 1964 / Carr et al.\ 1983). On the real month, two results: (i)
+\emph{proximity dominates} --- the DAM-band duty cycle is \jdActNear\% in the near half of the
+orbit versus \jdActFar\% in the far half, a factor $\sim$25 driven by Juno--Jupiter distance,
+not by any rotational clock; and (ii) in the canonical (CML, $\Phi_{Io}$) boxes the occurrence contrast is \jdContrast\
+(full month; \jdContrastFar\ in the far half alone) --- Io organisation genuinely persists at
+the orbital vantage, but reduced relative to the strong ground-based contrasts, as expected if
+part of the canonical structure encodes beaming toward a distant near-equatorial observer. One
+month cannot separate vantage physics from exposure; the multi-orbit extension (the same code
+over the 2016--2023 v02 archive) is the scoped follow-on.
+\end{abstract}
+
+\keywords{Jupiter (873) --- Radio bursts (1339) --- Planetary magnetospheres (997)}
+
+\section{Introduction}
+Io's control of Jovian DAM \citep{bigg1964} is the textbook example of a satellite--magnetosphere
+interaction, and the (CML, Io-phase) occurrence map with its A/B/C/D regions \citep{carr1983,
+marques2017} is its canonical representation --- built from decades of \emph{terrestrial}
+observations, i.e.\ from a fixed, distant, near-equatorial vantage. Juno's polar, eccentric orbit
+breaks every one of those assumptions. The 2025 public release of the calibrated Juno/Waves
+flux densities \citep{louis2021} (daily CDFs to 40.5~MHz with per-channel background and sigma)
+makes the from-orbit census reproducible with public data alone.
+
+\section{Method}
+Each daily CDF is binned to 15~s; a bin is DAM-active when $\ge$10\% of the 3--40.5~MHz channels
+exceed the shipped $\mathrm{Background}+5\Sigma$. The absolute scale (V$^2$m$^{-2}$Hz$^{-1}$)
+never enters --- an occurrence census needs only detection against the dataset's own statistics.
+The sub-Juno CML comes from Horizons (\code{PDObsLon}, observer \code{500@-61}) at 15-min
+sampling, unwrap-interpolated; Io phase is the Lieske mean longitude minus CML
+\citep{lieske1987}. Occurrence maps carry per-cell exposure, and cells visited $<$3 times are
+masked --- a single orbit does not sample the plane uniformly, and hiding that would manufacture
+structure. The synthetic recover-a-known drives the same code with real CML/Io rates and
+Bernoulli activity concentrated in the canonical boxes: injected contrast 8.75, recovered 7.2.
+
+\section{Results and honest limits}
+Figure~\ref{fig:jd} shows the month's map. The near/far duty-cycle split
+(\jdActNear\%/\jdActFar\%) says the strongest organising variable from orbit is simply distance
+--- at perijove Juno sits close to (at times within) the source regions and the band is active
+almost continuously, while in the far half the duty cycle drops to Earth-like rarity. The
+canonical Io boxes organise the residual at contrast \jdContrast\ (full month; \jdContrastFar\
+far-half; \jdCells\ cells used) --- present, but well below ground-based values. Honest limits: (i) one orbit --- (CML, $\Phi_{Io}$) exposure is uneven;
+(ii) the fixed 10\%-of-band activity criterion is one choice among several (it suppresses
+narrowband interference but dilutes narrowband DAM); (iii) proximity and vantage effects are not
+modelled, only demonstrated; (iv) the census does not separate Io-DAM from non-Io-DAM or
+kilometric leakage below 3~MHz; (v) the reduced-contrast reading is a consistency statement, not a proof --- the multi-orbit
+v02 census with distance-resolved maps is the test; and the review-caught convention error is
+disclosed above because a synthetic round-trip cannot validate frame conventions, only machinery.
+
+\begin{figure}
+\plotone{figures/junodam.pdf}
+\caption{\emph{Left:} DAM occurrence probability over the (CML, Io-phase) plane for 2017
+February, with the Earth-canonical Io-A/B/C/D boxes overlaid (dashed) and low-exposure cells
+masked. \emph{Right:} active bins (red) over the month's plane coverage. The CI build shows the
+synthetic-orbit fixture; \code{make reproduce} regenerates the real panels from the local CDFs.}
+\label{fig:jd}
+\end{figure}
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{junodam} module and the drafting of this manuscript.
+The author directed the work, independently reviewed and verified all code, results, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the public Juno/Waves estimated flux density dataset (MASER/PADC, Observatoire de
+Paris; doi:10.25935/6jg4-mk86), JPL Horizons, and builds on the \code{jansky} project. The author
+acknowledges the collaborative contribution of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, cdflib, astroquery, NumPy, Matplotlib,
+jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}

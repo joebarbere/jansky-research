@@ -42,6 +42,7 @@ SLICES = {
     "stokesv_discovery": ("stokesv_discovery", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "lpt": ("lpt", "--offline"),
+    "junodam": ("junodam", "--offline"),
 }
 
 
