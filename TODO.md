@@ -35,11 +35,14 @@ the one permanent, low-friction win). Do them top to bottom:
 4. **Order among the arXiv papers doesn't matter**, but if you submit only one first, make it
    `vlass` or `peaked` (the strongest methodology + recover-a-known stories).
 
-**Scope as of now:** the repo has **nineteen** completed slices, each with a tested tool + an AASTeX
-paper under `papers/<slice>/` (the full list is in `README.md`). Slice-building is **paused** — the
-reliable no-auth data sources are largely used up; two larger efforts are scoped in
-`plans/28-breakthrough-listen-singlepulse.md` and `plans/29-lotss-deep-144mhz-counts.md`. The
-publishing steps below operate on the current nineteen; revisit the arXiv shortlist if #28/#29 land.
+**Scope as of now:** the repo has **twenty-one** completed slices, each with a tested tool + an AASTeX
+paper under `papers/<slice>/` (the full list is in `README.md`). The earlier "reliable no-auth data
+sources are largely used up" assumption is **retired** — the 2026-07 re-survey
+(`survey/opportunity-scan-2026-07.md`) found major new/upgraded open sources (LoTSS DR3, CHIME/FRB
+Cat 2, SPICE-RACS DR2, MeerKAT image products, VLASS SE images, OVRO-LWA solar, Juno/Waves, Parkes
+PSRDA) and a ranked shortlist of plan-ready opportunities; two larger efforts remain scoped in
+`plans/28-breakthrough-listen-singlepulse.md` and `plans/29-lotss-deep-144mhz-counts.md` (29 should
+migrate to LoTSS DR3). The publishing steps below operate on the completed slices.
 
 **`stokesv` is now complete** (CASDA recovered; the forced-photometry leg is wired). It is a
 methods + honest-limits paper (I recovered from real RACS-low V images; single-epoch V is
