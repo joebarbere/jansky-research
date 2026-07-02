@@ -21,7 +21,7 @@ search + boxcar single-pulse + epoch folding.
 
 | leg | result |
 |---|---|
-| synthetic pulse train (Crab-like) | DM 56.63 (true 56.77); folded P 33.257 ms (true 33.27) |
+| synthetic pulse train (Crab-like) | DM 56.63 (true 56.77); folded P 33.379 ms (true 33.392, ATNF epoch-corrected) |
 | **real Parkes/UWL Crab** (GATE-0 3.25 MB public `.fil`) | **DM 56.59 — 0.3% from ATNF**; giant pulse at boxcar S/N 14 |
 
 GATE 0 note: Breakthrough Listen products were *ruled out* for this demo — their 1–18 s sampling

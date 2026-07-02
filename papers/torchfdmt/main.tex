@@ -24,11 +24,13 @@ implemented entirely in PyTorch tensor operations \citep{pytorch}: no custom ker
 RX~7600~XT). Correctness is anchored against an independently tested brute-force oracle: the
 zero-delay row equals the plain channel sum exactly, and on synthetic dispersed pulses the
 transform recovers the injected dispersion measure within delay quantisation
-(DM $\spRecDm$ for $\spTrueDm$ injected; folded period $\spRecP$\,ms for 33.27 injected). On a
+(DM $\spRecDm$ for $\spTrueDm$ injected; folded period $\spRecP$\,ms for $\spTrueP$ injected). On a
 small public Parkes/UWL observation of the Crab pulsar the same pipeline recovers
 $\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$ --- $\spRealDmErr\%$ from the ATNF catalogue value
 \citep{manchester2005} --- and detects a giant pulse at boxcar $S/N=\spRealSpSnr$. The honest
-benchmark headline is algorithmic, not hardware: over \spBenchNdm\ DM trials the FDMT on a CPU
+benchmark headline is algorithmic, not hardware --- comparing wall time for equal-size DM-trial
+output planes (and conservatively for the FDMT, whose track-integral output is the more sensitive
+of the two on smeared pulses): over \spBenchNdm\ DM trials the FDMT on a CPU
 (\spFdmtCpu~s) outruns even the GPU-accelerated brute force (\spBruteGpu~s), while the GPU
 accelerates the brute force by $\sim$24$\times$ (\spBruteCpu\ $\rightarrow$ \spBruteGpu~s); our
 FDMT's own GPU gain is currently $\sim$1$\times$ (host-loop bound). This is a
@@ -43,7 +45,7 @@ Astronomy software (1855) --- GPU computing (1969)}
 Incoherent dedispersion --- aligning a broadband signal's quadratic $\nu^{-2}$ delay across
 frequency channels --- is the foundational operation of pulsar and fast-radio-burst searching. The
 brute-force approach costs $O(N_f N_t N_\mathrm{DM})$; the Fast DM Transform of
-\citet{zackayofek2017} reduces this to $O(N_f N_t \log N_f)$ by recursively merging sub-band
+\citet{zackayofek2017} reduces this to $O(N_t(N_f + N_\Delta \log N_f))$ for $N_\Delta$ DM trials (comparable to $N_f$ here) by recursively merging sub-band
 transforms, exploiting the additivity of the dispersion curve across sub-bands. In production, GPU
 dedispersion is dominated by CUDA implementations \citep[e.g.\ \code{dedisp};][]{barsdell2012},
 none of which run on AMD (ROCm) hardware; to our knowledge no maintained PyTorch or JAX FDMT
@@ -67,7 +69,7 @@ Three anchors pin correctness. (i) The delay-0 row must equal the plain channel 
 (ii) The brute twin must reproduce the independently tested \code{jansky.transients} CPU oracle
 element-wise. (iii) On synthetic dispersed pulse trains the FDMT butterfly peak must sit at the
 injected DM within delay quantisation --- it recovers DM $\spRecDm$ (injected $\spTrueDm$) and,
-after epoch folding of the dedispersed series, a period of $\spRecP$~ms (injected 33.27). During
+after epoch folding of the dedispersed series, a period of $\spRecP$~ms (injected $\spTrueP$). During
 development these checks caught two real indexing errors (a swapped sub-band delay split and a
 padding-span bug) --- the reason the oracle-first discipline exists. One semantic difference is
 intentional and documented: the FDMT integrates the full track \emph{including} intra-channel
