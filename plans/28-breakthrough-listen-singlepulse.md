@@ -1,6 +1,9 @@
 # 28 — Single-pulse / pulsar dedispersion on Breakthrough Listen open data
 
-Status: 📋 planned (not started) — a *larger* effort: new data domain + a large-file mitigation gate
+Status: ➡️ absorbed into `plans/34-torch-fdmt-singlepulse.md` (2026-07) — its GATE 0, synthetic
+discipline, and recover-the-catalogued-DM/period science are steps 0/2/4 of the torch-fdmt arc;
+the GPU addendum in `survey/opportunity-scan-2026-07.md` verified PyTorch-ROCm on this machine,
+which turns the "GPU optional later" note below into the slice's headline
 
 ## Context
 

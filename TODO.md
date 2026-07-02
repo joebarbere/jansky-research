@@ -40,9 +40,11 @@ paper under `papers/<slice>/` (the full list is in `README.md`). The earlier "re
 sources are largely used up" assumption is **retired** — the 2026-07 re-survey
 (`survey/opportunity-scan-2026-07.md`) found major new/upgraded open sources (LoTSS DR3, CHIME/FRB
 Cat 2, SPICE-RACS DR2, MeerKAT image products, VLASS SE images, OVRO-LWA solar, Juno/Waves, Parkes
-PSRDA) and a ranked shortlist of plan-ready opportunities; two larger efforts remain scoped in
-`plans/28-breakthrough-listen-singlepulse.md` and `plans/29-lotss-deep-144mhz-counts.md` (29 should
-migrate to LoTSS DR3). The publishing steps below operate on the completed slices.
+PSRDA) and a ranked shortlist of plan-ready opportunities. The two openers are now drafted:
+`plans/33-racs-stokesv-discovery.md` (forced target-list V photometry + two-epoch variability;
+time-sensitive) and `plans/34-torch-fdmt-singlepulse.md` (pure-PyTorch FDMT + the single-pulse
+science, absorbing plan 28). `plans/29-lotss-deep-144mhz-counts.md` remains scoped (should migrate
+to LoTSS DR3). The publishing steps below operate on the completed slices.
 
 **`stokesv` is now complete** (CASDA recovered; the forced-photometry leg is wired). It is a
 methods + honest-limits paper (I recovered from real RACS-low V images; single-epoch V is
