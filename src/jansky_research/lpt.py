@@ -4,13 +4,15 @@ The confirmed LPT sample grew from 2 (2022) to 13 objects by mid-2026, and the c
 Hurley-Walker & Caleb 2026, arXiv:2601.10393) explicitly notes that **no population synthesis
 exists**. This slice ships one: a verified, per-value-provenanced table (``data/lpt_sample.csv``,
 compiled 2026-07 from the discovery papers -- during which a period typo in the review's own data
-file was caught, see FLAG_A) and the class's first P--Pdot placement against the pulsar
-population, the death line, and constant-B tracks (reusing ``ppdot``). Dipole-formula quantities
+file was caught, see FLAG_A) and a P--Pdot placement against the pulsar population, death line, and
+constant-B tracks (reusing ``ppdot``) -- the review's own Fig. 3 plots the class, so the novelty
+here is narrower and stated as such: per-value provenance, explicit measurement-vs-limit typing,
+and statistics that regenerate from the table. Dipole-formula quantities
 (B, tau) are computed **only** for objects where a neutron-star interpretation is viable; confirmed
 white-dwarf binaries are plotted but not assigned NS dipole values -- their "period" is orbital.
 
 The population question the diagram frames: only TWO Pdot *measurements* exist in the class
-(CHIME J0630+25 spin-down, glitch-caveated; CHIME/ILT J1634+44 spin-UP -- natural for a binary),
+(CHIME J0630+25 spin-down, glitch-caveated; CHIME J1634+44 spin-UP -- natural for a binary),
 everything else is upper limits, several so weak they constrain nothing; and the WD-binary members
 cluster at long periods (a hinted ~78-min boundary the sample is still too small to establish --
 we report the split statistic with its tiny-N caveat, not a claim).
@@ -82,6 +84,9 @@ def population_table(s: dict) -> dict:
         "period_min_min": round(p_min / 60.0, 1),
         "period_max_hr": round(p_max / 3600.0, 2),
         "median_period_min": round(float(np.median(s["period_s"])) / 60.0, 1),
+        # n_constrained counts POSITIVE Pdot values/limits only: the spin-up measurement
+        # (J1634+44) and the consistent-with-zero object (J1755-2527) cannot be placed on the
+        # spin-down death-line criterion and are excluded (stated in the paper).
         "n_pdot_constrained": n_constrained,
         "n_below_death_line": below_death,
     }
@@ -99,7 +104,7 @@ def period_split_stat(period_s: np.ndarray, is_wd: np.ndarray) -> dict:
     if a.size < 2 or b.size < 2:
         return {"delta_log_median": float("nan"), "p_perm": float("nan")}
     obs = np.median(a) - np.median(b)
-    pool = np.concatenate([a, b])
+    pool = np.concatenate([a, b]).copy()  # shuffled in-place below
     n_a = a.size
     count = 0
     n_perm = 20000

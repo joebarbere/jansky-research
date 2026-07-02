@@ -4,19 +4,22 @@
 \shorttitle{An LPT population catalogue and P--$\dot P$ diagram}
 \shortauthors{Barbere}
 \begin{document}
-\title{A Verified Population Catalogue of the Long-Period Radio Transients and the Class's First
-P--$\dot P$ Diagram}
+\title{A Verified, Provenance-Carrying Population Catalogue of the Long-Period Radio Transients,
+with Regenerable P--$\dot P$ Statistics}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
 The long-period radio transients (LPTs) grew from two objects in 2022 to \lptN\ by mid-2026, yet
-the class review \citep{rea2026} notes that no population synthesis exists. We compile a verified,
+no published population catalogue of the class carries per-value provenance and regenerable
+statistics (the review of \citealt{rea2026} discusses population constraints and plots the class,
+but ships neither). We compile a verified,
 per-value-provenanced catalogue of all \lptN\ confirmed LPTs (periods \lptPmin~min to
 \lptPmax~hr; every value traced to its discovery paper --- a process that surfaced a period
-transcription error in the review's own machine-readable table, which we flag) and place the
-class on its first P--$\dot P$ diagram against the pulsar death line \citep{ruderman1975} and
-constant-field tracks. The population facts the diagram makes quantitative: only
+transcription error in the review's own machine-readable table, which we flag) and place the class on the P--$\dot P$ plane against the pulsar death line \citep{ruderman1975}
+and constant-field tracks. The review's own Figure~3 already plots the class; what this catalogue
+adds is per-value provenance, explicit measurement-vs-limit typing, the binary split marked, and
+population statistics that regenerate from one vendored table. The population facts the diagram makes quantitative: only
 \lptNmeas\ $\dot P$ \emph{measurements} exist in the class (one glitch-caveated spin-down, one
 firm spin-\emph{up} --- natural for a binary); all \lptNconstr\ objects with any $\dot P$
 constraint sit \emph{below} the pulsar death line (\lptNdeath/\lptNconstr), the class's central
@@ -38,8 +41,9 @@ picture: coherent radio emission should cease beyond the pair-cascade death line
 GPM~J1839$-$10 has emitted for 35+ years at $P=22$~min with $\dot P<3.6\times10^{-13}$
 \citep{hurleywalker2023}. Interpretations split between ultra-long-period magnetars
 \citep[e.g.][]{caleb2024,dong2025a} and white-dwarf binaries, now unambiguously confirmed for
-several members \citep{deruiter2025}. The review of \citet{rea2026} synthesises the physics but
-provides no population analysis; with \lptN\ objects that analysis is now worth doing carefully
+several members \citep{deruiter2025}. The review of \citet{rea2026} synthesises the physics and plots the class; a verified,
+regenerable catalogue with typed $\dot P$ entries is the complementary piece, and with \lptN\
+objects it is worth doing carefully
 --- and is small enough that every number can be verified against its primary source.
 
 \section{The catalogue}
@@ -49,7 +53,7 @@ that caught a dropped leading digit in the review's machine-readable file for AS
 upper limit \emph{with its type flagged}, binary and X-ray status, and the discovery/measurement
 arXiv IDs. Two $\dot P$ entries need care: CHIME~J0630+25's $+5.2(1.1)\times10^{-12}$ is a
 measurement through a glitch (the review conservatively treats it as a limit; we carry both
-framings, \citealt{dong2025a}), and CHIME/ILT~J1634+44's $-9.03(0.11)\times10^{-12}$ is the
+framings, \citealt{dong2025a}), and CHIME~J1634+44's $-9.03(0.11)\times10^{-12}$ is the
 class's only firm spin-\emph{up} \citep{dong2025b} --- physically natural if the period is
 orbital or the emitter is torqued in a binary.
 
@@ -58,7 +62,9 @@ Figure~\ref{fig:lpt} places all \lptN\ objects on the P--$\dot P$ plane: measure
 symbols, upper limits as arrows, white-dwarf binaries distinguished --- and, deliberately,
 \emph{no} dipole $B$ or characteristic age is quoted for binary members, whose ``period'' is
 orbital and for whom neutron-star dipole formulae are meaningless. Every constrained object lies
-below the death line (\lptNdeath/\lptNconstr) --- for the no-companion members this is the
+below the death line (\lptNdeath/\lptNconstr; a limit below the line is informative --- the true
+$\dot P$ is lower still. The count uses positive $\dot P$ constraints only: the spin-up
+measurement and the consistent-with-zero object cannot be placed on a spin-down criterion) --- for the no-companion members this is the
 standing theoretical challenge; for the binaries it is simply the wrong diagnostic, which is
 precisely why the diagram needs the class split marked. The period distribution spans
 \lptPmin~min--\lptPmax~hr (median \lptPmed~min). Binaries sit at longer periods
@@ -72,7 +78,8 @@ untestable.
 \plotone{figures/lpt_ppdot.pdf}
 \caption{The LPT class on the P--$\dot P$ plane: circles are no-companion LPTs, squares
 white-dwarf binaries/candidates; arrows are upper limits, red-ringed symbols the two
-measurements. Dotted lines are constant dipole field (meaningful only for neutron-star
+measurements; CHIME~J1634+44's $\dot P$ is \emph{negative} (spin-up) and is plotted at
+$|\dot P|$ for reference only. Dotted lines are constant dipole field (meaningful only for neutron-star
 interpretations); the dashed line is the pulsar death line --- every constrained LPT sits below
 it.}
 \label{fig:lpt}

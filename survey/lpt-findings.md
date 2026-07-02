@@ -1,8 +1,10 @@
-# Findings — the first LPT population catalogue + P–Ṗ diagram (plan 35)
+# Findings — a verified, provenance-carrying LPT population catalogue (plan 35)
 
 `jansky_research.lpt` + `data/lpt_sample.csv` (13 confirmed LPTs, every value carrying its arXiv
 provenance — compiled 2026-07 from the discovery papers, cross-checked against the Rea+2026 review
-arXiv:2601.10393 and its GitHub data file).
+arXiv:2601.10393 and its GitHub data file). GATE-2 note: the review's own Fig. 3 already plots
+the class on P–Ṗ — the contribution here is the provenance-typed table + regenerable statistics,
+not the first diagram. Companion of GLEAM-X J0704-37 corrected to M3 (not M5).
 
 ## What the compilation itself found
 
@@ -10,7 +12,7 @@ arXiv:2601.10393 and its GitHub data file).
   2225.309 s vs the discovery paper's 3225.313±0.002 s (dropped leading digit). Flagged; the
   discovery value is used.
 - **Only 2 Ṗ measurements exist in the whole class**: CHIME J0630+25 (+5.2e-12, through a glitch —
-  the review conservatively downgrades it to a limit; both framings carried) and CHIME/ILT
+  the review conservatively downgrades it to a limit; both framings carried) and CHIME
   J1634+44 (−9.03e-12 — the class's only firm spin-UP, natural for a binary).
 - Post-review member included: ASKAP J1745−5051 (accreting WD binary, Rose+2026).
 
