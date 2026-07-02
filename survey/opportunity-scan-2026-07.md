@@ -156,7 +156,8 @@ with its GATE-0 already identified.
 
 - CASDA TAP: use `https://casda.csiro.au/casda_vo_tools/tap`.
 - CHIME/FRB: treat `chime-frb.ca` as flaky (503); mirror any fetched catalogue into `data/`.
-- GPU: AMD Navi 33, no ROCm — CPU-first plans; do not spec CUDA tools.
+- GPU: **superseded by the GPU addendum below** — PyTorch-ROCm is now installed and empirically
+  verified on the card; CUDA-only tools remain walled (see addendum).
 - WALLABY/SPICE-RACS/MeerKAT: catalogue products often live in **paper supplementary material
   or team pages, not the observatory archive** — every plan needs a data-location GATE-0, not
   just an archive name.
@@ -176,3 +177,62 @@ review), 2601.09399 (CHIME Cat 2), 2605.08410 (80 repeaters), 2606.26334 (CHIME 
 2602.15949 (LoTSS DR3), 2409.02554 (DH type II cycles), 2511.22702 (Parkes PSRDA),
 2512.11964 (MeerKLASS), doi:10.25935/6jg4-mk86 (Juno/Waves flux density). Agent syntheses
 generated 2026-07-01; condensed here.
+
+---
+
+# GPU addendum (2026-07-02) — ROCm on the RX 7600 XT: verified working; re-ranked GPU avenues
+
+The scan's "no ROCm → CPU-first" correction is itself now corrected. **Empirical result (this
+machine, 2026-07-02):** the PyTorch **2.12.1+rocm7.1** wheel (`pip install torch --index-url
+https://download.pytorch.org/whl/rocm7.1`, venv `~/.venvs/rocm-test`) detects the card **natively
+as gfx1102** — no `HSA_OVERRIDE`, and **no system ROCm install needed** (the wheels bundle the
+runtime; `/dev/kfd` + `/dev/dri/renderD128` are world-writable on Fedora 44). Measured, with
+GPU/CPU results verified matching:
+
+| Kernel (radio-astronomy proxy) | CPU | GPU (RX 7600 XT, 16 GiB) | Speedup |
+|---|---|---|---|
+| matmul 4096² fp32 (ML inference) | 216 ms (0.64 TF) | 65 ms (2.1 TF) | **3×** |
+| 2-D FFT 4096² complex64 (dynamic spectra / imaging) | 50 ms | 5.4 ms | **9×** |
+| Dedispersion-style gather+sum, 1024 DM × 4096 chan × 8192 samp | 156 s | 6.5 s | **24×** |
+
+Caveat kept honest: a web survey of the ecosystem (same date) found the *official* ROCm support
+matrix still omits gfx1102 and older wheels (≤ torch 2.6) dropped it — the empirical wheel test
+above is the ground truth for this machine, but pin the torch/rocm version that works and re-test
+on upgrades. VRAM discipline matters: a naive 64-DM-batch gather OOM'd 16 GiB; batch to fit.
+
+## What stays CUDA-walled (do not spec)
+
+**Heimdall / dedisp / astro-accelerate / FREDDA** (no HIP ports), **YOLO-CIANNA** (custom
+C+CUDA framework), **turboSETI GPU mode** (CuPy; `amd-cupy` exists but is Instinct-primary and
+untested on RDNA3 — run turboSETI on CPU), **FETCH** (TensorFlow; TF-ROCm is fragile — prefer a
+PyTorch classifier). The ROCm-viable rule of thumb: **if it's pure PyTorch, it runs; if it ships
+CUDA kernels, it doesn't.**
+
+## GPU-enabled avenues, ranked (a parallel track — does not displace the catalogue-work Tier 1)
+
+1. **`torch-fdmt`: a pure-PyTorch Fast-DM-Transform package** — no maintained torch/JAX FDMT
+   exists (verified; only Julia + a Python reference). Pure tensor ops → ROCm out of the box; the
+   naive gather benchmark above (24×) de-risks the performance claim ("faster than CPU
+   baselines", not "beats FREDDA"). Output: JOSS/RNAAS software paper + it upgrades plan 28's
+   dedispersion leg to GPU on this very hardware. Composes `jansky.transients` as the
+   correctness oracle (CPU reference implementation already tested).
+2. **FAST-FREX FRB-classifier benchmark** — the public labelled FAST dataset
+   (doi:10.57760/sciencedb.15070; 600 bursts + 1,000 RFI negatives, built *for* ML challenges);
+   train a plain-PyTorch ResNet/UNet on ROCm, report precision/recall vs the paper's
+   RaSPDAM baselines. 16 GiB VRAM is ample. Avoid custom-CUDA-op models.
+3. **OVRO-LWA solar burst detector (first ML detector on the new archive)** — Ultralytics YOLO
+   (pure PyTorch) fine-tuned on OVRO-LWA public dynamic spectra (Apr 2024+, cycle-25 max);
+   nothing published on this archive yet; ties directly into the e-Callisto census (a calibrated
+   cross-check instrument). Risk: sparse labels — seed-annotate, or transfer from the SWSC-2026
+   e-Callisto YOLOv5 work (code availability unverified).
+4. **Radio-morphology fine-tuning (Zoobot / STRADAViT) on LoTSS DR3 / VLASS cutouts** — Zoobot is
+   PyTorch and explicitly gaming-GPU-certified; classify the VLASS variability-census sources'
+   morphology as the science hook (connects an existing slice to interpretation).
+5. **U-Net RFI segmentation on Apertif TD DR2** (weak labels from AOFlagger; test flag-vs-FRB
+   preservation on the 24 FRB-positive pointings) — viable but the most crowded of the five.
+
+Interaction with the main shortlist: the Tier-1 catalogue picks (Stokes-V, LPT, SPICE-RACS,
+CHIME wait-times) are **GPU-idle and unaffected** — the GPU track runs in parallel. The single
+best synergy: **#1 (`torch-fdmt`) + plan 28 (BL single-pulse)** become one slice arc — build the
+tool, validate against `jansky.transients` synthetics, run it on a real public filterbank
+(BL / Apertif / Parkes PSRDA), publish the benchmark.
