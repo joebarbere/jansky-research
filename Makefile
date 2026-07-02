@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt rmstructure stokesv stokesv_discovery
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt rmstructure lpt stokesv stokesv_discovery
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -104,6 +104,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.singlepulse --benchmark --out .  # real Crab recover-a-known + CPU benchmark (GPU: rerun with --device cuda in a ROCm venv)
 	CASDA_USERNAME=$${CASDA_USERNAME:?set CASDA_USERNAME for the stokesv Stokes-V leg} uv run python -m jansky_research.stokesv --out .
 	uv run python -m jansky_research.rmstructure --out .  # SPICE-RACS DR1 via CASDA TAP (no auth)
+	uv run python -m jansky_research.lpt --out .  # vendored verified LPT table (offline by design)
 	uv run python -m jansky_research.stokesv_discovery --out .  # summarises results/stokesv_discovery_realtargets.csv (regenerate: uv run python scripts/stokesv_discovery_real.py)
 	$(MAKE) paper && $(MAKE) arxiv
 

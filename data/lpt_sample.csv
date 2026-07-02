@@ -1,0 +1,14 @@
+name,ra_deg,dec_deg,period_s,pdot_s_s,pdot_type,pdot_ref_arxiv,binary_status,companion,xray,discovery_arxiv,year,flags
+GCRT J1745-3009,266.271,-30.164,4620.72,,none,,unknown,unknown,no,astro-ph/0502231,2005,FLAG_F weakest member; no timing baseline
+GLEAM-X J162759.5-523504.3,246.998,-52.585,1091.1690,1.2e-9,upper_limit,2201.02926,no,none,no,2201.02926,2022,active Jan-Mar 2018 only
+GPM J1839-10,279.759,-10.531,1318.1957,3.6e-13,upper_limit,2307.14829,no,none,no,2307.14829,2023,active 35+ yr; deepest past death line
+ASKAP J1935+2148,293.771,21.812,3225.313,1.2e-10,upper_limit,2407.12266,no,none,no,2407.12266,2024,FLAG_A review CSV has 2225 s typo; use 3225.313 (discovery paper)
+CHIME J0630+25,97.660,25.441,421.35584,5.2e-12,measurement_disputed,2407.07480,no,none,no,2407.07480,2024,FLAG_B Pdot measured with glitch caveat; review treats as UL 8e-13
+ASKAP J183244.5-091121,278.202,-9.187,2656.2554,9.0e-12,upper_limit,2411.16606,no,none,yes,2411.16606,2025,first LPT X-ray detection; phase-locked
+ILT J1101+5521,150.455,55.522,7531.78,1.71e-11,upper_limit,2408.11536,yes,M dwarf,no,2408.11536,2025,detached WD+M binary
+GLEAM-X J0704-37,106.055,-37.104,10496.5575,3.9e-11,upper_limit,2408.15757,yes,M3 dwarf,no,2408.15757,2024,spectroscopic WD+M orbit (2501.03315)
+ASKAP J183950.5-075635,279.961,-7.943,23221.74,1.6e-7,upper_limit,2501.09133,no,none,no,2501.09133,2025,longest period; interpulses
+ASKAP J144834-685644,222.142,-68.945,5631.07,2.2e-8,upper_limit,2507.13453,candidate,hot WD/disk,yes,2507.13453,2025,radio+X-ray+optical
+CHIME J1634+44,248.450,44.430,841.24,-9.03e-12,measurement,2507.05139,candidate,hot WD,no,2507.05139,2025,FLAG_C only clear spin-UP; 100 pct circular pol
+ASKAP J175534.9-252749.1,268.895,-25.464,4186.3285,-1.0e-11,consistent_zero,2507.14448,candidate,unknown,no,2507.14448,2025,Pdot=(-10+/-92)e-12; intermittent
+ASKAP J174508.9-505149,266.287,-50.864,4842,,none,,yes,sub-stellar donor,yes,2606.04232,2026,FLAG_D post-review; accreting WD binary; orbital 1.35 hr
