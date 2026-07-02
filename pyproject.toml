@@ -36,6 +36,10 @@ windwaves = ["cdflib>=1.0"]
 # for the streaming e-Callisto ingest). Kept OUT of core/CI like airflow — needs Python >=3.11, so it
 # is installed only via `uv sync --extra workflow` (or `uv run --extra workflow snakemake ...`).
 workflow = ["snakemake>=8.0; python_version >= '3.11'"]
+# The pure-PyTorch Fast DM Transform (plan 34). Pinned to the CPU wheel index below so CI/tests
+# never pull multi-GB accelerator wheels; the GPU benchmark leg runs from a ROCm venv with this
+# repo importable (see plans/34). Tests `importorskip("torch")`, so core CI stays torch-free.
+fdmt = ["torch>=2.4"]
 
 # The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
 # analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.
@@ -50,6 +54,13 @@ Homepage = "https://github.com/joebarbere/jansky-research"
 # (the tag is cut on jansky; uv.lock records the exact resolved commit).
 [tool.uv.sources]
 jansky = { path = "../jansky", editable = true }
+# torch resolves from the CPU wheel index (small, CI-safe); GPU runs use a separate ROCm venv.
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

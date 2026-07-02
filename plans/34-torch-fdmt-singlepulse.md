@@ -1,6 +1,9 @@
 # 34 — `torch-fdmt`: a pure-PyTorch Fast DM Transform + the single-pulse slice (absorbs plan 28)
 
-Status: 📋 planned (not started) — the GPU-track opener from the `survey/opportunity-scan-2026-07.md` GPU addendum; **absorbs plan 28** (BL single-pulse), whose science becomes this arc's real-data leg
+Status: 🔨 in progress — `fdmt.py` tooling MERGED (torch FDMT + brute twin validated vs the
+`jansky.transients` oracle; 100% module coverage; the delay-split swap bug the plan predicted was
+caught by the oracle checks). GATE 0 (small filterbank hunt) running; next: `singlepulse.py` +
+benchmark leg + paper
 
 ## Context
 
