@@ -163,7 +163,7 @@ def _fold_period(series: np.ndarray, dt: float, p0: float) -> float:
     return float(res.best_period)
 
 
-def run(out: str = ".", *, offline: bool = True, device: str = "cpu") -> dict:
+def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
     """Full slice: synthetic recover-a-known, plus the real Crab leg when online."""
     import json
 
@@ -179,6 +179,25 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu") -> dict:
         "recovered_period_ms": round(p_syn * 1e3, 3),
         "device": device,
     }
+
+    if bench:  # pragma: no cover - timing-dependent; reproduced via --benchmark
+        from . import fdmt as _F
+
+        devs = ("cpu", "cuda") if device != "cpu" else ("cpu",)
+        b = _F.benchmark(n_time=8192, n_chan=1024, max_dm=800.0, devices=devs, repeats=3)
+        metrics.update(
+            {
+                "bench_brute_cpu_s": round(b["brute_cpu_s"], 2),
+                "bench_fdmt_cpu_s": round(b["fdmt_cpu_s"], 2),
+                "bench_brute_gpu_s": round(b.get("brute_cuda_s", float("nan")), 2)
+                if "brute_cuda_s" in b
+                else None,
+                "bench_fdmt_gpu_s": round(b.get("fdmt_cuda_s", float("nan")), 2)
+                if "fdmt_cuda_s" in b
+                else None,
+                "bench_n_dm": int(b["n_dm_trials"]),
+            }
+        )
 
     if not offline:  # pragma: no cover - network + real data
         import urllib.request
@@ -243,6 +262,11 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\spRealSnr}}{{{_fmt('real_butterfly_snr')}}}",
         rf"\newcommand{{\spRealSpSnr}}{{{_fmt('real_sp_snr')}}}",
         rf"\newcommand{{\spRealDmErr}}{{{_fmt('real_dm_error_pc')}}}",
+        rf"\newcommand{{\spBruteCpu}}{{{_fmt('bench_brute_cpu_s')}}}",
+        rf"\newcommand{{\spBruteGpu}}{{{_fmt('bench_brute_gpu_s')}}}",
+        rf"\newcommand{{\spFdmtCpu}}{{{_fmt('bench_fdmt_cpu_s')}}}",
+        rf"\newcommand{{\spFdmtGpu}}{{{_fmt('bench_fdmt_gpu_s')}}}",
+        rf"\newcommand{{\spBenchNdm}}{{{_fmt('bench_n_dm')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -257,8 +281,14 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
     p.add_argument("--device", default="cpu")
+    p.add_argument("--benchmark", action="store_true")
     args = p.parse_args(argv)
-    print(json.dumps(run(args.out, offline=args.offline, device=args.device), indent=2))
+    print(
+        json.dumps(
+            run(args.out, offline=args.offline, device=args.device, bench=args.benchmark),
+            indent=2,
+        )
+    )
     return 0
 
 

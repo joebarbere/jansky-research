@@ -38,6 +38,7 @@ SLICES = {
     "type3synthesis": ("type3synthesis", "--offline"),
     "ecallisto_pipeline": ("ecallisto_catalog", "--offline"),
     "ecallisto_census": ("ecallisto_census", "--offline"),
+    "torchfdmt": ("singlepulse", "--offline"),
 }
 
 
