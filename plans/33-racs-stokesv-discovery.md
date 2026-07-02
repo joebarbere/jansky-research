@@ -1,16 +1,6 @@
 # 33 — RACS Stokes-V discovery slice: forced target-list photometry + two-epoch V variability
 
-Status: 🔨 in progress — ALL GATE 0s passed (2026-07-02), two better than planned:
-- **0a (modified):** RACS-low1 (2019) V images do NOT exist in CASDA, but at ~1368 MHz there is a
-  **RACS-mid1 (MJD 59233, 2021-01) vs RACS-mid2 (MJD 60769, 2025-04) 4.2-yr same-band pair**, plus
-  ~3 commensal WALLABY 1368 MHz V epochs between them (up to 5 epochs/position), and RACS-low2
-  (888 MHz, MJD 59684) vs low3 (944 MHz, MJD ~60315) as a near-band 2-yr pair. Paper VIII covers
-  low2 only → the mid-band multi-epoch V census is even more clearly unclaimed. Epoch availability
-  varies per position → the tool must query obscore per target and group by band.
-- **0b:** CNS5 (VizieR `J/A+A/670/A19`, Gaia DR3 IDs for PM) chosen; Reylé 10 pc as validation.
-- **0c:** Paper VIII's V catalogue is a live CASDA TAP table: **`AS110.racs_low2_v_v01`** (no
-  transcription needed). Bonus: `AS110.spice_racs_dr1_corrected_cut_*` = SPICE-RACS RMs on TAP.
-Next: `stokesv_discovery.py` tooling + synthetic epoch-pair recover-a-known
+Status: ✅ done — GATE 0s passed (mid1/mid2 4.2-yr pair replaced nonexistent low1 V); tooling PR #75; real leg + GJ 65 10σ two-epoch V recovery + upper-limit census + GATE-2-fixed paper merged PR #78
 
 ## Context
 

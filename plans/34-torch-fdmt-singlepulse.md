@@ -1,15 +1,6 @@
 # 34 — `torch-fdmt`: a pure-PyTorch Fast DM Transform + the single-pulse slice (absorbs plan 28)
 
-Status: 🔨 in progress — `fdmt.py` tooling MERGED (torch FDMT + brute twin validated vs the
-`jansky.transients` oracle; 100% module coverage; the delay-split swap bug the plan predicted was
-caught by the oracle checks). GATE 0 PASSED: a 3.25 MB real Parkes/UWL **Crab** filterbank
-(sigpyproc3 test tree, no auth; ATNF DM 56.77 / P 33.27 ms; BL products ruled out — 1-18 s sampling
-makes the sweep invisible). `singlepulse.py` MERGED: minimal pure-NumPy SIGPROC reader + FDMT
-search + folding; synthetic recovers DM 56.63 / P 33.257 ms; **REAL Crab leg recovers DM 56.59
-(0.3% error), single-pulse S/N 14 (a giant pulse)**. Benchmark (8192×1024×1009 DM): brute CPU
-36.1 s → GPU 1.50 s (24×); **FDMT CPU 0.41 s beats brute-GPU 3.6×** (the algorithm beats the
-hardware); FDMT GPU ≈ CPU (Python delay-loop bound — kernel vectorisation is future work).
-Next: paper + Makefile/Snakefile wiring + findings + GATE-2
+Status: ✅ done — fdmt tooling PR #74 (oracle caught both predicted bugs); real Crab DM recovered to 0.3% + benchmark (FDMT-CPU beats brute-GPU 3.6×) PR #76; GATE-2-fixed paper + wiring PR #77
 
 ## Context
 
