@@ -49,8 +49,14 @@ def io_mean_longitude(jd: np.ndarray) -> np.ndarray:
 
 
 def io_phase(jd: np.ndarray, cml_deg: np.ndarray) -> np.ndarray:
-    """Io orbital phase: Io's longitude ahead of the sub-observer meridian (deg, 0-360)."""
-    return (io_mean_longitude(jd) - np.asarray(cml_deg, float)) % 360.0
+    r"""Conventional Io phase :math:`\Phi_{Io}` --- Io's departure from SUPERIOR conjunction.
+
+    :math:`\Phi_{Io} = \mathrm{CML} + 180^\circ - \Lambda_{Io}` (Bigg 1964 convention as
+    codified by Carr et al. 1983): zero when Io is diametrically opposite the observer as seen
+    from Jupiter. GATE-2 caught an earlier sign/offset error here (:math:`\Lambda_{Io} -
+    \mathrm{CML}` = :math:`180^\circ - \Phi_{Io}`), which displaced every canonical box.
+    """
+    return (np.asarray(cml_deg, float) + 180.0 - io_mean_longitude(jd)) % 360.0
 
 
 def fetch_cml_horizons(
@@ -124,14 +130,21 @@ def occurrence_map(
     return {"occ": occ, "exposure": exp_map, "edges": edges}
 
 
-#: Canonical Io-controlled regions in (CML, Io-phase), after Carr et al. (1983) Fig. 7.32 /
-#: Marques et al. (2017) Table 2 (deg ranges; coarse boxes for a contrast statistic, not fits).
+#: Canonical Io-controlled regions in (CML, conventional Io phase), after Carr et al. (1983)
+#: Fig. 7.32 / Marques et al. (2017) Table 2. CML ranges with c0 > c1 WRAP through 0 (Io-C).
 IO_REGIONS = {
-    "Io-A": ((200.0, 290.0), (195.0, 260.0)),
-    "Io-B": ((90.0, 200.0), (65.0, 115.0)),
-    "Io-C": ((280.0, 360.0), (200.0, 260.0)),
+    "Io-A": ((200.0, 290.0), (205.0, 260.0)),
+    "Io-B": ((90.0, 200.0), (80.0, 110.0)),
+    "Io-C": ((300.0, 20.0), (225.0, 260.0)),
     "Io-D": ((0.0, 200.0), (95.0, 130.0)),
 }
+
+
+def _in_box(cml, pha, box):
+    """Membership with CML wrap support (c0 > c1 wraps through 0 deg)."""
+    (c0, c1), (p0, p1) = box
+    in_c = ((cml >= c0) | (cml < c1)) if c0 > c1 else ((cml >= c0) & (cml < c1))
+    return in_c & (pha >= p0) & (pha < p1)
 
 
 def io_region_contrast(m: dict) -> dict:
@@ -140,8 +153,8 @@ def io_region_contrast(m: dict) -> dict:
     cen = 0.5 * (edges[:-1] + edges[1:])
     cml_g, pha_g = np.meshgrid(cen, cen, indexing="ij")
     inside = np.zeros_like(cml_g, bool)
-    for (c0, c1), (p0, p1) in IO_REGIONS.values():
-        inside |= (cml_g >= c0) & (cml_g < c1) & (pha_g >= p0) & (pha_g < p1)
+    for box in IO_REGIONS.values():
+        inside |= _in_box(cml_g, pha_g, box)
     occ = m["occ"]
     good = np.isfinite(occ)
     inside_occ = float(np.nanmean(occ[inside & good])) if (inside & good).any() else float("nan")
@@ -174,8 +187,8 @@ def synthetic_orbit(
     cml = (284.95 + 870.5360000 * (jd - J2000_JD)) % 360.0
     pha = io_phase(jd, cml)
     inside = np.zeros(jd.size, bool)
-    for (c0, c1), (p0, p1) in IO_REGIONS.values():
-        inside |= (cml >= c0) & (cml < c1) & (pha >= p0) & (pha < p1)
+    for box in IO_REGIONS.values():
+        inside |= _in_box(cml, pha, box)
     active = rng.random(jd.size) < np.where(inside, p_in, p_out)
     return {"jd": jd, "cml": cml, "io_phase": pha, "active": active, "p_in": p_in, "p_out": p_out}
 

@@ -17,13 +17,16 @@ synthetic month.
 |---|---|
 | 15-s bins / active | 155,520 / 6,244 (4.0%) |
 | **near-half vs far-half duty cycle** | **7.72% vs 0.31% — proximity dominates by ~25×** |
-| Io-box contrast (full month) | **1.38** (1.77 excluding perijove-4 ±1.5 d) |
-| far-half Io contrast | starved (0.0 — too few active bins; reported, not hidden) |
+| Io-box contrast (full month, CORRECT Φ_Io convention) | **2.22** |
+| far-half Io contrast | **1.55** |
 
-Reading (consistency statement, not proof): from Juno's moving polar vantage the strongest
-organising variable is **distance**, and the Earth-canonical Io boxes — built from a fixed,
-distant, near-equatorial vantage — only weakly organise the residual. The multi-orbit v02
-(2016–2023) census with distance-resolved maps is the scoped follow-on and the real test.
+**GATE-2 caught a real convention blocker**: Io phase was computed as Λ_Io−CML instead of the
+standard Φ_Io = CML+180°−Λ_Io — displacing every canonical box (except Io-B by coincidence) and
+faking a weak 1.38 contrast. With the correct convention (+ the Io-C CML wrap through 0°):
+contrast **2.22** full-month, **1.55** far-half. Reading: Io organisation genuinely persists
+from orbit, reduced vs ground-based — consistent with part of the canonical structure encoding
+observer beaming. Lesson recorded: **a synthetic round-trip cannot validate frame conventions**
+(it injected and recovered in the same wrong frame). Multi-orbit v02 census is the follow-on.
 
 ## Caveats
 
