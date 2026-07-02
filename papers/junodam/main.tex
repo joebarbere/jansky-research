@@ -4,8 +4,8 @@
 \shorttitle{Jovian DAM occurrence from Juno/Waves}
 \shortauthors{Barbere}
 \begin{document}
-\title{A Jovian Decametric Occurrence Census from Juno/Waves: Proximity Dominates, and the
-Canonical Io Source Regions Persist --- Reduced --- at the Orbital Vantage}
+\title{A Multi-Orbit Jovian Decametric Occurrence Census from Juno/Waves: Proximity Dominates, and the
+Earth-Canonical Io Source Regions Do Not Coherently Organise the Orbital Vantage}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
@@ -13,8 +13,8 @@ Canonical Io Source Regions Persist --- Reduced --- at the Orbital Vantage}
 Ground-based Jovian decametric (DAM) emission is famously organised in the plane of observer
 central meridian longitude (CML) and Io orbital phase into the Io-A/B/C/D source regions
 \citep{bigg1964,carr1983,marques2017}. The public Juno/Waves calibrated flux-density dataset
-\citep{louis2021} allows the same census \emph{from orbit}: we build an occurrence map over one
-Juno orbit (2017 February; \jdNbins\ 15-s bins, \jdNact\ active) using the dataset's shipped
+\citep{louis2021} allows the same census \emph{from orbit}: we build an occurrence map over seven months spanning six distinct orbital
+configurations (2016--2019; \jdNbins\ 15-s bins, \jdNact\ active) using the dataset's shipped
 per-channel background statistics for detection, JPL Horizons for the sub-Juno System~III CML
 (the naive IAU rotation formula errs by up to $\sim$40$^\circ$ at Juno, verified), and the Lieske
 ephemeris for Io phase \citep{lieske1987,archinal2018}. On a synthetic orbit with the canonical
@@ -55,23 +55,27 @@ structure. The synthetic recover-a-known drives the same code with real CML/Io r
 Bernoulli activity concentrated in the canonical boxes: injected contrast 8.75, recovered 7.2.
 
 \section{Results and honest limits}
-Figure~\ref{fig:jd} shows the month's map. The near/far duty-cycle split
-(\jdActNear\%/\jdActFar\%) says the strongest organising variable from orbit is simply distance
---- at perijove Juno sits close to (at times within) the source regions and the band is active
-almost continuously, while in the far half the duty cycle drops to Earth-like rarity. The
-canonical Io boxes organise the residual at contrast \jdContrast\ (full month; \jdContrastFar\
-far-half; \jdCells\ cells used) --- present, but well below ground-based values. Honest limits: (i) one orbit --- (CML, $\Phi_{Io}$) exposure is uneven;
+Figure~\ref{fig:jd} shows the aggregate map. The range-quartile duty cycles
+(\jdAqA\%$\rightarrow$\jdAqD\%) say the strongest organising variable from orbit is simply
+distance --- at perijove Juno sits close to (at times within) the source regions and the band
+is active almost continuously, while at apojove the duty cycle drops to Earth-like rarity. The
+canonical Io boxes do not survive aggregation: contrast \jdContrast\ overall (\jdCells\ cells),
+per-month median \jdCmMed\ with range \jdCmMin--\jdCmMax\ across \jdNmonths\ months, and no
+strengthening with distance in the resolved quartiles (\jdCqA, \jdCqB, \jdCqC, \jdCqD\ from
+near to far). Honest limits: (i) seven months is still sparse and the far quartiles are activity-starved
+(the \jdCqB--\jdCqD\ values carry few active bins); v01 (2017-02) and v02 months are mixed,
+benign for occurrence since detection uses each file's own background statistics;
 (ii) the fixed 10\%-of-band activity criterion is one choice among several (it suppresses
 narrowband interference but dilutes narrowband DAM); (iii) proximity and vantage effects are not
 modelled, only demonstrated; (iv) the census does not separate Io-DAM from non-Io-DAM or
-kilometric leakage below 3~MHz; (v) the reduced-contrast reading is a consistency statement, not a proof --- the multi-orbit
-v02 census with distance-resolved maps is the test; and the review-caught convention error is
-disclosed above because a synthetic round-trip cannot validate frame conventions, only machinery.
+kilometric leakage below 3~MHz; (v) the reduced-contrast reading is a consistency statement, not a proof --- a beaming-model fit over the full v02 archive is the definitive test; and the review-caught
+convention error is disclosed above because a synthetic round-trip cannot validate frame
+conventions, only machinery.
 
 \begin{figure}
 \plotone{figures/junodam.pdf}
-\caption{\emph{Left:} DAM occurrence probability over the (CML, Io-phase) plane for 2017
-February, with the Earth-canonical Io-A/B/C/D boxes overlaid (dashed) and low-exposure cells
+\caption{\emph{Left:} DAM occurrence probability over the (CML, $\Phi_{Io}$) plane aggregated
+over seven months (2016--2019), with the Earth-canonical Io-A/B/C/D boxes overlaid (dashed) and low-exposure cells
 masked. \emph{Right:} active bins (red) over the month's plane coverage. The CI build shows the
 synthetic-orbit fixture; \code{make reproduce} regenerates the real panels from the local CDFs.}
 \label{fig:jd}

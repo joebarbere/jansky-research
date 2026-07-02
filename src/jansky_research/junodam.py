@@ -203,20 +203,28 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         source = "synthetic orbit (canonical Io boxes injected)"
         expected = s["p_in"] / s["p_out"]
     else:  # pragma: no cover - data files + network
-        files = sorted(DATA_DIR.glob("jno_wav_cdr_lesia_*_v01.cdf"))
+        files = sorted(DATA_DIR.glob("jno_wav_cdr_lesia_*_v0?.cdf"))
         parts = [read_waves_cdf(f) for f in files]
+        months = [f.name.split("_")[4][:6] for f in files]
         jd = np.concatenate([p["jd"] for p in parts])
         af = np.concatenate([p["active_frac"] for p in parts])
-        eph = fetch_cml_horizons(float(jd.min()) - 0.02, float(jd.max()) + 0.02)
-        # unwrap-interpolate the 15-min CML onto the data bins
-        cml_unwrap = np.unwrap(np.radians(eph["cml"]))
-        cml = np.degrees(np.interp(jd, eph["jd"], cml_unwrap)) % 360.0
+        # fetch Horizons per contiguous data segment (a >2-day gap starts a new segment),
+        # so multi-month runs stay inside per-query epoch limits
+        order = np.argsort(jd)
+        jd, af = jd[order], af[order]
+        starts = [0] + list(np.where(np.diff(jd) > 2.0)[0] + 1) + [jd.size]
+        cml = np.empty_like(jd)
+        dist = np.empty_like(jd)
+        for a, b in zip(starts[:-1], starts[1:], strict=True):
+            eph = fetch_cml_horizons(float(jd[a]) - 0.02, float(jd[b - 1]) + 0.02)
+            cml_unwrap = np.unwrap(np.radians(eph["cml"]))
+            cml[a:b] = np.degrees(np.interp(jd[a:b], eph["jd"], cml_unwrap)) % 360.0
+            dist[a:b] = np.interp(jd[a:b], eph["jd"], eph["delta_au"])
         pha = io_phase(jd, cml)
         active = detect_active(af)
-        source = f"Juno/Waves L3a v01, {len(files)} days"
+        source = f"Juno/Waves L3a v01+v02, {len(files)} days"
         expected = float("nan")
         # the vantage dimension: Juno--Jupiter range dominates detection (proximity, not clock)
-        dist = np.interp(jd, eph["jd"], eph["delta_au"])
         far = dist > np.median(dist)
         m_far = occurrence_map(cml[far], pha[far], active[far])
         con_far = io_region_contrast(m_far)
@@ -227,6 +235,40 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             if np.isfinite(con_far["contrast"])
             else None,
         }
+        # distance-RESOLVED Io contrast (the paper's scoped test): quartiles of Juno range
+        qs = np.quantile(dist, [0.25, 0.5, 0.75])
+        for k, msk in enumerate(
+            [
+                dist <= qs[0],
+                (dist > qs[0]) & (dist <= qs[1]),
+                (dist > qs[1]) & (dist <= qs[2]),
+                dist > qs[2],
+            ],
+            start=1,
+        ):
+            cq = io_region_contrast(occurrence_map(cml[msk], pha[msk], active[msk]))
+            extra[f"io_contrast_q{k}"] = (
+                round(cq["contrast"], 2) if np.isfinite(cq["contrast"]) else None
+            )
+            extra[f"activity_q{k}_pct"] = round(100 * float(active[msk].mean()), 2)
+        # per-month Io contrast: the robustness spread across orbital configurations
+        pm = []
+        for ym in sorted(set(months)):
+            sel = np.zeros(jd.size, bool)
+            lo_i = 0
+            for f_m, p in zip(months, parts, strict=True):
+                n_i = p["jd"].size
+                if f_m == ym:
+                    sel[np.searchsorted(jd, p["jd"])] = True
+                lo_i += n_i
+            cm = io_region_contrast(occurrence_map(cml[sel], pha[sel], active[sel]))
+            if np.isfinite(cm["contrast"]):
+                pm.append(cm["contrast"])
+        if pm:
+            extra["n_months"] = len(pm)
+            extra["io_contrast_month_median"] = round(float(np.median(pm)), 2)
+            extra["io_contrast_month_min"] = round(float(np.min(pm)), 2)
+            extra["io_contrast_month_max"] = round(float(np.max(pm)), 2)
 
     m = occurrence_map(cml, pha, active)
     con = io_region_contrast(m)
@@ -297,6 +339,16 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\jdActNear}}{{{_fmt('activity_near_half_pct')}}}",
         rf"\newcommand{{\jdActFar}}{{{_fmt('activity_far_half_pct')}}}",
         rf"\newcommand{{\jdContrastFar}}{{{_fmt('io_contrast_far_half')}}}",
+        rf"\newcommand{{\jdCqA}}{{{_fmt('io_contrast_q1')}}}",
+        rf"\newcommand{{\jdCqB}}{{{_fmt('io_contrast_q2')}}}",
+        rf"\newcommand{{\jdCqC}}{{{_fmt('io_contrast_q3')}}}",
+        rf"\newcommand{{\jdCqD}}{{{_fmt('io_contrast_q4')}}}",
+        rf"\newcommand{{\jdAqA}}{{{_fmt('activity_q1_pct')}}}",
+        rf"\newcommand{{\jdAqD}}{{{_fmt('activity_q4_pct')}}}",
+        rf"\newcommand{{\jdNmonths}}{{{_fmt('n_months')}}}",
+        rf"\newcommand{{\jdCmMed}}{{{_fmt('io_contrast_month_median')}}}",
+        rf"\newcommand{{\jdCmMin}}{{{_fmt('io_contrast_month_min')}}}",
+        rf"\newcommand{{\jdCmMax}}{{{_fmt('io_contrast_month_max')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
