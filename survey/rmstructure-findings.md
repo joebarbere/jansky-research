@@ -36,28 +36,31 @@ from SPICE-RACS, not the first ever.
 
 ## DR2 full-sky leg (DONE 2026-07-02)
 
-337,548 RMs (S/N≥8) from the local DAP file (`data/spice-racs.dr2.fits`, gunzipped for memmap):
+**GATE-2 delta upgrade**: the survey's own `goodRM_flag` is now applied — **333,173 components**
+(matches the DR2 paper's pre-dedup goodRM count to ONE row, an independent filter validation;
+field-overlap duplicates sit below the smallest SF bin). The unflagged 337,548 sample was
+leakage-contaminated; corrected numbers below (from the local DAP file):
 
 | quantity | DR2 value |
 |---|---|
-| plane enhancement ratio (|b|<10 / >60) | **11.11 ± 0.09** (Taylor 2009: ~5.4 from 37k RMs) |
-| SF plateau, disc (|b|<10°) | **60,846 rad²m⁻⁴** |
-| SF plateau, halo (|b|>10°) | **2,612 rad²m⁻⁴** (→ σ≈36 rad/m², still intrinsic-dominated) |
-| disc–halo fluctuation-power contrast | **~23×** |
-| break scales | 1.41° (disc) vs 0.87° (halo) |
+| plane enhancement ratio (|b|<10 / >60) | **11.17 ± 0.10** (statistical only; Taylor09 ~5.4 — NOT apples-to-apples: NVSS nπ caps plane |RM|, southern sky adds inner-Galaxy sightlines; both push SPICE-RACS higher) |
+| SF plateau, disc (|b|<10°) | **62,065 rad²m⁻⁴** (upper bound; secular plane gradients mixed in) |
+| SF plateau, halo (|b|>10°) | **2,284 rad²m⁻⁴** |
+| disc–halo fluctuation-power contrast | **~27×** |
+| break scales | 2.29° (disc) vs 3.7° (halo) — the unflagged sample's 0.5° halo break was a LEAKAGE ARTIFACT |
 
 ### Latitude ladder (six |b| bins, the resolved profile)
 
 | |b| | n | σ_RM (rad/m²) | σ_Gal (floor-subtracted) |
 |---|---|---|---|
-| 0–5° | 22,560 | **212.6** | 212.1 |
-| 5–10° | 27,452 | 109.4 | 108.4 |
-| 10–20° | 57,398 | 68.1 | 66.4 |
-| 20–30° | 54,470 | 41.2 | 38.4 |
-| 30–50° | 92,090 | 24.1 | 18.9 |
-| 50–90° | 83,578 | 15.0 | (floor bin: ≡0; true polar Galactic term → lower bound) |
+| 0–5° | 22,220 | **214.7** | 214.4 |
+| 5–10° | 27,089 | 104.9 | 104.2 |
+| 10–20° | 56,801 | 66.3 | 65.2 |
+| 20–30° | 53,936 | 40.0 | 38.2 |
+| 30–50° | 91,197 | 20.2 | 16.3 |
+| 50–90° | 81,930 | 11.9 | (floor bin: ≡0; true polar Galactic term → lower bound) |
 
-Monotonic ×14 fall; the polar endpoint sits at the literature intrinsic+extragalactic floor
+Monotonic ×18 fall; the polar endpoint sits at the literature intrinsic+extragalactic floor
 (Mao+2010 ~9–15), licensing the quadrature floor subtraction (DEFROST-lite; the polar bin as
 floor estimate). The intrinsic-scatter floor is latitude-independent, so the disc–halo DIFFERENCE
 (~58,000 rad²m⁻⁴) is dominated by the Galactic magneto-ionic medium — the measurement the method paper

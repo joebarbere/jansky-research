@@ -20,15 +20,18 @@ synthetic month.
 | Io-box contrast, aggregate | **1.12** |
 | per-month contrasts (7 months) | 1.56, **2.22**, 0.87, 0.35, 0.93, 0.70, 0.84 — median 0.87, both sides of 1 |
 | distance-resolved contrast (near→far) | 1.24 / 0.36 / 1.37 / 0.71 (far quartiles activity-starved) |
-| Io-box contrast (full month, CORRECT Φ_Io convention) | **2.22** |
-| far-half Io contrast | **1.55** |
+| Io-box contrast, Feb-2017 single orbit (SUPERSEDED by the multi-orbit rows above) | 2.22 |
 
 **GATE-2 caught a real convention blocker**: Io phase was computed as Λ_Io−CML instead of the
 standard Φ_Io = CML+180°−Λ_Io — displacing every canonical box (except Io-B by coincidence) and
 faking a weak 1.38 contrast. With the correct convention the single Feb-2017 month gave contrast 2.22 — but the multi-orbit
 extension shows that was the high tail of month-to-month scatter: **across 7 months the
 canonical boxes do not coherently organise Juno-frame occurrence** (median 0.87, aggregate
-1.12, no strengthening with distance). One orbit can mislead; the census needed the spread.
+1.12, no strengthening with distance). One orbit can mislead; the census needed the spread. A one-sample test of the 7 monthly
+contrasts against unity does not reject (t p≈0.76; sign test 2-above/5-below p≈0.23) — stated
+as consistency with no coherent organisation, not proof; and genuine month-to-month Io-DAM
+variability (volcanism / plasma-torus state) is a real published alternative to pure scatter,
+acknowledged, not separated here.
 Lesson recorded: **a synthetic round-trip cannot validate frame conventions** (it injected and
 recovered in the same wrong frame). A beaming-model fit over the full v02 archive is the
 definitive follow-on.

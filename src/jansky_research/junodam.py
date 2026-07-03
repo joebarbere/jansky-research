@@ -255,12 +255,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         pm = []
         for ym in sorted(set(months)):
             sel = np.zeros(jd.size, bool)
-            lo_i = 0
             for f_m, p in zip(months, parts, strict=True):
-                n_i = p["jd"].size
                 if f_m == ym:
                     sel[np.searchsorted(jd, p["jd"])] = True
-                lo_i += n_i
             cm = io_region_contrast(occurrence_map(cml[sel], pha[sel], active[sel]))
             if np.isfinite(cm["contrast"]):
                 pm.append(cm["contrast"])
@@ -302,10 +299,12 @@ def _figure(m: dict, cml, pha, active, out_dir) -> None:
     im = ax1.pcolormesh(m["edges"], m["edges"], m["occ"].T, cmap="viridis", shading="auto")
     fig.colorbar(im, ax=ax1, label="occurrence probability")
     for name, ((c0, c1), (p0, p1)) in IO_REGIONS.items():
-        ax1.add_patch(
-            plt.Rectangle((c0, p0), c1 - c0, p1 - p0, fill=False, ec="w", lw=1.0, ls="--")
-        )
-        ax1.text(c0 + 3, p1 - 12, name, color="w", fontsize=7)
+        spans = [(c0, c1)] if c0 < c1 else [(c0, 360.0), (0.0, c1)]  # wrap-aware (Io-C)
+        for a, b in spans:
+            ax1.add_patch(
+                plt.Rectangle((a, p0), b - a, p1 - p0, fill=False, ec="w", lw=1.0, ls="--")
+            )
+        ax1.text(spans[0][0] + 3, p1 - 12, name, color="w", fontsize=7)
     ax1.set(xlabel="CML (System III, deg)", ylabel="Io phase (deg)", title="DAM occurrence map")
     ax2.plot(cml[~active][::7], pha[~active][::7], ".", ms=1, color="0.8")
     ax2.plot(cml[active], pha[active], ".", ms=2, color="C3")

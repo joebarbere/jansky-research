@@ -39,7 +39,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | RACS Stokes-V discovery: two-epoch forced photometry | `jansky_research.stokesv_discovery` | ✅/➖ recovers **GJ 65 (BL+UV Cet)** with a **10σ 4.2-yr V change**; all else quiescent (median 5σ limit 0.83 mJy); no new detections survived the novelty bar (honest) |
 | LPT population catalogue (13 objects, provenance-typed) | `jansky_research.lpt` | ✅/➖ 9/9 Ṗ-constrained members below the death line; the hinted ~78-min binary boundary **not significant at N=13** (honest, with demonstrated test power); caught a typo in the review's own data file |
 | RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per |b| bin; high-|b| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
-| Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ proximity dominates duty cycle ~25×; canonical Io regions persist at reduced contrast (2.2) from orbit; GATE-2 caught an Io-phase convention blocker (disclosed) |
+| Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ 7-month census: proximity dominates ~180×; Earth-canonical Io boxes do NOT coherently organise orbital-vantage occurrence (per-month median 0.87, one orbit misleads); GATE-2 caught the Io-phase convention blocker (disclosed) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
