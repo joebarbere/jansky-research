@@ -51,6 +51,8 @@ paper under `papers/<slice>/`. Publishing steps are in `TODO.md` (Zenodo → JOS
 ## Layout
 
 `src/jansky_research/` (slice modules + `data.py`/`pipeline.py`/`report.py`) · `tests/` · `plans/` ·
-`survey/` (committed findings) · `papers/<slice>/` · `workflow/Snakefile` (static-slice file-DAG, drives
-`make figures`) · `airflow/` (streaming e-Callisto ingest, Podman DAG) · `.claude/` (agents + skills) ·
+`survey/` (committed findings) · `papers/<slice>/` · `station/` (build guides for the physical rooftop
+station — self-collected data, WIP; owner's working notes live in an Obsidian vault, not here) ·
+`workflow/Snakefile` (static-slice file-DAG, drives `make figures`) · `airflow/` (streaming e-Callisto
+ingest, Podman DAG) · `.claude/` (agents + skills) ·
 `Makefile` (`setup`/`test`/`cov`/`lint`/`typecheck`/`figures`/`paper`/`arxiv`/`reproduce`).

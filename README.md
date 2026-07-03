@@ -138,6 +138,16 @@ ruff + mypy + pytest with an 85% coverage floor, Podman containers, and a `plans
 workflow. The `jansky` dependency is a local path source (`../jansky`) for cross-repo dev, switching
 to the pinned git tag `jansky@v0.1.0` for clean-checkout CI. See `pyproject.toml`.
 
+## The rooftop station (self-collected data, in progress)
+
+Beyond the public archives, the [`station/`](station/) directory documents SDR-based instruments
+built and operated from a Philadelphia rooftop — a [hydrogen-line receiver](station/hydrogen-line-receiver.md),
+a [meteor-scatter station](station/meteor-scatter-station.md), and a planned
+[two-dish interferometer](station/interferometry.md), plus [test-equipment](station/test-equipment.md)
+and [long-duration operations](station/operations.md) notes. These are the build guides for the
+instrument meant to feed self-collected data into future slices; the owner's working notes
+(purchase log, prices, per-part rationale) live in an Obsidian vault, not this repo.
+
 ## Quickstart
 
 ```bash
@@ -188,6 +198,7 @@ jansky-research/
   papers/<slice>/        # one AASTeX paper per slice (main.tex + refs.bib tracked;
                          #   figures/, generated/, arxiv-submission/ are produced by make)
                          #   frbstats/ also has rnaas.tex (a Research Note of the AAS)
+  station/               # build guides for the physical rooftop station (self-collected data, WIP)
   joss/                  # JOSS software paper (paper.md + paper.bib)
   CITATION.cff           # "Cite this repository"; .zenodo.json drives Zenodo archival
   containers/            # tectonic paper-build image
