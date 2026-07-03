@@ -64,13 +64,13 @@ def test_run_offline_writes_artifacts(tmp_path):
     assert saved == m
     assert (tmp_path / "papers" / "rmstructure" / "figures" / "rmstructure.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "rmstructure" / "generated" / "macros.tex").read_text()
-    assert r"\newcommand{\rmsRatio}" in macros
+    assert r"\newcommand{\rmsSynRatio}" in macros and r"\newcommand{\rmsRealRatio}{--}" in macros
 
 
 def test_write_macros_placeholder(tmp_path):
     p = tmp_path / "m.tex"
     rms._write_macros({"source": "x", "sf_break_low_b_deg": None}, p)
-    assert r"\newcommand{\rmsBreakLo}{--}" in p.read_text()
+    assert r"\newcommand{\rmsSynBreakLo}{--}" in p.read_text()
 
 
 def test_latitude_ladder_recovers_profile_shape():

@@ -21,15 +21,18 @@ ephemeris for Io phase \citep{lieske1987,archinal2018}. On a synthetic orbit wit
 Io boxes injected the census recovers the enhancement within cell-edge smearing (and the
 synthetic round-trip is a machinery check only --- an earlier Io-phase convention error, caught
 in science review, passed it while displacing every box; the convention is now the standard
-$\Phi_{Io}=\mathrm{CML}+180^\circ-\Lambda_{Io}$ of Bigg 1964 / Carr et al.\ 1983). On the real month, two results: (i)
-\emph{proximity dominates} --- the DAM-band duty cycle is \jdActNear\% in the near half of the
-orbit versus \jdActFar\% in the far half, a factor $\sim$25 driven by Juno--Jupiter distance,
-not by any rotational clock; and (ii) in the canonical (CML, $\Phi_{Io}$) boxes the occurrence contrast is \jdContrast\
-(full month; \jdContrastFar\ in the far half alone) --- Io organisation genuinely persists at
-the orbital vantage, but reduced relative to the strong ground-based contrasts, as expected if
-part of the canonical structure encodes beaming toward a distant near-equatorial observer. One
-month cannot separate vantage physics from exposure; the multi-orbit extension (the same code
-over the 2016--2023 v02 archive) is the scoped follow-on.
+$\Phi_{Io}=\mathrm{CML}+180^\circ-\Lambda_{Io}$ of Bigg 1964 / Carr et al.\ 1983). On the
+7-month aggregate, two results: (i) \emph{proximity dominates} --- the DAM-band duty cycle falls
+from \jdAqA\% in the nearest Juno--Jupiter range quartile to \jdAqD\% in the farthest, a factor
+$\sim$180 driven by distance, not by any rotational clock; and (ii) \emph{the Earth-canonical
+(CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage occurrence}: the
+aggregate contrast is \jdContrast, and across \jdNmonths\ individual months the contrast
+scatters on both sides of unity (median \jdCmMed, range \jdCmMin--\jdCmMax; a one-sample test
+against unity does not reject, and the earliest reviewed month alone reached \jdCmMax\ ---
+one orbit can mislead). Two readings are consistent with this: the canonical regions encode
+beaming toward a distant near-equatorial observer, and/or genuine month-to-month Io-DAM
+variability (Io volcanism and plasma-torus state); neither is separated here, and a
+beaming-model fit over the full v02 archive is the scoped follow-on.
 \end{abstract}
 
 \keywords{Jupiter (873) --- Radio bursts (1339) --- Planetary magnetospheres (997)}
@@ -62,7 +65,11 @@ is active almost continuously, while at apojove the duty cycle drops to Earth-li
 canonical Io boxes do not survive aggregation: contrast \jdContrast\ overall (\jdCells\ cells),
 per-month median \jdCmMed\ with range \jdCmMin--\jdCmMax\ across \jdNmonths\ months, and no
 strengthening with distance in the resolved quartiles (\jdCqA, \jdCqB, \jdCqC, \jdCqD\ from
-near to far). Honest limits: (i) seven months is still sparse and the far quartiles are activity-starved
+near to far). Honest limits: (0) the per-month contrasts carry no individual error bars; a one-sample test
+against unity does not reject (consistency, not proof), and genuine month-to-month Io-DAM
+variability --- Io volcanism and plasma-torus state are published drivers --- is an
+unmodelled alternative to geometric scatter; (i) seven months is still sparse and the far
+quartiles are activity-starved
 (the \jdCqB--\jdCqD\ values carry few active bins); v01 (2017-02) and v02 months are mixed,
 benign for occurrence since detection uses each file's own background statistics;
 (ii) the fixed 10\%-of-band activity criterion is one choice among several (it suppresses
