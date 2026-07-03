@@ -46,8 +46,21 @@ from SPICE-RACS, not the first ever.
 | disc–halo fluctuation-power contrast | **~23×** |
 | break scales | 1.41° (disc) vs 0.87° (halo) |
 
-The intrinsic-scatter floor is latitude-independent, so the disc–halo DIFFERENCE (~58,000
-rad²m⁻⁴) is dominated by the Galactic magneto-ionic medium — the measurement the method paper
+### Latitude ladder (six |b| bins, the resolved profile)
+
+| |b| | n | σ_RM (rad/m²) | σ_Gal (floor-subtracted) |
+|---|---|---|---|
+| 0–5° | 22,560 | **212.6** | 212.1 |
+| 5–10° | 27,452 | 109.4 | 108.4 |
+| 10–20° | 57,398 | 68.1 | 66.4 |
+| 20–30° | 54,470 | 41.2 | 38.4 |
+| 30–50° | 92,090 | 24.1 | 18.9 |
+| 50–90° | 83,578 | 15.0 | (floor bin: ≡0; true polar Galactic term → lower bound) |
+
+Monotonic ×14 fall; the polar endpoint sits at the literature intrinsic+extragalactic floor
+(Mao+2010 ~9–15), licensing the quadrature floor subtraction (DEFROST-lite; the polar bin as
+floor estimate). The intrinsic-scatter floor is latitude-independent, so the disc–halo DIFFERENCE
+(~58,000 rad²m⁻⁴) is dominated by the Galactic magneto-ionic medium — the measurement the method paper
 staked out. Caveat added: disc sightlines also gain depolarisation-selected populations; a
 DEFROST-style separation would tighten the difference argument. Pairs at this scale are drawn by
 random sampling (unbiased; fraction recorded). Reproduce: download csiro:64891, gunzip, then

@@ -71,3 +71,22 @@ def test_write_macros_placeholder(tmp_path):
     p = tmp_path / "m.tex"
     rms._write_macros({"source": "x", "sf_break_low_b_deg": None}, p)
     assert r"\newcommand{\rmsBreakLo}{--}" in p.read_text()
+
+
+def test_latitude_ladder_recovers_profile_shape():
+    s = rms.synthetic_rm_screen(n_sources=2500, seed=4)
+    lad = rms.latitude_ladder(s, b_edges=(0.0, 5.0, 10.0, 20.0), max_pairs=100_000, n_boot=10)
+    fin = np.isfinite(lad["sigma_rm"])
+    assert fin.sum() >= 2
+    # injected plane boost -> monotone-decreasing sigma_RM with |b|
+    vals = lad["sigma_rm"][fin]
+    assert vals[0] > vals[-1]
+    # floor subtraction: sigma_gal <= sigma_rm everywhere, and 0/NaN at the floor bin
+    assert np.all(lad["sigma_gal"][fin] <= lad["sigma_rm"][fin] + 1e-9)
+    assert lad["floor_sigma"] > 0
+
+
+def test_latitude_ladder_thin_bins_are_nan():
+    s = rms.synthetic_rm_screen(n_sources=300, seed=5)
+    lad = rms.latitude_ladder(s, b_edges=(0.0, 1.0, 90.0), max_pairs=50_000, n_boot=5)
+    assert np.isnan(lad["sigma_rm"][0])  # ~no sources in |b|<1 -> honest NaN

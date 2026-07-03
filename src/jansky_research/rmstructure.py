@@ -19,12 +19,14 @@ known latitude enhancement drives the recover-a-known.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
 from .rmsky import _ratio_bootstrap_se, enhancement_ratio
 
 __all__ = [
+    "latitude_ladder",
     "structure_function",
     "synthetic_rm_screen",
     "fetch_spice_racs_dr1",
@@ -230,6 +232,64 @@ def load_spice_racs_dr2(
     }
 
 
+def latitude_ladder(
+    s: dict,
+    *,
+    b_edges: tuple = (0.0, 5.0, 10.0, 20.0, 30.0, 50.0, 90.0),
+    max_pairs: int = 500_000,
+    n_boot: int = 40,
+) -> dict:
+    """SF plateau (and its sqrt/2 = RM dispersion) per |b| bin --- the fluctuation-power profile.
+
+    The two-bin disc--halo split showed a factor-~23 contrast; the ladder resolves HOW the RM
+    fluctuation power falls with latitude. Each bin's plateau is the median of the SF's three
+    largest-separation finite bins; per-bin source counts are reported (thin bins are honest
+    NaNs). The intrinsic+extragalactic floor is latitude-independent, so the ladder's SHAPE is
+    Galactic even though each absolute value is an upper bound.
+    """
+    ab = np.abs(np.asarray(s["gal_b"], float))
+    out: dict[str, list] = {
+        "b_lo": [],
+        "b_hi": [],
+        "n": [],
+        "plateau": [],
+        "plateau_err": [],
+        "sigma_rm": [],
+    }
+    for lo, hi in zip(b_edges[:-1], b_edges[1:], strict=True):
+        m = (ab >= lo) & (ab < hi)
+        out["b_lo"].append(lo)
+        out["b_hi"].append(hi)
+        out["n"].append(int(m.sum()))
+        if m.sum() < 200:
+            out["plateau"].append(float("nan"))
+            out["plateau_err"].append(float("nan"))
+            out["sigma_rm"].append(float("nan"))
+            continue
+        sf = structure_function(
+            s["ra"][m],
+            s["dec"][m],
+            s["rm"][m],
+            s["rm_err"][m],
+            max_pairs=max_pairs,
+            n_boot=n_boot,
+        )
+        good = np.isfinite(sf["sf"])
+        plat = float(np.nanmedian(sf["sf"][good][-3:])) if good.sum() >= 3 else float("nan")
+        perr = float(np.nanmedian(sf["sf_err"][good][-3:])) if good.sum() >= 3 else float("nan")
+        out["plateau"].append(plat)
+        out["plateau_err"].append(perr)
+        out["sigma_rm"].append(float(np.sqrt(plat / 2.0)) if plat > 0 else float("nan"))
+    lad: dict[str, Any] = {k: np.asarray(v) for k, v in out.items()}
+    # first-order floor subtraction: the highest-|b| bin estimates the latitude-independent
+    # intrinsic+extragalactic floor; sigma_gal = sqrt(sigma^2 - floor^2) (NaN where <= floor)
+    floor = lad["sigma_rm"][np.isfinite(lad["sigma_rm"])][-1]
+    with np.errstate(invalid="ignore"):
+        lad["sigma_gal"] = np.sqrt(np.clip(lad["sigma_rm"] ** 2 - floor**2, 0.0, None))
+    lad["floor_sigma"] = float(floor)
+    return lad
+
+
 def _sf_break(sep_deg: np.ndarray, sf: np.ndarray) -> float:
     """Crude coherence-scale estimate: separation where the SF first reaches half its plateau."""
     good = np.isfinite(sf) & (sf > 0)
@@ -267,6 +327,7 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     break_lo = _sf_break(sf_lo["sep_deg"], sf_lo["sf"])
     break_hi = _sf_break(sf_hi["sep_deg"], sf_hi["sf"])
 
+    ladder = latitude_ladder(s) if not offline else None  # pragma: no cover - big data only
     metrics = {
         "source": source,
         "n_sources": int(s["rm"].size),
@@ -278,6 +339,25 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         "sf_break_high_b_deg": round(break_hi, 2) if np.isfinite(break_hi) else None,
         "true_coherence_deg": s.get("coherence_deg"),
     }
+    if ladder is not None:  # pragma: no cover - big data only
+        fin = np.isfinite(ladder["sigma_rm"])
+        metrics.update(
+            {
+                "ladder_bins": [
+                    {
+                        "b": f"{ladder['b_lo'][i]:.0f}-{ladder['b_hi'][i]:.0f}",
+                        "n": int(ladder["n"][i]),
+                        "sigma_rm": round(float(ladder["sigma_rm"][i]), 1),
+                        "sigma_gal": round(float(ladder["sigma_gal"][i]), 1),
+                    }
+                    for i in range(len(ladder["n"]))
+                    if fin[i]
+                ],
+                "sigma_rm_plane": round(float(ladder["sigma_rm"][fin][0]), 1),
+                "sigma_rm_pole": round(float(ladder["sigma_rm"][fin][-1]), 1),
+                "ladder_floor_sigma": round(ladder["floor_sigma"], 1),
+            }
+        )
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "rmstructure_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
@@ -340,6 +420,8 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\rmsPlatHi}}{{{_fmt('sf_plateau_high_b')}}}",
         rf"\newcommand{{\rmsBreakLo}}{{{_fmt('sf_break_low_b_deg')}}}",
         rf"\newcommand{{\rmsBreakHi}}{{{_fmt('sf_break_high_b_deg')}}}",
+        rf"\newcommand{{\rmsSigPlane}}{{{_fmt('sigma_rm_plane')}}}",
+        rf"\newcommand{{\rmsSigPole}}{{{_fmt('sigma_rm_pole')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
