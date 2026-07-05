@@ -50,15 +50,16 @@ catalog, the SETI "detection" being an instrument artifact, and (every slice) at
 physics/citation/statistics fix before write-up. The negatives are arguably the most instructive part.
 Each slice's honest assessment is in `survey/*-findings.md`.
 
-New *data* slices are paused — the reliable no-auth sources (VizieR, SPDF, e-Callisto, Astrogeo,
-CIRADA/VLASS) and the clean recover-a-known method space are largely used up. Work has shifted to
-**synthesis and right-sized infrastructure**: the type III synthesis above (`plans/30`) and the
-streaming **e-Callisto Airflow-on-Podman ingest pipeline** (`plans/31`) are built — Airflow now serves a
-*frequently-updated* archive (daily schedule, catchup/backfill, per-station fan-out) instead of a static
-CSV, and a server-less file-DAG runner (**Snakemake**, `workflow/Snakefile`, `plans/32`) drives the
-static slices (`make figures`). Two larger new-domain efforts remain scoped in
-`plans/28-breakthrough-listen-singlepulse.md` and
-`plans/29-lotss-deep-144mhz-counts.md`. (The `stokesv` RACS Stokes-V slice, once CASDA-blocked, is now
+New slice ideas live in **`fable-ideas.md`** (2026-07-05, a 12-agent deep re-scan of the open-data
+landscape) — it supersedes the shortlist in `survey/opportunity-scan-2026-07.md`, and both retire
+the earlier "reliable no-auth sources are largely used up" assumption. Infrastructure is
+right-sized and built: the type III synthesis above (`plans/30`), the streaming **e-Callisto
+Airflow-on-Podman ingest pipeline** (`plans/31`) — Airflow serves a *frequently-updated* archive
+(daily schedule, catchup/backfill, per-station fan-out) instead of a static CSV — and a
+server-less file-DAG runner (**Snakemake**, `workflow/Snakefile`, `plans/32`) driving the static
+slices (`make figures`). `plans/29-lotss-deep-144mhz-counts.md` remains scoped (it should migrate
+to LoTSS DR3 — see `fable-ideas.md` F33); plan 28's single-pulse science was absorbed into the
+merged `torchfdmt` slice (`plans/34`). (The `stokesv` RACS Stokes-V slice, once CASDA-blocked, is
 complete — CASDA's cutout service recovered and the forced-photometry leg is wired.)
 
 ### Papers
@@ -202,10 +203,14 @@ jansky-research/
   joss/                  # JOSS software paper (paper.md + paper.bib)
   CITATION.cff           # "Cite this repository"; .zenodo.json drives Zenodo archival
   containers/            # tectonic paper-build image
-  .claude/skills/        # arxiv-submit (assemble + validate an arXiv upload package)
+  .claude/skills/        # arxiv-submit, research-publish, casda-cutout-fetch, radio-cutout,
+                         #   find-radio-papers, radio-source-lookup, idea-scan
   .claude/agents/        # dataset-analyst, pipeline-runner, results-interpreter (+ reused jansky)
-  plans/                 # numbered slice specs (00-29); the lasting record is each slice's
-                         #   survey/*-findings.md + papers/<slice>/. #28-29 are planned, not started
+  plans/                 # numbered slice specs (00-37); the lasting record is each slice's
+                         #   survey/*-findings.md + papers/<slice>/. #29 is planned, not started
+                         #   (#28 was absorbed into #34/torchfdmt)
+  fable-ideas.md         # current plan-ready idea list (2026-07 deep re-scan; supersedes the
+                         #   opportunity-scan shortlist)
 ```
 
 ## Method & gates

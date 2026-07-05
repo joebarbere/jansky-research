@@ -236,3 +236,46 @@ CHIME wait-times) are **GPU-idle and unaffected** — the GPU track runs in para
 best synergy: **#1 (`torch-fdmt`) + plan 28 (BL single-pulse)** become one slice arc — build the
 tool, validate against `jansky.transients` synthetics, run it on a real public filterbank
 (BL / Apertif / Parkes PSRDA), publish the benchmark.
+
+---
+
+# Addendum (2026-07-05) — shortlist executed; superseded by `fable-ideas.md`; corrections
+
+The ranked shortlist above is done: items 1–3 and 5 plus GPU avenue #1 are merged slices
+(`stokesv_discovery`, `lpt`, `rmstructure`, `junodam`, `torchfdmt` — the last absorbing plan 28).
+The **2026-07-05 twelve-agent re-scan (`fable-ideas.md`) is now the live opportunity file**; it
+carries its own "corrections & closed doors" section. Corrections to *this* document found by
+that scan (search-snippet-verified; the scan session could not fetch primary sources, so a
+full-text check applies before acting on any of these):
+
+- **GPU avenue #3 ("OVRO-LWA solar burst detector — first ML detector on the new archive") is
+  CLOSED.** The OVRO/NJIT team published a real-time YOLOv8 type III/IIIb detector: ApJ 1003, 57
+  (2026), arXiv:2603.25446. Surviving angles (fable-ideas F13 + its solar/ML notes): a
+  retrospective public burst *catalogue* over the archive, a **type II** detector (their system
+  is type-III-only), type I noise-storm statistics, and open weights (no paper in this lineage
+  verifiably ships them). Also: the archive's coverage starts **2024-04-01** (Aug 2025 was the
+  *release announcement*), i.e. >2 yr of cycle-25-max data.
+- **Tier 1 #4 (CHIME Cat 2 wait-times) — narrowed but still open.** Now published on Cat 2:
+  selection-function debiasing (arXiv:2606.26334), 80-repeater uniform rate statistics + DM
+  drift (arXiv:2605.08410), repeater-vs-one-off spectral split (arXiv:2601.16048), ML repeater
+  classification (arXiv:2509.02645, 2512.08308), and the polarization-dichotomy test
+  (arXiv:2401.17378 + companion). The surviving gap is the uniform **Weibull-k +
+  exposure-corrected duty-cycle census across all ~83 repeaters** (fable-ideas F2, bundled with
+  the lensed-repeater delay-pattern test F5). `chime-frb.ca` still 503 as of 2026-07-01.
+- **GPU avenue #5 (Apertif RFI U-Net)** — confirmed the most crowded, now with a full inventory:
+  ~10+ architectures on the standard Mesarcik LOFAR/HERA benchmark (Zenodo 10.5281/zenodo.6724065
+  + 8275061) since 2017. Survivors: cross-observatory generalization, uncertainty calibration,
+  an open pure-PyTorch inference package with public weights (folded into fable-ideas F6). It is
+  also **unconfirmed** that Apertif DR2 ships its AOFlagger masks as public weak labels — that
+  was an assumption, now an explicit GATE-0.
+- **GPU avenue #4 (Zoobot/STRADAViT morphology)** — sharpened: SSL/anomaly sweeps exist for
+  MGCLS, EMU-pilot, LoTSS DR1/DR2, VLASS-QL-partial; **RACS continuum, LoTSS DR3, VLASS as a
+  full 3-epoch sweep, and EMU-main have none** (fable-ideas F15). STRADAViT (arXiv:2603.29660)
+  is the competing backbone to check first.
+- **Tier 2 #10 (pulsar-timing cluster) status notes:** IPTA DR3 is **not** public (use NANOGrav
+  15yr + PPTA DR3, CSIRO DAP 10.25919/w0nw-jt05 / 10.25919/23wj-1d69); NANOGrav's June-2026
+  papers (arXiv:2606.28571/2606.28554, 2604.05453) closed the per-pulsar solar-wind-from-DM and
+  profile-event-scan angles. The JBO glitch angle is *sharper* than stated: the catalogue is at
+  ~664 glitches / 207 pulsars, ≥120 post-2018 events never in a population paper
+  (fable-ideas F11).
+- **Gaia DR4 is not out** (ESA roadmap 2026-12-02) — no entry above depends on it.
