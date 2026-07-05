@@ -7,10 +7,26 @@ tooling, analyzes public data, automates it, and writes it up — with honesty a
 
 It began as a single vertical slice (survey → gap → tool → automated pipeline → reproducible paper)
 and has grown into a **deep-research survey plus a set of self-contained research slices**, each:
-a tested CPU-only tool reusing jansky's helpers, run on real public data, put through an
-adversarial science-review gate, and written up — wins *and* negatives reported plainly.
+a tested tool — pure NumPy/SciPy/astropy, or pure PyTorch where device portability pays (the same
+code runs on CPU and on the workstation's AMD GPU via ROCm) — run on real public data, put through
+an adversarial science-review gate, and written up, wins *and* negatives reported plainly.
 
-## Status — twenty-six slices + a synthesis, honestly tallied
+**In this README:** [Method](#method) · [Results](#results) · [What's next](#whats-next) ·
+[Papers](#papers) · [Quickstart](#quickstart) · [The rooftop station](#the-rooftop-station) ·
+[Relation to `jansky`](#relation-to-jansky) · [Layout](#layout)
+
+## Method
+
+Every result follows the same discipline, recorded as a `plans/NN-slug.md` spec: build a tested
+tool (offline synthetic fixture, 85% coverage floor) → run it on real public data → an adversarial
+**science-reviewer gate** (a pass that has caught real blockers every time) → honest write-up
+(`survey/<slice>-findings.md` + `papers/<slice>/`). Findings are framed as *candidates /
+validations / limits*, never dressed-up discoveries; every reported number is reproducible. The
+non-chosen survey gaps are preserved as a backlog in `survey/candidate-gaps.md`.
+
+## Results
+
+Twenty-six slices plus a synthesis, honestly tallied:
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -38,7 +54,7 @@ adversarial science-review gate, and written up — wins *and* negatives reporte
 | torch-fdmt: device-portable Fast DM Transform | `jansky_research.fdmt`+`singlepulse` | ✅ oracle-validated pure-PyTorch FDMT; **real Crab DM recovered to 0.3%** (giant pulse S/N 14); honest benchmark: FDMT-on-CPU beats brute-on-GPU 3.6× |
 | RACS Stokes-V discovery: two-epoch forced photometry | `jansky_research.stokesv_discovery` | ✅/➖ recovers **GJ 65 (BL+UV Cet)** with a **10σ 4.2-yr V change**; all else quiescent (median 5σ limit 0.83 mJy); no new detections survived the novelty bar (honest) |
 | LPT population catalogue (13 objects, provenance-typed) | `jansky_research.lpt` | ✅/➖ 9/9 Ṗ-constrained members below the death line; the hinted ~78-min binary boundary **not significant at N=13** (honest, with demonstrated test power); caught a typo in the review's own data file |
-| RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per |b| bin; high-|b| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
+| RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per \|b\| bin; high-\|b\| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
 | Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ 7-month census: proximity dominates ~180×; Earth-canonical Io boxes do NOT coherently organise orbital-vantage occurrence (per-month median 0.87, one orbit misleads); GATE-2 caught the Io-phase convention blocker (disclosed) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
@@ -50,19 +66,20 @@ catalog, the SETI "detection" being an instrument artifact, and (every slice) at
 physics/citation/statistics fix before write-up. The negatives are arguably the most instructive part.
 Each slice's honest assessment is in `survey/*-findings.md`.
 
-New slice ideas live in **`fable-ideas.md`** (2026-07-05, a 12-agent deep re-scan of the open-data
-landscape) — it supersedes the shortlist in `survey/opportunity-scan-2026-07.md`, and both retire
-the earlier "reliable no-auth sources are largely used up" assumption. Infrastructure is
-right-sized and built: the type III synthesis above (`plans/30`), the streaming **e-Callisto
-Airflow-on-Podman ingest pipeline** (`plans/31`) — Airflow serves a *frequently-updated* archive
-(daily schedule, catchup/backfill, per-station fan-out) instead of a static CSV — and a
-server-less file-DAG runner (**Snakemake**, `workflow/Snakefile`, `plans/32`) driving the static
-slices (`make figures`). `plans/29-lotss-deep-144mhz-counts.md` remains scoped (it should migrate
-to LoTSS DR3 — see `fable-ideas.md` F33); plan 28's single-pulse science was absorbed into the
-merged `torchfdmt` slice (`plans/34`). (The `stokesv` RACS Stokes-V slice, once CASDA-blocked, is
-complete — CASDA's cutout service recovered and the forced-photometry leg is wired.)
+## What's next
 
-### Papers
+New slice ideas live in **[`fable-ideas.md`](fable-ideas.md)** (2026-07-05, a 12-agent deep
+re-scan of the open-data landscape) — it supersedes the shortlist in
+`survey/opportunity-scan-2026-07.md`, and both retire the earlier "reliable no-auth sources are
+largely used up" assumption. Suggested first moves there: the SPICE-RACS RM-dipole test (F1 —
+data already on disk), the CHIME/FRB Catalog 2 bundle (F2+F5 — gated on the archive recovering;
+most time-sensitive), and the `torch-dsp` GPU suite (F6). `plans/29-lotss-deep-144mhz-counts.md`
+remains scoped (it should migrate to LoTSS DR3 — see F33); plan 28's single-pulse science was
+absorbed into the merged `torchfdmt` slice (`plans/34`). Once the rooftop station (below) produces
+calibrated spectra, self-collected data joins the public-archive slices — `fable-ideas.md`
+carries a station track (S1–S8) for that too.
+
+## Papers
 
 Every slice is written up as its own **AASTeX paper** under `papers/<slice>/` (authored by Joseph
 Barbere, with Claude credited via an AI-use disclosure + a `\software{}` citation — an AI/LLM is not
@@ -75,7 +92,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | FRB burst statistics, validated on CHIME/FRB Cat 1 | `frbstats/` | validation (tested, reproducible tool) |
 | Recovering FRB 20180916B's 16.35-day period | `frbperiod/` | validation |
 | The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation |
-| A CPU-only SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
+| A SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
 | TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative |
 | VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) |
 | Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations |
@@ -98,7 +115,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark |
 | Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census |
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) |
-| RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-|b| estimate |
+| RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate |
 | Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
@@ -130,25 +147,6 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
   reproductions/negatives are **not** posted as a preprint batch — arXiv moderation expects a
   contribution, and "I reproduced a known result" belongs in the repo + Zenodo.
 
-## How it relates to `jansky`
-
-This repo **depends on `jansky` as a library** and reuses its tested helpers (`jansky.transients`,
-`jansky.rfi`, `jansky.timing`, `jansky.seti`, `jansky.sourcecounts`, `jansky.formats`,
-`jansky.data`, …) rather than reimplementing them. It mirrors jansky's conventions: `uv`-managed,
-ruff + mypy + pytest with an 85% coverage floor, Podman containers, and a `plans/NN-slug.md`
-workflow. The `jansky` dependency is a local path source (`../jansky`) for cross-repo dev, switching
-to the pinned git tag `jansky@v0.1.0` for clean-checkout CI. See `pyproject.toml`.
-
-## The rooftop station (self-collected data, in progress)
-
-Beyond the public archives, the [`station/`](station/) directory documents SDR-based instruments
-built and operated from a Philadelphia rooftop — a [hydrogen-line receiver](station/hydrogen-line-receiver.md),
-a [meteor-scatter station](station/meteor-scatter-station.md), and a planned
-[two-dish interferometer](station/interferometry.md), plus [test-equipment](station/test-equipment.md)
-and [long-duration operations](station/operations.md) notes. These are the build guides for the
-instrument meant to feed self-collected data into future slices; the owner's working notes
-(purchase log, prices, per-part rationale) live in an Obsidian vault, not this repo.
-
 ## Quickstart
 
 ```bash
@@ -164,6 +162,8 @@ uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3   # USS hu
 uv run python -m jansky_research.driftsearch  # SETI injection-recovery benchmark
 uv run python -m jansky_research.hi           # Milky Way HI rotation curve
 uv run python -m jansky_research.vlass --ra 190 --dec 20 --radius 15  # VLASS variability census (needs --extra vlass)
+uv run python -m jansky_research.singlepulse --benchmark --out .      # torch-fdmt benchmark (CPU;
+                                          #   add --device cuda from a ROCm venv for the GPU column)
 # (append --offline to run any slice on its synthetic fixture, no network)
 
 # The papers + orchestration:
@@ -180,6 +180,26 @@ make ecallisto-day DATE=20110914          # the same day's scan WITHOUT Airflow 
 See `REPRODUCING.md` for the full reproduction, the right-sized-orchestration notes
 (Snakemake static / Airflow streaming), and offline mode.
 
+## The rooftop station
+
+Beyond the public archives, the [`station/`](station/) directory documents SDR-based instruments
+built and operated from a Philadelphia rooftop (self-collected data, in progress) — a
+[hydrogen-line receiver](station/hydrogen-line-receiver.md), a
+[meteor-scatter station](station/meteor-scatter-station.md), and a planned
+[two-dish interferometer](station/interferometry.md), plus [test-equipment](station/test-equipment.md)
+and [long-duration operations](station/operations.md) notes. These are the build guides for the
+instrument meant to feed self-collected data into future slices; the owner's working notes
+(purchase log, prices, per-part rationale) live in an Obsidian vault, not this repo.
+
+## Relation to `jansky`
+
+This repo **depends on `jansky` as a library** and reuses its tested helpers (`jansky.transients`,
+`jansky.rfi`, `jansky.timing`, `jansky.seti`, `jansky.sourcecounts`, `jansky.formats`,
+`jansky.data`, …) rather than reimplementing them. It mirrors jansky's conventions: `uv`-managed,
+ruff + mypy + pytest with an 85% coverage floor, Podman containers, and a `plans/NN-slug.md`
+workflow. The `jansky` dependency is a local path source (`../jansky`) for cross-repo dev, switching
+to the pinned git tag `jansky@v0.1.0` for clean-checkout CI. See `pyproject.toml`.
+
 ## Layout
 
 ```
@@ -189,7 +209,9 @@ jansky-research/
     frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
-    ecallisto_catalog.py stokesv.py   # e-Callisto streaming worker; RACS Stokes-V coherent emitters
+    ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
+    rmstructure.py junodam.py
+    fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs
   survey/                # PERMANENT: literature.md, github-landscape.md, gap-analysis.md,
@@ -212,14 +234,6 @@ jansky-research/
   fable-ideas.md         # current plan-ready idea list (2026-07 deep re-scan; supersedes the
                          #   opportunity-scan shortlist)
 ```
-
-## Method & gates
-
-Each slice follows the same discipline, recorded as a `plans/NN-slug.md` spec: build a tested tool →
-run it on real public data → **science-reviewer gate** (an adversarial pass that has caught real
-blockers every time) → honest write-up. Findings are framed as *candidates / validations / limits*,
-never dressed-up discoveries; every reported number is reproducible. The non-chosen survey gaps are
-preserved as a backlog in `survey/candidate-gaps.md`.
 
 ## License
 
