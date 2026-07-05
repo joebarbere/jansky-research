@@ -33,25 +33,29 @@ tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-da
 `# pragma: no cover`) → GATE-2 science review → AASTeX paper (`papers/<slice>/`) → arXiv package
 (`make arxiv`). Plan in `plans/NN-*.md`; findings in `survey/<slice>-findings.md`.
 
-**Merged slices:** frbstats, spectra (USS), frbperiod, driftsearch, hi, vlass, peaked. Each has a
-paper under `papers/<slice>/`. Publishing steps are in `TODO.md` (Zenodo → JOSS → RNAAS → arXiv).
+**Merged slices:** twenty-six plus the type III synthesis — the authoritative per-slice table
+(tool + outcome) is in `README.md`. Each has a paper under `papers/<slice>/`. Publishing steps
+are in `TODO.md` (Zenodo → JOSS → RNAAS → arXiv).
 
-## Active direction (2026-06)
+## Active direction (2026-07)
 
-- **`stokesv`** — RACS Stokes-V coherent-emitter slice (`plans/15`, `src/jansky_research/stokesv.py`).
-  Tooling + the SRSC recover-a-known + forced-photometry core (`measure_circular_pol`) are done and
-  tested. The live forced-photometry leg is **blocked on a CASDA outage** (VO TAP/SIA2 *and* the web
-  cutout service return 0/errors for every position; OPAL login works). See `survey/stokesv-findings.md`
-  and the `casda-cutout-fetch` skill. Retry CASDA; when it recovers, finish the leg.
-- **Queued runner-up:** southern GLEAM-X×RACS spectral-curvature catalogue — reuses `peaked`/`spectra`,
-  fixes peaked's TGSS-upper-limit limitation with real GLEAM-X in-band turnovers; image access
-  de-risked (Data Central serves GLEAM-X Stokes-I, VizieR serves the catalogues). See
-  `survey/new-findings-scan.md`.
+- **Pick the next slice from `fable-ideas.md`** (2026-07-05, a 12-agent deep re-scan; supersedes
+  the shortlist in `survey/opportunity-scan-2026-07.md`, whose Tier-1 items are now merged:
+  `stokesv_discovery`, `lpt`, `rmstructure`, `torchfdmt`, `junodam`). Suggested first moves
+  there: F1 (RM dipole — data already on disk), F2+F5 (CHIME Cat 2 bundle — gated on
+  `chime-frb.ca` recovering from its 503s; most time-sensitive), F6 (`torch-dsp` GPU suite).
+- **Standing GATE-0 for anything from that file:** the scan session couldn't fetch primary
+  sources (egress-blocked), so do a full-text novelty pass + a data-URL check before writing the
+  plan. Its "Corrections & closed doors" section lists ideas already killed — check it first.
+- Earlier blockers are resolved: CASDA recovered (`stokesv` complete, both legs; the discovery
+  census is merged as `stokesv_discovery`); the southern GLEAM-X×RACS curvature catalogue is
+  merged (`southern`).
 
 ## Layout
 
 `src/jansky_research/` (slice modules + `data.py`/`pipeline.py`/`report.py`) · `tests/` · `plans/` ·
-`survey/` (committed findings) · `papers/<slice>/` · `station/` (build guides for the physical rooftop
+`fable-ideas.md` (current plan-ready idea list) · `survey/` (committed findings) ·
+`papers/<slice>/` · `station/` (build guides for the physical rooftop
 station — self-collected data, WIP; owner's working notes live in an Obsidian vault, not here) ·
 `workflow/Snakefile` (static-slice file-DAG, drives `make figures`) · `airflow/` (streaming e-Callisto
 ingest, Podman DAG) · `.claude/` (agents + skills) ·

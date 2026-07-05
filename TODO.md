@@ -35,16 +35,17 @@ the one permanent, low-friction win). Do them top to bottom:
 4. **Order among the arXiv papers doesn't matter**, but if you submit only one first, make it
    `vlass` or `peaked` (the strongest methodology + recover-a-known stories).
 
-**Scope as of now:** the repo has **twenty-one** completed slices, each with a tested tool + an AASTeX
-paper under `papers/<slice>/` (the full list is in `README.md`). The earlier "reliable no-auth data
-sources are largely used up" assumption is **retired** — the 2026-07 re-survey
+**Scope as of now:** the repo has **twenty-six** completed slices, each with a tested tool + an
+AASTeX paper under `papers/<slice>/` (the full list is in `README.md`). The earlier "reliable
+no-auth data sources are largely used up" assumption is **retired** — the 2026-07 re-survey
 (`survey/opportunity-scan-2026-07.md`) found major new/upgraded open sources (LoTSS DR3, CHIME/FRB
 Cat 2, SPICE-RACS DR2, MeerKAT image products, VLASS SE images, OVRO-LWA solar, Juno/Waves, Parkes
-PSRDA) and a ranked shortlist of plan-ready opportunities. The two openers are now drafted:
-`plans/33-racs-stokesv-discovery.md` (forced target-list V photometry + two-epoch variability;
-time-sensitive) and `plans/34-torch-fdmt-singlepulse.md` (pure-PyTorch FDMT + the single-pulse
-science, absorbing plan 28). `plans/29-lotss-deep-144mhz-counts.md` remains scoped (should migrate
-to LoTSS DR3). The publishing steps below operate on the completed slices.
+PSRDA), and its ranked shortlist has since been **executed**: plans 33–37 are merged slices
+(`stokesv_discovery`, `torchfdmt` — absorbing plan 28 — `lpt`, `rmstructure`, `junodam`). The
+current opportunity file is **`fable-ideas.md`** (2026-07-05 deep re-scan; supersedes the scan's
+shortlist, records corrections/closed doors). `plans/29-lotss-deep-144mhz-counts.md` remains
+scoped (should migrate to LoTSS DR3 — `fable-ideas.md` F33). The publishing steps below operate
+on the completed slices.
 
 **`stokesv` is now complete** (CASDA recovered; the forced-photometry leg is wired). It is a
 methods + honest-limits paper (I recovered from real RACS-low V images; single-epoch V is
@@ -99,7 +100,7 @@ Pre-submission checklist (JOSS will check these):
 - [ ] **Archive the software** (the Zenodo DOI from step 1) — JOSS asks for it.
 - [ ] Skim the JOSS "substantial scholarly effort" bar
       (<https://joss.readthedocs.io/en/latest/submitting.html>) — a thin wrapper can be
-      desk-rejected; lead the submission notes with the nineteen slices (recover-a-known
+      desk-rejected; lead the submission notes with the twenty-six slices (recover-a-known
       validations + methodology contributions) + the Airflow/Podman reproducibility layer.
 - [ ] Submit at <https://joss.theoj.org/papers/new>: give the repo URL, the branch/tag,
       `joss/paper.md`'s path, and the Zenodo DOI.
