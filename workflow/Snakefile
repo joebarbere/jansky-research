@@ -42,6 +42,8 @@ SLICES = {
     "stokesv_discovery": ("stokesv_discovery", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
+    "frbwait": ("frbwait", "--offline"),
+    "frblens": ("frblens", "--offline"),
     "lpt": ("lpt", "--offline"),
     "junodam": ("junodam", "--offline"),
 }

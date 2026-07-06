@@ -57,6 +57,8 @@ Twenty-six slices plus a synthesis, honestly tallied:
 | RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per \|b\| bin; high-\|b\| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
 | Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ 7-month census: proximity dominates ~180×; Earth-canonical Io boxes do NOT coherently organise orbital-vantage occurrence (per-month median 0.87, one orbit misleads); GATE-2 caught the Io-phase convention blocker (disclosed) |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `jansky_research.rmdipole` | ✅/➖ RM sky **isotropic at dipole order in its core**: the significant power dipole is carried entirely by the top-1% \|residual\| tail (clip → p 0.001→0.93); no apex within 80° of the CMB; real-footprint injection recovered (honest null) |
+| Uniform Cat-2 repeater timing census (CHIME/FRB) | `jansky_research.frbwait` | ✅/➖ first one-statistic census of all 83 repeaters: **anchor 20180916B re-found at 16.33 d** (107 cycles, p=0.001, duty 0.21); median k=0.83, 3 clustered; the 2 other p≤0.01 peaks have ≤5 cycles — labelled epoch degeneracies, **no new period claims** (honest) |
+| Lensed-repeater search in Cat 2 (CHIME/FRB) | `jansky_research.frblens` | ✅/➖ first catalogue-level fixed-delay search: **0/33 detections → lensed fraction < 0.091** (95%, injection-scoped); documents the day-scramble false-positive mode the real data exposed (honest methods lesson) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -119,6 +121,8 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate |
 | Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) |
+| Uniform Cat-2 repeater timing census | `frbwait/` | anchor recovery + population k census + honest no-new-periods verdict |
+| Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -212,7 +216,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py junodam.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

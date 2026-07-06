@@ -1,8 +1,14 @@
 # 39 — CHIME/FRB Catalog 2: uniform repeater wait-time & duty-cycle census
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + chime-frb.ca 503
-recovery check (the fable-ideas scan ran egress-blocked; the site also 503'd on 2026-07-01) —
-most time-sensitive slice in the file
+Status: ✅ done — GATE 0 passed 2026-07-06 (chime-frb.ca still 503, but the official CANFAR DOI
+10.11570/25.0066 serves the table + exposure maps — mirrored to `data/`; gap confirmed open:
+Cook et al. arXiv:2605.08410 does rates only). Plan corrections: 20240114A is NOT in Cat 2
+(post-cutoff; its "112.9 d" is chromatic anyway) — 20180916B is the single in-catalogue anchor,
+recovered at 16.33 d (p=0.001, 107 cycles, duty 0.21); the public exposure product is
+time-integrated → the null is a transit-comb-preserving sidereal scramble, not per-epoch
+correction. Census: 83 sources, 15 above the cut, median k=0.83, 3 clustered; the two non-anchor
+p≤0.01 peaks have ≤5 cycles and are labelled activity-epoch degeneracies, not periods. See
+survey/frbwait-findings.md.
 
 ## Context
 

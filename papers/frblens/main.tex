@@ -1,0 +1,139 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A lensed-repeater search in CHIME Catalog 2}
+\shortauthors{Barbere}
+\begin{document}
+\title{No Lensed Repeaters Among the CHIME/FRB Catalog 2 Sources:
+The First Catalogue-Level Search for Recurring Image Delays}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+A strongly lensed one-off fast radio burst masquerades as a repeater whose ``bursts'' arrive
+in image multiplets with a mutual time delay fixed (at the solar-system barycenter) to
+milliseconds \citep{dailu2017,li2018}. The theory is a decade old; no observational
+catalogue-level search has been published --- existing FRB lensing searches are all in the
+intra-burst $\mu$s--ms regime \citep{leung2022,kader2022,cat1lens,microlens2026}. We run the
+first, on the CHIME/FRB Catalog 2 repeaters \citep[83 sources, of which 33 have the $\ge$5
+bursts and $>$2-day spans the statistic needs;][]{cat2}: per source, we barycenter the
+catalogue's topocentric TOAs (the annual Roemer term would otherwise drift a fixed delay by
+up to $\pm$150\,s in topocentric pair delays --- far beyond tolerance), then scan all
+burst-pair delays $>$1\,d for a recurring delay $\Delta$ shared by the maximum number of
+disjoint pairs matching within 5\,s and consistent in DM within each source's own fitted-DM
+scatter. Significance comes from a null that first contact with the real catalogue proved
+load-bearing: permuting each burst's position \emph{within} its transit window while keeping
+its day --- so activity epochs, clustering, and periodic windows survive into every null
+realisation, and only sub-window fixed-delay coherence (the actual lensing signature) can
+score. A day-scrambling null, by contrast, false-positives the three most clustered
+repeaters in the catalogue; we document that failure mode rather than hide it. Injections at
+the real burst trains --- through the same barycentring, DM cut, and transit-window selection
+as the search --- map the sensitivity region and expose a transit-survey selection: both
+images are jointly detectable only when $\Delta$ is within the transit window of an integer
+number of sidereal days. The search returns \flRealNDet\ detections among \flRealNSearched\
+repeaters searched (cleanest non-detection $p=0.81$), giving the first empirical upper limit
+on the lensed-repeater fraction: $<$\flRealLimit\ per searched repeater (95\% confidence,
+within the mapped sensitivity region). The expected yield at lensing optical depth
+$\sim$$10^{-4}$ was zero; the limit, the machinery, and the honestly-mapped selection
+function are the contribution.
+\end{abstract}
+
+\keywords{Radio bursts (1339) --- Strong gravitational lensing (1643) ---
+Astronomy data analysis (1858)}
+
+\section{Introduction}
+\citet{dailu2017} and \citet{li2018} specify exactly how a strongly lensed one-off FRB
+appears in a survey: as a ``repeater'' whose burst arrivals come in pairs (or multiplets)
+separated by the lens's image delay --- fixed, for galaxy-scale lenses, at days-to-months, and
+stable at the barycenter to far better than a second over years. Every observational FRB
+lensing search to date has instead targeted the intra-burst regime: baseband interferometric
+echoes at $\mu$s \citep{leung2022,kader2022}, autocorrelation echoes at ms in Catalog 1
+\citep{cat1lens} and in the Catalog-2 one-offs \citep{microlens2026}. The burst-to-burst
+regime --- the one where a lensed one-off actually contaminates the repeater population
+\citep{cook2026} --- has never been searched in any catalogue. Catalog 2 \citep{cat2}, with
+83 repeaters and burst-train spans up to $\sim$4.8 years, is the first dataset where the
+search is worth running; the expected yield at optical depth $\sim$$10^{-4}$ is zero, so we
+frame the result as it is: the first empirical upper limit, plus tested machinery for the
+catalogues where the optical-depth arithmetic improves.
+
+\section{Method}
+\label{sec:method}
+Per repeater with $\ge$5 bursts and a span $>$2\,d (33 of the 83), we use the
+first-component \code{mjd\_400} TOAs --- which are \emph{topocentric} (Catalog 2, Appendix
+A). A lens delay is fixed only at the barycenter: the annual Roemer term makes a fixed
+barycentric delay drift in topocentric pair delays by $\sim$$\Delta\times9$\,s per day of
+delay (e.g.\ $\pm$150\,s at $\Delta=26$\,d) --- two orders of magnitude beyond our matching
+tolerance, so the search would be blind to real signals in the raw TOAs. We therefore
+barycenter every TOA (astropy, CHIME's location, per-source catalogue positions; arcminute
+positional uncertainty contributes $<$0.2\,s) and search in the barycentric frame. Every
+pairwise delay $>$1\,d (below one transit spacing, image pairs and intrinsic same-window
+clustering are indistinguishable --- excluded and stated) is a candidate $\Delta$; for each,
+we greedily count disjoint pairs $(t, t+\Delta)$ matching within 5\,s. The tolerance budget:
+catalogue TOA errors are ms-scale (repeater median 1.2\,ms, maximum 0.15\,s), a
+1\,pc\,cm$^{-3}$ DM difference shifts the 400-MHz TOA by 26\,ms, residual barycentring error
+is $<$0.2\,s, and secular delay drift \citep{dailu2017} is sub-second over the span --- 5\,s
+covers all of these with margin while staying far inside the $\sim$15-min transit window.
+Matched pairs must also agree in DM within $3\sqrt{2}\,\sigma_{\rm DM}$ of the source's own
+fitted-DM scatter ($\sigma_{\rm DM}$ = robust per-source scatter of \code{dm\_fitb}, 2--7
+pc\,cm$^{-3}$ for the most active repeaters --- a naive 1\,pc\,cm$^{-3}$ ``measurement
+floor'' would reject the majority of \emph{genuine} image pairs, whose independently fitted
+DMs scatter just like intrinsic bursts'). The per-source statistic is the maximum count
+$M_{\max}$.
+
+The null is the design decision this paper exists to document. Our first implementation
+scrambled burst \emph{days} (preserving sidereal phases) --- the correct null for a
+periodicity census --- and it promptly ``detected'' the three most intrinsically clustered
+repeaters in the catalogue (FRBs 20220912A, 20180916B, 20201124A, $M_{\max}$ up to 82): dense
+activity epochs put many burst pairs at near-integer sidereal-day separations within a loose
+tolerance, and a day-scramble destroys exactly that structure, so the comparison answers the
+wrong question. The correct null for a \emph{fixed-delay} signature keeps each burst's day
+and permutes the sidereal phases among bursts (re-applying each day's barycentric offset,
+which varies by $<$0.01\,s across a transit window): per-day burst counts survive exactly;
+what is destroyed is only the sub-window coherence that lensing (and nothing intrinsic)
+enforces. With the phase-permutation null and the 5-s tolerance, the same three sources are
+clean nulls --- and synthetic lensed trains (each burst duplicated at a fixed barycentric
+$+\Delta$; magnification ratio applied against the source's empirical fluence floor;
+topocentric transit-window detectability enforced; image DMs drawn with the source's own fit
+scatter so the DM cut costs injections what it costs real pairs) are recovered at the
+scramble floor. The injection grid also exposes the transit-survey selection function
+honestly: a delay that is not an integer number of sidereal days (within the $\sim$15-min
+window) puts every trailing image outside the beam --- those cells are dark, and the quoted
+limit is scoped to the sensitive region.
+
+\section{Results}
+Zero of \flRealNSearched\ searched repeaters show a significant recurring delay (all
+$p\ge0.81$ against 200 phase scrambles; $p=(k{+}1)/(n{+}1)$). With \flRealNDet\ detections,
+the 95\% Poisson upper limit on the lensed fraction is $2.996/\flRealNSearched\ = $
+\flRealLimit\ per searched repeater, applicable within the mapped sensitivity region: delays
+at integer sidereal days out to $\sim$26\,d and magnification ratios down to each source's
+fluence floor. The injection map is computed for the deepest train (FRB 20220912A, 373
+bursts; sensitive over \flRealSensFrac\ of its grid, whose dark cells are the deliberately
+off-comb delays and the lowest magnification ratio); the other 32 searched trains are
+shallower and necessarily less sensitive, so the limit is conservative in depth but the
+region is mapped from the best case --- both stated. This is consistent with --- and the
+first empirical statement about --- the $\sim$$10^{-4}$ optical-depth expectation
+\citep{lensreview}.
+
+\section{Discussion and Conclusions}
+Three things are worth keeping. (i) The limit itself: within the mapped delay and
+magnification region, repeater samples are not lensing-contaminated at the $\gtrsim$9\%
+level --- relevant to anyone using repeater counts \citep{cook2026} as population inputs.
+(ii) The selection function: a transit survey is nearly blind to lensed repeaters whose
+delays are not near-integer multiples of the sidereal day; an all-sky or multi-site monitor
+\citep[e.g.\ the science case in][]{lensreview} removes this, and the same machinery applies
+unchanged. (iii) The methods lessons, stated because we hit them: (a) for fixed-delay
+searches, day-scrambling nulls false-positive on intrinsic clustering --- phase-permutation
+nulls are the right control, and the difference is three fake detections versus a clean
+census on identical data; (b) topocentric TOAs must be barycentered before any
+seconds-tolerance delay matching --- the annual Roemer term is $\sim$30$\times$ our tolerance
+at month-scale delays. The per-source $M_{\max}$ and null distributions ship with the
+pipeline; Catalog 3 and CHIME outriggers (better TOAs, more repeaters) mechanically sharpen
+the limit.
+
+\textit{Reproducibility.} \code{jansky\_research.frblens}; every number above is
+pipeline-generated (\code{results/frblens\_metrics.json} $\to$ macros). Data: CANFAR DOI
+10.11570/25.0066 mirror of the ApJS machine-readable table \citep{cat2}.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}
