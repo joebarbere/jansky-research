@@ -42,8 +42,9 @@ are in `TODO.md` (Zenodo → JOSS → RNAAS → arXiv).
 - **Pick the next slice from `fable-ideas.md`** (2026-07-05, a 12-agent deep re-scan; supersedes
   the shortlist in `survey/opportunity-scan-2026-07.md`, whose Tier-1 items are now merged:
   `stokesv_discovery`, `lpt`, `rmstructure`, `torchfdmt`, `junodam`). Suggested first moves
-  there: F1 (RM dipole — data already on disk), F2+F5 (CHIME Cat 2 bundle — gated on
-  `chime-frb.ca` recovering from its 503s; most time-sensitive), F6 (`torch-dsp` GPU suite).
+  there: F2+F5 (CHIME Cat 2 bundle — gated on `chime-frb.ca` recovering from its 503s; most
+  time-sensitive), F6 (`torch-dsp` GPU suite). F1 (RM dipole) is executed — merged as
+  `rmdipole` (plan 38); all fable-ideas now have plans (`plans/38`–`84`).
 - **Standing GATE-0 for anything from that file:** the scan session couldn't fetch primary
   sources (egress-blocked), so do a full-text novelty pass + a data-URL check before writing the
   plan. Its "Corrections & closed doors" section lists ideas already killed — check it first.

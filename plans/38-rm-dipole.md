@@ -1,8 +1,14 @@
 # 38 — The first rotation-measure dipole/anisotropy test (SPICE-RACS DR2)
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + same-week ADS dipole
-re-search (the fable-ideas scan ran egress-blocked; see the standing caveat there); data risk ≈ 0
-(DR2 table already on disk from `rmstructure`)
+Status: ✅ done — GATE 0 passed (full-text pass 2026-07-05: gap open; kinematic RM expectation is
+a negligible ~0.25% Doppler rescaling → isotropy framing, GATE-2-corrected); tooling + synthetic
+& real-footprint injection recover-a-known + DR2 run (999 scrambles) + GATE-2-fixed paper.
+Headline: RM sky isotropic at dipole order in its core (the significant full-sample power dipole
+is carried entirely by the top-1% |residual| tail, p 0.001→0.93 after clipping 1,029/102,830
+sources); no sky-statistic variant's apex closer than 80° to the CMB apex.
+Deltas from plan: healpy dropped (per-source LSQ dipole fit); residuals via DR2's own nn_rm_med
+columns (not rmstructure's ladder); clip + noise-map diagnostic legs added. See
+survey/rmdipole-findings.md.
 
 ## Context
 
