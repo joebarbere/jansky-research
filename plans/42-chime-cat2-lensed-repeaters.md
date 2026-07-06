@@ -1,7 +1,15 @@
 # 42 — Lensed-repeater test: recurring time-delay patterns in CHIME Catalog 2
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + chime-frb.ca 503
-recovery (shared with plan 39 — bundle the data mirror; the fable-ideas scan ran egress-blocked)
+Status: ✅ done — GATE 0 passed 2026-07-06 (data via CANFAR DOI 10.11570/25.0066, shared mirror
+with plan 39; arXiv:2605.19653 checked: ms intra-burst microlensing on one-offs — different
+regime, cited as fence). Three design deltas the real data + GATE-2 forced: (1) the plan's day-scramble null
+false-positived the three most clustered repeaters → phase-permutation null + 5-s tolerance;
+(2) mjd_400 is topocentric → all TOAs barycentred (Roemer drift ±150 s at Δ=26 d ≫ tolerance);
+(3) the 1 pc/cc DM floor would reject genuine image pairs → per-source 3√2·σ_DM cut, costed in
+the injections. All documented as methods lessons. Result: 0 detections / 33 searched (cleanest
+p=0.81) → first empirical lensed-repeater fraction limit < 0.091 per searched repeater (95%),
+injection-mapped sensitivity (transit comb selection made explicit). See
+survey/frblens-findings.md.
 
 ## Context
 

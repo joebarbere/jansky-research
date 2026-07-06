@@ -1,0 +1,148 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A uniform Cat-2 repeater timing census}
+\shortauthors{Barbere}
+\begin{document}
+\title{A Uniform Wait-Time, Periodicity, and Duty-Cycle Census of the
+CHIME/FRB Catalog 2 Repeaters}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+CHIME/FRB Catalog 2 \citep{cat2} contains 83 repeating sources, yet its repeater timing has
+only been analysed source-by-source: the companion rate census \citep{cook2026} computes
+burst rates, DM drifts, and the repeater fraction, but no per-source wait-time clustering
+shape, no periodograms, and no duty cycles; all published periodicity results are
+single-source campaigns. We compute ONE statistic uniformly across every Cat-2 repeater: the
+Weibull wait-time shape $k$ in the \citet{oppermann2018} formalism, a Rayleigh-$Z^2$
+periodogram, and an activity-window duty cycle at any significant period. Because the public
+exposure release is time-integrated, per-epoch exposure correction is impossible from public
+data --- stated plainly --- so periodogram significance comes from a transit-comb-preserving
+scramble: each burst keeps its sidereal phase and gets a uniformly redrawn day number, putting
+CHIME's daily-visibility aliasing into every null realisation (the Catalog-1 lesson that
+exposure-blind FAPs are not rigorous, mechanised). The pipeline re-finds the one in-catalogue
+anchor: FRB 20180916B at \fwRealAnchorPeriod\,d ($p=$ \fwRealAnchorP, published 16.35\,d;
+\citealt{chime2020period}) with a 90\%-containment duty cycle of \fwRealAnchorDuty. Across the
+census (\fwRealN\ sources; \fwRealNStats\ above the 10-burst/30-day completeness cut), the
+median Weibull shape is $k=$ \fwRealMedianK, \fwRealNClustered\ sources are clustered at 95\%
+confidence, and \fwRealNPeriodic\ beat the scramble null at $p\le0.01$ --- of which only the
+anchor has enough cycles across the span to call the peak a period; the others are
+activity-epoch degeneracies and we label them as such, not as new periods.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Radio bursts (1339) ---
+Astronomy data analysis (1858)}
+
+\section{Introduction}
+Whether repeating FRB sources share a common temporal character --- Poissonian storms,
+long-memory clustering, periodic activity windows --- is a population question, but the
+population data have been analysed almost entirely one source at a time. The two known
+activity periods (16.35\,d for FRB 20180916B, \citealt{chime2020period}; $\sim$160\,d for
+FRB 20121102A, \citealt{rajwade2020}) came from dedicated campaigns; wait-time clustering fits exist for a handful of
+loud repeaters \citep[e.g.][]{oppermann2018,frb220912a}; and the Catalog-2 companion census
+\citep{cook2026} stops at rates and DM drift, noting that ``repeater burst arrival times are
+stochastic; however, they cluster in time'' without modelling it. Catalog 2 \citep{cat2},
+with 83 repeaters observed under one instrument, one detection pipeline, and one exposure
+accounting for just over five years, is the first dataset on which a homogeneous timing census
+is even possible. This paper runs it.
+
+Two scope notes. First, FRB 20240114A and FRB 20240209A --- the two loudest recent repeaters
+with claimed long periods --- post-date the Catalog-2 cutoff (2023 September 15) and are not
+in the table; the only in-catalogue anchor with an established period is FRB 20180916B, and
+re-finding it is the validation gate for everything else. Second, the public exposure product
+accompanying the catalog (CANFAR DOI 10.11570/25.0066) is a time-integrated sky map, not a
+per-epoch exposure history; we therefore never claim a per-epoch-corrected periodogram, and
+build the null differently (\S\ref{sec:method}).
+
+\section{Data and Method}
+\label{sec:method}
+We use the public burst table (4,539 events; sub-bursts deduplicated to the first component's
+\code{mjd\_400} TOA) and its per-source upper-transit exposure hours. Every source flagged
+with a \code{repeater\_name} enters the census with a rate row; sources with $\ge$10 bursts
+and $\ge$30-day spans (the stated completeness cut) additionally get: (i) a Weibull fit to
+their inter-burst wait times with bootstrap CIs on the shape $k$ ($k<1$ with the CI excluding
+1 = clustered); (ii) a Rayleigh-$Z^2$ periodogram over 1.5\,d--span/3; (iii) a
+90\%-containment activity-window duty cycle at the peak period, quoted only when the peak is
+significant.
+
+CHIME is a transit instrument: a source is visible for $\sim$minutes per sidereal day, so
+burst TOAs live on a comb of period 0.99727\,d, and any exposure-blind false-alarm estimate
+inherits that aliasing. Our null preserves it exactly: each burst keeps its sidereal phase
+(its position within the daily transit window) while its day number is redrawn uniformly over
+the source's observed span; the periodogram-peak FAP is the fraction of $10^3$ such scrambles
+whose maximum $Z^2$ over the same grid reaches the observed peak, $p=(k{+}1)/(n{+}1)$. What
+the scramble does NOT carry is day-scale exposure structure the public release omits ---
+instrument downtime and per-day exposure gaps are absent from the null (days are redrawn
+uniformly), a stated approximation, not a solved problem.
+
+The same transit geometry censors the wait-time data: waits between $\sim$15 minutes and
+$\sim$1 sidereal day are unobservable (the source has set), so observed waits are either
+intra-window or $\ge$1\,d. The Weibull fit is therefore conditioned on the visibility
+function; the missing intermediate waits bias $k$ downward (toward apparent clustering), and
+the bias is rate-dependent --- strongest for the highest-rate sources, where intra-window
+waits are common (FRB 20220912A, our smallest $k$, is the worst case). We disclose rather
+than correct it: the census's $k$ values are comparative, conditioned-on-CHIME-sampling
+statistics, not deconvolved intrinsic shapes.
+Validation is end-to-end on transit-sampled synthetics: an injected Weibull train ($k=0.4$)
+with a 16.35-d, 30\%-duty activity window is recovered in all three statistics, and a Poisson
+control with no window stays null (the offline CI leg).
+
+One statistic needs a warning label we attach throughout: a periodogram peak with only a few
+cycles across the span is degenerate with a small number of activity epochs. We report
+$N_{\rm cyc}={\rm span}/P$ per source and treat peaks with $N_{\rm cyc}\lesssim5$ as
+epoch-clustering candidates, not periods, whatever their formal $p$.
+
+\section{Results}
+\label{sec:results}
+\begin{table*}
+\centering
+\caption{The census, ranked by burst count (top 20 of \fwRealNStats\ above the completeness
+cut; the full machine-readable census ships in \code{results/frbwait\_metrics.json}).
+$p=(k{+}1)/(n{+}1)$ against the transit-comb-preserving scramble, $n=999$. Duty cycles
+(90\% containment) are quoted only for $p\le0.01$ peaks with $\ge$10 cycles across the span
+--- at fewer cycles a ``duty cycle'' would dress up an epoch degeneracy as a period.}
+\label{tab:census}
+\begin{tabular}{lllllll}
+\hline
+source & bursts & Weibull $k$ & peak period (d) & cycles & $p$ & duty \\
+\hline
+\input{generated/census_table}
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:census} is the census. The anchor validates the machinery:
+FRB 20180916B returns \fwRealAnchorPeriod\,d at the scramble floor ($p=$ \fwRealAnchorP,
+107 cycles) against the published 16.35\,d, with duty cycle \fwRealAnchorDuty\ (i.e.
+$\sim$3.5\,d at 90\% containment) --- consistent with the published 5-d window containing
+\emph{all} bursts and 50\% of them within 0.6\,d \citep{chime2020period}, once containment
+conventions are matched. Population-wise: the median Weibull shape among sources above the cut is
+\fwRealMedianK, below the Poisson value of 1, and \fwRealNClustered\ sources are individually
+clustered at 95\% confidence --- sub-Poissonian clustering is the population norm wherever
+the data can measure it, extending the single-source results of \citet{oppermann2018} and
+\citet{frb220912a} to a uniform sample. \fwRealNPeriodic\ sources beat the scramble at
+$p\le0.01$; besides the anchor, these peaks have $N_{\rm cyc}\lesssim5$ and are
+activity-epoch degeneracies under our own warning label --- we explicitly do NOT claim new
+periods. Their epochs are real (the same structure drives their small $k$), but
+distinguishing a window from a handful of storms needs longer spans.
+
+\section{Discussion and Conclusions}
+The census's honest summary: (i) clustering is ubiquitous and quantified uniformly for the
+first time at population scale; (ii) exactly one Catalog-2 repeater has a
+scramble-significant, many-cycle activity period --- the one already known; (iii) no new
+periodicity claims survive the cycles test, and the census quantifies exactly how much data
+each source needs before one could. The per-source $k$ distribution is the dataset-level
+input population-synthesis and progenitor models have been missing; the machinery (tested,
+transit-aware, with the null published alongside) transfers to Catalog 3 unchanged. The main
+limitation is stated, not hidden: without a public per-epoch exposure history, duty cycles
+inherit the transit-sampling approximation, and quantitative window shapes for
+low-declination sources (least daily exposure) are the least constrained.
+
+\textit{Reproducibility.} \code{jansky\_research.frbwait}; every number above is
+pipeline-generated (\code{results/frbwait\_metrics.json} $\to$ macros and
+Table~\ref{tab:census}). Data: CANFAR DOI 10.11570/25.0066 mirror of the ApJS
+machine-readable table \citep{cat2}.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}
