@@ -1,0 +1,174 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{An RM isotropy test from SPICE-RACS DR2}
+\shortauthors{Barbere}
+\begin{document}
+\title{Is the Extragalactic Rotation-Measure Sky Isotropic? A First Dipole Test
+on $10^5$ Faraday Rotation Measures from SPICE-RACS DR2}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Every test of the cosmic dipole anomaly to date uses source counts or flux densities as the
+tracer \citep{secrest2025,boehme2025,landstrykowski2025,mittal2026}; no published test uses
+Faraday rotation measures (RMs). The kinematic (observer-motion) expectation for RM is a
+Doppler rescaling, $\mathrm{RM}_{\rm obs} = \mathrm{RM}\,(1+\beta\cos\theta)^2$ --- a signed
+dipole of fractional amplitude $2\beta \approx 2.5\times10^{-3}$, two orders of magnitude below
+present catalogue sensitivity and largely absorbed by local foreground subtraction besides. We
+therefore pose the well-defined question a detection could actually answer: is the
+\emph{extragalactic RM sky} statistically isotropic at dipole order? SPICE-RACS DR2 \citep{spiceracs_dr2} is the first catalogue large enough to ask.
+From \rmdRealN\ quality-flagged (goodRM, S/N$\ge$8) components at $|b|\ge45\arcdeg$ we form
+extragalactic residuals with the catalogue's own nearest-neighbour Galactic-RM subtraction
+\citep[the convention of][]{malik2026}, fit a monopole$+$dipole model to the noise-debiased
+residual RM power and to $|$residual$|$, and calibrate significance with footprint-preserving
+Dec-band scrambles --- the survey's Dec$\,\le\,$$+49\arcdeg$ footprint is the dominant
+systematic, so the scramble null is load-bearing. The pipeline recovers an injected power dipole
+on the real footprint (amplitude $0.3\to$ \rmdRealInjAmp$\pm$\rmdRealInjAmpSe, apex within
+$\sim$$6\arcdeg$). On the real sky the power statistic rejects its scramble null
+(amplitude \rmdRealAmp$\pm$\rmdRealAmpSe, $p=$ \rmdRealPScramble) --- but the rejection is
+carried entirely by the top 1\% of $|$residual$|$: clipping those \rmdRealClipN\ sources returns
+the sky to consistency with isotropy ($p=$ \rmdRealClipP), the outlier-robust $|$residual$|$
+statistic on the widest sample is likewise isotropic ($p=$ \rmdRealWideAbsP), and every
+variant's apex lies $\sim$$80\arcdeg$--$150\arcdeg$ from the CMB dipole apex. The catalogued
+noise power carries its own small dipole (amplitude \rmdRealNoiseAmp) pointing elsewhere,
+excluding mis-modelled noise as the driver. We conclude the extragalactic RM sky is \textbf{isotropic at dipole order once a
+$\sim$1\% outlier tail is removed}, with \textbf{no evidence for any CMB-aligned dipole}; the
+outlier-tail anisotropy is a Galactic-subtraction/leakage/$n\pi$-ambiguity systematics
+statement, not a cosmological one. The tooling (pure NumPy, tested, with injection validation) transfers unchanged to the
+coming POSSUM full-survey RM grid, where per-source redshifts and lower leakage floors will
+sharpen the test.
+\end{abstract}
+
+\keywords{Cosmology: observations (1146) --- Magnetic fields (994) ---
+Astronomy data analysis (1858)}
+
+\section{Introduction}
+The cosmic dipole anomaly --- radio/quasar source-count dipoles exceeding the kinematic
+expectation from the CMB dipole by factors of $\sim$2--4 \citep{secrest2025,boehme2025} --- is
+tested exclusively with number counts and flux densities, the observables for which
+\citet{ellisbaldwin1984} derived the kinematic prediction. Faraday rotation measures are an
+entirely separate observable carried by much of the same source population, yet the RM sky has
+never been subjected to a catalogue-scale dipole/isotropy test. The closest prior art is
+decades old and asked a different question: a \emph{uniform cosmological magnetic field} would
+imprint a signed mean-RM dipole, which \citet{kronberg1976,vallee1990} bounded with
+$\mathcal{O}(10^2)$ RMs and \citet{kolatt1998} proposed correlation statistics for; more
+recently \citet{mtchedlidze2026} simulated the primordial-field RM sky without fitting any
+observed catalogue. SPICE-RACS DR2 \citep{spiceracs_dr2}, with $\sim$$3.3\times10^5$
+quality-flagged RMs over 87.5\% of the sky, changes the arithmetic.
+
+Two facts shape an honest test. First, the kinematic expectation for RM is negligible at
+present sensitivity: an observer boost rescales the observed RM by $(1+\beta\cos\theta)^2$ ---
+the same wavelength-squared scaling that produces the $(1+z)^{-2}$ redshift dilution --- a
+signed dipole of amplitude $2\beta \approx 2.5\times10^{-3}$ for the CMB-inferred velocity,
+far below this test's amplitude uncertainties ($0.006$--$0.065$) and largely removed by local
+foreground subtraction, since neighbouring sources share the factor. A dipole detected at
+measurable amplitude therefore could not be kinematic, and a null does not constrain our
+velocity; we frame the measurement strictly as a statistical-isotropy test.
+Second, extragalactic RMs are residuals after subtracting a Galactic foreground an order of
+magnitude larger \citep{mao2010}, and any \emph{signed} mean-RM dipole is partially absorbed by
+local foreground subtraction; the statistics tested here are dipoles in the residual
+\emph{amplitude/power}, which survive it. A Vall\'ee-style uniform-field limit from this
+catalogue would require model-based (not local) foreground subtraction and is deferred.
+
+\section{Data and Method}
+\label{sec:method}
+We start from the DR2 goodRM sample (S/N$_{\rm polint}\ge8$; the survey's leakage, S/N,
+Stokes-I-fit and channel flags all clean), and form per-source extragalactic residuals
+$r_i = \mathrm{RM}_i - \mathrm{GRM}_i$ using the catalogue's own nearest-neighbour local RM
+median (\code{nn\_rm\_med}, $\ge$5 neighbours) as the Galactic estimate \citep{malik2026}, at
+$|b|\ge45\arcdeg$ (primary) and $|b|\ge30\arcdeg$; a 5$\arcdeg$-latitude-band median
+subtraction is the cross-check path (it leaves longitude-dependent Galactic structure in the
+residuals by construction, and behaves accordingly; \S\ref{sec:results}).
+
+For each sample we fit $y_i = m + \vec p\cdot\hat n_i$ by least squares, with
+$y_i = r_i^2 - \sigma_i^2$ (noise-debiased residual power; the debias is exact in expectation)
+as the primary statistic and $y_i = |r_i|$ as the outlier-robust companion, reporting the
+fractional amplitude $|\vec p|/m$, the apex direction, and source-bootstrap uncertainties.
+Significance comes from footprint-preserving scrambles: residuals are permuted among the real
+source positions within $5\arcdeg$ Dec bands, preserving the footprint and any Dec-dependent
+systematic exactly while destroying all RA structure. One consequence must be stated: because
+band means survive every permutation, a real dipole's \emph{polar} (Dec-projected) component is
+shared by the observed and null amplitudes alike --- the test constrains the RA-projected
+dipole and is conservative for a general one; a dipole aligned with the celestial polar axis
+would be invisible to it. Sensitivity to a CMB-aligned dipole is nearly full only because the
+CMB apex sits at Dec $-6.9\arcdeg$ \citep[$(167.94\arcdeg, -6.94\arcdeg)$ equatorial;][]
+{planck2020}. Diagnostics: a 99th-percentile
+$|r|$-clipped power fit (tail-drivenness), and a dipole fit to the catalogued noise power
+$\sigma_i^2$ itself (a ``power dipole'' sharing its apex with the noise map would be
+mis-modelled noise, not sky). Validation is injection-based end to end: on a mock DR2-like
+footprint the pipeline recovers injected amplitude and apex (offline CI), and at the \emph{real}
+source positions a synthetic residual field carrying an injected $A=0.3$ power dipole is
+recovered to within $\sim$6\% in amplitude (a partial-sky $|\vec p|/m$ bias, visible in
+Table~\ref{tab:legs}) and $\sim$$6\arcdeg$ in direction.
+
+\section{Results}
+\label{sec:results}
+\begin{table*}
+\centering
+\caption{Dipole fits, diagnostics, and the real-footprint injection control.
+$p = (k+1)/(n+1)$ where $k$ counts footprint-preserving scrambles reaching the observed
+amplitude ($n=999$; the resolution floor is $10^{-3}$).}
+\label{tab:legs}
+\begin{tabular}{llllllll}
+\hline
+sample & subtraction & statistic & $N$ & $|\vec p|/m$ & apex (RA, Dec) & sep.\ CMB & $p$ \\
+\hline
+\input{generated/legs_table}
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:legs} is the result. Four features are robust across variants. (i) The
+noise-debiased \emph{power} statistic rejects its scramble null in every sample/subtraction
+variant. (ii) Its amplitude and apex are \emph{method-dependent}: the latitude-band subtraction
+--- which leaves longitude-dependent Galactic structure in the residuals --- yields larger
+amplitudes than the nearest-neighbour subtraction (and its $|r|$ statistic also rejects,
+$p=0.001$ at both cuts, the same contamination signature), the expected behaviour of residual
+Galactic structure rather than sky-stationary extragalactic anisotropy. (iii) The power anisotropy
+is a \emph{tail} phenomenon: removing the top 1\% of $|r|$ (\rmdRealClipN\ of \rmdRealN\
+sources) drops the amplitude from \rmdRealAmp\ to \rmdRealClipAmp\ and the scramble $p$-value
+from \rmdRealPScramble\ to \rmdRealClipP, and the outlier-robust $|r|$ statistic on the widest,
+best-subtracted sample ($|b|\ge30\arcdeg$, nearest-neighbour) is likewise consistent with its
+null ($p=$ \rmdRealWideAbsP). One entry is marginal and we state it rather than bury it: the
+$|r|$ statistic on the primary sample itself gives $p=0.023$ (apex $82\arcdeg$ from the CMB).
+With no trials correction across the eight sky-statistic variants tested (the chance of one
+$p\le0.023$ among eight is $\sim$15--20\%), and with no persistence in the $1.7\times$ larger
+$|b|\ge30\arcdeg$ sample, we read it as an echo of the same tail, not as evidence of core
+anisotropy. The core of the residual distribution is isotropic;
+$\sim$$10^3$ high-$|r|$ sources with an anisotropic sky distribution carry the whole signal.
+(iv) The catalogued noise power $\sigma^2$ has its own statistically significant but small
+dipole (amplitude \rmdRealNoiseAmp, apex $\sim$$150\arcdeg$ from the power apex) ---
+survey depth is not uniform, but it neither matches the power dipole's direction nor its
+magnitude, excluding mis-modelled noise as the carrier. No variant's apex lies near the CMB
+dipole apex (separations $\sim$$80\arcdeg$--$150\arcdeg$).
+
+\section{Discussion and Conclusions}
+The extragalactic RM sky at $10^5$-source scale is isotropic at dipole order in its
+distributional core, and shows \emph{no CMB-aligned dipole} in any variant: whatever the
+source-count dipole excess \citep{boehme2025} is, it has no counterpart in Faraday-rotation
+power pointing the same way at current sensitivity. The tail-carried power anisotropy we do
+measure --- $\sim$$10^3$ sources, $\sim$1\% of the sample, anisotropically distributed toward
+apex $\sim$$(70\arcdeg,+10\arcdeg)$ --- is most conservatively read as the residual-systematics
+floor of the present catalogue: imperfect local Galactic subtraction
+\citep[cf.][]{vacca2026}, leakage survivors, and $n\pi$-ambiguity outliers are all plausible
+carriers, none of which is cosmological. A further reason for modesty about the significant
+legs: the permutation null assumes within-band exchangeability, but the RM residual field has
+measured degree-scale correlations in this very catalogue (its structure function rises to
+$\sim$$3\arcdeg$--$4\arcdeg$), so small $p$-values strictly read ``RA structure exists,'' not
+``a dipole exists'' --- which is precisely the systematics reading we adopt. Identifying those
+$\sim$$10^3$ sources individually
+(are they clustered on particular tiles? near bright sources? do they share \code{rm\_width}
+morphology?) is the immediate follow-on and may itself be a useful DR2 quality diagnostic. Two follow-ons are natural: a model-based
+Galactic subtraction (which would unlock the signed mean-RM dipole and a modern
+\citealt{vallee1990} uniform-field limit at $\sim$$10^3\times$ the old sample size), and
+repeating the test on POSSUM's full RM grid with redshifts. The method, its injection
+validation, and its honest nulls are the contribution; the tooling is a $\sim$500-line tested
+module that runs on any RM catalogue with positions and errors.
+
+\textit{Reproducibility.} \code{jansky\_research.rmdipole}; every number above is
+pipeline-generated (\code{results/rmdipole\_metrics.json} $\to$ macros and
+Table~\ref{tab:legs}). Data: CSIRO DAP \code{csiro:64891} (no auth).
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}
