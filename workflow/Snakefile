@@ -44,6 +44,7 @@ SLICES = {
     "rmdipole": ("rmdipole", "--offline"),
     "frbwait": ("frbwait", "--offline"),
     "frblens": ("frblens", "--offline"),
+    "torchdsp": ("torchdsp", "--offline"),
     "lpt": ("lpt", "--offline"),
     "junodam": ("junodam", "--offline"),
 }
