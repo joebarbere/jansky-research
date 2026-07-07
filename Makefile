@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -107,6 +107,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	test -f data/spice-racs.dr2.fits && uv run python -m jansky_research.rmdipole --n-scramble 999 --out . || uv run python -m jansky_research.rmdipole --offline --out .  # RM dipole/isotropy test on the local DR2 file
 	test -f data/chimefrbcat2.csv && uv run python -m jansky_research.frbwait --n-scramble 999 --out . || uv run python -m jansky_research.frbwait --offline --out .  # Cat-2 repeater census (CANFAR mirror)
 	test -f data/chimefrbcat2.csv && uv run python -m jansky_research.frblens --n-scramble 200 --out . || uv run python -m jansky_research.frblens --offline --out .  # Cat-2 lensed-repeater search
+	test -f data/FRB20181231C_24366209_beamformed.h5 && uv run --extra fdmt --extra voyager python -m jansky_research.torchdsp --benchmark --out . || uv run --extra fdmt python -m jansky_research.torchdsp --offline --out .  # torch-dsp (GPU: rerun with --device cuda from the ROCm venv)
 	uv run python -m jansky_research.lpt --out .  # vendored verified LPT table (offline by design)
 	test -d data/junodam && uv run python -m jansky_research.junodam --out . || true  # real Juno month when local CDFs exist
 	uv run python -m jansky_research.stokesv_discovery --out .  # summarises results/stokesv_discovery_realtargets.csv (regenerate: uv run python scripts/stokesv_discovery_real.py)

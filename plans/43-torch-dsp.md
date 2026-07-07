@@ -1,8 +1,16 @@
 # 43 — torch-dsp: coherent dedispersion + RFI-excision kernels + FFA in pure PyTorch
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + CHIME baseband
-fetchability check (one small file from CANFAR without auth; the fable-ideas scan ran
-egress-blocked)
+Status: ✅ done — GATE 0 passed 2026-07-06 (all three niches OPEN for pure PyTorch; wording
+fences: a SYCL coherent dedisperser and a 3-week-old CUDA FFA scaffold `gaffa` exist → claim
+"pure-PyTorch", not "first portable/GPU"; jess is Kania+2026 not Agarwal). All three kernels
+shipped + FFA stretch goal landed: chirp round-trip exact (99.5% energy, offset 0), SK/
+SumThreshold byte-identical to jansky.rfi in sequential mode (parallel variant Jaccard 0.949,
+documented), FFA exact on injections vs a brute-fold oracle (delta: riptide cited not depended
+on). Real legs ON THE ROCm GPU: CHIME baseband FRB 20181231C burst S/N peaks exactly at its
+Cat-2 DM 556.11; Crab RFI mask Jaccard 0.916; Crab period re-find is an honest null (2.1-s
+file: fold S/N 2.2 at the published period — nothing to find). Benchmarks: FFA 10.5× GPU,
+chirp parity (transfer-bound), SumThreshold GPU-hostile (host loop — stated future work). See
+survey/torchdsp-findings.md.
 
 ## Context
 

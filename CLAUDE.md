@@ -42,10 +42,10 @@ are in `TODO.md` (Zenodo → JOSS → RNAAS → arXiv).
 - **Pick the next slice from `fable-ideas.md`** (2026-07-05, a 12-agent deep re-scan; supersedes
   the shortlist in `survey/opportunity-scan-2026-07.md`, whose Tier-1 items are now merged:
   `stokesv_discovery`, `lpt`, `rmstructure`, `torchfdmt`, `junodam`). Suggested first moves
-  there: F6 (`torch-dsp` GPU suite), F4 (WD-pulsar sweep), F8 (FASHI DR2). Executed so far:
-  F1 → `rmdipole` (plan 38); F2+F5 → `frbwait`+`frblens` (plans 39+42; Cat 2 mirrored from
-  CANFAR DOI 10.11570/25.0066 — chime-frb.ca itself is still 503). All fable-ideas have plans
-  (`plans/38`–`84`).
+  there: F4 (WD-pulsar sweep), F8 (FASHI DR2). Executed so far: F1 → `rmdipole` (plan 38);
+  F2+F5 → `frbwait`+`frblens` (plans 39+42; Cat 2 mirrored from CANFAR DOI 10.11570/25.0066 —
+  chime-frb.ca itself is still 503); F6 → `torchdsp` (plan 43; CHIME baseband + ROCm GPU legs
+  done). All fable-ideas have plans (`plans/38`–`84`).
 - **Standing GATE-0 for anything from that file:** the scan session couldn't fetch primary
   sources (egress-blocked), so do a full-text novelty pass + a data-URL check before writing the
   plan. Its "Corrections & closed doors" section lists ideas already killed — check it first.
