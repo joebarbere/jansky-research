@@ -13,9 +13,9 @@ The tracked service-level objective is **data continuity** — the percentage of
 
 ## Architecture
 
-Outdoor: LNA and bandpass filter in an IP65 enclosure at the dish feed, powered by a dedicated outdoor 5 V supply (the filter is DC-intolerant, so no bias-tee power anywhere in the chain). Drip loops and self-amalgamating tape on all connections; LMR-400 to a grounding block at building entry; non-penetrating ballasted roof mount.
+Outdoor, at the dish: an active hydrogen-line feed with integrated LNAs and SAW filters, powered up the coax by a USB bias-tee injector (~5 V, ~120 mA); the SDR's own bias tee stays disabled and the feed's internal DC block keeps DC off the SDR. Drip loops and self-amalgamating tape on all connections; short coax to the SDR enclosure on the same mast; a grounding block at building entry; non-penetrating ballasted roof mount.
 
-Indoor: the SDR and a Raspberry Pi 5 on a small UPS. The Pi runs:
+At the dish, in a weatherproof enclosure: the SDR and a Raspberry Pi 5, powered and networked over Power-over-Ethernet from an indoor switch on a small UPS. The Pi runs:
 
 - a capture service producing **averaged spectra only** (megabytes per day; raw IQ is never logged),
 - systemd units with restart policies plus a hardware watchdog,
