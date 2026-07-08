@@ -1,8 +1,15 @@
 # 40 — SBI population inference for the RACS Stokes-V coherent-emitter class
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) + `sbi` v0.26.x
-ROCm smoke test on the pinned torch wheel
+Status: ✅ done — GATE 0 2026-07-08: novelty PASS (no coherent-emitter population SBI exists) +
+**sbi 0.26.1 trains NPE natively on the RX 7600 XT / ROCm** (verified, no code changes). Result:
+the first calibrated beaming-fraction posterior for M-dwarf coherent emitters, f_beam = 0.30
+(90% CI 0.07–0.53), SBC-validated coverage (KS ≤ 0.09); LF weakly constrained (slope rails at the
+flat-prior edge, break near prior-wide) — the beaming–luminosity degeneracy at 2 detections,
+reported as weak constraints not measurements. Scope note: the plan's "inject synthetic V into
+real cutouts" recover-a-known was replaced by forward-model monotonicity checks + SBC (the
+selection is captured by the census's per-target rms/leakage floor, so cutout injection adds
+nothing the summary uses). New `[sbi]` extra; physics pure-NumPy in core CI. See
+survey/svsbi-findings.md.
 
 ## Context
 

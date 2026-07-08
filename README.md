@@ -61,7 +61,8 @@ Twenty-six slices plus a synthesis, honestly tallied:
 | Lensed-repeater search in Cat 2 (CHIME/FRB) | `jansky_research.frblens` | ✅/➖ first catalogue-level fixed-delay search: **0/33 detections → lensed fraction < 0.091** (95%, injection-scoped); documents the day-scramble false-positive mode the real data exposed (honest methods lesson) |
 | torch-dsp: coherent dedispersion + RFI + FFA in pure PyTorch | `jansky_research.torchdsp` | ✅/➖ three empty niches filled; **CHIME baseband burst re-dedispersed, S/N peaks at its catalogue DM on a ROCm GPU**; SK/SumThreshold byte-identical to the CPU oracle (sequential); FFA 10.5× on GPU; Crab period re-find = honest null (2.1-s file) |
 | Radio survey of 56 WD-pulsar candidates (RACS+VLASS) | `jansky_research.wdpulsar` | ✅/➖ first systematic radio search of the Pelisoli+2025 list: **0/51 candidates detected** (I or V) to a median 3σ V limit **0.41 mJy**; AR Sco control re-found (4.2 mJy, circular); J1912−4410 itself undetected — the duty-cycle caveat made concrete (honest null) |
-| Environment-split HI mass function (FASHI DR1) | `jansky_research.fashienv` | ✅/➖ first environment split of the FASHI HIMF (41,741 sources): **void knee suppressed −0.10 dex vs walls**, an independent FAST confirmation of the ALFALFA void HIMF (Moorman+2014); group knee survivor-biased +0.19 dex (stated); DR1 first leg (DR2 embargoed to ~Aug 2026), absolute slope caveated |
+| Environment-split HI mass function (FASHI DR1) | `jansky_research.fashienv` | ✅/➖ first environment split of the FASHI HIMF (41,741 sources): **void knee suppressed −0.26 dex (2.9σ) vs walls**, an independent FAST measurement of the ALFALFA void HIMF (Moorman+2014); group knee survivor-biased +0.19 dex (stated); DR1 first leg (DR2 embargoed to ~Aug 2026), absolute slope caveated |
+| SBI population inference for RACS Stokes-V emitters | `jansky_research.svsbi` | ✅/➖ first SBI of the M-dwarf coherent-emitter population: **first calibrated beaming-fraction posterior f_beam = 0.30 (90% CI 0.07–0.53)**, SBC-validated coverage; LF weakly constrained (beaming–luminosity degeneracy, honest); NPE trained on the ROCm GPU |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -129,6 +130,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks |
 | A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table |
 | The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation |
+| SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE |
 
 `make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
@@ -222,7 +224,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

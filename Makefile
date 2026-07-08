@@ -6,7 +6,7 @@
 .PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
-SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv
+SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -113,6 +113,7 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.stokesv_discovery --out .  # summarises results/stokesv_discovery_realtargets.csv (regenerate: uv run python scripts/stokesv_discovery_real.py)
 	test -f results/wdpulsar_realtargets.csv && uv run python -m jansky_research.wdpulsar --out . || uv run python -m jansky_research.wdpulsar --offline --out .  # WD-pulsar survey (sweep: uv run --extra vlass python scripts/wdpulsar_real.py)
 	uv run python -m jansky_research.fashienv --out .  # FASHI DR1 env-split HIMF (VizieR fetch; DR1 first leg, DR2 swap ~Aug 2026)
+	uv run python -m jansky_research.svsbi --offline --out .  # SBI physics + prior-predictive (real NPE leg: --device cuda from the ROCm venv with the sbi extra)
 	$(MAKE) paper && $(MAKE) arxiv
 
 clean: ## Remove caches and build artefacts
