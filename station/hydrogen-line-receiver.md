@@ -11,10 +11,9 @@ flowchart LR
     DISH["700 mm parabolic dish<br/>F/D 0.35"]
     FEED["Hydrogen-line active feed<br/>2 LNAs around 2 SAW filters<br/>at the focal point"]
     INJ["Inline bias-tee injector<br/>USB-powered, supplies the feed"]
-    ADP["SMA-to-MCX adapter"]
-    SDR["Airspy Mini SDR<br/>MCX input; own bias tee disabled"]
+    SDR["Airspy Mini SDR<br/>own bias tee disabled"]
     HOST["Host<br/>SDR++ commissioning; Virgo/ezRA capture"]
-    DISH --> FEED -->|6 m coax| INJ -->|SMA| ADP -->|MCX| SDR -->|USB| HOST
+    DISH --> FEED -->|6 m coax| INJ --> SDR -->|USB| HOST
 ```
 
 Two architectural rules drive this design:
@@ -27,7 +26,7 @@ This replaces the earlier discrete chain (a separate wideband LNA followed by a 
 
 ## Why these parts
 
-- **Airspy Mini** over an RTL-SDR: a 12-bit ADC (vs 8-bit) buys roughly 24 dB of dynamic range, and a 0.5 ppm TCXO keeps a spectral line from drifting with temperature — both matter when the signal is a small bump on the noise floor and the science is in its frequency. (Two connector notes: the injector, not the Mini's internal bias tee, powers the feed; and the Mini's antenna port is MCX while the rest of the chain is SMA, so a single SMA-to-MCX adapter sits just ahead of the SDR.)
+- **Airspy Mini** over an RTL-SDR: a 12-bit ADC (vs 8-bit) buys roughly 24 dB of dynamic range, and a 0.5 ppm TCXO keeps a spectral line from drifting with temperature — both matter when the signal is a small bump on the noise floor and the science is in its frequency. (Note the bias-tee caveat above: the injector, not the Mini's internal bias tee, powers the feed.)
 - **Parabolic dish with an integrated active feed** over a DIY LNA + filter + mesh-dish chain: the LNAs and SAW filters come factory-matched and sealed against weather, the front end is simpler and more reproducible, and the feed is swappable — the same dish accepts L-band satellite and GOES/S-band feeds for other projects. A 700 mm dish gives a wide half-power beam (~21° at 1420 MHz), which barely resolves Galactic structure but is more than adequate to detect the line and measure a rotation curve; integration time, not aperture, is the design lever.
 - **Wide beam, long integrations.** The narrow-beam alternative would demand a much larger, wind-loaded dish. A small forgiving beam plus long dwell times reaches the same detection for a fraction of the mechanical complexity.
 
