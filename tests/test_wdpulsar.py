@@ -161,3 +161,18 @@ def test_limits_table_rows(tmp_path):
     assert "C & CV & 3 & $<$0.60 & $<$0.50 & nan" in txt
     # the 6-column form: 5 ampersands per data row
     assert all(r.count("&") == 5 for r in txt.splitlines() if r.endswith(r"\\"))
+
+
+def test_limits_table_empty_emits_placeholder(tmp_path):
+    # Offline builds have no per_target; the table must still emit a valid body (a
+    # placeholder row spanning all six columns), never an empty one that would leave a
+    # stray \hline right after the header and break the paper with "Misplaced \noalign".
+    p = tmp_path / "t.tex"
+    wd._write_limits_table({}, p)
+    txt = p.read_text()
+    rows = [r for r in txt.splitlines() if r.endswith(r"\\")]
+    assert rows, "expected at least a placeholder row, got an empty table body"
+    # a plain six-column row (five ampersands), never \multicolumn (whose \omit trips LaTeX)
+    assert all(r.count("&") == 5 for r in rows)
+    assert r"\multicolumn" not in txt
+    assert "real-data build" in txt
