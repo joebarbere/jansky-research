@@ -1,8 +1,14 @@
 # 45 — FASHI DR2 (156,411 HI sources): the environment statistics nobody has run
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + FASHI DR2 VizieR /
-China-VO catalogue-ID confirmation (the fable-ideas scan ran egress-blocked; see the standing
-caveat there)
+Status: ✅ done (DR1 first leg) — GATE 0 2026-07-08: **DR2 not public yet** (catalogue links 404;
+release ~Aug 2026), so the DR1 leg on VizieR `J/other/SCPMA/67.19511/table2` (41,741 sources) —
+the `rmstructure` DR1-while-DR2-embargoed pattern; DR2 swap is one line. Headline: **void HIMF
+knee suppressed −0.10 dex vs walls**, an independent FAST confirmation of the ALFALFA void HIMF
+(Moorman+2014); group-member knee +0.19 dex, survivor-biased (stated). Scope corrections forced
+by FASHI lacking stellar masses/optical diameters: dropped "gas fraction at fixed M*" and
+"deficiency vs radius" (selection-biased), replaced by the cleaner group/field HIMF split.
+Absolute faint-end slope steeper than the published global (simple 1/Vmax, no completeness
+function) — relative offsets robust, stated honestly. See survey/fashienv-findings.md.
 
 ## Context
 

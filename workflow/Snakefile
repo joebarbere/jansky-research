@@ -41,6 +41,7 @@ SLICES = {
     "torchfdmt": ("singlepulse", "--offline"),
     "stokesv_discovery": ("stokesv_discovery", "--offline"),
     "wdpulsar": ("wdpulsar", "--offline"),
+    "fashienv": ("fashienv", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
     "frbwait": ("frbwait", "--offline"),
