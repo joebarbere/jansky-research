@@ -40,6 +40,11 @@ workflow = ["snakemake>=8.0; python_version >= '3.11'"]
 # never pull multi-GB accelerator wheels; the GPU benchmark leg runs from a ROCm venv with this
 # repo importable (see plans/34). Tests `importorskip("torch")`, so core CI stays torch-free.
 fdmt = ["torch>=2.4"]
+# Neural simulation-based inference for the RACS Stokes-V coherent-emitter population (plan 40).
+# Pulls torch; kept OUT of core/CI like fdmt. Tests `importorskip("sbi")`, so the pure-NumPy
+# forward model / summary statistics stay testable in core CI; NPE training runs from the ROCm
+# venv (verified: sbi 0.26.1 trains NPE on gfx1102 with no code changes).
+sbi = ["sbi>=0.26,<0.27"]
 
 # The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
 # analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.
