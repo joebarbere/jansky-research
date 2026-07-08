@@ -6,13 +6,14 @@ The 1400–1427 MHz band is internationally protected for radio astronomy, which
 
 ## Signal chain
 
-```
-700 mm parabolic dish (F/D 0.35)
-  → hydrogen-line active feed (two cascaded LNAs around two SAW filters, integrated at the focal point)
-  → 6 m coax
-  → inline bias-tee injector (USB-powered; supplies the feed)
-  → Airspy Mini SDR (its own bias tee disabled)
-  → host (SDR++ for commissioning; Virgo/ezRA for science capture)
+```mermaid
+flowchart LR
+    DISH["700 mm parabolic dish<br/>F/D 0.35"]
+    FEED["Hydrogen-line active feed<br/>2 LNAs around 2 SAW filters<br/>at the focal point"]
+    INJ["Inline bias-tee injector<br/>USB-powered, supplies the feed"]
+    SDR["Airspy Mini SDR<br/>own bias tee disabled"]
+    HOST["Host<br/>SDR++ commissioning; Virgo/ezRA capture"]
+    DISH --> FEED -->|6 m coax| INJ --> SDR -->|USB| HOST
 ```
 
 Two architectural rules drive this design:

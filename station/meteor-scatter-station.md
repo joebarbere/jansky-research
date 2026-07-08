@@ -6,13 +6,18 @@ Europe commonly uses the GRAVES radar at 143.05 MHz as the illuminator; North Am
 
 ## Signal chain
 
-```
-4-element FM yagi (88–108 MHz), horizon-pointed at a distant station
-  → (optional wideband LNA)
-  → RTL-SDR Blog V3
-  → Raspberry Pi running Echoes (24/7)
-  → per-event log → CSV/SQLite → dashboards
-  → monthly counts reported to RMOB
+```mermaid
+flowchart LR
+    YAGI["4-element FM yagi 88-108 MHz<br/>horizon-pointed at a distant station"]
+    LNA["Optional wideband LNA"]
+    SDR["RTL-SDR Blog V3"]
+    PI["Raspberry Pi running Echoes, 24/7"]
+    LOG["Per-event log<br/>CSV / SQLite"]
+    DASH["Dashboards"]
+    RMOB["Monthly counts to RMOB"]
+    YAGI --> LNA --> SDR --> PI --> LOG
+    LOG --> DASH
+    LOG --> RMOB
 ```
 
 ## Design notes
