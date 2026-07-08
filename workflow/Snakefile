@@ -40,6 +40,7 @@ SLICES = {
     "ecallisto_census": ("ecallisto_census", "--offline"),
     "torchfdmt": ("singlepulse", "--offline"),
     "stokesv_discovery": ("stokesv_discovery", "--offline"),
+    "wdpulsar": ("wdpulsar", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
     "frbwait": ("frbwait", "--offline"),
