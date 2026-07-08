@@ -13,6 +13,7 @@ htmlcov/
 data/*
 # vendored, provenance-carrying tables ARE committed (tiny; they are the paper input)
 !data/lpt_sample.csv
+!data/wdpulsar_candidates.csv
 .cache/
 
 # Generated analysis artifacts

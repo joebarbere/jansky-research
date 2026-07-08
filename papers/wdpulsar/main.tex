@@ -1,0 +1,153 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A radio survey of white-dwarf-pulsar candidates}
+\shortauthors{Barbere}
+\begin{document}
+\title{No Persistent Radio Emission from the Pelisoli White-Dwarf-Pulsar Candidates:
+A Systematic RACS and VLASS Survey of 56 AR\,Sco Analogues}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The white-dwarf pulsars AR\,Sco and J1912$-$4410 show pulsed, highly variable, and (at GHz
+frequencies) circularly polarized radio emission driven by a spinning magnetic white dwarf.
+\citet{pelisoli2025} selected \wdNCand\ further AR\,Sco-like binary candidates from Gaia and
+WISE (\wdNUnchar\ with no prior characterisation; \wdNClassNew\ newly classified here), but no
+systematic radio search of the list existed. We perform one, mining the all-sky archives:
+forced Stokes-I and Stokes-V photometry at every candidate position in every public Rapid ASKAP
+Continuum Survey (RACS) low- and mid-band observation (887 and 1367\,MHz), plus VLASS
+Quick-Look cone searches (3\,GHz) for the northern targets. The pipeline reuses and is validated
+by the tested \code{stokesv} forced-photometry machinery: a synthetic injection is recovered in
+both Stokes parameters, and the template object AR\,Sco (deliberately not among the 56) is
+re-detected at $I=\wdRealControlI$\,mJy and classified circularly polarized --- the recover-a-known.
+Across the \wdRealNCandCovered\ candidates with RACS coverage we find \textbf{zero radio
+detections} --- none in Stokes I above $5\sigma$, and \textbf{no circularly polarized emission}
+(\wdRealNCandVDet\ Stokes-V detections after leakage vetting) --- above a median
+$3\sigma$ limit of \wdRealMedianVLimit\,mJy per candidate. This is the deliverable: the first
+systematic radio non-detection census of the population, framed as a limit table, not a
+near-miss. The one confirmed white-dwarf pulsar in the list, J1912$-$4410, is itself undetected
+in \wdRealJEpochs\ RACS epochs ($3\sigma$ limits $I<\wdRealJLimI$, $V<\wdRealJLimV$\,mJy),
+making the central caveat concrete: for a source with a $\sim$1\% radio duty cycle, a
+survey non-detection is not an absence. A single candidate, the previously uncharacterised YSO
+J0408$+$6046, has a 1.25\,mJy VLASS counterpart consistent with its young-stellar classification
+rather than an AR\,Sco-like signature.
+\end{abstract}
+
+\keywords{White dwarf stars (1799) --- Cataclysmic variable stars (203) ---
+Radio continuum emission (1340) --- Stokes parameters (1583)}
+
+\section{Introduction}
+AR\,Sco \citep{marsh2016} and J1912$-$4410 \citep{pelisoli2023} are the two known
+``white-dwarf pulsars'': close binaries in which a rapidly spinning, magnetic white dwarf
+accelerates particles that radiate a pulsed, broadband, strongly variable signal from the radio
+to the X-ray. Their radio emission is the cleanest discriminator --- pulsed, often bright, and
+circularly polarized at the tens-of-percent level at GHz frequencies \citep{stanway2018} --- but
+it is also duty-cycled and highly variable, so a targeted campaign is the usual detection route
+(J1912$-$4410 was confirmed object-by-object). \citet{pelisoli2025} widened the field by
+selecting \wdNCand\ AR\,Sco-like candidates from Gaia$+$WISE variability and colours, but their
+follow-up was optical and X-ray; the list has never been searched for radio emission as a set.
+The all-sky radio archives make that search essentially free, and the outcome --- detection or
+limit --- is scientifically useful either way: a detection would be a new white-dwarf-pulsar
+candidate, and a systematic non-detection bounds the persistent radio-loud fraction of the
+photometrically selected population.
+
+Two facts shape the survey. First, RACS \citep{mcconnell2020} and VLASS \citep{lacy2020} are
+snapshot surveys: a single-epoch non-detection of a duty-cycled, variable source is expected
+even when the source is genuinely radio-emitting, so we measure every available epoch per
+target and quote the deepest single-epoch (snapshot) limit --- the epoch in which the source
+would most likely have been caught --- rather than treating a non-detection as an absence. Second, the
+recently released second epoch of RACS-low added a circular-polarization catalogue
+\citep{racslow2}; this survey's Stokes-V leg is both timely and, we note, exposed to being
+scooped by a catalogue cross-match.
+
+\section{Data and Method}
+\label{sec:method}
+The candidate list is Table 2 of \citet{pelisoli2025}; with no VizieR deposit, we transcribed it
+from the article (56 rows, J2000 positions to $\sim$$0.1\arcsec$, provenance-flagged), validating
+the transcription against the paper's per-type census (26 YSO / 16 polar / 3 CV / 2 IP /
+8 unclear / 1 pulsar) --- the discipline that, in a sibling slice, caught a source-paper typo.
+For each candidate we query the CASDA ObsCore for every RACS restored image containing the
+position with both a Stokes-I and a Stokes-V product, stage a SODA cutout of each, and run forced
+$I{+}V$ photometry \citep[the tested \code{measure\_circular\_pol};][locking the measurement to
+the catalogue position turns a non-detection into an honest limit rather than a miss]{driessen2024}.
+A Stokes-V detection must clear both $5\sigma$ and a $0.6\%$-of-$I$ instrumental-leakage veto
+(the characteristic ASKAP on-axis leakage level); upper limits are the deepest ($3\sigma$)
+single epoch across a target's epochs --- a best-case snapshot depth, not an epoch-stacked one. VLASS Quick-Look cone searches (3\,GHz, $7.5\arcsec$) cover the
+targets north of $\delta=-40\arcdeg$ that VLASS reaches.
+
+Validation is twofold. Offline, a synthetic RACS-like cutout with an injected point source is
+recovered by the same photometry ($I,V$ within the noise, classified circular) and a blank
+field yields no false detection. On the real sky, AR\,Sco --- the template that defined the
+selection, and deliberately \emph{not} one of the 56 --- is the recover-a-known: it is detected
+at $I=\wdRealControlI$\,mJy with the expected sense of circular polarization, and independently
+matched in VLASS. That the pipeline re-finds the archetype but none of the candidates is the
+central result's internal control.
+
+\section{Results}
+\label{sec:results}
+Of the \wdNCand\ candidates, \wdRealNCandCovered\ fall in the RACS footprint and were measured
+across a median of several epochs each (887 and 1367\,MHz). The survey is a clean null:
+\textbf{\wdRealNCandIDet\ candidates are detected in Stokes I} above $5\sigma$, and
+\textbf{\wdRealNCandVDet\ show circularly polarized emission} after leakage vetting. The
+brightest candidate Stokes-I measurements reach only $3.3$--$3.9\sigma$ (peak fluxes
+$\lesssim$1.2\,mJy), consistent with noise. The median $3\sigma$ Stokes-V limit is
+\wdRealMedianVLimit\,mJy (range \wdRealVLimMin--\wdRealVLimMax\,mJy); the full per-target limit table is the
+paper's primary product (Table~\ref{tab:limits}). By contrast the AR\,Sco control is detected at
+\wdRealControlSnr$\sigma$, and its VLASS counterpart ($5.4$\,mJy, $1.4\arcsec$) confirms the archive path end
+to end.
+
+The one confirmed white-dwarf pulsar in the list, J1912$-$4410, is \emph{undetected} in all
+\wdRealJEpochs\ of its RACS epochs ($3\sigma$ limits $I<\wdRealJLimI$, $V<\wdRealJLimV$\,mJy).
+This is not a failure of the survey but its most important calibration: J1912$-$4410 pulses at
+$\sim$15\,mJy for $<$4\,s with a $\sim$1\% duty cycle \citep{pelisoli2023}, time-averaging to
+$\sim$0.1--0.2\,mJy --- below our limit, and it is likewise absent from the RACS-low DR1 source
+catalogue. A snapshot-survey non-detection of these systems is therefore fully consistent with
+their being genuine, active white-dwarf pulsars; only the persistent, bright, high-duty-cycle
+minority would appear. VLASS adds one candidate counterpart: the previously uncharacterised YSO
+J0408$+$6046, a 1.25\,mJy 3\,GHz source at a $3.75\arcsec$ offset. That separation exceeds one
+VLASS beam, so the match is positionally marginal (chance-coincidence $\sim$2--3\% across the
+northern targets), and --- the source lies north of the RACS footprint --- \emph{no
+circular-polarization constraint exists for it}. Its 3\,GHz flux and optically-derived
+young-stellar classification are consistent with gyrosynchrotron emission rather than a
+white-dwarf pulsar, but we make no polarization claim.
+
+\begin{table}
+\centering
+\caption{Per-candidate RACS forced-photometry census (excerpt; the full
+\wdNCand-row table with VLASS columns is machine-readable in
+\code{results/wdpulsar\_table.json}). Limits are $3\sigma$; ``class'' is the $|V|/I$ category
+where I is detected. Uncovered = outside the RACS footprint.}
+\label{tab:limits}
+\footnotesize
+\begin{tabular}{llrrrl}
+\hline
+name & type & ep. & $I$ & $3\sigma\,V$ & class \\
+\hline
+\input{generated/limits_table}
+\end{tabular}
+\end{table}
+
+\section{Discussion and Conclusions}
+The first systematic radio survey of the \citet{pelisoli2025} white-dwarf-pulsar candidates
+yields no persistent radio counterparts: none of the \wdRealNCandCovered\ RACS-covered candidates
+is detected in total intensity, and none shows circular polarization, to a median $3\sigma$
+depth of \wdRealMedianVLimit\,mJy. Read correctly --- through the J1912$-$4410 calibration --- this
+does not disfavour the candidates: the archetype itself would be invisible to these surveys, so
+the census bounds only the \emph{persistently radio-loud} fraction of the sample, which is
+consistent with zero at $\sim$0.4\,mJy. The scientific value is the reusable limit table and the
+demonstration that archival Stokes-V mining reproduces the known emitter (AR\,Sco) while cleanly
+excluding leakage. The natural next steps are targeted, time-resolved observations (MeerKAT/ASKAP
+beamformed, the route that confirmed J1912$-$4410) of the highest-priority candidates, and a
+re-run against the RACS-low2 circular-polarization catalogue \citep{racslow2} as it matures.
+
+\textit{Reproducibility.} \code{jansky\_research.wdpulsar} (offline validation) $+$
+\code{scripts/wdpulsar\_real.py} (the resumable CASDA sweep); the principal survey numbers are
+pipeline-generated (\code{results/wdpulsar\_metrics.json} $\to$ macros and
+Table~\ref{tab:limits}), with the J1912$-$4410 pulse properties (15\,mJy, $\sim$1\% duty
+cycle) cited from \citet{pelisoli2023}. Candidate list vendored as
+\code{data/wdpulsar\_candidates.csv}; VLASS from the cached NRAO Quick-Look catalogues.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}

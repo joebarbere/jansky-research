@@ -1,8 +1,14 @@
 # 41 — Radio counterpart survey of the 56 optically-selected white-dwarf-pulsar candidates
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + locating the
-machine-readable 56-row candidate table (the fable-ideas scan ran egress-blocked; see the
-standing caveat there)
+Status: ✅ done — GATE 0 passed 2026-07-07 (gap open; no VizieR deposit → Table 2 vendored from
+the arXiv HTML as `data/wdpulsar_candidates.csv`). Two anchor corrections: J1912−4410 is NOT a
+plausible RACS re-detection (~1% duty cycle → ~0.1–0.2 mJy time-averaged, absent from RACS DR1) —
+its limit becomes the duty-cycle caveat; AR Sco (the list's template, not among the 56) is the
+control instead, re-found at I=4.20 mJy (circular) + VLASS. Result: forced I+V across the 51
+RACS-covered candidates (582 good measurements) → **0 detections in I or V**, median 3σ V limit
+0.41 mJy; one VLASS candidate hit (J0408+6046, a YSO, gyrosynchrotron). A clean null, framed as
+the limit table. Also caught a transcription subtlety (Table 2's asterisk = "classified here",
+17 rows, ≠ the abstract's 26 uncharacterised). See survey/wdpulsar-findings.md.
 
 ## Context
 
