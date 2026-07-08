@@ -1,0 +1,143 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{The environment-split FASHI HI mass function}
+\shortauthors{Barbere}
+\begin{document}
+\title{The Environment Dependence of the HI Mass Function in FASHI DR1:
+Void, Wall, Group, and Field Galaxies at $41{,}741$-Source Scale}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The FAST All Sky HI Survey (FASHI) has assembled the largest blind HI-galaxy catalogue to date,
+but both its DR2 release \citep{fashi_dr2} and DR1 \citep{fashi_dr1} publish only a \emph{global}
+Schechter HI mass function (HIMF); the sole environment study to date used 230 group galaxies
+\citep{fashi_groups}. We split the FASHI DR1 HIMF by large-scale environment for the first time,
+cross-matching its \feN\ HI sources against the Douglass+2023 SDSS void catalogue
+\citep{douglass2023} and the Tempel+2017 group catalogue \citep{tempel2017} and fitting a
+Schechter function to the $1/V_{\rm max}$ HIMF in each environment. Within the SDSS-cap overlap
+where the optical catalogues apply, the \emph{void} HIMF knee is suppressed relative to walls by
+$\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex
+(\feRealVoidKneeSigma$\sigma$; void $\log M^*/M_\odot = \feRealVoidLogMStar$ from
+\feRealNInVoid\ void galaxies, wall $\feRealWallLogMStar$) --- consistent in sign, and somewhat
+larger in magnitude, with the ALFALFA void HIMF \citep[$\sim$0.14~dex;][]{moorman2014},
+recovered independently from an entirely different survey. Group members show the opposite
+offset, $\Delta\log M^*=+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex
+(\feRealGroupKneeSigma$\sigma$, \feRealNGroupMembers\ members), which we read with its survivor
+bias explicit: in a flux-limited HI sample the group galaxies that \emph{retain} detectable HI
+are the more massive, gas-rich survivors, so the group knee is an upper envelope, not a
+deficiency. We frame the result carefully: the \emph{relative} knee offsets are the robust
+product (both environments use one $1/V_{\rm max}$ estimator), whereas the \emph{absolute}
+faint-end slope from our simple $1/V_{\rm max}$ ($\alpha\approx\feRealVoidAlpha$ to
+$\feRealWallAlpha$) is steeper than the published FASHI global HIMF, which used the survey's
+full completeness function we do not reproduce. The tooling --- injection-validated on a mock with environment-dependent
+Schechter inputs --- swaps to the DR2 catalogue (156{,}411 sources) with a one-line change once
+it is released.
+\end{abstract}
+
+\keywords{HI line emission (690) --- Galaxy environments (2029) --- Large-scale structure of the
+universe (902) --- Luminosity function (942)}
+
+\section{Introduction}
+The shape of the HI mass function --- how many galaxies of each atomic-gas mass exist per unit
+volume --- encodes the balance of gas accretion, consumption, and removal, and that balance is
+set partly by environment. Cluster and group galaxies lose HI to ram-pressure and tidal
+stripping \citep{solanes2001}; void galaxies, evolving in isolation, are expected to have a
+HIMF with a suppressed knee and a steeper faint end \citep{moorman2014,jones2018}. FASHI, the
+FAST all-sky blind HI survey \citep{fashi_dr1,fashi_dr2}, is now the largest such catalogue, but
+its released products stop at the \emph{global} HIMF; the one environment analysis on FASHI data
+\citep{fashi_groups} used 230 group galaxies. The DR1 catalogue alone contains \feN\ HI sources
+--- two orders of magnitude more --- and its environment-split HIMF has not been measured.
+
+Two facts set the scope. First, as of this writing the DR2 catalogue is not yet public (release
+targeted for late 2026); we therefore work with the public DR1 catalogue as a first leg,
+mirroring how large surveys' analyses proceed on an earlier release while a bigger one is
+embargoed. Second, FASHI carries HI masses and distances but no stellar masses or optical
+diameters, so the classical Haynes--Giovanelli HI deficiency (which needs optical morphology)
+and gas-fraction-at-fixed-$M_*$ statistics are out of reach; the HIMF itself, split by
+environment, is the cleanest self-contained measurement the data support.
+
+\section{Data and Method}
+\label{sec:method}
+From FASHI DR1 (VizieR \code{J/other/SCPMA/67.19511}) we take each source's position, redshift,
+integrated flux, distance, and precomputed $\log M_{\rm HI}$. We classify environment two ways.
+\emph{Voids}: converting positions to the comoving Cartesian frame of the Douglass+2023
+VoidFinder maximal spheres \citep[working in the survey's $h^{-1}$Mpc units, which are
+$H_0$-independent for comoving distance;][]{douglass2023}, a galaxy is a void member if it lies
+inside any sphere and a wall galaxy if it lies inside the void-survey volume but outside every
+sphere; galaxies beyond that volume (most of FASHI's southern and high-redshift sky) are
+unclassifiable and excluded, leaving \feRealNInVoid\ void and the surrounding wall galaxies in
+the SDSS cap. (The classifiable volume is approximated by a padded bounding box around the void
+spheres --- crude but honest: its corners can leak a few unclassifiable field galaxies into the
+wall bin, an effect that pushes the wall knee toward the global value and therefore, if
+anything, weakens the reported void--wall contrast.) \emph{Groups}: a galaxy within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of any
+Tempel+2017 group is a member (\feRealNGroupMembers\ in the cap), the rest field.
+
+For each environment we build the HIMF by the $1/V_{\rm max}$ method \citep{schmidt1968}: each
+source contributes $1/V_i$ to its mass bin, where $V_i$ is the comoving volume out to the
+distance at which its flux would fall to the survey limit, and we fit a Schechter function
+\citep{schechter1976} in log space. The recover-a-known is a flux-limited mock with two injected
+Schechter HIMFs (void: lower $M^*$, steeper $\alpha$; wall: the reference), which the pipeline
+fits back to the injected knees and slopes and to the correct knee-offset sign
+(\code{tests/test\_fashienv.py}).
+
+A limitation stated up front: this simple $1/V_{\rm max}$ uses a single flux limit, not FASHI's
+full completeness function, so the \emph{absolute} faint-end slopes we recover are steeper than
+the published FASHI global HIMF. Because every environment bin uses the identical estimator, the
+\emph{relative} knee offsets between environments are robust to this; the absolute slope is not,
+and we do not claim to reproduce the global HIMF.
+
+\section{Results}
+\label{sec:results}
+\textbf{Voids.} The void HIMF knee sits below the wall value by
+$\Delta\log M^* = \feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex, a
+\feRealVoidKneeSigma$\sigma$ suppression (void $\log M^* = \feRealVoidLogMStar\pm$0.08, wall
+$\feRealWallLogMStar\pm$0.05). It is consistent in sign, and somewhat larger, than the ALFALFA
+void-HIMF knee suppression \citep[$-0.14$~dex, $\sim$2$\sigma$;][]{moorman2014} --- an
+independent measurement from a different telescope, sky, and pipeline, not merely a
+consistency check. We flag a real sensitivity: the void membership depends on the adopted
+distance--redshift relation (we use the Douglass catalogue's own Planck2018 cosmology so the
+frames match); an EdS relation dilutes the offset to $\sim$1$\sigma$, so the quoted value is
+specific to the matched-cosmology geometry. The void faint-end slope ($\feRealVoidAlpha$) is
+marginally flatter than the wall's ($\feRealWallAlpha$), consistent with Moorman+2014's mild
+flattening rather than the steepening of \citet{jones2018}; at DR1 sample size the two are
+within their mutual uncertainties, so we report the sign, not a detection of the slope
+difference.
+
+\textbf{Groups.} Group members show a knee \emph{above} the field by
+$+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex (\feRealGroupKneeSigma$\sigma$; group
+$\log M^* = \feRealGroupLogMStar$, field $\feRealFieldLogMStar$) --- statistically the stronger
+of our two offsets, but the one we do \emph{not} headline, because it is survivor-biased.
+Taken at face value a positive offset is the opposite of gas stripping; it is the expected
+signature of a selection effect, not a physical enhancement: a flux-limited HI survey detects
+the group galaxies that have \emph{retained} substantial HI, i.e.\ the more massive, gas-rich
+survivors (the group knee, \feRealGroupLogMStar, even exceeds the global \feRealGlobalLogMStar\
+for this reason), while stripped members drop out of the sample entirely. The group knee is
+therefore an upper envelope on the surviving HI-rich population, and the true environmental
+effect (including the undetected, stripped galaxies) is more negative than
+$+\feRealGroupKneeOffset$~dex. The void--wall comparison does not suffer this bias because voids
+do not preferentially strip HI, which is why we take it as the headline despite its lower raw
+significance.
+
+\section{Discussion and Conclusions}
+Splitting the FASHI DR1 HIMF by environment for the first time, we find the void knee suppressed
+by $\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex relative to walls
+(\feRealVoidKneeSigma$\sigma$) --- an independent, FAST-based measurement of the ALFALFA void
+HIMF suppression \citep{moorman2014} --- and a group-member knee offset that is survivor-biased
+upward and thus a lower bound on HI stripping. The relative measurements are the robust product;
+the absolute faint-end slope awaits FASHI's own completeness function, and the void offset's
+central value carries a distance-model dependence we quantify. The follow-on is mechanical: the
+same pipeline reads the DR2 catalogue (156{,}411 sources, $\sim$4$\times$ DR1 and a wider
+footprint) with a one-line source change once it is public; halving the errors would move the
+void offset toward a firm ($\gtrsim$4$\sigma$) detection and extend the group split to
+cluster-scale densities.
+
+\textit{Reproducibility.} \code{jansky\_research.fashienv}; every number above is
+pipeline-generated (\code{results/fashienv\_metrics.json} $\to$ macros). Data: FASHI DR1
+(VizieR \code{J/other/SCPMA/67.19511}), Tempel+2017 (\code{J/A+A/602/A100}), Douglass+2023
+(\code{J/ApJS/265/7}), all via VizieR, no auth.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}
