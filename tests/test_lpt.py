@@ -11,10 +11,10 @@ from jansky_research import lpt
 
 def test_load_sample_shapes_and_flags():
     s = lpt.load_sample()
-    assert s["period_s"].size == 13
+    assert s["period_s"].size == 16  # v3: +3 2026 discoveries (J1424, J1651, J1700)
     assert (s["period_s"] > 60).all()  # every period > 1 minute (unit sanity)
     assert s["pdot_is_measurement"].sum() == 2  # CHIME J0630+25 + CHIME/ILT J1634+44
-    assert s["is_wd_binary"].sum() == 6
+    assert s["is_wd_binary"].sum() == 7
     # the one clear spin-up is negative
     neg = s["pdot"][s["pdot_is_measurement"]] < 0
     assert neg.sum() == 1
@@ -23,8 +23,9 @@ def test_load_sample_shapes_and_flags():
 def test_population_table_death_line_headline():
     s = lpt.load_sample()
     pop = lpt.population_table(s)
-    assert pop["n_lpt"] == 13
+    assert pop["n_lpt"] == 16  # v3
     # every Pdot-constrained object sits below the pulsar death line -- the class puzzle
+    # (the 3 new rows carry no Pdot constraint, so the 9/9 headline is unchanged)
     assert pop["n_below_death_line"] == pop["n_pdot_constrained"] == 9
     assert pop["period_min_min"] == 7.0 and pop["period_max_hr"] > 6
 
@@ -33,7 +34,7 @@ def test_period_split_stat_honest_at_small_n():
     s = lpt.load_sample()
     out = lpt.period_split_stat(s["period_s"], s["is_wd_binary"])
     assert out["delta_log_median"] > 0  # WD binaries do sit at longer periods...
-    assert out["p_perm"] > 0.05  # ...but NOT significantly at N=13 (the honest result)
+    assert out["p_perm"] > 0.05  # ...but NOT significantly at N=16 (the honest result)
 
 
 def test_split_stat_round_trips_injected_split():
@@ -49,7 +50,7 @@ def test_split_stat_degenerate():
 
 def test_run_writes_artifacts(tmp_path):
     m = lpt.run(str(tmp_path), offline=True)
-    assert m["n_lpt"] == 13 and m["n_pdot_measurements"] == 2
+    assert m["n_lpt"] == 16 and m["n_pdot_measurements"] == 2
     saved = json.loads((tmp_path / "results" / "lpt_metrics.json").read_text())
     assert saved == m
     assert (tmp_path / "papers" / "lpt" / "figures" / "lpt_ppdot.pdf").stat().st_size > 0

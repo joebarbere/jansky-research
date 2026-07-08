@@ -1,0 +1,150 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{LPT catalogue v3 + Stokes-V forced photometry}
+\shortauthors{Barbere}
+\begin{document}
+\title{A v3 Long-Period-Transient Catalogue and the First Systematic Multi-Epoch
+Stokes-V Forced Photometry at All LPT Positions}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Long-period radio transients (LPTs) --- sources pulsing on minute-to-hour periods
+\citep{hurleywalker2022,hurleywalker2023,caleb2024} --- are a young class whose progenitors span
+neutron stars and white-dwarf binaries \citep{rea2026}. We extend a provenance-carrying LPT
+catalogue to \lvNLpt\ confirmed members by adding the three 2026 discoveries (ASKAP
+J142431.2$-$612611, \citealt{deruiter2026}; ASKAP J165130.3$-$450520 and J170036.6$-$445758,
+\citealt{vaster2026}), each coordinate verified against its source-name convention --- the
+discipline that previously caught a transcription error in the review's own machine-readable
+table. At \lvNLpt\ members the hinted $\sim$78-minute period boundary between white-dwarf-binary
+and other LPTs is \textbf{still not significant} (permutation $p = \lvPeriodSplitP$): reported,
+not spun. We then perform what has not been done before: systematic multi-epoch forced Stokes-V
+(circular-polarization) photometry at every LPT position across the RACS-low1, RACS-low2, and
+RACS-mid epochs \citep{mcconnell2020,racslow2}. Per-source polarization exists for a handful of
+LPTs (e.g.\ GLEAM-X J1627 $\sim$90\% linear, \citealt{hurleywalker2022}; ASKAP J1935 $>$70\%
+circular in its weak state, \citealt{caleb2024}; CHIME/ILT J1634 $\sim$100\% circular,
+\citealt{chime1634}), and RACS-low2 published a blind V catalogue that did not target them, but
+no uniform V survey of the class exists. The pipeline reuses and is validated by tested forced-photometry
+machinery (a synthetic circularly-polarized injection is recovered; a blank field yields an honest
+limit), with a confusion veto that rejects an off-centre bright-outlier peak (a nearby source, not
+the target). Across the \lvRealNMeasured\ RACS-covered LPTs we find one \emph{secure}
+single-epoch circularly-polarized detection --- the accreting-white-dwarf LPT ASKAP J1745$-$5051,
+bright ($I\approx22$~mJy) and on-centre ($0.7\arcsec$) at $15\%$ circular ($21.6\sigma$),
+consistent with its magnetic-CV nature --- plus one \emph{candidate}, the newly-added VASTER
+source ASKAP J165130.3$-$450520 ($\sim$$59\%$ circular at $12.5\sigma$ in a single epoch, but
+offset $3.2\arcsec$ from the catalogue position, so its association with the LPT is not certain).
+A third peak was rejected by the confusion veto. Every other epoch of both, and all other
+sources, are limits (median $3\sigma$ limit \lvRealMedianVLimit\,mJy; \lvRealNSuspect\ confusion
+candidate vetoed; \lvRealNFlips\ handedness flips). Both signals are single-epoch burst states,
+not persistent counterparts: \emph{persistent} circular polarization at RACS depth is not a
+property of the class, but RACS snapshots can catch an LPT in a strongly circularly-polarized
+burst. The uniform V-limit table, one secure and one candidate burst detection, and the reusable
+vetted machinery are the deliverable.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Neutron stars (1108) --- White dwarf stars (1799) ---
+Stokes parameters (1583) --- Radio continuum emission (1340)}
+
+\section{Introduction}
+Since GLEAM-X J1627 \citep{hurleywalker2022} the long-period radio transients have grown from a
+curiosity (GCRT J1745$-$3009; \citealt{hyman2005}) into a class of $\sim$15 members with periods
+from minutes to hours, some now tied to white-dwarf binaries and others still consistent with
+neutron stars \citep{rea2026}. Two questions follow the growing sample. First, does the
+period distribution separate the white-dwarf-binary members from the rest --- a hinted
+$\sim$78-minute boundary? Second, do the sources have a persistent, circularly-polarized radio
+counterpart? Circular polarization is the cleanest coherent-emission diagnostic, and a steady
+component (versus purely bursty emission) would discriminate models; but the counterpart
+cross-matches published so far are Stokes-I only, and the one wide-field Stokes-V catalogue
+\citep{racslow2} was blind, not targeted. We address both: a verified v3 catalogue, and the first
+systematic multi-epoch forced-V photometry at every LPT position.
+
+\section{The v3 catalogue}
+\label{sec:cat}
+We add the three 2026 discoveries to the vendored, per-value-provenanced table, transcribing each
+value from its discovery paper and checking the RA/Dec against the source-name sexagesimal (all
+agree to $<$1\arcsec). The catalogue now holds \lvNLpt\ confirmed LPTs (median period
+\lvMedianPeriodMin\,min), \lvNWdBinary\ of them white-dwarf binaries or candidates. Re-running the
+period-split test --- an exact permutation test on the white-dwarf-binary-versus-rest median
+$\log$-period difference (a normal-approximation rank test is unreliable at this $N$) --- gives
+$p = \lvPeriodSplitP$: the hinted $\sim$78-min boundary is not significant at \lvNLpt\ members.
+Notably the $p$-value \emph{rose} from $\approx0.27$ at the previous $N{=}13$ to
+$\lvPeriodSplitP$ --- the extra data moved the split \emph{away} from significance, because the
+two long-period VASTER additions (6.5 and 4.7 hr) have binary status not yet reported and so
+enter the ``rest'' group at long periods, diluting the binaries-sit-longer trend. The 36-min
+ASKAP J1424 does not sharpen it either; we report the non-detection of the boundary rather than
+over-interpret a small sample.
+
+\section{Stokes-V forced photometry}
+\label{sec:v}
+For each LPT we query the CASDA ObsCore for every RACS restored image containing the position with
+both a Stokes-I and a Stokes-V product, stage a SODA cutout of each, and run forced $I{+}V$
+photometry at the catalogue position (the tested \code{measure\_circular\_pol}, locking the
+measurement so a non-detection becomes an honest limit). A V detection must clear both $5\sigma$
+and a $0.6\%$-of-$I$ instrumental-leakage veto (the characteristic ASKAP on-axis leakage level).
+A second, \emph{confusion} veto guards against the forced-photometry peak locking onto a nearby
+bright source: a detection is flagged suspect when the peak is both off-centre ($>$4\arcsec) and a
+gross Stokes-I outlier ($>$10$\times$ the source's median across its own epochs) --- the signature
+of a confusing source rather than the LPT. Upper limits are the deepest $3\sigma$ across a
+source's epochs, and we flag any inter-epoch handedness (LCP$\leftrightarrow$RCP) change among
+detections. Validation: offline, a synthetic RACS-like cutout with an injected $|V|/I = 0.6$
+source is recovered (class \lvInjClass) and a blank field yields no false detection; the same
+forced-photometry code recovers known circular emitters in the parent \code{stokesv} slice.
+
+\begin{table}
+\centering
+\caption{The v3 Stokes-V table (per LPT; the machine-readable version is in
+\code{results/lptv\_vtable.json}). Limits are $3\sigma$; ``class'' is the $|V|/I$ category where
+detected; ``flip'' marks an inter-epoch handedness change. Uncovered = outside the RACS
+footprint.}
+\label{tab:vtable}
+\footnotesize
+\begin{tabular}{lrrlll}
+\hline
+name & $P$ (min) & ep. & $V$ (mJy) & class & flip \\
+\hline
+\input{generated/v_table}
+\end{tabular}
+\end{table}
+
+\section{Results and Conclusions}
+Across the \lvRealNMeasured\ RACS-covered LPTs (Table~\ref{tab:vtable}), one source yields a
+secure circularly-polarized detection and one a candidate, each in a \emph{single} epoch, with
+the remaining epochs of both and all other targets yielding limits (median $3\sigma$ Stokes-V
+limit \lvRealMedianVLimit\,mJy; \lvRealNFlips\ handedness changes among detections). ASKAP
+J1745$-$5051, the accreting-white-dwarf LPT, is the \textbf{secure} case: bright ($I\approx22$~mJy),
+on-centre ($0.7\arcsec$), at $|V|/I\approx15\%$ with $21.6\sigma$ in $V$ --- $25\times$ above the
+$0.6\%$ on-axis leakage floor and above even a pessimistic several-per-cent off-axis leakage, and
+leakage would not switch on for a single epoch the way this burst does; the $15\%$ fraction is
+consistent with its magnetic-CV nature. ASKAP J165130.3$-$450520, one of the two 2026 VASTER
+additions, is a \textbf{candidate}: $\sim$$59\%$ circular ($12.5\sigma$) in the single epoch where
+its Stokes-I rises to $\sim$4~mJy, but the polarized peak sits $3.2\arcsec$ from the catalogue
+position --- several times the astrometric budget for an $18\sigma$ source, so we cannot confirm
+the peak is the LPT rather than a close neighbour. We therefore report it as a candidate burst,
+not a secure detection. A third peak (ASKAP J183950.5$-$075635) passed the leakage cut at
+$|V|/I\approx40\%$ but was rejected by the confusion veto --- its ``detection'' epoch is $240$~mJy,
+$\sim$260$\times$ brighter than every other epoch of that source and offset $5.3\arcsec$, i.e.\ a
+nearby confusing source, not the LPT; we report it as a limit. The confusion and secure/candidate
+thresholds ($4\arcsec$ and $10\times$ for confusion, $2\arcsec$ for secure) are heuristics set
+with this sweep in view; the confused peak lies far from the boundary in both offset and
+brightness-ratio, so the veto is not razor-tuned, but the candidate does sit just inside them
+($3.2\arcsec$, $8.6\times$) --- which is exactly why it is a candidate and not a detection. The
+picture is therefore not ``all limits'' but not persistent emission either: \emph{persistent}
+circular polarization at RACS depth is not a class property, yet RACS snapshots can catch an LPT
+in a strongly circularly-polarized burst state --- itself the coherent-emission diagnostic, now
+seen in survey imaging. Because RACS integrates over minutes, a source active for a small
+fraction of its period is otherwise diluted below the limit even when strongly polarized in
+burst. Two follow-ons are immediate through the
+same pipeline: the deeper, wider RACS-low2 V epochs as they are released \citep{racslow2}, and
+phase-resolved polarimetry of the burst windows which snapshot imaging cannot reach. The v3
+catalogue, the two serendipitous burst detections, and the reusable vetted V machinery are the
+contribution.
+
+\textit{Reproducibility.} \code{jansky\_research.lptv} (catalogue + offline validation) $+$
+\code{scripts/lptv\_real.py} (the resumable CASDA V sweep); every number above is
+pipeline-generated (\code{results/lptv\_metrics.json} $\to$ macros and Table~\ref{tab:vtable}).
+Catalogue: \code{data/lpt\_sample.csv} (per-value provenance).
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}

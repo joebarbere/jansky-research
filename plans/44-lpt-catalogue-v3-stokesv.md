@@ -1,7 +1,17 @@
 # 44 — LPT catalogue v3 + first multi-epoch Stokes-V forced photometry at all LPT positions
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass on the 2026 discovery
-papers + RACS-low2 Paper VIII (the fable-ideas scan ran egress-blocked; see the standing caveat)
+Status: ✅ done — GATE 0 2026-07-08: 3 new rows verified (ASKAP J1424-6126 arXiv:2603.07857;
+J1651-4505 + J1700-4457 arXiv:2606.20067), coordinates decoded from source names (<1"); Stokes-V
+novelty PASS (RACS-low2 blind V catalogue is a fence, per-source pol on a handful cited). Catalogue
+leg: N 13→16; **the ~78-min WD-binary period boundary is still not significant (p=0.52)** — the
+plan's headline question, answered. V leg: first systematic multi-epoch forced Stokes-V at all LPT
+positions via CASDA (reuses stokesv.measure_circular_pol + the wdpulsar CASDA driver; 191 rows,
+15/16 covered). Not all-limits: **1 secure single-epoch circular detection** (ASKAP J1745-5051,
+the accreting CV, 15% circular at 21.6σ, on-centre) + **1 candidate** (VASTER ASKAP J1651-4505,
+59% circular at 12.5σ but 3.2″ off) + 1 confusion peak vetoed (240 mJy/5.3″); median 3σ V limit
+0.474 mJy. Both are single-epoch burst states, not persistent counterparts. GATE-2 PASS w/ fixes
+(J1651 downgraded to candidate; confusion + secure/candidate vetoes disclosed as heuristics). See
+survey/lptv-findings.md.
 
 ## Context
 
