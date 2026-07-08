@@ -53,7 +53,7 @@ Twenty-six slices plus a synthesis, honestly tallied:
 | Type III occurrence census vs the solar cycle (e-Callisto × SILSO) | `jansky_research.ecallisto_census` | ✅/➖ coverage-corrected census statistic **recovers an injected solar-cycle proportionality** (r=0.97); SILSO is real, event stream is synthetic — real multi-cycle ingest is future work (honest) |
 | torch-fdmt: device-portable Fast DM Transform | `jansky_research.fdmt`+`singlepulse` | ✅ oracle-validated pure-PyTorch FDMT; **real Crab DM recovered to 0.3%** (giant pulse S/N 14); honest benchmark: FDMT-on-CPU beats brute-on-GPU 3.6× |
 | RACS Stokes-V discovery: two-epoch forced photometry | `jansky_research.stokesv_discovery` | ✅/➖ recovers **GJ 65 (BL+UV Cet)** with a **10σ 4.2-yr V change**; all else quiescent (median 5σ limit 0.83 mJy); no new detections survived the novelty bar (honest) |
-| LPT population catalogue (13 objects, provenance-typed) | `jansky_research.lpt` | ✅/➖ 9/9 Ṗ-constrained members below the death line; the hinted ~78-min binary boundary **not significant at N=13** (honest, with demonstrated test power); caught a typo in the review's own data file |
+| LPT population catalogue (16 objects, provenance-typed) | `jansky_research.lpt` | ✅/➖ 9/9 Ṗ-constrained members below the death line; the hinted ~78-min binary boundary **not significant at N=16** (v3; honest, with demonstrated test power); caught a typo in the review's own data file |
 | RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per \|b\| bin; high-\|b\| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
 | Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ 7-month census: proximity dominates ~180×; Earth-canonical Io boxes do NOT coherently organise orbital-vantage occurrence (per-month median 0.87, one orbit misleads); GATE-2 caught the Io-phase convention blocker (disclosed) |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `jansky_research.rmdipole` | ✅/➖ RM sky **isotropic at dipole order in its core**: the significant power dipole is carried entirely by the top-1% \|residual\| tail (clip → p 0.001→0.93); no apex within 80° of the CMB; real-footprint injection recovered (honest null) |
@@ -63,6 +63,7 @@ Twenty-six slices plus a synthesis, honestly tallied:
 | Radio survey of 56 WD-pulsar candidates (RACS+VLASS) | `jansky_research.wdpulsar` | ✅/➖ first systematic radio search of the Pelisoli+2025 list: **0/51 candidates detected** (I or V) to a median 3σ V limit **0.41 mJy**; AR Sco control re-found (4.2 mJy, circular); J1912−4410 itself undetected — the duty-cycle caveat made concrete (honest null) |
 | Environment-split HI mass function (FASHI DR1) | `jansky_research.fashienv` | ✅/➖ first environment split of the FASHI HIMF (41,741 sources): **void knee suppressed −0.26 dex (2.9σ) vs walls**, an independent FAST measurement of the ALFALFA void HIMF (Moorman+2014); group knee survivor-biased +0.19 dex (stated); DR1 first leg (DR2 embargoed to ~Aug 2026), absolute slope caveated |
 | SBI population inference for RACS Stokes-V emitters | `jansky_research.svsbi` | ✅/➖ first SBI of the M-dwarf coherent-emitter population: **first calibrated beaming-fraction posterior f_beam = 0.30 (90% CI 0.07–0.53)**, SBC-validated coverage; LF weakly constrained (beaming–luminosity degeneracy, honest); NPE trained on the ROCm GPU |
+| LPT catalogue v3 + Stokes-V forced photometry | `jansky_research.lptv` | ✅/➖ extends the LPT catalogue to **16 members** (3 verified 2026 rows); the ~78-min binary boundary **still not significant at N=16** (p=0.52); first systematic multi-epoch forced Stokes-V at all LPT positions → **1 secure + 1 candidate single-epoch circular burst detection** + a uniform V-limit table (0.47 mJy median; persistent circular pol not a class property; confusion-vetoed, honest) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -122,6 +123,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark |
 | Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census |
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) |
+| LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions |
 | RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate |
 | Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) |
@@ -224,7 +226,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

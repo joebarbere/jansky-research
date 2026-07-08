@@ -1,10 +1,17 @@
 # Findings — a verified, provenance-carrying LPT population catalogue (plan 35)
 
-`jansky_research.lpt` + `data/lpt_sample.csv` (13 confirmed LPTs, every value carrying its arXiv
-provenance — compiled 2026-07 from the discovery papers, cross-checked against the Rea+2026 review
-arXiv:2601.10393 and its GitHub data file). GATE-2 note: the review's own Fig. 3 already plots
-the class on P–Ṗ — the contribution here is the provenance-typed table + regenerable statistics,
-not the first diagram. Companion of GLEAM-X J0704-37 corrected to M3 (not M5).
+`jansky_research.lpt` + `data/lpt_sample.csv` (every value carrying its arXiv provenance — compiled
+2026-07 from the discovery papers, cross-checked against the Rea+2026 review arXiv:2601.10393 and
+its GitHub data file). GATE-2 note: the review's own Fig. 3 already plots the class on P–Ṗ — the
+contribution here is the provenance-typed table + regenerable statistics, not the first diagram.
+Companion of GLEAM-X J0704-37 corrected to M3 (not M5).
+
+**v3 update (plan 44, 2026-07-08):** the catalogue was extended in place from 13 → **16** with the
+three 2026 discoveries (ASKAP J142431.2−612611; VASTER's J165130.3−450520 and J170036.6−445758),
+each coordinate verified against its source-name convention. The stats below are the v3 (N=16)
+values; the period-split test moved to Δlog P = 0.176, **p_perm = 0.52 — still not significant**
+(the 2 long-period VASTER sources have unreported binary status, weakening the WD-binary/rest
+period contrast). The Stokes-V forced-photometry leg lives in the sibling `lptv` slice.
 
 ## What the compilation itself found
 
@@ -20,12 +27,12 @@ not the first diagram. Companion of GLEAM-X J0704-37 corrected to M3 (not M5).
 
 | quantity | value |
 |---|---|
-| N (confirmed, mid-2026) | 13 |
-| WD binaries / candidates | 6 |
+| N (confirmed, v3 2026-07-08) | 16 |
+| WD binaries / candidates | 7 |
 | X-ray detected | 3 |
-| period range | 7.0 min – 6.45 hr (median 69.8 min) |
+| period range | 7.0 min – 6.48 hr (median 73.4 min) |
 | Ṗ-constrained objects below the pulsar death line | **9 / 9** |
-| WD-binary vs rest period offset | Δlog P = 0.294, **p_perm = 0.27 — NOT significant at N=13** |
+| WD-binary vs rest period offset | Δlog P = 0.176, **p_perm = 0.52 — NOT significant at N=16** |
 | same test on a synthetic real split | p ≈ 0.022 (the test has power; the non-detection is informative) |
 
 The 9/9 below-death-line fact is the class's central puzzle made quantitative; the hinted ~78-min

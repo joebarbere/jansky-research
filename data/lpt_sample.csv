@@ -12,3 +12,6 @@ ASKAP J144834-685644,222.142,-68.945,5631.07,2.2e-8,upper_limit,2507.13453,candi
 CHIME J1634+44,248.450,44.430,841.24,-9.03e-12,measurement,2507.05139,candidate,hot WD,no,2507.05139,2025,FLAG_C only clear spin-UP; 100 pct circular pol
 ASKAP J175534.9-252749.1,268.895,-25.464,4186.3285,-1.0e-11,consistent_zero,2507.14448,candidate,unknown,no,2507.14448,2025,Pdot=(-10+/-92)e-12; intermittent
 ASKAP J174508.9-505149,266.287,-50.864,4842,,none,,yes,sub-stellar donor,yes,2606.04232,2026,FLAG_D post-review; accreting WD binary; orbital 1.35 hr
+ASKAP J142431.2-612611,216.130,-61.4364,2147.27,,none,,candidate,possible WD,no,2603.07857,2026,"FLAG_G 36-min; frac pol ~100pct, circular ~8pct, RM -222 (2603.07857); XMM non-detection Fx<1.9e-12; possible WD binary unconfirmed"
+ASKAP J165130.3-450520,252.8761,-45.0888,23317.9,,none,,unknown,unknown,no,2606.20067,2026,VASTER 6.48 hr; first detected 2025 commissioning; binary/xray not reported
+ASKAP J170036.6-445758,255.1525,-44.9661,16895.9,,none,,unknown,unknown,no,2606.20067,2026,VASTER 4.69 hr; first detected 2025 commissioning; binary/xray not reported

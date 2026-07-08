@@ -43,6 +43,7 @@ SLICES = {
     "wdpulsar": ("wdpulsar", "--offline"),
     "fashienv": ("fashienv", "--offline"),
     "svsbi": ("svsbi", "--offline"),
+    "lptv": ("lptv", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
     "frbwait": ("frbwait", "--offline"),
