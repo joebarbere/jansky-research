@@ -426,12 +426,13 @@ def _write_limits_table(m: dict, path: str | Path, *, n_excerpt: int = 16) -> No
             f"$<${e['v_limit_mjy']:.2f} & {e.get('class', 'nan')} \\\\"
         )
     if not rows_src:
-        # Offline builds carry no per-target measurements (real data only), so emit an
-        # honest placeholder row rather than an empty tabular body — matching the wdReal*
-        # macro convention and keeping the paper's tabular valid (an empty body would leave
-        # the header \hline immediately followed by this trailing \hline, which LaTeX rejects
-        # with "Misplaced \noalign").
-        out.append(r"\multicolumn{6}{c}{\emph{Per-target rows appear in the real-data build.}} \\")
+        # Offline builds carry no per-target measurements (real data only), so emit an honest
+        # placeholder row rather than an empty tabular body — matching the wdReal*/wdSyn* macro
+        # convention. Use a plain six-column row (five ampersands), NOT \multicolumn: an empty
+        # body leaves the header \hline against this trailing \hline ("Misplaced \noalign"), and
+        # a full-width \multicolumn trips "Misplaced \omit"; a normal row avoids both. The real
+        # build renders the full excerpt.
+        out.append(r"\emph{Per-target rows appear in the real-data build.} & & & & & \\")
     out.append(r"\hline")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

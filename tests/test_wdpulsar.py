@@ -172,4 +172,7 @@ def test_limits_table_empty_emits_placeholder(tmp_path):
     txt = p.read_text()
     rows = [r for r in txt.splitlines() if r.endswith(r"\\")]
     assert rows, "expected at least a placeholder row, got an empty table body"
-    assert r"\multicolumn{6}" in txt
+    # a plain six-column row (five ampersands), never \multicolumn (whose \omit trips LaTeX)
+    assert all(r.count("&") == 5 for r in rows)
+    assert r"\multicolumn" not in txt
+    assert "real-data build" in txt
