@@ -10,10 +10,13 @@ An interferometer responds to structure smaller than its fringe spacing and reso
 
 The achievable configuration, and the plan of record:
 
-```
-dish A → LNA + 1420 MHz filter ─┐
-                                 ├─ matched-length coax → RF power combiner → single SDR
-dish B → LNA + 1420 MHz filter ─┘
+```mermaid
+flowchart LR
+    A["Dish A"] --> AL["LNA + 1420 MHz filter"]
+    B["Dish B"] --> BL["LNA + 1420 MHz filter"]
+    AL -->|matched-length coax| C["RF power combiner"]
+    BL -->|matched-length coax| C
+    C --> SDR["Single SDR"]
 ```
 
 With one receiver there is no inter-channel coherence problem. As the Sun drifts through the overlapped beams, total power oscillates — fringes — and the fringe spacing yields the Sun's angular size. This reproduces 1950s-era radio astronomy techniques faithfully, for roughly $200 of additional hardware (second dish, second LNA, combiner, matched cables). The two bandpass filters were purchased from the same production batch for this purpose.
