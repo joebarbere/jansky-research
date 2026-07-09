@@ -100,11 +100,14 @@ solar dynamic spectra are published on AWS Open Data \citep{ovrolwa_data} (bucke
 \code{ovro-lwa-solar}, path \code{spec\_fits/<YYYY>/<YYYYMMDD>.fits}), directly downloadable with no
 login: the Cloudflare bot challenge on the query portal gates only the interactive UI, not the
 data. The daily files are large ($\sim$1.7~GB; a 4D I/V dynamic spectrum, $\sim$15--85~MHz,
-$\sim$0.26~s), so a multi-year census is a bulk-download and compute follow-on, not a code problem;
-the pipeline reads these FITS directly and is ready to run. We confirmed the real product's format
-on first contact --- a 4D primary array with axes (time, frequency, 1, Stokes) --- and
-\code{parse\_lwa\_dspec} handles it (with a fallback to the older documented table layout),
-unit-tested on both. What we deliver is the method: a validated slow-drift$+$harmonic type II
+$\sim$0.26~s), so the real leg \emph{streams} each day rather than downloading it: it opens the S3
+FITS lazily (astropy \code{use\_fsspec}) and range-reads only the Stokes-I plane in time-chunks,
+block-averaging each to $\sim$4~s bins on the fly, so a day is processed entirely in memory with
+nothing written to disk (peak memory is one reduced chunk, never the 1.7~GB file) and freed before
+the next. A multi-year census is thus a compute follow-on, not an access or disk-space problem. We
+confirmed the real product's format on first contact --- a 4D primary array with axes (time,
+frequency, 1, Stokes) --- and \code{parse\_lwa\_dspec} handles it (with a fallback to the older
+documented table layout), unit-tested on both. What we deliver is the method: a validated slow-drift$+$harmonic type II
 detector with a calibrated completeness curve and a CME cross-match, filling the type-II gap in the
 OVRO-LWA detector lineage and ready to run on the archive. The coverage-corrected
 occurrence-versus-cycle-phase census, which needs the multi-year event list, is deferred with the

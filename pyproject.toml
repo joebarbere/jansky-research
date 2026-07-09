@@ -45,6 +45,11 @@ fdmt = ["torch>=2.4"]
 # forward model / summary statistics stay testable in core CI; NPE training runs from the ROCm
 # venv (verified: sbi 0.26.1 trains NPE on gfx1102 with no code changes).
 sbi = ["sbi>=0.26,<0.27"]
+# Streaming the OVRO-LWA type II real leg (plan 50): astropy `use_fsspec` lazy cloud-FITS reads
+# over HTTPS need fsspec + aiohttp, so each ~1.7 GB daily dynamic spectrum is range-read (Stokes-I
+# plane only, chunked + time-downsampled) straight into memory -- no file ever touches disk. Kept
+# OUT of core CI; the pure downsample/sweep logic is tested without it.
+typeii = ["fsspec>=2024.2", "aiohttp>=3.9"]
 
 # The chosen-domain extra is added once GATE 1 picks the science focus, e.g.
 # analysis = ["jansky[pulsar]"]  or  ["jansky[hi]"]  etc.

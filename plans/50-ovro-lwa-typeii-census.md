@@ -1,17 +1,19 @@
 # 50 — OVRO-LWA metric type II census × LASCO CME catalogue
 
-Status: ✅ done (detector + method; real census = bulk-download follow-on) — GATE 0 2026-07-09:
-novelty PASS (OVRO-LWA detector arXiv:2603.25446 is type-III-only; no type II census on this
-archive). Data on **AWS Open Data** (bucket `ovro-lwa-solar`, `spec_fits/<YYYY>/<YYYYMMDD>.fits`,
-~15–85 MHz, ~0.26 s, ~1.7 GB/day, 4D I/V dynamic spectrum) — directly downloadable, NO
-login/CAPTCHA (the Cloudflare Turnstile on the `lwadata-query` UI gates only the query interface,
-not the data). So the real census is a **bulk-download follow-on**, not an access block; not run
-here (each day is 1.7 GB). Deliverable: the validated slow-drift+harmonic **detector** (purity 1.0;
-honest SNR-completeness curve 1.0→0.33 from SNR 4→2) + CME cross-match wiring, with
-`scripts/typeii_real.py --download` pulling straight from S3. Real FITS format confirmed on first
-contact (4D primary array); `parse_lwa_dspec` handles it. GATE-2 PASS w/ fixes (SNR curve not a
-saturated number; CME assoc labelled a wiring check; coverage/occurrence-vs-phase deferred). See
-survey/typeii-findings.md.
+Status: ✅ done (detector + method; streamed real leg ready) — GATE 0 2026-07-09: novelty PASS
+(OVRO-LWA detector arXiv:2603.25446 is type-III-only; no type II census on this archive). Data on
+**AWS Open Data** (bucket `ovro-lwa-solar`, `spec_fits/<YYYY>/<YYYYMMDD>.fits`, ~15–85 MHz,
+~0.26 s, ~1.7 GB/day, 4D I/V dynamic spectrum) — directly downloadable, NO login/CAPTCHA (the
+Cloudflare Turnstile on the `lwadata-query` UI gates only the query interface, not the data). The
+real leg **streams** each day in memory: `stream_dspec` lazily range-reads only the Stokes-I plane
+in time-chunks, block-averages to ~4 s bins on the fly, and `real_census` frees each day before the
+next — nothing touches disk; a census is a compute follow-on, not an access/disk block (not run
+here). Deliverable: the validated slow-drift+harmonic **detector** (purity 1.0; honest
+SNR-completeness curve 1.0→0.33 from SNR 4→2) + CME cross-match wiring + the streaming leg
+(`scripts/typeii_real.py --dates ... --cme ...`, needs the `typeii` extra). Real FITS format
+confirmed on first contact (4D primary array); `parse_lwa_dspec` handles it. GATE-2 PASS w/ fixes
+(SNR curve not a saturated number; CME assoc labelled a wiring check; coverage/occurrence-vs-phase
+deferred). See survey/typeii-findings.md.
 
 ## Context
 

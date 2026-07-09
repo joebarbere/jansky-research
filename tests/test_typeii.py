@@ -162,6 +162,37 @@ def test_s3_dspec_url():
     assert u == "https://ovro-lwa-solar.s3-us-west-2.amazonaws.com/spec_fits/2024/20240514.fits"
 
 
+def test_downsample_time_block_averages():
+    spec = np.arange(4 * 20, dtype=float).reshape(4, 20)  # (freq=4, time=20)
+    out = t2._downsample_time(spec, 4)
+    assert out.shape == (4, 5)  # 20 time cols -> 5 bins of 4
+    assert np.allclose(out[0], [1.5, 5.5, 9.5, 13.5, 17.5])  # mean of each 4-block
+    assert t2._downsample_time(spec, 1) is spec  # factor 1 is a no-op
+    # a ragged length is truncated to a whole number of blocks
+    assert t2._downsample_time(np.ones((2, 23)), 4).shape == (2, 5)
+
+
+def test_sweep_day_finds_windowed_type_ii():
+    # build a day-long spectrum (descending freq) with ONE injected type II in a 15-min window
+    s = t2.synthetic_typeii(seed=2, duration_s=600.0, n_time=150)  # a burst window
+    n_f = s["data"].shape[0]
+    rng = np.random.default_rng(0)
+    day = rng.normal(0, 1.0, (n_f, 1500))  # ~quiet day, same freq grid
+    day[:, 300:450] += s["data"]  # drop the burst in at ~one window
+    times = np.arange(1500) * 4.0  # 4 s bins
+    dets = t2.sweep_day(day, s["freqs"], times, window_s=900.0, step_s=450.0)
+    assert len(dets) >= 1  # the injected type II is found in its window
+    assert all(d["klass"] == "type_II" for d in dets)
+    assert all("burst_hr" in d for d in dets)  # tagged with a window-centre time for cross-match
+
+
+def test_sweep_day_empty_on_quiet_day():
+    rng = np.random.default_rng(1)
+    quiet = rng.normal(0, 1.0, (120, 1500))
+    times = np.arange(1500) * 4.0
+    assert t2.sweep_day(quiet, np.linspace(85, 15, 120), times) == []
+
+
 def test_run_offline_completeness_purity_and_bias(tmp_path):
     m = t2.run(str(tmp_path), offline=True)
     assert m["completeness"] >= 0.8 and m["purity"] >= 0.9  # honest mixed-difficulty number

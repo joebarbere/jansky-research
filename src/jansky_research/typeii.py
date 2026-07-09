@@ -20,11 +20,14 @@ wiring check of the match logic, not an independent reproduction (that needs rea
 is **no real census run yet**, but the data is NOT access-blocked: the OVRO-LWA solar dynamic
 spectra are on **AWS Open Data** (bucket ``ovro-lwa-solar``, path ``spec_fits/<YYYY>/<YYYYMMDD>.fits``,
 directly downloadable with no login) --- the Cloudflare Turnstile only gates the query *UI*, not
-the data (`s3_dspec_url`). The daily files are large (~1.7 GB, a 4D I/V dynamic spectrum), so a
-multi-year census is a bulk-download/compute follow-on rather than a code problem; the detector
-below is the shippable deliverable, ready to run on the S3 FITS (`real_census` /
-`scripts/typeii_real.py`). The coverage-corrected occurrence-vs-cycle-phase piece is deferred with
-that census (it needs the full event list).
+the data (`s3_dspec_url`). The daily files are large (~1.7 GB, a 4D I/V dynamic spectrum), so the
+real leg **streams** each day: `stream_dspec` opens the S3 FITS lazily (astropy ``use_fsspec``) and
+range-reads ONLY the Stokes-I plane in time-chunks, block-averaging each to ~4 s bins before it is
+kept, so a day is processed **entirely in memory with nothing written to disk** and peak memory is
+one reduced chunk, never the 1.7 GB file. `sweep_day` then slides a burst-sized window across the
+day and `real_census` frees each day before streaming the next (`scripts/typeii_real.py`). The
+detector below is the shippable deliverable, ready to run; the coverage-corrected
+occurrence-vs-cycle-phase piece is deferred with that census (it needs the full event list).
 
 Data: OVRO-LWA solar dynamic spectra (FITS, ~15--85 MHz, ~0.26 s, ~1.7 GB/day, on AWS Open Data);
 LASCO CME v2 (CDAW); GOES flares; SILSO for cycle phase (real leg). Reuse:
@@ -52,6 +55,8 @@ __all__ = [
     "cme_association_fraction",
     "parse_lwa_dspec",
     "s3_dspec_url",
+    "sweep_day",
+    "stream_dspec",
     "run",
 ]
 
@@ -427,8 +432,12 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             ),
             **{f"assoc_{k}": v for k, v in assoc.items()},
         }
-    else:  # pragma: no cover - real leg runs via scripts/typeii_real.py on local OVRO-LWA FITS
-        metrics = real_census(DATA_DIR)
+    else:  # pragma: no cover - the streaming real census needs explicit dates + a CME table
+        raise SystemExit(
+            "The real type II census streams days from AWS Open Data and needs explicit dates + a "
+            "LASCO CME table -- run `python scripts/typeii_real.py --dates ... --cme ...` instead of "
+            "`--offline`."
+        )
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -436,6 +445,66 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     _figure(metrics, op / "papers" / "typeii" / "figures")
     _write_macros(metrics, op / "papers" / "typeii" / "generated" / "macros.tex")
     return metrics
+
+
+TIME_DOWNSAMPLE = 16  # average 16 native ~0.256 s samples -> ~4 s bins (type II is minutes-long)
+CADENCE_S = 0.256  # native OVRO-LWA dynamic-spectrum time resolution
+SWEEP_WINDOW_S = 900.0  # slide a 15-min window across a day (type II lasts minutes)
+SWEEP_STEP_S = 450.0
+
+
+def _downsample_time(spec: np.ndarray, factor: int) -> np.ndarray:
+    """Block-average a (freq, time) spectrum over ``factor`` adjacent time columns.
+
+    A type II lasts minutes, so averaging to ~4 s bins loses nothing and shrinks a full-day
+    spectrum ~16x --- the key to holding a streamed day in memory.
+    """
+    if factor <= 1:
+        return spec
+    n = (spec.shape[1] // factor) * factor
+    return spec[:, :n].reshape(spec.shape[0], n // factor, factor).mean(axis=2)
+
+
+def _axes_from_header(hdr: dict, n_freq: int, n_time: int, *, factor: int = 1) -> tuple:
+    """Descending freq (MHz) + time (s) axes from a dynamic-spectrum header (post-downsample)."""
+    fmin = float(hdr.get("FREQMIN", 0.0134)) * 1e3  # GHz -> MHz
+    fmax = float(hdr.get("FREQMAX", 0.0869)) * 1e3
+    freqs = np.linspace(fmin, fmax, n_freq)
+    times = np.arange(n_time) * CADENCE_S * factor
+    if freqs[0] < freqs[-1]:  # descending, as solarbursts expects
+        freqs = freqs[::-1]
+    return freqs, times
+
+
+def sweep_day(
+    data: np.ndarray,
+    freqs: np.ndarray,
+    times: np.ndarray,
+    *,
+    window_s: float = SWEEP_WINDOW_S,
+    step_s: float = SWEEP_STEP_S,
+) -> list[dict]:
+    """Slide a burst-sized window across a full day and run `detect_typeii` in each.
+
+    A day-long dynamic spectrum holds many minutes-long candidate intervals; `detect_typeii` is a
+    single-window classifier, so we scan overlapping ``window_s`` windows (step ``step_s``) and
+    return the type II detections, each tagged with its window-centre time in hours (``burst_hr``,
+    the handle the CME cross-match uses). Descending frequency is assumed (as from `stream_dspec`).
+    """
+    t = np.asarray(times, float)
+    if t.size < 2:
+        return []
+    out = []
+    t0 = float(t.min())
+    while t0 < t.max():
+        m = (t >= t0) & (t < t0 + window_s)
+        if m.sum() >= N_RIDGE_MIN:
+            r = detect_typeii(data[:, m], freqs, t[m] - t[m][0])
+            if r["detected"]:
+                r["burst_hr"] = (float(t[m].mean())) / 3600.0
+                out.append(r)
+        t0 += step_s
+    return out
 
 
 def parse_lwa_dspec(path: str | Path) -> dict:
@@ -505,34 +574,61 @@ def s3_dspec_url(date: str) -> str:
     return f"{S3_SPEC_FITS}/{ymd[:4]}/{ymd}.fits"
 
 
-def real_census(data_dir: str | Path) -> dict:  # pragma: no cover - needs local OVRO-LWA FITS
-    """Sweep local OVRO-LWA dspec FITS for type II bursts + cross-match a local LASCO CME table.
+def stream_dspec(
+    date: str, *, time_downsample: int = TIME_DOWNSAMPLE, chunk: int = 20000
+) -> dict:  # pragma: no cover - network (astropy use_fsspec range reads)
+    """Stream one day's dynamic spectrum from AWS Open Data into memory --- no file on disk.
 
-    The daily dynamic spectra are on AWS Open Data (see `s3_dspec_url`); download the wanted days
-    into ``data_dir`` (each ~1.7 GB) plus a CDAW LASCO CME table (``data_dir/lasco_cme.csv`` with
-    onset_hr/speed_kms/width_deg), then this runs `detect_typeii` over per-day burst windows and
-    cross-matches detections to the CMEs.
+    Opens the S3 FITS lazily (astropy ``use_fsspec``; needs the ``typeii`` extra: fsspec+aiohttp)
+    and reads ONLY the Stokes-I plane, in ``chunk``-column time blocks via HTTP range requests,
+    block-averaging each to ~4 s bins before it is kept --- so peak memory is one chunk of the
+    reduced spectrum, never the ~1.7 GB file. Returns the reduced (freq, time) spectrum + axes,
+    ready for `sweep_day`. Falls back to reading the primary ``.data`` if ``.section`` is
+    unavailable.
+    """
+    from astropy.io import fits
+
+    url = s3_dspec_url(date)
+    with fits.open(url, use_fsspec=True) as hdul:
+        hdu = hdul[0]
+        hdr = dict(hdu.header)
+        n_t = int(hdu.shape[-1])  # FITS last axis = time
+        blocks = []
+        for a in range(0, n_t, chunk):
+            b = min(a + chunk, n_t)
+            plane = np.asarray(hdu.section[0, 0, :, a:b], float)  # Stokes I, (freq, chunk) — lazy
+            blocks.append(_downsample_time(plane, time_downsample))
+            del plane
+        spec = np.concatenate(blocks, axis=1)
+    freqs, times = _axes_from_header(hdr, spec.shape[0], spec.shape[1], factor=time_downsample)
+    if freqs[0] < freqs[-1]:
+        spec = spec[::-1]
+    return {"data": spec, "freqs": freqs, "times": times}
+
+
+def real_census(dates, cme_csv):  # noqa: ANN001  # pragma: no cover - streams from AWS Open Data
+    """Stream each day from AWS Open Data, sweep it for type II bursts, cross-match LASCO CMEs.
+
+    ``dates`` is a list of ``YYYY-MM-DD`` strings; ``cme_csv`` is a CDAW LASCO CME table with
+    ``onset_hr,speed_kms,width_deg`` columns. Each day is streamed into memory (`stream_dspec`),
+    swept (`sweep_day`), and freed before the next --- no ~1.7 GB file ever touches disk. Type II
+    detections are matched to the nearest preceding CME and the fast-and-wide fractions reported.
     """
     import csv
 
-    dd = Path(data_dir)
-    cme_list = [
-        {k: float(v) for k, v in row.items()} for row in csv.DictReader(open(dd / "lasco_cme.csv"))
-    ]
-    events, det = [], []
-    for f in sorted(dd.glob("*.fits")):
-        ds = parse_lwa_dspec(f)
-        r = detect_typeii(ds["data"], ds["freqs"], ds["times"])
-        if r["detected"]:
-            det.append(r)
-        events.append(r)
-    matched = [crossmatch_cme(r.get("burst_hr", 0.0), cme_list) for r in det]
+    cme_list = [{k: float(v) for k, v in row.items()} for row in csv.DictReader(open(cme_csv))]
+    all_det = []
+    for date in dates:
+        ds = stream_dspec(date)  # streamed, in memory
+        all_det.extend(sweep_day(ds["data"], ds["freqs"], ds["times"]))
+        del ds  # free the day before streaming the next
+    matched = [crossmatch_cme(r.get("burst_hr", 0.0), cme_list) for r in all_det]
     assoc = cme_association_fraction(matched)
     return {
-        "source": f"OVRO-LWA dspec (AWS Open Data), {len(events)} days",
+        "source": f"OVRO-LWA dspec (AWS Open Data, streamed), {len(dates)} days",
         "is_real": True,
-        "n_events": len(events),
-        "n_typeii_detected": len(det),
+        "n_events": len(dates),
+        "n_typeii_detected": len(all_det),
         "completeness": None,
         "purity": None,
         **{f"assoc_{k}": v for k, v in assoc.items()},

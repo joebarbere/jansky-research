@@ -54,15 +54,19 @@ revealed the actual data is on **AWS Open Data** — public bucket `ovro-lwa-sol
 Turnstile only gates the interactive query UI). Verified: the bucket lists and serves the FITS over
 plain HTTPS (`s3_dspec_url`).
 
-- The daily files are **large (~1.7 GB; a 4D I/V dynamic spectrum, ~15–85 MHz, ~0.26 s)**, so a
-  multi-year census is a bulk-download + compute follow-on — a bandwidth/compute cost, NOT an
-  access block.
+- The daily files are **large (~1.7 GB; a 4D I/V dynamic spectrum, ~15–85 MHz, ~0.26 s)**, so the
+  real leg **streams** rather than downloads: `stream_dspec` opens the S3 FITS lazily (astropy
+  `use_fsspec`) and range-reads ONLY the Stokes-I plane in time-chunks, block-averaging each to
+  ~4 s bins on the fly (`_downsample_time`), so a day is processed **entirely in memory with
+  nothing written to disk** (peak ≈ one reduced chunk, never the 1.7 GB file). `sweep_day` slides
+  a 15-min window across the day; `real_census` frees each day before streaming the next.
 - **Real FITS format confirmed on first contact** (`20240514.fits`): a 4D PRIMARY array, axes
   (time, freq, 1, Stokes), Jy, freq from FREQMIN/FREQMAX (GHz). `parse_lwa_dspec` was rewritten to
   this real layout (with a fallback to the older table layout), unit-tested on both.
-- The deliverable remains the validated detector + method; the real census (and the SILSO
-  occurrence-vs-cycle-phase piece) is the bulk-download follow-on via `scripts/typeii_real.py`
-  (`--download YYYY-MM-DD` pulls straight from S3).
+- The deliverable remains the validated detector + method; the streamed real census (and the SILSO
+  occurrence-vs-cycle-phase piece) runs via `scripts/typeii_real.py --dates ... --cme ...` (needs
+  the `typeii` extra: fsspec + aiohttp for the lazy cloud reads). A multi-year census is a compute
+  follow-on, NOT an access or disk-space block.
 
 ## GATE-2 (PASS with required fixes, all applied)
 
@@ -80,5 +84,5 @@ plain HTTPS (`s3_dspec_url`).
 ## Reproduce
 
 Offline (detector + synthetic + tests): `uv run python -m jansky_research.typeii --offline --out .`
-Real: `uv run python scripts/typeii_real.py --download 2024-05-14` (pulls ~1.7 GB from AWS Open
-Data, no auth) + a `data/typeii/lasco_cme.csv`, then `uv run python scripts/typeii_real.py`.
+Real (streamed, in memory, no disk): `uv run --extra typeii python scripts/typeii_real.py --dates
+2024-05-14 2024-05-15 --cme data/typeii/lasco_cme.csv`.

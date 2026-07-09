@@ -2350,6 +2350,10 @@ fdmt = [
 sbi = [
     { name = "sbi" },
 ]
+typeii = [
+    { name = "aiohttp" },
+    { name = "fsspec" },
+]
 vlass = [
     { name = "pyvo" },
 ]
@@ -2376,9 +2380,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", marker = "extra == 'typeii'", specifier = ">=3.9" },
     { name = "apache-airflow", marker = "extra == 'airflow'", specifier = ">=2.9,<3.0" },
     { name = "astropy", specifier = ">=6.0" },
     { name = "cdflib", marker = "extra == 'windwaves'", specifier = ">=1.0" },
+    { name = "fsspec", marker = "extra == 'typeii'", specifier = ">=2024.2" },
     { name = "h5py", marker = "extra == 'voyager'", specifier = ">=3.0" },
     { name = "hdf5plugin", marker = "extra == 'voyager'", specifier = ">=4.0" },
     { name = "jansky", editable = "../jansky" },
@@ -2392,7 +2398,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'fdmt'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cpu" },
     { name = "tqdm", specifier = ">=4.66" },
 ]
-provides-extras = ["airflow", "voyager", "vlass", "windwaves", "workflow", "fdmt", "sbi"]
+provides-extras = ["airflow", "voyager", "vlass", "windwaves", "workflow", "fdmt", "sbi", "typeii"]
 
 [package.metadata.requires-dev]
 dev = [
