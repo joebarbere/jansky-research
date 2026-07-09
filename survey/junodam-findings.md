@@ -71,3 +71,5 @@ the distance correction. Re-running the 7-month real leg:
 - Units are V²m⁻²Hz⁻¹ (occurrence needs only detection vs the shipped background).
 - Reproduce: download a month of CDFs to `data/junodam/` (URL pattern in module), then
   `uv run python -m jansky_research.junodam --out .` (Horizons access needed for CML).
+
+> Cross-slice note: the 1/r² sensitivity null added here was audited repo-wide (2026-07-09) — see [sensitivity-null-audit.md](sensitivity-null-audit.md). No other merged slice needs the fix.
