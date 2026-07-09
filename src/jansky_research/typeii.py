@@ -575,16 +575,17 @@ def s3_dspec_url(date: str) -> str:
 
 
 def stream_dspec(
-    date: str, *, time_downsample: int = TIME_DOWNSAMPLE, chunk: int = 20000
+    date: str, *, time_downsample: int = TIME_DOWNSAMPLE, chunk: int = 128
 ) -> dict:  # pragma: no cover - network (astropy use_fsspec range reads)
     """Stream one day's dynamic spectrum from AWS Open Data into memory --- no file on disk.
 
     Opens the S3 FITS lazily (astropy ``use_fsspec``; needs the ``typeii`` extra: fsspec+aiohttp)
-    and reads ONLY the Stokes-I plane, in ``chunk``-column time blocks via HTTP range requests,
-    block-averaging each to ~4 s bins before it is kept --- so peak memory is one chunk of the
-    reduced spectrum, never the ~1.7 GB file. Returns the reduced (freq, time) spectrum + axes,
-    ready for `sweep_day`. Falls back to reading the primary ``.data`` if ``.section`` is
-    unavailable.
+    and reads ONLY the Stokes-I plane, in ``chunk``-channel FREQUENCY blocks via HTTP range
+    requests. The plane is stored C-contiguous with time fastest-varying, so a frequency slice
+    ``[f0:f1, :]`` is one CONTIGUOUS byte range (fast); a time slice would be strided across every
+    channel (many small requests). Each block is time-averaged to ~4 s bins before it is kept, so
+    peak memory is one raw frequency block (~150 MB) plus the reduced spectrum, never the ~1.7 GB
+    file. Returns the reduced (freq, time) spectrum + axes, ready for `sweep_day`.
     """
     from astropy.io import fits
 
@@ -592,14 +593,14 @@ def stream_dspec(
     with fits.open(url, use_fsspec=True) as hdul:
         hdu = hdul[0]
         hdr = dict(hdu.header)
-        n_t = int(hdu.shape[-1])  # FITS last axis = time
+        n_f = int(hdu.shape[-2])  # FITS axis-2 = frequency
         blocks = []
-        for a in range(0, n_t, chunk):
-            b = min(a + chunk, n_t)
-            plane = np.asarray(hdu.section[0, 0, :, a:b], float)  # Stokes I, (freq, chunk) — lazy
-            blocks.append(_downsample_time(plane, time_downsample))
-            del plane
-        spec = np.concatenate(blocks, axis=1)
+        for a in range(0, n_f, chunk):
+            b = min(a + chunk, n_f)
+            block = np.asarray(hdu.section[0, 0, a:b, :], float)  # Stokes I, (freq_chunk, time)
+            blocks.append(_downsample_time(block, time_downsample))
+            del block
+        spec = np.concatenate(blocks, axis=0)
     freqs, times = _axes_from_header(hdr, spec.shape[0], spec.shape[1], factor=time_downsample)
     if freqs[0] < freqs[-1]:
         spec = spec[::-1]
