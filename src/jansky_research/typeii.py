@@ -17,14 +17,17 @@ deliverable, in core CI: (1) completeness/purity on a mixed synthetic set spanni
 completeness-vs-SNR curve, NOT a single saturated number; (2) a temporal CME cross-match whose
 recovered fast-and-wide fractions ECHO the injected Gopalswamy-biased CME distribution --- i.e. a
 wiring check of the match logic, not an independent reproduction (that needs real events). There
-is **no real census yet**: the OVRO-LWA solar portal (`ovsa.njit.edu/lwadata-query`) sits behind a
-Cloudflare Turnstile bot challenge, so the FITS cannot be fetched by a script (GATE-0 2026-07-09);
-the real census (and the coverage-corrected occurrence-vs-cycle-phase piece, which needs the
-multi-year event list) awaits FITS downloaded interactively through the portal --- see
-`real_census` / `scripts/typeii_real.py`.
+is **no real census run yet**, but the data is NOT access-blocked: the OVRO-LWA solar dynamic
+spectra are on **AWS Open Data** (bucket ``ovro-lwa-solar``, path ``spec_fits/<YYYY>/<YYYYMMDD>.fits``,
+directly downloadable with no login) --- the Cloudflare Turnstile only gates the query *UI*, not
+the data (`s3_dspec_url`). The daily files are large (~1.7 GB, a 4D I/V dynamic spectrum), so a
+multi-year census is a bulk-download/compute follow-on rather than a code problem; the detector
+below is the shippable deliverable, ready to run on the S3 FITS (`real_census` /
+`scripts/typeii_real.py`). The coverage-corrected occurrence-vs-cycle-phase piece is deferred with
+that census (it needs the full event list).
 
-Data: OVRO-LWA Level-1 beamforming spectrograms (FITS, 13.4--86.9 MHz, 256 ms, ~0.6 GB/day,
-2024-04->present); LASCO CME v2 (CDAW); GOES flares; SILSO for cycle phase (real leg). Reuse:
+Data: OVRO-LWA solar dynamic spectra (FITS, ~15--85 MHz, ~0.26 s, ~1.7 GB/day, on AWS Open Data);
+LASCO CME v2 (CDAW); GOES flares; SILSO for cycle phase (real leg). Reuse:
 `solarbursts` (coronal-density drift model + `background_subtract`) drives both the synthetic type
 II (a slow shock emitting fundamental+harmonic) and the type III contaminants; the real leg's
 occurrence rate will reuse `ecallisto_census.coverage_corrected_rate` (deferred with the census).
@@ -48,6 +51,7 @@ __all__ = [
     "crossmatch_cme",
     "cme_association_fraction",
     "parse_lwa_dspec",
+    "s3_dspec_url",
     "run",
 ]
 
@@ -435,49 +439,79 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
 
 def parse_lwa_dspec(path: str | Path) -> dict:
-    """Parse one OVRO-LWA Level-1 beamforming dynamic-spectrum FITS -> (data, freqs MHz, times s).
+    """Parse one OVRO-LWA solar dynamic-spectrum FITS -> (Stokes-I data, freqs MHz, times s).
 
-    File pattern ``ovro-lwa.lev1_bmf_256ms_96kHz.YYYY-MM-DD.dspec_I.fits`` (one/day, 13.4-86.9 MHz,
-    768 ch, 256 ms; Stokes-I in SFU). Per the OVRO-LWA Data Products wiki the FITS carries the
-    frequency list, the time list, and the I dynamic spectrum as tables/extensions; we locate the
-    2D spectrum HDU and the 1D freq/time axes and return the spectrum oriented (freq, time).
+    Confirmed on a real product (AWS Open Data ``spec_fits/YYYY/YYYYMMDD.fits``, 2026): a 4D
+    PRIMARY array with FITS axes (NAXIS1=time, NAXIS2=freq, NAXIS3=1, NAXIS4=stokes), i.e. numpy
+    shape ``(stokes, 1, freq, time)`` in Jy; the frequency axis spans header ``FREQMIN``--``FREQMAX``
+    (GHz) over NAXIS2 channels and the time axis ``DATE_OBS``--``DATE_END``. We take Stokes I (the
+    first plane), build the freq/time axes from the header, and return the spectrum oriented
+    (freq, time) with descending frequency (as `solarbursts` expects). Falls back to the older
+    table layout (2D spectrum HDU + 1D freq/time HDUs) if the primary array is not 4D.
     """
     from astropy.io import fits
 
     with fits.open(path) as hdul:
-        spec = next(
-            h.data for h in hdul if getattr(h, "data", None) is not None and h.data.ndim == 2
-        )
-        arrays = [
-            np.asarray(h.data, float).ravel()
-            for h in hdul
-            if getattr(h, "data", None) is not None and h.data.ndim == 1
-        ]
-        freqs = next(
-            (a for a in arrays if a.size == spec.shape[0] or a.size == spec.shape[1]), None
-        )
-        times = next(
-            (a for a in arrays if freqs is not None and a.size in spec.shape and a is not freqs),
-            None,
-        )
-    spec = np.asarray(spec, float)
-    if freqs is not None and spec.shape[0] != freqs.size and spec.shape[1] == freqs.size:
-        spec = spec.T  # orient (freq, time)
-    freqs = freqs if freqs is not None else np.linspace(86.9, 13.4, spec.shape[0])
-    times = times if times is not None else np.arange(spec.shape[1]) * 0.256
-    if freqs[0] < freqs[-1]:  # want descending frequency (as solarbursts)
+        prim = hdul[0]
+        if getattr(prim, "data", None) is not None and prim.data.ndim == 4:
+            spec = np.asarray(prim.data[0, 0], float)  # Stokes I -> (freq, time)
+            hdr = prim.header
+            n_f = spec.shape[0]
+            fmin = float(hdr.get("FREQMIN", 0.0134)) * 1e3  # GHz -> MHz
+            fmax = float(hdr.get("FREQMAX", 0.0869)) * 1e3
+            freqs = np.linspace(fmin, fmax, n_f)
+            times = np.linspace(0.0, spec.shape[1] * 0.256, spec.shape[1])
+        else:  # older documented table layout: 2D spectrum HDU + 1D freq/time HDUs
+            spec = np.asarray(
+                next(
+                    h.data
+                    for h in hdul
+                    if getattr(h, "data", None) is not None and h.data.ndim == 2
+                ),
+                float,
+            )
+            arrays = [
+                np.asarray(h.data, float).ravel()
+                for h in hdul
+                if getattr(h, "data", None) is not None and h.data.ndim == 1
+            ]
+            freqs = next(
+                (a for a in arrays if a.size in spec.shape), np.linspace(13.4, 86.9, spec.shape[0])
+            )
+            times = next(
+                (a for a in arrays if a.size in spec.shape and a is not freqs),
+                np.arange(spec.shape[1]) * 0.256,
+            )
+            if spec.shape[0] != freqs.size and spec.shape[1] == freqs.size:
+                spec = spec.T
+            if freqs.max() > 1e3:
+                freqs = freqs / 1e6  # Hz -> MHz
+    if freqs[0] < freqs[-1]:  # descending frequency, as solarbursts expects
         spec, freqs = spec[::-1], freqs[::-1]
-    return {"data": spec, "freqs": freqs / 1e6 if freqs.max() > 1e3 else freqs, "times": times}
+    return {"data": spec, "freqs": freqs, "times": times}
+
+
+S3_SPEC_FITS = "https://ovro-lwa-solar.s3-us-west-2.amazonaws.com/spec_fits"
+
+
+def s3_dspec_url(date: str) -> str:
+    """Public AWS-Open-Data URL for a daily OVRO-LWA dynamic spectrum (``date`` = YYYY-MM-DD).
+
+    The FITS are on AWS Open Data (bucket ``ovro-lwa-solar``), directly downloadable with no login
+    and no bot challenge --- the Cloudflare Turnstile only gates the query *UI*, not the data. Path:
+    ``spec_fits/<YYYY>/<YYYYMMDD>.fits`` (one/day, ~1.7 GB, 15-85 MHz, ~0.26 s cadence).
+    """
+    ymd = date.replace("-", "")
+    return f"{S3_SPEC_FITS}/{ymd[:4]}/{ymd}.fits"
 
 
 def real_census(data_dir: str | Path) -> dict:  # pragma: no cover - needs local OVRO-LWA FITS
     """Sweep local OVRO-LWA dspec FITS for type II bursts + cross-match a local LASCO CME table.
 
-    The OVRO-LWA solar portal (`ovsa.njit.edu/lwadata-query`) is behind a Cloudflare bot challenge,
-    so the FITS must be fetched interactively into ``data_dir`` first (see scripts/typeii_real.py).
-    This runs `detect_typeii` over per-day burst windows and cross-matches detections to a CDAW
-    LASCO CME table (``data_dir/lasco_cme.csv`` with onset_hr/speed_kms/width_deg), reproducing the
-    fast-and-wide association on real events.
+    The daily dynamic spectra are on AWS Open Data (see `s3_dspec_url`); download the wanted days
+    into ``data_dir`` (each ~1.7 GB) plus a CDAW LASCO CME table (``data_dir/lasco_cme.csv`` with
+    onset_hr/speed_kms/width_deg), then this runs `detect_typeii` over per-day burst windows and
+    cross-matches detections to the CMEs.
     """
     import csv
 
@@ -486,9 +520,8 @@ def real_census(data_dir: str | Path) -> dict:  # pragma: no cover - needs local
         {k: float(v) for k, v in row.items()} for row in csv.DictReader(open(dd / "lasco_cme.csv"))
     ]
     events, det = [], []
-    for f in sorted(dd.glob("ovro-lwa.*dspec_I.fits")):
+    for f in sorted(dd.glob("*.fits")):
         ds = parse_lwa_dspec(f)
-        # scan the day in overlapping windows sized for a minutes-long type II
         r = detect_typeii(ds["data"], ds["freqs"], ds["times"])
         if r["detected"]:
             det.append(r)
@@ -496,7 +529,7 @@ def real_census(data_dir: str | Path) -> dict:  # pragma: no cover - needs local
     matched = [crossmatch_cme(r.get("burst_hr", 0.0), cme_list) for r in det]
     assoc = cme_association_fraction(matched)
     return {
-        "source": f"OVRO-LWA dspec, {len(events)} days",
+        "source": f"OVRO-LWA dspec (AWS Open Data), {len(events)} days",
         "is_real": True,
         "n_events": len(events),
         "n_typeii_detected": len(det),

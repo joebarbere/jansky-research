@@ -120,29 +120,46 @@ def test_detects_single_lane_and_marginal_snr():
     assert c["snr2"] < 0.9  # near-threshold is NOT perfectly recovered
 
 
-def test_parse_lwa_dspec_reads_fits(tmp_path):
+def test_parse_lwa_dspec_reads_real_4d_format(tmp_path):
     from astropy.io import fits
 
-    # a wiki-format dspec FITS: 2D spectrum + 1D freq (Hz, ascending) + 1D time HDUs
+    # the REAL AWS-Open-Data layout (confirmed on 20240514.fits): 4D primary array with FITS axes
+    # (time, freq, 1, stokes) -> numpy (stokes, 1, freq, time), freq from FREQMIN/FREQMAX (GHz)
     n_f, n_t = 30, 50
-    freqs_hz = np.linspace(13.4e6, 86.9e6, n_f)  # ascending Hz
-    times = np.arange(n_t) * 0.256
-    spec = np.random.default_rng(0).normal(0, 1, (n_f, n_t))
-    spec[15, :] += 20.0  # a bright channel to check orientation survives
-    p = tmp_path / "ovro-lwa.lev1_bmf_256ms_96kHz.2024-05-14.dspec_I.fits"
+    arr = np.random.default_rng(0).normal(0, 1, (2, 1, n_f, n_t))  # (stokes, 1, freq, time)
+    arr[0, 0, 15, :] += 20.0  # bright Stokes-I channel to check orientation survives
+    hdr = fits.Header({"FREQMIN": 0.0150, "FREQMAX": 0.0849, "BUNIT": "jy"})  # GHz
+    p = tmp_path / "20240514.fits"
+    fits.PrimaryHDU(arr, header=hdr).writeto(p)
+    d = t2.parse_lwa_dspec(p)
+    assert d["data"].shape == (n_f, n_t)  # Stokes I, (freq, time)
+    assert d["freqs"][0] > d["freqs"][-1]  # descending MHz (as solarbursts expects)
+    assert 14.5 < d["freqs"].min() < 15.5 and 84.0 < d["freqs"].max() < 86.0  # GHz->MHz
+    assert d["times"].size == n_t
+
+
+def test_parse_lwa_dspec_reads_table_fallback(tmp_path):
+    from astropy.io import fits
+
+    # the older documented table layout: 2D spectrum + 1D freq (Hz) + 1D time HDUs
+    n_f, n_t = 30, 50
+    spec = np.random.default_rng(1).normal(0, 1, (n_f, n_t))
     fits.HDUList(
         [
             fits.PrimaryHDU(),
             fits.ImageHDU(spec, name="DSPEC"),
-            fits.ImageHDU(freqs_hz, name="FREQ"),
-            fits.ImageHDU(times, name="TIME"),
+            fits.ImageHDU(np.linspace(13.4e6, 86.9e6, n_f), name="FREQ"),
+            fits.ImageHDU(np.arange(n_t) * 0.256, name="TIME"),
         ]
-    ).writeto(p)
-    d = t2.parse_lwa_dspec(p)
+    ).writeto(tmp_path / "d.fits")
+    d = t2.parse_lwa_dspec(tmp_path / "d.fits")
     assert d["data"].shape == (n_f, n_t)
-    assert d["freqs"][0] > d["freqs"][-1]  # descending MHz (as solarbursts expects)
-    assert 13.0 < d["freqs"].min() < 14.0 and 86.0 < d["freqs"].max() < 87.0  # Hz->MHz
-    assert d["times"].size == n_t
+    assert d["freqs"][0] > d["freqs"][-1] and 13.0 < d["freqs"].min() < 14.0  # Hz->MHz, descending
+
+
+def test_s3_dspec_url():
+    u = t2.s3_dspec_url("2024-05-14")
+    assert u == "https://ovro-lwa-solar.s3-us-west-2.amazonaws.com/spec_fits/2024/20240514.fits"
 
 
 def test_run_offline_completeness_purity_and_bias(tmp_path):

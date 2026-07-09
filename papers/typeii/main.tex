@@ -22,10 +22,10 @@ contaminants and narrowband RFI): the detector separates type II from type III a
 bursts, \tiiCompSnrthree\ at SNR~3, falling to \tiiCompSnrtwo\ near the detection threshold
 (SNR~2). A temporal cross-match to a CME catalogue recovers the injected fast-and-wide driver bias
 by construction, validating the matching wiring (not, on synthetic data, the association itself).
-\textbf{We report no real census.} The OVRO-LWA solar data portal is behind a bot challenge that a
-script cannot pass, so the FITS must be retrieved interactively; the detector, its calibrated
-completeness curve, and the reusable cross-match pipeline are the deliverable, ready to run on the
-archive once the data are in hand.
+\textbf{We report no real census yet}, but the data is not access-blocked: the OVRO-LWA dynamic
+spectra are on AWS Open Data (directly downloadable), and a multi-year census is a bulk-download
+follow-on rather than a code problem. The detector, its calibrated completeness curve, and the
+reusable cross-match pipeline are the deliverable, ready to run on the archive.
 \end{abstract}
 
 \keywords{Solar radio emission (1522) --- Solar coronal mass ejections (310) --- Solar radio
@@ -95,17 +95,20 @@ validates that the temporal match picks the correct CME among decoys (the matchi
 \emph{not} the physical association itself, which can only be reproduced on real events.
 
 \section{Status and outlook}
-\textbf{No real census is reported here, by necessity.} The OVRO-LWA solar data portal
-\citep{ovrolwa_data} serves the Level-1 dynamic-spectrum FITS through a web application behind a
-Cloudflare bot challenge, so the files cannot be fetched programmatically; a scripted multi-year
-census is blocked until the data are pulled interactively through the portal (the pipeline reads
-local FITS and is ready for exactly that). The \code{parse\_lwa\_dspec} reader is written to the
-archive's documented FITS layout and unit-tested on a format-faithful file, but has not been run on
-a real product, so the actual HDU layout should be confirmed on first contact. What we deliver is
-the method: a validated slow-drift$+$harmonic type II detector with a calibrated completeness curve
-and a CME cross-match, filling the type-II gap in the OVRO-LWA detector lineage and ready to run.
-The coverage-corrected occurrence-versus-cycle-phase census, which needs the multi-year event
-list, is deferred with the real leg.
+\textbf{No real census is reported here yet --- but the data is not access-blocked.} The OVRO-LWA
+solar dynamic spectra are published on AWS Open Data \citep{ovrolwa_data} (bucket
+\code{ovro-lwa-solar}, path \code{spec\_fits/<YYYY>/<YYYYMMDD>.fits}), directly downloadable with no
+login: the Cloudflare bot challenge on the query portal gates only the interactive UI, not the
+data. The daily files are large ($\sim$1.7~GB; a 4D I/V dynamic spectrum, $\sim$15--85~MHz,
+$\sim$0.26~s), so a multi-year census is a bulk-download and compute follow-on, not a code problem;
+the pipeline reads these FITS directly and is ready to run. We confirmed the real product's format
+on first contact --- a 4D primary array with axes (time, frequency, 1, Stokes) --- and
+\code{parse\_lwa\_dspec} handles it (with a fallback to the older documented table layout),
+unit-tested on both. What we deliver is the method: a validated slow-drift$+$harmonic type II
+detector with a calibrated completeness curve and a CME cross-match, filling the type-II gap in the
+OVRO-LWA detector lineage and ready to run on the archive. The coverage-corrected
+occurrence-versus-cycle-phase census, which needs the multi-year event list, is deferred with the
+real leg.
 
 \textit{Reproducibility.} \code{jansky\_research.typeii} (detector $+$ synthetic recover-a-known,
 core CI) $+$ \code{scripts/typeii\_real.py} (the interactive-download real driver); every synthetic

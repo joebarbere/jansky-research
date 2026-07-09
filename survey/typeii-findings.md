@@ -45,16 +45,24 @@ Mixed-difficulty census — 24 injected type II (strong+harmonic, single-lane, n
   temporal match picks the right CME among decoys, NOT an independent Gopalswamy reproduction
   (that needs real events).
 
-## Status: NO real census — data-access blocked (honest)
+## Status: no real census run yet — but the data is NOT access-blocked (AWS Open Data)
 
-**The OVRO-LWA solar portal (`ovsa.njit.edu/lwadata-query`) is a JS SPA behind a Cloudflare
-Turnstile bot challenge** — the FITS cannot be fetched by a script (I will not circumvent a CAPTCHA).
-So there is no real type II census here; the deliverable is the validated detector + method. The
-real leg (`scripts/typeii_real.py` + `typeii.real_census`) reads local FITS and is ready to run
-once the days are downloaded interactively through the portal. `parse_lwa_dspec` is written to the
-documented FITS layout and unit-tested on a format-faithful file but never run on a real product —
-confirm the HDU layout on first contact. The coverage-corrected occurrence-vs-cycle-phase piece
-(SILSO) is deferred with the real census (it needs the multi-year event list).
+**Corrected 2026-07-09.** Initially I thought the portal (`ovsa.njit.edu/lwadata-query`) was a hard
+block: it's a JS SPA behind a Cloudflare Turnstile bot challenge. But reading the app bundle
+revealed the actual data is on **AWS Open Data** — public bucket `ovro-lwa-solar`, path
+`spec_fits/<YYYY>/<YYYYMMDD>.fits`, directly downloadable with **no login and no CAPTCHA** (the
+Turnstile only gates the interactive query UI). Verified: the bucket lists and serves the FITS over
+plain HTTPS (`s3_dspec_url`).
+
+- The daily files are **large (~1.7 GB; a 4D I/V dynamic spectrum, ~15–85 MHz, ~0.26 s)**, so a
+  multi-year census is a bulk-download + compute follow-on — a bandwidth/compute cost, NOT an
+  access block.
+- **Real FITS format confirmed on first contact** (`20240514.fits`): a 4D PRIMARY array, axes
+  (time, freq, 1, Stokes), Jy, freq from FREQMIN/FREQMAX (GHz). `parse_lwa_dspec` was rewritten to
+  this real layout (with a fallback to the older table layout), unit-tested on both.
+- The deliverable remains the validated detector + method; the real census (and the SILSO
+  occurrence-vs-cycle-phase piece) is the bulk-download follow-on via `scripts/typeii_real.py`
+  (`--download YYYY-MM-DD` pulls straight from S3).
 
 ## GATE-2 (PASS with required fixes, all applied)
 
@@ -72,5 +80,5 @@ confirm the HDU layout on first contact. The coverage-corrected occurrence-vs-cy
 ## Reproduce
 
 Offline (detector + synthetic + tests): `uv run python -m jansky_research.typeii --offline --out .`
-Real (after interactive FITS download to data/typeii/ + a lasco_cme.csv):
-`uv run python scripts/typeii_real.py`
+Real: `uv run python scripts/typeii_real.py --download 2024-05-14` (pulls ~1.7 GB from AWS Open
+Data, no auth) + a `data/typeii/lasco_cme.csv`, then `uv run python scripts/typeii_real.py`.
