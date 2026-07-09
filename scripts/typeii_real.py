@@ -12,13 +12,15 @@ touches disk.
 Needs the ``typeii`` extra (fsspec + aiohttp) for the lazy cloud reads:  uv sync --extra typeii
 
 Usage:
-    uv run --extra typeii python scripts/typeii_real.py \
-        --dates 2024-05-14 2024-05-15 2024-05-16 \
-        --cme data/typeii/lasco_cme.csv
+    # an explicit day list:
+    uv run --extra typeii python scripts/typeii_real.py --dates 2024-05-14 2024-05-15
+    # OR every observing day in the archive over a date range (listed from the S3 bucket):
+    uv run --extra typeii python scripts/typeii_real.py --start 2024-04-01 --end 2026-07-09
 
-``--cme`` is a CDAW LASCO CME table with columns ``onset_hr,speed_kms,width_deg`` (hours on the
-same clock as the burst days). Writes results/typeii_metrics.json (is_real=True) + regenerates the
-paper macros.
+The CDAW LASCO CME catalogue, the SWPC/HEK GOES flare list, and the SILSO sunspot series are all
+fetched automatically for the date span. Writes results/typeii_metrics.json (is_real=True; the full
+plan product set: event list + CME + GOES association + occurrence vs cycle phase) + regenerates
+the paper macros.
 
 The detector and its synthetic recover-a-known (completeness-vs-SNR curve + the Gopalswamy
 fast-and-wide CME association wiring) are validated in core CI without any of this -- that is the
@@ -29,35 +31,65 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
-from jansky_research.typeii import _figure, _write_macros, real_census  # noqa: E402
+from jansky_research.typeii import S3_SPEC_FITS, _figure, _write_macros, real_census  # noqa: E402
+
+
+def list_observing_days(start: str, end: str) -> list[str]:
+    """Observing days (YYYY-MM-DD) present in the S3 bucket within [start, end], via the S3 list API."""
+    bucket = S3_SPEC_FITS.split("/spec_fits")[0]
+    days: list[str] = []
+    for year in range(int(start[:4]), int(end[:4]) + 1):
+        token = ""
+        while True:
+            u = f"{bucket}/?list-type=2&prefix=spec_fits/{year}/&max-keys=1000{token}"
+            xml = urllib.request.urlopen(u, timeout=60).read().decode("utf-8", "replace")
+            for k in re.findall(r"<Key>spec_fits/\d{4}/(\d{8})\.fits</Key>", xml):
+                iso = f"{k[:4]}-{k[4:6]}-{k[6:8]}"
+                if start <= iso <= end:
+                    days.append(iso)
+            nt = re.search(r"<NextContinuationToken>([^<]+)</NextContinuationToken>", xml)
+            if not nt:
+                break
+            token = "&continuation-token=" + urllib.parse.quote(nt.group(1))
+    return sorted(set(days))
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="OVRO-LWA type II streamed real census (plan 50)")
     ap.add_argument(
         "--dates",
-        nargs="+",
-        required=True,
+        nargs="*",
         metavar="YYYY-MM-DD",
-        help="days to stream from AWS Open Data (in memory, no disk)",
+        help="explicit days to stream from AWS Open Data (in memory, no disk)",
     )
-    ap.add_argument(
-        "--cme", required=True, help="CDAW LASCO CME CSV (onset_hr,speed_kms,width_deg)"
-    )
+    ap.add_argument("--start", help="census start YYYY-MM-DD (lists all archive days in range)")
+    ap.add_argument("--end", help="census end YYYY-MM-DD")
     args = ap.parse_args()
 
-    metrics = real_census(args.dates, args.cme)
+    if args.start and args.end:
+        dates = list_observing_days(args.start, args.end)
+        print(f"{len(dates)} observing days in {args.start}..{args.end}", flush=True)
+    elif args.dates:
+        dates = args.dates
+    else:
+        ap.error("give --dates ... OR --start/--end")
+
+    metrics = real_census(dates)  # CDAW CMEs + HEK flares + SILSO fetched automatically
     (REPO / "results").mkdir(exist_ok=True)
     (REPO / "results" / "typeii_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
     _figure(metrics, REPO / "papers" / "typeii" / "figures")
     _write_macros(metrics, REPO / "papers" / "typeii" / "generated" / "macros.tex")
-    print(json.dumps(metrics, indent=2))
+    m = {k: v for k, v in metrics.items() if k != "event_list"}
+    print(json.dumps(m, indent=2))
     return 0
 
 

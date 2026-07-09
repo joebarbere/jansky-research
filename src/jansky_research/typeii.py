@@ -53,6 +53,10 @@ __all__ = [
     "detect_typeii",
     "crossmatch_cme",
     "cme_association_fraction",
+    "parse_cme_html",
+    "parse_hek_flares",
+    "crossmatch_flare",
+    "occurrence_vs_phase",
     "parse_lwa_dspec",
     "s3_dspec_url",
     "sweep_day",
@@ -282,18 +286,18 @@ def detect_typeii(
 
 
 def crossmatch_cme(
-    burst_time_hr: float, cme_list: list[dict], *, window_hr: float = 1.0
+    burst_time_hr: float, cme_list: list[dict], *, window_hr: float = 2.0
 ) -> dict | None:
-    """Best-matching LASCO CME for a type II (onset within [-window, +0.25] hr of the burst).
+    """Nearest LASCO CME within +/- ``window_hr`` of the burst (in time), or None.
 
-    A CME-shock type II follows CME onset, so we match CMEs whose onset time (hours) precedes the
-    burst by up to ``window_hr`` (or trails by up to 15 min for timing slop). The gap
-    ``burst - onset`` is therefore POSITIVE for a real driver (onset first); we accept
-    ``-0.25 <= gap <= window_hr``. The physical driver is the CME whose onset most closely PRECEDES
-    the burst, so among candidates we return the one with the smallest |gap|. Returns the CME dict
-    (with ``speed_kms``, ``width_deg``) or None.
+    A metric type II and its driving CME are near-simultaneous but the catalogue times differ in
+    sign: the type II is emitted low in the corona (~1.5-3 Rsun) while CDAW logs the CME's FIRST C2
+    APPEARANCE (~2.5-6 Rsun), which trails the burst by ~30-90 min; other conventions put the
+    extrapolated onset before it. So we use a symmetric time window (default +/-2 h) and take the
+    nearest CME, robust to the offset direction. Returns the CME dict (``speed_kms``, ``width_deg``)
+    or None if none is within the window.
     """
-    cands = [c for c in cme_list if -0.25 <= (burst_time_hr - float(c["onset_hr"])) <= window_hr]
+    cands = [c for c in cme_list if abs(burst_time_hr - float(c["onset_hr"])) <= window_hr]
     if not cands:
         return None
     return min(cands, key=lambda c: abs(burst_time_hr - float(c["onset_hr"])))
@@ -322,6 +326,111 @@ def cme_association_fraction(matched_cmes: list[dict | None]) -> dict:
         ),
         "median_speed_kms": round(float(np.median(speeds)), 1),
     }
+
+
+EPOCH_ISO = "2024-01-01T00:00:00"  # common clock: all burst/CME/flare times in hours since here
+
+
+def _iso_to_hours(iso: str) -> float:
+    """ISO-8601 UTC timestamp -> hours since ``EPOCH_ISO`` (the common cross-match clock)."""
+    from datetime import datetime
+
+    s = iso.strip().replace("Z", "").split(".")[0]
+    fmt = "%Y-%m-%dT%H:%M:%S" if "T" in s else "%Y-%m-%d %H:%M:%S"
+    dt = datetime.strptime(s, fmt)
+    ep = datetime.strptime(EPOCH_ISO, "%Y-%m-%dT%H:%M:%S")
+    return (dt - ep).total_seconds() / 3600.0
+
+
+def parse_cme_html(html: str) -> list[dict]:
+    """Parse one CDAW SOHO/LASCO monthly CME-catalogue HTML page -> [{onset_hr, speed_kms, width_deg}].
+
+    Columns (CDAW UNIVERSAL_ver2): date, time [UT], central PA, angular width [deg], linear speed
+    [km/s], ... We strip tags and match ``DATE TIME (CPA|Halo) WIDTH SPEED``; rows with an
+    unmeasured speed (``----``) are skipped. Onset time -> hours on the ``EPOCH_ISO`` clock.
+    """
+    import re
+
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    out = []
+    for m in re.finditer(
+        r"(\d{4})/(\d{2})/(\d{2}) (\d{2}:\d{2}:\d{2}) (?:\d+|Halo) (\d+) (\d+)", text
+    ):
+        y, mo, d, tod, width, speed = m.groups()
+        out.append(
+            {
+                "onset_hr": _iso_to_hours(f"{y}-{mo}-{d}T{tod}"),
+                "width_deg": float(width),
+                "speed_kms": float(speed),
+            }
+        )
+    return out
+
+
+def parse_hek_flares(payload: dict) -> list[dict]:
+    """Parse a HEK flare-search JSON payload -> [{peak_hr, goes_class, goes_flux}].
+
+    HEK returns ``result`` rows with ``event_peaktime`` and ``fl_goescls`` (e.g. ``X1.7``); we keep
+    SWPC-sourced flares, convert the class letter+number to a log10 W/m^2 flux for magnitude cuts,
+    and the peak time to hours on the ``EPOCH_ISO`` clock.
+    """
+    band = {"A": -8.0, "B": -7.0, "C": -6.0, "M": -5.0, "X": -4.0}
+    out = []
+    for r in payload.get("result", []):
+        cls = (r.get("fl_goescls") or "").strip()
+        pk = r.get("event_peaktime")
+        if not cls or not pk or cls[0] not in band:
+            continue
+        # class letter sets the decade (X=1e-4 W/m^2), the trailing number the mantissa
+        try:
+            mant = float(cls[1:]) if len(cls) > 1 and float(cls[1:]) > 0 else 1.0
+        except ValueError:
+            mant = 1.0
+        flux = band[cls[0]] + float(np.log10(mant))
+        out.append(
+            {"peak_hr": _iso_to_hours(pk), "goes_class": cls, "goes_log_flux": round(flux, 2)}
+        )
+    return out
+
+
+def crossmatch_flare(
+    burst_hr: float, flare_list: list[dict], *, window_hr: float = 1.0
+) -> dict | None:
+    """Nearest GOES flare whose peak is within [-window, +0.25] hr of the burst (flare leads/accompanies)."""
+    cands = [f for f in flare_list if -0.25 <= (burst_hr - float(f["peak_hr"])) <= window_hr]
+    if not cands:
+        return None
+    return min(cands, key=lambda f: abs(burst_hr - float(f["peak_hr"])))
+
+
+def occurrence_vs_phase(
+    burst_hrs: list[float], observing_day_hrs: list[float], sunspot_by_month: dict
+) -> dict:
+    """Coverage-corrected monthly type II rate vs SILSO sunspot number (reuse `ecallisto_census`).
+
+    Bins detections and OBSERVING days by calendar month (both on the ``EPOCH_ISO`` clock),
+    forms rate = detections / observing-days (the `ecallisto_census` coverage correction), and
+    correlates it with the SILSO monthly mean sunspot number. With the ~2 yr baseline this is
+    indicative only (stated). ``sunspot_by_month`` maps ``"YYYY-MM"`` -> mean SN.
+    """
+    from datetime import datetime, timedelta
+
+    from .ecallisto_census import census_correlation, coverage_corrected_rate
+
+    ep = datetime.strptime(EPOCH_ISO, "%Y-%m-%dT%H:%M:%S")
+
+    def month_key(hr: float) -> str:
+        return (ep + timedelta(hours=hr)).strftime("%Y-%m")
+
+    months = sorted({month_key(h) for h in observing_day_hrs})
+    n_events = np.array([sum(month_key(b) == mk for b in burst_hrs) for mk in months], float)
+    coverage = np.array(
+        [sum(month_key(o) == mk for o in observing_day_hrs) for mk in months], float
+    )
+    rate = coverage_corrected_rate(n_events, coverage)
+    sn = np.array([sunspot_by_month.get(mk, np.nan) for mk in months], float)
+    corr = census_correlation(rate, sn)
+    return {"n_months": len(months), "months": months, **corr}
 
 
 def _synthetic_census(seed: int = 0) -> dict:
@@ -488,8 +597,9 @@ def sweep_day(
 
     A day-long dynamic spectrum holds many minutes-long candidate intervals; `detect_typeii` is a
     single-window classifier, so we scan overlapping ``window_s`` windows (step ``step_s``) and
-    return the type II detections, each tagged with its window-centre time in hours (``burst_hr``,
-    the handle the CME cross-match uses). Descending frequency is assumed (as from `stream_dspec`).
+    return the type II detections, each tagged with its window-centre time in SECONDS from the start
+    of the day (``t_center_s``); `real_census` adds the day's absolute offset for the cross-match.
+    Descending frequency is assumed (as from `stream_dspec`).
     """
     t = np.asarray(times, float)
     if t.size < 2:
@@ -501,7 +611,7 @@ def sweep_day(
         if m.sum() >= N_RIDGE_MIN:
             r = detect_typeii(data[:, m], freqs, t[m] - t[m][0])
             if r["detected"]:
-                r["burst_hr"] = (float(t[m].mean())) / 3600.0
+                r["t_center_s"] = float(t[m].mean())
                 out.append(r)
         t0 += step_s
     return out
@@ -604,34 +714,145 @@ def stream_dspec(
     freqs, times = _axes_from_header(hdr, spec.shape[0], spec.shape[1], factor=time_downsample)
     if freqs[0] < freqs[-1]:
         spec = spec[::-1]
-    return {"data": spec, "freqs": freqs, "times": times}
+    date_obs = str(hdr.get("DATE_OBS", f"{date}T00:00:00"))  # absolute obs start for cross-match
+    return {"data": spec, "freqs": freqs, "times": times, "date_obs": date_obs}
 
 
-def real_census(dates, cme_csv):  # noqa: ANN001  # pragma: no cover - streams from AWS Open Data
-    """Stream each day from AWS Open Data, sweep it for type II bursts, cross-match LASCO CMEs.
+def fetch_lasco_cme(dates: list[str]) -> list[dict]:  # pragma: no cover - network (CDAW HTML)
+    """CDAW SOHO/LASCO CMEs for the months spanning ``dates`` -> [{onset_hr, speed_kms, width_deg}]."""
+    import urllib.request
 
-    ``dates`` is a list of ``YYYY-MM-DD`` strings; ``cme_csv`` is a CDAW LASCO CME table with
-    ``onset_hr,speed_kms,width_deg`` columns. Each day is streamed into memory (`stream_dspec`),
-    swept (`sweep_day`), and freed before the next --- no ~1.7 GB file ever touches disk. Type II
-    detections are matched to the nearest preceding CME and the fast-and-wide fractions reported.
+    out: list[dict] = []
+    for ym in sorted({d[:7] for d in dates}):  # YYYY-MM
+        y, mo = ym.split("-")
+        url = f"https://cdaw.gsfc.nasa.gov/CME_list/UNIVERSAL_ver2/{y}_{mo}/univ{y}_{mo}.html"
+        try:
+            html = urllib.request.urlopen(url, timeout=60).read().decode("utf-8", "replace")
+            out += parse_cme_html(html)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  CDAW {ym} unavailable: {exc!r}", flush=True)
+    return out
+
+
+def fetch_goes_flares(dates: list[str]) -> list[dict]:  # pragma: no cover - network (HEK)
+    """SWPC GOES flares over the span of ``dates`` from the HEK -> [{peak_hr, goes_class, ...}]."""
+    import json
+    import urllib.parse
+    import urllib.request
+
+    lo, hi = min(dates), max(dates)
+    q = {
+        "cosec": "2",
+        "cmd": "search",
+        "type": "column",
+        "event_type": "fl",
+        "event_starttime": f"{lo}T00:00:00",
+        "event_endtime": f"{hi}T23:59:59",
+        "event_coordsys": "helioprojective",
+        "x1": "-1200",
+        "x2": "1200",
+        "y1": "-1200",
+        "y2": "1200",
+        "result_limit": "5000",
+        "return": "fl_goescls,event_peaktime,frm_name",
+        "param0": "FRM_NAME",
+        "op0": "=",
+        "value0": "SWPC",
+    }
+    url = "https://www.lmsal.com/hek/her?" + urllib.parse.urlencode(q)
+    try:
+        payload = json.loads(
+            urllib.request.urlopen(url, timeout=120).read().decode("utf-8", "replace")
+        )
+        return parse_hek_flares(payload)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  HEK flares unavailable: {exc!r}", flush=True)
+        return []
+
+
+def fetch_sunspots_by_month() -> dict:  # pragma: no cover - network (SILSO)
+    """SILSO monthly mean sunspot number -> {"YYYY-MM": SN} (the cycle-phase axis)."""
+    import urllib.request
+
+    from .ecallisto_census import SILSO_URL
+
+    txt = urllib.request.urlopen(SILSO_URL, timeout=60).read().decode("utf-8", "replace")
+    out = {}
+    for line in txt.splitlines():
+        parts = line.replace(";", " ").split()
+        if len(parts) >= 4:
+            try:
+                out[f"{int(parts[0]):04d}-{int(parts[1]):02d}"] = float(parts[3])
+            except ValueError:
+                continue
+    return out
+
+
+def real_census(dates, cme_list=None, flare_list=None, sunspots=None):  # noqa: ANN001  # pragma: no cover
+    """Stream each day, sweep for type II bursts, cross-match LASCO CMEs + GOES flares, occurrence.
+
+    ``dates`` is ``YYYY-MM-DD`` strings. The catalogues are fetched if not supplied (CDAW CMEs, HEK
+    GOES flares, SILSO sunspots). Each day is streamed into memory (`stream_dspec`), swept
+    (`sweep_day`), and freed before the next --- no ~1.7 GB file touches disk. Detections carry an
+    absolute time (day ``DATE_OBS`` + window centre), matched to the nearest preceding CME and
+    flare; the coverage-corrected monthly rate is correlated with the sunspot number. Emits the full
+    plan product set (event list + CME + GOES association + occurrence vs cycle phase).
     """
-    import csv
+    cme_list = fetch_lasco_cme(dates) if cme_list is None else cme_list
+    flare_list = fetch_goes_flares(dates) if flare_list is None else flare_list
+    sunspots = fetch_sunspots_by_month() if sunspots is None else sunspots
 
-    cme_list = [{k: float(v) for k, v in row.items()} for row in csv.DictReader(open(cme_csv))]
-    all_det = []
+    all_det: list[dict] = []
+    observing_day_hrs: list[float] = []
+    n_failed = 0
     for date in dates:
-        ds = stream_dspec(date)  # streamed, in memory
-        all_det.extend(sweep_day(ds["data"], ds["freqs"], ds["times"]))
-        del ds  # free the day before streaming the next
-    matched = [crossmatch_cme(r.get("burst_hr", 0.0), cme_list) for r in all_det]
-    assoc = cme_association_fraction(matched)
+        try:
+            ds = stream_dspec(date)  # streamed, in memory
+            day_hr = _iso_to_hours(ds["date_obs"])
+            observing_day_hrs.append(day_hr)
+            for r in sweep_day(ds["data"], ds["freqs"], ds["times"]):
+                r["burst_hr"] = day_hr + r["t_center_s"] / 3600.0
+                all_det.append(r)
+            del ds  # free the day before streaming the next
+        except Exception as exc:  # noqa: BLE001 - one bad/corrupt day must not abort a long run
+            n_failed += 1
+            print(f"  {date}: FAILED {type(exc).__name__}: {exc}", flush=True)
+            continue
+        print(f"  {date}: {len(all_det)} type II so far", flush=True)
+
+    matched_cme = [crossmatch_cme(r["burst_hr"], cme_list) for r in all_det]
+    matched_fl = [crossmatch_flare(r["burst_hr"], flare_list) for r in all_det]
+    assoc = cme_association_fraction(matched_cme)
+    occ = occurrence_vs_phase([r["burst_hr"] for r in all_det], observing_day_hrs, sunspots)
+    event_list = [
+        {
+            "burst_hr": round(r["burst_hr"], 3),
+            "drift_mhz_s": r["drift_mhz_s"],
+            "duration_s": r["duration_s"],
+            "harmonic_score": r["harmonic_score"],
+            "cme": matched_cme[i],
+            "goes_class": matched_fl[i]["goes_class"] if matched_fl[i] else None,
+        }
+        for i, r in enumerate(all_det)
+    ]
+    n_fl = sum(1 for f in matched_fl if f is not None)
     return {
         "source": f"OVRO-LWA dspec (AWS Open Data, streamed), {len(dates)} days",
         "is_real": True,
         "n_events": len(dates),
+        "n_days_processed": len(observing_day_hrs),
+        "n_days_failed": n_failed,
         "n_typeii_detected": len(all_det),
         "completeness": None,
         "purity": None,
+        "n_flare_associated": n_fl,
+        "frac_flare_associated": round(n_fl / max(len(all_det), 1), 3),
+        "occ_n_months": occ["n_months"],
+        "occ_pearson_r": round(occ["pearson_r"], 3) if np.isfinite(occ["pearson_r"]) else None,
+        "occ_spearman_rho": round(occ["spearman_rho"], 3)
+        if np.isfinite(occ["spearman_rho"])
+        else None,
+        "event_list": event_list,
         **{f"assoc_{k}": v for k, v in assoc.items()},
     }
 
@@ -708,6 +929,10 @@ def _write_macros(m: dict, path: str | Path) -> None:
             ("FracFastWide", "assoc_frac_fast_and_wide"),
             ("MedSpeed", "assoc_median_speed_kms"),
             ("NMatched", "assoc_n_matched"),
+            ("FracFlare", "frac_flare_associated"),
+            ("OccMonths", "occ_n_months"),
+            ("OccPearson", "occ_pearson_r"),
+            ("OccSpearman", "occ_spearman_rho"),
         ):
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
     p = Path(path)
