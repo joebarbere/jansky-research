@@ -86,3 +86,5 @@ The reviewer caught a real methodological error and two framing gaps:
 Offline (synthetic + tests): `uv run python -m jansky_research.skr --offline --out .`
 Real: `uv run python scripts/skr_real.py --year 2017 --doy-min 100 --doy-max 258` (downloads
 KEY60S days to data/skr/), then `uv run python -m jansky_research.skr --out .` (parse + Horizons).
+
+> Cross-slice note: the 1/r² sensitivity null used here was audited repo-wide (2026-07-09) — see [sensitivity-null-audit.md](sensitivity-null-audit.md). No other merged slice needs the fix.
