@@ -16,7 +16,8 @@ synthetic month.
 | quantity | value |
 |---|---|
 | 15-s bins / active | 1,209,600 / 44,294 (3.7%) |
-| **duty cycle by range quartile** | **12.9% → 1.5% → 0.20% → 0.07% — proximity dominates by ~180×** |
+| **duty cycle by range quartile (raw)** | **12.9% → 1.5% → 0.20% → 0.07% — raw near/far ~196×** |
+| **duty cycle by range quartile (1/r² sensitivity-corrected)** | **0.25% → 0.27% → 0.20% → 0.11% — corrected near/far only 2.2×** |
 | Io-box contrast, aggregate | **1.12** |
 | per-month contrasts (7 months) | 1.56, **2.22**, 0.87, 0.35, 0.93, 0.70, 0.84 — median 0.87, both sides of 1 |
 | distance-resolved contrast (near→far) | 1.24 / 0.36 / 1.37 / 0.71 (far quartiles activity-starved) |
@@ -36,11 +37,37 @@ Lesson recorded: **a synthetic round-trip cannot validate frame conventions** (i
 recovered in the same wrong frame). A beaming-model fit over the full v02 archive is the
 definitive follow-on.
 
+## Follow-up (2026-07-08): 1/r² sensitivity null model — the ~180× is almost all sensitivity
+
+Prompted by the sibling `skr` slice (which found its SKR proximity trend was dominated by 1/r²
+detection sensitivity), the same null model was retrofitted here. `read_waves_cdf` now also emits a
+per-bin 90th-percentile channel SNR (`snr_p90`, which reproduces the `active_frac ≥ 0.1` detection
+up to linear-interpolation ties at the 10% boundary — marginally stricter there), and
+`sensitivity_corrected_active` distance-corrects it (SNR → SNR·(r/rref)²) and re-thresholds. Its
+validity for the null rests on `snr_p90` scaling *linearly* under the correction (a self-consistent
+p90 detector applied identically at every range), not on identity with `active_frac`; the raw
+near/far on the same p90 detector is reported alongside the corrected one so the collapse isolates
+the distance correction. Re-running the 7-month real leg:
+
+- **Raw near/far 196×** (`active_frac` detector; 330× on the same p90 detector as the corrected
+  column; 39→111 Rj quartile medians) **→ sensitivity-corrected near/far 2.2×.** The 330→2.2
+  same-detector collapse isolates the distance correction (not a detector swap). Corrected
+  quartiles 0.25/0.27/0.20/0.11% are **non-monotonic** (q2>q1) — no clean intrinsic trend.
+- So the celebrated "proximity dominates ~180×" is a **threshold-amplified 1/r² visibility
+  effect**, NOT a ~180× intrinsic occurrence rise: the DAM SNR distribution falls steeply across
+  the background+5σ floor, so the modest ~8× flux change over the quartile range spread is
+  amplified into the ~196× occurrence swing. Correcting for it leaves only ~2.2×.
+- The residual 2.2× is **an upper bound, not intrinsic**: Juno's polar orbit couples range to
+  magnetic latitude and hence CMI beaming geometry (same confound the `skr` slice flagged).
+- The offline synthetic path and all pre-existing raw numbers are byte-unchanged — the null is
+  purely additive. Test: `test_sensitivity_corrected_active_flattens_pure_1r2_trend`.
+
 ## Caveats
 
 - One orbit; uneven (CML, phase) exposure (per-cell exposure carried; <3-visit cells masked).
 - 10%-of-band activity criterion is one choice (suppresses narrowband RFI, dilutes narrowband DAM).
-- No Io/non-Io separation; no beaming/proximity modelling — demonstrated, not modelled.
+- The 1/r² null divides out inverse-square sensitivity but not the co-varying beaming geometry —
+  the corrected 2.2× residual is an upper bound on intrinsic occurrence-vs-range, not a measurement.
 - Units are V²m⁻²Hz⁻¹ (occurrence needs only detection vs the shipped background).
 - Reproduce: download a month of CDFs to `data/junodam/` (URL pattern in module), then
   `uv run python -m jansky_research.junodam --out .` (Horizons access needed for CML).
