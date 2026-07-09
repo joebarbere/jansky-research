@@ -37,6 +37,7 @@ J2000_JD = 2451545.0
 IO_L0, IO_RATE = 106.07719, 203.488955790
 DAM_BAND_MHZ = (3.0, 40.5)
 DATA_DIR = Path("data/junodam")
+RJ_AU = 71492.0 / 1.495978707e8  # Jupiter equatorial radius in AU (for range display)
 CDF_URL = (
     "https://maser.obspm.fr/repository/juno/waves/data/l3a/data/cdf/"
     "{y}/{m:02d}/jno_wav_cdr_lesia_{y}{m:02d}{d:02d}_v01.cdf"
@@ -98,14 +99,40 @@ def read_waves_cdf(path: str | Path, *, bin_s: int = 15) -> dict:  # pragma: no 
     n = (data.shape[0] // bin_s) * bin_s
     d = data[:n].reshape(-1, bin_s, band.sum())
     med = np.median(d, axis=1)
-    active_frac = (med > bg + 5.0 * sig).mean(axis=1)
+    floor = bg + 5.0 * sig
+    active_frac = (med > floor).mean(axis=1)
+    # per-bin 90th-percentile channel SNR vs the 5-sigma floor: snr_p90 >= 1 APPROXIMATES
+    # active_frac >= 0.1 (>=10% of DAM channels above floor) -- exact except for linear-interpolation
+    # ties at the 10% boundary, where p90 is marginally stricter. Its value for the null is that it
+    # scales LINEARLY under the 1/r^2 distance correction (percentile(c*r,90) = c*percentile(r,90)),
+    # so the corrected detector is a self-consistent p90 rule applied identically at every range.
+    snr_p90 = np.percentile(med / floor, 90, axis=1)
     jd_bin = jd[:n].reshape(-1, bin_s).mean(axis=1)
-    return {"jd": jd_bin, "active_frac": active_frac}
+    return {"jd": jd_bin, "active_frac": active_frac, "snr_p90": snr_p90}
 
 
 def detect_active(active_frac: np.ndarray, *, min_frac: float = 0.1) -> np.ndarray:
     """A time bin is 'DAM active' when >= ``min_frac`` of DAM-band channels exceed background."""
     return np.asarray(active_frac, float) >= min_frac
+
+
+def sensitivity_corrected_active(
+    snr_p90: np.ndarray, dist_au: np.ndarray, *, ref_au: float | None = None
+) -> np.ndarray:
+    r"""The 1/r^2 sensitivity null: distance-correct each bin's DAM SNR, then re-detect.
+
+    DAM power falls as :math:`1/r^2` with Juno--Jupiter range, so near perijove the *same*
+    intrinsic emission clears the background+5$\sigma$ floor more often --- a pure sensitivity
+    effect, not intrinsic occurrence. Correcting each bin's 90th-percentile SNR to a reference
+    range (:math:`S\to S\,(r/r_\mathrm{ref})^2`, default ``ref_au`` = median range) and
+    re-thresholding at :math:`\ge 1` is the null: if the proximity duty-cycle trend is only
+    sensitivity, the corrected occurrence is flat with range. Any residual near/far ratio after
+    correction bounds the intrinsic$+$beaming part. Mirrors the `skr` slice's null model.
+    """
+    s = np.asarray(snr_p90, float)
+    d = np.asarray(dist_au, float)
+    ref = float(np.nanmedian(d)) if ref_au is None else ref_au
+    return (s * (d / ref) ** 2) >= 1.0
 
 
 def occurrence_map(
@@ -208,10 +235,11 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         months = [f.name.split("_")[4][:6] for f in files]
         jd = np.concatenate([p["jd"] for p in parts])
         af = np.concatenate([p["active_frac"] for p in parts])
+        snr_p90 = np.concatenate([p["snr_p90"] for p in parts])
         # fetch Horizons per contiguous data segment (a >2-day gap starts a new segment),
         # so multi-month runs stay inside per-query epoch limits
         order = np.argsort(jd)
-        jd, af = jd[order], af[order]
+        jd, af, snr_p90 = jd[order], af[order], snr_p90[order]
         starts = [0] + list(np.where(np.diff(jd) > 2.0)[0] + 1) + [jd.size]
         cml = np.empty_like(jd)
         dist = np.empty_like(jd)
@@ -222,6 +250,8 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             dist[a:b] = np.interp(jd[a:b], eph["jd"], eph["delta_au"])
         pha = io_phase(jd, cml)
         active = detect_active(af)
+        active_p90 = snr_p90 >= 1.0  # the p90 surrogate detector (uncorrected baseline)
+        active_corr = sensitivity_corrected_active(snr_p90, dist)  # 1/r^2 null, SAME p90 detector
         source = f"Juno/Waves L3a v01+v02, {len(files)} days"
         expected = float("nan")
         # the vantage dimension: Juno--Jupiter range dominates detection (proximity, not clock)
@@ -237,20 +267,33 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         }
         # distance-RESOLVED Io contrast (the paper's scoped test): quartiles of Juno range
         qs = np.quantile(dist, [0.25, 0.5, 0.75])
-        for k, msk in enumerate(
-            [
-                dist <= qs[0],
-                (dist > qs[0]) & (dist <= qs[1]),
-                (dist > qs[1]) & (dist <= qs[2]),
-                dist > qs[2],
-            ],
-            start=1,
-        ):
+        qmasks = [
+            dist <= qs[0],
+            (dist > qs[0]) & (dist <= qs[1]),
+            (dist > qs[1]) & (dist <= qs[2]),
+            dist > qs[2],
+        ]
+        for k, msk in enumerate(qmasks, start=1):
             cq = io_region_contrast(occurrence_map(cml[msk], pha[msk], active[msk]))
             extra[f"io_contrast_q{k}"] = (
                 round(cq["contrast"], 2) if np.isfinite(cq["contrast"]) else None
             )
             extra[f"activity_q{k}_pct"] = round(100 * float(active[msk].mean()), 2)
+            # the 1/r^2 sensitivity null: same range bins, distance-corrected detection
+            extra[f"activity_q{k}_corr_pct"] = round(100 * float(active_corr[msk].mean()), 3)
+        # raw vs sensitivity-corrected near/far ratio: how much of the ~180x proximity trend
+        # survives once the 1/r^2 detection advantage of perijove is divided out. near_far_raw is
+        # the original active_frac detector; near_far_raw_p90 is the SAME p90 detector as the
+        # corrected column (so raw_p90 -> corrected isolates the distance correction, not a
+        # detector swap); the two raw baselines agree closely.
+        near_raw, far_raw = float(active[qmasks[0]].mean()), float(active[qmasks[3]].mean())
+        near_p, far_p = float(active_p90[qmasks[0]].mean()), float(active_p90[qmasks[3]].mean())
+        near_c, far_c = float(active_corr[qmasks[0]].mean()), float(active_corr[qmasks[3]].mean())
+        extra["near_far_raw"] = round(near_raw / far_raw, 1) if far_raw > 0 else None
+        extra["near_far_raw_p90"] = round(near_p / far_p, 1) if far_p > 0 else None
+        extra["near_far_corrected"] = round(near_c / far_c, 1) if far_c > 0 else None
+        extra["range_near_rj"] = round(float(np.median(dist[qmasks[0]])) / RJ_AU, 1)
+        extra["range_far_rj"] = round(float(np.median(dist[qmasks[3]])) / RJ_AU, 1)
         # per-month Io contrast: the robustness spread across orbital configurations
         pm = []
         for ym in sorted(set(months)):
@@ -344,6 +387,15 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\jdCqD}}{{{_fmt('io_contrast_q4')}}}",
         rf"\newcommand{{\jdAqA}}{{{_fmt('activity_q1_pct')}}}",
         rf"\newcommand{{\jdAqD}}{{{_fmt('activity_q4_pct')}}}",
+        rf"\newcommand{{\jdAqAcorr}}{{{_fmt('activity_q1_corr_pct')}}}",
+        rf"\newcommand{{\jdAqDcorr}}{{{_fmt('activity_q4_corr_pct')}}}",
+        rf"\newcommand{{\jdNearFarRaw}}{{{_fmt('near_far_raw')}}}",
+        rf"\newcommand{{\jdNearFarRawPninety}}{{{_fmt('near_far_raw_p90')}}}",
+        rf"\newcommand{{\jdNearFarCorr}}{{{_fmt('near_far_corrected')}}}",
+        rf"\newcommand{{\jdAqBcorr}}{{{_fmt('activity_q2_corr_pct')}}}",
+        rf"\newcommand{{\jdAqCcorr}}{{{_fmt('activity_q3_corr_pct')}}}",
+        rf"\newcommand{{\jdRangeNear}}{{{_fmt('range_near_rj')}}}",
+        rf"\newcommand{{\jdRangeFar}}{{{_fmt('range_far_rj')}}}",
         rf"\newcommand{{\jdNmonths}}{{{_fmt('n_months')}}}",
         rf"\newcommand{{\jdCmMed}}{{{_fmt('io_contrast_month_median')}}}",
         rf"\newcommand{{\jdCmMin}}{{{_fmt('io_contrast_month_min')}}}",

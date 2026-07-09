@@ -27,6 +27,26 @@ def test_detect_active_threshold():
     assert jdm.detect_active(af).tolist() == [False, False, True, True]
 
 
+def test_sensitivity_corrected_active_flattens_pure_1r2_trend():
+    # a range-INDEPENDENT intrinsic emitter seen through 1/r^2: raw detection rises near-in
+    # (snr clears the floor more often at small range), but distance-correction removes it
+    rng = np.random.default_rng(0)
+    n = 4000
+    dist = np.linspace(0.02, 0.6, n)  # AU, perijove-ish to far
+    rng.shuffle(dist)
+    ref = np.median(dist)
+    intrinsic_snr = 10.0 ** rng.normal(-0.3, 0.15, n)  # range-independent, straddles 1
+    snr_obs = intrinsic_snr * (ref / dist) ** 2  # observed: brighter (higher snr) when closer
+    raw_active = snr_obs >= 1.0
+    corr_active = jdm.sensitivity_corrected_active(snr_obs, dist)
+    near = dist <= np.quantile(dist, 0.25)
+    far = dist > np.quantile(dist, 0.75)
+    raw_ratio = raw_active[near].mean() / max(raw_active[far].mean(), 1e-9)
+    corr_ratio = corr_active[near].mean() / max(corr_active[far].mean(), 1e-9)
+    assert raw_ratio > 3.0  # 1/r^2 sensitivity manufactures a strong proximity trend
+    assert corr_ratio < 1.5  # the null collapses it to ~flat (intrinsic is range-independent)
+
+
 def test_occurrence_map_masks_low_exposure():
     cml = np.array([10.0] * 5 + [200.0])
     pha = np.array([10.0] * 5 + [200.0])
