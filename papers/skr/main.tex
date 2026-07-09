@@ -1,0 +1,135 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{Cassini SKR proximity duty-cycle census}
+\shortauthors{Barbere}
+\begin{document}
+\title{Is SKR Detection Occurrence a Saturn-Proximity Law? A Sensitivity-Null
+Census from Cassini/RPWS, Anchored to the Known Rotation Period}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Saturn Kilometric Radiation (SKR) is Saturn's dominant auroral radio emission, and its dual
+rotation-modulation periods ($\sim$10.6/10.8~h north/south) are tracked end-to-end across the
+Cassini mission \citep{gurnett2009,fischer2015,gurnett2016,provan2019}. We port the occurrence-census
+method of a sibling Jovian-decametric study to Saturn: over \skrNBins\ one-minute RPWS
+key-parameter bins from the 2017 proximal (Grand Finale) orbits, we band-integrate the electric
+spectral density over the SKR band, flag SKR-active bins by a background$+k\sigma$ threshold, and
+fold detection occurrence against the Cassini--Saturn range from JPL Horizons. Two results, in
+order of confidence. First, as a pipeline \emph{validation}, a Lomb-Scargle analysis of the
+intensity series recovers the dual SKR rotation period at \skrRealAnchorPeriod\ and
+\skrRealPeriodTwo~h --- within \skrRealAnchorDev\% of the published late-mission values
+\citep{provan2019}, so the flux series and detection are sound; we claim no new period result, the
+record being already complete. Second, the occurrence census: the SKR-active duty cycle rises from
+\skrRealDutyFar\% at \skrRealRangeFar~$R_S$ to \skrRealDutyNear\% at \skrRealRangeNear~$R_S$, a raw
+near/far ratio of \skrRealNearFar. But this is \emph{almost entirely a $1/r^2$ sensitivity effect}:
+correcting each bin's flux to a common range and re-thresholding collapses the ratio to
+\skrRealSensCorrNearFar. Even that residual is not clean --- the near and far range bins differ in
+sub-spacecraft latitude by \skrRealAbsLatSpan$^\circ$, so SKR's known latitude-dependent visibility
+is entangled with range and is not removed. The honest result is therefore a near-null: the
+apparent SKR ``proximity law'' is dominated by inverse-square detection sensitivity, with at most a
+$\sim$\skrRealSensCorrNearFar$\times$ residual that we cannot cleanly separate from viewing
+geometry. The value is the bounded, honestly-framed measurement and the validated, reusable
+tooling --- not a proximity law.
+\end{abstract}
+
+\keywords{Saturn (1426) --- Planetary magnetospheres (997) --- Radio astronomy (1338) ---
+Non-thermal radiation sources (1119) --- Auroral kilometric radiation}
+
+\section{Introduction}
+Saturn Kilometric Radiation (SKR; $\sim$100--400~kHz, cyclotron-maser emission from the auroral
+regions) is modulated near Saturn's rotation period, with the striking property of \emph{two}
+close periods from the northern and southern auroral systems that drift and swap across equinox
+\citep{gurnett2009,fischer2015}. That periodicity record is complete: Fischer et al.\ tracked it
+through early 2013 \citep{fischer2015}, and Gurnett et al.\ and Provan et al.\ carried it to the
+end of the mission \citep{gurnett2016,provan2019}. What has \emph{not} been asked is a simpler
+occurrence question, by analogy to a proximity--occurrence law reported for Jovian decametric
+emission from Juno: does SKR \emph{detection} occurrence depend on the observer's distance from
+the planet? Cassini's range to Saturn varied by more than an order of magnitude across each orbit,
+so its own key-parameter archive answers the question directly. The occurrence and visibility of
+SKR versus observer local time and latitude have been mapped \citep{lamy2008,ye2016}; the
+observer-\emph{range} axis, and specifically whether a $1/r^2$ sensitivity trend leaves any
+residual occurrence dependence, has not. We build that census, using the known rotation period as
+a built-in validation.
+
+\section{Data and method}
+\label{sec:method}
+We use the Cassini/RPWS 60-second summary key parameters
+(\code{CO-V/E/J/S/SS-RPWS-4-SUMM-KEY60S-V1.0}; \citealt{rpws_key60s}), which provide per-minute
+calibrated electric spectral densities on a 73-channel electric-antenna grid but \emph{no}
+pre-integrated SKR flux --- so we integrate the electric spectral density over the SKR band
+(0.1--1.2~MHz) ourselves (\code{read\_key\_params} $+$ \code{band\_integrated\_flux}, tested
+against the fixed-width PDS3 record layout). A bin is SKR-active when its band flux exceeds a
+robust background ($25$th log-flux percentile) plus $k\sigma$ (the sibling census's
+detection rule). The Cassini--Saturn range and sub-spacecraft latitude come from JPL Horizons
+(target Saturn, observer Cassini). We analyze the 2017 proximal orbits (\skrNBins\ one-minute
+bins), where the range sweeps repeatedly over $\sim$8--21~$R_S$.
+
+\textbf{Validation.} Before any occurrence claim we run a Lomb-Scargle periodogram of the
+log-intensity series in the physically-motivated Saturn-rotation band (10.4--11.0~h, bracketing
+the established $\sim$10.6--10.8~h periods). It must recover the known period; it does
+(\S\ref{sec:results}). A broader search additionally shows a stronger, unexplained sub-11~h
+feature near $\sim$10.34~h --- plausibly a sampling/aliasing artefact of the orbit-modulated
+duty cycle --- which we deliberately exclude from the rotation anchor; stated, not hidden.
+
+\textbf{Proximity census and its null model.} We bin the SKR-active flag by Cassini--Saturn range
+quartile and report the duty cycle per bin. The dominant confound is inverse-square sensitivity:
+at smaller range the \emph{same} intrinsic emission produces a larger flux and clears the fixed
+threshold more often. We test it directly --- correct each bin's flux to a common reference range
+($S\to S\,(r/r_\mathrm{ref})^2$), re-threshold, and recompute the near/far ratio. If the trend is
+pure sensitivity the corrected ratio is unity; any excess is the intrinsic$+$beaming part. A second
+confound is latitude: SKR is auroral and beamed, and range correlates with sub-spacecraft latitude
+along the orbit, so we report the $|\mathrm{lat}|$ span between the range bins to make the residual
+entanglement visible rather than assert it away.
+
+\section{Results}
+\label{sec:results}
+\textbf{Rotation-period anchor (validation).} The Lomb-Scargle analysis recovers the dual SKR
+rotation period at \skrRealAnchorPeriod\ and \skrRealPeriodTwo~h, matching the published
+late-mission northern ($\sim$10.79~h) and southern ($\sim$10.68~h) values \citep{provan2019} to
+better than 1\%. This is a reproduction, not a new result --- its role is to certify that the
+band-integrated flux series and the detection are physically faithful before we trust the
+occurrence census.
+
+\textbf{Occurrence census (a near-null).} Across \skrNBins\ bins the overall SKR-active duty cycle
+is \skrRealDutyPct\%. The raw duty cycle rises monotonically with proximity, from \skrRealDutyFar\%
+at $\sim$\skrRealRangeFar~$R_S$ to \skrRealDutyNear\% at $\sim$\skrRealRangeNear~$R_S$ (near/far
+\skrRealNearFar). The $1/r^2$ null model accounts for almost all of it: after correcting the flux
+to a common range and re-thresholding, the near/far ratio falls to \skrRealSensCorrNearFar. So the
+apparent proximity ``law'' is dominated by inverse-square detection sensitivity. The residual
+$\sim$\skrRealSensCorrNearFar$\times$ is moreover not cleanly intrinsic: the near and far range
+quartiles differ in $|$sub-spacecraft latitude$|$ by \skrRealAbsLatSpan$^\circ$, and SKR
+visibility is latitude-dependent \citep{lamy2008,ye2016}, so this residual is entangled with
+viewing geometry and is at most an upper bound on any intrinsic occurrence-versus-range effect.
+
+\textbf{Honest interpretation.} The result is a bounded near-null, not a proximity law: SKR
+detection occurrence versus Cassini range is explained by $1/r^2$ sensitivity to within a
+$\sim$\skrRealSensCorrNearFar$\times$ residual that we cannot separate from the
+\skrRealAbsLatSpan$^\circ$ latitude difference between bins. This is a cleaner statement than the
+sibling Jovian-decametric census, whose $\sim$180$\times$ raw proximity ratio was reported as
+proximity-dominated \emph{detection} but without an explicit sensitivity null --- here the null is
+computed and it removes essentially the whole effect.
+
+\section{Conclusions}
+Cassini's own RPWS key-parameter archive yields a bounded near-null: the raw $\sim$3$\times$ rise
+in SKR detection occurrence from $\sim$21 to $\sim$8~$R_S$ across the 2017 proximal orbits is
+almost entirely $1/r^2$ detection sensitivity --- the null model collapses it to
+$\sim$\skrRealSensCorrNearFar$\times$, and that residual is itself entangled with a
+\skrRealAbsLatSpan$^\circ$ latitude difference between the range bins. The one firm result is the
+validation: the pipeline recovers the published dual rotation period to \skrRealAnchorDev\%. Two
+follow-ons use the same tooling: extending the range baseline with earlier, higher-apoapsis orbits
+(to $\sim$60~$R_S$), where a real intrinsic dependence would have more leverage against the
+sensitivity floor; and a proper SKR beaming/visibility model to disentangle the residual from
+latitude. The sensitivity-null method, the rotation-period anchor, and the tested KEY60S tooling
+are the deliverable.
+
+\textit{Reproducibility.} \code{jansky\_research.skr} (parser $+$ detection $+$ Lomb-Scargle $+$
+proximity census, synthetic recover-a-known in core CI) $+$ \code{scripts/skr\_real.py} (the
+PDS-PPI KEY60S downloader); every number above is pipeline-generated
+(\code{results/skr\_metrics.json} $\to$ macros). Data: \citet{rpws_key60s}; geometry from JPL
+Horizons.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}

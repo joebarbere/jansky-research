@@ -1,8 +1,26 @@
 # 60 — Cassini SKR: post-2013 dual-period census + Grand-Finale proximity law
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — pin the pre-2008 PDS
-volume ID for CO-V/E/J/S/SS-RPWS-4-SUMM-KEY60S-V1.0 before any code
+Status: ✅ done — see survey/skr-findings.md. **Result:** validation PASS (Lomb-Scargle recovers
+the published dual rotation period 10.68+10.80 h to 0.05%); the SKR occurrence-vs-range "proximity
+law" is a **bounded near-null** — raw near/far 3.33× collapses to 1.39× under the 1/r² sensitivity
+null, and that residual is entangled with a 28° between-bin latitude difference. GATE-2 PASS w/
+fixes (added the sensitivity null model + latitude-span reporting after the reviewer showed the
+original within-bin latitude weighting was a non-sequitur; cited Lamy+2008/Ye+2016; softened the
+10.34 h feature). Below is the original plan.
+
+**Novelty PIVOT (honest-framing):** the SKR
+dual-period tracking through 2017 is ALREADY published (Gurnett+2016 JGR 2012–2015; Provan+2019
+JGR 2016–end-of-mission, N~10.79/S~10.68 h) — so "extend the dual-period census through 2017" is
+NOT novel. The unclaimed angle is the **SKR occurrence/duty-cycle vs Saturn-distance proximity
+law** (the `junodam` port); the dual-period re-derivation is kept as pipeline VALIDATION only
+(anchor to Fischer+2015 Icarus 254 72, cite Gurnett+2016/Provan+2019 as the established record).
+Data pinned: `CO-V/E/J/S/SS-RPWS-4-SUMM-KEY60S-V1.0`, single volume `CORPWS_9002` (whole mission,
+monthly dirs `T<YYYY><M>XX`, per-day `RPWS_KEY__<YYYY><DDD>_<n>.TAB`+`.LBL`, fixed-length ASCII
+ROW_BYTES 1175). NO pre-integrated SKR flux — parse per-channel ELECTRIC_SPECTRAL_DENSITIES
+(73 ch, V²/m²/Hz, start byte 24) + FREQUENCY row (115 ch, HZ) and integrate the SKR band
+(~100–400 kHz core, to ~1200 kHz) ourselves. N/S convention is epoch-dependent (pre-equinox
+S~10.8/N~10.6; late-mission N~10.79/S~10.68 — state the epoch). Horizons: TARGET=699, CENTER=
+500@-82, quantities 14 (sub-lat/lon) + 20 (range). SED/lightning fence (Fischer+2025) clear.
 
 ## Context
 
