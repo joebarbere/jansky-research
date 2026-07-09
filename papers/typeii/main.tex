@@ -1,0 +1,117 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A type II burst detector for OVRO-LWA}
+\shortauthors{Barbere}
+\begin{document}
+\title{A Slow-Drift, Harmonic-Aware Type II Solar Radio Burst Detector for OVRO-LWA:
+Method and Synthetic Validation}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Type II solar radio bursts trace CME-driven coronal shocks by their slow frequency drift, and the
+published OVRO-LWA real-time burst detector \citep{ovrolwa_detector} handles only the fast type III
+beam bursts --- so the type II detector on this archive is an open gap. We build one: a slow-drift
+ridge tracker with a fundamental--harmonic discriminator, distinguishing type II from type III by
+three physical signatures (drift rate $\lesssim$1~MHz/s vs tens--hundreds; duration of minutes vs
+seconds; a fundamental$+$harmonic band pair at ratio $\sim$2). We validate it on a synthetic
+census of mixed difficulty (strong, single-lane, and near-threshold-SNR type IIs among type III
+contaminants and narrowband RFI): the detector separates type II from type III and RFI at purity
+\tiiPurity, with a completeness that is honestly SNR-dependent --- \tiiCompSnrfour\ for strong
+bursts, \tiiCompSnrthree\ at SNR~3, falling to \tiiCompSnrtwo\ near the detection threshold
+(SNR~2). A temporal cross-match to a CME catalogue recovers the injected fast-and-wide driver bias
+by construction, validating the matching wiring (not, on synthetic data, the association itself).
+\textbf{We report no real census.} The OVRO-LWA solar data portal is behind a bot challenge that a
+script cannot pass, so the FITS must be retrieved interactively; the detector, its calibrated
+completeness curve, and the reusable cross-match pipeline are the deliverable, ready to run on the
+archive once the data are in hand.
+\end{abstract}
+
+\keywords{Solar radio emission (1522) --- Solar coronal mass ejections (310) --- Solar radio
+bursts (1494) --- Astronomy data analysis (1858)}
+
+\section{Introduction}
+Metric and decametric type II bursts are the radio signature of a shock climbing through the solar
+corona: as the shock rises into thinner plasma the local plasma frequency falls, and the emission
+drifts slowly from high to low frequency \citep{nelson1985,mann1995}. They are the diagnostic of
+CME-driven shocks in the radio, and their statistics --- occurrence, drift, band-splitting, and
+the CME populations that drive them --- are the science. The Owens Valley Long Wavelength Array
+(OVRO-LWA) now records solar dynamic spectra continuously over 13.4--86.9~MHz, and a real-time
+burst detector has been published \citep{ovrolwa_detector} --- but it identifies only type III
+bursts (fast electron-beam emission), the easy, short-lived case a detector trained on synthetic
+type III can catch. The slow-drift type II is not covered. Metric type II censuses elsewhere are a
+different instrument and cycle (RSTN, Cycle 24; \citealt{lawrance2024}) or small-N case studies, so
+a systematic type II detector for the OVRO-LWA archive is unclaimed. We build and validate that
+detector.
+
+\section{Method}
+\label{sec:method}
+\textbf{Discriminators.} A type II differs from a type III in three testable ways, each of which
+the detector measures on a background-subtracted dynamic spectrum: (i) a \emph{slow} frequency
+drift --- we track the drifting band's peak frequency per time column and fit a robust
+(Theil--Sen) drift rate, classifying type II only for $|df/dt|$ between 0.01 and 2~MHz/s (the last
+a guard band above the physical $\sim$1, in the empty gap below type III's tens--hundreds); (ii) a
+\emph{minutes}-long duration ($\ge$90~s, versus type III seconds); and (iii) a \emph{coherent}
+ridge --- the frequency--time correlation must exceed 0.55, which rejects the two false positives a
+bare slope admits: scattered noise/RFI peaks (low correlation) and a horizontal RFI line
+(near-zero drift). A \emph{harmonic score} --- the fraction of ridge points with co-emission at
+twice (or half) their frequency --- is reported as a purity indicator but not required, since
+single-lane type IIs exist. Narrowband RFI is masked by a channel-variance outlier test (a
+persistent-RFI channel inflates its own scatter far above a channel a drifting burst only crosses
+briefly). The synthetic type II reuses the same coronal-density drift model as the repository's
+type III slice \citep{newkirk1961}, driven by a slow CME shock rather than a fast beam; the
+detector measures generic drift/duration/coherence and does not invert that model, so the
+validation is a genuine test of the discriminators, not a circular one.
+
+\textbf{CME cross-match.} A shock-driven type II follows CME onset, so each detection is matched to
+the CME whose onset most closely precedes it (within a $\sim$1-hr window; \citealt{yashiro2004}).
+We then report the fraction of matched CMEs that are fast ($\ge$900~km/s) and wide ($\ge$60\arcdeg),
+the established type II driver bias \citep{gopalswamy2005}.
+
+\section{Synthetic validation}
+\label{sec:results}
+We run the detector on a mixed synthetic census --- \tiiSynNTypeII\ recovered type II bursts of
+varied difficulty (strong$+$harmonic, single-lane, and near-threshold SNR), among type III
+contaminants and narrowband-RFI spectra. It separates the classes at purity \tiiPurity\ (no type
+III or RFI is misclassified as type II), and its completeness is, honestly, SNR-dependent rather
+than a single saturated number:
+\begin{center}
+\begin{tabular}{lcccc}
+\hline
+injected SNR & 2 & 2.5 & 3 & 4 \\
+completeness & \tiiCompSnrtwo & \tiiCompSnrtwofive & \tiiCompSnrthree & \tiiCompSnrfour \\
+\hline
+\end{tabular}
+\end{center}
+Strong bursts are recovered completely; near the threshold the detector genuinely misses a
+fraction, as it must. This curve --- not a headline ``100\%'' --- is the honest characterization of
+what the detector will and will not catch on real data.
+
+The CME cross-match, on this synthetic set, recovers the injected fast-and-wide driver bias
+(\tiiSynFracFast\ fast, \tiiSynFracWide\ wide, median driver speed \tiiSynMedSpeed~km/s). We stress
+that these fractions \emph{echo the injected CME distribution by construction}: the synthetic test
+validates that the temporal match picks the correct CME among decoys (the matching \emph{wiring}),
+\emph{not} the physical association itself, which can only be reproduced on real events.
+
+\section{Status and outlook}
+\textbf{No real census is reported here, by necessity.} The OVRO-LWA solar data portal
+\citep{ovrolwa_data} serves the Level-1 dynamic-spectrum FITS through a web application behind a
+Cloudflare bot challenge, so the files cannot be fetched programmatically; a scripted multi-year
+census is blocked until the data are pulled interactively through the portal (the pipeline reads
+local FITS and is ready for exactly that). The \code{parse\_lwa\_dspec} reader is written to the
+archive's documented FITS layout and unit-tested on a format-faithful file, but has not been run on
+a real product, so the actual HDU layout should be confirmed on first contact. What we deliver is
+the method: a validated slow-drift$+$harmonic type II detector with a calibrated completeness curve
+and a CME cross-match, filling the type-II gap in the OVRO-LWA detector lineage and ready to run.
+The coverage-corrected occurrence-versus-cycle-phase census, which needs the multi-year event
+list, is deferred with the real leg.
+
+\textit{Reproducibility.} \code{jansky\_research.typeii} (detector $+$ synthetic recover-a-known,
+core CI) $+$ \code{scripts/typeii\_real.py} (the interactive-download real driver); every synthetic
+number above is pipeline-generated (\code{results/typeii\_metrics.json} $\to$ macros). Drift model
+reused from the \code{solarbursts} slice.
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+\end{document}

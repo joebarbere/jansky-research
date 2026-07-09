@@ -57,6 +57,7 @@ Twenty-six slices plus a synthesis, honestly tallied:
 | RM structure functions (SPICE-RACS DR1) | `jansky_research.rmstructure` | ✅/➖ noise-debiased SF per \|b\| bin; high-\|b\| plateau is an **upper bound** (intrinsic-scatter-dominated); disc–halo contrast awaits the public DR2 file |
 | Jovian DAM occurrence census (Juno/Waves) | `jansky_research.junodam` | ✅/➖ 7-month census: the raw ~196× range-quartile proximity trend is **a threshold-amplified 1/r² sensitivity effect — the sensitivity-corrected near/far is only 2.2×** (null model added 2026-07, mirroring `skr`); Earth-canonical Io boxes do NOT coherently organise orbital-vantage occurrence (per-month median 0.87); GATE-2 caught the Io-phase convention blocker (disclosed) |
 | Cassini SKR proximity census (RPWS KEY60S) | `jansky_research.skr` | ✅/➖ ports the junodam census to Saturn: recovers the published dual rotation period **10.68+10.80 h to 0.05%** (validation); the raw 3.3× proximity duty-cycle trend is **a bounded near-null** — the 1/r² sensitivity null collapses it to ~1.4×, still entangled with a 28° latitude difference (honest; not a proximity law) |
+| OVRO-LWA type II burst detector (F13) | `jansky_research.typeii` | ✅/➖ fills the type-II gap in the OVRO-LWA detector lineage (published detector is type-III-only): a slow-drift+harmonic detector, purity 1.0 + an **honest SNR-completeness curve** (1.0→0.33 from SNR 4→2), CME cross-match wiring validated; **no real census — portal is Cloudflare-Turnstile-gated** (detector+method shipped, ready to run) |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `jansky_research.rmdipole` | ✅/➖ RM sky **isotropic at dipole order in its core**: the significant power dipole is carried entirely by the top-1% \|residual\| tail (clip → p 0.001→0.93); no apex within 80° of the CMB; real-footprint injection recovered (honest null) |
 | Uniform Cat-2 repeater timing census (CHIME/FRB) | `jansky_research.frbwait` | ✅/➖ first one-statistic census of all 83 repeaters: **anchor 20180916B re-found at 16.33 d** (107 cycles, p=0.001, duty 0.21); median k=0.83, 3 clustered; the 2 other p≤0.01 peaks have ≤5 cycles — labelled epoch degeneracies, **no new period claims** (honest) |
 | Lensed-repeater search in Cat 2 (CHIME/FRB) | `jansky_research.frblens` | ✅/➖ first catalogue-level fixed-delay search: **0/33 detections → lensed fraction < 0.091** (95%, injection-scoped); documents the day-scramble false-positive mode the real data exposed (honest methods lesson) |
@@ -126,6 +127,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) |
 | LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions |
 | Cassini SKR proximity census | `skr/` | rotation-period anchor (0.05%) + 1/r² sensitivity-null bounding of the SKR occurrence-vs-range trend to a ~1.4× near-null |
+| OVRO-LWA type II burst detector | `typeii/` | slow-drift+harmonic type II detector + synthetic completeness curve (real OVRO-LWA census pending; portal Turnstile-gated) |
 | RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate |
 | Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) |
@@ -228,7 +230,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

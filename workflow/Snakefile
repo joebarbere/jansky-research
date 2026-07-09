@@ -45,6 +45,7 @@ SLICES = {
     "svsbi": ("svsbi", "--offline"),
     "lptv": ("lptv", "--offline"),
     "skr": ("skr", "--offline"),
+    "typeii": ("typeii", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
     "frbwait": ("frbwait", "--offline"),
