@@ -81,7 +81,16 @@ def ecallisto_ingest():
         out = OUT / "results" / "ecallisto_catalog"
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{date}.csv"
-        cols = ["date", "station", "is_burst", "n_channels", "f_lo_mhz", "f_hi_mhz", "drift_mhz_s", "r2"]
+        cols = [
+            "date",
+            "station",
+            "is_burst",
+            "n_channels",
+            "f_lo_mhz",
+            "f_hi_mhz",
+            "drift_mhz_s",
+            "r2",
+        ]
         with path.open("w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
@@ -92,7 +101,9 @@ def ecallisto_ingest():
         with epath.open("w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=["t_peak_s", "n_stations", "median_drift_mhz_s"])
             w.writeheader()
-            w.writerows({k: e[k] for k in ("t_peak_s", "n_stations", "median_drift_mhz_s")} for e in events)
+            w.writerows(
+                {k: e[k] for k in ("t_peak_s", "n_stations", "median_drift_mhz_s")} for e in events
+            )
         n_burst = sum(1 for r in rows if r.get("is_burst"))
         return f"{date}: {len(events)} confirmed events from {n_burst}/{len(rows)} candidates -> {path}"
 

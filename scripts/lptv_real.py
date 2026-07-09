@@ -98,7 +98,10 @@ def main() -> int:
 
     t0 = time.time()
     for it, tgt in enumerate(targets):
-        print(f"[{it + 1}/{len(targets)}] {tgt['name']} (P={tgt['period_s'] / 60:.0f} min)", flush=True)
+        print(
+            f"[{it + 1}/{len(targets)}] {tgt['name']} (P={tgt['period_s'] / 60:.0f} min)",
+            flush=True,
+        )
         try:
             table = obscore_products(tap, tgt["ra_deg"], tgt["dec_deg"])
             groups = complete_iv_groups(table)

@@ -561,8 +561,12 @@ def _write_macros(m: dict, path: str | Path) -> None:
     ]
     curve = m.get("completeness_vs_snr") or {}
     # LaTeX control sequences are letters-only -> spell out the SNR values
-    for snr, tag in (("snr2", "Snrtwo"), ("snr2.5", "Snrtwofive"), ("snr3", "Snrthree"),
-                     ("snr4", "Snrfour")):
+    for snr, tag in (
+        ("snr2", "Snrtwo"),
+        ("snr2.5", "Snrtwofive"),
+        ("snr3", "Snrthree"),
+        ("snr4", "Snrfour"),
+    ):
         v = curve.get(snr)
         lines.append(rf"\newcommand{{\tiiComp{tag}}}{{{'--' if v is None else v}}}")
     for ns in ("tiiSyn", "tiiReal"):

@@ -55,20 +55,50 @@ def _apply_macros(s: str, macros: dict[str, str]) -> str:
 # Common LaTeX macros -> plain-text/unicode, so the auto-extracted abstract stays readable
 # (arXiv stores the abstract as near-plain text). Applied before the generic macro strip.
 _SYMBOLS = {
-    r"\approx": "~", r"\simeq": "~", r"\sim": "~", r"\pm": "+/-", r"\mp": "-/+",
-    r"\times": "x", r"\cdot": ".", r"\propto": "~prop~", r"\equiv": "=",
-    r"\leq": "<=", r"\geq": ">=", r"\ll": "<<", r"\gg": ">>",
-    r"\lesssim": "<~", r"\gtrsim": ">~", r"\ell": "l", r"\odot": "sun",
-    r"\alpha": "alpha", r"\beta": "beta", r"\gamma": "gamma", r"\delta": "delta",
-    r"\mu": "mu", r"\nu": "nu", r"\sigma": "sigma", r"\chi": "chi", r"\phi": "phi",
-    r"\arcdeg": " deg", r"\degree": " deg", r"\arcsec": "arcsec", r"\arcmin": "arcmin",
-    r"\sin": "sin ", r"\cos": "cos ", r"\tan": "tan ", r"\log": "log ", r"\ln": "ln ",
-    r"\bmod": " mod ", r"\textbackslash": "\\",
+    r"\approx": "~",
+    r"\simeq": "~",
+    r"\sim": "~",
+    r"\pm": "+/-",
+    r"\mp": "-/+",
+    r"\times": "x",
+    r"\cdot": ".",
+    r"\propto": "~prop~",
+    r"\equiv": "=",
+    r"\leq": "<=",
+    r"\geq": ">=",
+    r"\ll": "<<",
+    r"\gg": ">>",
+    r"\lesssim": "<~",
+    r"\gtrsim": ">~",
+    r"\ell": "l",
+    r"\odot": "sun",
+    r"\alpha": "alpha",
+    r"\beta": "beta",
+    r"\gamma": "gamma",
+    r"\delta": "delta",
+    r"\mu": "mu",
+    r"\nu": "nu",
+    r"\sigma": "sigma",
+    r"\chi": "chi",
+    r"\phi": "phi",
+    r"\arcdeg": " deg",
+    r"\degree": " deg",
+    r"\arcsec": "arcsec",
+    r"\arcmin": "arcmin",
+    r"\sin": "sin ",
+    r"\cos": "cos ",
+    r"\tan": "tan ",
+    r"\log": "log ",
+    r"\ln": "ln ",
+    r"\bmod": " mod ",
+    r"\textbackslash": "\\",
 }
 
 
 def _latex_to_text(s: str) -> str:
-    s = re.sub(r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s)
+    s = re.sub(
+        r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s
+    )
     s = re.sub(r"\\cite[tp]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
     s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
     # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
@@ -109,7 +139,9 @@ def collect(paper: Path, main: Path) -> tuple[list[Path], list[str]]:
     if bbl.exists():
         files.append(bbl)
     else:
-        warn.append("no .bbl found — compile with bibtex and ship the .bbl (arXiv may not run your .bst)")
+        warn.append(
+            "no .bbl found — compile with bibtex and ship the .bbl (arXiv may not run your .bst)"
+        )
     for bib in re.findall(r"\\bibliography\{([^}]+)\}", text):
         f = paper / (bib + ".bib")
         if f.exists():
@@ -165,7 +197,7 @@ def main() -> int:
         f"""# arXiv submission metadata — fill every TODO, then upload at https://arxiv.org/submit
 title: {title!r}
 authors:        # full names + affiliations, in order (an AI/LLM is NOT an eligible author)
-{chr(10).join('  - ' + repr(x) for x in authors) or '  - TODO'}
+{chr(10).join("  - " + repr(x) for x in authors) or "  - TODO"}
 abstract: |
   {abstract}
 primary_category: TODO   # e.g. astro-ph.IM | astro-ph.GA | astro-ph.HE | astro-ph.CO
@@ -200,7 +232,7 @@ orcid: {orcid}              # set on the arXiv account/profile too
         "4. Preview & submit (new submitters may need endorsement in the category).",
     ]
     (out / "CHECKLIST.md").write_text("\n".join(lines) + "\n")
-    print(f"wrote {tar}, {out/'metadata.yaml'}, {out/'CHECKLIST.md'}")
+    print(f"wrote {tar}, {out / 'metadata.yaml'}, {out / 'CHECKLIST.md'}")
     print(f"  {len(files)} files | {len(errs)} errors | {len(warns)} warnings")
     return 1 if errs else 0
 
