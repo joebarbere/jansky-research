@@ -1,0 +1,206 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A 15-year megaconstellation RFI trend in the e-CALLISTO archive}
+\shortauthors{Barbere}
+\begin{document}
+\title{e-CALLISTO as an Accidental 15-Year RFI Observatory: A Narrowband
+Unintended-Emission Trend Across the Megaconstellation Era}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The e-CALLISTO network of low-cost solar radio spectrometers \citep{benz2009} has recorded
+45--870~MHz dynamic spectra worldwide since 2002, making it an unintended long-baseline record of
+the radio-frequency-interference (RFI) environment. The only published RFI-trend study on the
+archive \citep{perez2020} is a two-epoch (2012 vs.\ 2019) campaign finding a $\sim$2$\times$
+interference rise, and it stops in 2019 --- the year Starlink deployment scaled. We mine the
+\emph{continuous} archive across the megaconstellation era. From the open FITS record we sample one
+representative spectrum per station-month over 2012--2026 at \rfRealNStations\ configuration-stable
+stations and reduce each to a burst-immune occupancy metric (a per-channel time median, so a
+transient solar burst or satellite pass does not move it). Because e-CALLISTO log-power drifts with
+uncalibrated station gain --- a common-mode systematic that would fake a trend --- our primary
+metric is a \emph{self-normalizing} one: the excess level at the intrinsic narrowband Starlink
+unintended-emission (UEM) lines (125/135/150/175~MHz; \citealt{divruno2023}) over their immediately
+adjacent channels, which cancels common-mode station gain and, unlike a fixed FM control, survives
+the per-station RFI-avoidance notches that leave many e-CALLISTO instruments not observing the FM
+band at all. We attribute the trend to the public Starlink on-orbit count \citep{planet4589}.
+\textbf{The result is a systematics-limited null with one intriguing single-station rise.} Across
+\rfRealNMonths\ usable station-months, the two stations that sample UEM lines \emph{disagree in
+sign}: HUMAIN's line excess (\rfRealHUMAINLines~MHz) rises steeply and significantly
+($\rfRealHUMAINSlope$ per year, $p=\rfRealHUMAINP$, correlating with the Starlink count at
+$r=\rfRealHUMAINStarCorr$), while ALMATY's (\rfRealALMATYLines~MHz) falls significantly
+($\rfRealALMATYSlope$ per year, $p=\rfRealALMATYP$). A genuine \emph{global} megaconstellation
+signal should raise every station's UEM lines together, so the sign disagreement (\rfRealNRising\
+rising, \rfRealNFalling\ falling; \code{coherent\_rise}=\rfRealCoherent) indicates per-station and
+local-RFI effects dominate over any common Starlink signal, and the weakly positive pooled slope
+(\rfRealLineExcessSlope\ per year, pooled Starlink correlation only $r=\rfRealCorr$) is a
+sample-size artifact of whichever station dominates. We therefore claim no Starlink attribution.
+The validated burst-immune metric, the notch-robust self-normalizing line test, the
+pipeline-generated cross-station coherence verdict, and the honest per-station systematics
+accounting --- including HUMAIN as a flagged candidate for targeted follow-up --- are the
+contribution.
+\end{abstract}
+
+\keywords{Radio frequency interference (2043) --- Solar radio emission (1522) --- Artificial
+satellites (68) --- Astronomy data analysis (1858)}
+
+\section{Introduction}
+Large low-Earth-orbit satellite constellations radiate unintended electromagnetic emission (UEM)
+that falls inside protected and scientifically used radio bands. Dedicated-instrument campaigns
+have detected Starlink UEM directly: LOFAR sees broadband emission between 110 and 188~MHz plus
+narrowband features \citep{divruno2023}, and the second-generation satellites are brighter still
+\citep{bassa2024}. These are targeted observations with calibrated interferometers. What has not
+been examined is whether the \emph{archival} record of a distributed, uncalibrated spectrograph
+network already carries the constellation-growth signal --- a question of spectrum management as
+much as astronomy, and one the e-CALLISTO archive is uniquely positioned to answer because it spans
+the entire deployment era with the same simple receivers.
+
+The only RFI-trend precedent on this archive \citep{perez2020} compares two epochs, 2012 and 2019,
+at Spanish sites and reports a $\sim$2$\times$ rise in interference occupancy across the band --- but
+it ends in 2019, the year the first operational Starlink batches launched. The 2012--2026
+e-CALLISTO record is therefore an unexamined 15-year RFI observatory covering the megaconstellation
+ramp, and extending the two-epoch result into a continuous trend, attributed to the public
+constellation count, is unclaimed. We do that here, with the honest caveat stated up front: the
+archive can ask whether a \emph{post-2019, UEM-band-specific} rise tracks Starlink growth, but it
+cannot by itself prove causation, because general terrestrial RFI grows over the same period.
+
+\section{Method}
+\label{sec:method}
+\textbf{The systematics problem.} e-CALLISTO values are uncalibrated digital log-power. Two effects
+would manufacture or mask a trend: (i) \emph{station gain drift} --- receiver and antenna changes
+move the whole 45--870~MHz spectrum up or down over years; and (ii) \emph{solar bursts} ---
+broadband transients that raise all frequencies for minutes. Both are \emph{common-mode}: they move
+the band together. Our metrics are built to cancel both.
+
+\textbf{Burst immunity.} For a band we compute, per channel, the \emph{time median} over the
+15-minute sweep --- the persistent occupied level --- and take the median of those channel floors
+as the band occupancy. A solar burst or satellite pass occupies a small fraction of the sweep, so
+it does not move a time median; the metric reads the persistent RFI floor, not transients. We
+verify on synthetic stacks that turning bursts on in up to 90\% of months does not change the
+recovered trend (\S\ref{sec:synth}).
+
+\textbf{Gain cancellation, and why the control is not FM.} The natural gain-cancelling metric is a
+\emph{differential}: the UEM-band occupancy minus that of a fixed-transmitter control band at the
+same station, so a common-mode gain drift subtracts out. The cleanest such control is the FM
+broadcast band (88--108~MHz), a strong stable terrestrial transmitter. On real e-CALLISTO data,
+however, this fails at the archive's best UEM-band station: HUMAIN (focus code~59) \emph{notches out
+the FM band entirely} --- a hardware gap from 84 to 112~MHz with zero sampled channels --- and
+notches other sub-bands too. e-CALLISTO operators configure station-specific RFI-avoidance notches,
+so a fixed FM control is not universally observed. We therefore make the differential's control
+\emph{station-adaptive} (falling back to a sampled clean band below or above the UEM window), and
+promote to primary a metric that needs no external control at all.
+
+\textbf{Primary metric: the narrowband line-vs-adjacent excess.} \citet{divruno2023} identify
+narrowband Starlink UEM features \emph{intrinsic} to the satellites at 125, 135, 150 and 175~MHz (a
+fifth feature at 143.05~MHz is reflected GRAVES space-surveillance radar, not intrinsic, and we
+exclude it). A genuine intrinsic UEM line sits \emph{above} the channels immediately around it,
+whereas station gain or broadband terrestrial RFI raise a line and its neighbourhood together. For
+each sampled UEM line we take the level within $\pm$1~MHz minus the level in the flanking channels
+and average. This is self-normalizing \emph{within} the UEM band: it cancels \emph{common-mode}
+station gain by construction and is robust to the per-station notches (a line simply drops out if
+its region is not sampled). It does \emph{not} cancel differential local contamination of a line's
+flanking channels --- which, as \S\ref{sec:real} shows, is exactly the residual systematic that
+limits the study. Configuration stability is enforced by requiring a station to keep the \emph{same}
+set of sampled UEM lines across its retained months; months with a different sampled grid are
+dropped so the trend is not an instrument-reconfiguration artifact. This screen keys on the sampled
+line-set only, not on level continuity, so within-set receiver reconfigurations can survive it --- a
+limitation the per-station results make visible rather than hide.
+
+\textbf{Attribution.} We regress the metric against decimal year (robust Theil--Sen slope with a
+Kendall-$\tau$ significance, so a single anomalous month cannot swing it) and correlate it with the
+public cumulative on-orbit Starlink count \citep{planet4589}, which is zero before 2019.4 and rises
+monotonically thereafter --- no Space-Track credentials required. As a \emph{qualitative} pre-vs-post
+baseline check we also compare the raw UEM occupancy in 2012--2013 against 2018--2019, in the spirit
+of the two-epoch \citet{perez2020} campaign --- though this is the gain-contaminated raw level (not
+their occupancy statistic) at a different station, so it is a consistency note, not a reproduction.
+
+\section{Synthetic recover-a-known}
+\label{sec:synth}
+We build \rfSynNMonths\ synthetic monthly spectra with a known UEM-band level rise \emph{and}
+narrowband line excesses at the intrinsic UEM frequencies, both shaped like the Starlink count, plus
+per-month common-mode gain drift and broadband solar bursts in a configurable fraction of months.
+Both metrics recover the injected trend: the secondary differential at \rfSynSlope\ per year
+($p=\rfSynTrendP$, $r=\rfSynCorr$ with the injected Starlink shape), and the \emph{primary}
+line-vs-adjacent excess at \rfSynLineExcessSlope\ per year ($r=\rfSynLineCorr$) --- so the metric
+that headlines the real analysis is validated end-to-end, not only the cross-check. A null control
+built from two bands both outside the UEM window does \emph{not} trend (slope \rfSynCtrlSlope\ per
+year), confirming the metric does not manufacture a trend from gain drift. Burst immunity is
+explicit: the recovered slope is unchanged whether 0\% or 90\% of months carry a broadband burst.
+These validations run offline in continuous integration.
+
+\section{The real archive: 2012--2026}
+\label{sec:real}
+We sampled one representative spectrum per station-month over 2012--2026 at three e-CALLISTO
+stations spanning the era (\rfRealNMonths\ station-months after config-stability screening),
+reducing each to the burst-immune line-excess and station-adaptive differential. The three stations
+sample the UEM band very differently, which is itself the story (Table~\ref{tab:stations}). Only
+two of the three observe UEM lines with a stable core-plus-flank grid; GLASGOW samples no UEM line
+region stably and drops out of the line analysis entirely.
+
+\begin{deluxetable}{lccccc}
+\tablecaption{Per-station UEM-line-excess trend, 2012--2026\label{tab:stations}}
+\tablehead{\colhead{Station} & \colhead{UEM lines (MHz)} & \colhead{months} &
+\colhead{slope/yr} & \colhead{$p$} & \colhead{$r$(Starlink)}}
+\startdata
+HUMAIN  & \rfRealHUMAINLines  & \rfRealHUMAINNMonths  & $\rfRealHUMAINSlope$  & $\rfRealHUMAINP$  & $\rfRealHUMAINStarCorr$ \\
+ALMATY  & \rfRealALMATYLines  & \rfRealALMATYNMonths  & $\rfRealALMATYSlope$  & $\rfRealALMATYP$  & $\rfRealALMATYStarCorr$ \\
+GLASGOW & \rfRealGLASGOWLines & \rfRealGLASGOWNMonths & \nodata               & \nodata         & \nodata \\
+\enddata
+\tablecomments{The line-excess is the level at the sampled Starlink UEM lines over their adjacent
+channels, robustly trended (Theil--Sen slope, Kendall-$\tau$ $p$) and correlated with the public
+Starlink on-orbit count. GLASGOW samples no UEM line with a stable core-plus-flank grid.}
+\end{deluxetable}
+
+\textbf{The two line-sampling stations disagree in sign.} HUMAIN's line excess (lines
+\rfRealHUMAINLines~MHz) rises strongly and significantly ($\rfRealHUMAINSlope$ per year,
+$p=\rfRealHUMAINP$), positively correlated with the Starlink count ($r=\rfRealHUMAINStarCorr$), and
+its raw UEM occupancy rose by \rfRealHUMAINPerez\ log-units between 2012--2013 and 2018--2019 ---
+qualitatively consistent with the pre-Starlink rise that \citet{perez2020} found in their two-epoch
+campaign, though this is the gain-contaminated raw level at a different station, so we read it as a
+consistency note rather than a reproduction. Taken alone, HUMAIN looks like a textbook
+megaconstellation UEM signal. But ALMATY --- overhead the same global constellation --- trends the
+\emph{opposite} way: its line excess (lines \rfRealALMATYLines~MHz) \emph{falls} significantly
+($\rfRealALMATYSlope$ per year, $p=\rfRealALMATYP$, $r=\rfRealALMATYStarCorr$).
+
+\textbf{The cross-station coherence test is the verdict.} A real global Starlink UEM signal should
+raise every station's UEM lines together. Our pipeline computes, from the significant per-station
+slopes, whether they agree in sign: they do not (\rfRealNRising\ rising, \rfRealNFalling\ falling;
+\code{coherent\_rise}=\rfRealCoherent). The weakly positive network-pooled slope
+(\rfRealLineExcessSlope\ per year, $p=\rfRealTrendP$) with only a $r=\rfRealCorr$ Starlink
+correlation is therefore a sample-size artifact of the more populous rising station, not a coherent
+trend. \textbf{We claim no Starlink attribution and no megaconstellation detection.} The result is
+consistent with per-station effects limiting any common signal: local RFI-environment change,
+receiver and antenna reconfiguration (e-CALLISTO instruments are uncalibrated and operator-tuned),
+and station-specific occupancy of the flanking channels that normalize each line. This is exactly
+the systematics limit the differential/multi-station design was built to expose.
+
+\textbf{A caveat on the coherence test itself.} With only two line-sampling stations (GLASGOW drops
+out), the test is an underpowered global-vs-local discriminator, and opposite signs do not
+\emph{strictly} rule out a real global signal: the two stations sample partly different lines
+(Table~\ref{tab:stations}), and because the line-excess is self-normalized against its flanks, a
+station whose flank channels accrue local terrestrial RFI faster than the line can register a
+\emph{falling} excess even under a rising true signal. So the test shows the data are dominated by
+per-station systematics; it does not prove the absence of any Starlink contribution. Because our
+conclusion is a null, this asymmetry is conservative --- it can only make us \emph{less} likely to
+claim a detection.
+
+\textbf{HUMAIN as a flagged candidate.} The honest exception is that HUMAIN's rise is real,
+significant, and Starlink-correlated in the right band. We cannot attribute it to Starlink from
+spectral archive data alone --- a co-located general-RFI rise would look identical --- but it is the
+right target for a follow-up that the archive cannot provide: satellite-pass-gated occupancy (does
+the excess appear only when Starlink satellites are above the horizon at HUMAIN?), which would break
+the local-RFI degeneracy. We flag it, and claim nothing more.
+
+\section{Reproducibility}
+The metric, its synthetic recover-a-known, and all unit tests run offline in CI
+(\code{python -m jansky\_research.rfitrend --offline}). The real census streams the open e-CALLISTO
+FITS archive one small gzipped file at a time, entirely in memory
+(\code{scripts/rfitrend\_real.py}). Code, tests, and this paper's pipeline are in the
+\code{jansky-research} repository, built on the \code{jansky} course library \citep{jansky}. Draft
+prepared with the assistance of a large language model \citep{anthropicclaude}; all results are
+pipeline-generated and human-verified.
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}
