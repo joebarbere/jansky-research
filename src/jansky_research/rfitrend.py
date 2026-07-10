@@ -612,8 +612,12 @@ def _write_macros(m: dict, path: str | Path) -> None:
         rf"\newcommand{{\rfRealLineExcessSlope}}{{{g(real, 'line_excess_slope_per_yr')}}}",
         rf"\newcommand{{\rfRealCorr}}{{{g(real, 'corr_with_starlink')}}}",
     ]
-    # per-station specifics for the results table (letters-only macro names: \rfReal<NAME><field>)
-    for st, d in (real.get("per_station") or {}).items():
+    # per-station specifics for the results table (letters-only macro names: \rfReal<NAME><field>).
+    # ALWAYS emit for the canonical station set so the paper's macros are defined even in the offline
+    # build (real per_station is empty offline -> every field is the "--" placeholder).
+    per_station = real.get("per_station") or {}
+    for st in ECALLISTO_STATIONS:
+        d = per_station.get(st, {})
         name = "".join(ch for ch in st if ch.isalpha())
         lines.append(rf"\newcommand{{\rfReal{name}Slope}}{{{g(d, 'line_excess_slope_per_yr')}}}")
         lines.append(rf"\newcommand{{\rfReal{name}P}}{{{gp(d, 'line_excess_p')}}}")
@@ -624,7 +628,7 @@ def _write_macros(m: dict, path: str | Path) -> None:
         lines.append(rf"\newcommand{{\rfReal{name}NMonths}}{{{g(d, 'n_months')}}}")
         sl = d.get("stable_lines") or []
         lines.append(
-            rf"\newcommand{{\rfReal{name}Lines}}{{{', '.join(f'{x:g}' for x in sl) or 'none'}}}"
+            rf"\newcommand{{\rfReal{name}Lines}}{{{', '.join(f'{x:g}' for x in sl) or '--'}}}"
         )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
