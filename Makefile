@@ -3,7 +3,7 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper arxiv reproduce clean
+.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper papers-zip arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi lptv skr typeii rfitrend vgpra
@@ -78,6 +78,24 @@ arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/a
 		uv run python .claude/skills/arxiv-submit/assemble_arxiv.py \
 			--paper papers/$$s --out papers/$$s/arxiv-submission || exit 1; \
 	done
+
+papers-zip: figures paper ## Package every built paper PDF into dist/jansky-research-papers-<TAG>.zip
+	@TAG=$(or $(TAG),dev-$$(git rev-parse --short HEAD)); \
+	STAGE=jansky-research-papers-$$TAG; \
+	rm -rf "dist/$$STAGE"; mkdir -p "dist/$$STAGE"; \
+	{ echo "jansky-research papers -- $$TAG"; echo "commit $$(git rev-parse HEAD)"; echo; } > "dist/$$STAGE/MANIFEST.txt"; \
+	n=0; \
+	for pdf in papers/*/*.pdf; do \
+		[ -e "$$pdf" ] || continue; \
+		slice=$$(basename $$(dirname "$$pdf")); \
+		mkdir -p "dist/$$STAGE/$$slice"; cp "$$pdf" "dist/$$STAGE/$$slice/"; \
+		printf '%-28s  %s\n' "$$slice" "$$(basename $$pdf)" >> "dist/$$STAGE/MANIFEST.txt"; \
+		n=$$((n+1)); \
+	done; \
+	echo "staged $$n PDFs"; \
+	[ "$$n" -gt 0 ] || { echo "no PDFs produced"; exit 1; }; \
+	(cd dist && zip -r "$$STAGE.zip" "$$STAGE" >/dev/null); \
+	ls -la "dist/$$STAGE.zip"
 
 reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers -> arXiv packages
 	uv run python -m jansky_research.pipeline --out .

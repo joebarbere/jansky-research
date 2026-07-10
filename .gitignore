@@ -46,3 +46,4 @@ papers/*/*.pdf
 # Snakemake workflow state
 .snakemake/
 sbi-logs/
+dist/
