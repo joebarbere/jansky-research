@@ -243,6 +243,32 @@ def test_crossmatch_flare_nearest_preceding():
     assert t2.crossmatch_flare(200.0, flares) is None  # nothing in window
 
 
+def test_purity_diagnostics_flags_background_like_matches():
+    # a dense background CME population (mostly slow) + detections at random times: the CME matches
+    # should look like the background (not fast-and-wide) and no better than chance -> flagged
+    rng = np.random.default_rng(0)
+    cme = [
+        {"onset_hr": float(h), "speed_kms": float(rng.normal(400, 150)), "width_deg": 40.0}
+        for h in rng.uniform(0, 5000, 3000)  # ~dense, slow background
+    ]
+    dets = [{"burst_hr": float(h)} for h in rng.uniform(0, 5000, 200)]
+    d = t2.purity_diagnostics(dets, cme, n_days=200)
+    assert d["association_is_background_like"] is True
+    assert d["matched_cme_median_kms"] < 1.5 * d["bg_cme_median_kms"]
+    assert d["observed_cme_match_rate"] <= d["chance_cme_match_rate"] + 0.05
+
+    # a REAL type II sample: detections each just after a FAST wide CME -> not background-like
+    fast_cme = [
+        {"onset_hr": float(h), "speed_kms": 1500.0, "width_deg": 300.0} for h in range(0, 400, 20)
+    ]
+    real_dets = [{"burst_hr": float(h) + 0.3} for h in range(0, 400, 20)]
+    d2 = t2.purity_diagnostics(real_dets, fast_cme, n_days=20)
+    assert (
+        d2["matched_cme_median_kms"] > 1.5 * d2["bg_cme_median_kms"]
+        or not d2["association_is_background_like"]
+    )
+
+
 def test_occurrence_vs_phase_reuses_coverage_correction():
     # detections and observing days across 6 months; rate should track the injected sunspot number
     from datetime import datetime

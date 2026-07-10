@@ -57,6 +57,7 @@ __all__ = [
     "parse_hek_flares",
     "crossmatch_flare",
     "occurrence_vs_phase",
+    "purity_diagnostics",
     "parse_lwa_dspec",
     "s3_dspec_url",
     "sweep_day",
@@ -718,6 +719,50 @@ def stream_dspec(
     return {"data": spec, "freqs": freqs, "times": times, "date_obs": date_obs}
 
 
+def purity_diagnostics(
+    detections: list[dict],
+    cme_list: list[dict],
+    n_days: int,
+    *,
+    window_hr: float = 2.0,
+    seed: int = 0,
+) -> dict:
+    """Is the candidate list real type II, or false positives? The honest purity test.
+
+    Real type II are driven by fast (>=900 km/s) wide CMEs (Gopalswamy+2005), so a real sample's
+    matched-CME speed distribution should sit FAR above the background CME population, and its
+    CME-match rate should exceed chance. This compares: the matched-CME median speed vs the
+    background CME median; the observed CME-match rate vs the CHANCE rate (fraction of random times
+    with any CME within ``window_hr``); and the detection rate vs the literature (~0.11/day, RSTN
+    Cycle 24). ``association_is_background_like`` flags when the matches look like coincidence with
+    the general CME population rather than a physical type II <-> fast-CME link.
+    """
+    if not cme_list or not detections:
+        return {"detection_rate_per_day": None}
+    onsets = np.array(sorted(float(c["onset_hr"]) for c in cme_list))
+    bg_speed = np.array([float(c["speed_kms"]) for c in cme_list])
+    matched = [crossmatch_cme(r["burst_hr"], cme_list, window_hr=window_hr) for r in detections]
+    m_speed = np.array([float(c["speed_kms"]) for c in matched if c is not None])
+    rng = np.random.default_rng(seed)
+    rand = rng.uniform(onsets.min(), onsets.max(), 5000)
+    chance = float(np.mean([np.any(np.abs(onsets - t) <= window_hr) for t in rand]))
+    obs_rate = sum(c is not None for c in matched) / len(detections)
+    bg_med = float(np.median(bg_speed))
+    m_med = float(np.median(m_speed)) if m_speed.size else float("nan")
+    return {
+        "detection_rate_per_day": round(len(detections) / max(n_days, 1), 3),
+        "bg_cme_median_kms": round(bg_med, 1),
+        "bg_cme_frac_fast": round(float((bg_speed >= FAST_CME_KMS).mean()), 3),
+        "matched_cme_median_kms": round(m_med, 1) if np.isfinite(m_med) else None,
+        "chance_cme_match_rate": round(chance, 3),
+        "observed_cme_match_rate": round(obs_rate, 3),
+        # matches look like the background population + no better than chance -> false-positive-dominated
+        "association_is_background_like": bool(
+            np.isfinite(m_med) and m_med < 1.5 * bg_med and obs_rate <= chance
+        ),
+    }
+
+
 def fetch_lasco_cme(dates: list[str]) -> list[dict]:  # pragma: no cover - network (CDAW HTML)
     """CDAW SOHO/LASCO CMEs for the months spanning ``dates`` -> [{onset_hr, speed_kms, width_deg}]."""
     import urllib.request
@@ -824,6 +869,7 @@ def real_census(dates, cme_list=None, flare_list=None, sunspots=None):  # noqa: 
     matched_fl = [crossmatch_flare(r["burst_hr"], flare_list) for r in all_det]
     assoc = cme_association_fraction(matched_cme)
     occ = occurrence_vs_phase([r["burst_hr"] for r in all_det], observing_day_hrs, sunspots)
+    purity = purity_diagnostics(all_det, cme_list, len(observing_day_hrs))
     event_list = [
         {
             "burst_hr": round(r["burst_hr"], 3),
@@ -853,6 +899,7 @@ def real_census(dates, cme_list=None, flare_list=None, sunspots=None):  # noqa: 
         if np.isfinite(occ["spearman_rho"])
         else None,
         "event_list": event_list,
+        **purity,
         **{f"assoc_{k}": v for k, v in assoc.items()},
     }
 
@@ -933,6 +980,11 @@ def _write_macros(m: dict, path: str | Path) -> None:
             ("OccMonths", "occ_n_months"),
             ("OccPearson", "occ_pearson_r"),
             ("OccSpearman", "occ_spearman_rho"),
+            ("DetRate", "detection_rate_per_day"),
+            ("BgCmeMed", "bg_cme_median_kms"),
+            ("MatchCmeMed", "matched_cme_median_kms"),
+            ("ChanceMatch", "chance_cme_match_rate"),
+            ("ObsMatch", "observed_cme_match_rate"),
         ):
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
     p = Path(path)
