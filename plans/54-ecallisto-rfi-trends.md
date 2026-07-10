@@ -1,9 +1,28 @@
 # 54 — e-Callisto as an accidental 15-year RFI observatory: the megaconstellation trend
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: read
-Pérez+2020 (SoPh 295:11) full-text, confirm no post-2019 e-Callisto RFI-trend paper exists, and
-verify Space-Track TLE access
+Status: ✅ done 2026-07-10 — a SYSTEMATICS-LIMITED NULL. Burst-immune, gain-cancelling
+narrowband-UEM-line metric over the continuous e-Callisto archive 2012–2026 (intrinsic Starlink
+lines 125/135/150/175 MHz, Di Vruno+2023; GRAVES 143.05 excluded); synthetic recovers both
+metrics. Real leg (286 usable station-months, HUMAIN/ALMATY/GLASGOW): the two line-sampling
+stations trend in OPPOSITE signs (HUMAIN +0.45/yr rising r=0.48; ALMATY −0.13/yr falling r=0.04),
+so the pipeline cross-station coherence test returns `coherent_rise=False` — no Starlink
+attribution, HUMAIN flagged only for satellite-pass-gated follow-up. GATE-2 PASS (honest framing;
+caught the 137→143.05/GRAVES line error, re-run). Module `rfitrend.py`, paper `papers/rfitrend/`,
+findings `survey/rfitrend-findings.md`. — GATE 0 done 2026-07-10: novelty PASS. Anchor = Prieto/Pérez+2020
+(SoPh 295:11): a two-epoch 2012-vs-2019 campaign at Spanish sites, ~**2× RFI rise** across
+45–870 MHz, ending before Starlink scaled — a dedicated two-snapshot campaign, NOT the continuous
+operational-archive time series this slice builds (methodologically distinct + extends past 2019).
+No post-2019 e-Callisto RFI-trend/megaconstellation census exists (LOFAR/SKA-Low UEM studies are
+dedicated-instrument, motivate not pre-empt). **Starlink UEM bands in 45–870 MHz:** broadband
+110–188 MHz, **intrinsic** narrowband lines at **125/135/150/175 MHz** (Di Vruno+2023). The
+143.05 MHz feature is reflected GRAVES radar (NOT intrinsic — excluded), corrected 2026-07-10 after
+an initial 137.05 transcription error. **Control:** FM 87.5–108 MHz is the cleanest flat control; DAB Band III
+(174–230) + UHF TV have analog-switchover/700 MHz-digital-dividend STEP changes (switchover-aware
+masking; FM primary). **Attribution:** the public planet4589 Starlink-count-vs-date time series
+(no Space-Track login needed). **Stations (45–870 MHz, span 2012–2026, sample UEM):** HUMAIN,
+ALMATY, GLASGOW (+ BLEN7M anchor, partial UEM). Reuse: `solarbursts.fetch_ecallisto` +
+`ecallisto_catalog` (archive) + `ecallisto_census.coverage_corrected_rate`. The differential
+in-station UEM-vs-control comparison is the load-bearing systematics gate.
 
 ## Context
 
