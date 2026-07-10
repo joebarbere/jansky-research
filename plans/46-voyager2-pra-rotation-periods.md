@@ -1,8 +1,34 @@
 # 46 — Voyager 2 PRA: modern re-derivation of the Uranus & Neptune radio rotation periods
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — pin the PDS-PPI
-VG2-PRA Uranus/Neptune encounter dataset IDs before any code
+Status: ✅ done 2026-07-10 — a CONTROLLED NULL: blind Lomb-Scargle of the PRA total-power flux
+recovers a clean injected rotation in synthetic tests (same wide 14–20 h window) but **recovers
+NEITHER real ice-giant period** — Uranus peak 18.44 h (wanders across sub-bands, +1.2 h off 17.24 h),
+Neptune rails to the 20 h search bound (+3.9 h off 16.11 h). The failure is a data limitation (the
+auroral total-power flux isn't a clean rotational sinusoid over the short flyby), not a pipeline bug;
+the historical beaming/magnetic-longitude modelling was essential, and the ~2 h flyby precision is
+hundreds× coarser than the 28-s HST shift regardless. GATE-2 PASS (caught: the earlier narrow-window
+"Neptune 16.04≈16.11" was a window artifact; band-stability is a coherence check, NOT a right/wrong
+gate — Uranus's wrong peak is more band-stable than the truth; "independent" → same dataset,
+re-analysis; citation fixes). Module `vgpra.py`, driver `scripts/vgpra_real.py`, paper
+`papers/vgpra/`, findings `survey/vgpra-findings.md`. — GATE 0 done
+2026-07-10: novelty PASS + data pinned. **Dataset IDs**:
+`VG2-U-PRA-3-RDR-LOWBAND-6SEC-V1.0` (`DATA/VG2_URN_PRA_6SEC.TAB`, 49 MB) and
+`VG2-N-PRA-3-RDR-LOWBAND-6SEC-V1.0` (`DATA/VG2_NEP_PRA_6SEC.TAB`, 79 MB) on PDS-PPI
+(`pds-ppi.igpp.ucla.edu/data/<id>/DATA/`), direct HTTP, egress verified (curl 200).
+**Format** (pinned from the .LBL + real bytes): fixed-width ASCII, line-based (2284 data bytes +
+LF; NOT the 2286 RECORD_BYTES stride). Each row = one 48-s major frame: `DATE` (YYMMDD, chars
+0:6) + `SECOND` (sec-of-day, 6:12) + 8 sweeps × (1 status word + 70 channels), each field 4 chars
+ASCII int in **MILLIBELL** (=0.01 dB). Sweep k (0..7) starts at `SECOND + 6*k` s. **70 low-band
+channels**: `f_i = 1326.0 − 19.2*i` kHz, i=0..69 (1326.0 → 1.2 kHz). Neptune 36028 rows ≈ 20 d ≈
+30 rotations; Uranus ≈ 12 d ≈ 17 rotations (tens of cycles, not just a few — period recoverable,
+but 28-s-level shifts are below the achievable precision → the honest deliverable). Real sample
+(first 8 Neptune rows) vendored at `tests/data/vg2_nep_pra_6sec_sample.tab` for the parser test.
+**Novelty PASS**: Lamy+2025 (Nat.Astron. 9, 658; 17.247864±0.000010 h) is HST-UV aurora, NOT
+radio; the recent arXiv:2604.19863 is radio *occultations* (atmospheric geometry), not a PRA
+burst re-derivation; Cecconi+2017 (arXiv:1710.10471) refurbished only Jupiter/Saturn. No modern
+radio re-analysis of the Uranus/Neptune PRA rotation periods exists. **Published anchors**: Uranus
+17.24±0.01 h (Warwick+1986), Neptune 16.11±0.05 h (Warwick+1989); 16.108±0.006 h (Lecacheux+1993).
+Reuse: `frbperiod` (`rayleigh_z2`, `period_search`, scramble FAPs), `report._agg/_fmt_p`.
 
 ## Context
 
