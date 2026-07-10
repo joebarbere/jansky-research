@@ -98,16 +98,62 @@ def test_observed_summary_detects_bright_v():
     assert s[0] == 1  # only the 5 mJy source clears 5*rms and the floor
 
 
-def test_parent_from_census_reads_real_csv():
-    # the merged stokesv_discovery census must parse into a usable parent sample (offline:
-    # no Gaia distance fetch)
-    parent = sv.parent_from_census(fetch_distances=False)
-    assert parent["v_rms"].size >= 30  # ~38 physical targets after binary dedup
+def test_parent_from_census_parses_and_dedupes(tmp_path):
+    # a self-contained census fixture (the real merged CSV is git-ignored, so absent in a fresh
+    # CI checkout) exercising the parser + the GJ-65-style unresolved-binary dedup
+    import csv as _csv
+
+    rows = [
+        # GJ 65: an unresolved binary (two names, byte-identical bright photometry) that IS the
+        # detection -- deduped to one physical source (dedup fires only for bright v_best > 1)
+        {
+            "name": "GJ65A",
+            "gaia_id": "4",
+            "i_mjy": "3.0",
+            "e_i": "0.2",
+            "v_mjy": "5.0",
+            "e_v": "0.2",
+        },
+        {
+            "name": "GJ65A",
+            "gaia_id": "4",
+            "i_mjy": "3.0",
+            "e_i": "0.2",
+            "v_mjy": "0.1",
+            "e_v": "0.2",
+        },
+        {
+            "name": "GJ65B",
+            "gaia_id": "5",
+            "i_mjy": "3.0",
+            "e_i": "0.2",
+            "v_mjy": "5.0",
+            "e_v": "0.2",
+        },
+        {
+            "name": "GJ65B",
+            "gaia_id": "5",
+            "i_mjy": "3.0",
+            "e_i": "0.2",
+            "v_mjy": "0.1",
+            "e_v": "0.2",
+        },
+        # two quiet targets (no detection), 2 epochs each
+        {"name": "Q1", "gaia_id": "2", "i_mjy": "1.0", "e_i": "0.2", "v_mjy": "0.1", "e_v": "0.2"},
+        {"name": "Q1", "gaia_id": "2", "i_mjy": "1.0", "e_i": "0.2", "v_mjy": "0.15", "e_v": "0.2"},
+        {"name": "Q2", "gaia_id": "3", "i_mjy": "1.0", "e_i": "0.2", "v_mjy": "0.05", "e_v": "0.2"},
+        {"name": "Q2", "gaia_id": "3", "i_mjy": "1.0", "e_i": "0.2", "v_mjy": "0.2", "e_v": "0.2"},
+    ]
+    p = tmp_path / "census.csv"
+    with open(p, "w", newline="") as f:
+        w = _csv.DictWriter(f, fieldnames=["name", "gaia_id", "i_mjy", "e_i", "v_mjy", "e_v"])
+        w.writeheader()
+        w.writerows(rows)
+    parent = sv.parent_from_census(p, fetch_distances=False)
+    assert parent["v_rms"].size == 3  # GJ65A/GJ65B deduped -> 3 physical targets (GJ65, Q1, Q2)
     assert np.all(parent["v_rms"] > 0)
     assert parent["v_best_obs"].size == parent["v_rms"].size
-    # exactly one confident V detection in the real census: GJ 65 (its two Gaia components
-    # are byte-identical unresolved photometry and are deduplicated to one source)
-    assert sv.observed_summary(parent)[0] == 1
+    assert sv.observed_summary(parent)[0] == 1  # only the deduped GJ 65 clears 5*rms and the floor
 
 
 def test_run_offline_writes_artifacts(tmp_path):

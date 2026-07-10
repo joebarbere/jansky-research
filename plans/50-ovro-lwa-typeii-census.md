@@ -1,8 +1,17 @@
 # 50 — OVRO-LWA metric type II census × LASCO CME catalogue
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — verify
-`ovsa.njit.edu/lwadata-query` access/format for the Level-1 spectrograms
+Status: ✅ done — an HONEST NULL. GATE 0 2026-07-09: novelty PASS (OVRO-LWA detector arXiv:2603.25446
+is type-III-only). Built the slow-drift+harmonic detector (synthetic SNR-completeness curve
+1.0→0.33), the in-memory streaming pipeline (data on AWS Open Data, `ovro-lwa-solar` S3; ~30 s/day,
+nothing on disk), and the full cross-match (CDAW CMEs + HEK GOES flares + SILSO occurrence).
+**Ran the full census**: all 765 observing days 2024-04→2026-07, 0 failures → 331 candidates that
+are **false-positive dominated** (matched-CME median 478≈background 379 km/s; observed match rate
+0.55 < chance 0.64; drift⊥CME-speed r=0.09; 83% window-saturated; harmonic cut worsens it; the
+flare-gated "signal" is a flare↔fast-CME confound). A blind spectral type II census fails in this
+RFI-heavy band — why the archive detector is type-III-only. GATE-2 PASS w/ fixes (verified the null
+is correct + not a missed sub-population; required the confound + window-saturation evidence be
+pipeline-generated, now in `purity_diagnostics`). No census/rate/detection claimed. See
+survey/typeii-findings.md.
 
 ## Context
 

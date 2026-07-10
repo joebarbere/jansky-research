@@ -252,25 +252,60 @@ def test_write_v_table_all_row_types(tmp_path):
     p = tmp_path / "vt.tex"
     m = {
         "per_target": [
-            {"name": "SECURE_x", "period_min": 80.7, "n_epochs": 5, "believable": True,
-             "secure": True, "v_mjy": -3.25, "class": "circular", "offset_arcsec": 0.7,
-             "v_limit_mjy": 0.4, "handedness_change": None},
-            {"name": "CAND", "period_min": 388.6, "n_epochs": 7, "believable": True,
-             "secure": False, "v_mjy": 2.56, "class": "highly_circular", "offset_arcsec": 3.2,
-             "v_limit_mjy": 0.5, "handedness_change": None},
-            {"name": "CONF", "period_min": 387.0, "n_epochs": 10, "believable": False,
-             "secure": False, "suspect_confusion": True, "v_mjy": None, "v_limit_mjy": 0.49,
-             "handedness_change": None},
-            {"name": "LIM", "period_min": 22.0, "n_epochs": 8, "believable": False,
-             "suspect_confusion": False, "v_mjy": None, "v_limit_mjy": 0.45,
-             "handedness_change": None},
+            {
+                "name": "SECURE_x",
+                "period_min": 80.7,
+                "n_epochs": 5,
+                "believable": True,
+                "secure": True,
+                "v_mjy": -3.25,
+                "class": "circular",
+                "offset_arcsec": 0.7,
+                "v_limit_mjy": 0.4,
+                "handedness_change": None,
+            },
+            {
+                "name": "CAND",
+                "period_min": 388.6,
+                "n_epochs": 7,
+                "believable": True,
+                "secure": False,
+                "v_mjy": 2.56,
+                "class": "highly_circular",
+                "offset_arcsec": 3.2,
+                "v_limit_mjy": 0.5,
+                "handedness_change": None,
+            },
+            {
+                "name": "CONF",
+                "period_min": 387.0,
+                "n_epochs": 10,
+                "believable": False,
+                "secure": False,
+                "suspect_confusion": True,
+                "v_mjy": None,
+                "v_limit_mjy": 0.49,
+                "handedness_change": None,
+            },
+            {
+                "name": "LIM",
+                "period_min": 22.0,
+                "n_epochs": 8,
+                "believable": False,
+                "suspect_confusion": False,
+                "v_mjy": None,
+                "v_limit_mjy": 0.45,
+                "handedness_change": None,
+            },
             {"name": "UNCOV", "period_min": 125.5, "n_epochs": 0},
         ]
     }
     lv._write_v_table(m, p)
     txt = p.read_text()
     assert "SECURE" in txt and r"\_" in txt  # underscore escaped in the name
-    assert "circular" in txt and "_" not in txt.split("SECURE")[1].split("&")[4]  # class no underscore
+    assert (
+        "circular" in txt and "_" not in txt.split("SECURE")[1].split("&")[4]
+    )  # class no underscore
     assert "cand., 3.2" in txt  # candidate flagged with offset
     assert "confused" in txt  # suspect reported as a flagged limit
     assert "uncovered" in txt  # zero-epoch target
