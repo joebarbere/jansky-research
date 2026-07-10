@@ -1,0 +1,152 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A blind reanalysis of the ice-giant radio rotation periods}
+\shortauthors{Barbere}
+\begin{document}
+\title{Why a Blind Modern Reanalysis of the Voyager~2 PRA Data Does Not Recover the
+Uranus and Neptune Radio Rotation Periods}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The rotation periods anchoring the System~III longitude systems of Uranus ($17.24\pm0.01$~h) and
+Neptune ($16.11$~h) were fixed by the Voyager~2 Planetary Radio Astronomy (PRA) experiment during
+the 1986 and 1989 flybys \citep{warwick1986,warwick1989} and, for the radio data, never reanalysed
+with modern statistics --- even as \citet{lamy2025} recently shifted Uranus's period by 28~s using
+Hubble UV aurorae. We ask a narrow, answerable question: what do the Voyager radio data yield under a
+\emph{blind} modern periodogram, using none of the emission-beaming or magnetic-longitude modelling
+of the original determinations? From the open PDS-PPI PRA low-band 6-second encounter volumes
+\citep{pdsppi_vg2pra} we build a band-integrated flux series and search it with a Lomb--Scargle
+periodogram over a wide, un-tuned 14--20~h window, taking a rotation-block bootstrap and the peak's
+spread across frequency sub-bands as the uncertainties. \textbf{The result is a controlled null.} The
+pipeline is validated end-to-end: on a synthetic flyby searched in the same wide window it recovers
+an injected period (\vgSynInjected~h $\to$ \vgSynRecovered~h) to $\sim$1~min. On the real data it
+recovers \emph{neither} planet: the Uranus peak wanders between sub-bands (\vgRealUPeriod~h, sub-band
+spread \vgRealUSpread~h, offset $+1.2$~h from $17.24$~h; not recovered, \vgRealURecovers) and the
+Neptune peak rails to the search bound (\vgRealNPeriod~h; not recovered, \vgRealNRecovers). Because
+the method demonstrably works when a clean rotational signal is present, the real-data failure is a
+genuine limitation of blind total-power analysis, not a pipeline artifact: the ice-giant total-power
+radio flux is not a clean rotational sinusoid, and recovering the periods requires the geometric
+modelling of the original analyses. Even in the best case the flyby precision ceiling is $\sim$1--2~h,
+hundreds of times coarser than the modern Hubble result. The contribution is a reproducible,
+modern-statistical demonstration of exactly why the historical Voyager radio periods needed the
+sophisticated methods they used --- and of how little a naive periodogram of these short flybys can
+constrain.
+\end{abstract}
+
+\keywords{Planetary science (1255) --- Uranus (1751) --- Neptune (1096) --- Radio astronomy (1338)
+--- Planetary magnetospheres (997) --- Time series analysis (1916)}
+
+\section{Introduction}
+The rotation period of a giant planet's deep interior is inferred from the periodic modulation of
+magnetospheric phenomena locked to the internal magnetic field. For Uranus and Neptune the defining
+measurement was the periodicity of auroral radio emission --- Uranus Kilometric Radiation (UKR) and
+its Neptune analogue --- recorded by Voyager~2 PRA during the only spacecraft encounters with the ice
+giants \citep{warwick1986,warwick1989}. Those periods, $17.24\pm0.01$~h and $16.11$~h, became the
+System~III longitude systems still in use.
+
+Two facts motivate a fresh look. First, \citet{lamy2025} used 11~yr of Hubble UV aurora tracking to
+refine Uranus's period to $17.247864\pm0.000010$~h --- a 28~s shift and a $10^3$-fold precision gain
+over the Voyager value, highlighting that the \emph{radio} value was a single brief-flyby measurement
+never revisited with modern statistics. Second, the PRA refurbishing effort \citep{cecconi2017}
+reprocessed only Jupiter and Saturn, leaving the ice-giant volumes an unworked archive. The original
+period determinations were not simple periodograms: they folded in magnetic-field models and emission
+beaming. We therefore ask the complementary, honest question --- how much does a \emph{blind} modern
+periodogram of the raw radio flux, using none of that modelling, recover on its own? --- and answer
+it, with a validated pipeline, in the negative.
+
+\section{Data}
+We use the open PDS-PPI PRA low-band 6-second RDR encounter volumes \citep{pdsppi_vg2pra}, datasets
+\code{VG2-U-PRA-3-RDR-LOWBAND-6SEC-V1.0} (Uranus) and \code{VG2-N-PRA-3-RDR-LOWBAND-6SEC-V1.0}
+(Neptune). Each is a fixed-width ASCII table of 48-second major frames; a frame carries a
+spacecraft-event date and second-of-day plus eight sweeps of one status word and 70 channel
+intensities in millibell, the sweeps spaced 6~s apart. The 70 low-band channels run from 1326.0 to
+1.2~kHz in 19.2~kHz steps. Expanding the sweeps gives a 6-second-cadence dynamic spectrum spanning
+$\sim$\vgRealUSpan~h at Uranus and $\sim$\vgRealNSpan~h at Neptune --- of order 15--30 rotations.
+
+\section{Method}
+\label{sec:method}
+\textbf{Flux series.} We sum the linear power ($10^{\mathrm{mB}/1000}$ per channel) over the
+100--1000~kHz band where the auroral emission dominates, giving one total-power sample per 6-second
+sweep.
+
+\textbf{Blind Lomb--Scargle.} A rotation would modulate a continuous, red-noise-dominated emission, so
+we search the (log, 0.1-h-binned, quadratically-detrended) flux with a Lomb--Scargle periodogram over
+a wide, physically-motivated 14--20~h ice-giant window --- deliberately \emph{not} tuned to bracket
+the known values, since a narrow window centred on the answer would manufacture a match. Because the
+samples are strongly autocorrelated and enormous in number, the analytic Lomb--Scargle false-alarm
+probability is meaningless (absurdly small) and we do not report it. The \emph{statistical}
+uncertainty is a rotation-block bootstrap (resample whole rotation-length blocks); the
+\emph{systematic} one is the peak's spread across four frequency sub-bands. A coherent signal ---
+rotation \emph{or} a viewing-geometry, beaming, or spectral-window modulation --- is achromatic, so a
+small sub-band spread confirms a real coherent peak but does \emph{not} establish that it is the
+rotation. A discrete-epoch Rayleigh $Z^2_1$ fold \citep{buccheri1983} of detected bursts, reused from
+this repository's FRB module, is reported as a weaker cross-check.
+
+\textbf{Recovery criterion.} We call the historical period \emph{recovered} only if the blind peak
+lands within one combined-$\sigma$ of it, is band-robust (sub-band spread $<0.6$~h), and is not railed
+to a search-window bound --- proximity alone is worthless when $\sigma\sim2$~h.
+
+\section{Synthetic recover-a-known}
+We validate the pipeline on a synthetic flyby --- a rotation-modulated flux series with an injected
+period (\vgSynInjected~h), noise, and data gaps --- searched in the \emph{same} wide 14--20~h window
+used on the real data. The Lomb--Scargle estimator recovers \vgSynRecovered~h (\vgSynRecoveredOK) and
+the Rayleigh fold recovers \vgSynRayPeriod~h (\vgSynRayOK), both inside their bootstrap bands. This is
+the control that makes the real-data null interpretable: the method finds a clean rotation when one is
+present, so a failure on the real data is a property of the data, not the pipeline.
+
+\section{Results}
+\label{sec:results}
+On the real encounter volumes the blind periodogram recovers \emph{neither} rotation period
+(Table~\ref{tab:periods}).
+
+\textbf{Uranus.} The peak sits at \vgRealUPeriod~h, offset $+1.2$~h from the historical $17.24$~h, and
+is \emph{not} band-robust: across four sub-bands it wanders with a spread of \vgRealUSpread~h. It is
+not a recovery (\vgRealURecovers); the historical and Hubble values fall inside the $\pm\vgRealUUnc$~h
+band only because that band is nearly two hours wide, a vacuous consistency.
+
+\textbf{Neptune.} The peak rails to the upper search bound (\vgRealNPeriod~h), offset far from
+$16.11$~h --- the signature of a periodogram dominated by the red-noise / flyby-envelope continuum
+rather than a rotational line. It is neither recovered (\vgRealNRecovers) nor consistent
+(\vgRealNHistOK). We note explicitly that a narrower search window \emph{can} place the Neptune peak
+near $16$~h, but that only demonstrates the result's window-dependence: with an un-tuned wide window
+there is no stable rotational peak.
+
+\textbf{Interpretation.} The blind total-power periodogram does not recover the ice-giant rotation
+periods, while recovering a clean injected signal in the identical analysis. The auroral total-power
+flux is therefore not a clean rotational sinusoid over these flybys; the historical determinations'
+beaming and magnetic-longitude modelling --- which a blind periodogram omits --- was essential.
+Independently, the rotation-block uncertainties ($\sim$\vgRealUUnc~h) are hundreds of times coarser
+than the 28~s by which \citet{lamy2025} refined Uranus, so even a successful blind extraction could
+never approach modern precision. The secondary Rayleigh burst fold (Uranus \vgRealURayPeriod~h,
+Neptune \vgRealNRayPeriod~h) is likewise uninformative, as expected for a discrete-epoch method on
+this emission.
+
+\begin{deluxetable}{lccc}
+\tablecaption{Rotation periods (hours)\label{tab:periods}}
+\tablehead{\colhead{Source} & \colhead{Uranus} & \colhead{Neptune} & \colhead{method}}
+\startdata
+Voyager (historical)   & $17.24\pm0.01$ & $16.11$ & radio (modelled) \\
+\citet{lamy2025}       & $\vgRealULamy$ & \nodata & HST UV \\
+This work (blind)      & $\vgRealUPeriod\pm\vgRealUUnc$ & $\vgRealNPeriod\pm\vgRealNUnc$ & radio (blind LS) \\
+recovers historical?   & \vgRealURecovers & \vgRealNRecovers & \\
+\enddata
+\tablecomments{This work: blind Lomb--Scargle of the PRA flux series over an un-tuned 14--20~h window;
+uncertainty = larger of the rotation-block bootstrap $\sigma$ and the sub-band spread. ``Recovered''
+requires a band-robust, un-railed peak within one combined-$\sigma$ of the historical value. Neither
+planet qualifies.}
+\end{deluxetable}
+
+\section{Reproducibility}
+The metric, its synthetic recover-a-known, and all unit tests (including a parser test against a
+vendored real PRA sample) run offline in CI (\code{python -m jansky\_research.vgpra --offline}). The
+real reanalysis downloads the two open PDS-PPI encounter volumes and runs on demand
+(\code{scripts/vgpra\_real.py}). Code, tests, and this paper's pipeline are in the
+\code{jansky-research} repository, built on the \code{jansky} course library \citep{jansky} and its
+\code{frbperiod} periodicity machinery. Draft prepared with the assistance of a large language model
+\citep{anthropicclaude}; all numerical results are pipeline-generated and human-verified.
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}
