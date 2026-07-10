@@ -142,7 +142,10 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE |
 
-`make paper` builds every slice's PDF; `make arxiv` runs the bundled **`arxiv-submit` skill**
+`make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
+job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,
+attaches `jansky-research-papers-<tag>.zip` to a GitHub Release — and uploads it as a workflow
+artifact on every manual run). `make arxiv` runs the bundled **`arxiv-submit` skill**
 (`.claude/skills/arxiv-submit/`) to assemble and validate an upload package per paper
 (`papers/<slice>/arxiv-submission/`: the LaTeX-source tarball with its `.bbl`, plus a `metadata.yaml`
 capturing every arXiv submission property and a `CHECKLIST.md`). The orchestration is right-sized: the
@@ -193,6 +196,7 @@ uv run python -m jansky_research.singlepulse --benchmark --out .      # torch-fd
 # The papers + orchestration:
 make figures                              # build every static slice via the Snakemake DAG (offline; needs --extra workflow)
 make paper                                # tectonic -> all papers/<slice>/main.pdf (in a container)
+make papers-zip                           # bundle every paper PDF into dist/jansky-research-papers-<TAG>.zip
 make arxiv                                # assemble + validate an arXiv package per paper
 make reproduce                            # fetch -> figures -> papers -> arXiv packages, end to end
 
