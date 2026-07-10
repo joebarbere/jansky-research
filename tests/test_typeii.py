@@ -251,11 +251,17 @@ def test_purity_diagnostics_flags_background_like_matches():
         {"onset_hr": float(h), "speed_kms": float(rng.normal(400, 150)), "width_deg": 40.0}
         for h in rng.uniform(0, 5000, 3000)  # ~dense, slow background
     ]
-    dets = [{"burst_hr": float(h)} for h in rng.uniform(0, 5000, 200)]
+    # detections at random times, with window-filling durations + drift uncorrelated to any CME
+    dets = [
+        {"burst_hr": float(h), "drift_mhz_s": float(rng.uniform(-0.05, -0.01)), "duration_s": 897.0}
+        for h in rng.uniform(0, 5000, 200)
+    ]
     d = t2.purity_diagnostics(dets, cme, n_days=200)
     assert d["association_is_background_like"] is True
     assert d["matched_cme_median_kms"] < 1.5 * d["bg_cme_median_kms"]
     assert d["observed_cme_match_rate"] <= d["chance_cme_match_rate"] + 0.05
+    assert abs(d["drift_cme_speed_corr"]) < 0.2  # radio drift knows nothing about the CME speed
+    assert d["window_saturation_frac"] == 1.0  # every ridge fills the window (FP signature)
 
     # a REAL type II sample: detections each just after a FAST wide CME -> not background-like
     fast_cme = [

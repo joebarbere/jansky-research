@@ -1,19 +1,17 @@
 # 50 — OVRO-LWA metric type II census × LASCO CME catalogue
 
-Status: ✅ done (detector + method; streamed real leg ready) — GATE 0 2026-07-09: novelty PASS
-(OVRO-LWA detector arXiv:2603.25446 is type-III-only; no type II census on this archive). Data on
-**AWS Open Data** (bucket `ovro-lwa-solar`, `spec_fits/<YYYY>/<YYYYMMDD>.fits`, ~15–85 MHz,
-~0.26 s, ~1.7 GB/day, 4D I/V dynamic spectrum) — directly downloadable, NO login/CAPTCHA (the
-Cloudflare Turnstile on the `lwadata-query` UI gates only the query interface, not the data). The
-real leg **streams** each day in memory: `stream_dspec` lazily range-reads only the Stokes-I plane
-in time-chunks, block-averages to ~4 s bins on the fly, and `real_census` frees each day before the
-next — nothing touches disk; a census is a compute follow-on, not an access/disk block (not run
-here). Deliverable: the validated slow-drift+harmonic **detector** (purity 1.0; honest
-SNR-completeness curve 1.0→0.33 from SNR 4→2) + CME cross-match wiring + the streaming leg
-(`scripts/typeii_real.py --dates ... --cme ...`, needs the `typeii` extra). Real FITS format
-confirmed on first contact (4D primary array); `parse_lwa_dspec` handles it. GATE-2 PASS w/ fixes
-(SNR curve not a saturated number; CME assoc labelled a wiring check; coverage/occurrence-vs-phase
-deferred). See survey/typeii-findings.md.
+Status: ✅ done — an HONEST NULL. GATE 0 2026-07-09: novelty PASS (OVRO-LWA detector arXiv:2603.25446
+is type-III-only). Built the slow-drift+harmonic detector (synthetic SNR-completeness curve
+1.0→0.33), the in-memory streaming pipeline (data on AWS Open Data, `ovro-lwa-solar` S3; ~30 s/day,
+nothing on disk), and the full cross-match (CDAW CMEs + HEK GOES flares + SILSO occurrence).
+**Ran the full census**: all 765 observing days 2024-04→2026-07, 0 failures → 331 candidates that
+are **false-positive dominated** (matched-CME median 478≈background 379 km/s; observed match rate
+0.55 < chance 0.64; drift⊥CME-speed r=0.09; 83% window-saturated; harmonic cut worsens it; the
+flare-gated "signal" is a flare↔fast-CME confound). A blind spectral type II census fails in this
+RFI-heavy band — why the archive detector is type-III-only. GATE-2 PASS w/ fixes (verified the null
+is correct + not a missed sub-population; required the confound + window-saturation evidence be
+pipeline-generated, now in `purity_diagnostics`). No census/rate/detection claimed. See
+survey/typeii-findings.md.
 
 ## Context
 

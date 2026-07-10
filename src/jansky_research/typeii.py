@@ -725,17 +725,25 @@ def purity_diagnostics(
     n_days: int,
     *,
     window_hr: float = 2.0,
+    window_s: float = SWEEP_WINDOW_S,
     seed: int = 0,
 ) -> dict:
     """Is the candidate list real type II, or false positives? The honest purity test.
 
     Real type II are driven by fast (>=900 km/s) wide CMEs (Gopalswamy+2005), so a real sample's
-    matched-CME speed distribution should sit FAR above the background CME population, and its
-    CME-match rate should exceed chance. This compares: the matched-CME median speed vs the
-    background CME median; the observed CME-match rate vs the CHANCE rate (fraction of random times
-    with any CME within ``window_hr``); and the detection rate vs the literature (~0.11/day, RSTN
-    Cycle 24). ``association_is_background_like`` flags when the matches look like coincidence with
-    the general CME population rather than a physical type II <-> fast-CME link.
+    matched-CME speeds should sit FAR above the background CME population. Three independent tests:
+
+    (1) **Speed** --- matched-CME median vs the background CME median; and the observed CME-match
+    rate vs the CHANCE rate (random times, any CME within ``window_hr``). At solar max the CME
+    density makes ``chance`` high, so this test is weak on its own and the SPEED comparison carries
+    the argument (`association_is_background_like`).
+    (2) **Decorrelation** --- the burst's own drift rate encodes the shock kinematics, so a real
+    sample would show ``|drift|`` correlated with the matched CME speed. A near-zero
+    ``drift_cme_speed_corr`` means the radio properties know nothing about the CME --- the "matches"
+    are coincidence (any flare-coincident blob auto-selects a nearby fast CME).
+    (3) **Window saturation** --- real type II are minutes-long transients of VARIED duration; a
+    high ``window_saturation_frac`` (ridges filling the whole detection window) is persistent
+    RFI/background structure tracked as a slow drift, the classic false-positive signature.
     """
     if not cme_list or not detections:
         return {"detection_rate_per_day": None}
@@ -749,6 +757,22 @@ def purity_diagnostics(
     obs_rate = sum(c is not None for c in matched) / len(detections)
     bg_med = float(np.median(bg_speed))
     m_med = float(np.median(m_speed)) if m_speed.size else float("nan")
+    # (2) does the burst drift know anything about the matched CME speed? (real type II: yes)
+    pairs = [
+        (abs(float(r["drift_mhz_s"])), float(c["speed_kms"]))
+        for r, c in zip(detections, matched, strict=True)
+        if c is not None and r.get("drift_mhz_s") is not None
+    ]
+    if len(pairs) >= 5:
+        dr, sp = np.array(pairs).T
+        drift_speed_corr = (
+            float(np.corrcoef(dr, sp)[0, 1]) if np.std(dr) > 0 and np.std(sp) > 0 else float("nan")
+        )
+    else:
+        drift_speed_corr = float("nan")
+    # (3) fraction of detections whose ridge fills >=98% of the detection window (FP signature)
+    durs = [float(r["duration_s"]) for r in detections if r.get("duration_s") is not None]
+    sat = float(np.mean([d >= 0.98 * window_s for d in durs])) if durs else float("nan")
     return {
         "detection_rate_per_day": round(len(detections) / max(n_days, 1), 3),
         "bg_cme_median_kms": round(bg_med, 1),
@@ -756,7 +780,12 @@ def purity_diagnostics(
         "matched_cme_median_kms": round(m_med, 1) if np.isfinite(m_med) else None,
         "chance_cme_match_rate": round(chance, 3),
         "observed_cme_match_rate": round(obs_rate, 3),
-        # matches look like the background population + no better than chance -> false-positive-dominated
+        "drift_cme_speed_corr": round(drift_speed_corr, 3)
+        if np.isfinite(drift_speed_corr)
+        else None,
+        "window_saturation_frac": round(sat, 3) if np.isfinite(sat) else None,
+        # matches ~ background population, radio props decorrelated from CME speed, and ridges
+        # saturate the window -> the candidate list is false-positive-dominated
         "association_is_background_like": bool(
             np.isfinite(m_med) and m_med < 1.5 * bg_med and obs_rate <= chance
         ),
@@ -982,9 +1011,12 @@ def _write_macros(m: dict, path: str | Path) -> None:
             ("OccSpearman", "occ_spearman_rho"),
             ("DetRate", "detection_rate_per_day"),
             ("BgCmeMed", "bg_cme_median_kms"),
+            ("BgFracFast", "bg_cme_frac_fast"),
             ("MatchCmeMed", "matched_cme_median_kms"),
             ("ChanceMatch", "chance_cme_match_rate"),
             ("ObsMatch", "observed_cme_match_rate"),
+            ("DriftSpeedCorr", "drift_cme_speed_corr"),
+            ("WindowSat", "window_saturation_frac"),
         ):
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
     p = Path(path)
