@@ -167,16 +167,19 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 - **A short note in the literature:** the frbstats validation is condensed to a
   [Research Note of the AAS](https://journals.aas.org/research-notes/) (`papers/frbstats/rnaas.tex`,
   built by `make paper`).
-- **arXiv:** reserved for the papers with a genuinely fresh angle — `type3synthesis/` (the lead: a
-  type III beam tracked corona→0.4 AU across four instruments with an independent geometric check on the
-  density-model distance), `vlass/` (a 703 deg² census with a real recovery, FK Comae Berenices, plus
-  the QL-systematics methodology), `peaked/` (a three-frequency curvature selector with two
-  recover-a-known validations and the TGSS-upper-limit + resolution-floor method), `triangulate/` (the
-  3D triangulation it builds on), and `ecallisto_pipeline/` (the streaming Airflow-on-Podman ingest
-  pattern, astro-ph.IM). `frbstats/` is **not** an arXiv target — its only fresh angle was the Airflow
-  pattern, now re-homed on the streaming archive; it stays a JOSS/RNAAS tool. The pure
-  reproductions/negatives are **not** posted as a preprint batch — arXiv moderation expects a
-  contribution, and "I reproduced a known result" belongs in the repo + Zenodo.
+- **arXiv:** reserved for the genuine-novelty, real-data papers (full-repo triage 2026-07-11, PR #115) —
+  `lptv/` (the lead: the first uniform multi-epoch forced Stokes-V survey of the long-period-transient
+  class, with a secure single-epoch circular detection), `junodam/` (a from-orbit Juno/Waves DAM census
+  showing the apparent range-occurrence "law" is a 1/r² detection effect), and `fashienv/` (the first
+  environment-split FASHI DR1 HI mass function) — all three packaged and validated; next up are
+  `frblens/` (first catalogue-level lensed-repeater search) and `rmstructure/` (first structure function
+  of SPICE-RACS DR2). The pre-triage shortlist (`type3synthesis/`, `vlass/`, `peaked/`, `triangulate/`)
+  is demoted to repo + Zenodo — recover-a-knowns and method demos, not discoveries. Software-pattern
+  papers (`frbstats/`, `torchdsp/`, `torchfdmt/`, `ecallisto_pipeline/`) are JOSS candidates, not
+  science preprints. The pure reproductions/negatives are **not** posted as a preprint batch — arXiv
+  moderation expects a contribution, and "I reproduced a known result" belongs in the repo + Zenodo.
+  The account-bound submission walkthrough lives in Joe's personal notes
+  (Obsidian vault: `efforts/radio_astronomy/research_paper_todo.md`).
 
 ## Quickstart
 
