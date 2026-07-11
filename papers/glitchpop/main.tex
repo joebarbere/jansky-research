@@ -1,0 +1,150 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A per-pulsar glitch waiting-time classification}
+\shortauthors{Barbere}
+\begin{document}
+\title{A Monitoring-Gap-Robust Per-Pulsar Waiting-Time Classification of the Jodrell Bank
+Glitch Catalogue, and the Post-2018 Change}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The Jodrell Bank glitch catalogue \citep{espinoza2011,basu2022} now holds \gpRealNGlitches\ glitches
+from \gpRealNPulsars\ pulsars; the last population-statistics paper \citep{basu2022} stops at
+end-2018 (543/178), so $\sim$184 glitches have never entered a population analysis, and that paper
+characterised the glitch-\emph{size} distribution, not the per-pulsar waiting-time behaviour.
+\citet{howitt2018} did classify per-pulsar waiting times (Poisson vs quasi-periodic), but only for
+the few most-glitching pulsars on a pre-2018 sample and without gap-robustness; we extend that to the
+full $\ge5$-glitch sample, add monitoring-gap robustness, and diff across the post-2018 data. We
+classify each pulsar's inter-glitch waiting-time distribution as \emph{exponential} (memoryless
+Poisson, the null), \emph{quasi-periodic} (regular, Vela/J0537-like), or \emph{clustered}, from a
+coefficient of variation calibrated against the exponential null with a parametric bootstrap. \textbf{The load-bearing step is monitoring-gap excision}: the archival
+catalogue conflates real inter-glitch intervals with intervals in which a pulsar kept glitching but
+was not observed, and a single such gap misclassifies even the textbook quasi-periodic glitcher
+J0537$-$6910 (whose 2264-day RXTE$\to$NICER gap lifts its raw coefficient of variation to $\sim$2).
+After excising waits far longer than a pulsar's median, the classifier recovers both known
+quasi-periodic glitchers --- J0537$-$6910 and Vela --- as quasi-periodic (\gpRealKnownQpOK), while a
+synthetic recover-a-known separates injected exponential and quasi-periodic processes with a
+false-positive rate of \gpSynFP. Of \gpRealNFit\ pulsars above the count cut (magnetars
+excluded), \gpRealNQp\ are quasi-periodic and \gpRealNExp\ exponential. Under an all-Poisson null only
+\gpRealExpectedFalseQp\ false quasi-periodics are expected among these, so the quasi-periodic
+\emph{fraction} is highly significant (binomial $p=\gpRealQpBinomP$) even though $\sim$1--2 individual
+borderline members are expected spurious. Only \gpRealNClustered\ pulsar is clustered: the gap
+excision removes exactly the long gaps that produce clustering, so long-gap clustering is
+structurally under-detected --- a method asymmetry, not evidence against the clustering that
+\citet{zhuzheng2025} report on this same sample. Adding the post-2018 glitches flips \gpRealNFlipped\
+classification (J2229$+$6114 exponential$\to$quasi-periodic) among the \gpRealNStable\ pulsars
+classifiable in both epochs and makes \gpRealNNewly\ newly classifiable. The gap-robust classification
+(which a naive analysis lacks, as J0537 shows) and the post-2018 change table are the contribution,
+extending \citet{howitt2018} to the full sample and differentiated from the concurrent cluster-period
+analysis of \citet{zhuzheng2025}.
+\end{abstract}
+
+\keywords{Pulsars (1306) --- Neutron stars (1108) --- Rotation-powered pulsars (1408) ---
+Astrostatistics techniques (1886)}
+
+\section{Introduction}
+A pulsar glitch is a sudden spin-up of a neutron star, the observable of an internal
+angular-momentum transfer. The \emph{statistics} of glitches --- how large they are and how they are
+spaced in time --- constrain the interior physics, and two behaviours are established: most pulsars
+glitch like a memoryless Poisson process (exponential waiting times; \citealt{howitt2018}), while a
+few --- notably Vela and PSR~J0537$-$6910 --- glitch quasi-periodically, J0537 roughly every 100 days
+with a strong size--waiting-time correlation \citep{middleditch2006}.
+
+The Jodrell Bank glitch catalogue \citep{espinoza2011,basu2022} is the standard population resource.
+Its last population-statistics paper \citep{basu2022} ends at 2018 and models the aggregate
+glitch-size and spin-down-change distributions with a two-component Gaussian mixture; it does not
+perform a per-pulsar \emph{waiting-time} model selection. \citet{howitt2018} did estimate per-pulsar
+waiting-time distributions and separate Poisson-like from quasi-periodic glitchers, but for only the
+few most-glitching pulsars on a pre-2018 sample and without correcting for monitoring gaps. The
+catalogue has since grown by $\sim$184 glitches. We extend the per-pulsar waiting-time classification
+to the full $\ge5$-glitch sample, make it robust to monitoring gaps, and report how the
+classifications change when the post-2018 data are added. The concurrent work of \citet{zhuzheng2025}
+draws on the same sample but studies glitch-\emph{cluster} period versus characteristic age --- a
+different quantity we do not overlap.
+
+\section{Method}
+\label{sec:method}
+\textbf{Waiting times.} We scrape the live catalogue, group by J-name, and take successive-epoch
+differences as inter-glitch waiting times (in years) for each pulsar with $\ge5$ glitches.
+
+\textbf{Monitoring-gap excision.} The archival waiting times mix real intervals with monitoring gaps.
+A regular glitcher observed through a long hiatus records one enormous interval that is not physical;
+J0537$-$6910's 2264-day RXTE$\to$NICER gap among $\sim$100-day intervals is the extreme case, and it
+alone lifts its raw coefficient of variation to $\sim$2, so a naive fit calls it exponential. We drop
+waits longer than six times a pulsar's median as monitoring gaps before classifying. For a regular
+glitcher such a wait is almost certainly unobserved; for a genuine exponential only the far tail is
+lost ($P(w>6\,\mathrm{median})\approx1.5\%$), so the null is barely biased. The unavoidable cost is
+that a genuinely \emph{clustered} pulsar --- bursts of glitches separated by real long quiescent gaps
+--- has those gaps excised too, so long-gap clustering is under-detected; we state this plainly.
+
+\textbf{Classification.} On the excised waits the coefficient of variation $\mathrm{cv}=\sigma/\mu$
+is the regularity measure ($\sim$1 for exponential, $<$1 for quasi-periodic, $>$1 for clustered). We
+calibrate it against the exponential null with a parametric bootstrap --- the cv distribution of $n$
+exponential waits (cv is scale-free) --- and classify quasi-periodic if the observed cv is
+significantly low ($p<0.05$), clustered if significantly high, else exponential. The bootstrap null is
+drawn with the \emph{same} gap excision applied to it, so null and data undergo identical processing.
+This test replaced an initial gamma--exponential BIC that underweighted Vela's mild-but-real
+regularity --- so the statistic was, in part, reselected against the known objects, and the
+independent validation is the synthetic injection test above (Vela in any case passes with \emph{zero}
+gap excision, and J0537's gap is $\sim$22$\times$ its median, so both recover for any gap threshold in
+3--10$\times$; the classifications and the quasi-periodic count are stable across that range). We
+exclude magnetars/AXPs (\gpRealNMagnetars\ dropped), whose catalogued glitches are
+X-ray-outburst-driven rather than rotation-powered.
+
+\textbf{The post-2018 delta.} We reclassify each pulsar on the pre-2019 (Basu) subset and on the full
+catalogue, and report which cross the $\ge5$-glitch threshold only with the new data
+(\emph{newly classifiable}) and which had a real class in both epochs but changed it (\emph{flipped}).
+
+\section{Synthetic recover-a-known}
+On synthetic glitch series with known waiting-time processes, the classifier separates exponential
+from quasi-periodic with accuracy that rises with glitch count (exponential accuracy \gpSynExpAccLow\
+at 6 glitches to \gpSynExpAccHigh\ at 40; quasi-periodic completeness \gpSynQpCompLow--\gpSynQpCompHigh)
+at a false-positive rate of \gpSynFP\ (a Poisson series called regular). A quasi-periodic series with
+an injected monitoring gap is misclassified without excision and correctly recovered with it ---
+the J0537 scenario in miniature. Clustered processes are recoverable only with excision disabled, as
+expected.
+
+\section{Results}
+\label{sec:results}
+\textbf{The real-data recover-a-known passes.} Both established quasi-periodic glitchers come out
+quasi-periodic --- J0537$-$6910 (cv~0.53 after excising its one monitoring gap) and Vela
+(cv~0.57) --- so \gpRealKnownQpOK. This required the gap excision: without it J0537 is misclassified
+exponential, which is itself the paper's methodological point.
+
+\textbf{The census.} Of \gpRealNFit\ pulsars with $\ge5$ glitches, \gpRealNExp\ are exponential and
+\gpRealNQp\ ($\sim$30\%) quasi-periodic (\gpRealNClustered\ clustered). Under an all-Poisson null only
+\gpRealExpectedFalseQp\ false quasi-periodics are expected among the \gpRealNFit, so the
+quasi-periodic \emph{fraction} is highly significant (binomial $p=\gpRealQpBinomP$); with a
+per-pulsar $p<0.05$ test, however, $\sim$1--2 individual borderline members are expected spurious, so
+we assert the class exists but not the security of every member. The exponential majority matches the
+Poisson-process picture of \citet{howitt2018}; the quasi-periodic minority is the set for which a
+reservoir/threshold interpretation is warranted. The single \gpRealNClustered\ clustered source is a
+lower bound, since the gap excision suppresses long-gap clustering by construction.
+
+\textbf{The post-2018 change.} Adding the $\sim$184 post-2018 glitches flips \gpRealNFlipped\
+classification among the \gpRealNStable\ pulsars classifiable in both epochs (J2229$+$6114
+exponential$\to$quasi-periodic, on its 9th glitch) and makes \gpRealNNewly\ pulsars newly
+classifiable. The population picture is thus still shifting with each catalogue increment --- a small,
+honest, data-driven statement, explicitly \emph{not} a physical claim: with $\le$10 waits per pulsar a
+single new glitch moves a \emph{borderline} classification (J2229$+$6114 sits near the $p=0.05$
+boundary), exactly the regime where more monitoring, not new physics, is what matters.
+
+\textbf{Honest limits.} Glitch detection is incomplete and uneven across the monitoring history, so
+waiting-time regularity is a lower bound; the $\ge5$-glitch cut selects the most active glitchers; the
+gap excision assumes large waits are monitoring gaps, which suppresses genuine long-gap clustering;
+and the flips are single-glitch-sensitive. None of these is hidden --- the recover-a-known,
+false-positive rate, and count-dependent accuracy bound what the classification can and cannot say.
+
+\section{Reproducibility}
+The classifier, its synthetic recover-a-known, and all unit tests (including a parser test against a
+vendored real catalogue sample) run offline in CI (\code{python -m jansky\_research.glitchpop
+--offline}). The real census scrapes the live JBO table on demand (\code{scripts/glitchpop\_real.py}).
+Code, tests, and this paper's pipeline are in the \code{jansky-research} repository, built on the
+\code{jansky} course library \citep{jansky}. Draft prepared with the assistance of a large language
+model \citep{anthropicclaude}; all numerical results are pipeline-generated and human-verified.
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+\end{document}
