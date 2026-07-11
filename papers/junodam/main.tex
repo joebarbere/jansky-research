@@ -14,30 +14,25 @@ Coherently Organise the Orbital Vantage}
 Ground-based Jovian decametric (DAM) emission is famously organised in the plane of observer
 central meridian longitude (CML) and Io orbital phase into the Io-A/B/C/D source regions
 \citep{bigg1964,carr1983,marques2017}. The public Juno/Waves calibrated flux-density dataset
-\citep{louis2021} allows the same census \emph{from orbit}: we build an occurrence map over seven months spanning six distinct orbital
-configurations (2016--2019; \jdNbins\ 15-s bins, \jdNact\ active) using the dataset's shipped
-per-channel background statistics for detection, JPL Horizons for the sub-Juno System~III CML
-(the naive IAU rotation formula errs by up to $\sim$40$^\circ$ at Juno, verified), and the Lieske
-ephemeris for Io phase \citep{lieske1987,archinal2018}. On a synthetic orbit with the canonical
-Io boxes injected the census recovers the enhancement within cell-edge smearing (and the
-synthetic round-trip is a machinery check only --- an earlier Io-phase convention error, caught
-in science review, passed it while displacing every box; the convention is now the standard
-$\Phi_{Io}=\mathrm{CML}+180^\circ-\Lambda_{Io}$ of Bigg 1964 / Carr et al.\ 1983). On the
-7-month aggregate, two results: (i) \emph{the raw proximity trend is almost entirely detection
-sensitivity} --- the DAM-band duty cycle falls from \jdAqA\% in the nearest Juno--Jupiter range
+\citep{louis2021} enables the same census \emph{from orbit}: we build an occurrence map over seven
+months spanning six orbital configurations (2016--2019; \jdNbins\ 15-s bins, \jdNact\
+active), using the dataset's per-channel background statistics for detection, Horizons for the
+sub-Juno CML, and the Lieske ephemeris for Io phase \citep{lieske1987}. A synthetic round-trip
+with the Io boxes injected recovers them (a machinery check only; a review-caught Io-phase
+convention error is corrected to the Bigg 1964 / Carr et al.\ 1983 standard). On the
+7-month aggregate, two results. (i) \emph{The raw proximity trend is almost entirely detection
+sensitivity}: the DAM-band duty cycle falls from \jdAqA\% in the nearest Juno--Jupiter range
 quartile ($\sim$\jdRangeNear~$R_J$) to \jdAqD\% in the farthest ($\sim$\jdRangeFar~$R_J$), a raw
-factor $\sim$\jdNearFarRaw, but a $1/r^2$ sensitivity null (distance-correct each bin's DAM SNR to
-a common range and re-threshold) collapses it to \jdNearFarCorr: the apparent proximity ``law'' is
-a threshold-amplified inverse-square visibility effect, not an $\sim$180$\times$ intrinsic
-occurrence rise, and the $\sim$\jdNearFarCorr\ residual is an upper bound entangled with viewing
-geometry; and (ii) \emph{the Earth-canonical
-(CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage occurrence}: the
-aggregate contrast is \jdContrast, and across \jdNmonths\ individual months the contrast
-scatters on both sides of unity (median \jdCmMed, range \jdCmMin--\jdCmMax; a one-sample test
-against unity does not reject, and the earliest reviewed month alone reached \jdCmMax\ ---
-one orbit can mislead). Two readings are consistent with this: the canonical regions encode
-beaming toward a distant near-equatorial observer, and/or genuine month-to-month Io-DAM
-variability (Io volcanism and plasma-torus state); neither is separated here, and a
+factor $\sim$\jdNearFarRaw, but a $1/r^2$ sensitivity null (distance-correct each bin's DAM SNR and
+re-threshold) collapses it to \jdNearFarCorr --- the apparent proximity ``law'' is a
+threshold-amplified inverse-square visibility effect, not an $\sim$180$\times$ intrinsic rise, and
+the residual is an upper bound entangled with viewing geometry. (ii) \emph{The Earth-canonical
+(CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage occurrence}: the aggregate
+contrast is \jdContrast, and across \jdNmonths\ months the contrast scatters on both sides of unity
+(median \jdCmMed, range \jdCmMin--\jdCmMax; a one-sample test against unity does not reject, and the
+earliest month reached \jdCmMax\ --- one orbit can mislead). Both are consistent with the
+canonical regions encoding beaming toward a distant near-equatorial observer and/or genuine
+month-to-month variability (Io volcanism, plasma-torus state); neither is separated here, and a
 beaming-model fit over the full v02 archive is the scoped follow-on.
 \end{abstract}
 

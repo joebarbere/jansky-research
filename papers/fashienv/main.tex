@@ -90,6 +90,19 @@ and we do not claim to reproduce the global HIMF.
 
 \section{Results}
 \label{sec:results}
+
+\begin{figure}
+\plotone{figures/fashienv.pdf}
+\caption{The environment-split FASHI DR1 HI mass function. Each environment's $1/V_{\rm max}$ HIMF
+is fitted with a Schechter function (legend gives $\log M^*$). The void knee sits below the wall
+value ($\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex,
+\feRealVoidKneeSigma$\sigma$); the group-member knee lies above the field, a survivor-biased upper
+envelope (\S\ref{sec:results}). Relative knee offsets are the robust product; the absolute faint-end
+slope is steeper than the published global HIMF because this simple estimator uses a single flux
+limit rather than the survey completeness function.}
+\label{fig:himf}
+\end{figure}
+
 \textbf{Voids.} The void HIMF knee sits below the wall value by
 $\Delta\log M^* = \feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex, a
 \feRealVoidKneeSigma$\sigma$ suppression (void $\log M^* = \feRealVoidLogMStar\pm$0.08, wall
@@ -137,6 +150,23 @@ cluster-scale densities.
 pipeline-generated (\code{results/fashienv\_metrics.json} $\to$ macros). Data: FASHI DR1
 (VizieR \code{J/other/SCPMA/67.19511}), Tempel+2017 (\code{J/A+A/602/A100}), Douglass+2023
 (\code{J/ApJS/265/7}), all via VizieR, no auth.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+implementation, and testing of the \code{fashienv} module and the drafting of this manuscript.
+The author directed the work, independently reviewed and verified all code, results, and
+citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+This work uses the FASHI DR1 catalogue (FAST; \citealt{fashi_dr1}), the Tempel et al.\ (2017)
+group catalogue, and the Douglass et al.\ (2023) SDSS void catalogue, all via VizieR, and builds
+on the \code{jansky} project. The author acknowledges the collaborative contribution of Anthropic's
+Claude.
+\end{acknowledgments}
+
+\software{Claude \citep{anthropicclaude}, astroquery, NumPy, SciPy, Matplotlib,
+jansky \citep{jansky}}
 
 \bibliography{refs}
 \bibliographystyle{aasjournal}
