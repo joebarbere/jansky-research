@@ -18,7 +18,9 @@ import json
 import re
 from pathlib import Path
 
-ARXIV_PAPERS = ("frbstats", "vlass", "peaked", "southern")  # the fresh-angle papers (see TODO.md)
+# The genuine-novelty shortlist from the 2026-07-11 triage (PR #115); lptv leads.
+# Full walkthrough lives in Joe's Obsidian vault (efforts/radio_astronomy/research_paper_todo.md).
+ARXIV_PAPERS = ("lptv", "junodam", "fashienv", "frblens", "rmstructure")
 
 
 def _exists(p: Path) -> bool:
