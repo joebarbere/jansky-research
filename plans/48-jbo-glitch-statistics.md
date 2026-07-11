@@ -1,8 +1,31 @@
 # 48 — JBO glitch catalogue: post-2018 population statistics (≥120 unanalysed glitches)
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — and an explicit check
-for an in-press JBO population paper before committing
+Status: ✅ done 2026-07-11 — a WORKING classification with a passing recover-a-known. Monitoring-gap-
+robust per-pulsar waiting-time classification of the live JBO catalogue (727 glitches/223 pulsars; 33
+with >=5 glitches: 23 exponential, 10 quasi-periodic, 0 clustered). **Recover-a-known PASSES** (J0537-6910
++ Vela both quasi-periodic) -- but ONLY after the key insight that the archival waiting times conflate
+real intervals with MONITORING gaps: J0537's 2264-d RXTE->NICER gap inflates its raw CV to ~2 so a
+naive fit calls it exponential; excising waits >6x median fixes it (cost: long-gap clustering
+under-detected, stated). Classifier = parametric-bootstrap CV test (replaced a gamma-BIC that
+underweighted Vela). Post-2018 delta: 2 flips (J1841-0524 qp->exp, J2229+6114 exp->qp) + 3 newly
+classifiable vs the end-2018 Basu subset. GATE-2 pending. Module `glitchpop.py` (+`glitchpop_real.py`),
+paper `papers/glitchpop/`, findings `survey/glitchpop-findings.md`. — GATE 0 done 2026-07-11:
+**PASS (conditional)**. Data LIVE + scrapable, no
+auth: `jb.man.ac.uk/pulsar/glitches/gTable.html`, **727 glitches / 222 pulsars** (up from Basu+2022's
+543/178 -> ~184 new post-2018). Columns: Bname, **JNAME**, glitch#, **MJD**+err, **dF/F** (dnu/nu
+x1e-9)+err, **dF1/F1** (dnudot/nudot x1e-3)+err, References. **Basu+2022** (MNRAS 510, 4049;
+arXiv:2111.06835): catalogue + two-component-Gaussian mixture of glitch SIZE + dnudot; end-2018; did
+NOT do systematic per-pulsar WAITING-TIME model selection. **arXiv:2502.20017** = Bactrian sizes,
+J0537 only (single-pulsar). **IN-PRESS CHECK**: no JBO catalogue-update/population paper post-2022.
+BUT **Zhu & Zheng 2025 (arXiv:2501.01862)** use the SAME >=5-glitch JBO+ATNF sample (671 glitches, 32
+pulsars) for glitch-CLUSTER-period-vs-age -- MUST cite + differentiate; our deliverable is different
+(per-pulsar exponential-vs-regular waiting-time classification + the post-2018 DELTA, NOT clustering,
+which is taken -- do not drift there). **Recover-a-known**: most pulsars power-law sizes + EXPONENTIAL
+(Poisson) waits; J0537-6910 quasi-periodic ~100 d (Gaussian, NOT exponential, size<->next-wait corr);
+Vela ~2-3 yr quasi-periodic; Crab ~30 glitches. **The wedge**: per-pulsar waiting-time regularity
+classification (exponential vs quasi-periodic vs clustered, via CV + gamma-vs-exponential BIC) + the
+diff of which classifications FLIP when post-2018 glitches are added vs the end-2018 Basu subset.
+ATNF join by JNAME. Reuse: `frbstats.fit_power_law`, `ppdot`/`lpt` scrape+flag discipline.
 
 ## Context
 
