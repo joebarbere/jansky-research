@@ -47,6 +47,7 @@ SLICES = {
     "skr": ("skr", "--offline"),
     "typeii": ("typeii", "--offline"),
     "vgpra": ("vgpra", "--offline"),
+    "pte2": ("pte2", "--offline"),
     "rfitrend": ("rfitrend", "--offline"),
     "rmstructure": ("rmstructure", "--offline"),
     "rmdipole": ("rmdipole", "--offline"),
