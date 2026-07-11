@@ -1,8 +1,34 @@
 # 47 — Parkes Transient Events II: giant-pulse/heavy-tail census across 363 pulsars
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the PTE-II
-sqlite DB download path and that raw segments are included
+Status: ✅ done 2026-07-10 — an HONEST NULL. Uniform per-source giant-pulse (heavy-tail) test over
+all 363 PTE-II pulsars, 136 fitted (>=50 pulses): 26 (19%) flagged heavy-tailed, but (i) NO
+correlation with Edot (Spearman -0.03, p=0.76; MW p=0.13), (ii) the classification is
+**detection-power limited** (`count_limited`: heavy sources 2.4x more pulses, MW p=0.02; flag rate
+0.088 low-count -> 0.294 high-count half), (iii) the tails are steep (median index 11.6, not the
+~2-3 of true giant pulses), and the classic GP archetypes (Crab/B1937+21/Vela) don't survive the
+count cut (only B0950+08 present, correctly flagged). Synthetic recover-a-known confirms the test
+works (completeness 0.33->1.0 vs count, FP ~0.05) so the null is a real data limit, not tooling.
+No giant-pulse population and no Edot trend claimed; confound is pipeline-generated. Module
+`pte2.py` (+`pte2_real.py`), paper `papers/pte2/`, findings `survey/pte2-findings.md`. — GATE 0
+done 2026-07-10: **CONDITIONAL PASS, novelty NARROWED**. Paper =
+Yang+2025, *Parkes transient events II* (arXiv:2508.14403, **ApJS** 10.3847/1538-4365/adfe67):
+165,592 single pulses / 363 pulsars / Parkes MB 1997-2001; SQLite3 (~1.5 GB zip on GitHub LFS
+`Astroyx/Pulsar_collection` -> `Pulsar_fits_database_v1.zip`, sha256 775dffa0...; mirror CSIRO DAP
+10.25919/34am-zx04; **open, no auth -> real leg runnable**). **Correction: the paper is NOT
+infrastructure-only** -- it already fits log-normal/Gaussian fluence distributions for 98 pulsars
+(>100 detections) + a population power-law (alpha=-1.7+/-0.1) + a 25.3% giant-pulse-fraction stat. And
+**HTRU-V (Burke-Spolaor+2012, MNRAS 423, 1351)** is a prior 315-pulsar log-normal single-pulse
+energy census. So a generic "363-pulsar energy-distribution census" is **anticipated and NOT novel**.
+**The defensible wedge (this slice)**: uniform PER-SOURCE heavy-tail **model selection** -- log-normal
+vs power-law-**tail** via a principled likelihood ratio (Vuong/Clauset) -- across ALL 363, correlated
+with Edot; HTRU-V tested log-normal/Gaussian (not heavy-tail) and PTE-II fit only 98 (population
+power-law, not per-source tails). **Schema**: `pulsar`(jname, p0, s1400, spNumber, smax/smin) <-
+`file`(pfLinkID, timeStartMJD, gain_factor) <- `fileSegment`/`seg_file`(pfLinkID, snr_max/snr_min,
+data BLOB). Per-pulse FLUENCE is NOT stored -- derived on-the-fly from blobs by the paper's tool; we
+use per-pulse **S/N** (snr_max) as the energy proxy (proportional to fluence within a source; standard
+for tail-shape work). Join to ATNF Edot by `jname`=PSRJ. Recover-a-known heavy-tail set: B1937+21,
+Vela (J0835-4510), + PTE-II giant-pulse-fraction pulsars. Reuse: `frbstats.fit_power_law`/`select_xmin`,
+`ppdot.spindown_luminosity` + `fetch_atnf_ppdot`, `stacking.injection_recovery` discipline.
 
 ## Context
 
