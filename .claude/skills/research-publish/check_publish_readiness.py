@@ -4,7 +4,7 @@
 A static pre-flight that inspects the repo's *artifacts* (no network, no accounts) and prints an
 ordered readiness report mirroring the dependency chain (Zenodo DOI unblocks JOSS; RNAAS and arXiv are
 independent). It flags what's present, what's missing, and the next manual step — so nothing in the
-account-bound `TODO.md` flow is missed.
+account-bound publishing flow (checklist in Joe's personal notes) is missed.
 
 Marks: [x] ready · [ ] missing/action-needed · [~] present but verify. Exit 0 always (it's a report).
 
@@ -106,7 +106,10 @@ def check(repo: Path) -> None:
     print(
         "      next: register + line up an endorser early; `make arxiv`; fill metadata.yaml; upload."
     )
-    print("\nSee TODO.md for the full account-bound walkthrough.\n")
+    print(
+        "\nFull account-bound walkthrough: research_paper_todo.md in Joe's Obsidian vault"
+        " (efforts/radio_astronomy/).\n"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

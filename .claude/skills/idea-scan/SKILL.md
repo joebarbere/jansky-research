@@ -13,7 +13,7 @@ read whichever is newest first; the new scan must go *beyond* it, not repeat it.
 ## Procedure
 
 1. **Ground in the repo's current state** (30 min, no network): `README.md` slice table,
-   `TODO.md`, the newest `survey/*-findings.md` "caveats/future work" sections, open `plans/`,
+   the newest `survey/*-findings.md` "caveats/future work" sections, open `plans/`,
    and the workstation profile (GPU/ROCm status, disk, station timeline) from the latest scan.
    List what is *merged* — the biggest failure mode is proposing already-executed ideas.
 2. **Fan out parallel research agents** (Agent tool, background, one message). Proven split:

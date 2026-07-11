@@ -10,7 +10,8 @@ needs the user signed in to an external service, and DOIs/endorsements are issue
 What this skill *does*: run a **static readiness check** on the repo's artifacts (no network, no
 accounts), report what's present/missing, and walk the venues in the right **dependency order**. It
 complements the per-paper `arxiv-submit` skill (which assembles one arXiv package) by covering the
-whole Zenodo → JOSS → RNAAS → arXiv flow. The repo's `TODO.md` is the canonical account-bound checklist.
+whole Zenodo → JOSS → RNAAS → arXiv flow. The canonical account-bound checklist lives in Joe's
+personal notes, outside this repo (Obsidian vault: `efforts/radio_astronomy/research_paper_todo.md`).
 
 ## When invoked
 
@@ -19,7 +20,9 @@ whole Zenodo → JOSS → RNAAS → arXiv flow. The repo's `TODO.md` is the cano
    It inspects `LICENSE`, `CITATION.cff`, `.zenodo.json`, `joss/paper.md`+`paper.bib`, the RNAAS note,
    and each fresh-angle paper's `arxiv-submission/` package, printing `[x]`/`[ ]`/`[~]` with the next
    action per venue.
-2. **Read `TODO.md`** for the full manual walkthrough, then guide the user venue by venue.
+2. **Consult the checklist** (`efforts/radio_astronomy/research_paper_todo.md` in the Obsidian
+   vault, if reachable; otherwise the order below) for the full manual walkthrough, then guide the
+   user venue by venue.
 
 ## The order (and why)
 

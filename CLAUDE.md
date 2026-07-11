@@ -35,7 +35,8 @@ tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-da
 
 **Merged slices:** twenty-six plus the type III synthesis — the authoritative per-slice table
 (tool + outcome) is in `README.md`. Each has a paper under `papers/<slice>/`. Publishing steps
-are in `TODO.md` (Zenodo → JOSS → RNAAS → arXiv).
+(Zenodo → JOSS → RNAAS → arXiv) are tracked in Joe's personal notes, outside this repo
+(Obsidian vault: `efforts/radio_astronomy/research_paper_todo.md`).
 
 ## Active direction (2026-07)
 
