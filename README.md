@@ -270,6 +270,13 @@ jansky-research/
                          #   opportunity-scan shortlist)
 ```
 
+## Support
+
+The station track (plans 77–84) runs on rooftop hardware bought out of pocket. You can
+help fund the buildout — rotator, second dish, coherent receiver — via
+[GitHub Sponsors](https://github.com/sponsors/joebarbere) or
+[Ko-fi](https://ko-fi.com/joebarbere).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
