@@ -531,17 +531,19 @@ common finding: the amateur literature stops at qualitative detections, so **rig
 budgets, public-survey ground truth, geometry correction) is the novelty axis**, matching this
 repo's house style.
 
-- **S1. LNA-first vs filter-first noise-figure/overload A/B** — bench (VNA + Y-factor +
-  out-of-band interferer); folk knowledge nobody has published measured. RNAAS-able methods
-  note; do during commissioning. *Updated 2026-07-11 for the integrated Discovery feed:* the
-  station's sealed feed fixes its own ordering, so the A/B is a pure methods note on a dedicated
-  ~$85 discrete-parts buy (SPF5189Z + standalone 1420 filter + SAWbird+ H1 as the bench-measurable
-  integrated reference), anchored by an on-sky ground/cold-sky Tsys measurement of the Discovery
-  feed itself (not bench-injectable — antenna-integrated input). See `plans/77`.
+- **S1. LNA-first vs filter-first noise-figure/overload A/B** — 🧊 **deferred to backlog
+  2026-07-11** (`survey/candidate-gaps.md` § Station hardware methods, `plans/77`): the sealed
+  Discovery feed fixes the station's ordering, so no outcome changes a station decision, and the
+  A/B needs a dedicated ~$85 parts buy purely for the paper. Its one station-relevant piece —
+  the on-sky ground/cold-sky **Tsys measurement of the Discovery feed** — moved into S2's
+  commissioning leg. Pick S1 back up only if the fast-RNAAS credit is wanted (still the quickest
+  citable result in the track; re-run the novelty check first).
 - **S2. Open H-line pipeline with recover-a-known vs LAB/HI4PI** — per-pointing calibrated
   spectra reproducing survey profiles to stated accuracy; the CHART/campus-telescope genre
   (arXiv:2307.11173, 2404.17893) ships no tested, CI'd pipeline. `hi.py` LAB reader extends.
-  Also the calibration substrate for S3/S4.
+  Also the calibration substrate for S3/S4 — and (2026-07-11, from S1's restructure) carries the
+  **commissioning Tsys measurement** of the Discovery feed (ground/cold-sky Y-factor; no
+  published Tsys exists for this feed; seeds S3's error budget).
 - **S3. Annual ±142 kHz H-line Doppler sinusoid with a real uncertainty budget** — the flagship;
   best precedent found is a two-date proof of concept, never 12 months with an error budget.
   The limiting term is gain/bandpass drift (weekly cal cadence + possibly the Dicke-switched

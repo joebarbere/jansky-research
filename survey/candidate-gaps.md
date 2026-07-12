@@ -119,3 +119,13 @@ These are domain-independent and partly addressed by *this* project's automation
   sigpyproc3, `your`, fitburst) into one tested pipeline, avoiding the GPU-only/abandoned corner.
 - **Reproducible, offline radio-ML tooling** with CI + pretrained models (FETCH/sclassifier/ClaRAN
   are GPU-assumed, untested, or abandoned).
+
+## Station hardware methods (deferred from the station track)
+
+- **LNA-first vs filter-first: measured NF/overload A/B** (deferred 2026-07-11, full plan
+  preserved in `plans/77-station-lna-filter-ab.md`) — the folk trade-off nobody has published
+  measured. Deferred because the station's sealed Discovery feed fixes its own ordering, so the
+  measurement no longer informs any build decision; needs a dedicated ~$85 discrete-parts buy
+  (SPF5189Z, standalone 1420 MHz filter, SAWbird+ H1) + the owned bench. Its on-sky Discovery-feed
+  Tsys leg moved to `plans/78`. Still the quickest citable result in the station track
+  (RNAAS-able, bench-only); re-run the novelty check before picking up.

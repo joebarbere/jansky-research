@@ -15,13 +15,21 @@ Philadelphia rooftop receiver (`station/hydrogen-line-receiver.md`), extending `
 reader (`read_lab_slice`/`fetch_lab_longitude`) into a survey-comparison harness — and it is the
 calibration substrate for plans 79 (annual Doppler) and 80 (drift-scan), which sequence after it.
 
+**2026-07-11 restructure:** this slice also carries the **commissioning Tsys measurement** of the
+Discovery feed (ground vs cold-sky Y-factor through the full chain), moved here from plan 77 when
+that slice was deferred to backlog. It is the first calibration-substrate number, it needs no new
+parts (two pointings, no noise source), no published system temperature exists for this feed, and
+it seeds plan 79's error budget (gain/Tsys drift is that slice's stated limiting term).
+
 ## Deliverables
 
 - `src/jansky_research/hline.py`: `read_capture` (averaged-spectra format from the station's
   capture service), `bandpass_calibrate` (reference-load/frequency-switched gain removal),
   `freq_to_vlsr` (barycentric + LSR correction), `survey_profile` (LAB/HI4PI profile at a
   pointing, extending `hi.py`), `compare_pointing` (residual + accuracy statistic),
-  `synthetic_capture` (injected profile + gain shape + noise), `run`/`_figure`/macros.
+  `sky_ground_tsys` (ground/cold-sky Y-factor → system temperature with propagated uncertainty;
+  moved from plan 77), `synthetic_capture` (injected profile + gain shape + noise),
+  `run`/`_figure`/macros.
 - Tests to the 85% floor (synthetic/offline fixtures — no sky data needed for tests);
   `papers/hline/`; `survey/hline-findings.md`; wiring.
 
@@ -32,11 +40,14 @@ calibration substrate for plans 79 (annual Doppler) and 80 (drift-scan), which s
 1. Tooling + synthetic recover-a-known, ahead of hardware: inject a known HI profile through a
    simulated bandpass + noise; the pipeline must recover the profile's amplitude, centroid, and
    width to stated tolerance. Build the HI4PI/LAB per-pointing comparison harness offline too.
-2. First-light leg (`# pragma: no cover`): pointed 60–300 s integrations toward the Galactic
+2. Commissioning Tsys (`# pragma: no cover`): ground vs cold-sky Y-factor through the full
+   chain → system temperature with propagated uncertainty; synthetic hot/cold pair must
+   round-trip through `sky_ground_tsys` in step 1 first.
+3. First-light leg (`# pragma: no cover`): pointed 60–300 s integrations toward the Galactic
    plane in Cygnus + off-plane reference; calibrate; compare each pointing to LAB/HI4PI.
-3. Extend to a handful of longitudes (the rotation-curve pointings); report per-pointing
+4. Extend to a handful of longitudes (the rotation-curve pointings); report per-pointing
    accuracy (K-scale or relative), centroid error in km/s, and the urban RFI environment.
-4. GATE-2 science review → paper: an open, tested, CI'd small-dish H-line pipeline with
+5. GATE-2 science review → paper: an open, tested, CI'd small-dish H-line pipeline with
    quantified survey agreement — the artifact the genre lacks.
 
 ## Verification
@@ -48,7 +59,9 @@ GATE-2 sign-off.
 ## Risks & mitigations
 
 - **Hardware/first-light delay** → the entire software + synthetic + survey-harness stack lands
-  first; only step 2 waits on the roof.
+  first; only steps 2–3 wait on the roof.
+- **Cold-sky Tsys leg weather/RFI sensitivity** → repeat on ≥2 nights; report the spread as the
+  uncertainty, not a single-shot number.
 - **Urban RFI in the protected band's shoulders** (Philadelphia rooftop) → RFI flagging in
   `bandpass_calibrate`; off-plane reference pointings; report occupancy honestly.
 - **Absolute calibration is hard with hobby parts** → lead with relative/shape accuracy and a
