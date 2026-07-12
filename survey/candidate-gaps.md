@@ -10,6 +10,11 @@ Every gap below is CPU-only, offline-reproducible, lightweight-data, and compose
 tested `jansky` helper. Datasets and packages were URL-verified in the survey (see
 `literature.md`, `github-landscape.md`).
 
+Standalone idea notes (triggered by a specific paper/event, kept as their own files):
+[`idea-pwn-xray-radio-polarimetry.md`](idea-pwn-xray-radio-polarimetry.md) — the PWN
+X-ray/radio B-field mismatch from the 2026 IXPE Lighthouse-pulsar result (imaging
+polarimetry; heavier than the usual catalogue slice, novelty-gated).
+
 ## ✅ Completed slices (built, reviewed, merged)
 
 1. **FRB burst-statistics** → `jansky_research.frbstats` — reproduced the CHIME width result.
