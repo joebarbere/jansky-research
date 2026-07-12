@@ -1,5 +1,8 @@
 # jansky-research
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/joebarbere?logo=githubsponsors)](https://github.com/sponsors/joebarbere)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/joebarbere)
+
 **Amateur radio-astronomy research, end to end.** A sibling of the
 [`jansky`](https://github.com/joebarbere/jansky) teaching course: where jansky *teaches* radio
 astronomy, this repo *does* original amateur research — surveys the landscape, builds tested
@@ -275,7 +278,9 @@ jansky-research/
 The station track (plans 77–84) runs on rooftop hardware bought out of pocket. You can
 help fund the buildout — rotator, second dish, coherent receiver — via
 [GitHub Sponsors](https://github.com/sponsors/joebarbere) or
-[Ko-fi](https://ko-fi.com/joebarbere).
+[Ko-fi](https://ko-fi.com/joebarbere). Honestly: that list is a general direction, not a
+promise — the research plans and the observing priorities can and will change as results
+come in.
 
 ## License
 
