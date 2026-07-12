@@ -531,9 +531,13 @@ common finding: the amateur literature stops at qualitative detections, so **rig
 budgets, public-survey ground truth, geometry correction) is the novelty axis**, matching this
 repo's house style.
 
-- **S1. LNA-first vs filter-first noise-figure/overload A/B** — bench-only (VNA + Y-factor +
-  out-of-band interferer), no sky needed; folk knowledge nobody has published measured.
-  RNAAS-able methods note; do during commissioning.
+- **S1. LNA-first vs filter-first noise-figure/overload A/B** — bench (VNA + Y-factor +
+  out-of-band interferer); folk knowledge nobody has published measured. RNAAS-able methods
+  note; do during commissioning. *Updated 2026-07-11 for the integrated Discovery feed:* the
+  station's sealed feed fixes its own ordering, so the A/B is a pure methods note on a dedicated
+  ~$85 discrete-parts buy (SPF5189Z + standalone 1420 filter + SAWbird+ H1 as the bench-measurable
+  integrated reference), anchored by an on-sky ground/cold-sky Tsys measurement of the Discovery
+  feed itself (not bench-injectable — antenna-integrated input). See `plans/77`.
 - **S2. Open H-line pipeline with recover-a-known vs LAB/HI4PI** — per-pointing calibrated
   spectra reproducing survey profiles to stated accuracy; the CHART/campus-telescope genre
   (arXiv:2307.11173, 2404.17893) ships no tested, CI'd pipeline. `hi.py` LAB reader extends.
