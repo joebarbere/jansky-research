@@ -11,7 +11,9 @@ and mirrors its `uv`/ruff/mypy/pytest conventions.
 - **`../jansky`** — the course (library we depend on). Its `.claude/skills/` hold the general
   research helpers: `find-radio-papers`, `radio-source-lookup`, `dataset-watch`, `radio-mastodon`.
 - **this repo** — the research. Its `.claude/skills/` hold the publishing/data helpers: `arxiv-submit`,
-  `casda-cutout-fetch`. (Ports of `find-radio-papers` + `radio-source-lookup` live here too so they
+  `casda-cutout-fetch`, `pull-station-data` (pulls the `jansky-observe` station's codified
+  observation bundles — averaged HI spectra + provenance — into `data/station/` for plan 78's
+  `hline.read_capture`). (Ports of `find-radio-papers` + `radio-source-lookup` live here too so they
   work without the course checked out.)
 
 A new session in *either* repo: read this file (or jansky's `CLAUDE.md`) to learn the other exists.
