@@ -229,6 +229,16 @@ and [long-duration operations](station/operations.md) notes. These are the build
 instrument meant to feed self-collected data into future slices; the owner's working notes
 (purchase log, prices, per-part rationale) live in an Obsidian vault, not this repo.
 
+The station's **control software** is the sibling [`jansky-observe`](https://github.com/joebarbere/jansky-observe)
+repo — now feature-complete across every planned milestone (capture + live view, an HI-line
+classifier, calibration epochs, an unattended transit scheduler, drift-scan campaigns, a codified
+observation-export bundle, and az/el rotator control, behind a read-mostly MCP surface). What's
+left there is first light. Once it produces real spectra, the
+[`pull-station-data`](.claude/skills/pull-station-data/SKILL.md) skill in this repo pulls its
+codified observation bundles (averaged spectra + full provenance) into `data/station/` — exactly
+the input format the hydrogen-line pipeline ([plan 78](plans/78-station-hline-pipeline.md))
+consumes.
+
 ## Relation to `jansky`
 
 This repo **depends on `jansky` as a library** and reuses its tested helpers (`jansky.transients`,
@@ -264,7 +274,7 @@ jansky-research/
   CITATION.cff           # "Cite this repository"; .zenodo.json drives Zenodo archival
   containers/            # tectonic paper-build image
   .claude/skills/        # arxiv-submit, research-publish, casda-cutout-fetch, radio-cutout,
-                         #   find-radio-papers, radio-source-lookup, idea-scan
+                         #   find-radio-papers, radio-source-lookup, idea-scan, pull-station-data
   .claude/agents/        # dataset-analyst, pipeline-runner, results-interpreter (+ reused jansky)
   plans/                 # numbered slice specs (00-37); the lasting record is each slice's
                          #   survey/*-findings.md + papers/<slice>/. #29 is planned, not started
