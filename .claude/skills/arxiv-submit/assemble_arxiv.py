@@ -162,6 +162,213 @@ def validate(paper: Path, main: Path, abstract: str, files: list[Path]) -> list[
     return errs
 
 
+# --- arXiv category suggestion ("which groups to submit to") -----------------
+# arXiv routes a paper by its *primary* category (one, the best single fit) plus up
+# to ~3 *cross-lists* (secondary categories whose readers should also see it). For
+# radio astronomy almost everything is under astro-ph; the science domain sets the
+# primary and astro-ph.IM rides along whenever the contribution is a tool/method
+# (the whole point of this repo's papers). Non-astro cross-lists (eess.SP for pure
+# DSP, physics.space-ph for heliophysics) are added only when a *different*
+# community should genuinely see it.
+ASTRO_CATEGORIES = {
+    "astro-ph.GA": "galaxies, Milky Way, ISM, AGN/jets, HI 21cm, Faraday rotation",
+    "astro-ph.CO": "cosmology, large-scale structure, isotropy/dipole, source counts, lensing",
+    "astro-ph.HE": "FRBs, pulsars/magnetars, transients, accretion/jets, explosive phenomena",
+    "astro-ph.SR": "the Sun & solar radio bursts, stars, M/white/brown dwarfs, coherent emission",
+    "astro-ph.EP": "planets & the solar system: Jovian/Saturnian/ice-giant radio, magnetospheres",
+    "astro-ph.IM": "instrumentation, methods, software, pipelines, data analysis, statistics, RFI",
+}
+
+# Non-astro cross-lists a radio paper occasionally warrants (a *different* community).
+_NONASTRO_CATEGORIES = {
+    "eess.SP": "signal processing — for a pure DSP/algorithm contribution",
+    "physics.space-ph": "space physics / heliophysics — solar-wind & magnetosphere radio",
+    "physics.ins-det": "instrumentation & detectors — for a hardware/receiver design",
+    "gr-qc": "gravitational waves / GR",
+    "stat.ML": "machine-learning methodology (e.g. SBI, classifiers)",
+}
+
+# Curated (primary, cross_lists) for THIS repo's slices, keyed by paper-dir name.
+# Rule of thumb encoded here: primary = the science domain the headline result lives
+# in; astro-ph.IM cross-listed because each is a reproducible tool. A few are IM-primary
+# because the *tool itself* is the contribution (benchmarks, DSP kernels, pipelines).
+SLICE_CATEGORIES: dict[str, tuple[str, list[str]]] = {
+    # FRBs & transients
+    "frbstats": ("astro-ph.HE", ["astro-ph.IM"]),
+    "frbperiod": ("astro-ph.HE", ["astro-ph.IM"]),
+    "frbwait": ("astro-ph.HE", ["astro-ph.IM"]),
+    "frblens": ("astro-ph.HE", ["astro-ph.CO", "astro-ph.IM"]),
+    "driftsearch": ("astro-ph.IM", ["astro-ph.HE"]),
+    "lpt": ("astro-ph.HE", ["astro-ph.IM"]),
+    "lptv": ("astro-ph.HE", ["astro-ph.IM"]),
+    # Pulsars
+    "pulsarspec": ("astro-ph.HE", ["astro-ph.IM"]),
+    "ppdot": ("astro-ph.HE", ["astro-ph.IM"]),
+    "pte2": ("astro-ph.HE", ["astro-ph.IM"]),
+    "glitchpop": ("astro-ph.HE", ["astro-ph.IM"]),
+    "wdpulsar": ("astro-ph.SR", ["astro-ph.HE", "astro-ph.IM"]),
+    # Galaxies / AGN / ISM
+    "hi": ("astro-ph.GA", ["astro-ph.IM"]),
+    "peaked": ("astro-ph.GA", ["astro-ph.IM"]),
+    "southern": ("astro-ph.GA", ["astro-ph.IM"]),
+    "offsets": ("astro-ph.GA", ["astro-ph.IM"]),
+    "vlbi": ("astro-ph.GA", ["astro-ph.HE", "astro-ph.IM"]),
+    "vlass": ("astro-ph.GA", ["astro-ph.HE", "astro-ph.IM"]),
+    "stacking": ("astro-ph.GA", ["astro-ph.CO", "astro-ph.IM"]),
+    "spectra": ("astro-ph.GA", ["astro-ph.IM"]),
+    "fashienv": ("astro-ph.GA", ["astro-ph.CO", "astro-ph.IM"]),
+    # Faraday rotation / cosmic magnetism
+    "rmsky": ("astro-ph.GA", ["astro-ph.IM"]),
+    "rmstructure": ("astro-ph.GA", ["astro-ph.IM"]),
+    "rmdipole": ("astro-ph.CO", ["astro-ph.GA", "astro-ph.IM"]),
+    # Source counts
+    "sourcecounts": ("astro-ph.CO", ["astro-ph.GA", "astro-ph.IM"]),
+    # Solar radio
+    "solarbursts": ("astro-ph.SR", ["astro-ph.IM"]),
+    "windwaves": ("astro-ph.SR", ["physics.space-ph", "astro-ph.IM"]),
+    "swaves": ("astro-ph.SR", ["physics.space-ph", "astro-ph.IM"]),
+    "triangulate": ("astro-ph.SR", ["astro-ph.IM"]),
+    "type3synthesis": ("astro-ph.SR", ["astro-ph.IM"]),
+    "typeii": ("astro-ph.SR", ["astro-ph.IM"]),
+    "ecallisto_pipeline": ("astro-ph.IM", ["astro-ph.SR"]),
+    "ecallisto_census": ("astro-ph.SR", ["astro-ph.IM"]),
+    # Stellar coherent emitters (RACS Stokes V)
+    "stokesv": ("astro-ph.SR", ["astro-ph.IM"]),
+    "stokesv_discovery": ("astro-ph.SR", ["astro-ph.IM"]),
+    "svsbi": ("astro-ph.SR", ["astro-ph.IM"]),
+    # Planetary radio
+    "junodam": ("astro-ph.EP", ["astro-ph.IM"]),
+    "skr": ("astro-ph.EP", ["astro-ph.IM"]),
+    "vgpra": ("astro-ph.EP", ["astro-ph.IM"]),
+    # Instrumentation / DSP
+    "torchfdmt": ("astro-ph.IM", ["astro-ph.HE", "eess.SP"]),
+    "torchdsp": ("astro-ph.IM", ["astro-ph.HE", "eess.SP"]),
+    "rfitrend": ("astro-ph.IM", ["astro-ph.SR"]),
+}
+
+# Keyword votes for papers not in the curated table (e.g. a new station paper).
+_CATEGORY_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "astro-ph.HE": (
+        "fast radio burst",
+        "frb",
+        "pulsar",
+        "magnetar",
+        "giant pulse",
+        "glitch",
+        "transient",
+        "dispersion measure",
+        "dedispersion",
+        "repeater",
+        "gamma-ray",
+        "accretion",
+        "blazar",
+    ),
+    "astro-ph.GA": (
+        "galax",
+        "milky way",
+        "galactic",
+        "interstellar",
+        " ism ",
+        "hi 21",
+        "21 cm",
+        "21cm",
+        "rotation curve",
+        "faraday",
+        "rotation measure",
+        "agn",
+        "quasar",
+        "radio galaxy",
+        "peaked-spectrum",
+        "gps",
+        "css",
+        "h ii",
+    ),
+    "astro-ph.CO": (
+        "cosmolog",
+        "large-scale structure",
+        "isotropy",
+        "dipole",
+        "source counts",
+        "number counts",
+        "gravitational lens",
+        "cmb",
+    ),
+    "astro-ph.SR": (
+        "solar",
+        " sun ",
+        "coronal",
+        "type iii",
+        "type ii",
+        "stellar",
+        "m dwarf",
+        "white dwarf",
+        "brown dwarf",
+        "heliospher",
+        "flare",
+        "coherent emission",
+        "chromospher",
+    ),
+    # NB: no bare "io " — it matches inside "rad-io-" on every radio paper.
+    "astro-ph.EP": (
+        "planet",
+        "jupiter",
+        "jovian",
+        "saturn",
+        "decametric",
+        "kilometric",
+        "uranus",
+        "neptune",
+        "magnetospher",
+    ),
+    "astro-ph.IM": (
+        "software",
+        "pipeline",
+        "reproducible",
+        "benchmark",
+        "gpu",
+        "pytorch",
+        "algorithm",
+        "detector",
+        "rfi",
+        "data analysis",
+        "statistical",
+        "library",
+        "framework",
+        "tool",
+        "method",
+    ),
+}
+
+
+def suggest_categories(slice_name: str, title: str, abstract: str) -> tuple[str, list[str], str]:
+    """Suggest (primary_category, cross_lists, rationale) for a paper.
+
+    Curated per-slice picks win; otherwise a keyword vote over the title+abstract
+    chooses the primary science domain and adds astro-ph.IM whenever the paper reads
+    as a tool/method. Always a *suggestion* the human confirms — arXiv moderators can
+    reclassify, and the primary is a judgment call at the margins.
+    """
+    if slice_name in SLICE_CATEGORIES:
+        primary, cross = SLICE_CATEGORIES[slice_name]
+        return primary, list(cross), f"curated for the '{slice_name}' slice"
+    text = f" {title} {abstract} ".lower()
+    votes = {c: sum(text.count(k) for k in kws) for c, kws in _CATEGORY_KEYWORDS.items()}
+    science = {c: n for c, n in votes.items() if c != "astro-ph.IM" and n > 0}
+    is_tool = votes["astro-ph.IM"] >= 2
+    if science:
+        # Primary = the strongest science domain; then the next domain(s); then
+        # astro-ph.IM if the paper reads as a tool. (A science result stays
+        # domain-primary with IM as a cross-list — the conventional choice; the
+        # curated table above encodes the few genuinely IM-primary papers.)
+        ranked = sorted(science, key=lambda c: science[c], reverse=True)
+        primary, cross = ranked[0], ranked[1:3]
+        if is_tool:
+            cross = cross + ["astro-ph.IM"]
+    else:
+        primary, cross = "astro-ph.IM", []  # pure methods/software, no science domain hit
+    return primary, cross[:3], "keyword-inferred — VERIFY against the guide in SKILL.md"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--paper", default="paper")
@@ -188,6 +395,12 @@ def main() -> int:
     n_fig = sum(1 for f in files if f.suffix == ".pdf")
     comments = f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research"
 
+    # Suggest which arXiv groups this paper belongs in (primary + cross-lists).
+    primary_cat, cross_cats, cat_why = suggest_categories(paper.name, title, abstract)
+    _scopes = {**ASTRO_CATEGORIES, **_NONASTRO_CATEGORIES}
+    cat_ref = "\n".join(f"#   {c:<17}{_scopes.get(c, '')}" for c in [primary_cat, *cross_cats])
+    cross_yaml = ", ".join(cross_cats)
+
     tar = out / "arxiv-source.tar.gz"
     with tarfile.open(tar, "w:gz") as tf:
         for f in files:
@@ -200,8 +413,11 @@ authors:        # full names + affiliations, in order (an AI/LLM is NOT an eligi
 {chr(10).join("  - " + repr(x) for x in authors) or "  - TODO"}
 abstract: |
   {abstract}
-primary_category: TODO   # e.g. astro-ph.IM | astro-ph.GA | astro-ph.HE | astro-ph.CO
-cross_lists: []          # 0-3 secondary, e.g. [astro-ph.GA, astro-ph.HE]
+# categories — SUGGESTED ({cat_why}). Confirm the primary is the single best fit and
+# each cross-list genuinely targets a *different* readership (arXiv allows up to ~3):
+{cat_ref}
+primary_category: {primary_cat}
+cross_lists: [{cross_yaml}]
 comments: {comments!r}
 license: CC BY 4.0       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
 report_number: null
@@ -228,7 +444,10 @@ orcid: {orcid}              # set on the arXiv account/profile too
         "## Upload (manual — arXiv has no submit API)",
         "1. https://arxiv.org/submit → choose license (metadata.yaml).",
         "2. Upload `arxiv-source.tar.gz`; check the AutoTeX preview matches paper/main.pdf.",
-        "3. Paste title/authors/abstract/comments; set primary + cross-list categories.",
+        "3. Paste title/authors/abstract/comments; set the primary + cross-list categories from",
+        f"   metadata.yaml (SUGGESTED: {primary_cat}"
+        + (f" + [{cross_yaml}]" if cross_yaml else "")
+        + ") — verify per 'Choosing the categories' in SKILL.md.",
         "4. Preview & submit (new submitters may need endorsement in the category).",
     ]
     (out / "CHECKLIST.md").write_text("\n".join(lines) + "\n")

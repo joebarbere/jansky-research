@@ -19,7 +19,9 @@ precise step-by-step for the web upload. The user performs the final upload at
 2. **Run the assembler:** `uv run python .claude/skills/arxiv-submit/assemble_arxiv.py --paper <dir>
    --out arxiv-submission`. It produces, under `arxiv-submission/`:
    - `arxiv-source.tar.gz` — the upload (LaTeX source + figures + `.bbl` + `\input`s), or the PDF.
-   - `metadata.yaml` — every submission property, auto-filled where possible, `TODO` otherwise.
+   - `metadata.yaml` — every submission property, auto-filled where possible (including a
+     **suggested primary category + cross-lists** — see *Choosing the categories* below),
+     `TODO` otherwise.
    - `CHECKLIST.md` — the web-upload steps + validation results.
 3. **Fill the metadata with the user.** Walk through `metadata.yaml` and confirm/complete each field
    (below). Extract title/authors/abstract from the `.tex` automatically; ask for the rest.
@@ -42,9 +44,9 @@ precise step-by-step for the web upload. The user performs the final upload at
   account. (An AI/LLM is **not** an eligible author — credit it in acknowledgements + a software
   citation, never the author list.)
 - **abstract** — plain text, ≤ ~1920 chars.
-- **primary_category** — e.g. `astro-ph.IM` (Instrumentation & Methods), `astro-ph.GA` (Galaxy),
-  `astro-ph.HE` (High Energy), `astro-ph.CO`, `astro-ph.SR`, `astro-ph.EP`. Pick the best single fit.
-- **cross_lists** — 0–3 secondary categories (e.g. `astro-ph.GA`, `astro-ph.HE`).
+- **primary_category** / **cross_lists** — which arXiv groups the paper is submitted to. The
+  assembler pre-fills a suggestion in `metadata.yaml`; confirm it using **Choosing the
+  categories** below.
 - **comments** — free text; conventionally page/figure count + status, e.g.
   `"4 pages, 3 figures. Code and data: github.com/joebarbere/jansky-research"`.
 - **license** — the user must choose one at submission:
@@ -57,6 +59,51 @@ precise step-by-step for the web upload. The user performs the final upload at
 - **orcid** — link the submitting author's ORCID (e.g. `0009-0008-3289-4447`) — strongly
   recommended; it's set on the arXiv account/profile, and `\author[orcid]{...}` is in the source.
 - **endorsement** — note whether the submitting category needs endorsement (see Account setup).
+
+## Choosing the categories (which groups to submit to)
+
+arXiv routes a paper by **one primary** category (the single best fit — it sets the listing) plus
+up to ~3 **cross-lists** (secondary categories whose readers should also see it). The assembler
+pre-fills a suggestion in `metadata.yaml` — curated per slice, or keyword-inferred for a new paper
+(flagged *VERIFY*). Confirm it with the user using the rules below. Radio astronomy lives almost
+entirely under **astro-ph**:
+
+| Code | Scope |
+|---|---|
+| `astro-ph.GA` | galaxies, the Milky Way, ISM, AGN/jets, HI 21 cm, Faraday rotation |
+| `astro-ph.CO` | cosmology, large-scale structure, isotropy/dipole, source counts, lensing |
+| `astro-ph.HE` | FRBs, pulsars/magnetars, transients, accretion/jets, explosive phenomena |
+| `astro-ph.SR` | the Sun & solar radio bursts, stars, M/white/brown dwarfs, coherent emission |
+| `astro-ph.EP` | planets & the solar system: Jovian/Saturnian/ice-giant radio, magnetospheres |
+| `astro-ph.IM` | instrumentation, methods, software, pipelines, data analysis, statistics, RFI |
+
+**Rules:**
+
+1. **Primary = where the headline result lives.** A science result → its science domain (an HI
+   rotation curve is `astro-ph.GA`; an FRB census is `astro-ph.HE`). A paper whose contribution
+   *is* the tool/benchmark/DSP kernel/pipeline → `astro-ph.IM`.
+2. **These papers are reproducible tools, so `astro-ph.IM` is almost always a cross-list** — but
+   the *primary* stays the science domain unless the method itself is the point (the IM-primary
+   ones here are `driftsearch`, `torchfdmt`, `torchdsp`, `rfitrend`, `ecallisto_pipeline`).
+3. **Cross-list only for a genuinely different readership**, ≤3, most-relevant first. Add a second
+   *science* domain when the result spans them: AGN variability = `GA` + `HE`; an isotropy/dipole
+   test = `CO` + `GA`; a WD-pulsar = `SR` + `HE`.
+4. **Non-astro cross-lists** only when another community should see it: `eess.SP` (a pure
+   DSP/algorithm kernel), `physics.space-ph` (solar-wind/magnetosphere heliophysics), `physics.ins-det`
+   (a hardware/receiver design), `stat.ML` (an SBI/ML method). Not routine.
+5. **Endorsement is per-category** (see Account setup) — a first submission to a category you're not
+   endorsed in needs an endorser there, so prefer a primary you can actually submit to.
+
+**Per-slice quick reference** (the assembler's `SLICE_CATEGORIES` holds the full primary+cross map):
+
+| Primary | Slices |
+|---|---|
+| `astro-ph.HE` | frbstats, frbperiod, frbwait, frblens, lpt, lptv, pulsarspec, ppdot, pte2, glitchpop |
+| `astro-ph.GA` | hi, peaked, southern, offsets, vlbi, vlass, stacking, spectra, fashienv, rmsky, rmstructure |
+| `astro-ph.CO` | rmdipole, sourcecounts |
+| `astro-ph.SR` | solarbursts, windwaves, swaves, triangulate, type3synthesis, typeii, ecallisto_census, stokesv, stokesv_discovery, svsbi, wdpulsar |
+| `astro-ph.EP` | junodam, skr, vgpra |
+| `astro-ph.IM` | driftsearch, torchfdmt, torchdsp, rfitrend, ecallisto_pipeline |
 
 ## Web-upload steps (what to tell the user to do)
 
