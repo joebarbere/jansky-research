@@ -26,6 +26,9 @@ A new session in *either* repo: read this file (or jansky's `CLAUDE.md`) to lear
   `main.tex`/`refs.bib`/`.gitkeep` are tracked per paper. Macros come from the pipeline.
 - **Honest framing**: validations, limits, and negatives reported plainly; no overclaiming. The
   `science-reviewer` agent gates this.
+- **Versioning**: SemVer per [`VERSIONING.md`](VERSIONING.md) (version lives in `pyproject.toml`
+  + `CITATION.cff`; Zenodo takes it from the tag). Every PR adds a `CHANGELOG.md` `Unreleased`
+  entry; `python scripts/next_version.py` recommends the next bump from it.
 - Commit footer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
   PR footer: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
