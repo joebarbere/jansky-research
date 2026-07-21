@@ -62,18 +62,18 @@ each module's `__all__`, the `run()` signatures, and the public functions of
 4. `scripts/next_version.py` prints e.g. `next: 1.1.0 (MINOR — Unreleased has "Added: lineconf slice", no breaking changes)`.
 
 **Steps**
-- [ ] Write `VERSIONING.md` (policy table + recipe + the single-source-of-truth note: version lives
+- [x] Write `VERSIONING.md` (policy table + recipe + the single-source-of-truth note: version lives
       in `pyproject.toml` and `CITATION.cff`; Zenodo takes it from the release tag).
-- [ ] Write `CHANGELOG.md` with a `[Unreleased]` section seeded from `git log 0e2ad04..HEAD` (i.e.
-      everything since the last `main` commit, grouped Added/Changed/Fixed) — this becomes the
-      `[1.0.0]` section in T3.
-- [ ] Add `scripts/next_version.py` (pure stdlib: parse `git tag`/`git log` + the changelog; print
-      recommended bump + reason; exit non-zero if `Unreleased` is empty). A unit test on a fixture
-      changelog keeps it in the 85% floor.
-- [ ] `CLAUDE.md`: add a "Versioning" bullet under **Working rules** pointing at `VERSIONING.md`, and
+- [x] Write `CHANGELOG.md` with a `[Unreleased]` section. Note: `0e2ad04..HEAD` is only the plan
+      commit (no prior tag exists), so `Unreleased` records the **full initial-release scope**
+      (domain-grouped) rather than a diff — this becomes the `[1.0.0]` section in T3.
+- [x] Add `scripts/next_version.py` (pure stdlib: parse `git tag` + the changelog; print
+      recommended bump + reason; exit non-zero if `Unreleased` is empty). Unit-tested on fixture
+      changelogs (`tests/test_next_version.py`, 10 tests).
+- [x] `CLAUDE.md`: add a "Versioning" bullet under **Working rules** pointing at `VERSIONING.md`, and
       "every PR adds a `CHANGELOG.md` `Unreleased` entry".
-- **Done when:** `python scripts/next_version.py` prints a correct recommendation on the seeded
-      `Unreleased`; `VERSIONING.md` + `CHANGELOG.md` committed; CLAUDE.md points at them.
+- **Done when:** ✅ `python scripts/next_version.py` prints `next: 1.0.0 (initial release …)`;
+      `VERSIONING.md` + `CHANGELOG.md` committed; CLAUDE.md points at them.
 
 ---
 
