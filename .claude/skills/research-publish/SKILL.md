@@ -17,9 +17,9 @@ personal notes, outside this repo (Obsidian vault: `efforts/radio_astronomy/rese
 
 1. **Run the readiness check:**
    `uv run python .claude/skills/research-publish/check_publish_readiness.py`
-   It inspects `LICENSE`, `CITATION.cff`, `.zenodo.json`, `joss/paper.md`+`paper.bib`, the RNAAS note,
-   and each fresh-angle paper's `arxiv-submission/` package, printing `[x]`/`[ ]`/`[~]` with the next
-   action per venue.
+   It inspects `LICENSE`, `CITATION.cff`, `.zenodo.json`, `joss/paper.md`+`paper.bib`, every
+   auto-discovered `papers/*/rnaas.tex` note, and each fresh-angle paper's `arxiv-submission/`
+   package, printing `[x]`/`[ ]`/`[~]` with the next action per venue.
 2. **Consult the checklist** (`efforts/radio_astronomy/research_paper_todo.md` in the Obsidian
    vault, if reachable; otherwise the order below) for the full manual walkthrough, then guide the
    user venue by venue.
