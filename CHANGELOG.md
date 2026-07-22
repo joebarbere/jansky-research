@@ -21,6 +21,11 @@ recommend the next version number.
   (breadth across domains + the dual Snakemake/Airflow reproducibility layer + "the software is
   itself the research"). Refreshed the stale "twenty-six slices" tally → "forty slices plus a
   synthesis" in the README Results header and `CLAUDE.md` (the slice table has 41 rows).
+- Papers now cite the toolkit: the `vgpra` and `spectra` RNAAS notes `\software{}`-cite
+  **`jansky-research`** via its Zenodo concept DOI `10.5281/zenodo.21482378` (new `@misc{janskyresearch}`
+  `refs.bib` entry). Added a related-work disclosure to `joss/paper.md` (the two notes are in
+  preparation for RNAAS, distinct from the software paper), and recorded the "cite jansky-research
+  going forward" convention in `CLAUDE.md` and the `research-publish` skill.
 
 ## [1.0.0] — 2026-07-21
 
