@@ -58,13 +58,33 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 
 ## Suggested reviewers
 
-JOSS lets you suggest reviewers by GitHub handle from its pool
-(<https://reviewers.joss.theoj.org/>). Suggest 3–5, each **verified to be in the pool** and **free
-of conflicts of interest** — per JOSS COI rules, not a recent co-author (last ~4 years), not the
-same institution, not a current collaborator, advisor, or advisee.
+**Access note.** The JOSS reviewer pool (<https://reviewers.joss.theoj.org/>) is **editor-gated** —
+GitHub-login required, no public browse or export. Two ways forward: suggest the verified handles
+below, and/or ask your handling editor to search the pool (area **"Astronomy, Astrophysics, and
+Space Sciences"** plus keywords like `pulsar`, `FRB`, `radio`, `reproducibility`, `workflow`).
 
-> _Candidate shortlist is being compiled from the JOSS reviewer pool (radio-astronomy and
-> reproducible-research backgrounds) and will be filled in here once each handle is verified._
+Every handle below was **verified** by reading the linked `openjournals/joss-reviews` issue — each
+is a confirmed reviewer of an accepted, closely-related JOSS paper (so demonstrably in the pool and
+relevant).
+
+**Recommended (suggest ~4–5):**
+
+| Handle | Reviewed for JOSS | Fit for `jansky-research` |
+|---|---|---|
+| `@pravirkr` | *Your* — FRB/pulsar reader ([#2750](https://github.com/openjournals/joss-reviews/issues/2750)) | `sigpyproc` author; FRB/pulsar single-pulse & dedispersion — matches `frbstats`, `frbperiod`, `torchfdmt`/`singlepulse`, `pte2` |
+| `@paulray` | *Your* ([#2750](https://github.com/openjournals/joss-reviews/issues/2750)) | Pulsar timing (PINT co-author, NICER) — matches `ppdot`, `pulsarspec`, `glitchpop`, `vgpra` |
+| `@matteobachetti` | *Hasasia* — PTA sensitivity ([#1775](https://github.com/openjournals/joss-reviews/issues/1775)) | X-ray/time-series timing (Stingray/HENDRICS) **and** a prominent reproducible-research / Astropy contributor — spans the analysis **and** reproducibility pillars |
+| `@ygrange` | *Virgo* — radio spectrometer ([#3067](https://github.com/openjournals/joss-reviews/issues/3067)) | ASTRON/LOFAR radio-data infrastructure & pipelines |
+| `@garrettj403` | *Blimpy* — Breakthrough Listen I/O ([#1554](https://github.com/openjournals/joss-reviews/issues/1554)) | SETI/filterbank I/O — matches `driftsearch` + the Breakthrough Listen Voyager slices |
+
+**Further verified options** (for specific sub-domain coverage): `@ptiede` or `@David-McKenna`
+(VLBI/interferometry — *pyuvdata v3*, [#7482](https://github.com/openjournals/joss-reviews/issues/7482));
+`@astrom-tom` / `@zhampel` / `@cmbiwer`. For a reproducibility-tooling-focused reviewer, the editor
+can also search the pool for `snakemake`/`workflow`/`containers`.
+
+**Conflict of interest.** Before suggesting anyone, confirm none is a recent co-author (~4 years),
+same institution, or a current collaborator/advisor/advisee (JOSS COI rules). Availability isn't
+guaranteed — suggesting 4–5 lets the editor choose.
 
 ## Before you click submit
 - Confirm the Zenodo release metadata is correct and the DOI resolves.
