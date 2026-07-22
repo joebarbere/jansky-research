@@ -187,9 +187,10 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 
 ## Quickstart
 
-New here? [`docs/usage.md`](docs/usage.md) is a short install-and-run guide, and
-[`CONTRIBUTING.md`](CONTRIBUTING.md) covers how to contribute, report issues, and get
-support.
+New here? [`docs/usage.md`](docs/usage.md) is a short install-and-run guide,
+[`docs/faq.md`](docs/faq.md) answers common questions about using the toolkit and the
+papers in this repo, and [`CONTRIBUTING.md`](CONTRIBUTING.md) covers how to contribute,
+report issues, and get support.
 
 ```bash
 # Requires the jansky repo checked out next to this one (../jansky) for local dev.
