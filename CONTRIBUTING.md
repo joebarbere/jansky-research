@@ -8,8 +8,8 @@ support, report a problem, and contribute a change, and the checks CI enforces.
 ## Getting support and reporting issues
 
 - **Questions, support, or ideas** → open a [GitHub Discussion or Issue](https://github.com/joebarbere/jansky-research/issues)
-  with the `question` label, or start with the [README](README.md) and
-  [`docs/usage.md`](docs/usage.md).
+  with the `question` label, or start with the [README](README.md), [`docs/usage.md`](docs/usage.md),
+  and [`docs/faq.md`](docs/faq.md) (how others use the toolkit; how the papers in this repo work).
 - **Bugs** → open an [issue](https://github.com/joebarbere/jansky-research/issues/new)
   with: what you ran (the exact `python -m jansky_research.<slice> …` command or `make`
   target), what you expected, what happened (full traceback), and your OS + Python

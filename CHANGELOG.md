@@ -30,8 +30,11 @@ recommend the next version number.
   note (was hardcoded to `frbstats`) with a per-note 1000-word sanity check, so `vgpra`/`spectra`
   and any future note are covered without editing the script.
 - Added `joss/SUBMISSION.md` — a paste-ready helper for the manual JOSS submission (form fields,
-  the comments-to-editor text with the substantial-effort + related-work + AI-use disclosures, and
-  a suggested-reviewers section).
+  the comments-to-editor text with the substantial-effort + related-work + AI-use disclosures, a
+  verified suggested-reviewers shortlist, and RNAAS Editorial-Manager cover text).
+- Added `docs/faq.md` — how others use the toolkit (depend, don't fork), how the in-repo papers work
+  (authorship, provenance/priority via Zenodo DOIs, what "unpublished" does and doesn't mean), and a
+  licensing note. Linked from the README and `CONTRIBUTING.md`.
 
 ## [1.0.0] — 2026-07-21
 
