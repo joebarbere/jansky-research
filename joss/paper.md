@@ -110,6 +110,18 @@ survived the gate. This makes the package useful not only as tooling but as a
 reproducible reference for what careful, gate-checked amateur analysis of public data
 can and cannot establish.
 
+What lifts this above a collection of one-off scripts is breadth matched to
+reproducible engineering. The more than forty slices span FRBs and the time domain,
+pulsars, HI 21 cm, solar/heliospheric and planetary radio, Faraday rotation and
+cosmology, continuum variability, SETI, and GPU/ML methods, and they are driven
+through two complementary orchestrators behind one set of tested entry points: a
+server-less Snakemake file-target DAG for the static-input analyses, and an
+Apache Airflow DAG on rootless Podman for the frequently-updated e-Callisto streaming
+archive. The software is itself the research — each slice is written up as an AASTeX
+paper under `papers/`, two of them further as Research Notes of the AAS — so
+`make reproduce` regenerates the whole chain, from raw public data through the
+analyses and papers to arXiv packages, from a clean checkout.
+
 # Functionality and reproducibility
 
 The package installs with `uv`/`pip`, depends on `jansky` for shared radio-astronomy
