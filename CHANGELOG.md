@@ -9,15 +9,18 @@ recommend the next version number.
 
 ## [Unreleased]
 
-This becomes the `1.0.0` section when the first release is cut. `1.0.0` is the **initial public
-release**: with no prior tag it records the full toolkit as it stands rather than a diff from an
-earlier version. After 1.0.0 this section accumulates one entry per PR.
+Nothing yet. `scripts/next_version.py` will report the next bump once entries land here.
+
+## [1.0.0] — 2026-07-21
+
+**Initial public release.** With no prior tag this records the full toolkit as it stands rather
+than a diff from an earlier version; every later section is a diff from its predecessor.
 
 ### Added
 
-- **Initial public release of the `jansky-research` toolkit** — ~40 self-contained,
-  reproducible research slices (a tested tool → real public data → adversarial science-review
-  gate → honest AASTeX write-up), grouped by domain:
+- The `jansky-research` toolkit — ~40 self-contained, reproducible research slices (a tested tool
+  → real public data → adversarial science-review gate → honest AASTeX write-up), grouped by
+  domain:
   - *FRB & time-domain* — `frbstats`, `frbperiod`, `frbwait`, `frblens`, `singlepulse`;
   - *Pulsars* — `pulsarspec`, `ppdot`, `pte2`, `glitchpop`, `wdpulsar`;
   - *HI & spectral line* — `hi`, `fashienv`;
@@ -39,6 +42,11 @@ earlier version. After 1.0.0 this section accumulates one entry per PR.
 - **Release-versioning infrastructure** — `VERSIONING.md` (SemVer policy for this repo),
   this `CHANGELOG.md`, and `scripts/next_version.py` (recommends the next version from the
   `Unreleased` section, with its reasoning).
+- `papers/vgpra/rnaas.tex` — an RNAAS short-form of the Voyager 2 PRA ice-giant rotation-period
+  reanalysis (the recover-a-known → controlled-null showcase).
+- `papers/spectra/rnaas.tex` — an RNAAS short-form showing raw TGSS×NVSS ultra-steep-spectrum
+  selection is dominated by the TGSS flux-scale systematic (the "apparent signal is a
+  systematic" cautionary note).
 
 ### Changed
 
@@ -48,10 +56,6 @@ earlier version. After 1.0.0 this section accumulates one entry per PR.
   the current scope: "CPU-first with optional GPU" (was the false "CPU-only"), a domain-grouped
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
-- Added `papers/vgpra/rnaas.tex` — an RNAAS short-form of the Voyager 2 PRA ice-giant
-  rotation-period reanalysis (the recover-a-known → controlled-null showcase).
-- Added `papers/spectra/rnaas.tex` — an RNAAS short-form showing raw TGSS×NVSS ultra-steep-spectrum
-  selection is dominated by the TGSS flux-scale systematic (the "apparent signal is a systematic"
-  cautionary note).
 
-[Unreleased]: https://github.com/joebarbere/jansky-research/compare/HEAD...HEAD
+[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/joebarbere/jansky-research/releases/tag/v1.0.0

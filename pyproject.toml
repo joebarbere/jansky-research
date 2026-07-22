@@ -1,6 +1,6 @@
 [project]
 name = "jansky-research"
-version = "0.0.1"
+version = "1.0.0"
 description = "Amateur radio-astronomy research, end to end: tested tools run on real public data — FRBs, HI, VLASS variability, peaked-spectrum searches — each gated by adversarial science review and written up honestly, nulls included. Sibling of the jansky teaching course."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"

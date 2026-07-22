@@ -17,8 +17,8 @@ authors:
     family-names: Barbere
     orcid: "https://orcid.org/0009-0008-3289-4447"
     affiliation: "Independent researcher"
-version: "0.0.1"
-date-released: "2026-06-27"
+version: "1.0.0"
+date-released: "2026-07-21"
 license: MIT
 repository-code: "https://github.com/joebarbere/jansky-research"
 url: "https://github.com/joebarbere/jansky-research"

@@ -125,20 +125,20 @@ staleness:
 Depends on T1 (policy) and T2 (paper describes the released scope).
 
 **Steps**
-- [ ] Bump version to `1.0.0` in **`pyproject.toml`** (`version = "1.0.0"`) and **`CITATION.cff`**
-      (`version: "1.0.0"`).
-- [ ] Check **`.zenodo.json`** for a hardcoded version (it currently has none — Zenodo takes it from
-      the tag; leave as-is unless a version field appears).
-- [ ] Move `CHANGELOG.md`'s `Unreleased` → a dated `## [1.0.0] — 2026-…` section.
-- [ ] Update the Obsidian publishing todo (`efforts/radio_astronomy/research_paper_todo.md`): change
-      every `v0.0.1` → `v1.0.0` in §0 (the "hold the tag" note) and §1 (the Zenodo release steps and
-      title "jansky-research v1.0.0"); note the version decision + rationale.
-- [ ] Per the todo §1: wire Zenodo (GitHub switch ON) **first**, then draft the GitHub release
-      `v1.0.0`, publish, confirm the Zenodo record + `.zenodo.json` metadata, copy the concept DOI,
-      add the DOI badge to `README.md`.
-- **Done when:** `pyproject.toml` + `CITATION.cff` say `1.0.0`, `CHANGELOG.md` has a `[1.0.0]`
-      section, the todo no longer says `v0.0.1`, and the tag/release/Zenodo checklist is ready to
-      execute (the account-bound steps stay Joe's to click).
+- [x] Bump version to `1.0.0` in **`pyproject.toml`** (`version = "1.0.0"`) and **`CITATION.cff`**
+      (`version: "1.0.0"`, `date-released: "2026-07-21"`).
+- [x] Checked **`.zenodo.json`** — no version field (Zenodo takes it from the tag); left as-is.
+- [x] Moved `CHANGELOG.md`'s `Unreleased` → a dated `## [1.0.0] — 2026-07-21` section; added a fresh
+      empty `## [Unreleased]` (so `next_version.py` now correctly reports "nothing to release").
+- [ ] **Joe (personal vault):** update the Obsidian publishing todo
+      (`efforts/radio_astronomy/research_paper_todo.md`) — every `v0.0.1` → `v1.0.0` in §0/§1; note
+      the version decision + rationale. (Outside this repo; not editable from here.)
+- [ ] **Joe (account-bound):** wire Zenodo (GitHub switch ON) **first**, then draft + publish the
+      GitHub release `v1.0.0` (tag on the merge commit), confirm the Zenodo record + `.zenodo.json`
+      metadata, copy the concept DOI, add the DOI badge to `README.md`.
+- **Done when:** ✅ `pyproject.toml` + `CITATION.cff` say `1.0.0`, `CHANGELOG.md` has a dated
+      `[1.0.0]` section; ⏳ the tag/release/Zenodo checklist is ready to execute (the account-bound
+      steps stay Joe's to click, per the sequencing gate).
 
 ---
 
