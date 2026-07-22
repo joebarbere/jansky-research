@@ -1,0 +1,89 @@
+\documentclass[RNAAS]{aastex631}
+
+% Numbers are \input from the pipeline-generated macros -- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{A Blind Modern Reanalysis of the Voyager~2 PRA Radio Data Recovers
+Neither the Uranus nor the Neptune Rotation Period}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+The radio rotation periods anchoring the System~III longitudes of Uranus
+(\vgRealUHist~h) and Neptune (\vgRealNHist~h) were fixed by the Voyager~2 Planetary
+Radio Astronomy (PRA) experiment during the 1986 and 1989 flybys
+\citep{warwick1986,warwick1989} and, for the radio data, never reanalysed with modern
+statistics --- even as \citet{lamy2025} recently refined Uranus to \vgRealULamy~h from
+Hubble UV aurorae. Using a small, tested tool (\code{vgpra}), I ask what a \emph{blind}
+Lomb--Scargle periodogram of the open PDS-PPI PRA flux \citep{pdsppi_vg2pra}, using
+none of the emission-beaming or magnetic-longitude modelling of the original
+determinations, recovers over an un-tuned 14--20~h window. The answer is a controlled
+null: the pipeline recovers an injected synthetic rotation
+(\vgSynInjected~h $\to$ \vgSynRecovered~h) to $\sim$1~min, but recovers \emph{neither}
+real period. This is a reproducibility-and-limits note, not a new measurement.
+\end{abstract}
+
+\section{Result}
+
+\code{vgpra} \citep{jansky} builds a band-integrated total-power flux series from the
+open PDS-PPI Voyager~2 PRA low-band 6-second encounter volumes \citep{pdsppi_vg2pra}
+and searches it with a blind Lomb--Scargle periodogram over a wide, deliberately
+un-tuned 14--20~h ice-giant window --- \emph{not} centred on the known answers, since a
+narrow window would manufacture a match. The statistical uncertainty is a
+rotation-block bootstrap; the systematic one is the peak's spread across four frequency
+sub-bands. A historical period counts as \emph{recovered} only if the blind peak lands
+within one combined-$\sigma$ of it, is band-robust (sub-band spread $<0.6$~h), and is
+not railed to a search bound. Every routine is tested offline against a synthetic
+series with known ground truth.
+
+That synthetic control, searched in the identical wide window, recovers its injected
+period (\vgSynInjected~h $\to$ \vgSynRecovered~h, $\pm\vgSynSigma$~h) to about a minute
+--- so a failure on the real data is a property of the data, not the pipeline. On the
+real encounter volumes the blind periodogram recovers \emph{neither} planet
+(Figure~\ref{fig:vgpra}). The Uranus peak sits at \vgRealUPeriod~h, above the
+historical \vgRealUHist~h, and is not band-robust (sub-band spread \vgRealUSpread~h);
+the historical and Hubble values fall inside the $\pm\vgRealUUnc$~h band only because
+that band is nearly two hours wide, a vacuous consistency (not recovered,
+\vgRealURecovers). The Neptune peak rails to the upper search bound (\vgRealNPeriod~h),
+far from \vgRealNHist~h --- the signature of a periodogram dominated by the red-noise
+flyby envelope rather than a rotational line (not recovered, \vgRealNRecovers).
+
+Because the identical analysis recovers a clean injected signal, the real-data null is
+genuine: the ice-giant auroral total-power flux is not a clean rotational sinusoid over
+these brief flybys, and the beaming and magnetic-longitude modelling of the original
+determinations --- which a blind periodogram omits --- was essential to recovering the
+periods. Independently, the rotation-block uncertainties ($\sim$\vgRealUUnc~h) are
+hundreds of times coarser than the 28~s by which \citet{lamy2025} refined Uranus, so
+even a successful blind extraction could never approach modern precision. Every number
+above is \code{\textbackslash input} from a pipeline-generated macro file and
+regenerates from a clean checkout (\code{python -m jansky\_research.vgpra}).
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/vgpra.pdf}
+\caption{Blind Lomb--Scargle reanalysis of the Voyager~2 PRA flux, computed by
+\code{vgpra}. The synthetic recover-a-known (injected \vgSynInjected~h, recovered
+\vgSynRecovered~h) validates the pipeline in the same un-tuned 14--20~h window in which
+neither real ice-giant period is recovered (Uranus \vgRealUPeriod~h, sub-band spread
+\vgRealUSpread~h; Neptune \vgRealNPeriod~h, railed to the bound).}
+\label{fig:vgpra}
+\end{figure}
+
+\begin{acknowledgments}
+Developed collaboratively with Anthropic's Claude \citep{anthropicclaude} (a large
+language model); the author directed and verified the work, and an AI assistant is not
+an eligible author. Thanks to the NASA PDS Planetary Plasma Interactions node for the
+open Voyager~2 PRA archive.
+\end{acknowledgments}
+
+\software{Astropy \citep{astropy2022}, NumPy, SciPy, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

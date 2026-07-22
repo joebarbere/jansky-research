@@ -101,20 +101,22 @@ staleness:
    Cat 2, SPICE-RACS, FASHI, etc. as cited).
 
 **Steps**
-- [ ] Rewrite **Summary**: one-para intro + a **domain-grouped** capability list (FRB/time-domain;
+- [x] Rewrite **Summary**: one-para intro + a **domain-grouped** capability list (FRB/time-domain;
       pulsars; HI & spectral-line; solar/heliospheric; planetary radio; RM/Faraday & cosmology;
       continuum variability; GPU/ML — SBI + PyTorch DSP), each with 1–2 named exemplar slices; point
       to the README table as the full inventory.
-- [ ] Fix the **CPU-only** framing in the title and body → CPU-first + optional GPU extras.
-- [ ] Rewrite the **Statement of need** methodological paragraph around recover-a-known + honest-null
+- [x] Fix the **CPU-only** framing in the title and body → CPU-first + optional GPU extras.
+- [x] Rewrite the **Statement of need** methodological paragraph around recover-a-known + honest-null
       at scale; keep the three-audience framing.
-- [ ] Update **Functionality**: current counts, the GPU extras, the `arxiv-submit` +
+- [x] Update **Functionality**: current counts, the GPU extras, the `arxiv-submit` +
       `pull-station-data` helpers, `make reproduce`.
-- [ ] Update `paper.bib`; refresh the `date`.
-- [ ] Rebuild/validate the JOSS paper (JOSS renders `paper.md`; check it compiles via the JOSS
-      Docker preview or `make` target if present).
-- **Done when:** `joss/paper.md` accurately describes the v1.0.0 scope, makes no CPU-only overclaim,
-      and lists no stale counts; `science-reviewer` (or a careful read) confirms no overclaiming.
+- [x] Update `paper.bib` (added `pytorch` + `sbi_toolkit`); refresh the `date` → 21 July 2026.
+- [x] Validate offline: YAML frontmatter parses, all 12 cite keys resolve, required Summary +
+      Statement-of-need sections present (no pandoc/JOSS-Docker locally; JOSS builds on submission).
+- [x] **Also fixed the same CPU-only/six-slice staleness in `CITATION.cff` + `.zenodo.json`** for
+      release consistency (version bump itself stays in T3).
+- **Done when:** ✅ `joss/paper.md` describes the v1.0.0 scope, no CPU-only overclaim, no stale
+      count; an overclaim gate against the README slice table returned **PASS**.
 
 ---
 
@@ -154,18 +156,19 @@ Key macros to reuse: `\vgSynInjected`, `\vgSynRecovered`, `\vgRealUPeriod`, `\vg
 `\vgRealURecovers`, `\vgRealNPeriod`, `\vgRealNRecovers`.
 
 **Steps**
-- [ ] Write `papers/vgpra/rnaas.tex` (≤1000 words, 1 figure): abstract states the controlled null;
+- [x] Write `papers/vgpra/rnaas.tex` (≤1000 words, 1 figure): abstract states the controlled null;
       the Result section makes the recover-a-known→null arc explicit (synthetic recovers the injected
       period to ~1 min; neither real ice-giant period recovered; blind total-power can't do it —
       historical geometric modelling was essential). Every number `\input` from `generated/macros`.
-- [ ] Reuse `figures/vgpra.pdf` (the periodogram / recovery figure) as the single figure.
-- [ ] Keep the AI-use acknowledgement + `\software{}` block from the frbstats template; author =
+- [x] Reuse `figures/vgpra.pdf` (the periodogram / recovery figure) as the single figure.
+- [x] Keep the AI-use acknowledgement + `\software{}` block from the frbstats template; author =
       Joseph Barbere only.
-- [ ] `make figures`/`make paper` so macros exist; build and check the RNAAS PDF fits the 1-page
-      / ≤1000-word limit.
-- [ ] Add a Summary-table row and check-box to the publishing todo §3 (already listed as a
-      candidate; mark it "packaged" once the `rnaas.tex` builds).
-- **Done when:** `papers/vgpra/rnaas.tex` builds a ≤1000-word, 1-figure note with all numbers from
+- [x] Built with the `jansky-research-paper` tectonic container (`podman run … tectonic rnaas.tex`):
+      compiles; **441 words** (< 1000) and 2 pages — matching the sanctioned `frbstats/rnaas.tex`
+      house format (aastex631 RNAAS + one figure is 2 pages there too).
+- [ ] Publishing-todo §3 row: **Joe's** (lives in the Obsidian vault outside this repo) — mark
+      `vgpra` "packaged" there once ready to submit.
+- **Done when:** ✅ `papers/vgpra/rnaas.tex` builds a ≤1000-word, 1-figure note with all numbers from
       macros; ready for the §3 submission steps.
 
 ---

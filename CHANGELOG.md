@@ -48,5 +48,7 @@ earlier version. After 1.0.0 this section accumulates one entry per PR.
   the current scope: "CPU-first with optional GPU" (was the false "CPU-only"), a domain-grouped
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
+- Added `papers/vgpra/rnaas.tex` — an RNAAS short-form of the Voyager 2 PRA ice-giant
+  rotation-period reanalysis (the recover-a-known → controlled-null showcase).
 
 [Unreleased]: https://github.com/joebarbere/jansky-research/compare/HEAD...HEAD
