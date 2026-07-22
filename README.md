@@ -187,6 +187,10 @@ contribution — the *tooling and reproducibility*, not a novelty claim:
 
 ## Quickstart
 
+New here? [`docs/usage.md`](docs/usage.md) is a short install-and-run guide, and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) covers how to contribute, report issues, and get
+support.
+
 ```bash
 # Requires the jansky repo checked out next to this one (../jansky) for local dev.
 uv sync                                   # env + jansky (from ../jansky)
@@ -292,6 +296,13 @@ help fund the buildout — rotator, second dish, coherent receiver — via
 [Ko-fi](https://ko-fi.com/joebarbere). Honestly: that list is a general direction, not a
 promise — the research plans and the observing priorities can and will change as results
 come in.
+
+## Contributing
+
+Contributions, issues, and questions are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md)
+for how to set up, contribute a change, report a bug, and get support, and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Releases follow SemVer per
+[`VERSIONING.md`](VERSIONING.md).
 
 ## License
 

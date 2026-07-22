@@ -13,6 +13,10 @@ recommend the next version number.
 
 - Documentation: added the Zenodo DOI badge (concept DOI `10.5281/zenodo.21482378`) to the README
   following the v1.0.0 release.
+- Documentation: added community guidelines for JOSS review — `CONTRIBUTING.md` (how to contribute,
+  report issues, and get support; dev setup; the slice pattern; the pre-PR checks),
+  `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), and `docs/usage.md` (a short install-and-run
+  guide, incl. the sibling-checkout install a fresh clone needs). Linked from the README.
 
 ## [1.0.0] — 2026-07-21
 
