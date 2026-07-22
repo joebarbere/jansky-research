@@ -1,0 +1,89 @@
+\documentclass[RNAAS]{aastex631}
+
+% Numbers are \input from the pipeline-generated macros -- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{Ultra-Steep-Spectrum Selection from Raw TGSS~ADR1~$\times$~NVSS Is Dominated
+by the TGSS Flux-Scale Systematic}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Ultra-steep-spectrum (USS) radio sources efficiently locate high-redshift radio
+galaxies \citep{debreuck2000}. Using a small, tested tool (\code{spectra}), I
+cross-match TGSS~ADR1 150~MHz \citep{intema2017} with NVSS 1.4~GHz \citep{condon1998},
+compute two-point spectral indices $\alpha_{150}^{1400}$, and select USS candidates
+($\alpha<\usThreshold$). In a high-Galactic-latitude field the run matches
+\usNmatched\ sources with a median $\alpha=\usAlphaMedian$ --- the textbook value for
+flux-limited extragalactic samples, which validates the method --- and flags
+\usNuss\ raw USS candidates (steepest $\alpha=\usAlphaMin$). The honest result is
+negative: against the flux-scale-\emph{corrected} \citet{degasperin2018}
+TGSS$\times$NVSS catalogue the raw indices are systematically steeper by
+$\Delta\alpha\approx-0.15$ --- the known TGSS~ADR1 flux-scale inflation
+\citep{hurleywalker2017} --- so only 1 candidate survives as genuinely USS and all
+\usNuss\ are already catalogued. A cautionary result, reported as such.
+\end{abstract}
+
+\section{Result}
+
+\code{spectra} \citep{jansky} is a pure-NumPy/Astropy tool that positionally
+cross-matches TGSS and NVSS catalogue sources within $15\arcsec$, forms the two-point
+index $\alpha_{150}^{1400}=\ln(S_{150}/S_{1400})/\ln(150/1400)$, and flags
+$\alpha<\usThreshold$ as USS. Every routine is tested offline on a synthetic field
+with injected indices. Run on a high-latitude extragalactic field near the North
+Galactic Pole, it matches \usNmatched\ sources with a median $\alpha=\usAlphaMedian$,
+consistent with the typical $-0.7$ to $-0.8$ of flux-limited extragalactic radio
+samples --- the validation that the implementation is correct --- and flags
+\usNuss\ raw USS candidates (steepest $\alpha=\usAlphaMin$), none of which has a
+measured redshift in NED or SIMBAD.
+
+The mandatory follow-up compares those candidates against a published,
+flux-scale-corrected reference: the 1.4-million-source \citet{degasperin2018}
+TGSS$\times$NVSS spectral-index catalogue. Two facts emerge, both deflating. First,
+all \usNuss\ candidates already appear in it, so none is new. Second, our raw indices
+are systematically steeper by a mean $\Delta\alpha\approx-0.15$ --- precisely the
+TGSS~ADR1 flux-scale inflation documented by \citet{hurleywalker2017}, magnified where
+this field straddles the declination edge of the rescaled coverage. Using the
+corrected fluxes, only 1 of the \usNuss\ remains genuinely USS
+(Figure~\ref{fig:spectra}); the rest are ordinary steep sources, and the single
+survivor is a long-standing catalogue entry with no measured redshift, not something
+this search revealed.
+
+The honest outcome is negative and cautionary: raw TGSS~ADR1~$\times$~NVSS USS
+selection is dominated by the TGSS flux-scale systematic, and a cross-check against
+the corrected catalogue is mandatory before any candidate is believed. What survives
+is genuinely useful --- an open, tested USS-selection tool, the textbook population
+median as a validation, and a reproducible demonstration that uncorrected fluxes
+inflate $\alpha$ by $\sim$0.15 and manufacture false USS candidates. Every number
+above is \code{\textbackslash input} from a pipeline-generated macro file and
+regenerates from a clean checkout (\code{python -m jansky\_research.spectra}).
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/alpha_vs_flux.pdf}
+\caption{Two-point spectral index versus 150~MHz flux for the \usNmatched\ matched
+sources, computed by \code{spectra}; raw USS candidates ($\alpha<\usThreshold$,
+dashed) are marked. After the \citet{degasperin2018} flux-scale correction almost all
+move above the cut --- the raw candidates are the TGSS~ADR1 flux-scale systematic, not
+a genuine ultra-steep population.}
+\label{fig:spectra}
+\end{figure}
+
+\begin{acknowledgments}
+Developed collaboratively with Anthropic's Claude \citep{anthropicclaude} (a large
+language model); the author directed and verified the work, and an AI assistant is not
+an eligible author. Thanks to the TGSS, NVSS, and de~Gasperin et al. teams for the
+public catalogues.
+\end{acknowledgments}
+
+\software{Astropy \citep{astropy2022}, NumPy, SciPy, jansky \citep{jansky}}
+
+\bibliographystyle{aasjournal}
+\bibliography{refs}
+
+\end{document}

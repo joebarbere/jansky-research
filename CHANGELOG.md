@@ -50,5 +50,8 @@ earlier version. After 1.0.0 this section accumulates one entry per PR.
   Statement of need reframed around recover-a-known + honest-null at scale.
 - Added `papers/vgpra/rnaas.tex` — an RNAAS short-form of the Voyager 2 PRA ice-giant
   rotation-period reanalysis (the recover-a-known → controlled-null showcase).
+- Added `papers/spectra/rnaas.tex` — an RNAAS short-form showing raw TGSS×NVSS ultra-steep-spectrum
+  selection is dominated by the TGSS flux-scale systematic (the "apparent signal is a systematic"
+  cautionary note).
 
 [Unreleased]: https://github.com/joebarbere/jansky-research/compare/HEAD...HEAD

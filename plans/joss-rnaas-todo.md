@@ -179,15 +179,17 @@ Same pattern; the thematically-matched follow-up ("the apparent USS population i
 flux-scale systematic").
 
 **Steps**
-- [ ] Confirm `papers/spectra/` has `generated/macros.tex` + a suitable figure (regenerate with
-      `make figures` if needed); note its title/result macros.
-- [ ] Write `papers/spectra/rnaas.tex` (≤1000 words, 1 figure) from `papers/spectra/main.tex`: the
+- [x] Confirmed `papers/spectra/generated/macros.tex` (`usNmatched`, `usAlphaMedian`, `usAlphaMin`,
+      `usNuss`, `usThreshold`) + two figures; the RNAAS note uses `figures/alpha_vs_flux.pdf` (the
+      flux-scale-correction deflation — the on-message single figure).
+- [x] Write `papers/spectra/rnaas.tex` (≤1000 words, 1 figure) from `papers/spectra/main.tex`: the
       cautionary result that raw TGSS×NVSS ultra-steep-spectrum selection is dominated by the TGSS
       flux-scale systematic and the candidates don't survive the de Gasperin cross-check. Numbers from
       macros; AI-use ack + `\software{}`; author Joseph Barbere.
-- [ ] Build and check the ≤1000-word / 1-figure limit.
-- [ ] Mark it "packaged" in the publishing todo §3.
-- **Done when:** `papers/spectra/rnaas.tex` builds within RNAAS limits, numbers from macros.
+- [x] Built with the tectonic container: compiles, no undefined refs; **381 words** (< 1000), 2 pages
+      (matching the house RNAAS format).
+- [ ] Publishing-todo §3 "packaged" mark: **Joe's** (Obsidian vault, outside this repo).
+- **Done when:** ✅ `papers/spectra/rnaas.tex` builds within RNAAS limits, numbers from macros.
 
 ---
 
