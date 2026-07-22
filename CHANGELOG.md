@@ -29,6 +29,9 @@ recommend the next version number.
 - `research-publish` skill: the readiness check now **auto-discovers every `papers/*/rnaas.tex`**
   note (was hardcoded to `frbstats`) with a per-note 1000-word sanity check, so `vgpra`/`spectra`
   and any future note are covered without editing the script.
+- Added `joss/SUBMISSION.md` — a paste-ready helper for the manual JOSS submission (form fields,
+  the comments-to-editor text with the substantial-effort + related-work + AI-use disclosures, and
+  a suggested-reviewers section).
 
 ## [1.0.0] — 2026-07-21
 
