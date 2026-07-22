@@ -17,6 +17,10 @@ recommend the next version number.
   report issues, and get support; dev setup; the slice pattern; the pre-PR checks),
   `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), and `docs/usage.md` (a short install-and-run
   guide, incl. the sibling-checkout install a fresh clone needs). Linked from the README.
+- JOSS paper (`joss/paper.md`): added a substantial-effort paragraph to the Statement of need
+  (breadth across domains + the dual Snakemake/Airflow reproducibility layer + "the software is
+  itself the research"). Refreshed the stale "twenty-six slices" tally → "forty slices plus a
+  synthesis" in the README Results header and `CLAUDE.md` (the slice table has 41 rows).
 
 ## [1.0.0] — 2026-07-21
 

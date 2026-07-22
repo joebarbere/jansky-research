@@ -30,7 +30,7 @@ non-chosen survey gaps are preserved as a backlog in `survey/candidate-gaps.md`.
 
 ## Results
 
-Twenty-six slices plus a synthesis, honestly tallied:
+Forty slices plus a synthesis, honestly tallied:
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
