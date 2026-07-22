@@ -120,7 +120,10 @@ Apache Airflow DAG on rootless Podman for the frequently-updated e-Callisto stre
 archive. The software is itself the research — each slice is written up as an AASTeX
 paper under `papers/`, two of them further as Research Notes of the AAS — so
 `make reproduce` regenerates the whole chain, from raw public data through the
-analyses and papers to arXiv packages, from a clean checkout.
+analyses and papers to arXiv packages, from a clean checkout. Two of those notes
+(the `vgpra` and `spectra` slices) are in preparation for the Research Notes of the
+AAS; they report individual science results and are distinct from this paper, which
+describes the software and its methodology.
 
 # Functionality and reproducibility
 

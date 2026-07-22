@@ -44,5 +44,21 @@ personal notes, outside this repo (Obsidian vault: `efforts/radio_astronomy/rese
 
 - Author is **Joseph Barbere**, ORCID `0009-0008-3289-4447`; an AI/LLM is **not** an author (it's in
   each paper's AI-use disclosure + `\software{}`). Keep the name consistent on every account.
+- **Cite the toolkit.** Since the v1.0.0 Zenodo archive, every new slice paper / RNAAS note should
+  `\software{}`-cite **`jansky-research`** (the toolkit that produced the result) alongside `jansky`,
+  via its Zenodo **concept DOI `10.5281/zenodo.21482378`** (all-versions). Add this `refs.bib` entry
+  (already in `papers/vgpra/` and `papers/spectra/`):
+  ```bibtex
+  @misc{janskyresearch,
+    author       = {Barbere, Joseph},
+    title        = {jansky-research: A CPU-first, reproducible toolkit for amateur radio-astronomy analyses},
+    year         = {2026}, version = {1.0.0}, doi = {10.5281/zenodo.21482378},
+    howpublished = {\url{https://doi.org/10.5281/zenodo.21482378}}
+  }
+  ```
+- **JOSS co-publication:** when submitting the JOSS software paper, **disclose related publications**
+  (published / in review / nearing submission) — currently the `vgpra` + `spectra` RNAAS notes. The
+  software clears JOSS's bar on its own (40+ slices + the dual reproducibility layer), so a parallel
+  RNAAS submission is fine and is not a reason to delay JOSS.
 - The check is artifact-only: it can't verify a DOI resolves or an endorser is lined up — those are
   the `[~]`/manual items. Re-run it after each milestone to see the chain advance.

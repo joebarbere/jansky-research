@@ -38,6 +38,10 @@ tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-da
 `# pragma: no cover`) → GATE-2 science review → AASTeX paper (`papers/<slice>/`) → arXiv package
 (`make arxiv`). Plan in `plans/NN-*.md`; findings in `survey/<slice>-findings.md`.
 
+Every new slice paper / RNAAS note `\software{}`-cites **`jansky-research`** (the toolkit, Zenodo
+concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{janskyresearch}`
+`refs.bib` entry from `papers/vgpra/` or `papers/spectra/`. See the `research-publish` skill.
+
 **Merged slices:** forty plus the type III synthesis — the authoritative per-slice table
 (tool + outcome) is in `README.md`. Each has a paper under `papers/<slice>/`. Publishing steps
 (Zenodo → JOSS → RNAAS → arXiv) are tracked in Joe's personal notes, outside this repo
