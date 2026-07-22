@@ -62,18 +62,18 @@ each module's `__all__`, the `run()` signatures, and the public functions of
 4. `scripts/next_version.py` prints e.g. `next: 1.1.0 (MINOR — Unreleased has "Added: lineconf slice", no breaking changes)`.
 
 **Steps**
-- [ ] Write `VERSIONING.md` (policy table + recipe + the single-source-of-truth note: version lives
+- [x] Write `VERSIONING.md` (policy table + recipe + the single-source-of-truth note: version lives
       in `pyproject.toml` and `CITATION.cff`; Zenodo takes it from the release tag).
-- [ ] Write `CHANGELOG.md` with a `[Unreleased]` section seeded from `git log 0e2ad04..HEAD` (i.e.
-      everything since the last `main` commit, grouped Added/Changed/Fixed) — this becomes the
-      `[1.0.0]` section in T3.
-- [ ] Add `scripts/next_version.py` (pure stdlib: parse `git tag`/`git log` + the changelog; print
-      recommended bump + reason; exit non-zero if `Unreleased` is empty). A unit test on a fixture
-      changelog keeps it in the 85% floor.
-- [ ] `CLAUDE.md`: add a "Versioning" bullet under **Working rules** pointing at `VERSIONING.md`, and
+- [x] Write `CHANGELOG.md` with a `[Unreleased]` section. Note: `0e2ad04..HEAD` is only the plan
+      commit (no prior tag exists), so `Unreleased` records the **full initial-release scope**
+      (domain-grouped) rather than a diff — this becomes the `[1.0.0]` section in T3.
+- [x] Add `scripts/next_version.py` (pure stdlib: parse `git tag` + the changelog; print
+      recommended bump + reason; exit non-zero if `Unreleased` is empty). Unit-tested on fixture
+      changelogs (`tests/test_next_version.py`, 10 tests).
+- [x] `CLAUDE.md`: add a "Versioning" bullet under **Working rules** pointing at `VERSIONING.md`, and
       "every PR adds a `CHANGELOG.md` `Unreleased` entry".
-- **Done when:** `python scripts/next_version.py` prints a correct recommendation on the seeded
-      `Unreleased`; `VERSIONING.md` + `CHANGELOG.md` committed; CLAUDE.md points at them.
+- **Done when:** ✅ `python scripts/next_version.py` prints `next: 1.0.0 (initial release …)`;
+      `VERSIONING.md` + `CHANGELOG.md` committed; CLAUDE.md points at them.
 
 ---
 
@@ -101,20 +101,22 @@ staleness:
    Cat 2, SPICE-RACS, FASHI, etc. as cited).
 
 **Steps**
-- [ ] Rewrite **Summary**: one-para intro + a **domain-grouped** capability list (FRB/time-domain;
+- [x] Rewrite **Summary**: one-para intro + a **domain-grouped** capability list (FRB/time-domain;
       pulsars; HI & spectral-line; solar/heliospheric; planetary radio; RM/Faraday & cosmology;
       continuum variability; GPU/ML — SBI + PyTorch DSP), each with 1–2 named exemplar slices; point
       to the README table as the full inventory.
-- [ ] Fix the **CPU-only** framing in the title and body → CPU-first + optional GPU extras.
-- [ ] Rewrite the **Statement of need** methodological paragraph around recover-a-known + honest-null
+- [x] Fix the **CPU-only** framing in the title and body → CPU-first + optional GPU extras.
+- [x] Rewrite the **Statement of need** methodological paragraph around recover-a-known + honest-null
       at scale; keep the three-audience framing.
-- [ ] Update **Functionality**: current counts, the GPU extras, the `arxiv-submit` +
+- [x] Update **Functionality**: current counts, the GPU extras, the `arxiv-submit` +
       `pull-station-data` helpers, `make reproduce`.
-- [ ] Update `paper.bib`; refresh the `date`.
-- [ ] Rebuild/validate the JOSS paper (JOSS renders `paper.md`; check it compiles via the JOSS
-      Docker preview or `make` target if present).
-- **Done when:** `joss/paper.md` accurately describes the v1.0.0 scope, makes no CPU-only overclaim,
-      and lists no stale counts; `science-reviewer` (or a careful read) confirms no overclaiming.
+- [x] Update `paper.bib` (added `pytorch` + `sbi_toolkit`); refresh the `date` → 21 July 2026.
+- [x] Validate offline: YAML frontmatter parses, all 12 cite keys resolve, required Summary +
+      Statement-of-need sections present (no pandoc/JOSS-Docker locally; JOSS builds on submission).
+- [x] **Also fixed the same CPU-only/six-slice staleness in `CITATION.cff` + `.zenodo.json`** for
+      release consistency (version bump itself stays in T3).
+- **Done when:** ✅ `joss/paper.md` describes the v1.0.0 scope, no CPU-only overclaim, no stale
+      count; an overclaim gate against the README slice table returned **PASS**.
 
 ---
 
@@ -123,20 +125,20 @@ staleness:
 Depends on T1 (policy) and T2 (paper describes the released scope).
 
 **Steps**
-- [ ] Bump version to `1.0.0` in **`pyproject.toml`** (`version = "1.0.0"`) and **`CITATION.cff`**
-      (`version: "1.0.0"`).
-- [ ] Check **`.zenodo.json`** for a hardcoded version (it currently has none — Zenodo takes it from
-      the tag; leave as-is unless a version field appears).
-- [ ] Move `CHANGELOG.md`'s `Unreleased` → a dated `## [1.0.0] — 2026-…` section.
-- [ ] Update the Obsidian publishing todo (`efforts/radio_astronomy/research_paper_todo.md`): change
-      every `v0.0.1` → `v1.0.0` in §0 (the "hold the tag" note) and §1 (the Zenodo release steps and
-      title "jansky-research v1.0.0"); note the version decision + rationale.
-- [ ] Per the todo §1: wire Zenodo (GitHub switch ON) **first**, then draft the GitHub release
-      `v1.0.0`, publish, confirm the Zenodo record + `.zenodo.json` metadata, copy the concept DOI,
-      add the DOI badge to `README.md`.
-- **Done when:** `pyproject.toml` + `CITATION.cff` say `1.0.0`, `CHANGELOG.md` has a `[1.0.0]`
-      section, the todo no longer says `v0.0.1`, and the tag/release/Zenodo checklist is ready to
-      execute (the account-bound steps stay Joe's to click).
+- [x] Bump version to `1.0.0` in **`pyproject.toml`** (`version = "1.0.0"`) and **`CITATION.cff`**
+      (`version: "1.0.0"`, `date-released: "2026-07-21"`).
+- [x] Checked **`.zenodo.json`** — no version field (Zenodo takes it from the tag); left as-is.
+- [x] Moved `CHANGELOG.md`'s `Unreleased` → a dated `## [1.0.0] — 2026-07-21` section; added a fresh
+      empty `## [Unreleased]` (so `next_version.py` now correctly reports "nothing to release").
+- [ ] **Joe (personal vault):** update the Obsidian publishing todo
+      (`efforts/radio_astronomy/research_paper_todo.md`) — every `v0.0.1` → `v1.0.0` in §0/§1; note
+      the version decision + rationale. (Outside this repo; not editable from here.)
+- [ ] **Joe (account-bound):** wire Zenodo (GitHub switch ON) **first**, then draft + publish the
+      GitHub release `v1.0.0` (tag on the merge commit), confirm the Zenodo record + `.zenodo.json`
+      metadata, copy the concept DOI, add the DOI badge to `README.md`.
+- **Done when:** ✅ `pyproject.toml` + `CITATION.cff` say `1.0.0`, `CHANGELOG.md` has a dated
+      `[1.0.0]` section; ⏳ the tag/release/Zenodo checklist is ready to execute (the account-bound
+      steps stay Joe's to click, per the sequencing gate).
 
 ---
 
@@ -154,18 +156,19 @@ Key macros to reuse: `\vgSynInjected`, `\vgSynRecovered`, `\vgRealUPeriod`, `\vg
 `\vgRealURecovers`, `\vgRealNPeriod`, `\vgRealNRecovers`.
 
 **Steps**
-- [ ] Write `papers/vgpra/rnaas.tex` (≤1000 words, 1 figure): abstract states the controlled null;
+- [x] Write `papers/vgpra/rnaas.tex` (≤1000 words, 1 figure): abstract states the controlled null;
       the Result section makes the recover-a-known→null arc explicit (synthetic recovers the injected
       period to ~1 min; neither real ice-giant period recovered; blind total-power can't do it —
       historical geometric modelling was essential). Every number `\input` from `generated/macros`.
-- [ ] Reuse `figures/vgpra.pdf` (the periodogram / recovery figure) as the single figure.
-- [ ] Keep the AI-use acknowledgement + `\software{}` block from the frbstats template; author =
+- [x] Reuse `figures/vgpra.pdf` (the periodogram / recovery figure) as the single figure.
+- [x] Keep the AI-use acknowledgement + `\software{}` block from the frbstats template; author =
       Joseph Barbere only.
-- [ ] `make figures`/`make paper` so macros exist; build and check the RNAAS PDF fits the 1-page
-      / ≤1000-word limit.
-- [ ] Add a Summary-table row and check-box to the publishing todo §3 (already listed as a
-      candidate; mark it "packaged" once the `rnaas.tex` builds).
-- **Done when:** `papers/vgpra/rnaas.tex` builds a ≤1000-word, 1-figure note with all numbers from
+- [x] Built with the `jansky-research-paper` tectonic container (`podman run … tectonic rnaas.tex`):
+      compiles; **441 words** (< 1000) and 2 pages — matching the sanctioned `frbstats/rnaas.tex`
+      house format (aastex631 RNAAS + one figure is 2 pages there too).
+- [ ] Publishing-todo §3 row: **Joe's** (lives in the Obsidian vault outside this repo) — mark
+      `vgpra` "packaged" there once ready to submit.
+- **Done when:** ✅ `papers/vgpra/rnaas.tex` builds a ≤1000-word, 1-figure note with all numbers from
       macros; ready for the §3 submission steps.
 
 ---
@@ -176,15 +179,17 @@ Same pattern; the thematically-matched follow-up ("the apparent USS population i
 flux-scale systematic").
 
 **Steps**
-- [ ] Confirm `papers/spectra/` has `generated/macros.tex` + a suitable figure (regenerate with
-      `make figures` if needed); note its title/result macros.
-- [ ] Write `papers/spectra/rnaas.tex` (≤1000 words, 1 figure) from `papers/spectra/main.tex`: the
+- [x] Confirmed `papers/spectra/generated/macros.tex` (`usNmatched`, `usAlphaMedian`, `usAlphaMin`,
+      `usNuss`, `usThreshold`) + two figures; the RNAAS note uses `figures/alpha_vs_flux.pdf` (the
+      flux-scale-correction deflation — the on-message single figure).
+- [x] Write `papers/spectra/rnaas.tex` (≤1000 words, 1 figure) from `papers/spectra/main.tex`: the
       cautionary result that raw TGSS×NVSS ultra-steep-spectrum selection is dominated by the TGSS
       flux-scale systematic and the candidates don't survive the de Gasperin cross-check. Numbers from
       macros; AI-use ack + `\software{}`; author Joseph Barbere.
-- [ ] Build and check the ≤1000-word / 1-figure limit.
-- [ ] Mark it "packaged" in the publishing todo §3.
-- **Done when:** `papers/spectra/rnaas.tex` builds within RNAAS limits, numbers from macros.
+- [x] Built with the tectonic container: compiles, no undefined refs; **381 words** (< 1000), 2 pages
+      (matching the house RNAAS format).
+- [ ] Publishing-todo §3 "packaged" mark: **Joe's** (Obsidian vault, outside this repo).
+- **Done when:** ✅ `papers/spectra/rnaas.tex` builds within RNAAS limits, numbers from macros.
 
 ---
 
