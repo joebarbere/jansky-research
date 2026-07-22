@@ -1,5 +1,6 @@
 # jansky-research
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21482378.svg)](https://doi.org/10.5281/zenodo.21482378)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/joebarbere?logo=githubsponsors)](https://github.com/sponsors/joebarbere)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/joebarbere)
 
