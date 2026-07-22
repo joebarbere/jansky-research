@@ -35,6 +35,8 @@ recommend the next version number.
 - Added `docs/faq.md` — how others use the toolkit (depend, don't fork), how the in-repo papers work
   (authorship, provenance/priority via Zenodo DOIs, what "unpublished" does and doesn't mean), and a
   licensing note. Linked from the README and `CONTRIBUTING.md`.
+- **Dual-licensed the repository:** the papers in `papers/` are now **CC BY 4.0** (new
+  `papers/LICENSE`); the code remains **MIT**. README, `docs/faq.md` updated to state it.
 
 ## [1.0.0] — 2026-07-21
 

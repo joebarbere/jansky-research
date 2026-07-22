@@ -70,11 +70,16 @@ astronomy has no "prior public posting disqualifies you" rule.)
 
 ### Is there one license for the code and the papers?
 
-The repository carries the **MIT** license — ideal and permissive for the **code**. Because MIT is a
-software license and the papers are creative works, how the *papers* may be reused is a softer
-question than for the code. If that matters to you as a reader, the safe default is **cite and link
-rather than copy**, and open an issue to ask. (The maintainer may add a separate license for
-`papers/` — e.g. Creative Commons — or a NOTICE clarifying this.) *Not legal advice.*
+No — the project is **dual-licensed**, which is common for software that ships with written work:
+
+- **Code** — the `jansky_research` package and everything outside `papers/` — is **MIT** (top-level
+  [`LICENSE`](../LICENSE)).
+- **Papers** — everything in [`papers/`](../papers) — is **Creative Commons Attribution 4.0
+  (CC BY 4.0)** ([`papers/LICENSE`](../papers/LICENSE)).
+
+So you're free to reuse, adapt, and redistribute the papers — including commercially — as long as
+you give appropriate credit and link the license. (Giving credit satisfies the license;
+re-presenting the work as your own is still misconduct — see above.) *Not legal advice.*
 
 ## Contributing
 

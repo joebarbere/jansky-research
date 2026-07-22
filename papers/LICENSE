@@ -1,0 +1,33 @@
+License for the papers in this directory
+=========================================
+
+The papers in this directory (`papers/`) — their LaTeX sources (`*.tex`), bibliographies
+(`*.bib`), figures, generated macros, and compiled PDFs — are licensed under the
+
+    Creative Commons Attribution 4.0 International License (CC BY 4.0)
+
+SPDX-License-Identifier: CC-BY-4.0
+
+  - Human-readable summary: https://creativecommons.org/licenses/by/4.0/
+  - Full legal code:        https://creativecommons.org/licenses/by/4.0/legalcode
+
+You are free to share (copy and redistribute in any medium or format) and adapt (remix,
+transform, and build upon) this material for any purpose, even commercially, provided you
+give appropriate credit, provide a link to the license, and indicate if changes were made.
+
+How to attribute
+----------------
+
+  "<paper title>", Joseph Barbere (ORCID 0009-0008-3289-4447), from the jansky-research
+  project — https://github.com/joebarbere/jansky-research — licensed under CC BY 4.0.
+
+Where a paper has been archived or published with a DOI, cite that DOI. Note that giving
+credit satisfies the license; it does not permit re-presenting the work as your own, which
+is academic misconduct regardless of license.
+
+Scope
+-----
+
+This CC BY 4.0 license applies ONLY to the contents of this `papers/` directory. The rest
+of the repository — the `jansky_research` software package and all other code — is licensed
+under the MIT License; see the top-level `LICENSE` file.

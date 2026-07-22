@@ -307,4 +307,6 @@ for how to set up, contribute a change, report a bug, and get support, and the
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Dual-licensed: the **code** (the `jansky_research` package and everything outside `papers/`) is
+**MIT** — see [LICENSE](LICENSE); the **papers** in [`papers/`](papers/) are **CC BY 4.0** — see
+[`papers/LICENSE`](papers/LICENSE).
