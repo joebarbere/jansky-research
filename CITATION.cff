@@ -1,14 +1,16 @@
 cff-version: 1.2.0
 message: "If you use this software or its analyses, please cite it as below."
-title: "jansky-research: A CPU-only, reproducible toolkit for amateur radio-astronomy analyses"
+title: "jansky-research: A CPU-first, reproducible toolkit for amateur radio-astronomy analyses"
 abstract: >-
-  A tested, CPU-only Python toolkit for amateur, reproducible radio-astronomy
-  analyses, built on the jansky course library. It bundles six public-data
-  research slices — FRB burst statistics, FRB activity-periodicity, the Milky Way
-  HI tangent-point rotation curve, a SETI Doppler-drift injection-recovery
-  benchmark, ultra-steep-spectrum source selection, and a VLASS multi-epoch radio
-  variability census — each run on real public data, put through an adversarial
-  science-review gate, and written up honestly (validations and negatives alike).
+  A tested, CPU-first Python toolkit for amateur, reproducible radio-astronomy
+  analyses, built on the jansky course library, with optional opt-in GPU
+  acceleration for its signal-processing and machine-learning components. It bundles
+  more than forty self-contained public-data research slices — spanning fast radio
+  bursts, pulsars, HI 21 cm, solar and heliospheric radio bursts, planetary radio,
+  Faraday rotation, continuum variability, SETI, and GPU/ML methods — each run on
+  real public data, put through an adversarial science-review gate, and written up
+  honestly (validations and negatives alike), with every reported number regenerated
+  from the pipeline.
 type: software
 authors:
   - given-names: Joseph

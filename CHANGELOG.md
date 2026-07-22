@@ -44,5 +44,9 @@ earlier version. After 1.0.0 this section accumulates one entry per PR.
 
 - Optional GPU acceleration (`fdmt`, `sbi` extras, and the `torchdsp` slice) is pure-PyTorch and
   ROCm/CUDA-portable; the core install and CI remain CPU-only, GPU is opt-in.
+- Refreshed the JOSS paper (`joss/paper.md` + `paper.bib`), `CITATION.cff`, and `.zenodo.json` to
+  the current scope: "CPU-first with optional GPU" (was the false "CPU-only"), a domain-grouped
+  capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
+  Statement of need reframed around recover-a-known + honest-null at scale.
 
 [Unreleased]: https://github.com/joebarbere/jansky-research/compare/HEAD...HEAD
