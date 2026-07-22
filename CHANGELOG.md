@@ -26,6 +26,9 @@ recommend the next version number.
   `refs.bib` entry). Added a related-work disclosure to `joss/paper.md` (the two notes are in
   preparation for RNAAS, distinct from the software paper), and recorded the "cite jansky-research
   going forward" convention in `CLAUDE.md` and the `research-publish` skill.
+- `research-publish` skill: the readiness check now **auto-discovers every `papers/*/rnaas.tex`**
+  note (was hardcoded to `frbstats`) with a per-note 1000-word sanity check, so `vgpra`/`spectra`
+  and any future note are covered without editing the script.
 
 ## [1.0.0] — 2026-07-21
 

@@ -27,6 +27,18 @@ def _exists(p: Path) -> bool:
     return p.exists() and (p.is_dir() or p.stat().st_size > 0)
 
 
+def _rnaas_wordcount(tex: str) -> int:
+    """Rough prose word count of an RNAAS note: document body minus LaTeX, for a 1000-word check."""
+    body = re.sub(r"(?<!\\)%.*", "", tex)  # strip % comments
+    m = re.search(r"\\begin\{document\}(.*?)\\end\{document\}", body, re.S)
+    if m:
+        body = m.group(1)
+    body = re.split(r"\\bibliography\b", body)[0]  # drop the bibliography onward
+    body = re.sub(r"\\[a-zA-Z@]+\*?(\[[^\]]*\])?", " ", body)  # \commands + optional [..]
+    body = re.sub(r"[{}\\$~&]", " ", body)  # residual TeX punctuation/braces
+    return len([w for w in body.split() if re.search(r"[A-Za-z0-9]", w)])
+
+
 def check(repo: Path) -> None:
     def mark(ok, msg, note=""):
         m = "[x]" if ok is True else ("[~]" if ok == "verify" else "[ ]")
@@ -78,12 +90,23 @@ def check(repo: Path) -> None:
     print("      next: archive on Zenodo (step 1), then submit at joss.theoj.org/papers/new.")
 
     print("\n=== 3. RNAAS (independent; quickest) ===")
-    rn = repo / "papers" / "frbstats" / "rnaas.tex"
-    mark(_exists(rn), "papers/frbstats/rnaas.tex present")
-    if rn.exists():
-        words = len(re.sub(r"[^A-Za-z0-9 ]", " ", rn.read_text()).split())
+    # Auto-discover every packaged note; no slice names hardcoded, so new notes show up for free.
+    notes = sorted((repo / "papers").glob("*/rnaas.tex"))
+    if not notes:
+        mark(False, "any papers/*/rnaas.tex present", "no RNAAS short-form notes found")
+    for rn in notes:
+        name = rn.parent.name
+        words = _rnaas_wordcount(rn.read_text())
+        over = words > 1000
         mark(
-            "verify", f"length sanity (~{words} raw words incl. LaTeX)", "RNAAS limit is 1000 words"
+            not over,
+            f"papers/{name}/rnaas.tex (~{words} words)",
+            "over the 1000-word RNAAS limit — trim" if over else "within the 1000-word limit",
+        )
+    if notes:
+        print(
+            f"      found {len(notes)} note(s); which to actually submit is the editorial call"
+            " (see the publishing checklist — some are repo-only reproductions)."
         )
     print("      next: build the note, confirm the current AAS fee, submit via Editorial Manager.")
 
