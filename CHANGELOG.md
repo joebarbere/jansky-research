@@ -9,7 +9,10 @@ recommend the next version number.
 
 ## [Unreleased]
 
-Nothing yet. `scripts/next_version.py` will report the next bump once entries land here.
+### Changed
+
+- Documentation: added the Zenodo DOI badge (concept DOI `10.5281/zenodo.21482378`) to the README
+  following the v1.0.0 release.
 
 ## [1.0.0] — 2026-07-21
 
