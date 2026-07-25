@@ -12,7 +12,7 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 | **Repository URL** | `https://github.com/joebarbere/jansky-research` |
 | **Software version** | `v1.0.1` |
 | **Git branch** | `main` (leave default) |
-| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions — stable across releases). At acceptance JOSS may want the version-specific archive of the released tag; for `v1.0.1` that DOI is minted by Zenodo when the release is published — read it off the Zenodo record and paste it here before submitting. (The v1.0.0 version DOI was `10.5281/zenodo.21482379`.) |
+| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions — stable across releases). If JOSS asks for the version-specific archive of one exact release, `v1.0.1` is `10.5281/zenodo.21564183`. Re-check this after any release cut during review: Zenodo mints a new version DOI each time, and JOSS collects the final one at acceptance. |
 | **Submitting author** | Joseph Barbere · ORCID `0009-0008-3289-4447` · Independent researcher |
 | **Suggested keywords/topics** | Python; astronomy; radio astronomy; fast radio bursts; pulsars; reproducibility |
 
