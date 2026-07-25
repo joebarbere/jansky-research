@@ -9,18 +9,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      # The jansky dependency is a local path source (../jansky); check it out
-      # as a sibling so `uv sync` resolves it on a clean runner.
+      # `jansky` resolves from its pinned git tag (pyproject.toml [tool.uv.sources]),
+      # so CI installs exactly what `git clone && uv sync` gives anyone else.
       - name: Checkout jansky-research
         uses: actions/checkout@v4
         with:
           path: jansky-research
-      - name: Checkout jansky (the library dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: joebarbere/jansky
-          ref: v0.1.0
-          path: jansky
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Sync

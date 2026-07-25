@@ -9,16 +9,11 @@ jobs:
   build-paper:
     runs-on: ubuntu-latest
     steps:
+      # `jansky` resolves from its pinned git tag (pyproject.toml [tool.uv.sources]).
       - name: Checkout jansky-research
         uses: actions/checkout@v4
         with:
           path: jansky-research
-      - name: Checkout jansky (the library dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: joebarbere/jansky
-          ref: v0.1.0
-          path: jansky
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Generate every slice's figures + macros via the static-slice DAG (Snakemake, offline)

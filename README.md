@@ -193,8 +193,8 @@ papers in this repo, and [`CONTRIBUTING.md`](CONTRIBUTING.md) covers how to cont
 report issues, and get support.
 
 ```bash
-# Requires the jansky repo checked out next to this one (../jansky) for local dev.
-uv sync                                   # env + jansky (from ../jansky)
+git clone https://github.com/joebarbere/jansky-research.git && cd jansky-research
+uv sync                                   # env + jansky (installed from its pinned tag)
 make test                                 # unit tests (offline, on synthetic fixtures)
 make cov                                  # tests + 85% coverage floor
 
@@ -251,8 +251,10 @@ This repo **depends on `jansky` as a library** and reuses its tested helpers (`j
 `jansky.rfi`, `jansky.timing`, `jansky.seti`, `jansky.sourcecounts`, `jansky.formats`,
 `jansky.data`, …) rather than reimplementing them. It mirrors jansky's conventions: `uv`-managed,
 ruff + mypy + pytest with an 85% coverage floor, Podman containers, and a `plans/NN-slug.md`
-workflow. The `jansky` dependency is a local path source (`../jansky`) for cross-repo dev, switching
-to the pinned git tag `jansky@v0.1.0` for clean-checkout CI. See `pyproject.toml`.
+workflow. The `jansky` dependency installs from the pinned git tag `jansky@v0.2.0`, so a bare
+`git clone && uv sync` works with no second checkout; for cross-repo development,
+`eval "$(make -s dev-env)"` puts a sibling `../jansky/src` on `PYTHONPATH` ahead of the pinned tag.
+See `pyproject.toml`.
 
 ## Layout
 
