@@ -26,17 +26,27 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 ## Set up the environment
 
 The project is managed with [uv](https://docs.astral.sh/uv/) and depends on the
-[`jansky`](https://github.com/joebarbere/jansky) course library. For local development
-`jansky` is resolved as a **sibling checkout** (`../jansky`), so clone both repos next
-to each other:
+[`jansky`](https://github.com/joebarbere/jansky) course library, installed automatically
+from its pinned git tag. One clone is enough:
 
 ```bash
-git clone https://github.com/joebarbere/jansky.git
 git clone https://github.com/joebarbere/jansky-research.git
 cd jansky-research
-uv sync                                   # core + dev toolchain (+ ../jansky, editable)
+uv sync                                   # core + dev toolchain (+ jansky, pinned tag)
 uv run python -c "import jansky_research"  # sanity check
 ```
+
+**Changing both repos at once?** Clone [`jansky`](https://github.com/joebarbere/jansky)
+next to this one and put it ahead of the pinned tag on `PYTHONPATH`:
+
+```bash
+eval "$(make -s dev-env)"    # export PYTHONPATH=../jansky/src
+unset PYTHONPATH             # back to the pinned tag
+```
+
+`uv run` preserves `PYTHONPATH`, so edits in `../jansky` are live immediately. Note that
+`uv pip install -e ../jansky` does *not* work for this — `uv run` re-syncs the project
+environment and silently reverts the overlay.
 
 Everything runs through `uv run`, so you never activate a venv by hand. `make help`
 lists the shortcuts. See [`docs/usage.md`](docs/usage.md) for running a slice.

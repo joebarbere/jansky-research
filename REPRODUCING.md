@@ -5,9 +5,10 @@ path — `jansky_research.pipeline`), plus the one-command full chain.
 
 ## Prerequisites
 
-- [`uv`](https://docs.astral.sh/uv/) and the **`jansky`** repo checked out next to this one
-  (`../jansky`) for local development — `pyproject.toml` uses a path source. (CI and the containers
-  install `jansky` from its pinned git tag `v0.1.0` instead.)
+- [`uv`](https://docs.astral.sh/uv/). The **`jansky`** library installs automatically from its
+  pinned git tag (`v0.2.0`), so a single clone of this repo is enough — no sibling checkout.
+  (For cross-repo development, `eval "$(make -s dev-env)"` puts a sibling `../jansky/src` on
+  `PYTHONPATH`, ahead of the pinned tag.)
 - For the Airflow and paper steps: **Podman** (rootless is fine). On Fedora there is often no
   `podman compose` provider, so use `podman-compose`; no install needed if you have uv:
   `make ... COMPOSE="uvx podman-compose"`.

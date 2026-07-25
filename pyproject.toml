@@ -1,6 +1,6 @@
 [project]
 name = "jansky-research"
-version = "1.0.0"
+version = "1.0.1"
 description = "Amateur radio-astronomy research, end to end: tested tools run on real public data — FRBs, HI, VLASS variability, peaked-spectrum searches — each gated by adversarial science review and written up honestly, nulls included. Sibling of the jansky teaching course."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -58,12 +58,13 @@ typeii = ["fsspec>=2024.2", "aiohttp>=3.9"]
 Homepage = "https://github.com/joebarbere/jansky-research"
 
 # --- jansky dependency source ----------------------------------------------------
-# LOCAL DEV (default): use the sibling checkout so edits across both repos are live.
-# RELEASE / CI on a clean checkout: switch to the pinned git tag instead, e.g.
-#   jansky = { git = "https://github.com/joebarbere/jansky", tag = "v0.1.0" }
-# (the tag is cut on jansky; uv.lock records the exact resolved commit).
+# DEFAULT: the pinned git tag, so a bare `git clone && uv sync` works for anyone —
+# no sibling checkout required (uv.lock records the exact resolved commit).
+# CROSS-REPO DEV: `eval "$(make -s dev-env)"` puts a sibling `../jansky/src` on PYTHONPATH,
+# ahead of the pinned tag, so edits in both repos are live. (`uv pip install -e ../jansky`
+# does NOT work here — `uv run` re-syncs the environment and reverts it.)
 [tool.uv.sources]
-jansky = { path = "../jansky", editable = true }
+jansky = { git = "https://github.com/joebarbere/jansky.git", tag = "v0.2.0" }
 # torch resolves from the CPU wheel index (small, CI-safe); GPU runs use a separate ROCm venv.
 torch = [{ index = "pytorch-cpu" }]
 

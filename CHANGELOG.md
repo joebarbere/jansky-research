@@ -9,14 +9,26 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-07-25
+
 ### Changed
 
+- **Install: a single clone now works.** The `jansky` dependency defaults to its pinned git tag
+  (`v0.2.0`) in `[tool.uv.sources]` instead of the `../jansky` path source, so `git clone && uv sync`
+  succeeds with no sibling checkout — removing a JOSS review-checklist blocker and the most likely
+  first-run failure for new users. Cross-repo development is now an explicit opt-in:
+  `eval "$(make -s dev-env)"` puts a sibling `../jansky/src` on `PYTHONPATH` ahead of the pinned tag
+  (`uv run` preserves `PYTHONPATH`; a `uv pip install -e` overlay does *not* survive, because
+  `uv run` re-syncs the environment). CI/paper/release workflows drop their second
+  `actions/checkout`, so CI installs exactly what a stranger gets.
+  Docs updated: `README.md`, `CONTRIBUTING.md`, `REPRODUCING.md`, `docs/usage.md`,
+  `joss/SUBMISSION.md`, `CLAUDE.md`.
 - Documentation: added the Zenodo DOI badge (concept DOI `10.5281/zenodo.21482378`) to the README
   following the v1.0.0 release.
 - Documentation: added community guidelines for JOSS review — `CONTRIBUTING.md` (how to contribute,
   report issues, and get support; dev setup; the slice pattern; the pre-PR checks),
   `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), and `docs/usage.md` (a short install-and-run
-  guide, incl. the sibling-checkout install a fresh clone needs). Linked from the README.
+  guide). Linked from the README.
 - JOSS paper (`joss/paper.md`): added a substantial-effort paragraph to the Statement of need
   (breadth across domains + the dual Snakemake/Airflow reproducibility layer + "the software is
   itself the research"). Refreshed the stale "twenty-six slices" tally → "forty slices plus a
@@ -84,5 +96,6 @@ than a diff from an earlier version; every later section is a diff from its pred
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
 
-[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/joebarbere/jansky-research/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/joebarbere/jansky-research/releases/tag/v1.0.0

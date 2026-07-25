@@ -10,9 +10,9 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 | Field | Value |
 |---|---|
 | **Repository URL** | `https://github.com/joebarbere/jansky-research` |
-| **Software version** | `v1.0.0` |
+| **Software version** | `v1.0.1` |
 | **Git branch** | `main` (leave default) |
-| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions). At acceptance JOSS may want the version-specific archive of the released tag: `10.5281/zenodo.21482379` — give that if it asks for one exact release. |
+| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions — stable across releases). At acceptance JOSS may want the version-specific archive of the released tag; for `v1.0.1` that DOI is minted by Zenodo when the release is published — read it off the Zenodo record and paste it here before submitting. (The v1.0.0 version DOI was `10.5281/zenodo.21482379`.) |
 | **Submitting author** | Joseph Barbere · ORCID `0009-0008-3289-4447` · Independent researcher |
 | **Suggested keywords/topics** | Python; astronomy; radio astronomy; fast radio bursts; pulsars; reproducibility |
 
@@ -52,9 +52,9 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 > results, and citations; an AI/LLM is not an author. Full disclosure is in the paper's
 > Acknowledgements.
 >
-> **Install note for reviewers:** the sole dependency `jansky` (the sibling teaching course) is
-> resolved as a local path source, so please clone both repositories side by side (`jansky` and
-> `jansky-research`) before `uv sync` — documented in `docs/usage.md`.
+> **Install note for reviewers:** `git clone` + `uv sync` is all that is needed. The sole
+> first-party dependency `jansky` (the sibling teaching course) installs automatically from its
+> pinned git tag, so no second checkout is required — documented in `docs/usage.md`.
 
 ## Suggested reviewers
 

@@ -3,7 +3,7 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper papers-zip arxiv reproduce clean
+.PHONY: help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper papers-zip arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi lptv skr typeii rfitrend vgpra pte2 glitchpop
@@ -16,8 +16,15 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-setup: ## Create the environment (Python 3.12 + deps, incl. jansky)
+setup: ## Create the environment (Python 3.12 + deps, incl. jansky from its pinned tag)
 	uv sync
+
+dev-env: ## Cross-repo dev: print the env putting a sibling ../jansky ahead of the pinned tag
+	@test -d ../jansky || { echo "../jansky not found — clone it next to this repo first" >&2; exit 1; }
+	@echo "export PYTHONPATH=$(abspath ../jansky/src)"
+	@echo "# eval \"\$$(make -s dev-env)\" — uv run preserves PYTHONPATH, so edits in ../jansky go" >&2
+	@echo "# live immediately. 'unset PYTHONPATH' returns to the pinned tag. (Do NOT use" >&2
+	@echo "# 'uv pip install -e ../jansky': uv run re-syncs the env and silently reverts it.)" >&2
 
 test: ## Run the unit tests
 	uv run pytest

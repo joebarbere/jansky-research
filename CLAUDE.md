@@ -1,7 +1,8 @@
 # jansky-research — guide for Claude
 
 **What this is.** Amateur radio-astronomy *research*, end to end. A public sibling of the
-[`jansky`](https://github.com/joebarbere/jansky) teaching course (checked out at `../jansky`): where
+[`jansky`](https://github.com/joebarbere/jansky) teaching course (installed from its pinned git tag;
+clone it at `../jansky` + `eval "$(make -s dev-env)"` for cross-repo work): where
 jansky *teaches*, this repo *does original work* as reproducible "slices" — one gap → one tested tool
 → real public data → honest write-up. It **depends on `jansky` as a library** (`from jansky import …`)
 and mirrors its `uv`/ruff/mypy/pytest conventions.

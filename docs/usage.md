@@ -7,14 +7,13 @@ for the per-slice inventory and outcomes, see the [README](../README.md).
 ## Install
 
 The project is managed with [uv](https://docs.astral.sh/uv/) and depends on the
-[`jansky`](https://github.com/joebarbere/jansky) course library, resolved as a **sibling
-checkout**. Clone both repositories next to each other:
+[`jansky`](https://github.com/joebarbere/jansky) course library, which is installed
+automatically from its pinned git tag — you do **not** need a second checkout:
 
 ```bash
-git clone https://github.com/joebarbere/jansky.git
 git clone https://github.com/joebarbere/jansky-research.git
 cd jansky-research
-uv sync                                    # builds the env, incl. ../jansky (editable)
+uv sync                                    # builds the env, incl. jansky (pinned tag)
 uv run python -c "import jansky_research"   # sanity check
 ```
 
