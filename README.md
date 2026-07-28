@@ -15,9 +15,30 @@ a tested tool — pure NumPy/SciPy/astropy, or pure PyTorch where device portabi
 code runs on CPU and on the workstation's AMD GPU via ROCm) — run on real public data, put through
 an adversarial science-review gate, and written up, wins *and* negatives reported plainly.
 
-**In this README:** [Method](#method) · [Results](#results) · [What's next](#whats-next) ·
-[Papers](#papers) · [Quickstart](#quickstart) · [The rooftop station](#the-rooftop-station) ·
+**In this README:** [AI use disclosure](#ai-use-disclosure) · [Method](#method) ·
+[Results](#results) · [What's next](#whats-next) · [Papers](#papers) ·
+[Quickstart](#quickstart) · [The rooftop station](#the-rooftop-station) ·
 [Relation to `jansky`](#relation-to-jansky) · [Layout](#layout)
+
+## AI use disclosure
+
+The tools, analyses, and paper drafts in this repo were developed collaboratively
+with Anthropic's Claude, directed by me — an amateur, not a professional astronomer.
+Each paper carries its own AI-use disclosure, and an AI/LLM is not an author.
+
+The method section below describes real guardrails — every tool must recover a
+known, published result before it's trusted with anything blind, an adversarial
+science-review gate tries to knock each finding down, tests hold an 85% coverage
+floor in CI, and every reported number regenerates from a clean checkout. But be
+clear about what those guardrails are for: they make the work **checkable**, not
+**expert-reviewed**. No professional radio astronomer has peer-reviewed these
+results. That's why findings are framed as candidates, validations, and limits —
+never discoveries — and why negatives are reported as negatives.
+
+If you're qualified to review a slice, that's the most valuable contribution you
+can make: each one is self-contained under `plans/`, `survey/`, and `papers/`, and
+[issues](https://github.com/joebarbere/jansky-research/issues) citing a specific
+result are very welcome.
 
 ## Method
 
