@@ -1,7 +1,14 @@
 # 85 — Independent reproduction of the Breakthrough Listen 3I/ATLAS GBT nondetection
 
-Status: 📋 planned — GATE 0 done 2026-07-30: data verified public + novelty PASS (details below).
-Remaining pin at step 1: the blc-node → receiver-band mapping (read from `.h5` header attrs).
+Status: 🚧 in progress — GATE 0 done 2026-07-30: data verified public + novelty PASS (details
+below). Step 1 done 2026-07-30 — node→band mapping pinned by remote header reads (fsspec+h5py
+HTTP range requests on the `.0002` products, ~KB per file): MJD 61027, four cadences by start
+second — **L** t0=17226: blc21–26 = 939.0–2064.0 MHz; **S** t0=21817: blc22–27 =
+1651.5–2776.5 MHz; **C** t0=26882: blc21–27/30–37/60–67/70–75 = 3939.0–8251.5 MHz; **X**
+t0=31308: blc20–27/30–37/60–67/70–76 = 7689.0–12376.5 MHz. Each node = 187.5 MHz; `.0002` is
+the 65536-channel (~2.86 kHz) mid-res product. Minimum-unit node: **blc25** (1126.5–1314 MHz,
+inside FAST's 1.05–1.45 GHz comparison band). Disk checked: 348 GB free vs ~60 GB node-serial
+peak.
 
 ## Context
 
