@@ -118,6 +118,45 @@ def test_eirp_limit_reproduces_paper_headline():
     assert atlas3i.eirp_limit_w(snr=32.0) == pytest.approx(2 * eirp)
 
 
+def test_vet_stamps_confirms_tracking_tone_and_flags_zero_drift_rfi():
+    tsamp, foff, hw = 18.6, -2.79, 512
+    wfs, secs, on = atlas3i.synthetic_cadence(tsamp_s=tsamp, foff_hz=foff, seed=0)
+    tone_stamps = [wf[:, 1024 - hw : 1024 + hw] for wf in wfs]
+    tone = atlas3i.vet_stamps(
+        tone_stamps,
+        secs,
+        on,
+        atlas3i.Hit(chan=1024, drift_hz_s=0.4, snr=25.0),
+        tsamp_s=tsamp,
+        foff_hz=foff,
+        stamp_center_chan=1024,
+    )
+    assert tone["confirmed"] is True
+    assert tone["tracks_in_ons"] and tone["clean_in_offs"] and not tone["zero_drift"]
+    rfi_stamps = [wf[:, 3000 - hw : 3000 + hw] for wf in wfs]
+    rfi = atlas3i.vet_stamps(
+        rfi_stamps,
+        secs,
+        on,
+        atlas3i.Hit(chan=3000, drift_hz_s=0.0, snr=25.0),
+        tsamp_s=tsamp,
+        foff_hz=foff,
+        stamp_center_chan=3000,
+    )
+    assert rfi["confirmed"] is False
+    assert rfi["zero_drift"] is True
+    with pytest.raises(ValueError, match="equal length"):
+        atlas3i.vet_stamps(
+            tone_stamps[:2],
+            secs,
+            on,
+            atlas3i.Hit(1024, 0.4, 25.0),
+            tsamp_s=tsamp,
+            foff_hz=foff,
+            stamp_center_chan=1024,
+        )
+
+
 def test_run_offline_round_trip(tmp_path):
     m = atlas3i.run(out=str(tmp_path))
     assert m["recovered_injected"] is True

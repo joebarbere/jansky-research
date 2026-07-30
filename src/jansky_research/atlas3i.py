@@ -381,7 +381,170 @@ def _write_macros(m: dict, path) -> None:
     p.write_text("\n".join(lines) + "\n")
 
 
+def vet_stamps(
+    stamps: list[np.ndarray],
+    secs: list[int],
+    on: list[bool],
+    hit: Hit,
+    *,
+    tsamp_s: float,
+    foff_hz: float,
+    stamp_center_chan: int,
+    threshold: float = 8.0,
+    tol_chan: int = 32,
+) -> dict:
+    """Vet one on/off survivor against small waterfall stamps from all six scans.
+
+    The survivor's drift rate predicts where the tone must sit in every scan; each stamp is
+    de-Dopplered at that rate and the S/N at the predicted channel is read off. A confirmed
+    sky signal must track the prediction in every ON stamp (S/N above ``threshold`` within
+    ``tol_chan``) and stay clean in every OFF — chance ON/OFF coincidences from dense RFI hit
+    lists do not survive this coherence test. Zero-drift survivors are additionally flagged:
+    a transmitter at the target must show nonzero barycentric drift, so an exactly-constant
+    tone is terrestrial. Stamps are centred on ``stamp_center_chan`` (full-band channel).
+    """
+    if not (len(stamps) == len(secs) == len(on)):
+        raise ValueError("stamps, secs and on must have equal length")
+    t0 = secs[0]
+    per_scan_snr = []
+    for wf, sec in zip(stamps, secs, strict=True):
+        wfn, _ = normalize(np.asarray(wf, float))
+        dd = dedoppler(
+            wfn, tsamp_s=tsamp_s, foff_hz=foff_hz, drift_rates=np.array([hit.drift_hz_s])
+        )
+        row = dd[0]
+        med = np.median(row)
+        mad = np.median(np.abs(row - med)) * 1.4826
+        pred = (
+            (hit.chan - stamp_center_chan)
+            + wf.shape[1] // 2
+            + hit.drift_hz_s * (sec - t0) / foff_hz
+        )
+        lo = max(0, int(pred) - tol_chan)
+        hi = min(row.size, int(pred) + tol_chan + 1)
+        peak = row[lo:hi].max() if hi > lo else med
+        per_scan_snr.append(float((peak - med) / max(mad, 1e-300)))
+    on_ok = all(s >= threshold for s, o in zip(per_scan_snr, on, strict=True) if o)
+    off_clean = all(s < threshold / 2 for s, o in zip(per_scan_snr, on, strict=True) if not o)
+    zero_drift = hit.drift_hz_s == 0.0
+    return {
+        "per_scan_snr": per_scan_snr,
+        "tracks_in_ons": on_ok,
+        "clean_in_offs": off_clean,
+        "zero_drift": zero_drift,
+        "confirmed": on_ok and off_clean and not zero_drift,
+    }
+
+
 # ----------------------------------------------------------------------------- real-data leg
+
+
+class _HttpRangeFile:  # pragma: no cover - network
+    """Minimal read-only file-like over HTTP Range requests, for remote h5py access.
+
+    Reads are served from 256 KB-aligned cached blocks so h5py's many small metadata reads
+    do not each cost a round trip. Dependency-free (urllib only).
+    """
+
+    BLOCK = 256 * 1024
+
+    def __init__(self, url: str):
+        from urllib.request import Request, urlopen
+
+        self.url = url
+        self.pos = 0
+        self._cache: dict[int, bytes] = {}
+        req = Request(url, headers={"Range": "bytes=0-0"})
+        with urlopen(req) as r:
+            rng = r.headers.get("Content-Range", "")
+        self.size = int(rng.rsplit("/", 1)[-1])
+
+    def _block(self, idx: int) -> bytes:
+        if idx not in self._cache:
+            from urllib.request import Request, urlopen
+
+            start = idx * self.BLOCK
+            end = min(start + self.BLOCK, self.size) - 1
+            req = Request(self.url, headers={"Range": f"bytes={start}-{end}"})
+            with urlopen(req) as r:
+                self._cache[idx] = r.read()
+        return self._cache[idx]
+
+    def read(self, n: int = -1) -> bytes:
+        if n < 0:
+            n = self.size - self.pos
+        out = bytearray()
+        while n > 0 and self.pos < self.size:
+            idx, off = divmod(self.pos, self.BLOCK)
+            chunk = self._block(idx)[off : off + n]
+            out += chunk
+            self.pos += len(chunk)
+            n -= len(chunk)
+        return bytes(out)
+
+    def seek(self, pos: int, whence: int = 0) -> int:
+        self.pos = {0: pos, 1: self.pos + pos, 2: self.size + pos}[whence]
+        return self.pos
+
+    def tell(self) -> int:
+        return self.pos
+
+    def seekable(self) -> bool:
+        return True
+
+    def readable(self) -> bool:
+        return True
+
+    def writable(self) -> bool:
+        return False
+
+
+def fetch_stamp(  # pragma: no cover - network
+    scan: Scan, center_chan: int, half_width: int = 2048
+) -> tuple[np.ndarray, dict]:
+    """Remote-read a small frequency window around ``center_chan`` from one archive file."""
+    import h5py
+    import hdf5plugin  # noqa: F401 - registers the bitshuffle filter
+
+    with h5py.File(_HttpRangeFile(GB_ATLAS_BASE + scan.filename), "r") as f:
+        d = f["data"]
+        hdr = {
+            k: (v.item() if hasattr(v, "item") and getattr(v, "size", 1) == 1 else v)
+            for k, v in d.attrs.items()
+        }
+        n_freq = d.shape[-1]
+        lo = max(0, center_chan - half_width)
+        hi = min(n_freq, center_chan + half_width)
+        block = d[:, 0, lo:hi] if d.ndim == 3 else d[:, lo:hi]
+        return np.asarray(block, float), hdr
+
+
+def vet_node(  # pragma: no cover - network
+    node: str, survivors: list[dict], *, band: str = "L", half_width: int = 2048
+) -> list[dict]:
+    """Remote-vet a node's on/off survivors: stamp reads + drift-coherence check per hit."""
+    scans = cadence(fetch_index(), node, band=band)
+    out = []
+    for sv in survivors:
+        hit = Hit(chan=int(sv["chan"]), drift_hz_s=float(sv["drift_hz_s"]), snr=float(sv["snr"]))
+        stamps: list[np.ndarray] = []
+        hdr: dict = {}
+        for s in scans:
+            wf, hdr = fetch_stamp(s, hit.chan, half_width)
+            stamps.append(wf)
+        verdict = vet_stamps(
+            stamps,
+            [s.sec for s in scans],
+            [s.on for s in scans],
+            hit,
+            tsamp_s=float(hdr["tsamp"]),
+            foff_hz=float(hdr["foff"]) * 1e6,
+            stamp_center_chan=max(0, hit.chan - half_width) + half_width,
+        )
+        freq_mhz = float(hdr["fch1"]) + float(hdr["foff"]) * hit.chan
+        out.append({**sv, "freq_mhz": freq_mhz, **verdict})
+        print(f"[atlas3i] vet chan={hit.chan} f={freq_mhz:.3f} MHz: {verdict}", flush=True)
+    return out
 
 
 def fetch_index() -> list[Scan]:  # pragma: no cover - network
@@ -512,8 +675,16 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--band", default="L")
     p.add_argument("--threshold", type=float, default=16.0, help="real-leg S/N threshold")
     p.add_argument("--keep", action="store_true", help="keep downloaded scan files")
+    p.add_argument("--vet", help="vet the survivors in this search-result JSON (remote stamps)")
     args = p.parse_args(argv)
-    if args.node:
+    if args.vet:
+        from pathlib import Path
+
+        prev = json.loads(Path(args.vet).read_text())
+        res = {**prev, "survivors": vet_node(prev["node"], prev["survivors"], band=prev["band"])}
+        res["n_confirmed"] = sum(bool(s["confirmed"]) for s in res["survivors"])
+        Path(args.vet.replace(".json", "_vetted.json")).write_text(json.dumps(res, indent=2) + "\n")
+    elif args.node:
         from pathlib import Path
 
         res = search_node(
