@@ -9,6 +9,14 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+
+- `plans/85-bl3i-atlas-drift-reproduction.md` — new slice plan: independent reproduction of the
+  Breakthrough Listen 3I/ATLAS GBT nondetection (RNAAS arXiv:2512.19763) from the public
+  `bldata.berkeley.edu/ATLAS` archive, reusing the plan-11 `driftsearch` machinery. GATE 0 done
+  in-plan (data verified public with sizes/layout; novelty pass: no independent reanalysis of
+  the released data exists — ATA/FAST/MeerKAT follow-ups are all original observations).
+
 ## [1.0.1] — 2026-07-25
 
 ### Changed
