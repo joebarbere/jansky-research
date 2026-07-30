@@ -1,0 +1,37 @@
+# Automated dependency updates, mirroring the jansky course repo's setup with
+# one research-repo difference: uv bumps come MONTHLY, not weekly. Published
+# slices value a stable environment (every lockfile bump is potential numerical
+# churn), and git history preserves the exact lockfile each paper used — monthly
+# is enough to stay ahead of bit-rot and security fixes without a PR treadmill.
+#
+# Deliberately untouched by dependabot:
+# * the `jansky` dependency — a git source pinned to a release tag in
+#   [tool.uv.sources]; promoting to a new course release stays a manual,
+#   reviewed step.
+# * deliberate ceilings (apache-airflow <3.0, sbi <0.27) — updates stay within
+#   the declared constraints.
+# https://docs.github.com/code-security/dependabot
+version: 2
+updates:
+  # Python dependencies (uv reads pyproject.toml / uv.lock).
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      # Batch the routine dev-tooling bumps into one PR to cut noise.
+      dev-tooling:
+        patterns:
+          - "ruff"
+          - "pytest*"
+          - "mypy"
+          - "nbmake"
+          - "jupyterlab"
+
+  # GitHub Actions used by the workflows in .github/workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
