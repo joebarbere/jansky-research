@@ -646,12 +646,39 @@ def search_node(  # pragma: no cover - network + large data
                 ]
         print(f"[atlas3i] {s.filename}: {len(hits)} hits", flush=True)
         hits_per_scan.append(hits)
+    foff_hz = float(hdr["foff"]) * 1e6
+    tsamp = float(hdr["tsamp"])
     survivors = onoff_filter(
         hits_per_scan,
         [s.sec for s in scans],
         [s.on for s in scans],
-        foff_hz=float(hdr["foff"]) * 1e6,
+        foff_hz=foff_hz,
     )
+    # Vet inline while the scan files are still on disk: drift-coherence stamps are cheap
+    # locally, and the remote-stamp path proved slow/fragile (server throttling).
+    half_width = 2048
+    vetted = []
+    for h in survivors:
+        stamps = []
+        for path in paths:
+            with h5py.File(path, "r") as f:
+                d = f["data"]
+                lo = max(0, h.chan - half_width)
+                hi = min(d.shape[-1], h.chan + half_width)
+                block = d[:, 0, lo:hi] if d.ndim == 3 else d[:, lo:hi]
+                stamps.append(np.asarray(block, float))
+        verdict = vet_stamps(
+            stamps,
+            [s.sec for s in scans],
+            [s.on for s in scans],
+            h,
+            tsamp_s=tsamp,
+            foff_hz=foff_hz,
+            stamp_center_chan=max(0, h.chan - half_width) + half_width,
+        )
+        freq_mhz = float(hdr["fch1"]) + float(hdr["foff"]) * h.chan
+        vetted.append({**vars(h), "freq_mhz": freq_mhz, **verdict})
+        print(f"[atlas3i] vet chan={h.chan} f={freq_mhz:.3f} MHz: {verdict}", flush=True)
     if delete_after:
         for p in paths:
             os.remove(p)
@@ -660,7 +687,8 @@ def search_node(  # pragma: no cover - network + large data
         "band": band,
         "n_hits_per_scan": [len(h) for h in hits_per_scan],
         "n_survivors": len(survivors),
-        "survivors": [vars(h) for h in survivors],
+        "n_confirmed": sum(bool(v["confirmed"]) for v in vetted),
+        "survivors": vetted,
         "eirp_limit_w": eirp_limit_w(snr=threshold),
     }
 
@@ -676,7 +704,27 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--threshold", type=float, default=16.0, help="real-leg S/N threshold")
     p.add_argument("--keep", action="store_true", help="keep downloaded scan files")
     p.add_argument("--vet", help="vet the survivors in this search-result JSON (remote stamps)")
+    p.add_argument("--sweep", action="store_true", help="search+vet every L-band node serially")
     args = p.parse_args(argv)
+    if args.sweep:
+        from pathlib import Path
+
+        rp = Path(args.out) / "results"
+        rp.mkdir(parents=True, exist_ok=True)
+        for node in L_BAND_NODES:
+            dest = rp / f"atlas3i_{node}_{args.band}.json"
+            if dest.exists():
+                print(f"[atlas3i] {node}: already done, skipping", flush=True)
+                continue
+            r = search_node(
+                node, band=args.band, threshold=args.threshold, delete_after=not args.keep
+            )
+            dest.write_text(json.dumps(r, indent=2) + "\n")
+            print(
+                f"[atlas3i] {node}: {r['n_survivors']} survivors, {r['n_confirmed']} confirmed",
+                flush=True,
+            )
+        return 0
     if args.vet:
         from pathlib import Path
 
