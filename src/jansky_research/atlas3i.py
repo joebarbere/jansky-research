@@ -1,0 +1,532 @@
+"""Independent reproduction of the Breakthrough Listen 3I/ATLAS GBT technosignature search.
+
+On 2025-12-18 Breakthrough Listen observed the interstellar object 3I/ATLAS with the GBT at
+1-12 GHz (four receivers, ABACAD on/off cadences), searched with turboSETI at +-4 Hz/s, and
+reported a nondetection down to ~100 mW EIRP (Jacobson-Bell et al. 2025, RNAAS,
+arXiv:2512.19763). The data are public (https://bldata.berkeley.edu/ATLAS/GB_ATLAS/), but no
+independent reanalysis of the released files exists — the other 3I/ATLAS searches (ATA
+arXiv:2512.18142, FAST arXiv:2603.19023) are teams analysing their own observations.
+
+This module is an independent pipeline over those files: a physical-units (Hz/s) de-Doppler
+search with per-channel bandpass normalisation and DC-spike excision — the two real-data
+effects that defeated the teaching-grade detector in the merged ``driftsearch`` slice (plan 11
+honestly reported that ``jansky.seti.drift_search`` recovers injected tones but *not* the real
+Voyager-1 carrier). The ABACAD on/off filter then rejects anything not localised on the sky at
+the target. Everything scientific is pure NumPy and offline-testable on a synthetic cadence;
+file I/O and downloads are thin, network-marked wrappers.
+"""
+
+from __future__ import annotations
+
+import math
+import re
+from dataclasses import dataclass
+
+import numpy as np
+
+__all__ = [
+    "CADENCE_T0_SEC",
+    "GB_ATLAS_BASE",
+    "Hit",
+    "L_BAND_NODES",
+    "Scan",
+    "cadence",
+    "dedoppler",
+    "eirp_limit_w",
+    "find_hits",
+    "normalize",
+    "onoff_filter",
+    "parse_index",
+    "run",
+    "synthetic_cadence",
+]
+
+GB_ATLAS_BASE = "https://bldata.berkeley.edu/ATLAS/GB_ATLAS/"
+MJD = 61027  # 2025-12-18
+
+# Cadence start (UT second of day) per receiver, pinned 2026-07-30 by remote header reads of
+# the .0002 products (fsspec+h5py HTTP range requests; see plans/85).
+CADENCE_T0_SEC = {"L": 17226, "S": 21817, "C": 26882, "X": 31308}
+
+# L-band node -> (f_lo, f_hi) in MHz, pinned from the same headers. Each node spans 187.5 MHz.
+L_BAND_NODES = {
+    "blc21": (1876.5, 2064.0),
+    "blc22": (1689.0, 1876.5),
+    "blc23": (1501.5, 1689.0),
+    "blc24": (1314.0, 1501.5),
+    "blc25": (1126.5, 1314.0),
+    "blc26": (939.0, 1126.5),
+}
+
+AU_M = 1.495978707e11
+# Geocentric distance of 3I/ATLAS at the observation epoch (closest approach 2025-12-19 was
+# ~1.80 au); the real-data leg re-pins this from JPL Horizons.
+DISTANCE_AU_DEFAULT = 1.80
+
+
+@dataclass(frozen=True)
+class Scan:
+    """One rawspec product file in the GB_ATLAS archive listing."""
+
+    node: str
+    sec: int  # UT second of day (scan start)
+    on: bool  # True = on-target, False = the _OFF reference position
+    scan_id: str
+    product: str  # "0000" (fine-frequency) / "0001" / "0002" (mid-resolution)
+    filename: str
+
+
+_FILE_RE = re.compile(
+    r"(blc\d+)_guppi_(\d+)_(\d+)_DIAG_3I_ATLAS(_OFF)?_(\d+)\.rawspec\.(\d{4})\.h5"
+)
+
+
+def parse_index(text: str) -> list[Scan]:
+    """Parse the GB_ATLAS HTTP index (or any text containing the filenames) into scans."""
+    seen: dict[str, Scan] = {}
+    for m in _FILE_RE.finditer(text):
+        fn = m.group(0)
+        seen[fn] = Scan(
+            node=m.group(1),
+            sec=int(m.group(3)),
+            on=m.group(4) is None,
+            scan_id=m.group(5),
+            product=m.group(6),
+            filename=fn,
+        )
+    return sorted(seen.values(), key=lambda s: (s.node, s.sec, s.product))
+
+
+def cadence(scans: list[Scan], node: str, band: str = "L", product: str = "0000") -> list[Scan]:
+    """Select one node's 6-scan ABACAD cadence for ``band``, validating the ON/OFF pattern.
+
+    Scans are grouped by proximity to the pinned cadence start; a gap of more than 600 s to the
+    block start ends the block (the next receiver's cadence starts ~1 h later).
+    """
+    t0 = CADENCE_T0_SEC[band]
+    blk = sorted(
+        (s for s in scans if s.node == node and s.product == product and 0 <= s.sec - t0 < 2400),
+        key=lambda s: s.sec,
+    )
+    if len(blk) != 6:
+        raise ValueError(f"expected 6 scans for {node} band {band}, found {len(blk)}")
+    if [s.on for s in blk] != [True, False, True, False, True, False]:
+        raise ValueError(f"scans for {node} band {band} are not an ABACAD on/off cadence")
+    return blk
+
+
+def normalize(wf: np.ndarray, *, clip: float = 10.0) -> tuple[np.ndarray, np.ndarray]:
+    """Per-channel bandpass normalisation plus excision of grossly deviant channels.
+
+    Each channel is divided by its median over time (flattening the bandpass), then channels
+    whose median deviates from the band median by more than ``clip`` robust sigma (MAD) are
+    masked to 1.0 — this removes the rawspec band-centre DC spike that plan 11 identified as
+    the dominant artifact in real BL files. Returns ``(normalised, excised_mask)``.
+    """
+    wf = np.asarray(wf, float)
+    med = np.median(wf, axis=0)
+    band_med = np.median(med)
+    mad = np.median(np.abs(med - band_med)) * 1.4826
+    bad = np.abs(med - band_med) > clip * max(mad, 1e-300)
+    safe = np.where(med > 0, med, 1.0)
+    out = wf / safe
+    out[:, bad] = 1.0
+    return out, bad
+
+
+def dedoppler(
+    wf: np.ndarray, *, tsamp_s: float, foff_hz: float, drift_rates: np.ndarray
+) -> np.ndarray:
+    """Brute-force shift-and-sum de-Doppler in physical units.
+
+    For each drift rate (Hz/s) every time row is shifted by ``round(rate * t / foff_hz)``
+    channels (``foff_hz`` is signed — negative in BL files, where channel 0 is the highest
+    frequency) and the rows are averaged. Returns shape ``(n_drift, n_freq)``; each row is the
+    drift-aligned time-averaged spectrum, indexed by start channel.
+    """
+    wf = np.asarray(wf, float)
+    n_time, n_freq = wf.shape
+    t = np.arange(n_time) * tsamp_s
+    out = np.zeros((len(drift_rates), n_freq))
+    for i, rate in enumerate(np.asarray(drift_rates, float)):
+        shifts = np.rint(rate * t / foff_hz).astype(int)
+        acc = np.zeros(n_freq)
+        for k in range(n_time):
+            s = shifts[k]
+            if s == 0:
+                acc += wf[k]
+            elif s > 0:
+                acc[: n_freq - s] += wf[k, s:]
+            else:
+                acc[-s:] += wf[k, : n_freq + s]
+        out[i] = acc / n_time
+    return out
+
+
+@dataclass(frozen=True)
+class Hit:
+    """One de-Doppler detection: start channel, drift rate, and integrated S/N."""
+
+    chan: int
+    drift_hz_s: float
+    snr: float
+
+
+def find_hits(
+    wf: np.ndarray,
+    *,
+    tsamp_s: float,
+    foff_hz: float,
+    drift_rates: np.ndarray,
+    threshold: float = 10.0,
+    min_sep: int = 16,
+) -> list[Hit]:
+    """De-Doppler ``wf`` and return above-threshold peaks, strongest first.
+
+    S/N is computed per drift row against that row's robust (median/MAD) noise. Peaks within
+    ``min_sep`` channels of a stronger peak (at any drift) are suppressed, so one tone yields
+    one hit.
+    """
+    dd = dedoppler(wf, tsamp_s=tsamp_s, foff_hz=foff_hz, drift_rates=drift_rates)
+    med = np.median(dd, axis=1, keepdims=True)
+    mad = np.median(np.abs(dd - med), axis=1, keepdims=True) * 1.4826
+    snr = (dd - med) / np.maximum(mad, 1e-300)
+    drift_rates = np.asarray(drift_rates, float)
+    hits: list[Hit] = []
+    for i, j in np.argwhere(snr > threshold):
+        hits.append(Hit(chan=int(j), drift_hz_s=float(drift_rates[i]), snr=float(snr[i, j])))
+    hits.sort(key=lambda h: -h.snr)
+    kept: list[Hit] = []
+    for h in hits:
+        if all(abs(h.chan - k.chan) >= min_sep for k in kept):
+            kept.append(h)
+    return kept
+
+
+def onoff_filter(
+    hits_per_scan: list[list[Hit]],
+    scan_secs: list[int],
+    scan_on: list[bool],
+    *,
+    foff_hz: float,
+    tol_chan: int = 32,
+) -> list[Hit]:
+    """ABACAD sky-localisation filter: keep hits present in every ON and absent in every OFF.
+
+    A first-ON hit is extrapolated to each later scan along its own drift rate
+    (``chan + rate * dt / foff_hz``); it survives only if a hit lies within ``tol_chan``
+    channels of the prediction in every ON scan and in no OFF scan. This is what separates a
+    sky signal at the target from local RFI (present in the OFFs too).
+    """
+    if not (len(hits_per_scan) == len(scan_secs) == len(scan_on)):
+        raise ValueError("hits_per_scan, scan_secs and scan_on must have equal length")
+    if not scan_on[0]:
+        raise ValueError("the cadence must start with an ON scan")
+    t0 = scan_secs[0]
+    survivors = []
+    for h in hits_per_scan[0]:
+        ok = True
+        for hits, sec, on in zip(hits_per_scan[1:], scan_secs[1:], scan_on[1:], strict=True):
+            pred = h.chan + h.drift_hz_s * (sec - t0) / foff_hz
+            matched = any(abs(g.chan - pred) <= tol_chan for g in hits)
+            if on != matched:
+                ok = False
+                break
+        if ok:
+            survivors.append(h)
+    return survivors
+
+
+def synthetic_cadence(
+    *,
+    n_time: int = 16,
+    n_freq: int = 4096,
+    tsamp_s: float = 18.6,
+    foff_hz: float = -2.79,
+    tone_chan: int = 1024,
+    tone_drift_hz_s: float = 0.4,
+    tone_snr: float = 25.0,
+    rfi_chan: int | None = 3000,
+    dc_spike: bool = True,
+    seed: int = 0,
+) -> tuple[list[np.ndarray], list[int], list[bool]]:
+    """Six synthetic scans mimicking one node's ABACAD cadence, with known contaminants.
+
+    The drifting tone (the "signal") appears only in the ON scans and drifts coherently across
+    the whole cadence; the RFI tone is a zero-drift carrier present in all six scans; the DC
+    spike is a huge static spike at the band centre, as in real rawspec files. Returns
+    ``(waterfalls, scan_secs, scan_on)`` ready for :func:`find_hits` + :func:`onoff_filter`.
+    """
+    rng = np.random.default_rng(seed)
+    secs = [17226 + 318 * k for k in range(6)]
+    on = [True, False, True, False, True, False]
+    amp = tone_snr / math.sqrt(n_time)
+    t_in_scan = np.arange(n_time) * tsamp_s
+    wfs = []
+    for sec, is_on in zip(secs, on, strict=True):
+        wf = rng.normal(loc=10.0, scale=1.0, size=(n_time, n_freq))
+        if is_on:
+            dt = (sec - secs[0]) + t_in_scan
+            chans = np.rint(tone_chan + tone_drift_hz_s * dt / foff_hz).astype(int)
+            wf[np.arange(n_time), chans] += amp
+        if rfi_chan is not None:
+            wf[:, rfi_chan] += amp
+        if dc_spike:
+            wf[:, n_freq // 2] += 1e3
+        wfs.append(wf)
+    return wfs, secs, on
+
+
+def eirp_limit_w(
+    *,
+    snr: float = 10.0,
+    sefd_jy: float = 10.0,
+    t_obs_s: float = 300.0,
+    chan_hz: float = 2.79,
+    distance_au: float = DISTANCE_AU_DEFAULT,
+    n_pol: int = 2,
+) -> float:
+    """Minimum detectable EIRP (W) for a narrowband tone, EIRP = 4 pi d^2 * S_min * dnu.
+
+    ``S_min = snr * SEFD / sqrt(n_pol * dnu * t)`` is the radiometer narrowband limit for one
+    fine channel. With the paper's GBT L-band numbers (SEFD ~10 Jy, 5-min scans, ~3 Hz
+    channels, d = 1.8 au) this reproduces their ~100 mW headline figure.
+    """
+    s_min_jy = snr * sefd_jy / math.sqrt(n_pol * chan_hz * t_obs_s)
+    d_m = distance_au * AU_M
+    return 4.0 * math.pi * d_m**2 * s_min_jy * 1e-26 * chan_hz
+
+
+def run(out: str = ".", *, threshold: float = 10.0, seed: int = 0) -> dict:
+    """Offline synthetic round-trip: recover the injected tone, reject RFI and the DC spike.
+
+    Builds the synthetic cadence, runs normalisation + de-Doppler + the on/off filter, and
+    writes metrics, a two-panel figure, and the paper macros. This is the tested, reproducible
+    core; the real-data leg (``--node``, network) drives exactly the same functions.
+    """
+    import json
+    from pathlib import Path
+
+    tsamp, foff = 18.6, -2.79
+    drifts = np.linspace(-1.0, 1.0, 41)
+    wfs, secs, on = synthetic_cadence(tsamp_s=tsamp, foff_hz=foff, seed=seed)
+    hits_per_scan = []
+    dc_excised = []
+    for wf in wfs:
+        wfn, bad = normalize(wf)
+        dc_excised.append(bool(bad[wf.shape[1] // 2]))
+        hits_per_scan.append(
+            find_hits(wfn, tsamp_s=tsamp, foff_hz=foff, drift_rates=drifts, threshold=threshold)
+        )
+    survivors = onoff_filter(hits_per_scan, secs, on, foff_hz=foff)
+    recovered = any(abs(h.chan - 1024) < 32 for h in survivors)
+    rfi_rejected = not any(abs(h.chan - 3000) < 32 for h in survivors)
+    metrics = {
+        "threshold": threshold,
+        "n_hits_first_on": len(hits_per_scan[0]),
+        "n_survivors": len(survivors),
+        "recovered_injected": recovered,
+        "rfi_rejected": rfi_rejected,
+        "dc_spike_excised": all(dc_excised),
+        "survivor_drift_hz_s": survivors[0].drift_hz_s if survivors else None,
+        "eirp_limit_w_paper_params": eirp_limit_w(snr=16.0),
+    }
+    op = Path(out)
+    (op / "results").mkdir(parents=True, exist_ok=True)
+    (op / "results" / "atlas3i_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    paper = op / "papers" / "atlas3i"
+    _figure(wfs[0], tsamp, foff, drifts, paper / "figures")
+    _write_macros(metrics, paper / "generated" / "macros.tex")
+    return metrics
+
+
+def _figure(wf: np.ndarray, tsamp: float, foff: float, drifts: np.ndarray, out_dir) -> None:
+    from pathlib import Path
+
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    wfn, _ = normalize(wf)
+    dd = dedoppler(wfn, tsamp_s=tsamp, foff_hz=foff, drift_rates=drifts)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.2))
+    ax1.imshow(wfn, origin="lower", aspect="auto", cmap="viridis")
+    ax1.set(xlabel="channel", ylabel="time sample", title="Synthetic ON scan (normalised)")
+    ax2.imshow(
+        dd,
+        origin="lower",
+        aspect="auto",
+        cmap="viridis",
+        extent=[0, wf.shape[1], drifts.min(), drifts.max()],
+    )
+    ax2.set(xlabel="start channel", ylabel="drift rate (Hz/s)", title="De-Doppler plane")
+    fig.tight_layout()
+    fig.savefig(out / "atlas3i_dedoppler.pdf")
+    plt.close(fig)
+
+
+def _write_macros(m: dict, path) -> None:
+    """Emit LaTeX ``\\newcommand`` macros so the paper hard-codes no number."""
+    from pathlib import Path
+
+    lines = [
+        "% Auto-generated by jansky_research.atlas3i._write_macros — do not edit by hand.",
+        rf"\newcommand{{\aiThreshold}}{{{m['threshold']:.0f}}}",
+        rf"\newcommand{{\aiSurvivors}}{{{m['n_survivors']}}}",
+        rf"\newcommand{{\aiEirpMw}}{{{m['eirp_limit_w_paper_params'] * 1e3:.0f}}}",
+    ]
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(lines) + "\n")
+
+
+# ----------------------------------------------------------------------------- real-data leg
+
+
+def fetch_index() -> list[Scan]:  # pragma: no cover - network
+    """Download and parse the live GB_ATLAS archive index."""
+    from urllib.request import urlopen
+
+    with urlopen(GB_ATLAS_BASE) as r:
+        return parse_index(r.read().decode("utf-8", "replace"))
+
+
+def fetch_scan(scan: Scan, dest_dir: str) -> str:  # pragma: no cover - network, large
+    """Download one scan file (resumable via a .part file); returns the local path."""
+    from pathlib import Path
+    from urllib.request import Request, urlopen
+
+    dest = Path(dest_dir) / scan.filename
+    if dest.exists():
+        return str(dest)
+    part = dest.with_suffix(dest.suffix + ".part")
+    offset = part.stat().st_size if part.exists() else 0
+    req = Request(GB_ATLAS_BASE + scan.filename)
+    if offset:
+        req.add_header("Range", f"bytes={offset}-")
+    with urlopen(req) as r, open(part, "ab" if offset else "wb") as f:
+        while chunk := r.read(1 << 20):
+            f.write(chunk)
+    part.rename(dest)
+    return str(dest)
+
+
+def read_scan(path: str):  # pragma: no cover - optional voyager extra (h5py)
+    """Read a rawspec .h5 product -> ``(waterfall, header)`` (requires the ``voyager`` extra)."""
+    import h5py
+    import hdf5plugin  # noqa: F401 - registers the bitshuffle filter
+
+    with h5py.File(path, "r") as f:
+        d = f["data"]
+        hdr = {
+            k: (v.item() if hasattr(v, "item") and getattr(v, "size", 1) == 1 else v)
+            for k, v in d.attrs.items()
+        }
+        return np.asarray(d[:]).squeeze().astype(float), hdr
+
+
+def search_node(  # pragma: no cover - network + large data
+    node: str,
+    *,
+    band: str = "L",
+    dest_dir: str = "data/atlas3i",
+    threshold: float = 10.0,
+    max_drift_hz_s: float = 4.0,
+    n_drift: int = 129,
+    chunk: int = 1 << 20,
+    delete_after: bool = True,
+) -> dict:
+    """Full real-data pass for one node: fetch its cadence, search, on/off filter, report.
+
+    Fine-frequency files are searched in frequency chunks (~1M channels, overlapping by the
+    maximum drift excursion) to bound memory. With ``delete_after`` the 10 GB scan files are
+    removed once searched, so peak disk stays at one cadence (~60 GB).
+    """
+    import os
+
+    import h5py
+    import hdf5plugin  # noqa: F401 - registers the bitshuffle filter
+
+    drifts = np.linspace(-max_drift_hz_s, max_drift_hz_s, n_drift)
+    scans = cadence(fetch_index(), node, band=band)
+    hits_per_scan: list[list[Hit]] = []
+    hdr: dict = {}
+    paths = []
+    for s in scans:
+        path = fetch_scan(s, dest_dir)
+        paths.append(path)
+        # Chunked lazy reads: a full fine-res waterfall is ~10 GB on disk and would double
+        # twice in RAM as float64; slicing the dataset per frequency chunk bounds memory.
+        hits: list[Hit] = []
+        with h5py.File(path, "r") as f:
+            d = f["data"]
+            hdr = {
+                k: (v.item() if hasattr(v, "item") and getattr(v, "size", 1) == 1 else v)
+                for k, v in d.attrs.items()
+            }
+            tsamp = float(hdr["tsamp"])
+            foff = float(hdr["foff"]) * 1e6  # MHz -> Hz
+            n_freq = d.shape[-1]
+            n_time = d.shape[0]
+            pad = int(max_drift_hz_s * tsamp * n_time / abs(foff)) + 1
+            for lo in range(0, n_freq, chunk):
+                hi = min(n_freq, lo + chunk + pad)
+                block = d[:, 0, lo:hi] if d.ndim == 3 else d[:, lo:hi]
+                wfn, _ = normalize(np.asarray(block, float))
+                hits += [
+                    Hit(chan=h.chan + lo, drift_hz_s=h.drift_hz_s, snr=h.snr)
+                    for h in find_hits(
+                        wfn, tsamp_s=tsamp, foff_hz=foff, drift_rates=drifts, threshold=threshold
+                    )
+                    if h.chan < (hi - lo) - (pad if hi < n_freq else 0)
+                ]
+        print(f"[atlas3i] {s.filename}: {len(hits)} hits", flush=True)
+        hits_per_scan.append(hits)
+    survivors = onoff_filter(
+        hits_per_scan,
+        [s.sec for s in scans],
+        [s.on for s in scans],
+        foff_hz=float(hdr["foff"]) * 1e6,
+    )
+    if delete_after:
+        for p in paths:
+            os.remove(p)
+    return {
+        "node": node,
+        "band": band,
+        "n_hits_per_scan": [len(h) for h in hits_per_scan],
+        "n_survivors": len(survivors),
+        "survivors": [vars(h) for h in survivors],
+        "eirp_limit_w": eirp_limit_w(snr=threshold),
+    }
+
+
+def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
+    import argparse
+    import json
+
+    p = argparse.ArgumentParser(description="BL 3I/ATLAS GBT reproduction (plan 85).")
+    p.add_argument("--out", default=".")
+    p.add_argument("--node", help="run the real-data leg on this node (e.g. blc25)")
+    p.add_argument("--band", default="L")
+    p.add_argument("--threshold", type=float, default=16.0, help="real-leg S/N threshold")
+    p.add_argument("--keep", action="store_true", help="keep downloaded scan files")
+    args = p.parse_args(argv)
+    if args.node:
+        from pathlib import Path
+
+        res = search_node(
+            args.node, band=args.band, threshold=args.threshold, delete_after=not args.keep
+        )
+        rp = Path(args.out) / "results"
+        rp.mkdir(parents=True, exist_ok=True)
+        (rp / f"atlas3i_{args.node}_{args.band}.json").write_text(json.dumps(res, indent=2) + "\n")
+    else:
+        res = run(args.out)
+    print(json.dumps(res, indent=2))
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(_main())

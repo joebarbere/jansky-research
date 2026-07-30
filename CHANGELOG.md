@@ -16,6 +16,18 @@ recommend the next version number.
   `bldata.berkeley.edu/ATLAS` archive, reusing the plan-11 `driftsearch` machinery. GATE 0 done
   in-plan (data verified public with sizes/layout; novelty pass: no independent reanalysis of
   the released data exists — ATA/FAST/MeerKAT follow-ups are all original observations).
+- `src/jansky_research/atlas3i.py` + `tests/test_atlas3i.py` — the plan-85 tool: archive-index
+  parser and ABACAD cadence selector (validated against a vendored real GB_ATLAS listing),
+  bandpass normalisation with DC-spike excision (the artifact that defeated plan 11's teaching
+  detector on real BL data), a physical-units (Hz/s) brute-force de-Doppler search with robust
+  per-drift S/N and neighbour suppression, the ABACAD on/off sky-localisation filter, a
+  narrowband EIRP limit that reproduces the paper's ~100 mW headline from GBT L-band
+  parameters, and a fully offline synthetic-cadence round-trip (`run`) that recovers an
+  injected drifting tone while rejecting always-on RFI and the DC spike. Real-data leg
+  (`--node`, network + `voyager` extra) streams each 10 GB fine-resolution file in bounded
+  frequency chunks and deletes scans after searching (peak disk ≈ one cadence). The node→band
+  mapping (L: blc21–26 = 939–2064 MHz, etc.) was pinned by remote HDF5 header reads and is
+  embedded as constants.
 
 ## [1.0.1] — 2026-07-25
 
