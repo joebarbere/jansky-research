@@ -5,6 +5,14 @@ Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + 
 no survey-V EIRP-limit paper has landed since the Lenc+2018 lineage, and re-read the narrowband
 haystack anchors (arXiv:2103.16250, 2606.04304) full-text
 
+> **Update 2026-07-30:** Mason et al. (Manchester; NAM 2026, press via Gizmodo) ran archival
+> *narrowband* SETI searches well outside the water hole — ALMA Band 3 windows near 90.642 and
+> 93.151 GHz plus a Gaia-data leg, mapped to the Besançon Galaxy model (MNRAS; article cites
+> stae2714 and staf2112 — pin the exact refs at GATE 0). This *confirms* the premise (the
+> EIRP-limit literature remains narrowband-only; F16's broadband survey-V cell is still empty)
+> and adds new high-frequency anchors for the haystack-axes figure. Add both papers to the
+> GATE-0 full-text pass and the narrowband-anchor list.
+
 ## Context
 
 All published technosignature EIRP-limit work is narrowband (BL GBT, MeerKAT commensal
