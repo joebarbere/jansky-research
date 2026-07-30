@@ -12,7 +12,7 @@ jobs:
       # `jansky` resolves from its pinned git tag (pyproject.toml [tool.uv.sources]),
       # so CI installs exactly what `git clone && uv sync` gives anyone else.
       - name: Checkout jansky-research
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: jansky-research
       - name: Install uv
