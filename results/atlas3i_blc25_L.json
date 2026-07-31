@@ -1,0 +1,246 @@
+{
+  "node": "blc25",
+  "band": "L",
+  "n_hits_per_scan": [
+    118906,
+    234066,
+    223717,
+    102823,
+    105626,
+    96516
+  ],
+  "n_survivors": 12,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 2028241,
+      "drift_hz_s": 0.0,
+      "snr": 32.399613183307494,
+      "freq_mhz": 1308.298003859818,
+      "per_scan_snr": [
+        22.101139538881043,
+        10.511450121670771,
+        15.753317372015248,
+        9.140306395541495,
+        13.093735660769484,
+        10.98631476643634
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 2153971,
+      "drift_hz_s": 0.0,
+      "snr": 19.532657128926328,
+      "freq_mhz": 1307.9467182978988,
+      "per_scan_snr": [
+        6.532415828983233,
+        4.974911832733947,
+        10.645262164502943,
+        3.974493312525811,
+        6.7504111718671265,
+        4.592750745535669
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 3143053,
+      "drift_hz_s": 0.0,
+      "snr": 18.42904450912127,
+      "freq_mhz": 1305.1832551136613,
+      "per_scan_snr": [
+        16.115402867513996,
+        14.554018442734872,
+        17.81940015658653,
+        12.595884514594104,
+        17.195126323985637,
+        12.958967514578887
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 2154283,
+      "drift_hz_s": 0.0,
+      "snr": 17.210765121014695,
+      "freq_mhz": 1307.945846579969,
+      "per_scan_snr": [
+        5.676305861412276,
+        4.7736615819811865,
+        8.330596243113627,
+        3.223897485914028,
+        5.978265236776132,
+        3.0393622445534794
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 4073402,
+      "drift_hz_s": 0.0,
+      "snr": 28.728170615600654,
+      "freq_mhz": 1302.5838900357485,
+      "per_scan_snr": [
+        27.129160707863026,
+        13.375981637606214,
+        21.45177395554115,
+        14.372147332224728,
+        25.84369715002238,
+        11.430137743634399
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 4037020,
+      "drift_hz_s": 0.0,
+      "snr": 21.185447192494195,
+      "freq_mhz": 1302.6855401694775,
+      "per_scan_snr": [
+        19.935892588260216,
+        8.726927289240393,
+        16.902297439350914,
+        5.82419472879961,
+        16.874155931415476,
+        7.910265786355287
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 39498954,
+      "drift_hz_s": 3.125,
+      "snr": 21.096238119580725,
+      "freq_mhz": 1203.606041148305,
+      "per_scan_snr": [
+        18.08578960614541,
+        2.505261968300506,
+        9.827016791830424,
+        5.235726811704618,
+        6.19923607655808,
+        -0.3882296326392033
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": "GPS L5 / Galileo E5"
+    },
+    {
+      "chan": 39240970,
+      "drift_hz_s": 3.125,
+      "snr": 20.241877116550516,
+      "freq_mhz": 1204.3268401175737,
+      "per_scan_snr": [
+        18.718726793122748,
+        4.246944991709931,
+        4.182261190029564,
+        2.101775955257072,
+        4.02581009681785,
+        -0.915040100087219
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": "GPS L5 / Galileo E5"
+    },
+    {
+      "chan": 40536440,
+      "drift_hz_s": 3.9375,
+      "snr": 24.467805485353864,
+      "freq_mhz": 1200.7073387503624,
+      "per_scan_snr": [
+        23.153955546072964,
+        7.651256757119034,
+        3.8629022661257215,
+        4.946257885250316,
+        -7.163498939535353,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": "GPS L5 / Galileo E5"
+    },
+    {
+      "chan": 40833884,
+      "drift_hz_s": 3.9375,
+      "snr": 19.534880207749723,
+      "freq_mhz": 1199.8762898147106,
+      "per_scan_snr": [
+        19.302281689770165,
+        7.164705681288138,
+        6.375056210873984,
+        2.6531347099128233,
+        -7.72983770773402,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": "GPS L5 / Galileo E5"
+    },
+    {
+      "chan": 40683650,
+      "drift_hz_s": 2.5625,
+      "snr": 16.352725328719952,
+      "freq_mhz": 1200.296038761735,
+      "per_scan_snr": [
+        15.354190079138844,
+        5.0702776513433445,
+        5.044240959648276,
+        2.4450860068175104,
+        3.0416187013354103,
+        2.4593307016327945
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": "GPS L5 / Galileo E5"
+    },
+    {
+      "chan": 58688931,
+      "drift_hz_s": 2.6875,
+      "snr": 17.48770776048898,
+      "freq_mhz": 1149.9898647889495,
+      "per_scan_snr": [
+        13.515704485694764,
+        2.5251074579006567,
+        2.9021285588608614,
+        2.1136189179558427,
+        2.1656912170177978,
+        1.7748798477051582
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": null
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655,
+  "distance_au": 1.798
+}

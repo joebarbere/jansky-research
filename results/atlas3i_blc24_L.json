@@ -1,0 +1,37 @@
+{
+  "node": "blc24",
+  "band": "L",
+  "n_hits_per_scan": [
+    641,
+    1544,
+    543,
+    14698,
+    487,
+    568
+  ],
+  "n_survivors": 1,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 59034691,
+      "drift_hz_s": 0.0625,
+      "snr": 33.28345560878035,
+      "freq_mhz": 1336.5238225087523,
+      "per_scan_snr": [
+        10.835484360828248,
+        3.498892373395265,
+        9.548678503473994,
+        6.64864399244979,
+        9.792701271476501,
+        2.750374759434226
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": null
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655,
+  "distance_au": 1.798
+}
