@@ -27,7 +27,14 @@ recommend the next version number.
   (`--node`, network + `voyager` extra) streams each 10 GB fine-resolution file in bounded
   frequency chunks and deletes scans after searching (peak disk ≈ one cadence). The node→band
   mapping (L: blc21–26 = 939–2064 MHz, etc.) was pinned by remote HDF5 header reads and is
-  embedded as constants.
+  embedded as constants. Candidate vetting: per-survivor drift-coherence stamps
+  (`vet_stamps`, inline during the search) plus a satellite-allocation exclusion axis
+  (`classify_band`; Iridium/Inmarsat/GNSS downlinks defeat two-position filters by design).
+- `survey/atlas3i-findings.md` — the L-band real-data result: all six nodes (939–2064 MHz)
+  searched and vetted, 261 ABACAD survivors, 0 confirmed — **the paper's L-band null
+  reproduces independently**, with a matching ~99 mW EIRP limit; includes the two instructive
+  filter-evasion modes (sub-threshold OFF carriers, satellite downlinks) and honest caveats
+  (L band only, low-drift blind spot, S/N-convention and SEFD/distance nominals).
 
 ## [1.0.1] — 2026-07-25
 
