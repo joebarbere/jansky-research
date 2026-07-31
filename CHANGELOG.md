@@ -9,6 +9,14 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+
+- `atlas3i`: S/C/X band support — the pinned node→band tables for all four receivers
+  (`BAND_NODES`, with the six pairwise-duplicated bank-boundary recordings per C/X band
+  deduplicated and documented in `DUPLICATE_NODES`), and `--sweep`/`sweep_summary`/
+  `sweep_figure` generalised over `--band`. Extends the L-band reproduction toward the
+  paper's full 1–12 GHz claim (S: 6 nodes; C: 23; X: 25 unique nodes).
+
 ### Fixed
 
 - CI paper builds: `atlas3i` registered in the static-slice DAG (`workflow/Snakefile`, via its
