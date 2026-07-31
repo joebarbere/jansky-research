@@ -157,6 +157,14 @@ def test_vet_stamps_confirms_tracking_tone_and_flags_zero_drift_rfi():
         )
 
 
+def test_classify_band_flags_satellite_allocations():
+    assert atlas3i.classify_band(1620.0) == "Iridium downlink"
+    assert atlas3i.classify_band(1544.1) == "Inmarsat/MSS downlink"
+    assert atlas3i.classify_band(1575.42) == "GPS L1 / Galileo E1"
+    assert atlas3i.classify_band(1420.406) is None  # the HI line is clean
+    assert atlas3i.classify_band(1300.0) is None
+
+
 def test_run_offline_round_trip(tmp_path):
     m = atlas3i.run(out=str(tmp_path))
     assert m["recovered_injected"] is True

@@ -436,6 +436,27 @@ def vet_stamps(
     }
 
 
+# L-band satellite downlink allocations (MHz): transmitters genuinely in the sky, so they
+# defeat a two-position ON/OFF filter by design and must be flagged by frequency. Ranges per
+# ITU allocations; the same lists underlie the exclusion masks in BL L-band searches.
+SATELLITE_BANDS_MHZ = {
+    "Inmarsat/MSS downlink": (1525.0, 1559.0),
+    "GPS L1 / Galileo E1": (1559.0, 1591.0),
+    "GLONASS L1": (1592.0, 1610.0),
+    "Iridium downlink": (1616.0, 1626.5),
+    "GPS L2 (+GLONASS L2)": (1215.0, 1254.0),
+    "GPS L5 / Galileo E5": (1164.0, 1215.0),
+}
+
+
+def classify_band(freq_mhz: float) -> str | None:
+    """Name the known satellite downlink allocation containing ``freq_mhz``, else ``None``."""
+    for name, (lo, hi) in SATELLITE_BANDS_MHZ.items():
+        if lo <= freq_mhz < hi:
+            return name
+    return None
+
+
 # ----------------------------------------------------------------------------- real-data leg
 
 
@@ -677,8 +698,10 @@ def search_node(  # pragma: no cover - network + large data
             stamp_center_chan=max(0, h.chan - half_width) + half_width,
         )
         freq_mhz = float(hdr["fch1"]) + float(hdr["foff"]) * h.chan
-        vetted.append({**vars(h), "freq_mhz": freq_mhz, **verdict})
-        print(f"[atlas3i] vet chan={h.chan} f={freq_mhz:.3f} MHz: {verdict}", flush=True)
+        sat = classify_band(freq_mhz)
+        verdict["confirmed"] = verdict["confirmed"] and sat is None
+        vetted.append({**vars(h), "freq_mhz": freq_mhz, "satellite_band": sat, **verdict})
+        print(f"[atlas3i] vet chan={h.chan} f={freq_mhz:.3f} MHz sat={sat}: {verdict}", flush=True)
     if delete_after:
         for p in paths:
             os.remove(p)
