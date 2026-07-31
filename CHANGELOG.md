@@ -9,6 +9,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-30
+
 ### Added
 
 - `plans/85-bl3i-atlas-drift-reproduction.md` — new slice plan: independent reproduction of the
@@ -130,6 +132,7 @@ than a diff from an earlier version; every later section is a diff from its pred
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
 
-[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/joebarbere/jansky-research/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/joebarbere/jansky-research/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/joebarbere/jansky-research/releases/tag/v1.0.0
