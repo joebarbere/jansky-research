@@ -167,6 +167,64 @@ def test_classify_band_flags_satellite_allocations():
     assert atlas3i.classify_band(1300.0) is None
 
 
+def test_sweep_summary_macros_and_figure(tmp_path):
+    import json
+
+    rd = tmp_path / "results"
+    rd.mkdir()
+    for node, hits, nsurv, nconf, survs in [
+        ("blc21", [10, 20, 12, 18, 11, 15], 0, 0, []),
+        (
+            "blc23",
+            [100, 90, 95, 80, 85, 88],
+            2,
+            0,
+            [
+                {
+                    "satellite_band": "Iridium downlink",
+                    "tracks_in_ons": True,
+                    "clean_in_offs": True,
+                    "zero_drift": False,
+                },
+                {
+                    "satellite_band": None,
+                    "tracks_in_ons": False,
+                    "clean_in_offs": True,
+                    "zero_drift": False,
+                },
+            ],
+        ),
+    ]:
+        (rd / f"atlas3i_{node}_L.json").write_text(
+            json.dumps(
+                {
+                    "node": node,
+                    "band": "L",
+                    "n_hits_per_scan": hits,
+                    "n_survivors": nsurv,
+                    "n_confirmed": nconf,
+                    "survivors": survs,
+                    "eirp_limit_w": 0.0992,
+                    "distance_au": 1.798,
+                }
+            )
+        )
+    s = atlas3i.sweep_summary(str(rd))
+    assert s["total_hits"] == sum([10, 20, 12, 18, 11, 15]) + sum([100, 90, 95, 80, 85, 88])
+    assert s["total_survivors"] == 2
+    assert s["total_confirmed"] == 0
+    assert s["sat_coherent"] == 1  # only the Iridium one is drift-coherent AND satellite-band
+    assert s["nodes"] == ["blc21", "blc23"]
+    atlas3i.sweep_macros(s, tmp_path / "generated" / "macros.tex")
+    macros = (tmp_path / "generated" / "macros.tex").read_text()
+    assert r"\newcommand{\aiConfirmed}{0}" in macros
+    assert r"\newcommand{\aiEirpMw}{99.2}" in macros
+    atlas3i.sweep_figure(s, tmp_path / "figures")
+    assert (tmp_path / "figures" / "atlas3i_sweep.pdf").exists()
+    with pytest.raises(FileNotFoundError):
+        atlas3i.sweep_summary(str(tmp_path / "empty"))
+
+
 def test_run_offline_round_trip(tmp_path):
     m = atlas3i.run(out=str(tmp_path))
     assert m["recovered_injected"] is True
@@ -175,5 +233,5 @@ def test_run_offline_round_trip(tmp_path):
     assert m["survivor_drift_hz_s"] == pytest.approx(0.4, abs=0.11)
     assert (tmp_path / "results" / "atlas3i_metrics.json").exists()
     assert (tmp_path / "papers" / "atlas3i" / "figures" / "atlas3i_dedoppler.pdf").exists()
-    macros = (tmp_path / "papers" / "atlas3i" / "generated" / "macros.tex").read_text()
-    assert r"\aiEirpMw" in macros
+    macros = (tmp_path / "papers" / "atlas3i" / "generated" / "macros_offline.tex").read_text()
+    assert r"\aiSynEirpMw" in macros

@@ -30,6 +30,13 @@ recommend the next version number.
   embedded as constants. Candidate vetting: per-survivor drift-coherence stamps
   (`vet_stamps`, inline during the search) plus a satellite-allocation exclusion axis
   (`classify_band`; Iridium/Inmarsat/GNSS downlinks defeat two-position filters by design).
+- `papers/atlas3i/` — the RNAAS note (`rnaas.tex` + `refs.bib`, compiles in the tectonic
+  container): the reproduction result + the filter-evasion taxonomy, with every number
+  `\input` from `sweep_macros`/`sweep_figure` (new module functions reading the committed
+  per-node result JSONs — nothing typed by hand). README slice tables updated. GATE-2
+  review passed with fixes (threshold asymmetry implemented + honest caveats: raw-hit-count
+  comparability, analysed-band scope, β=1, notch filters); distance Horizons-pinned to
+  1.79801 au → final EIRP limit 99.2 mW.
 - `survey/atlas3i-findings.md` — the L-band real-data result: all six nodes (939–2064 MHz)
   searched and vetted, 261 ABACAD survivors, 0 confirmed — **the paper's L-band null
   reproduces independently**, with a matching ~99 mW EIRP limit; includes the two instructive
