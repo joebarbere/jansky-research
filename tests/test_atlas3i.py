@@ -167,6 +167,18 @@ def test_classify_band_flags_satellite_allocations():
     assert atlas3i.classify_band(1300.0) is None
 
 
+def test_band_nodes_contiguous_and_deduped():
+    for band, nodes in atlas3i.BAND_NODES.items():
+        spans = sorted(nodes.values())
+        assert all(abs((hi - lo) - 187.5) < 1e-9 for lo, hi in spans)
+        for (_, hi1), (lo2, _) in zip(spans, spans[1:], strict=False):
+            assert hi1 == lo2, f"{band} band has a gap or overlap at {hi1}"
+    for band, dups in atlas3i.DUPLICATE_NODES.items():
+        assert set(dups).isdisjoint(atlas3i.BAND_NODES[band])  # dups excluded from the sweep
+        assert set(dups.values()) <= set(atlas3i.BAND_NODES[band])  # each maps to a kept node
+    assert atlas3i.L_BAND_NODES is atlas3i.BAND_NODES["L"]
+
+
 def test_sweep_summary_macros_and_figure(tmp_path):
     import json
 

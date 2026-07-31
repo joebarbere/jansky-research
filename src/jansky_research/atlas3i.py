@@ -48,15 +48,101 @@ MJD = 61027  # 2025-12-18
 # the .0002 products (fsspec+h5py HTTP range requests; see plans/85).
 CADENCE_T0_SEC = {"L": 17226, "S": 21817, "C": 26882, "X": 31308}
 
-# L-band node -> (f_lo, f_hi) in MHz, pinned from the same headers. Each node spans 187.5 MHz.
-L_BAND_NODES = {
-    "blc21": (1876.5, 2064.0),
-    "blc22": (1689.0, 1876.5),
-    "blc23": (1501.5, 1689.0),
-    "blc24": (1314.0, 1501.5),
-    "blc25": (1126.5, 1314.0),
-    "blc26": (939.0, 1126.5),
+# Band -> node -> (f_lo, f_hi) in MHz, pinned from the same remote header reads. Each node
+# spans 187.5 MHz. For C and X the recording used four banks with pairwise-duplicated coverage
+# at bank boundaries (e.g. blc26 == blc30 in C); the duplicates are OMITTED here so a sweep
+# searches each frequency chunk once — the skipped redundant nodes are listed per band in
+# `DUPLICATE_NODES` (not a coverage gap: identical spectra recorded twice).
+BAND_NODES: dict[str, dict[str, tuple[float, float]]] = {
+    "L": {
+        "blc21": (1876.5, 2064.0),
+        "blc22": (1689.0, 1876.5),
+        "blc23": (1501.5, 1689.0),
+        "blc24": (1314.0, 1501.5),
+        "blc25": (1126.5, 1314.0),
+        "blc26": (939.0, 1126.5),
+    },
+    "S": {
+        "blc22": (2589.0, 2776.5),
+        "blc23": (2401.5, 2589.0),
+        "blc24": (2214.0, 2401.5),
+        "blc25": (2026.5, 2214.0),
+        "blc26": (1839.0, 2026.5),
+        "blc27": (1651.5, 1839.0),
+    },
+    "C": {
+        "blc21": (8064.0, 8251.5),
+        "blc22": (7876.5, 8064.0),
+        "blc23": (7689.0, 7876.5),
+        "blc24": (7501.5, 7689.0),
+        "blc25": (7314.0, 7501.5),
+        "blc26": (7126.5, 7314.0),
+        "blc27": (6939.0, 7126.5),
+        "blc32": (6751.5, 6939.0),
+        "blc33": (6564.0, 6751.5),
+        "blc34": (6376.5, 6564.0),
+        "blc35": (6189.0, 6376.5),
+        "blc36": (6001.5, 6189.0),
+        "blc37": (5814.0, 6001.5),
+        "blc62": (5626.5, 5814.0),
+        "blc63": (5439.0, 5626.5),
+        "blc64": (5251.5, 5439.0),
+        "blc65": (5064.0, 5251.5),
+        "blc66": (4876.5, 5064.0),
+        "blc67": (4689.0, 4876.5),
+        "blc72": (4501.5, 4689.0),
+        "blc73": (4314.0, 4501.5),
+        "blc74": (4126.5, 4314.0),
+        "blc75": (3939.0, 4126.5),
+    },
+    "X": {
+        "blc20": (12189.0, 12376.5),
+        "blc21": (12001.5, 12189.0),
+        "blc22": (11814.0, 12001.5),
+        "blc23": (11626.5, 11814.0),
+        "blc24": (11439.0, 11626.5),
+        "blc25": (11251.5, 11439.0),
+        "blc26": (11064.0, 11251.5),
+        "blc27": (10876.5, 11064.0),
+        "blc32": (10689.0, 10876.5),
+        "blc33": (10501.5, 10689.0),
+        "blc34": (10314.0, 10501.5),
+        "blc35": (10126.5, 10314.0),
+        "blc36": (9939.0, 10126.5),
+        "blc37": (9751.5, 9939.0),
+        "blc62": (9564.0, 9751.5),
+        "blc63": (9376.5, 9564.0),
+        "blc64": (9189.0, 9376.5),
+        "blc65": (9001.5, 9189.0),
+        "blc66": (8814.0, 9001.5),
+        "blc67": (8626.5, 8814.0),
+        "blc72": (8439.0, 8626.5),
+        "blc73": (8251.5, 8439.0),
+        "blc74": (8064.0, 8251.5),
+        "blc75": (7876.5, 8064.0),
+        "blc76": (7689.0, 7876.5),
+    },
 }
+# Redundant recordings of chunks already covered above (identical band per the pinned headers).
+DUPLICATE_NODES = {
+    "C": {
+        "blc30": "blc26",
+        "blc31": "blc27",
+        "blc60": "blc36",
+        "blc61": "blc37",
+        "blc70": "blc66",
+        "blc71": "blc67",
+    },
+    "X": {
+        "blc30": "blc26",
+        "blc31": "blc27",
+        "blc60": "blc36",
+        "blc61": "blc37",
+        "blc70": "blc66",
+        "blc71": "blc67",
+    },
+}
+L_BAND_NODES = BAND_NODES["L"]  # backward-compatible alias
 
 AU_M = 1.495978707e11
 # Geocentric distance of 3I/ATLAS at the L-cadence epoch, pinned 2026-07-30 from JPL Horizons
@@ -437,18 +523,19 @@ def vet_stamps(
     }
 
 
-def sweep_summary(results_dir: str = "results") -> dict:
-    """Aggregate the per-node sweep JSONs into the numbers the paper quotes."""
+def sweep_summary(results_dir: str = "results", band: str = "L") -> dict:
+    """Aggregate one band's per-node sweep JSONs into the numbers the paper quotes."""
     import json
     from pathlib import Path
 
     rows = []
-    for p in sorted(Path(results_dir).glob("atlas3i_blc*_L.json")):
+    for p in sorted(Path(results_dir).glob(f"atlas3i_blc*_{band}.json")):
         r = json.loads(p.read_text())
         rows.append(r)
     if not rows:
-        raise FileNotFoundError(f"no atlas3i_blc*_L.json results in {results_dir}")
+        raise FileNotFoundError(f"no atlas3i_blc*_{band}.json results in {results_dir}")
     return {
+        "band": band,
         "nodes": [r["node"] for r in rows],
         "hits_per_scan": {r["node"]: r["n_hits_per_scan"] for r in rows},
         "survivors": {r["node"]: r["n_survivors"] for r in rows},
@@ -467,8 +554,8 @@ def sweep_summary(results_dir: str = "results") -> dict:
         ),
         "eirp_w": rows[0]["eirp_limit_w"],
         "distance_au": rows[0].get("distance_au", DISTANCE_AU_DEFAULT),
-        "band_lo_mhz": min(lo for lo, _ in L_BAND_NODES.values()),
-        "band_hi_mhz": max(hi for _, hi in L_BAND_NODES.values()),
+        "band_lo_mhz": min(lo for lo, _ in BAND_NODES[band].values()),
+        "band_hi_mhz": max(hi for _, hi in BAND_NODES[band].values()),
     }
 
 
@@ -508,7 +595,7 @@ def sweep_figure(summary: dict, out_dir) -> None:
         x = i + (np.arange(len(hits)) - (len(hits) - 1) / 2) * 0.11
         on = [k % 2 == 0 for k in range(len(hits))]
         ax.scatter(x, hits, c=["#1f77b4" if o else "#d62728" for o in on], s=22, zorder=3)
-        lo, hi = L_BAND_NODES[node]
+        lo, hi = BAND_NODES[summary.get("band", "L")][node]
         ax.annotate(
             f"{node}\n{lo:.0f}–{hi:.0f}",
             (i, 0.55),
@@ -521,7 +608,7 @@ def sweep_figure(summary: dict, out_dir) -> None:
     ax.set(
         ylabel="hits per 5-min scan (16$\\sigma$)",
         title=(
-            f"GB\\_ATLAS L band: {summary['total_hits']:,} raw hits "
+            f"GB\\_ATLAS {summary.get('band', 'L')} band: {summary['total_hits']:,} raw hits "
             f"$\\to$ {summary['total_survivors']} on/off survivors "
             f"$\\to$ {summary['total_confirmed']} confirmed"
         ),
@@ -832,7 +919,7 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     )
     p.add_argument("--keep", action="store_true", help="keep downloaded scan files")
     p.add_argument("--vet", help="vet the survivors in this search-result JSON (remote stamps)")
-    p.add_argument("--sweep", action="store_true", help="search+vet every L-band node serially")
+    p.add_argument("--sweep", action="store_true", help="search+vet every node of --band serially")
     p.add_argument(
         "--paper", action="store_true", help="write the RNAAS figure + macros from results/"
     )
@@ -840,7 +927,7 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     if args.paper:
         from pathlib import Path
 
-        s = sweep_summary(str(Path(args.out) / "results"))
+        s = sweep_summary(str(Path(args.out) / "results"), band=args.band)
         paper = Path(args.out) / "papers" / "atlas3i"
         sweep_figure(s, paper / "figures")
         sweep_macros(s, paper / "generated" / "macros.tex")
@@ -851,7 +938,7 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
 
         rp = Path(args.out) / "results"
         rp.mkdir(parents=True, exist_ok=True)
-        for node in L_BAND_NODES:
+        for node in BAND_NODES[args.band]:
             dest = rp / f"atlas3i_{node}_{args.band}.json"
             if dest.exists():
                 print(f"[atlas3i] {node}: already done, skipping", flush=True)
