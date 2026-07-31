@@ -5,8 +5,17 @@ Status: 🚧 L-band legs done 2026-07-30 — **the null reproduces**: all six L-
 (killed by drift-coherence stamps + the satellite-allocation axis — blc23's nine
 drift-coherent candidates were all Iridium/Inmarsat, the instructive failure mode of a
 two-position filter). Our EIRP limit 99.4 mW vs the paper's ~100 mW. Full numbers + caveats
-in `survey/atlas3i-findings.md`. Remaining: S/C/X bands (optional stretch), Horizons distance
-pin, GATE-2 science review, paper. — GATE 0 done 2026-07-30: data verified public + novelty
+in `survey/atlas3i-findings.md`. **GATE-2 PASS with fixes applied 2026-07-30** (caught: the
+paper's 16σ-ON/10σ-OFF threshold asymmetry was not reproduced — now implemented, and the
+symmetric-run bias direction + why the stamp vet subsumes it are caveated; our L-band raw hit
+count [1.12M] exceeds the paper's full-survey total [471k] because per-drift-row MAD is looser
+than turboSETI's normalisation in RFI forests — caveated as conservative-for-a-null; searched
+939–2064 MHz vs the paper's analysed 1.1–1.9 GHz — blc21/26 are roll-off, caveated; blc25's
+high-drift pass-1 survivors were mischaracterised as pure chance — 5/6 are GPS L5/Galileo E5;
+β=1 dedrifting-efficiency assumption now stated; GNSS band-split points flagged heuristic;
+L/S notch filters flagged unverified. Confirmed: EIRP match is an algebraic identity, distance
+1.80 au ≈ ephemeris 1.7976 au, de-Doppler sign convention, all tables internally consistent).
+Remaining: Horizons distance pin, paper (`papers/atlas3i/`); S/C/X bands optional stretch. — GATE 0 done 2026-07-30: data verified public + novelty
 PASS (details below). Step 1 done 2026-07-30 — node→band mapping pinned by remote header reads
 (fsspec+h5py HTTP range requests on the `.0002` products, ~KB per file): MJD 61027, four
 cadences by start second — **L** t0=17226: blc21–26 = 939.0–2064.0 MHz; **S** t0=21817:

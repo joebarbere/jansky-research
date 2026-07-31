@@ -615,7 +615,8 @@ def search_node(  # pragma: no cover - network + large data
     *,
     band: str = "L",
     dest_dir: str = "data/atlas3i",
-    threshold: float = 10.0,
+    threshold: float = 16.0,
+    threshold_off: float = 10.0,
     max_drift_hz_s: float = 4.0,
     n_drift: int = 129,
     chunk: int = 1 << 20,
@@ -658,10 +659,13 @@ def search_node(  # pragma: no cover - network + large data
                 hi = min(n_freq, lo + chunk + pad)
                 block = d[:, 0, lo:hi] if d.ndim == 3 else d[:, lo:hi]
                 wfn, _ = normalize(np.asarray(block, float))
+                # Paper convention (arXiv:2512.19763 §III): a lower OFF-scan threshold so a
+                # candidate slightly weaker in the OFFs still registers there and is vetoed.
+                thr = threshold if s.on else threshold_off
                 hits += [
                     Hit(chan=h.chan + lo, drift_hz_s=h.drift_hz_s, snr=h.snr)
                     for h in find_hits(
-                        wfn, tsamp_s=tsamp, foff_hz=foff, drift_rates=drifts, threshold=threshold
+                        wfn, tsamp_s=tsamp, foff_hz=foff, drift_rates=drifts, threshold=thr
                     )
                     if h.chan < (hi - lo) - (pad if hi < n_freq else 0)
                 ]
@@ -724,7 +728,10 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--out", default=".")
     p.add_argument("--node", help="run the real-data leg on this node (e.g. blc25)")
     p.add_argument("--band", default="L")
-    p.add_argument("--threshold", type=float, default=16.0, help="real-leg S/N threshold")
+    p.add_argument("--threshold", type=float, default=16.0, help="ON-scan S/N threshold")
+    p.add_argument(
+        "--threshold-off", type=float, default=10.0, help="OFF-scan S/N threshold (paper: 10)"
+    )
     p.add_argument("--keep", action="store_true", help="keep downloaded scan files")
     p.add_argument("--vet", help="vet the survivors in this search-result JSON (remote stamps)")
     p.add_argument("--sweep", action="store_true", help="search+vet every L-band node serially")
@@ -740,7 +747,11 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
                 print(f"[atlas3i] {node}: already done, skipping", flush=True)
                 continue
             r = search_node(
-                node, band=args.band, threshold=args.threshold, delete_after=not args.keep
+                node,
+                band=args.band,
+                threshold=args.threshold,
+                threshold_off=args.threshold_off,
+                delete_after=not args.keep,
             )
             dest.write_text(json.dumps(r, indent=2) + "\n")
             print(
@@ -759,7 +770,11 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
         from pathlib import Path
 
         res = search_node(
-            args.node, band=args.band, threshold=args.threshold, delete_after=not args.keep
+            args.node,
+            band=args.band,
+            threshold=args.threshold,
+            threshold_off=args.threshold_off,
+            delete_after=not args.keep,
         )
         rp = Path(args.out) / "results"
         rp.mkdir(parents=True, exist_ok=True)

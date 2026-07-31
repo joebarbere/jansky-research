@@ -24,33 +24,66 @@ drift-coherence vet on postage stamps + a satellite-allocation exclusion):
 | blc25 | 1126.5–1314.0 | 96 516–234 066 | 12 | 0 |
 | blc26 | 939.0–1126.5 | 459–36 187 | 0 | 0 |
 
-261 two-position survivors total; **0 survive vetting**. Our 16σ narrowband EIRP limit with
-the paper's own L-band parameters (SEFD ≈ 10 Jy, 300 s scans, 2.79 Hz channels, d = 1.80 au)
-is **99.4 mW — matching the paper's ~100 mW headline**.
+261 two-position survivors total (1 124 011 raw hits — see the caveat on detector strictness
+below); **0 survive vetting**. Our 16σ narrowband EIRP limit with the paper's own L-band
+parameters (SEFD ≈ 10 Jy, 300 s scans, 2.79 Hz channels, d = 1.80 au) is **99.4 mW — matching
+the paper's ~100 mW headline**. GATE-2 verified this match is an *algebraic identity*, not a
+coincidence: the paper's Eq. 1+2 (Gajjar et al. 2021 form) reduce exactly to our
+`eirp_limit_w` once the transmit-bandwidth term cancels — under the assumption β = 1 (perfect
+dedrifting efficiency; the paper carries an explicit β for high-drift smearing loss that we
+drop, which makes our limit marginally optimistic at the highest drift rates).
 
 ## What the two-stage filter let through, and why (the interesting part)
 
-- **Zero-drift terrestrial carriers** (blc25 pass 1): six tones at 1302–1308 MHz (inside the
+- **Zero-drift terrestrial carriers** (blc25): six tones at 1302–1308 MHz (inside the
   1250–1350 MHz aeronautical-radionavigation/ATC-radar region) passed the on/off filter
   because they sat *below the 16σ search threshold in the OFFs* while above it in the ONs.
-  The stamp vet sees them directly in the OFF data (S/N 4–14) and kills them; exactly-zero
-  drift is additionally flagged terrestrial by construction.
-- **Satellite downlinks** (blc23): nine candidates passed *both* the on/off filter and the
-  drift-coherence vet — every one at 1544 MHz (Inmarsat/MSS) or 1619–1625 MHz (Iridium),
-  with LEO-Doppler-scale drifts (−3.5 to +1.8 Hz/s) and duplicate frequencies at multiple
-  drift rates (an RFI forest, not a point transmitter). Satellites are genuinely in the sky
-  and intermittent, so no two-position filter can reject them; a frequency-allocation
-  exclusion axis (Iridium/Inmarsat/GNSS bands, `SATELLITE_BANDS_MHZ`) is *necessary*, which
-  is why BL pipelines carry the equivalent masks. Good cautionary paragraph for the paper.
-- **Chance coincidences** (blc25 pass 1, high drift): with ~10⁵ hits/scan in the noisiest
-  node, ±32-channel matching across 6 scans passes ~10 chance candidates; none track their
-  own drift rate through the stamps.
+  The stamp vet sees them directly in the OFF data (per-scan S/N 3–15; committed in
+  `results/atlas3i_blc25_L.json`) and kills them; exactly-zero drift is additionally flagged
+  terrestrial by construction.
+- **Satellite downlinks** (blc23 and blc25): blc23's nine drift-coherent candidates all sit
+  at 1544 MHz (Inmarsat/MSS) or 1619–1625 MHz (Iridium), with LEO-Doppler-scale drifts
+  (−3.5 to +1.8 Hz/s) and duplicate frequencies at multiple drift rates (an RFI forest, not
+  a point transmitter). Likewise **5 of blc25's 6 high-drift survivors are in the GPS
+  L5/Galileo E5 allocation** (1200–1204 MHz, drifts 2.6–3.9 Hz/s) — GNSS-band RFI that fails
+  drift-coherence, not statistical flukes; only the 1149.99 MHz one is unclassified (and
+  fails tracking too). Satellites are genuinely in the sky and intermittent, so no
+  two-position filter can reject them; a frequency-allocation exclusion axis
+  (`SATELLITE_BANDS_MHZ`) is *necessary*, which is why BL pipelines carry the equivalent
+  masks. (Band edges: Inmarsat and Iridium ranges are ITU-exact; the internal split points
+  between the GNSS entries are heuristic groupings of the 1164–1215 and 1559–1610 MHz RNSS
+  allocations.)
 
 ## Caveats (honest scope)
 
-- **L band only.** The S (blc22–27, t0 21817), C (23 nodes, t0 26882) and X (25 nodes,
-  t0 31308) cadences are pinned but not yet processed — the reproduction claim covers
-  939–2064 MHz, not "1–12 GHz". No silent caps: this is 1.125 GHz of the ~9 GHz total.
+- **L band only, and wider than the paper's L band.** The S (blc22–27, t0 21817), C (23
+  nodes, t0 26882) and X (25 nodes, t0 31308) cadences are pinned but not yet processed —
+  the reproduction claim covers our searched span, not "1–12 GHz". Moreover we searched the
+  full *recorded* node span (939.0–2064.0 MHz) while the paper analyses its L receiver as
+  **1.1–1.9 GHz**: blc21 and blc26 lie mostly outside the paper's passband, in receiver
+  roll-off the original team presumably trimmed deliberately. Their hit counts (up to 36 187
+  per scan) are plausibly part edge-artifact, and the nominal SEFD = 10 Jy is optimistic
+  there; the like-for-like reproduction statement is for 1.1–1.9 GHz (blc22–25 + edges of
+  21/26), where the result is the same: 0 confirmed.
+- **Symmetric search thresholds (deviation from the paper).** The paper uses 16σ for ON
+  scans but a *lower* 10σ for OFF scans, so a candidate slightly weaker in the OFFs still
+  registers there and is vetoed. This run used a symmetric 16σ everywhere — a stricter OFF
+  threshold, which passes *more* borderline RFI to the two-position filter (part of why 261
+  survivors needed a vet stage). The stamp vet subsumes the missing veto — it reads the OFF
+  S/N directly at the predicted position with an 8σ bar, stricter than the paper's 10σ — so
+  the 0-confirmed outcome is unaffected, but the intermediate survivor counts are not
+  comparable to the paper's candidate counts. The asymmetry (`threshold_off=10`) is now
+  implemented for future runs.
+- **Our first-stage detector fires far more often than turboSETI's.** 1 124 011 raw hits in
+  L band alone vs the paper's 471 198 across the whole 1–12 GHz survey (>2× from ~1/8 of the
+  bandwidth). The per-drift-row MAD noise estimate is robust to (i.e. deflated by) dense RFI
+  forests, so our "16σ" is effectively looser than turboSETI's normalisation in RFI-heavy
+  sub-bands. For a null reproduction this errs conservative — we admit more false positives
+  into vetting and still confirm none — but raw hit counts must not be compared
+  detector-to-detector.
+- **GBT L/S hardware notch filters not mapped.** The paper's Fig. 1 marks unsampled notch
+  regions (L and S band); we have not verified how those gaps appear in the archived `.h5`
+  data or whether gap edges seed spurious hits. Unverified, flagged for the paper pass.
 - **Low-drift blind spot.** Per-channel bandpass excision suppresses tones drifting less than
   ~1 channel per scan (|drift| ≲ 0.01 Hz/s) — such tones are observationally
   indistinguishable from terrestrial carriers in any single-dish search; turboSETI-family
