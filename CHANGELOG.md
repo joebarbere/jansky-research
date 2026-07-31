@@ -9,6 +9,13 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+
+- CI paper builds: `atlas3i` registered in the static-slice DAG (`workflow/Snakefile`, via its
+  offline `--paper` entry point over the committed result JSONs), so `make figures`/CI
+  regenerate `papers/atlas3i/generated/macros.tex` + the sweep figure before tectonic runs —
+  the v1.1.0 `paper`/`release` workflows failed on the missing gitignored macros file.
+
 ## [1.1.0] — 2026-07-30
 
 ### Added
