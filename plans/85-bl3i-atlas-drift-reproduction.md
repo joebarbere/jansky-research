@@ -15,7 +15,8 @@ high-drift pass-1 survivors were mischaracterised as pure chance — 5/6 are GPS
 β=1 dedrifting-efficiency assumption now stated; GNSS band-split points flagged heuristic;
 L/S notch filters flagged unverified. Confirmed: EIRP match is an algebraic identity, distance
 1.80 au ≈ ephemeris 1.7976 au, de-Doppler sign convention, all tables internally consistent).
-Remaining: Horizons distance pin, paper (`papers/atlas3i/`); S/C/X bands optional stretch. — GATE 0 done 2026-07-30: data verified public + novelty
+Distance Horizons-pinned 2026-07-30 (1.79801 au geocentric at 2025-12-18 05:00 UT → EIRP
+99.2 mW). Remaining: paper (`papers/atlas3i/`); S/C/X bands optional stretch. — GATE 0 done 2026-07-30: data verified public + novelty
 PASS (details below). Step 1 done 2026-07-30 — node→band mapping pinned by remote header reads
 (fsspec+h5py HTTP range requests on the `.0002` products, ~KB per file): MJD 61027, four
 cadences by start second — **L** t0=17226: blc21–26 = 939.0–2064.0 MHz; **S** t0=21817:

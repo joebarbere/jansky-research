@@ -59,9 +59,9 @@ L_BAND_NODES = {
 }
 
 AU_M = 1.495978707e11
-# Geocentric distance of 3I/ATLAS at the observation epoch (closest approach 2025-12-19 was
-# ~1.80 au); the real-data leg re-pins this from JPL Horizons.
-DISTANCE_AU_DEFAULT = 1.80
+# Geocentric distance of 3I/ATLAS at the L-cadence epoch, pinned 2026-07-30 from JPL Horizons
+# (DES=C/2025 N1, center 500@399, 2025-12-18 05:00 UT: delta = 1.79801 au, rdot = -1.52 km/s).
+DISTANCE_AU_DEFAULT = 1.798
 
 
 @dataclass(frozen=True)

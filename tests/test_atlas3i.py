@@ -110,11 +110,13 @@ def test_onoff_filter_validates_inputs():
 
 
 def test_eirp_limit_reproduces_paper_headline():
-    # Paper params: 16 sigma, GBT L-band SEFD ~10 Jy, 5-min scans, ~2.79 Hz channels, 1.8 au.
+    # Paper params: 16 sigma, GBT L-band SEFD ~10 Jy, 5-min scans, ~2.79 Hz channels,
+    # d = 1.798 au (Horizons-pinned for 2025-12-18 05:00 UT).
     eirp = atlas3i.eirp_limit_w(snr=16.0)
     assert 0.03 < eirp < 0.3  # ~100 mW headline figure
     # scaling sanity: EIRP ~ d^2 and ~ snr
-    assert atlas3i.eirp_limit_w(snr=16.0, distance_au=3.6) == pytest.approx(4 * eirp)
+    double_d = 2 * atlas3i.DISTANCE_AU_DEFAULT
+    assert atlas3i.eirp_limit_w(snr=16.0, distance_au=double_d) == pytest.approx(4 * eirp)
     assert atlas3i.eirp_limit_w(snr=32.0) == pytest.approx(2 * eirp)
 
 

@@ -26,8 +26,9 @@ drift-coherence vet on postage stamps + a satellite-allocation exclusion):
 
 261 two-position survivors total (1 124 011 raw hits — see the caveat on detector strictness
 below); **0 survive vetting**. Our 16σ narrowband EIRP limit with the paper's own L-band
-parameters (SEFD ≈ 10 Jy, 300 s scans, 2.79 Hz channels, d = 1.80 au) is **99.4 mW — matching
-the paper's ~100 mW headline**. GATE-2 verified this match is an *algebraic identity*, not a
+parameters (SEFD ≈ 10 Jy, 300 s scans, 2.79 Hz channels, d = 1.798 au — JPL Horizons,
+DES=C/2025 N1, geocentric, 2025-12-18 05:00 UT) is **99.2 mW — matching the paper's ~100 mW
+headline**. GATE-2 verified this match is an *algebraic identity*, not a
 coincidence: the paper's Eq. 1+2 (Gajjar et al. 2021 form) reduce exactly to our
 `eirp_limit_w` once the transmit-bandwidth term cancels — under the assumption β = 1 (perfect
 dedrifting efficiency; the paper carries an explicit β for high-drift smearing loss that we
@@ -92,8 +93,9 @@ drop, which makes our limit marginally optimistic at the highest drift rates).
   plane; the paper's "~16σ" follows the Choza et al. (2024) turboSETI convention. They are
   comparable but not identical detectors; the matching EIRP limit is parameter-level, not a
   claim of identical completeness.
-- **Distance is a constant** (1.80 au) pending a Horizons pin at the epoch (TODO before the
-  paper; changes the EIRP limit as d²).
+- **Distance is Horizons-pinned**: 1.79801 au geocentric at 2025-12-18 05:00 UT (mid
+  L-cadence; DES=C/2025 N1, range-rate −1.52 km/s), pinned 2026-07-30. The earlier 1.80 au
+  nominal was accurate to 0.1%.
 - **SEFD is the nominal 10 Jy** GBT L-band figure, not measured from these scans.
 
 ## Reproduce
