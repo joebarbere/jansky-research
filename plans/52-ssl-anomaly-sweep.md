@@ -5,6 +5,15 @@ Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + 
 STRADAViT (arXiv:2603.29660) + the LoTSS DR3 paper full-text for "in prep" claims, and check the
 unverified HF checkpoint `ISSA-ML/stradavit-base`
 
+> **Update 2026-07-30:** Stuardi et al. published a Radio U-Net *cluster-targeted* diffuse-emission
+> segmentation of LoTSS-DR3 (A&A, DOI 10.1051/0004-6361/202659444; 3,822 clusters → 918
+> candidates, 357 curated at ~76% accuracy). It is NOT a blind sweep, so F15's empty cell stands —
+> but ML groups are now visibly active on DR3, so the window is narrowing: this raises the
+> slice's priority. Bonus: their public segmentation maps + curated sample are a free labeled
+> benchmark — usable in `known_anchor_check` (known diffuse-emission fields must rank as
+> non-anomalous extended emission, or be masked) and as a validation figure. Add the paper to
+> the GATE-0 full-text pass.
+
 ## Context
 
 SSL/SOM/anomaly sweeps exist for MGCLS, EMU-pilot, LoTSS DR1/DR2, and partial VLASS-QL — but

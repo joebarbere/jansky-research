@@ -1,0 +1,75 @@
+{
+  "node": "blc22",
+  "band": "L",
+  "n_hits_per_scan": [
+    462,
+    524,
+    436,
+    506,
+    557,
+    462
+  ],
+  "n_survivors": 3,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 64118243,
+      "drift_hz_s": 0.625,
+      "snr": 21.263942056754214,
+      "freq_mhz": 1697.3205422982574,
+      "per_scan_snr": [
+        19.740320123849816,
+        3.5472176148019767,
+        3.5706405204992877,
+        2.1582079170363513,
+        3.6131024944962853,
+        1.9109638982517172
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 64118134,
+      "drift_hz_s": -0.6875,
+      "snr": 19.96727485379873,
+      "freq_mhz": 1697.3208468407393,
+      "per_scan_snr": [
+        19.08794181536627,
+        2.3082291508208646,
+        3.2841439013453946,
+        2.2965591116714417,
+        2.0045372493207503,
+        2.109705904425219
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": null
+    },
+    {
+      "chan": 64118150,
+      "drift_hz_s": -0.5,
+      "snr": 18.81623559300386,
+      "freq_mhz": 1697.3208021372557,
+      "per_scan_snr": [
+        18.241885572019417,
+        2.996910338179487,
+        2.1469141346248377,
+        2.226417084011002,
+        2.471998513735802,
+        2.4487172788209732
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false,
+      "satellite_band": null
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655,
+  "distance_au": 1.798
+}

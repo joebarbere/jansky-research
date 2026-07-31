@@ -95,6 +95,7 @@ Forty slices plus a synthesis, honestly tallied:
 | Environment-split HI mass function (FASHI DR1) | `jansky_research.fashienv` | ✅/➖ first environment split of the FASHI HIMF (41,741 sources): **void knee suppressed −0.26 dex (2.9σ) vs walls**, an independent FAST measurement of the ALFALFA void HIMF (Moorman+2014); group knee survivor-biased +0.19 dex (stated); DR1 first leg (DR2 embargoed to ~Aug 2026), absolute slope caveated |
 | SBI population inference for RACS Stokes-V emitters | `jansky_research.svsbi` | ✅/➖ first SBI of the M-dwarf coherent-emitter population: **first calibrated beaming-fraction posterior f_beam = 0.30 (90% CI 0.07–0.53)**, SBC-validated coverage; LF weakly constrained (beaming–luminosity degeneracy, honest); NPE trained on the ROCm GPU |
 | LPT catalogue v3 + Stokes-V forced photometry | `jansky_research.lptv` | ✅/➖ extends the LPT catalogue to **16 members** (3 verified 2026 rows); the ~78-min binary boundary **still not significant at N=16** (p=0.52); first systematic multi-epoch forced Stokes-V at all LPT positions → **1 secure + 1 candidate single-epoch circular burst detection** + a uniform V-limit table (0.47 mJy median; persistent circular pol not a class property; confusion-vetoed, honest) |
+| BL 3I/ATLAS GBT reproduction (plan 85) | `jansky_research.atlas3i` | ✅ independent reproduction of the Breakthrough Listen 3I/ATLAS L-band nondetection (arXiv:2512.19763) from the public GB_ATLAS archive: physical-units de-Doppler + ABACAD on/off + drift-coherence stamp vet + satellite-band exclusion over all six L nodes (939–2064 MHz) → **the null reproduces** (1.12M raw hits → 261 survivors → 0 confirmed) with a matching **99.2 mW** EIRP limit (Horizons-pinned 1.798 au); the survivors are a taxonomy of two-position-filter evasion (sub-threshold OFF carriers, Iridium/Inmarsat downlinks) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -158,6 +159,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Cassini SKR proximity census | `skr/` | rotation-period anchor (0.05%) + 1/r² sensitivity-null bounding of the SKR occurrence-vs-range trend to a ~1.4× near-null |
 | OVRO-LWA type II burst census | `typeii/` | slow-drift detector + in-memory streaming of the whole 2024–2026 archive → an honest null (blind spectral census is false-positive dominated) |
 | e-Callisto megaconstellation RFI trend | `rfitrend/` | notch-robust narrowband-UEM-line metric over 2012–2026 + pipeline cross-station coherence verdict → a systematics-limited null (stations trend in opposite signs; no Starlink attribution) |
+| BL 3I/ATLAS GBT L-band reproduction | `atlas3i/` | independent pipeline over the public archive → the null reproduces (261 survivors, 0 confirmed) + the filter-evasion taxonomy (satellite downlinks defeat two-position filters by design) |
 | Voyager 2 PRA ice-giant rotation periods | `vgpra/` | blind Lomb-Scargle of the PRA flux + rotation-block bootstrap → a controlled null (synthetic recovers an injected period; neither real Uranus/Neptune period is recovered — historical geometric modelling was essential) |
 | PTE-II per-source giant-pulse census | `pte2/` | floor-robust giant-pulse excess test over 363 Parkes pulsars + ATNF Ė cross-match → an honest null (detection-power-limited heavy-tail fraction; no Ė trend; tails too steep for classic giant pulses) |
 | JBO glitch waiting-time classification | `glitchpop/` | monitoring-gap-robust per-pulsar waiting-time classification of the live JBO catalogue (exp/quasi-periodic) + post-2018 change table; recover-a-known passes (J0537 & Vela quasi-periodic, gap excision required) |
@@ -224,6 +226,7 @@ uv run python -m jansky_research.pipeline     # FRB burst statistics (CHIME cata
 uv run python -m jansky_research.frbperiod    # FRB repeater periodicity
 uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3   # USS hunt
 uv run python -m jansky_research.driftsearch  # SETI injection-recovery benchmark
+uv run python -m jansky_research.atlas3i --sweep  # BL 3I/ATLAS L-band reproduction (needs --extra voyager; ~13 h, 60 GB peak)
 uv run python -m jansky_research.hi           # Milky Way HI rotation curve
 uv run python -m jansky_research.vlass --ra 190 --dec 20 --radius 15  # VLASS variability census (needs --extra vlass)
 uv run python -m jansky_research.singlepulse --benchmark --out .      # torch-fdmt benchmark (CPU;
@@ -283,7 +286,7 @@ See `pyproject.toml`.
 jansky-research/
   src/jansky_research/   # the tooling package (tested-helper pattern, 85% floor) — one module per slice
     data.py              # dataset registry + offline synthetic fallback
-    frbstats.py spectra.py frbperiod.py driftsearch.py hi.py vlass.py peaked.py southern.py
+    frbstats.py spectra.py frbperiod.py driftsearch.py atlas3i.py hi.py vlass.py peaked.py southern.py
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py

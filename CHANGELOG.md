@@ -9,6 +9,40 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+
+- `plans/85-bl3i-atlas-drift-reproduction.md` — new slice plan: independent reproduction of the
+  Breakthrough Listen 3I/ATLAS GBT nondetection (RNAAS arXiv:2512.19763) from the public
+  `bldata.berkeley.edu/ATLAS` archive, reusing the plan-11 `driftsearch` machinery. GATE 0 done
+  in-plan (data verified public with sizes/layout; novelty pass: no independent reanalysis of
+  the released data exists — ATA/FAST/MeerKAT follow-ups are all original observations).
+- `src/jansky_research/atlas3i.py` + `tests/test_atlas3i.py` — the plan-85 tool: archive-index
+  parser and ABACAD cadence selector (validated against a vendored real GB_ATLAS listing),
+  bandpass normalisation with DC-spike excision (the artifact that defeated plan 11's teaching
+  detector on real BL data), a physical-units (Hz/s) brute-force de-Doppler search with robust
+  per-drift S/N and neighbour suppression, the ABACAD on/off sky-localisation filter, a
+  narrowband EIRP limit that reproduces the paper's ~100 mW headline from GBT L-band
+  parameters, and a fully offline synthetic-cadence round-trip (`run`) that recovers an
+  injected drifting tone while rejecting always-on RFI and the DC spike. Real-data leg
+  (`--node`, network + `voyager` extra) streams each 10 GB fine-resolution file in bounded
+  frequency chunks and deletes scans after searching (peak disk ≈ one cadence). The node→band
+  mapping (L: blc21–26 = 939–2064 MHz, etc.) was pinned by remote HDF5 header reads and is
+  embedded as constants. Candidate vetting: per-survivor drift-coherence stamps
+  (`vet_stamps`, inline during the search) plus a satellite-allocation exclusion axis
+  (`classify_band`; Iridium/Inmarsat/GNSS downlinks defeat two-position filters by design).
+- `papers/atlas3i/` — the RNAAS note (`rnaas.tex` + `refs.bib`, compiles in the tectonic
+  container): the reproduction result + the filter-evasion taxonomy, with every number
+  `\input` from `sweep_macros`/`sweep_figure` (new module functions reading the committed
+  per-node result JSONs — nothing typed by hand). README slice tables updated. GATE-2
+  review passed with fixes (threshold asymmetry implemented + honest caveats: raw-hit-count
+  comparability, analysed-band scope, β=1, notch filters); distance Horizons-pinned to
+  1.79801 au → final EIRP limit 99.2 mW.
+- `survey/atlas3i-findings.md` — the L-band real-data result: all six nodes (939–2064 MHz)
+  searched and vetted, 261 ABACAD survivors, 0 confirmed — **the paper's L-band null
+  reproduces independently**, with a matching ~99 mW EIRP limit; includes the two instructive
+  filter-evasion modes (sub-threshold OFF carriers, satellite downlinks) and honest caveats
+  (L band only, low-drift blind spot, S/N-convention and SEFD/distance nominals).
+
 ## [1.0.1] — 2026-07-25
 
 ### Changed
