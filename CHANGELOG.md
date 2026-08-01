@@ -26,6 +26,14 @@ recommend the next version number.
 
 ### Added
 
+- `plans/86-inner-rotation-curve.md` — new slice plan (`innerrc`): independent replication of
+  Sofue & Kohno 2025 (PASJ 77, 1335; arXiv:2509.23581), the modern inner Milky Way rotation
+  curve. GATE 0 done: full-text read (their 0.107 GeV/cm³ local DM density is halo-only and
+  author-framed as a lower limit — the slice maps its sensitivity, not a refutation), novelty
+  pass (cited, never audited), data verified (HI4PI CDS tiles ~15–20 GB for |b|≈0; their RC
+  ASCII tables in the arXiv source as the anchor). Also retires the `hi` slice's documented
+  2 K-threshold bias via a Gaussian-decomposition TVM head-to-head. First plan written under
+  the committed-real-results integrity rule.
 - `atlas3i`: S/C/X band support — the pinned node→band tables for all four receivers
   (`BAND_NODES`, with the six pairwise-duplicated bank-boundary recordings per C/X band
   deduplicated and documented in `DUPLICATE_NODES`), and `--sweep`/`sweep_summary`/
