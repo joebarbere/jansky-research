@@ -3,7 +3,7 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper papers-zip arxiv reproduce clean
+.PHONY: help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper guard-real papers-zip arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi lptv skr typeii rfitrend vgpra pte2 glitchpop
@@ -86,7 +86,10 @@ arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/a
 			--paper papers/$$s --out papers/$$s/arxiv-submission || exit 1; \
 	done
 
-papers-zip: figures paper ## Package every built paper PDF into dist/jansky-research-papers-<TAG>.zip
+guard-real: ## Fail if any results/*.json is synthetic-sourced (papers must not mislabel synthetic output)
+	uv run python scripts/guard_real_results.py
+
+papers-zip: guard-real paper ## Package every built paper PDF into dist/jansky-research-papers-<TAG>.zip (real results only)
 	@TAG=$(or $(TAG),dev-$$(git rev-parse --short HEAD)); \
 	STAGE=jansky-research-papers-$$TAG; \
 	rm -rf "dist/$$STAGE"; mkdir -p "dist/$$STAGE"; \

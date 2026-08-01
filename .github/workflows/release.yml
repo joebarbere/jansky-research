@@ -1,9 +1,12 @@
 name: release
 
-# Packages every slice's paper as a PDF into a single zip archive and attaches it to a GitHub
-# Release. Fires on a version tag (v*); also runnable on demand from the Actions tab (the zip is
-# always uploaded as a workflow artifact, and additionally published to a Release when a tag drove
-# the run).
+# SMOKE BUILD ONLY: compiles every paper against the OFFLINE (synthetic-fixture) figure DAG to
+# prove the papers build, and uploads the result as a clearly-labelled workflow artifact. It is
+# NEVER attached to a GitHub Release: CI has no real data, so its figures/macros carry synthetic
+# validation numbers (caught 2026-07-31 — the released hi paper quoted the synthetic curve as
+# LAB data). Distributable zips are built locally via `make papers-zip TAG=vX.Y.Z`, which is
+# guarded by `make guard-real` (real-sourced results only), and uploaded manually:
+#   gh release upload vX.Y.Z dist/jansky-research-papers-vX.Y.Z.zip
 
 on:
   push:
@@ -54,11 +57,14 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           case "${GITHUB_REF}" in refs/tags/*) : ;; *) TAG="dev-$(git rev-parse --short HEAD)" ;; esac
           echo "TAG=$TAG" >> "$GITHUB_ENV"
-          STAGE="jansky-research-papers-$TAG"
+          STAGE="jansky-research-papers-SYNTHETIC-SMOKE-$TAG"
           mkdir -p "dist/$STAGE"
           MANIFEST="dist/$STAGE/MANIFEST.txt"
           {
-            echo "jansky-research papers -- $TAG"
+            echo "jansky-research papers -- SYNTHETIC SMOKE BUILD -- $TAG"
+            echo "WARNING: figures/macros in these PDFs come from the OFFLINE synthetic-fixture"
+            echo "DAG. They prove the papers compile; the numbers are NOT real-data results."
+            echo "Do not distribute. Real zips: make papers-zip (guard-real enforced), locally."
             echo "generated $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "commit $(git rev-parse HEAD)"
             echo
@@ -80,16 +86,14 @@ jobs:
           echo "ZIP=jansky-research/dist/$STAGE.zip" >> "$GITHUB_ENV"
           ls -la "dist/$STAGE.zip"
           cat "$MANIFEST"
-      - name: Upload the zip as a workflow artifact
+      - name: Upload the smoke zip as a workflow artifact (never to a Release)
         uses: actions/upload-artifact@v4
         with:
-          name: papers-zip-${{ env.TAG }}
+          name: papers-synthetic-smoke-${{ env.TAG }}
           path: jansky-research/dist/*.zip
           if-no-files-found: error
-      - name: Publish the zip to a GitHub Release (tag pushes only)
+      - name: Create the GitHub Release (tag pushes only; no CI-built assets attached)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: jansky-research/dist/*.zip
-          fail_on_unmatched_files: true
           generate_release_notes: true

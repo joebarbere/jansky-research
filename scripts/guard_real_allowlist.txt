@@ -1,0 +1,4 @@
+# Results files permitted to carry a synthetic source in packaged papers.
+# Add a file ONLY after verifying the corresponding paper's own text states the
+# synthetic/offline provenance of the numbers it quotes. Keep a justification per entry.
+# (Deliberately empty as of 2026-07-31 — every reviewed paper quotes real-data results.)

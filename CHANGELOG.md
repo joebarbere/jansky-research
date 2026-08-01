@@ -9,6 +9,21 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Integrity: packaged papers can no longer mislabel synthetic output as real data.** Caught
+  2026-07-31 via the released `hi` paper, which quoted the offline synthetic-fixture rotation
+  curve (231 km/s, ±0.3 scatter) under a caption claiming LAB data — `make papers-zip` depended
+  on the offline `figures` DAG, which regenerates every slice's figures/macros from synthetic
+  fixtures into the same files the papers `\input`. Now: `papers-zip` depends on a new
+  `make guard-real` (`scripts/guard_real_results.py`) that fails the build if any
+  `results/*.json` is synthetic-sourced (allowlist requires per-entry justification, currently
+  empty); the CI release workflow no longer attaches its offline build to Releases (renamed to
+  a clearly-labelled `papers-synthetic-smoke` artifact with a MANIFEST warning) — distributable
+  zips are built locally from real-sourced results and uploaded manually. The v1.1.0 release
+  asset's `hi/main.pdf` was regenerated from the real LAB leg (257 ± 6 km/s) and replaced, with
+  the correction noted in the zip's MANIFEST.
+
 ### Added
 
 - `atlas3i`: S/C/X band support — the pinned node→band tables for all four receivers
