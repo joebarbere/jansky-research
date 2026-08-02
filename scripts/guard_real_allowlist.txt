@@ -11,3 +11,9 @@ ecallisto_census_metrics.json
 # real census derives from the force-tracked results/stokesv_discovery_realtargets.csv.
 # Source-field split is queued in the committed-real-results migration.
 stokesv_discovery_metrics.json
+# typeii_metrics.json — TEMPORARY EXCLUSION (not an approval): the paper quotes real-census
+# numbers via tiiReal* macros that the offline clobber reset to '--' placeholders, so the
+# typeii paper is EXCLUDED from packaged zips (PDF removed + SLICES filter) rather than
+# packaged. The real 765-day OVRO-LWA census re-run is queued after the X-band sweep;
+# REMOVE this entry when its real metrics land.
+typeii_metrics.json
