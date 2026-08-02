@@ -2,3 +2,12 @@
 # Add a file ONLY after verifying the corresponding paper's own text states the
 # synthetic/offline provenance of the numbers it quotes. Keep a justification per entry.
 # (Deliberately empty as of 2026-07-31 — every reviewed paper quotes real-data results.)
+# ecallisto_census_metrics.json — the paper is explicitly a synthetic-validated census statistic
+# (abstract + §: "validated here on synthetic data with a real sunspot record"); the real
+# multi-cycle ingest is documented future work (plans/joss-rnaas-todo, reproduce target comment).
+ecallisto_census_metrics.json
+# stokesv_discovery_metrics.json — mixed source string ("synthetic recover-a-known + real
+# RACS-mid epoch pair"): the paper labels its synthetic fixture in the figure captions and the
+# real census derives from the force-tracked results/stokesv_discovery_realtargets.csv.
+# Source-field split is queued in the committed-real-results migration.
+stokesv_discovery_metrics.json
