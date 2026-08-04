@@ -34,7 +34,7 @@ killed) clustered in the 1.9–2.2 GHz PCS/MSS region.
 
 **Computational cost (measured from the run logs):** ~95 h active compute — L ≈ 2.2 h/node,
 S/C/X ≈ 1.5 h/node — and ~3.7 TB transferred (366 fine-resolution scans × ~10.2 GB), peak
-disk ~60 GB (fetch-search-vet-delete), on one desktop (Ryzen 5 5600X, 62 GB RAM, pure-NumPy
+disk ~60 GB (fetch-search-vet-delete), on one desktop (Ryzen 5 5600X, 64 GB RAM, pure-NumPy
 CPU pipeline). Runs were paused for bandwidth management; the figure quoted is active
 runtime, not calendar time.
 
