@@ -23,9 +23,10 @@ recordings are skipped as redundant, documented in `DUPLICATE_NODES`):
 | X | 25 | 7689.0–12376.5 | 444 691 | 4 | 0 |
 | **total** | **60** | — | **1 938 860** | **294** | **0** |
 
-The hit-density contrast is itself the picture: five orders of magnitude between the worst
-L-band node (~234k hits/scan) and the C band, which produced **zero two-position survivors
-across 4.3 GHz**. X band's only four survivors are zero-drift tones at 12.0–12.35 GHz —
+The hit-density contrast is itself the picture: from ~2×10⁵ hits/scan in the worst L-band
+node down to individual C-band scans recording zero raw hits (C max 3,773, mean ≈114/scan —
+about 1.8–3.3 decades below L depending on the comparison); separately, C produced **zero
+two-position survivors across 4.3 GHz**. X band's only four survivors are zero-drift tones at 12.0–12.35 GHz —
 inside the Ku FSS/DBS satellite-TV downlink allocation and *above* the paper's analysed
 7.6–11.7 GHz passband (the roll-off region again); all four fail drift-coherence vetting and
 are now also caught by the extended satellite-allocation table. S band's 29 survivors (all
@@ -85,8 +86,12 @@ drop, which makes our limit marginally optimistic at the highest drift rates).
 
 ## Caveats (honest scope)
 
-- **Wider than the analysed passbands.** (S/C/X completed 2026-08-04; the band-scope caveat
-  below now applies per band, not to the survey.) We searched the
+- **Wider than the analysed passbands — all four bands.** Recorded vs analysed spans:
+  L 939.0–2064.0 vs 1.1–1.9 GHz; S 1651.5–2776.5 vs 1.8–2.7 GHz (~150 MHz low / ~77 MHz
+  high excess); C 3939.0–8251.5 vs 4.0–7.8 GHz (~61 MHz low / ~452 MHz high); X
+  7689.0–12376.5 vs 7.6–11.7 GHz (~677 MHz high — where all four X survivors sit, in the
+  Ku DBS allocation). Edge-region survivors failed vetting everywhere; S's survivors are
+  mid-band (1.9–2.2 GHz) and C's edges produced none. On the L band specifically: we searched the
   full *recorded* node span (939.0–2064.0 MHz) while the paper analyses its L receiver as
   **1.1–1.9 GHz**: blc21 and blc26 lie mostly outside the paper's passband, in receiver
   roll-off the original team presumably trimmed deliberately. Their hit counts (up to 36 187

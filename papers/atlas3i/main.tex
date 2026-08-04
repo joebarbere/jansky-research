@@ -121,9 +121,10 @@ total & \aiTotNodes & \aiTotRawHits & \aiTotSurvivors & \aiTotConfirmed \\
 
 The null reproduces across the full band (Table~\ref{tab:funnel},
 Figure~\ref{fig:survey}): no candidate survives all three filters anywhere in
-1--12~GHz. The hit-density contrast spans five orders of magnitude, from
-$\sim$2$\times10^{5}$ hits per scan in the worst L-band node to a C band that produced
-\emph{zero} two-position survivors across 4.3~GHz. The narrowband sensitivity,
+1--12~GHz. The hit-density contrast is extreme --- from $\sim$2$\times10^{5}$ hits per scan in
+the worst L-band node down to individual C-band scans recording zero raw hits ---
+and, separately, the C band produced \emph{zero} two-position survivors across its
+4.3~GHz. The narrowband sensitivity,
 $S_\mathrm{min} = 16\,\mathrm{SEFD}/\sqrt{n_\mathrm{pol}\,\delta\nu\,\tau}$ and
 $\mathrm{EIRP} = 4\pi d^{2} S_\mathrm{min}\,\delta\nu$, gives
 $\le\aiEirpMw$~mW at L band --- and reduces algebraically to the published formulation
@@ -147,6 +148,8 @@ strategy, is forced to rediscover the same three-axis rejection design (geometry
 coherence, allocation) is itself a validation of the original search's architecture.
 
 \subsection{Computational cost}
+% The figures in this subsection are run-log measurements (survey/atlas3i-findings.md),
+% not macro-generated from the result JSONs — update them there if the runs are redone.
 Measured from run logs: $\approx$95~h of active compute (L $\approx$2.2~h per node;
 S/C/X $\approx$1.5~h) and $\approx$3.7~TB transferred, with peak disk of one cadence
 ($\approx$60~GB) under a fetch--search--vet--delete cycle, on one desktop (6-core Ryzen
@@ -166,8 +169,8 @@ confirming none. Third, the recorded band edges searched here (e.g.\ 939~MHz,
 those regions failed vetting regardless.
 
 With those bounds, the conclusion is direct: the BL 3I/ATLAS GBT nondetection is
-robust to full independent reanalysis of the released data, at matching quoted
-sensitivity, across the complete 1--12~GHz coverage --- and the audit is cheap enough
+robust to full independent reanalysis of the released data across the complete
+1--12~GHz coverage, at matching quoted sensitivity (at L band) --- and the audit is cheap enough
 to become routine for high-visibility technosignature results.
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
