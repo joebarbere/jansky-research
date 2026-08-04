@@ -123,3 +123,13 @@ null is correct** (not a missed real sub-population). Required fixes, all applie
 Offline (detector + synthetic + tests): `uv run python -m jansky_research.typeii --offline --out .`
 Real (streamed, in memory, no disk): `uv run --extra typeii python scripts/typeii_real.py --dates
 2024-05-14 2024-05-15 --cme data/typeii/lasco_cme.csv`.
+
+
+## Regeneration note (2026-08-04)
+
+The real census was re-run end-to-end (same pipeline, same date range) after the 2026-07-30
+offline-build incident clobbered the original metrics: the archive now serves **768** observing
+days (3 backfilled by OVRO since the original 765-day run) yielding **332** candidates (was 331).
+All conclusions unchanged — the extra day's candidate joins the false-positive-dominated
+population; the purity confounds re-derive to the same verdict. The paper macros now carry the
+regenerated numbers; this file's prose above describes the original run.
