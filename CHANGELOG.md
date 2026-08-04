@@ -9,6 +9,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-08-04
+
 ### Fixed
 
 - **Integrity: packaged papers can no longer mislabel synthetic output as real data.** Caught
@@ -177,7 +179,8 @@ than a diff from an earlier version; every later section is a diff from its pred
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
 
-[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/joebarbere/jansky-research/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/joebarbere/jansky-research/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/joebarbere/jansky-research/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/joebarbere/jansky-research/releases/tag/v1.0.0
