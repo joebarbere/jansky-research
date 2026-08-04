@@ -9,7 +9,35 @@
 existed before this one (checked 2026-07-30; the ATA arXiv:2512.18142 and FAST
 arXiv:2603.19023 searches are original observations).
 
-## Result
+## Result — full 1–12 GHz coverage (completed 2026-08-04)
+
+**The null reproduces across the paper's entire frequency range.** All four receiver cadences,
+every unique recorded node (60 node-cadences; the 12 pairwise-duplicated C/X bank-boundary
+recordings are skipped as redundant, documented in `DUPLICATE_NODES`):
+
+| band | nodes | coverage (MHz) | raw hits | on/off survivors | confirmed |
+|---|---|---|---|---|---|
+| L | 6 | 939.0–2064.0 | 1 124 011 | 261 | 0 |
+| S | 6 | 1651.5–2776.5 | 354 423 | 29 | 0 |
+| C | 23 | 3939.0–8251.5 | 15 735 | **0** | 0 |
+| X | 25 | 7689.0–12376.5 | 444 691 | 4 | 0 |
+| **total** | **60** | — | **1 938 860** | **294** | **0** |
+
+The hit-density contrast is itself the picture: five orders of magnitude between the worst
+L-band node (~234k hits/scan) and the C band, which produced **zero two-position survivors
+across 4.3 GHz**. X band's only four survivors are zero-drift tones at 12.0–12.35 GHz —
+inside the Ku FSS/DBS satellite-TV downlink allocation and *above* the paper's analysed
+7.6–11.7 GHz passband (the roll-off region again); all four fail drift-coherence vetting and
+are now also caught by the extended satellite-allocation table. S band's 29 survivors (all
+killed) clustered in the 1.9–2.2 GHz PCS/MSS region.
+
+**Computational cost (measured from the run logs):** ~95 h active compute — L ≈ 2.2 h/node,
+S/C/X ≈ 1.5 h/node — and ~3.7 TB transferred (366 fine-resolution scans × ~10.2 GB), peak
+disk ~60 GB (fetch-search-vet-delete), on one desktop (Ryzen 5 5600X, 62 GB RAM, pure-NumPy
+CPU pipeline). Runs were paused for bandwidth management; the figure quoted is active
+runtime, not calendar time.
+
+## Result — L band detail (first leg, 2026-07-30)
 
 **The L-band null reproduces.** Independent pipeline (physical-units brute-force de-Doppler,
 ±4 Hz/s, 16σ against per-drift MAD noise; ABACAD on/off filter; then a per-candidate
@@ -57,9 +85,8 @@ drop, which makes our limit marginally optimistic at the highest drift rates).
 
 ## Caveats (honest scope)
 
-- **L band only, and wider than the paper's L band.** The S (blc22–27, t0 21817), C (23
-  nodes, t0 26882) and X (25 nodes, t0 31308) cadences are pinned but not yet processed —
-  the reproduction claim covers our searched span, not "1–12 GHz". Moreover we searched the
+- **Wider than the analysed passbands.** (S/C/X completed 2026-08-04; the band-scope caveat
+  below now applies per band, not to the survey.) We searched the
   full *recorded* node span (939.0–2064.0 MHz) while the paper analyses its L receiver as
   **1.1–1.9 GHz**: blc21 and blc26 lie mostly outside the paper's passband, in receiver
   roll-off the original team presumably trimmed deliberately. Their hit counts (up to 36 187

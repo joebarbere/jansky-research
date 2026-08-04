@@ -1,0 +1,302 @@
+{
+  "node": "blc26",
+  "band": "S",
+  "n_hits_per_scan": [
+    25277,
+    42504,
+    20279,
+    33798,
+    25853,
+    34159
+  ],
+  "n_survivors": 15,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 21622560,
+      "drift_hz_s": 3.8125,
+      "snr": 80.15613504313212,
+      "freq_mhz": 1966.052109003067,
+      "satellite_band": null,
+      "per_scan_snr": [
+        7.370382036510015,
+        1.5344443561474064,
+        4.364905173892896,
+        0.3877266325458023,
+        -1.1566772400442076,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622533,
+      "drift_hz_s": 3.6875,
+      "snr": 78.71813234269533,
+      "freq_mhz": 1966.0521844401956,
+      "satellite_band": null,
+      "per_scan_snr": [
+        7.608531075879837,
+        0.7635861256247954,
+        4.464679482855151,
+        0.5869132449389161,
+        -0.21077519537711098,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622251,
+      "drift_hz_s": -0.625,
+      "snr": 78.48185170278944,
+      "freq_mhz": 1966.0529723390937,
+      "satellite_band": null,
+      "per_scan_snr": [
+        9.72331664809495,
+        1.086484516998906,
+        -0.05422111614484765,
+        1.305161659915838,
+        2.774506528641893,
+        -0.4821970370460118
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622780,
+      "drift_hz_s": 3.9375,
+      "snr": 72.18879193497831,
+      "freq_mhz": 1966.0514943301678,
+      "satellite_band": null,
+      "per_scan_snr": [
+        6.8988009826364065,
+        0.6426807010372786,
+        9.105265219280087,
+        0.7853560700266776,
+        -1.3450803740335404,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622763,
+      "drift_hz_s": 3.6875,
+      "snr": 69.77257376643375,
+      "freq_mhz": 1966.051541827619,
+      "satellite_band": null,
+      "per_scan_snr": [
+        6.715561344354687,
+        0.7410207324295567,
+        6.6499004954227,
+        0.5473309649236787,
+        0.32614070162818265,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622810,
+      "drift_hz_s": 3.9375,
+      "snr": 44.37982465732584,
+      "freq_mhz": 1966.051410511136,
+      "satellite_band": null,
+      "per_scan_snr": [
+        6.922194874288056,
+        1.738636521473151,
+        6.750586089913614,
+        0.7848205356512046,
+        -1.7022969058262443,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622857,
+      "drift_hz_s": 3.875,
+      "snr": 44.27921041238922,
+      "freq_mhz": 1966.051279194653,
+      "satellite_band": null,
+      "per_scan_snr": [
+        4.356230333510988,
+        1.0151628362638132,
+        5.415578907641331,
+        0.5181482542219685,
+        -0.6437019377847902,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622874,
+      "drift_hz_s": 4.0,
+      "snr": 35.28547533935978,
+      "freq_mhz": 1966.0512316972017,
+      "satellite_band": null,
+      "per_scan_snr": [
+        4.282584735357517,
+        1.1238644633517254,
+        6.221152380617205,
+        0.421741356293525,
+        -1.5326482003648478,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622939,
+      "drift_hz_s": 3.875,
+      "snr": 27.670306968672556,
+      "freq_mhz": 1966.0510500892997,
+      "satellite_band": null,
+      "per_scan_snr": [
+        2.790634444422555,
+        1.281631013133956,
+        6.2381051790181745,
+        0.5502888753248826,
+        -1.1276210859150404,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 21622958,
+      "drift_hz_s": 4.0,
+      "snr": 23.9830591427944,
+      "freq_mhz": 1966.050997003913,
+      "satellite_band": null,
+      "per_scan_snr": [
+        2.6098220156368823,
+        1.5465662864060217,
+        6.341456197242076,
+        0.3746505858371259,
+        -2.3442545299607978,
+        0.0
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 36424382,
+      "drift_hz_s": -0.0625,
+      "snr": 33.39801728259143,
+      "freq_mhz": 1924.696296080947,
+      "satellite_band": null,
+      "per_scan_snr": [
+        22.45840178422024,
+        3.569874668047013,
+        5.848564528152276,
+        3.110722076722497,
+        22.669257205934578,
+        2.1952915479324595
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 36424343,
+      "drift_hz_s": -0.125,
+      "snr": 30.789293289142865,
+      "freq_mhz": 1924.6964050456882,
+      "satellite_band": null,
+      "per_scan_snr": [
+        18.866114541161366,
+        2.6587756401445968,
+        3.35446045439348,
+        2.5986341671683304,
+        11.370319455151373,
+        2.274549271435907
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 36424522,
+      "drift_hz_s": -0.125,
+      "snr": 30.68376176225058,
+      "freq_mhz": 1924.6959049254656,
+      "satellite_band": null,
+      "per_scan_snr": [
+        17.89966192904168,
+        2.0737374549542427,
+        3.5878282235275036,
+        3.2362429898356173,
+        11.95012328249019,
+        8.548995316795354
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 35679373,
+      "drift_hz_s": 0.0,
+      "snr": 24.691760731419425,
+      "freq_mhz": 1926.777827180922,
+      "satellite_band": null,
+      "per_scan_snr": [
+        20.810201609534733,
+        8.434595954107973,
+        12.19259661913982,
+        2.6005622122850087,
+        14.944548531436276,
+        7.461342001040922
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 35852353,
+      "drift_hz_s": 0.0,
+      "snr": 18.559174365608307,
+      "freq_mhz": 1926.294526644051,
+      "satellite_band": null,
+      "per_scan_snr": [
+        27.901607892521554,
+        8.341457951757386,
+        7.315297979853908,
+        3.517392503034465,
+        18.24302642558565,
+        7.791624041535476
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655
+}

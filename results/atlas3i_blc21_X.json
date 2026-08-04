@@ -1,0 +1,36 @@
+{
+  "node": "blc21",
+  "band": "X",
+  "n_hits_per_scan": [
+    7493,
+    19256,
+    8167,
+    14173,
+    1132,
+    3174
+  ],
+  "n_survivors": 1,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 51394795,
+      "drift_hz_s": 0.0,
+      "snr": 71.0011401074377,
+      "freq_mhz": 12045.369445346296,
+      "satellite_band": "Ku FSS/DBS downlink",
+      "per_scan_snr": [
+        67.40861082533873,
+        3.763073872743823,
+        3.740108755159886,
+        3.882045967148661,
+        2.207175537934963,
+        2.4846331995875808
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": true,
+      "confirmed": false
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655
+}

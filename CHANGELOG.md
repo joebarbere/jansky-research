@@ -26,6 +26,13 @@ recommend the next version number.
 
 ### Added
 
+- `atlas3i` full 1–12 GHz completion: S/C/X sweeps done (60 unique node-cadences total,
+  1,938,860 raw hits → 294 on/off survivors → **0 confirmed** — the paper's full-band null
+  reproduces). `survey_summary`/`survey_macros`/`survey_figure` aggregate all bands for the
+  papers; satellite table extended (S-MSS, S-DARS, Ku FSS/DBS — X's only 4 survivors are
+  Ku-band TV tones above the analysed passband); findings updated with the full funnel and
+  measured cost (~95 h compute, ~3.7 TB transfer, one desktop); RNAAS updated to the
+  full-band claim and a full-length `main.tex` added for arXiv.
 - `plans/86-inner-rotation-curve.md` — new slice plan (`innerrc`): independent replication of
   Sofue & Kohno 2025 (PASJ 77, 1335; arXiv:2509.23581), the modern inner Milky Way rotation
   curve. GATE 0 done: full-text read (their 0.107 GeV/cm³ local DM density is halo-only and
