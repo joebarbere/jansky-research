@@ -1,0 +1,16 @@
+{
+  "node": "blc76",
+  "band": "X",
+  "n_hits_per_scan": [
+    2,
+    33,
+    1,
+    3,
+    57,
+    175
+  ],
+  "n_survivors": 0,
+  "n_confirmed": 0,
+  "survivors": [],
+  "eirp_limit_w": 0.09919425545962655
+}

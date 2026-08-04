@@ -7,83 +7,92 @@
 
 \begin{document}
 
-\title{An Independent Reproduction of the Breakthrough Listen 3I/ATLAS L-band
+\title{An Independent Reproduction of the Breakthrough Listen 3I/ATLAS
 Nondetection from the Public Green Bank Telescope Data}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-Breakthrough Listen's technosignature search of the interstellar object 3I/ATLAS with
-the Green Bank Telescope reported a nondetection down to $\sim$100~mW equivalent
-isotropic radiated power \citep{jacobsonbell2025}, and released the data publicly. I
-reprocess the L-band cadence with an independent, open pipeline --- a physical-units
-de-Doppler search, the ABACAD on/off filter, and a per-candidate drift-coherence vet
---- and reproduce the null: \aiRawHits\ raw hits reduce to \aiSurvivors\ two-position
-survivors and \aiConfirmed\ confirmed candidates, with a matching
-\aiEirpMw~mW limit. The survivors that evade each filter stage are themselves
-instructive: sub-threshold terrestrial carriers, and satellite downlinks that defeat
-any two-position sky filter by design.
+Breakthrough Listen's 1--12~GHz technosignature search of the interstellar object
+3I/ATLAS with the Green Bank Telescope reported a nondetection down to $\sim$100~mW
+equivalent isotropic radiated power \citep{jacobsonbell2025}, and released the data
+publicly. I reprocess every recorded node of all four receiver cadences with an
+independent, open pipeline --- a physical-units de-Doppler search, the ABACAD on/off
+filter, a per-candidate drift-coherence vet, and a satellite-allocation exclusion ---
+and reproduce the null across the full band: \aiTotRawHits\ raw hits over \aiTotNodes\
+nodes reduce to \aiTotSurvivors\ two-position survivors and \aiTotConfirmed\ confirmed
+candidates, with a matching \aiEirpMw~mW limit. The survivors that evade each filter
+stage form an instructive taxonomy of how terrestrial and satellite interference defeats
+geometric filters.
 \end{abstract}
 
 \section{Result}
 
 On 2025 December 18 Breakthrough Listen observed 3I/ATLAS with the GBT in four bands
-(1--12~GHz) using 6$\times$5-min ABACAD on/off cadences, searched the fine-resolution
-($\sim$2.8~Hz) data with \code{turboSETI} over $\pm4$~Hz\,s$^{-1}$, and found no
-technosignature candidates \citep{jacobsonbell2025}. Companion searches with the ATA
-\citep{ata3i} and FAST \citep{fast3i} also report nulls. All GBT data are public
-(\url{https://bldata.berkeley.edu/ATLAS}), yet --- as for most technosignature nulls
---- no independent reanalysis of the released files existed.
+(L/S/C/X, 1--12~GHz) using 6$\times$5-min ABACAD on/off cadences, searched the
+fine-resolution ($\sim$2.8~Hz) data with \code{turboSETI} over $\pm4$~Hz\,s$^{-1}$, and
+found no technosignature candidates \citep{jacobsonbell2025}. Companion searches with
+the ATA \citep{ata3i} and FAST \citep{fast3i} also report nulls. All GBT data are public
+(\url{https://bldata.berkeley.edu/ATLAS}), yet --- as for most technosignature nulls ---
+no independent reanalysis of the released files existed.
 
-\code{atlas3i} \citep{janskyresearch} is such a reanalysis for the L-band cadence
-(\aiNodes\ compute-node sub-bands spanning \aiBandLo--\aiBandHi~MHz; the paper analyses
-1.1--1.9~GHz within this recorded span): a brute-force shift-and-sum de-Doppler search
-in physical units over $\pm4$~Hz\,s$^{-1}$, with per-channel bandpass normalization and
-DC-spike excision, thresholded at $16\sigma$ against per-drift-rate robust (MAD) noise;
-an on/off filter requiring a hit to appear, extrapolated along its own drift rate, in
-every on-target scan and no off-target scan; and a postage-stamp vet that re-reads all
-six scans around each survivor and demands the same coherence directly of the data.
-Every stage is validated offline on a synthetic cadence with an injected drifting tone,
-an always-on interferer, and a DC spike.
+\code{atlas3i} \citep{janskyresearch} is such a reanalysis of the complete release:
+\aiTotNodes\ unique 187.5~MHz compute-node cadences spanning
+\aiLBandLo~MHz--\aiXBandHi~MHz (L: \aiLNodes\ nodes; S: \aiSNodes; C: \aiCNodes;
+X: \aiXNodes; the recorded spans exceed the paper's analysed passbands at the band
+edges). The pipeline is a brute-force shift-and-sum de-Doppler search in physical units
+over $\pm4$~Hz\,s$^{-1}$, with per-channel bandpass normalization and DC-spike excision,
+thresholded at $16\sigma$ against per-drift-rate robust (MAD) noise; an on/off filter
+requiring a hit to appear, extrapolated along its own drift rate, in every on-target
+scan and no off-target scan; a postage-stamp vet that re-reads all six scans around each
+survivor and demands the same coherence directly of the data; and an ITU
+satellite-downlink allocation exclusion. Every stage is validated offline on a synthetic
+cadence with an injected drifting tone, an always-on interferer, and a DC spike.
 
-The result reproduces the paper's null (Figure~\ref{fig:sweep}): \aiRawHits\ raw hits
-$\to$ \aiSurvivors\ two-position survivors $\to$ \aiConfirmed\ confirmed. The
-$16\sigma$ narrowband limit, $\mathrm{EIRP} = 4\pi d^{2}\,S_\mathrm{min}\,\delta\nu$
-with the paper's own parameters (SEFD $\approx$ 10~Jy, 300~s scans,
-$d=\aiDistanceAu$~au from JPL Horizons at the cadence epoch), is
-$\mathrm{EIRP} \le \aiEirpMw$~mW --- algebraically identical to the paper's formulation
-\citep{gajjar2021} for unit dedrifting efficiency, hence the matching $\sim$100~mW.
+The result reproduces the paper's null over the full band (Figure~\ref{fig:survey}):
+\aiTotRawHits\ raw hits $\to$ \aiTotSurvivors\ survivors $\to$ \aiTotConfirmed\
+confirmed. The $16\sigma$ narrowband limit,
+$\mathrm{EIRP} = 4\pi d^{2}\,S_\mathrm{min}\,\delta\nu$ with the paper's own parameters
+(SEFD $\approx$ 10~Jy, 300~s scans, $d=\aiDistanceAu$~au from JPL Horizons at the
+cadence epoch), is $\mathrm{EIRP} \le \aiEirpMw$~mW at L band --- algebraically
+identical to the paper's formulation \citep{gajjar2021} for unit dedrifting efficiency,
+hence the matching $\sim$100~mW. The reproduction cost $\approx$95~h of active compute
+and $\approx$3.7~TB of transfer on one desktop PC --- auditing a published
+technosignature search from its public archive is within any interested party's reach.
 
 \section{What Evades a Two-Position Filter}
 
-The vetted survivors are a taxonomy of filter evasion. Terrestrial carriers at
-1302--1308~MHz (aeronautical radionavigation) passed the on/off filter by sitting below
-the search threshold in the off scans; the stamp vet sees them there directly.
-High-drift survivors cluster in GNSS allocations (GPS L5/Galileo E5) and fail
-drift-coherence. Most instructive, \aiSatCoherent\ candidates passed \emph{both} the
-on/off filter and drift-coherence --- every one in the Iridium (1616--1626.5~MHz) or
-Inmarsat (1525--1559~MHz) downlink bands, with LEO-Doppler-scale drifts. Satellites are
-genuinely in the sky and intermittent, so no two-position filter can reject them by
-geometry; a frequency-allocation exclusion axis is necessary, as BL's own pipelines
-encode. An independent pipeline rediscovering this necessity from scratch is, in
-itself, a useful check of the original search's design.
+The survivor population is a taxonomy of filter evasion, concentrated where the
+interference lives: \aiLSurvivors\ of the \aiTotSurvivors\ survivors are in L band,
+\aiSSurvivors\ in S, \aiXSurvivors\ in X (all zero-drift Ku-band satellite-TV tones
+above the analysed passband), and C band --- 4.3~GHz of spectrum --- produced
+\aiCSurvivors. Terrestrial carriers passed the on/off filter by sitting below threshold
+in the off scans (the stamp vet sees them there directly); high-drift chance
+coincidences in the densest hit lists fail to track their own drift rate; and, most
+instructive, \aiSatCoherent\ candidates passed \emph{both} geometric filters --- every
+one in the Iridium or Inmarsat downlink bands with LEO-Doppler-scale drifts. Satellites
+are genuinely in the sky and intermittent, so no two-position filter can reject them by
+geometry; a frequency-allocation axis is necessary, as BL's own pipelines encode. An
+independent pipeline rediscovering this necessity from scratch is itself a useful check
+of the original search's design.
 
-Caveats: this reproduces the L-band leg only (the S/C/X cadences are not yet
-processed); the search used symmetric on/off thresholds where the paper used
-$16\sigma$/$10\sigma$ (the stamp vet's direct off-scan check subsumes the difference,
-and the confirmed count is unaffected); and the MAD-based threshold is effectively
-looser than \code{turboSETI}'s normalization \citep{choza2024} in dense RFI, so raw hit
-counts are not comparable between detectors --- a conservative bias for a null.
+Caveats: the search used symmetric on/off thresholds where the paper used
+$16\sigma$/$10\sigma$ (the stamp vet's direct off-scan check subsumes the difference);
+the MAD-based threshold is effectively looser than \code{turboSETI}'s normalization
+\citep{choza2024} in dense RFI, so raw hit counts are not comparable between detectors
+--- a conservative bias for a null; and the recorded band edges searched here extend
+beyond the passbands the original team analysed.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/atlas3i_sweep.pdf}
-\caption{Hits per 5-min scan at $16\sigma$ for the six L-band nodes (blue: on-target;
-red: off-target), spanning four orders of magnitude with RFI environment. The full
-vetting funnel is \aiRawHits\ hits $\to$ \aiSurvivors\ on/off survivors $\to$
-\aiConfirmed\ confirmed candidates.}
-\label{fig:sweep}
+\includegraphics[width=\linewidth]{figures/atlas3i_survey.pdf}
+\caption{Hits per 5-min scan at $16\sigma$ for all \aiTotNodes\ nodes, grouped by
+receiver band. The contrast between the L-band interference environment (up to
+$\sim$2$\times$10$^{5}$ hits per scan) and the C band, where individual scans record
+zero hits, is the dominant feature; the full vetting funnel is \aiTotRawHits\
+hits $\to$ \aiTotSurvivors\ on/off survivors $\to$ \aiTotConfirmed\ confirmed.}
+\label{fig:survey}
 \end{figure}
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},

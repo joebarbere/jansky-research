@@ -237,6 +237,52 @@ def test_sweep_summary_macros_and_figure(tmp_path):
         atlas3i.sweep_summary(str(tmp_path / "empty"))
 
 
+def test_survey_summary_macros_and_figure(tmp_path):
+    import json
+
+    rd = tmp_path / "results"
+    rd.mkdir()
+    for band, node, hits, surv in [
+        ("L", "blc21", [5, 9, 6, 8, 5, 7], 1),
+        ("X", "blc20", [1, 2, 0, 1, 0, 1], 0),
+    ]:
+        (rd / f"atlas3i_{node}_{band}.json").write_text(
+            json.dumps(
+                {
+                    "node": node,
+                    "band": band,
+                    "n_hits_per_scan": hits,
+                    "n_survivors": surv,
+                    "n_confirmed": 0,
+                    "survivors": [],
+                    "eirp_limit_w": 0.0992,
+                    "distance_au": 1.798,
+                }
+            )
+        )
+    sv = atlas3i.survey_summary(str(rd))
+    assert set(sv["bands"]) == {"L", "X"}
+    assert sv["total_nodes"] == 2
+    assert sv["total_hits"] == 40 + 5
+    assert sv["total_survivors"] == 1
+    assert sv["total_confirmed"] == 0
+    atlas3i.survey_macros(sv, tmp_path / "generated" / "macros.tex")
+    macros = (tmp_path / "generated" / "macros.tex").read_text()
+    assert r"\newcommand{\aiTotConfirmed}{0}" in macros
+    assert r"\newcommand{\aiLRawHits}{40}" in macros
+    assert r"\newcommand{\aiXNodes}{1}" in macros
+    atlas3i.survey_figure(sv, tmp_path / "figures")
+    assert (tmp_path / "figures" / "atlas3i_survey.pdf").exists()
+    with pytest.raises(FileNotFoundError):
+        atlas3i.survey_summary(str(tmp_path / "none"))
+
+
+def test_classify_band_covers_new_allocations():
+    assert atlas3i.classify_band(12306.0) == "Ku FSS/DBS downlink"
+    assert atlas3i.classify_band(2330.0) == "S-DARS broadcast"
+    assert atlas3i.classify_band(9000.0) is None
+
+
 def test_run_offline_round_trip(tmp_path):
     m = atlas3i.run(out=str(tmp_path))
     assert m["recovered_injected"] is True

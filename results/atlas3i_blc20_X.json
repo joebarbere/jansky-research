@@ -1,0 +1,74 @@
+{
+  "node": "blc20",
+  "band": "X",
+  "n_hits_per_scan": [
+    447,
+    2749,
+    3248,
+    7737,
+    1518,
+    4040
+  ],
+  "n_survivors": 3,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 9374778,
+      "drift_hz_s": 0.0,
+      "snr": 20.403086617167695,
+      "freq_mhz": 12350.272016599774,
+      "satellite_band": "Ku FSS/DBS downlink",
+      "per_scan_snr": [
+        5.101397128107777,
+        3.4148426007591652,
+        3.320902787846266,
+        2.526129459268661,
+        50.58523413511236,
+        2.2565223063142055
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 25209456,
+      "drift_hz_s": 0.0,
+      "snr": 20.78996334803954,
+      "freq_mhz": 12306.030437350273,
+      "satellite_band": "Ku FSS/DBS downlink",
+      "per_scan_snr": [
+        1.2107110138957298,
+        3.4405085127467183,
+        3.2966462582361635,
+        2.936765336229457,
+        3.224839697098718,
+        2.362271708715176
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 29444450,
+      "drift_hz_s": 0.0,
+      "snr": 16.624811473862458,
+      "freq_mhz": 12294.19800080359,
+      "satellite_band": "Ku FSS/DBS downlink",
+      "per_scan_snr": [
+        2.9582316970569242,
+        3.6039578483151096,
+        5.054194280373625,
+        3.2573905853493916,
+        2.626872331015154,
+        2.7557745685488286
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": true,
+      "confirmed": false
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655
+}

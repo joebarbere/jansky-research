@@ -1,0 +1,183 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\shorttitle{Reproducing the BL 3I/ATLAS nondetection}
+\shortauthors{Barbere}
+\begin{document}
+
+\title{An Independent Reproduction of the Breakthrough Listen 3I/ATLAS Technosignature
+Nondetection from the Public Green Bank Telescope Archive}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Breakthrough Listen (BL) searched the interstellar object 3I/ATLAS for radio
+technosignatures with the Green Bank Telescope at 1--12~GHz during its 2025 December
+close approach and reported a nondetection down to $\sim$100~mW equivalent isotropic
+radiated power (EIRP), releasing all data publicly. Technosignature nulls are almost
+never independently re-examined. I reprocess the complete released archive ---
+\aiTotNodes\ unique 187.5~MHz compute-node cadences across the four receivers --- with
+a fully independent open-source pipeline: a physical-units brute-force de-Doppler search
+($\pm4$~Hz\,s$^{-1}$, $16\sigma$ against robust per-drift noise), the ABACAD on/off sky
+filter, a per-candidate drift-coherence vet on postage stamps re-read from the archive,
+and an ITU satellite-allocation exclusion. The null reproduces in full: \aiTotRawHits\
+raw hits reduce to \aiTotSurvivors\ two-position survivors and \aiTotConfirmed\
+confirmed candidates, and the implied narrowband limit ($\le\aiEirpMw$~mW at L band for
+$d=\aiDistanceAu$~au) is algebraically identical to the published one at unit
+dedrifting efficiency. The survivors form a physically interpretable taxonomy of
+filter evasion --- sub-threshold terrestrial carriers, chance coincidences in dense hit
+lists, and satellite downlinks that defeat two-position geometry by construction ---
+independently recovering the design rationale of BL's interference rejection. The
+entire reproduction cost $\approx$95~h of active compute and $\approx$3.7~TB of
+transfer on a single desktop computer.
+\end{abstract}
+
+\keywords{Technosignatures (2128) --- Search for extraterrestrial intelligence (2127)
+--- Radio astronomy (1338) --- Interstellar objects (52)}
+
+\section{Introduction}
+Radio technosignature searches report, almost without exception, nondetections
+\citep[e.g.][]{gajjar2021,choza2024}. Those nulls carry quantitative content --- EIRP
+upper limits over a defined haystack volume --- yet they are essentially never
+independently reproduced: the datasets are large, the pipelines are specialised, and a
+null invites no scrutiny. The 2025 apparition of the interstellar object 3I/ATLAS
+produced an unusually visible cluster of such results: BL observed it with the GBT
+across 1--12~GHz at its closest approach and reported no candidate signals above
+$\sim$100~mW EIRP \citep{jacobsonbell2025}, with independent-\emph{observation} nulls
+from the Allen Telescope Array \citep{ata3i} and FAST \citep{fast3i}. All BL data were
+released publicly at \url{https://bldata.berkeley.edu/ATLAS}.
+
+This paper asks the complementary question: does the published null survive an
+independent \emph{reanalysis} of the same released data with a pipeline sharing no code
+with the original? Same-data reproduction cannot confirm the observation itself, but it
+tests everything downstream of the telescope: the search's completeness against its
+stated parameters, the interference-rejection logic, and the sensitivity arithmetic.
+For technosignature claims --- where a future positive would demand extraordinary
+scrutiny --- demonstrating that the null pipeline audit is practical seems worth doing
+once, explicitly, on a high-profile target.
+
+\section{Data}
+BL observed 3I/ATLAS on MJD 61027 (2025 December 18) with four GBT receivers (L, S, C,
+X) in consecutive 6$\times$5-min ABACAD on/off cadences, recording 187.5~MHz per
+compute node \citep{jacobsonbell2025}. The released fine-frequency products
+($\sim$2.79~Hz channels, $\sim$18.25~s integrations, $\sim$10~GB per scan per node)
+were mapped by reading every node's header remotely (HTTP range requests): L spans
+\aiLBandLo--\aiLBandHi~MHz over \aiLNodes\ nodes, S \aiSBandLo--\aiSBandHi~MHz
+(\aiSNodes), C \aiCBandLo--\aiCBandHi~MHz (\aiCNodes), and X
+\aiXBandLo--\aiXBandHi~MHz (\aiXNodes). Twelve additional C/X-band recordings duplicate
+bank-boundary coverage byte-for-byte and were searched once. The recorded spans exceed
+the passbands the original analysis quotes (L: 1.1--1.9~GHz; X: 7.6--11.7~GHz); the
+band-edge roll-off regions are included here and flagged where they matter. In total:
+\aiTotNodes\ unique node-cadences, 366 fine-resolution scans.
+
+\section{Methods}
+The pipeline (\code{atlas3i} in \code{jansky-research}; \citealt{janskyresearch}) is
+pure NumPy and shares no code with \code{turboSETI}. Each scan is processed in bounded
+frequency chunks: per-channel bandpass normalization by the time-median, excision of
+channels deviating $>10$ robust~$\sigma$ from the band median (removing the rawspec
+band-centre DC spike and persistent carriers), then a brute-force shift-and-sum
+de-Doppler over 129 drift rates spanning $\pm4$~Hz\,s$^{-1}$ in physical units.
+Detections are peaks above $16\sigma$ of the per-drift-row median/MAD noise, with
+neighbour suppression. Candidates must then survive three physically distinct filters:
+
+\emph{(i) ABACAD geometry.} A hit must appear, extrapolated along its own drift rate,
+in every on-target scan and no off-target scan.
+
+\emph{(ii) Drift coherence.} For each survivor the pipeline re-reads $\pm$2048-channel
+postage stamps from all six scans and demands the tone track its fitted drift through
+the full $\sim$27-min cadence, with direct off-scan cleanliness at $8\sigma$ ---
+subsuming the original search's asymmetric ($16\sigma$/$10\sigma$) on/off thresholds,
+which this reproduction otherwise does not replicate (a stricter symmetric choice that
+passes \emph{more} borderline interference forward; conservative for a null).
+Exactly-zero drift is flagged terrestrial.
+
+\emph{(iii) Frequency allocation.} Survivors inside ITU satellite-downlink allocations
+(GNSS bands, Iridium, Inmarsat/MSS, S-DARS, Ku FSS/DBS) cannot be confirmed: satellite
+transmitters are genuinely in the sky and intermittent, so no two-position filter
+rejects them by geometry --- the same rationale as BL's exclusion masks.
+
+Every stage is validated offline on a synthetic cadence containing an injected drifting
+tone (recovered), an always-on interferer (rejected by geometry), and a DC spike
+(excised); the detector's false-positive rate and recovery completeness were calibrated
+in a companion injection-recovery benchmark \citep{janskyresearch}. The 3I/ATLAS
+geocentric distance at the cadence epoch, $d=\aiDistanceAu$~au, is taken from JPL
+Horizons.
+
+\section{Results}
+\begin{deluxetable}{lcccc}
+\tablecaption{Full-survey vetting funnel by receiver band.\label{tab:funnel}}
+\tablehead{\colhead{band} & \colhead{nodes} & \colhead{raw hits} &
+\colhead{on/off survivors} & \colhead{confirmed}}
+\startdata
+L & \aiLNodes & \aiLRawHits & \aiLSurvivors & \aiLConfirmed \\
+S & \aiSNodes & \aiSRawHits & \aiSSurvivors & \aiSConfirmed \\
+C & \aiCNodes & \aiCRawHits & \aiCSurvivors & \aiCConfirmed \\
+X & \aiXNodes & \aiXRawHits & \aiXSurvivors & \aiXConfirmed \\
+\hline
+total & \aiTotNodes & \aiTotRawHits & \aiTotSurvivors & \aiTotConfirmed \\
+\enddata
+\end{deluxetable}
+
+The null reproduces across the full band (Table~\ref{tab:funnel},
+Figure~\ref{fig:survey}): no candidate survives all three filters anywhere in
+1--12~GHz. The hit-density contrast is extreme --- from $\sim$2$\times10^{5}$ hits per scan in
+the worst L-band node down to individual C-band scans recording zero raw hits ---
+and, separately, the C band produced \emph{zero} two-position survivors across its
+4.3~GHz. The narrowband sensitivity,
+$S_\mathrm{min} = 16\,\mathrm{SEFD}/\sqrt{n_\mathrm{pol}\,\delta\nu\,\tau}$ and
+$\mathrm{EIRP} = 4\pi d^{2} S_\mathrm{min}\,\delta\nu$, gives
+$\le\aiEirpMw$~mW at L band --- and reduces algebraically to the published formulation
+\citep{gajjar2021} at unit dedrifting efficiency $\beta$, so the agreement with the
+paper's $\sim$100~mW is exact rather than coincidental (our limit is marginally
+optimistic at the highest drift rates, where $\beta<1$).
+
+\subsection{The filter-evasion taxonomy}
+The \aiTotSurvivors\ two-position survivors decompose cleanly. \emph{Sub-threshold
+terrestrial carriers} (L band, 1302--1308~MHz, aeronautical radionavigation) passed the
+on/off filter by sitting below the search threshold in off scans while above it in on
+scans; the stamp vet detects them directly in the off data. \emph{Chance coincidences}
+arise in the densest hit lists ($\sim$10$^{5}$ per scan) at the $\pm$32-channel matching
+tolerance; none track their own drift. \emph{Satellite downlinks} are the instructive
+class: \aiSatCoherent\ candidates passed \emph{both} geometric filters --- all in the
+Iridium (1616--1626.5~MHz) or Inmarsat (1525--1559~MHz) bands with LEO-Doppler-scale
+drifts and duplicate frequencies at multiple drift rates. X band contributed only four
+survivors, all zero-drift Ku-band satellite-television tones above the analysed
+passband. That an independent pipeline, built without reference to BL's interference
+strategy, is forced to rediscover the same three-axis rejection design (geometry,
+coherence, allocation) is itself a validation of the original search's architecture.
+
+\subsection{Computational cost}
+% The figures in this subsection are run-log measurements (survey/atlas3i-findings.md),
+% not macro-generated from the result JSONs — update them there if the runs are redone.
+Measured from run logs: $\approx$95~h of active compute (L $\approx$2.2~h per node;
+S/C/X $\approx$1.5~h) and $\approx$3.7~TB transferred, with peak disk of one cadence
+($\approx$60~GB) under a fetch--search--vet--delete cycle, on one desktop (6-core Ryzen
+5 5600X, 62~GB RAM), CPU only. Auditing a published technosignature search from its
+public archive requires no institutional resources.
+
+\section{Discussion}
+Three caveats bound the claim. First, same-data reproduction validates the analysis,
+not the observation: a signal absent from the recorded voltages is beyond any
+reanalysis. Second, detector conventions differ --- the per-drift-row MAD threshold
+used here fires far more often than \code{turboSETI}'s normalization in dense
+interference (our L-band raw hit count alone exceeds the original survey's full-band
+total), so raw hit counts are not comparable across pipelines; for a null this is the
+conservative direction, admitting more false positives into vetting and still
+confirming none. Third, the recorded band edges searched here (e.g.\ 939~MHz,
+12.4~GHz) lie in receiver roll-off the original team excluded; all survivors unique to
+those regions failed vetting regardless.
+
+With those bounds, the conclusion is direct: the BL 3I/ATLAS GBT nondetection is
+robust to full independent reanalysis of the released data across the complete
+1--12~GHz coverage, at matching quoted sensitivity (at L band) --- and the audit is cheap enough
+to become routine for high-visibility technosignature results.
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+NumPy, h5py, astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
+verified by the pipeline's test suite.}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}

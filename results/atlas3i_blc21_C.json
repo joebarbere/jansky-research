@@ -1,0 +1,16 @@
+{
+  "node": "blc21",
+  "band": "C",
+  "n_hits_per_scan": [
+    23,
+    54,
+    19,
+    68,
+    23,
+    46
+  ],
+  "n_survivors": 0,
+  "n_confirmed": 0,
+  "survivors": [],
+  "eirp_limit_w": 0.09919425545962655
+}

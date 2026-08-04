@@ -1,0 +1,283 @@
+{
+  "node": "blc25",
+  "band": "S",
+  "n_hits_per_scan": [
+    10853,
+    17470,
+    8770,
+    22140,
+    10400,
+    34150
+  ],
+  "n_survivors": 14,
+  "n_confirmed": 0,
+  "survivors": [
+    {
+      "chan": 5066855,
+      "drift_hz_s": 0.0,
+      "snr": 17.08095789239523,
+      "freq_mhz": 2199.80821441859,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        12.18713126496813,
+        31.574979893781062,
+        9.246959853226846,
+        28.56350756890149,
+        12.591506851670008,
+        16.19994423781152
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 6206432,
+      "drift_hz_s": 0.0,
+      "snr": 23.45285904970679,
+      "freq_mhz": 2196.6242730617523,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        23.080460649646955,
+        2.2135551288198725,
+        30.41387374175666,
+        2.897659090469722,
+        25.32369464739109,
+        8.729775195928536
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 7237756,
+      "drift_hz_s": 0.0,
+      "snr": 29.997471691888464,
+      "freq_mhz": 2193.742787092924,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        20.395219010553994,
+        5.161067396790229,
+        16.67256122680301,
+        5.879940125645752,
+        12.140456942967317,
+        5.948565853834219
+      ],
+      "tracks_in_ons": true,
+      "clean_in_offs": false,
+      "zero_drift": true,
+      "confirmed": false
+    },
+    {
+      "chan": 7233088,
+      "drift_hz_s": 0.1875,
+      "snr": 23.588823748157914,
+      "freq_mhz": 2193.755829334259,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        17.75811213093988,
+        1.5388775035011204,
+        7.324846661807071,
+        1.6899413000885855,
+        5.076050923773943,
+        4.826775489115612
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 7002095,
+      "drift_hz_s": 3.3125,
+      "snr": 19.15262445260915,
+      "freq_mhz": 2194.4012163206935,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        13.52576996308789,
+        3.9013570620901423,
+        2.317834945006684,
+        2.6610207977576104,
+        1.9447181756616987,
+        -11.380228449588689
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 7012898,
+      "drift_hz_s": -0.1875,
+      "snr": 17.948506334164982,
+      "freq_mhz": 2194.371033087373,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        14.500224120840747,
+        4.32216600420374,
+        5.53502244556297,
+        4.1231332038805615,
+        2.390911359583059,
+        1.9156609541918739
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 7205920,
+      "drift_hz_s": -0.1875,
+      "snr": 16.286954487520525,
+      "freq_mhz": 2193.8317358493805,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        11.080200003409722,
+        3.428901884139536,
+        6.258993017235955,
+        3.682498373497559,
+        5.171770534507938,
+        3.698516386927645
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 7369632,
+      "drift_hz_s": -3.3125,
+      "snr": 16.47903165605455,
+      "freq_mhz": 2193.374329805374,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        5.963739732610865,
+        3.0139621120992346,
+        2.4056314439440256,
+        2.988618398537963,
+        3.0716267220518674,
+        -10.009052143268487
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9145246,
+      "drift_hz_s": 1.5,
+      "snr": 88.84323833001231,
+      "freq_mhz": 2188.4133215993643,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        72.8521942682466,
+        3.9307551355650396,
+        1.6436594689468125,
+        1.9387714470728437,
+        1.9229120164524325,
+        1.7651842377247606
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9139430,
+      "drift_hz_s": -1.25,
+      "snr": 31.582053328295153,
+      "freq_mhz": 2188.429571315646,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        20.09608076819349,
+        2.5680899818669296,
+        7.639936132912436,
+        1.2035764046164055,
+        7.301025474381199,
+        1.147815647512095
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9139402,
+      "drift_hz_s": -1.5625,
+      "snr": 29.905550441535873,
+      "freq_mhz": 2188.4296495467424,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        19.190096598595158,
+        4.160108800227878,
+        0.9301364956606841,
+        1.760763393417904,
+        16.607501520700822,
+        1.4643055464685109
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": false,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9144295,
+      "drift_hz_s": 3.1875,
+      "snr": 21.29380927069243,
+      "freq_mhz": 2188.4159786626697,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        16.173006833019105,
+        1.3906016825673206,
+        4.164581240761927,
+        2.8648891137510235,
+        4.058993441892916,
+        -3.155429920248688
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9145669,
+      "drift_hz_s": 2.5,
+      "snr": 20.919208281740467,
+      "freq_mhz": 2188.412139751017,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        17.056982748802707,
+        2.029056528064699,
+        3.038121174668884,
+        2.705441096287972,
+        1.2911959036893526,
+        1.080012148680182
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    },
+    {
+      "chan": 9145686,
+      "drift_hz_s": 2.6875,
+      "snr": 20.29828592427602,
+      "freq_mhz": 2188.412092253566,
+      "satellite_band": "S-band MSS downlink",
+      "per_scan_snr": [
+        16.7772942080577,
+        2.4034691810986435,
+        2.5703228381560645,
+        2.914649656295447,
+        2.770808245268423,
+        1.6031599449050558
+      ],
+      "tracks_in_ons": false,
+      "clean_in_offs": true,
+      "zero_drift": false,
+      "confirmed": false
+    }
+  ],
+  "eirp_limit_w": 0.09919425545962655
+}
