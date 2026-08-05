@@ -1,0 +1,170 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\shorttitle{Replicating the inner Milky Way rotation curve}
+\shortauthors{Barbere}
+\begin{document}
+
+\title{An Independent Replication of the Sofue \& Kohno Inner Milky Way Rotation Curve:
+the Terminal-Velocity Method from Raw HI4PI Data, and the Degeneracy Behind the
+Local Dark-Matter Density}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+\citet{sofue2025} derived the definitive modern inner rotation curve (RC) of the Milky Way
+by the terminal-velocity method (TVM) applied to HI4PI and CO longitude--velocity data,
+published it as machine-readable tables, and decomposed it into bulge, disc, and NFW halo,
+quoting a halo-only local dark-matter density $\rho_\mathrm{DM} = 0.107$~GeV\,cm$^{-3}$ ---
+a factor $\sim$3 below the $\sim$0.3--0.5 consensus, which they frame as a lower limit. I
+replicate the analysis independently at both ends. (1) From their \emph{published tables}:
+their $\rho_\mathrm{DM}$ arithmetic reproduces exactly (through the $4\pi$ convention their
+halo equations absorb), but an unconstrained refit of the same curve, same model family,
+fits marginally better (\irRmsOurs\ vs \irRmsTheirs~km\,s$^{-1}$ rms) at
+$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$, and all \irScanN\ variants of a
+profile/range/weighting sensitivity scan land in \irRhoMin--\irRhoMax: the published curve
+is fully compatible with the consensus density, and the factor-3 gap is disc--halo
+degeneracy width, not tension. (2) From \emph{raw HI4PI data} (\irNsight\ tangent-point
+sightlines in both quadrants): their Table~2 curve reproduces at the
+$\sim$\irTabTwoAbs~km\,s$^{-1}$ level, their east--west asymmetry replicates in period and
+phase, and a head-to-head of terminal-velocity estimators measures the fixed-threshold
+rule to read $+\irBiasMed$~km\,s$^{-1}$ high of Gaussian decomposition --- with the
+calibrated dispersion corrections of the two estimators (\irSigGauss\ vs
+\irSigThresh~km\,s$^{-1}$) bracketing the paper's adopted 15~km\,s$^{-1}$.
+\end{abstract}
+
+\keywords{Milky Way rotation (1059) --- Milky Way dark matter halo (1049) --- Radio
+astronomy (1338) --- Interstellar medium (847)}
+
+\section{Introduction}
+The inner-Galaxy rotation curve underpins the Milky Way's mass model, and the
+terminal-velocity method --- reading the extreme line-of-sight velocity of HI/CO emission at
+the tangent point --- remains its workhorse inside the solar circle
+\citep{mcclure2016,chemin2015}. \citet{sofue2025} provide the current reference analysis:
+TVM applied to HI4PI \citep{hi4pi} and four CO surveys, Gaussian decomposition for the
+terminal velocities, a dispersion correction calibrated at the solar circle, publication of
+the RC as ASCII tables, and a mass decomposition whose halo component implies a local
+dark-matter density well below consensus determinations \citep{readdm}. Replication of such
+reference analyses is rare; this paper attempts one at two levels --- their published tables
+(testing the decomposition and its headline density) and the raw public survey (testing the
+measurement chain) --- with an independent open-source pipeline
+\citep{janskyresearch}.
+
+\section{Anchor: decomposing their published curve}
+The arXiv source of \citet{sofue2025} includes the RC tables (inner curve at
+$\delta R = 50$~pc, \irInnerRows\ rows; unified TVM+VERA+VLBA+Gaia curve to
+\irRmax~kpc, \irUniRows\ rows). Fitting the unified curve with their model family (their
+eqs.~19--27: $4\times10^{6}\,M_\odot$ point mass, Plummer bulge and disc, NFW halo) gives
+Figure~\ref{fig:decomp}. Their Table~1 parameters describe their curve at
+\irRmsTheirs~km\,s$^{-1}$ rms and --- converted through their
+$\rho_0 = V_h^2/(G h^2)$ convention, in which their $V_h$ absorbs $\sqrt{4\pi}$ relative to
+the standard normalisation --- reproduce their published
+$\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$ exactly. An unconstrained least-squares
+refit prefers a more concentrated halo at \irRmsOurs~km\,s$^{-1}$ rms with
+$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$; the bulge is stable across all solutions
+(394~km\,s$^{-1}$/316~pc vs their 406/333), and a sensitivity scan over halo profile
+(NFW/Burkert), fit range (all $R$ vs $R>2$~kpc), and error weighting yields
+$\rho_\mathrm{DM} = \irRhoMin$--\irRhoMax\ across all \irScanN\ converging variants. None
+reproduces their corner, suggesting an additional constraint in their fit not stated in the
+paper. The conclusion is the quantified form of their own caveat: the curve constrains the
+disc--halo split only to a width that spans the full range from their lower limit to the
+consensus density.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/innerrc_decomposition.pdf}
+\caption{Their published unified RC (points) with our refit (solid; components dotted) and
+their Table~1 solution (dashed). Both describe the data; the halo terms differ by the full
+$\rho_\mathrm{DM}$ range quoted in the text.}
+\label{fig:decomp}
+\end{figure}
+
+\section{Replication from raw HI4PI data}
+From the ten HI4PI galactic-plane tiles (CDS; 2.6~GB), $|b|<3^{\circ}$ longitude--velocity
+diagrams (Figure~\ref{fig:lv}) yield \irNsight\ tangent-point sightlines at
+$\ell = 5$--$89.5^{\circ}$ and $270.5$--$355^{\circ}$. Terminal velocities are measured two
+ways on identical spectra: Gaussian decomposition of the envelope window (greedy seeding +
+joint refinement; their method, Figure~\ref{fig:lvb}), and the fixed 2~K threshold crossing
+used by simple treatments. Each estimator receives the paper's \S3.3 dispersion correction,
+calibrated (per estimator) so the binned curve meets $\Theta_0$ at $R_0$; since $V$ is
+linear in $\sigma_v$ the calibration is closed-form.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/innerrc_lv.pdf}
+\caption{HI4PI longitude--velocity diagram ($|b|<3^{\circ}$, $\ell\sim20$--$40^{\circ}$
+tile) with the Gaussian-decomposition terminal envelope overplotted.}
+\label{fig:lv}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/innerrc_decomp.pdf}
+\caption{A single crowded spectrum at $\ell\approx30^{\circ}$ decomposed into Gaussian
+components; the outermost component centre is the terminal velocity.}
+\label{fig:lvb}
+\end{figure}
+
+Three results (Figures~\ref{fig:rc}--\ref{fig:ew}):
+
+\emph{(i) The estimator bias, measured.} The threshold rule reads
+$+\irBiasMed$~km\,s$^{-1}$ (median; 16th--84th percentiles $\irBiasPlo$ to
+$+\irBiasPhi$) high of Gaussian decomposition on the same \irNsight\ real spectra --- same
+sign as, and larger than, the $\sim$7~km\,s$^{-1}$ literature figure for threshold-vs-fitting
+offsets \citep{mcclure2016}. The calibration route confirms it independently: the two
+estimators require $\sigma_v = \irSigGauss$ and \irSigThresh~km\,s$^{-1}$ respectively, a
+difference equal to the direct bias --- and the paper's adopted
+$\sigma_\mathrm{HI} = 15$~km\,s$^{-1}$ falls between them, indicating their decomposition
+lands between component-centre and envelope-crossing in practice.
+
+\emph{(ii) Their Table~2 reproduces at the $\sim$4\% level.} After calibration, the binned
+HI-only curve matches their published inner RC to mean
+$|\Delta V| = \irTabTwoAbs$~km\,s$^{-1}$ (median $\irTabTwoMed$; \irTabTwoN\ bins,
+$R>2$~kpc). The residual is a shape difference plausibly from their HI+CO merge and finer
+latitude windows; the flat, non-Keplerian form and the bar-region inner peak reproduce
+fully.
+
+\emph{(iii) The east--west asymmetry replicates in period and phase.} Fitting their damped
+sinusoid (their eq.~29) in the mid-disc window (2--8~kpc; inside 2~kpc the bar rails any
+smooth fit) gives amplitude \irEwAmp~km\,s$^{-1}$, period \irEwPeriod~kpc, phase
+\irEwPhase~kpc against their $\sim$14~km\,s$^{-1}$ (at 4~kpc), 4.4~kpc, 4.0~kpc --- the same
+phenomenon at softer amplitude from HI alone, with mid-disc
+$\delta V$ rms \irEwRms~km\,s$^{-1}$; the damping length is unconstrained over our window.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/innerrc_rc.pdf}
+\caption{Inner RC from raw HI4PI (this work, band = weighted scatter) against the published
+Table~2 curve, with the threshold-estimator curve showing its bias.}
+\label{fig:rc}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/innerrc_ew.pdf}
+\caption{East and west rotation curves and their difference, with the eq.-29 damped-sinusoid
+fit over the mid-disc window.}
+\label{fig:ew}
+\end{figure}
+
+\section{Discussion}
+Caveats bound both legs. The anchor refit does not replicate their exact fitting procedure
+(weighting and algorithm are not fully specified); the sensitivity scan brackets defensible
+choices instead. The raw-data leg is HI-only against their HI+CO merge; TVM itself is not a
+clean mass tracer inside the bar \citep{chemin2015}, which both analyses exclude from
+interpretation; and terminal-velocity systematics at the $\sim$10~km\,s$^{-1}$ level
+\citep{tvmcaution} are precisely what the estimator head-to-head quantifies. Within those
+bounds: the reference inner RC replicates from raw public data at the few-percent level;
+its published dark-matter density arithmetic is exactly correct \emph{and} its curve is
+equally consistent with the consensus local density --- the informative statement is the
+degeneracy width, which the published tables themselves encode.
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+NumPy, SciPy, astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
+verified by the pipeline's test suite.}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}

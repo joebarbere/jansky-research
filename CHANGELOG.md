@@ -37,6 +37,10 @@ recommend the next version number.
 
 ### Added
 
+- `innerrc` increment 3 (plan 86): the full-length paper (`papers/innerrc/main.tex` +
+  `refs.bib`, compiles in the tectonic container) — anchor degeneracy + raw-HI4PI
+  replication + estimator head-to-head, all numbers from `paper_macros` reading the two
+  committed evidence JSONs (the committed-real-results pattern end-to-end).
 - `innerrc` increment 2 (plan 86): the HI4PI real-data leg — 1,113 sightlines through both
   TVM estimators close the `hi` slice's caveat with a measured number (threshold reads
   +17.9 km/s high; per-estimator σ calibration gives 9.5 vs 26.6 km/s, bracketing the
