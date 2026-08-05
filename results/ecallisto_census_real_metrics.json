@@ -1,0 +1,10 @@
+{
+  "source": "e-Callisto x SILSO (168 sampled days, real ingest)",
+  "n_days": 168,
+  "n_events_total": 5,
+  "n_days_with_events": 2,
+  "n_periods": 45,
+  "pearson_r": 0.27985221511798514,
+  "spearman_rho": 0.2718998207363679,
+  "slope": 0.00023307990445648353
+}

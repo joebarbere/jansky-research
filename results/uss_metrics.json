@@ -1,0 +1,9 @@
+{
+  "source": "tgss-x-nvss @ <SkyCoord (ICRS): (ra, dec) in deg\n    (180., 30.)>",
+  "n_matched": 456,
+  "n_uss": 6,
+  "n_inverted": 4,
+  "alpha_median": -0.7303135090172099,
+  "alpha_min": -1.6477294960958002,
+  "uss_threshold": -1.3
+}

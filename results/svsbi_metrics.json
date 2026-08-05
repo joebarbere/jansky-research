@@ -1,0 +1,46 @@
+{
+  "source": "stokesv_discovery census (38 M dwarfs, RACS-mid V)",
+  "is_real": true,
+  "n_targets": 38,
+  "median_v_rms_mjy": 0.168,
+  "ndet_low_beaming": 0.97,
+  "ndet_high_beaming": 10.0,
+  "ndet_faint_lf": 1.09,
+  "ndet_bright_lf": 11.62,
+  "beaming_monotonic": true,
+  "luminosity_monotonic": true,
+  "posterior_median": {
+    "lf_slope": 1.371,
+    "log_Lbreak": 14.547,
+    "f_beam": 0.349
+  },
+  "posterior_ci90": {
+    "lf_slope": [
+      1.054,
+      2.002
+    ],
+    "log_Lbreak": [
+      13.826,
+      14.945
+    ],
+    "f_beam": [
+      0.089,
+      0.554
+    ]
+  },
+  "posterior_prior_width_ratio": {
+    "lf_slope": 0.53,
+    "log_Lbreak": 0.41,
+    "f_beam": 0.89
+  },
+  "sbc_ks": {
+    "lf_slope": 0.087,
+    "log_Lbreak": 0.047,
+    "f_beam": 0.1
+  },
+  "sbc_ks_max": 0.1,
+  "sbc_ks_crit": 0.111,
+  "sbc_calibrated": true,
+  "n_sims": 12000,
+  "n_v_detections_observed": 1
+}

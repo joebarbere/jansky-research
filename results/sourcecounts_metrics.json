@@ -1,0 +1,11 @@
+{
+  "source": "NVSS cone (180.0, +30.0) r=8.0 deg",
+  "n_sources": 7428,
+  "area_sr": 0.0611,
+  "s_min_mjy": 3.5,
+  "s_max_jy": 2.98,
+  "n_bins_used": 10,
+  "slope_diff": -1.91,
+  "hopkins_ratio_med": 1.021,
+  "hopkins_scatter_dex": 0.061
+}

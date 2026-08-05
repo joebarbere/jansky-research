@@ -1,0 +1,57 @@
+{
+  "source": "PDS-PPI Voyager 2 PRA low-band 6-s encounter volumes (Uranus + Neptune)",
+  "is_real": true,
+  "planets": {
+    "URANUS": {
+      "best_period_hr": 18.44362,
+      "ls_power": 0.00716,
+      "boot_lo_hr": 14.41862,
+      "boot_hi_hr": 18.67411,
+      "boot_sigma_hr": 1.94272,
+      "n_binned": 3059,
+      "band_peaks_hr": [
+        18.4439,
+        18.4293,
+        18.0282,
+        14.2603
+      ],
+      "band_spread_hr": 1.75737,
+      "total_unc_hr": 1.94272,
+      "offset_from_hist_hr": 1.20362,
+      "rayleigh_period_hr": 14.72424,
+      "rayleigh_z2": 1.816,
+      "n_bursts": 98,
+      "span_hr": 312.0,
+      "n_samples": 179688,
+      "at_window_edge": false,
+      "recovers_hist": false,
+      "consistent_hist": true,
+      "consistent_lamy": true
+    },
+    "NEPTUNE": {
+      "best_period_hr": 20.0,
+      "ls_power": 0.00498,
+      "boot_lo_hr": 15.84267,
+      "boot_hi_hr": 20.0,
+      "boot_sigma_hr": 1.94042,
+      "n_binned": 5039,
+      "band_peaks_hr": [
+        20.0,
+        18.6007,
+        18.5921,
+        20.0
+      ],
+      "band_spread_hr": 0.70181,
+      "total_unc_hr": 1.94042,
+      "offset_from_hist_hr": 3.89,
+      "rayleigh_period_hr": 15.95265,
+      "rayleigh_z2": 2.988,
+      "n_bursts": 121,
+      "span_hr": 504.0,
+      "n_samples": 288224,
+      "at_window_edge": true,
+      "recovers_hist": false,
+      "consistent_hist": false
+    }
+  }
+}

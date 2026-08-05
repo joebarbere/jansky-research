@@ -1,0 +1,24 @@
+{
+  "source": "Astrogeo VLBI (18 sources)",
+  "n_sources": 18,
+  "n_testable": 18,
+  "n_candidates": 0,
+  "eta_thr": 439.58,
+  "v_thr": 0.812,
+  "median_alpha_sx": 0.026,
+  "n_controls": 4,
+  "n_noncontrol": 14,
+  "v_floor": 0.193,
+  "n_above_floor": 13,
+  "median_v_control": 0.193,
+  "median_v_variable": 0.32,
+  "top_variable": {
+    "name": "J0854+2006",
+    "n_epochs": 123,
+    "eta": 208.6,
+    "v": 0.48,
+    "p_value": 0.0,
+    "mean_flux_jy": 3.79,
+    "alpha_sx": 0.42
+  }
+}

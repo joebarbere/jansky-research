@@ -1,0 +1,14 @@
+{
+  "source": "Wind/WAVES RAD2 20031028",
+  "n_ridge": 256,
+  "n_used": 256,
+  "r2": 0.651,
+  "f_lo_mhz": 1.075,
+  "f_hi_mhz": 13.825,
+  "harmonic": 2,
+  "r_lo_rsun": 2.41,
+  "r_hi_rsun": 10.25,
+  "r_hi_au": 0.048,
+  "speed_kms": 24912.1,
+  "speed_c": 0.0831
+}

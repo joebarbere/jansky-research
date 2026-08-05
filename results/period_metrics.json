@@ -1,0 +1,16 @@
+{
+  "source": "chime-frb-catalog",
+  "n_sources": 18,
+  "n_searchable": 2,
+  "n_significant": 1,
+  "min_bursts": 8,
+  "detections": [
+    {
+      "name": "FRB20180916B",
+      "period_days": 16.326,
+      "z2": 33.4,
+      "fap": 7.208799311819725e-06,
+      "n": 19
+    }
+  ]
+}

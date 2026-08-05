@@ -9,6 +9,15 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+
+- **Committed-real-results migration (the structural fix from the 2026-07-31 incident):**
+  real-run outputs — `results/*.json|csv`, every paper's `figures/` and `generated/` macros —
+  are now git-tracked evidence, reviewed in PRs, replacing the "regenerable artifacts are
+  gitignored" policy that made the synthetic-clobber possible. The offline Snakemake DAG is
+  demoted to CI smoke only; `make guard-real` continues to gate packaging. All artifacts
+  committed in this change are guard-verified real (or by-design-disclosed synthetic).
+
 ## [1.2.0] — 2026-08-04
 
 ### Fixed

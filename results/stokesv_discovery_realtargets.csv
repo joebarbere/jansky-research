@@ -1,0 +1,121 @@
+name,gaia_id,epoch,ra_prop,dec_prop,epoch_mjd,band_mhz,i_mjy,e_i,v_mjy,e_v,n_products,note
+CNS5 3591,5853498713190525696,mid1,217.380678,-62.674988,59246.87227,1367.5,0.6646,0.2743,0.0521,0.2525,4,offset_arcsec=11.89
+CNS5 3591,5853498713190525696,mid2,217.371823,-62.674161,60660.01088,1367.5,0.3247,0.2237,-0.1473,0.2181,4,offset_arcsec=8.48
+CNS5 4449,4472832130942575872,mid1,269.447371,4.754004,59239.04867,1367.5,0.4688,0.1820,0.1597,0.1523,2,offset_arcsec=11.00
+CNS5 4449,4472832130942575872,mid2,269.446513,4.765054,60641.26807,1367.5,0.2560,0.1784,-0.0911,0.1568,2,offset_arcsec=7.61
+CNS5 2674,3864972938605115520,mid1,164.097768,6.998970,59218.88147,1367.5,0.8618,0.2835,-0.1183,0.2660,8,offset_arcsec=3.18
+CNS5 2674,3864972938605115520,mid2,nan,nan,nan,nan,nan,nan,nan,nan,8,"FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('operands could not be broadcast together with shapes (92,92) (91,91) ')"
+CNS5 2696,762815470562110464,mid1,165.829964,35.942018,59214.90125,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5 2696,762815470562110464,mid2,165.829208,35.936976,60603.07286,1367.5,nan,nan,nan,nan,8,offset_arcsec=nan
+CNS5  425,5140693571158946048,mid1,24.776362,-17.946863,59233.37168,1367.5,15.9946,0.1555,9.2594,0.1523,2,offset_arcsec=2.27
+CNS5  425,5140693571158946048,mid2,24.780265,-17.946181,60769.21956,1367.5,11.8724,0.1742,7.1089,0.1522,2,offset_arcsec=1.10
+CNS5  424,5140693571158739840,mid1,24.776548,-17.947553,59233.37168,1367.5,15.9946,0.1546,9.2594,0.1518,2,offset_arcsec=0.55
+CNS5  424,5140693571158739840,mid2,24.780705,-17.946932,60769.21956,1367.5,11.8724,0.1755,7.1089,0.1523,2,offset_arcsec=2.06
+CNS5 4678,4075141768785646848,mid1,282.459769,-23.837369,59231.15691,1367.5,0.5449,0.1777,-0.3616,0.1591,4,offset_arcsec=10.97
+CNS5 4678,4075141768785646848,mid2,282.460498,-23.837572,60603.41763,1367.5,0.5554,0.2888,0.3449,0.2888,4,offset_arcsec=5.77
+CNS5 5688,6553614253923452800,mid1,346.515545,-35.845311,59220.35857,1367.5,0.3207,0.1384,0.0796,0.1365,2,offset_arcsec=9.93
+CNS5 5688,6553614253923452800,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,"FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('operands could not be broadcast together with shapes (92,92) (91,91) ')"
+CNS5 2890,3796072592206250624,mid1,176.938536,0.797413,59223.88766,1367.5,0.5076,0.2038,-0.0226,0.1464,2,offset_arcsec=5.44
+CNS5 2890,3796072592206250624,mid2,176.939178,0.796120,60614.08824,1367.5,0.5319,0.2243,0.0088,0.1761,2,offset_arcsec=10.10
+CNS5 5218,1872046574983497216,mid1,316.760978,38.760457,59215.28625,1367.5,0.4573,0.2011,-0.1869,0.1987,4,offset_arcsec=8.10
+CNS5 5218,1872046574983497216,mid2,316.766645,38.763854,60630.43161,1367.5,0.6260,0.5052,0.4979,0.4691,6,offset_arcsec=11.61
+CNS5 2093,703790044252850688,mid1,127.448357,26.772434,59217.71126,1367.5,0.2871,0.1761,0.1387,0.1309,2,offset_arcsec=11.73
+CNS5 2093,703790044252850688,mid2,127.447041,26.771788,60604.96147,1367.5,nan,nan,nan,nan,8,offset_arcsec=nan
+CNS5  919,4848140361962951552,mid1,54.004852,-44.514883,59221.53187,1367.5,0.8942,0.4699,-0.2878,0.4524,6,offset_arcsec=5.11
+CNS5  919,4848140361962951552,mid2,54.006076,-44.515320,60761.33144,1367.5,1.6580,0.5354,0.5698,0.5152,6,offset_arcsec=9.66
+CNS5 5452,6412596012146801152,mid1,331.086681,-56.797282,59238.25238,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5 5452,6412596012146801152,mid2,331.094848,-56.800053,60715.18557,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5  334,2358524597030794112,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('503 Server Error: Service Unavailable for url: https://casda.csiro.au/casda_data_access/data/async?ID=c1FK4EZ0NZOF0EB_YhLmRL664Fq_9JRRaXzqyw545QfV9uNqRfUCAUYzR4Nth2TQ')
+CNS5  334,2358524597030794112,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('503 Server Error: Service Unavailable for url: https://casda.csiro.au/casda_data_access/data/async?ID=jYk4ilsl61M32bq-YelcxORTcqkLPc7J7xzzhpPETAgx8c2m273wu5vcOuuyh4fY')
+CNS5 1843,3139847906307949696,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('503 Server Error: Service Unavailable for url: https://casda.csiro.au/casda_data_access/data/async?ID=gE0VloiKm4hArQO8-cIrGb664Fq_9JRRaXzqyw545Qc3FIZ_R09KMPGLhemKftQB')
+CNS5 1843,3139847906307949696,mid2,111.856036,5.200325,60614.91010,1367.5,0.4500,0.2110,0.1396,0.1814,2,offset_arcsec=10.60
+CNS5  723,35227046884571776,mid1,43.274621,16.859086,59215.52713,1367.5,0.2401,0.1817,-0.0762,0.1736,6,offset_arcsec=5.27
+CNS5  723,35227046884571776,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('503 Server Error: Service Unavailable for url: https://casda.csiro.au/casda_data_access/data/async?ID=yXcGxz7H9AYEhKDIJeox0ORTcqkLPc7J7xzzhpPETAiuX_yBLgtoqE2nfj8Gj35Z')
+CNS5 1304,4810594479418041856,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('503 Server Error: Service Unavailable for url: https://casda.csiro.au/casda_data_access/data/async?ID=cicP3aNy60Pdg8zlX_nCML664Fq_9JRRaXzqyw545Qf0JeQ80wciyA8v8QhaSUnW')
+CNS5 1304,4810594479418041856,mid2,77.984444,-45.059040,60896.01307,1367.5,0.2137,0.1573,-0.3298,0.1552,2,offset_arcsec=7.91
+CNS5 5246,6583272171336048640,mid1,319.289209,-38.874047,59213.26636,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5 5246,6583272171336048640,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4651,6439125097427143808,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4651,6439125097427143808,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2647,5393446658454453632,mid1,162.051723,-39.941016,59238.77641,1367.5,0.3734,0.1640,0.0927,0.1577,4,offset_arcsec=10.58
+CNS5 2647,5393446658454453632,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4043,4330690742322011520,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4043,4330690742322011520,mid2,247.574576,-12.670777,60638.21729,1367.5,0.3965,0.1895,0.2844,0.1769,2,offset_arcsec=10.93
+CNS5 3092,3902874650602495232,mid1,188.311963,9.022395,59217.90468,1367.5,0.3484,0.1670,0.1402,0.1292,2,offset_arcsec=10.87
+CNS5 3092,3902874650602495232,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('You do not have access to any of the requested data files.')
+CNS5   19,2306965202564744064,mid1,1.393181,-37.371004,59224.35148,1367.5,0.4713,0.1756,0.0158,0.1433,2,offset_arcsec=9.94
+CNS5   19,2306965202564744064,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: HTTPError('500 Server Error: Internal Server Error for url: https://data.csiro.au/casda_vo_proxy/vo/datalink/links?ID=cube-560273')
+CNS5  510,76868614540049408,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5  510,76868614540049408,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 3093,3902874650601954816,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 3093,3902874650601954816,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4293,5951824121022278144,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4293,5951824121022278144,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2648,3757613049856225792,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2648,3757613049856225792,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 5644,2603090003484152064,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 5644,2603090003484152064,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2631,5254061535106490112,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2631,5254061535106490112,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5   28,2441630500517079808,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5   28,2441630500517079808,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5  732,4752399493622045696,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5  732,4752399493622045696,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2533,625453654702751872,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2533,625453654702751872,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 5309,6562924609150908416,mid1,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 5309,6562924609150908416,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4348,5955305209191546112,mid1,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 4348,5955305209191546112,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 1052,3195919254111314816,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 1052,3195919254111314816,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2209,660597997697274752,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2209,660597997697274752,mid2,nan,nan,nan,nan,nan,nan,nan,nan,8,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2210,660597997696173440,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2210,660597997696173440,mid2,nan,nan,nan,nan,nan,nan,nan,nan,8,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 1492,3316364602541746048,mid1,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 1492,3316364602541746048,mid2,nan,nan,nan,nan,nan,nan,nan,nan,6,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2055,5278042880077383040,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 2055,5278042880077383040,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 3863,5985290231327158144,mid1,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('Credentials must be supplied to download CASDA image data')
+CNS5 3863,5985290231327158144,mid2,235.202819,-51.028902,60630.20155,1367.5,0.3617,0.1854,-0.1371,0.1799,4,offset_arcsec=11.49
+CNS5 1257,3187115498866675456,mid1,75.486029,-6.949332,59223.61115,1367.5,0.4955,0.2080,0.0579,0.1984,4,offset_arcsec=10.84
+CNS5 1257,3187115498866675456,mid2,75.485423,-6.949915,60658.68028,1367.5,0.3070,0.3102,0.7489,0.2967,4,offset_arcsec=9.26
+CNS5 3403,3741297293732404352,mid1,206.443119,14.883031,59214.99318,1367.5,0.6345,0.1810,0.1305,0.1489,4,offset_arcsec=9.89
+CNS5 3403,3741297293732404352,mid2,206.445112,14.881453,60641.02489,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5 1713,939072613334579328,mid1,103.698920,33.265854,59217.62832,1367.5,0.2464,0.1893,0.2329,0.1619,2,offset_arcsec=9.20
+CNS5 1713,939072613334579328,mid2,103.698003,33.265434,60604.90134,1367.5,0.4671,0.1847,0.1084,0.1693,4,offset_arcsec=10.72
+CNS5 5161,6882963066420161664,mid1,313.135680,-16.974507,59230.22595,1367.5,0.4660,0.1570,0.0290,0.1356,4,offset_arcsec=8.02
+CNS5 5161,6882963066420161664,mid2,313.135271,-16.974460,60894.63677,1367.5,0.4313,0.1737,-0.1096,0.1530,8,offset_arcsec=8.13
+CNS5 4601,2091177593123254016,mid1,278.907328,32.993737,59217.12135,1367.5,0.6522,0.2207,0.1450,0.1712,4,offset_arcsec=3.21
+CNS5 4601,2091177593123254016,mid2,278.907233,32.992909,60658.18281,1367.5,0.4531,0.2047,0.1902,0.1822,6,offset_arcsec=3.41
+CNS5 1375,3209938366665770752,mid1,82.868606,-3.689448,59223.62547,1367.5,0.3954,0.2167,0.1460,0.1835,4,offset_arcsec=7.09
+CNS5 1375,3209938366665770752,mid2,nan,nan,nan,nan,nan,nan,nan,nan,4,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('You do not have access to any of the requested data files.')
+CNS5 3707,6305165514134625024,mid1,224.976666,-18.537771,59287.79938,1367.5,0.5218,0.2528,0.1236,0.2238,6,offset_arcsec=11.38
+CNS5 3707,6305165514134625024,mid2,224.976678,-18.537783,60894.46101,1367.5,0.5635,0.2430,-0.1543,0.2256,4,offset_arcsec=8.78
+CNS5 1528,2940856402123426176,mid1,92.643374,-21.868833,59235.61504,1367.5,0.1798,0.1533,-0.0270,0.1345,2,offset_arcsec=11.56
+CNS5 1528,2940856402123426176,mid2,92.643222,-21.869582,60603.88381,1367.5,nan,nan,nan,nan,6,offset_arcsec=nan
+CNS5 1415,3340477717172813568,mid1,85.550575,12.480160,59231.54188,1367.5,0.1863,0.1695,-0.1488,0.1342,2,offset_arcsec=7.53
+CNS5 1415,3340477717172813568,mid2,85.552736,12.478502,60620.81059,1367.5,nan,nan,nan,nan,4,offset_arcsec=nan
+CNS5 4403,5918660719983560192,mid1,266.630578,-57.326938,59210.13309,1367.5,0.3990,0.1643,0.0461,0.1415,2,offset_arcsec=7.92
+CNS5 4403,5918660719983560192,mid2,266.628294,-57.328433,60662.19298,1367.5,0.3041,0.1999,-0.1360,0.1991,4,offset_arcsec=8.81
+CNS5 5871,2739689239311660672,mid1,357.307987,2.395570,59218.42032,1367.5,0.3906,0.2739,0.1228,0.2677,10,offset_arcsec=11.19
+CNS5 5871,2739689239311660672,mid2,nan,nan,nan,nan,nan,nan,nan,nan,10,"FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('operands could not be broadcast together with shapes (92,92) (91,91) ')"
+CNS5 4800,6663600360560306560,mid1,290.205419,-45.575116,59209.24083,1367.5,0.3161,0.1789,-0.2099,0.1553,2,offset_arcsec=11.38
+CNS5 4800,6663600360560306560,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('You do not have access to any of the requested data files.')
+CNS5 4779,4293318823182081408,mid1,289.226834,5.161103,59236.17907,1367.5,0.4273,0.1945,0.2418,0.1522,2,offset_arcsec=8.92
+CNS5 4779,4293318823182081408,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,"FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('operands could not be broadcast together with shapes (92,92) (91,91) ')"
+CNS5 4780,4293315765165489536,mid1,289.236529,5.142454,59236.17907,1367.5,0.5493,0.2013,-0.4053,0.1468,2,offset_arcsec=10.43
+CNS5 4780,4293315765165489536,mid2,nan,nan,nan,nan,nan,nan,nan,nan,2,"FAILED: RuntimeError: cutout/photometry failed after 3 retries: ValueError('operands could not be broadcast together with shapes (92,92) (91,91) ')"
+CNS5 3826,6002807341299977216,mid1,233.044722,-41.281627,59240.98410,1367.5,0.4280,0.1567,0.1452,0.1481,2,offset_arcsec=5.64
+CNS5 3826,6002807341299977216,mid2,233.042746,-41.282928,60900.40784,1367.5,0.3008,0.1730,-0.1654,0.1617,2,offset_arcsec=8.85
+CNS5 1909,3136952686035250688,mid1,116.165347,3.549860,59231.63865,1367.5,1.3796,0.6100,-0.2094,0.5747,4,offset_arcsec=9.42
+CNS5 1909,3136952686035250688,mid2,116.164979,3.549388,60621.89094,1367.5,nan,nan,nan,nan,6,offset_arcsec=nan
+CNS5 1784,946632924007399936,mid1,107.504363,38.523957,59215.66526,1367.5,0.5044,0.2095,0.0421,0.1692,4,offset_arcsec=11.45
+CNS5 1784,946632924007399936,mid2,107.503771,38.522960,60601.91936,1367.5,0.3378,0.2807,-0.0267,0.2540,6,offset_arcsec=6.71
+CNS5  405,2572901021957789568,mid1,24.242996,9.563048,59217.47640,1367.5,0.4619,0.2120,0.1243,0.1646,4,offset_arcsec=8.20
+CNS5  405,2572901021957789568,mid2,24.244414,9.563030,60701.40376,1367.5,0.6173,0.2466,-0.3546,0.1841,4,offset_arcsec=6.07
+CNS5 5017,6673000841376349696,mid1,303.478922,-45.164952,59213.23872,1367.5,0.4318,0.1586,-0.1322,0.1309,2,offset_arcsec=7.63
+CNS5 5017,6673000841376349696,mid2,303.480111,-45.165125,60629.39653,1367.5,0.3257,0.1689,0.0079,0.1534,2,offset_arcsec=11.21
+CNS5 3614,6324325225803432320,mid1,218.567915,-12.516081,59257.84269,1367.5,0.5472,0.3514,0.6183,0.3370,4,offset_arcsec=10.39
+CNS5 3614,6324325225803432320,mid2,218.567526,-12.515448,60661.03062,1367.5,0.3884,0.2296,-0.2786,0.2205,4,offset_arcsec=4.34

@@ -1,0 +1,34 @@
+{
+  "source": "VLASS Quick-Look epochs 1,2,3 @ (190.0, 20.0) r=15.0deg",
+  "area_deg2": 702.8302838515228,
+  "n_sources": 42721,
+  "n_detected_multi_epoch": 38999,
+  "n_excluded_crowded": 2043,
+  "n_usable": 36956,
+  "n_candidates": 40,
+  "variable_fraction": 0.0010823682216690117,
+  "eta_threshold": 58.163137994186876,
+  "v_threshold": 0.881314496605226,
+  "sigma": 3.0,
+  "completeness_factors": [
+    1.25,
+    1.5,
+    2.0,
+    3.0,
+    5.0,
+    10.0
+  ],
+  "completeness_recovered": [
+    0.0025,
+    0.0,
+    0.005,
+    0.0325,
+    0.335,
+    0.5225
+  ],
+  "completeness_50_factor": 9.400000000000002,
+  "completeness_90_factor": NaN,
+  "completeness_max": 0.5225,
+  "n_confirm_attempted": 40,
+  "n_image_confirmed": 2
+}

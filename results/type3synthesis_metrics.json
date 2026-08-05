@@ -1,0 +1,19 @@
+{
+  "n_instruments": 4,
+  "crosscheck_event": "2013-05-15 (STEREO/WAVES + STEREO-A+B triangulation)",
+  "f_hi_mhz": 78.94,
+  "f_lo_mhz": 0.125,
+  "corona_r_lo": 1.622,
+  "corona_r_hi": 2.572,
+  "corona_speed_c": 0.1347,
+  "helio_r_hi": 10.25,
+  "helio_speed_c": 0.0831,
+  "ip_r_hi_rsun": 82.59,
+  "ip_r_hi_au": 0.384,
+  "ip_speed_c": 0.1503,
+  "geom_r_hi_rsun": 106.1,
+  "geom_r_hi_au": 0.494,
+  "geom_corr": 0.989,
+  "geom_ratio": 2.18,
+  "overall_r_hi_au": 0.493
+}

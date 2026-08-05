@@ -1,0 +1,51 @@
+{
+  "source": "JBO glitch catalogue (jb.man.ac.uk); per-pulsar waiting-time classification + post-2018 delta",
+  "is_real": true,
+  "n_glitches": 727,
+  "n_pulsars": 220,
+  "n_magnetars_dropped": 3,
+  "n_qualified_full": 31,
+  "n_exponential": 20,
+  "n_quasiperiodic": 10,
+  "n_clustered": 1,
+  "expected_false_qp": 1.55,
+  "qp_binomial_p": 1.6373481812024025e-06,
+  "qp_excess_significant": true,
+  "known_quasiperiodic": {
+    "J0537-6910": "quasi_periodic",
+    "B0833-45": "quasi_periodic"
+  },
+  "known_quasiperiodic_ok": "yes",
+  "n_newly_classifiable": 3,
+  "n_stable_sample": 28,
+  "n_flipped": 1,
+  "flipped": [
+    {
+      "jname": "J2229+6114",
+      "was": "exponential",
+      "now": "quasi_periodic",
+      "n_pre": 8,
+      "n_now": 9
+    }
+  ],
+  "newly_classifiable": [
+    {
+      "jname": "B1830-08",
+      "n_pre": 3,
+      "n_now": 5,
+      "klass": "exponential"
+    },
+    {
+      "jname": "J2021+3651",
+      "n_pre": 4,
+      "n_now": 6,
+      "klass": "quasi_periodic"
+    },
+    {
+      "jname": "B2224+65",
+      "n_pre": 5,
+      "n_now": 6,
+      "klass": "clustered"
+    }
+  ]
+}

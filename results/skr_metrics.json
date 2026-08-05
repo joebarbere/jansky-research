@@ -1,0 +1,43 @@
+{
+  "source": "Cassini/RPWS KEY60S, 59 days",
+  "is_real": true,
+  "n_bins": 83382,
+  "n_active": 33549,
+  "duty_cycle_pct": 40.235,
+  "anchor_period_hr": 10.675,
+  "anchor_dev_pct": 0.05,
+  "peak_periods_hr": [
+    10.675,
+    10.796
+  ],
+  "period_two_hr": 10.796,
+  "ls_fap": 0.0,
+  "duty_by_range_bin": [
+    0.6596,
+    0.4286,
+    0.3231,
+    0.1981
+  ],
+  "range_centers_rs": [
+    7.81,
+    15.22,
+    19.2,
+    20.95
+  ],
+  "range_near_rs": 7.81,
+  "range_far_rs": 20.95,
+  "duty_near_pct": 66.0,
+  "duty_far_pct": 19.8,
+  "near_far_ratio": 3.33,
+  "sensitivity_corrected_near_far": 1.39,
+  "weighted_near_far_ratio": 3.39,
+  "abs_lat_median_by_bin": [
+    36.3,
+    20.7,
+    14.0,
+    8.3
+  ],
+  "abs_lat_span_deg": 28.0,
+  "expected_near_far_ratio": null,
+  "expected_period_hr": null
+}

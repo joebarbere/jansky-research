@@ -1,0 +1,50 @@
+{
+  "source": "FASHI DR1 (VizieR J/other/SCPMA/67.19511) x Tempel+2017 groups x Douglass+2023 voids",
+  "is_real": true,
+  "n_sources": 41741,
+  "n_classifiable_void": 26713,
+  "n_in_void": 2538,
+  "n_group_members": 6119,
+  "himf_global": {
+    "log_phi_star": -2.893,
+    "log_m_star": 9.944,
+    "alpha": -1.732,
+    "log_m_star_err": 0.058,
+    "alpha_err": 0.077
+  },
+  "himf_void": {
+    "log_phi_star": -3.7,
+    "log_m_star": 9.698,
+    "alpha": -1.582,
+    "log_m_star_err": 0.071,
+    "alpha_err": 0.137
+  },
+  "himf_wall": {
+    "log_phi_star": -3.131,
+    "log_m_star": 9.954,
+    "alpha": -1.703,
+    "log_m_star_err": 0.05,
+    "alpha_err": 0.065
+  },
+  "himf_group": {
+    "log_phi_star": -3.923,
+    "log_m_star": 10.082,
+    "alpha": -1.742,
+    "log_m_star_err": 0.05,
+    "alpha_err": 0.049
+  },
+  "himf_field": {
+    "log_phi_star": -3.1,
+    "log_m_star": 9.89,
+    "alpha": -1.678,
+    "log_m_star_err": 0.053,
+    "alpha_err": 0.077
+  },
+  "void_knee_offset": -0.256,
+  "void_knee_offset_err": 0.087,
+  "void_knee_offset_sigma": 2.93,
+  "group_knee_offset": 0.192,
+  "group_knee_offset_err": 0.073,
+  "group_knee_offset_sigma": 2.64,
+  "dr2_followon": "swap fetch_fashi_dr1 -> DR2 table when it publishes (~Aug 2026)"
+}

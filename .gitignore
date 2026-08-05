@@ -17,12 +17,10 @@ data/*
 .cache/
 
 # Generated analysis artifacts
-results/*.json
-results/*.csv
-papers/*/figures/*
-papers/*/generated/*
-!papers/*/figures/.gitkeep
-!papers/*/generated/.gitkeep
+# Real-run outputs are COMMITTED evidence (post-2026-07-31 integrity incident): results
+# JSONs/CSVs, paper figures, and generated macros all carry real-data provenance and are
+# reviewed in PRs like any source change. The offline Snakefile DAG is CI smoke ONLY —
+# never commit its synthetic outputs (make guard-real enforces this for packaging).
 # arXiv packages are assembled from the generated figures + .bbl (regenerate with `make arxiv`).
 papers/*/arxiv-submission/
 
