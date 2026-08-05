@@ -1,8 +1,20 @@
 # 64 — Blind moving-source search across VLASS E1/E2/E3: radio proper motions without Gaia
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the VLASS
-epoch catalogue versions/astrometric docs at CIRADA and re-check for any blind radio-PM paper
+Status: 📋 planned — **GATE 0 discharged 2026-08-04** (full-text novelty pass + data
+verification): the blind radio-PM niche is **still open** — the field remains entirely
+Gaia/optical-anchored (De et al. 2024 arXiv:2409.18466 and Driessen et al. 2023
+arXiv:2306.08059 both anchor to known optical PMs; the E1–E2 variability census
+arXiv:2508.00976 is flux-only; the July 2026 VLASS-completion press names transients but no
+PM program, with catalog processing "continuing over the next several years"). Data pinned:
+E1 = CIRADA VLASS1QLv3.1 (2.42M components, VizieR J/ApJS/255/30), E2 = VLASS2QLv2 CSV
+(2.37M), E3 = QL3.1/QL3.2 interim lists per **VLASS Memo 22** (Lacy & Dong 2025-06-03;
+combined 2.38M + a 3.38M median-stack list); no SE/"final" catalog supersedes QL yet; epoch
+4.1 observed (Feb 2026) but uncatalogued. **One correction to carry:** replace the flat
+"0.25–0.5″ astrometric floor" with per-epoch, declination-dependent floors — E1 ~0.5″
+(Dec>−20°) to ~1″ (south), E3 ≈0.1″ MAD vs the VLBI RFC per Memo 22 — E1 is the limiting
+epoch and drives the false-pair budget and the annulus's honest lower rate bound (cite
+Gordon et al. 2021 + Memo 22, not a blanket number). Baselines confirmed: E1–E2 ≈2.8–3 yr,
+E1–E3 ≈5.5–6 yr. Remaining standing item: same-week ADS re-search before first commit.
 
 ## Context
 
