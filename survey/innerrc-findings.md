@@ -65,14 +65,15 @@ Figs. 1/2/8/14/11).
   paper's adopted σ_HI = 15 km/s sits *between* our two estimators, suggesting their
   decomposition lands between component-centre and envelope-crossing in practice.
 - **Their Table 2 reproduces at the ~4% level from raw survey data**: mean |ΔV| = 8.8 km/s
-  (median −8.9) over 123 bins at R > 2 kpc, after per-estimator σ calibration (which took
-  the offset from −13.4 pre-calibration). The residual is a shape difference, candidates:
+  (median −8.9) over 123 bins at R > 2 kpc, after per-estimator σ calibration (the same comparison at the first-attempt fixed σ=15 gives −14.5, committed as
+  `median_dv_kms_fixed_sigma15`; the −13.4 quoted in an earlier draft came from the
+  pre-Q4-fix run and is superseded). The residual is a shape difference, candidates:
   their HI+CO merge (CO traces colder gas), finer |b| windows per survey, and their 2-pc
   Gaussian binning; shape (flat, non-Keplerian, bar-region peak) is fully consistent.
 - **The E/W asymmetry replicates qualitatively**: fitting their eq.-29 damped sinusoid in the
   mid-disc window (2–8 kpc; inside 2 kpc the bar rails any smooth fit — reported, not
-  hidden) gives amplitude 9.5 km/s, period 6.0 kpc, phase 3.8 kpc vs their ~14 km/s
-  (evaluated at 4 kpc), 4.4 kpc, 4.0 kpc — same phenomenon, same phase, softer amplitude
+  hidden) gives amplitude 9.5 km/s, period 6.0 kpc, phase 3.8 kpc vs their directly stated ≃15 km/s mid-disc
+  amplitude and eq.-29 period/phase 4.4/4.0 kpc — same phenomenon, same phase, softer amplitude
   from HI alone; damping unconstrained over our window (railed, reported). Mid-disc δV rms
   8.0 km/s.
 

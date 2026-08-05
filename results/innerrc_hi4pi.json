@@ -12,7 +12,8 @@
   "table2_comparison_R>2kpc": {
     "mean_abs_dv_kms": 8.813901831947671,
     "median_dv_kms": -8.935002601098432,
-    "n_bins": 123
+    "n_bins": 123,
+    "median_dv_kms_fixed_sigma15": -14.47228537439159
   },
   "ew_asymmetry_fit": {
     "amp_kms": 9.5384481621065,

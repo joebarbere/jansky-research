@@ -37,6 +37,11 @@ recommend the next version number.
 
 ### Added
 
+- `innerrc` GATE-2 PASS with fixes: Sofue & Kohno DOI added (10.1093/pasj/psaf114); the
+  pre-calibration Table-2 offset made traceable (`median_dv_kms_fixed_sigma15` = −14.5,
+  superseding a pre-Q4-fix −13.4); bulge claim scoped and macro-fed; sensitivity variants now
+  commit bulge/disc params; E/W amplitude compared to their stated ≃15 km/s mid-disc figure;
+  MG&D16 apples-to-apples clause; hidden-constraint and Davis+2025 phrasing softened.
 - `innerrc` increment 3 (plan 86): the full-length paper (`papers/innerrc/main.tex` +
   `refs.bib`, compiles in the tectonic container) — anchor degeneracy + raw-HI4PI
   replication + estimator head-to-head, all numbers from `paper_macros` reading the two
