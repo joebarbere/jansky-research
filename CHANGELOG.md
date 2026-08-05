@@ -37,6 +37,15 @@ recommend the next version number.
 
 ### Added
 
+- `innerrc` increment 1 (plan 86): tooling + synthetic recover-a-known + the **offline anchor
+  result** — decomposing Sofue & Kohno 2025's own published RC tables (vendored from the arXiv
+  source) validates their ρ_DM = 0.107 GeV/cm³ arithmetic exactly (through the eq.-25 4π
+  convention, now covered by a test) while showing it is one corner of a broad disc–halo
+  degeneracy: an unconstrained refit of the same curve fits marginally better at
+  ρ_DM = 0.24, and all eight sensitivity-scan variants land in 0.19–0.32 — the consensus
+  range. Gaussian-decomposition TVM (greedy + joint refinement) recovers injected terminal
+  velocities on crowded synthetic spectra and measures the `hi` threshold estimator's
+  documented high bias on the same spectra. Committed evidence: `results/innerrc_anchor.json`.
 - `atlas3i` full 1–12 GHz completion: S/C/X sweeps done (60 unique node-cadences total,
   1,938,860 raw hits → 294 on/off survivors → **0 confirmed** — the paper's full-band null
   reproduces). `survey_summary`/`survey_macros`/`survey_figure` aggregate all bands for the

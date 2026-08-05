@@ -1,0 +1,74 @@
+{
+  "source": "Sofue & Kohno 2025 published RC tables (arXiv:2509.23581 source, vendored)",
+  "n_inner_rows": 161,
+  "n_unified_rows": 103,
+  "anchor_fit": {
+    "v_bulge": 394.1009828668818,
+    "a_bulge": 315.5518152826055,
+    "v_disc": 282.40260851716346,
+    "a_disc": 6287.142304744711,
+    "v_halo": 308.79163961667587,
+    "h_halo": 5838.820950060123,
+    "dv_bulge": 5.765492949859922,
+    "da_bulge": 9.098547615294477,
+    "dv_disc": 21.974929029551983,
+    "da_disc": 812.1317619404779,
+    "dv_halo": 34.45809901313495,
+    "dh_halo": 2828.66595843842,
+    "halo": "nfw",
+    "rms_kms": 11.837806193682994,
+    "rho_dm_gev": 0.2436258934877126
+  },
+  "paper_table1_rms_kms": 13.568673811772799,
+  "paper_table1_rho_dm_gev": 0.10739058704913246,
+  "paper_rho_dm_gev": 0.107,
+  "rho_dm_ratio_vs_paper": 2.276877509230959,
+  "r_max_pc": 25568.236,
+  "sensitivity": {
+    "rho_dm_min_gev": 0.18848765043394963,
+    "rho_dm_max_gev": 0.3223335619141118,
+    "n_converged": 8
+  },
+  "sensitivity_variants": {
+    "nfw:all:w": {
+      "halo": "nfw",
+      "rms_kms": 11.837806193682994,
+      "rho_dm_gev": 0.2436258934877126
+    },
+    "nfw:all:u": {
+      "halo": "nfw",
+      "rms_kms": 11.00113502158618,
+      "rho_dm_gev": 0.19170043361577035
+    },
+    "nfw:R>2kpc:w": {
+      "halo": "nfw",
+      "rms_kms": 3.061253990379229,
+      "rho_dm_gev": 0.3223335619141118
+    },
+    "nfw:R>2kpc:u": {
+      "halo": "nfw",
+      "rms_kms": 2.7969794564820907,
+      "rho_dm_gev": 0.31596333459653936
+    },
+    "burkert:all:w": {
+      "halo": "burkert",
+      "rms_kms": 12.04553915353492,
+      "rho_dm_gev": 0.18848765043394963
+    },
+    "burkert:all:u": {
+      "halo": "burkert",
+      "rms_kms": 11.304353004093556,
+      "rho_dm_gev": 0.19990089828107818
+    },
+    "burkert:R>2kpc:w": {
+      "halo": "burkert",
+      "rms_kms": 3.000356725127493,
+      "rho_dm_gev": 0.2006672183871267
+    },
+    "burkert:R>2kpc:u": {
+      "halo": "burkert",
+      "rms_kms": 2.7472761514317767,
+      "rho_dm_gev": 0.20174859960321667
+    }
+  }
+}
