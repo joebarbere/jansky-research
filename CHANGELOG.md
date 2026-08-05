@@ -9,6 +9,34 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+
+- `innerrc` GATE-2 PASS with fixes: Sofue & Kohno DOI added (10.1093/pasj/psaf114); the
+  pre-calibration Table-2 offset made traceable (`median_dv_kms_fixed_sigma15` = −14.5,
+  superseding a pre-Q4-fix −13.4); bulge claim scoped and macro-fed; sensitivity variants now
+  commit bulge/disc params; E/W amplitude compared to their stated ≃15 km/s mid-disc figure;
+  MG&D16 apples-to-apples clause; hidden-constraint and Davis+2025 phrasing softened.
+- `innerrc` increment 3 (plan 86): the full-length paper (`papers/innerrc/main.tex` +
+  `refs.bib`, compiles in the tectonic container) — anchor degeneracy + raw-HI4PI
+  replication + estimator head-to-head, all numbers from `paper_macros` reading the two
+  committed evidence JSONs (the committed-real-results pattern end-to-end).
+- `innerrc` increment 2 (plan 86): the HI4PI real-data leg — 1,113 sightlines through both
+  TVM estimators close the `hi` slice's caveat with a measured number (threshold reads
+  +17.9 km/s high; per-estimator σ calibration gives 9.5 vs 26.6 km/s, bracketing the
+  paper's adopted 15); their Table 2 reproduces at the ~4% level from raw survey data; the
+  E/W asymmetry replicates qualitatively (period/phase match, softer amplitude). Fourth-
+  quadrant |sin ℓ| bug and a CDS stall (now timeout+resume+retry) found and fixed. Five
+  paper-style figures + evidence JSON committed.
+- `innerrc` increment 1 (plan 86): tooling + synthetic recover-a-known + the **offline anchor
+  result** — decomposing Sofue & Kohno 2025's own published RC tables (vendored from the arXiv
+  source) validates their ρ_DM = 0.107 GeV/cm³ arithmetic exactly (through the eq.-25 4π
+  convention, now covered by a test) while showing it is one corner of a broad disc–halo
+  degeneracy: an unconstrained refit of the same curve fits marginally better at
+  ρ_DM = 0.24, and all eight sensitivity-scan variants land in 0.19–0.32 — the consensus
+  range. Gaussian-decomposition TVM (greedy + joint refinement) recovers injected terminal
+  velocities on crowded synthetic spectra and measures the `hi` threshold estimator's
+  documented high bias on the same spectra. Committed evidence: `results/innerrc_anchor.json`.
+
 ### Changed
 
 - **Committed-real-results migration (the structural fix from the 2026-07-31 incident):**
@@ -37,31 +65,6 @@ recommend the next version number.
 
 ### Added
 
-- `innerrc` GATE-2 PASS with fixes: Sofue & Kohno DOI added (10.1093/pasj/psaf114); the
-  pre-calibration Table-2 offset made traceable (`median_dv_kms_fixed_sigma15` = −14.5,
-  superseding a pre-Q4-fix −13.4); bulge claim scoped and macro-fed; sensitivity variants now
-  commit bulge/disc params; E/W amplitude compared to their stated ≃15 km/s mid-disc figure;
-  MG&D16 apples-to-apples clause; hidden-constraint and Davis+2025 phrasing softened.
-- `innerrc` increment 3 (plan 86): the full-length paper (`papers/innerrc/main.tex` +
-  `refs.bib`, compiles in the tectonic container) — anchor degeneracy + raw-HI4PI
-  replication + estimator head-to-head, all numbers from `paper_macros` reading the two
-  committed evidence JSONs (the committed-real-results pattern end-to-end).
-- `innerrc` increment 2 (plan 86): the HI4PI real-data leg — 1,113 sightlines through both
-  TVM estimators close the `hi` slice's caveat with a measured number (threshold reads
-  +17.9 km/s high; per-estimator σ calibration gives 9.5 vs 26.6 km/s, bracketing the
-  paper's adopted 15); their Table 2 reproduces at the ~4% level from raw survey data; the
-  E/W asymmetry replicates qualitatively (period/phase match, softer amplitude). Fourth-
-  quadrant |sin ℓ| bug and a CDS stall (now timeout+resume+retry) found and fixed. Five
-  paper-style figures + evidence JSON committed.
-- `innerrc` increment 1 (plan 86): tooling + synthetic recover-a-known + the **offline anchor
-  result** — decomposing Sofue & Kohno 2025's own published RC tables (vendored from the arXiv
-  source) validates their ρ_DM = 0.107 GeV/cm³ arithmetic exactly (through the eq.-25 4π
-  convention, now covered by a test) while showing it is one corner of a broad disc–halo
-  degeneracy: an unconstrained refit of the same curve fits marginally better at
-  ρ_DM = 0.24, and all eight sensitivity-scan variants land in 0.19–0.32 — the consensus
-  range. Gaussian-decomposition TVM (greedy + joint refinement) recovers injected terminal
-  velocities on crowded synthetic spectra and measures the `hi` threshold estimator's
-  documented high bias on the same spectra. Committed evidence: `results/innerrc_anchor.json`.
 - `atlas3i` full 1–12 GHz completion: S/C/X sweeps done (60 unique node-cadences total,
   1,938,860 raw hits → 294 on/off survivors → **0 confirmed** — the paper's full-band null
   reproduces). `survey_summary`/`survey_macros`/`survey_figure` aggregate all bands for the
