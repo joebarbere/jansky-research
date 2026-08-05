@@ -1,0 +1,12 @@
+{
+  "source": "GLEAM-X DR2 x RACS @ (30.0,-30.0) r=3.0deg",
+  "n_matched": 1545,
+  "n_peaked": 90,
+  "n_uss": 59,
+  "n_extended": 28,
+  "median_nu_pk_mhz": 210.9,
+  "call_tried": 50,
+  "call_recovered": 38,
+  "call_dlog": 0.112,
+  "call_within_pct": 92
+}

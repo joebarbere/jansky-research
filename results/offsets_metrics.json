@@ -1,0 +1,17 @@
+{
+  "source": "ICRF3 x Gaia DR3",
+  "n": 3502,
+  "median_offset_mas": 0.584,
+  "frac_x_gt3_pct": 26.7,
+  "rayleigh_pct": 1.11,
+  "excess_ratio": 24.0,
+  "jet_source": "MOJAVE XVIII",
+  "n_jet": 414,
+  "median_axis_deg": 24.3,
+  "frac_axis_lt30": 0.572,
+  "frac_down_lt45": 0.502,
+  "ks_p": 3.2030113555113244e-22,
+  "n_jet_signif": 252,
+  "median_axis_signif_deg": 18.9,
+  "frac_axis_signif": 0.659
+}

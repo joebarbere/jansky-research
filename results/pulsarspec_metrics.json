@@ -1,0 +1,10 @@
+{
+  "source": "ATNF Pulsar Catalogue (B/psr)",
+  "n": 473,
+  "mean_alpha": -1.77,
+  "median_alpha": -1.87,
+  "std_alpha": 0.75,
+  "n_msp": 43,
+  "mean_alpha_msp": -1.75,
+  "mean_alpha_normal": -1.77
+}

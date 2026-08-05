@@ -1,0 +1,276 @@
+{
+  "source": "CHIME/FRB Catalog 2 repeaters (CANFAR DOI 10.11570/25.0066)",
+  "is_real": true,
+  "n_searched": 33,
+  "n_detections": 0,
+  "detection_names": [],
+  "lensed_fraction_limit_95": 0.0908,
+  "sensitive_fraction": 0.778,
+  "rows": [
+    {
+      "name": "FRB20180814A",
+      "n_bursts": 20,
+      "m_max": 1,
+      "best_delay": 1.0376,
+      "p_value": 1.0,
+      "dm_tol": 6.51
+    },
+    {
+      "name": "FRB20180916B",
+      "n_bursts": 113,
+      "m_max": 3,
+      "best_delay": 261.2892,
+      "p_value": 0.9850746268656716,
+      "dm_tol": 1.6
+    },
+    {
+      "name": "FRB20181017A",
+      "n_bursts": 5,
+      "m_max": 1,
+      "best_delay": 121.6681,
+      "p_value": 1.0,
+      "dm_tol": 2.02
+    },
+    {
+      "name": "FRB20181030A",
+      "n_bursts": 9,
+      "m_max": 1,
+      "best_delay": 449.2556,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20181119A",
+      "n_bursts": 15,
+      "m_max": 1,
+      "best_delay": 5.9916,
+      "p_value": 1.0,
+      "dm_tol": 2.01
+    },
+    {
+      "name": "FRB20181128A",
+      "n_bursts": 10,
+      "m_max": 1,
+      "best_delay": 20.9425,
+      "p_value": 1.0,
+      "dm_tol": 10.43
+    },
+    {
+      "name": "FRB20181201D",
+      "n_bursts": 5,
+      "m_max": 1,
+      "best_delay": 47.7791,
+      "p_value": 1.0,
+      "dm_tol": 5.55
+    },
+    {
+      "name": "FRB20190117A",
+      "n_bursts": 20,
+      "m_max": 1,
+      "best_delay": 1.0014,
+      "p_value": 1.0,
+      "dm_tol": 5.46
+    },
+    {
+      "name": "FRB20190208A",
+      "n_bursts": 18,
+      "m_max": 1,
+      "best_delay": 4.9864,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20190212A",
+      "n_bursts": 11,
+      "m_max": 1,
+      "best_delay": 1.0362,
+      "p_value": 1.0,
+      "dm_tol": 2.12
+    },
+    {
+      "name": "FRB20190303A",
+      "n_bursts": 35,
+      "m_max": 1,
+      "best_delay": 1.0061,
+      "p_value": 1.0,
+      "dm_tol": 2.44
+    },
+    {
+      "name": "FRB20190417A",
+      "n_bursts": 18,
+      "m_max": 1,
+      "best_delay": 1.9966,
+      "p_value": 1.0,
+      "dm_tol": 3.59
+    },
+    {
+      "name": "FRB20190804E",
+      "n_bursts": 8,
+      "m_max": 1,
+      "best_delay": 2.9895,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20190905A",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 87.8297,
+      "p_value": 1.0,
+      "dm_tol": 35.5
+    },
+    {
+      "name": "FRB20190907A",
+      "n_bursts": 8,
+      "m_max": 1,
+      "best_delay": 7.9762,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20190915D",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 1.0014,
+      "p_value": 0.8059701492537313,
+      "dm_tol": 1.64
+    },
+    {
+      "name": "FRB20190929E",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 5.9839,
+      "p_value": 1.0,
+      "dm_tol": 3.09
+    },
+    {
+      "name": "FRB20191106C",
+      "n_bursts": 18,
+      "m_max": 1,
+      "best_delay": 6.9822,
+      "p_value": 1.0,
+      "dm_tol": 3.5
+    },
+    {
+      "name": "FRB20200120E",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 1.9893,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20200223B",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 1.9914,
+      "p_value": 1.0,
+      "dm_tol": 1.64
+    },
+    {
+      "name": "FRB20200619A",
+      "n_bursts": 5,
+      "m_max": 1,
+      "best_delay": 2.0011,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20200926A",
+      "n_bursts": 7,
+      "m_max": 1,
+      "best_delay": 9.9709,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20200929C",
+      "n_bursts": 17,
+      "m_max": 1,
+      "best_delay": 7.9771,
+      "p_value": 1.0,
+      "dm_tol": 1.79
+    },
+    {
+      "name": "FRB20201124A",
+      "n_bursts": 34,
+      "m_max": 2,
+      "best_delay": 50.8579,
+      "p_value": 1.0,
+      "dm_tol": 9.4
+    },
+    {
+      "name": "FRB20201130A",
+      "n_bursts": 12,
+      "m_max": 1,
+      "best_delay": 2.9897,
+      "p_value": 1.0,
+      "dm_tol": 2.51
+    },
+    {
+      "name": "FRB20201221B",
+      "n_bursts": 6,
+      "m_max": 1,
+      "best_delay": 1.9871,
+      "p_value": 1.0,
+      "dm_tol": 1.8
+    },
+    {
+      "name": "FRB20210209C",
+      "n_bursts": 5,
+      "m_max": 1,
+      "best_delay": 7.9752,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20210323C",
+      "n_bursts": 6,
+      "m_max": 1,
+      "best_delay": 7.9837,
+      "p_value": 1.0,
+      "dm_tol": 1.46
+    },
+    {
+      "name": "FRB20210409B",
+      "n_bursts": 6,
+      "m_max": 1,
+      "best_delay": 62.8194,
+      "p_value": 1.0,
+      "dm_tol": 1.63
+    },
+    {
+      "name": "FRB20210822E",
+      "n_bursts": 6,
+      "m_max": 1,
+      "best_delay": 2.9921,
+      "p_value": 1.0,
+      "dm_tol": 1.86
+    },
+    {
+      "name": "FRB20220505A",
+      "n_bursts": 8,
+      "m_max": 1,
+      "best_delay": 1.4859,
+      "p_value": 1.0,
+      "dm_tol": 1.0
+    },
+    {
+      "name": "FRB20220529A",
+      "n_bursts": 15,
+      "m_max": 1,
+      "best_delay": 1.9966,
+      "p_value": 1.0,
+      "dm_tol": 1.79
+    },
+    {
+      "name": "FRB20220912A",
+      "n_bursts": 373,
+      "m_max": 15,
+      "best_delay": 1.9966,
+      "p_value": 0.9601990049751243,
+      "dm_tol": 7.65
+    }
+  ],
+  "sensitivity_source": "FRB20220912A"
+}

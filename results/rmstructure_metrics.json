@@ -1,0 +1,53 @@
+{
+  "source": "SPICE-RACS DR2 goodRM (CSIRO DAP csiro:64891)",
+  "is_real": true,
+  "n_sources": 333173,
+  "enhancement_ratio": 11.17,
+  "enhancement_ratio_se": 0.1,
+  "sf_plateau_low_b": 62065.3,
+  "sf_plateau_high_b": 2284.2,
+  "sf_break_low_b_deg": 2.29,
+  "sf_break_high_b_deg": 3.7,
+  "true_coherence_deg": NaN,
+  "ladder_bins": [
+    {
+      "b": "0-5",
+      "n": 22220,
+      "sigma_rm": 214.7,
+      "sigma_gal": 214.3
+    },
+    {
+      "b": "5-10",
+      "n": 27089,
+      "sigma_rm": 104.9,
+      "sigma_gal": 104.2
+    },
+    {
+      "b": "10-20",
+      "n": 56801,
+      "sigma_rm": 66.3,
+      "sigma_gal": 65.2
+    },
+    {
+      "b": "20-30",
+      "n": 53936,
+      "sigma_rm": 40.0,
+      "sigma_gal": 38.2
+    },
+    {
+      "b": "30-50",
+      "n": 91197,
+      "sigma_rm": 20.2,
+      "sigma_gal": 16.3
+    },
+    {
+      "b": "50-90",
+      "n": 81930,
+      "sigma_rm": 11.9,
+      "sigma_gal": 0.0
+    }
+  ],
+  "sigma_rm_plane": 214.7,
+  "sigma_rm_pole": 11.9,
+  "ladder_floor_sigma": 11.9
+}

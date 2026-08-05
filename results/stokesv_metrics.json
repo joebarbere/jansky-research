@@ -1,0 +1,17 @@
+{
+  "source": "RACS-low DR1 (CASDA)",
+  "n_targets": 500,
+  "n_bright_ref": 500,
+  "leakage_floor_pct": 6.053,
+  "n_above_floor": 21,
+  "n_candidates": 21,
+  "n_injected": 21,
+  "n_recovered": 21,
+  "n_pm_rejected": 0,
+  "purity": 1.0,
+  "n_measured": 15,
+  "i_recovery_ratio": 0.92,
+  "n_v_circular": 9,
+  "frac_v_circular": 0.6,
+  "median_img_frac_pct": 14.59
+}

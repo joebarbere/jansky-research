@@ -1,0 +1,384 @@
+{
+  "source": "PTE-II SQLite (Yang+2025); per-source giant-pulse test + ATNF Edot cross-match",
+  "is_real": true,
+  "n_pulsars_total": 363,
+  "n_fit": 136,
+  "n_heavy": 26,
+  "heavy_fraction": 0.1912,
+  "min_pulses": 50,
+  "n_matched": 135,
+  "spearman_excess_logedot": -0.027,
+  "spearman_p": 0.7555063365763428,
+  "logedot_heavy_median": 33.285,
+  "logedot_nonheavy_median": 32.84,
+  "mannwhitney_p": 0.12979144507926754,
+  "median_gamma_heavy": 11.58,
+  "median_n_heavy": 552.5,
+  "median_n_nonheavy": 227.5,
+  "heavy_frac_lowcount": 0.088,
+  "heavy_frac_highcount": 0.294,
+  "count_mw_p": 0.02016102598361934,
+  "count_limited": true,
+  "top_heavy": [
+    {
+      "jname": "J1243-6423",
+      "n": 2731,
+      "n_giant": 141,
+      "excess": 1.529,
+      "gamma": 10.5699,
+      "p_excess": 1.0092209407538838e-165,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1633-5015",
+      "n": 558,
+      "n_giant": 17,
+      "excess": 1.1488,
+      "gamma": 24.5422,
+      "p_excess": 8.831319020701212e-18,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1535-4114",
+      "n": 758,
+      "n_giant": 14,
+      "excess": 0.9794,
+      "gamma": 10.8199,
+      "p_excess": 5.893333476947151e-12,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1709-4429",
+      "n": 189,
+      "n_giant": 6,
+      "excess": 0.9357,
+      "gamma": NaN,
+      "p_excess": 2.9865295825420674e-07,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J0953+0755",
+      "n": 396,
+      "n_giant": 7,
+      "excess": 0.8614,
+      "gamma": NaN,
+      "p_excess": 1.502469693877327e-06,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1146-6030",
+      "n": 612,
+      "n_giant": 9,
+      "excess": 0.8551,
+      "gamma": 12.3371,
+      "p_excess": 2.3553676853222085e-07,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1847-0402",
+      "n": 256,
+      "n_giant": 5,
+      "excess": 0.8132,
+      "gamma": NaN,
+      "p_excess": 3.083049948470787e-05,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1224-6407",
+      "n": 2816,
+      "n_giant": 27,
+      "excess": 0.8066,
+      "gamma": 9.4897,
+      "p_excess": 1.0273146649675735e-14,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1707-4053",
+      "n": 80,
+      "n_giant": 3,
+      "excess": 0.7602,
+      "gamma": NaN,
+      "p_excess": 0.00019361631168633787,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1327-6301",
+      "n": 85,
+      "n_giant": 3,
+      "excess": 0.7563,
+      "gamma": NaN,
+      "p_excess": 0.00022323428929419062,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1539-5626",
+      "n": 214,
+      "n_giant": 4,
+      "excess": 0.7562,
+      "gamma": NaN,
+      "p_excess": 0.00023055386919092297,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1133-6250",
+      "n": 116,
+      "n_giant": 3,
+      "excess": 0.7268,
+      "gamma": NaN,
+      "p_excess": 0.0005692761368265445,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1507-4352",
+      "n": 267,
+      "n_giant": 4,
+      "excess": 0.7205,
+      "gamma": NaN,
+      "p_excess": 0.000506223339211405,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1651-5222",
+      "n": 440,
+      "n_giant": 5,
+      "excess": 0.7014,
+      "gamma": NaN,
+      "p_excess": 0.00037687609399326364,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1754-3510",
+      "n": 163,
+      "n_giant": 3,
+      "excess": 0.6908,
+      "gamma": NaN,
+      "p_excess": 0.00137919828985292,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1059-5742",
+      "n": 547,
+      "n_giant": 5,
+      "excess": 0.648,
+      "gamma": NaN,
+      "p_excess": 0.000986234955923457,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1651-4246",
+      "n": 583,
+      "n_giant": 5,
+      "excess": 0.6312,
+      "gamma": NaN,
+      "p_excess": 0.001304320356938913,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J0846-3533",
+      "n": 65,
+      "n_giant": 2,
+      "excess": 0.6298,
+      "gamma": NaN,
+      "p_excess": 0.0035237800567089533,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1705-3423",
+      "n": 78,
+      "n_giant": 2,
+      "excess": 0.616,
+      "gamma": NaN,
+      "p_excess": 0.005169045241078162,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1548-4927",
+      "n": 83,
+      "n_giant": 2,
+      "excess": 0.6121,
+      "gamma": NaN,
+      "p_excess": 0.005692455706243568,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1822-2256",
+      "n": 470,
+      "n_giant": 4,
+      "excess": 0.5984,
+      "gamma": NaN,
+      "p_excess": 0.00408667010086233,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1605-5257",
+      "n": 1192,
+      "n_giant": 7,
+      "excess": 0.551,
+      "gamma": NaN,
+      "p_excess": 0.0013790073272716542,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1722-3207",
+      "n": 397,
+      "n_giant": 3,
+      "excess": 0.5293,
+      "gamma": NaN,
+      "p_excess": 0.01714415448819177,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1827-0750",
+      "n": 198,
+      "n_giant": 2,
+      "excess": 0.513,
+      "gamma": NaN,
+      "p_excess": 0.029949443349208967,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1820-0427",
+      "n": 659,
+      "n_giant": 4,
+      "excess": 0.5116,
+      "gamma": NaN,
+      "p_excess": 0.012756099910112574,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1833-0827",
+      "n": 229,
+      "n_giant": 2,
+      "excess": 0.4906,
+      "gamma": NaN,
+      "p_excess": 0.038680243481882474,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1825-1446",
+      "n": 716,
+      "n_giant": 4,
+      "excess": 0.4869,
+      "gamma": NaN,
+      "p_excess": 0.017004120061913756,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1803-2137",
+      "n": 246,
+      "n_giant": 2,
+      "excess": 0.4792,
+      "gamma": NaN,
+      "p_excess": 0.043683279008643355,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1727-2739",
+      "n": 274,
+      "n_giant": 2,
+      "excess": 0.4585,
+      "gamma": NaN,
+      "p_excess": 0.053661272915469904,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1056-6258",
+      "n": 573,
+      "n_giant": 3,
+      "excess": 0.4414,
+      "gamma": NaN,
+      "p_excess": 0.04276062669179922,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J0908-4913",
+      "n": 601,
+      "n_giant": 3,
+      "excess": 0.4295,
+      "gamma": NaN,
+      "p_excess": 0.0476874438643001,
+      "heavy_tailed": true
+    },
+    {
+      "jname": "J1832-0827",
+      "n": 52,
+      "n_giant": 1,
+      "excess": 0.4201,
+      "gamma": NaN,
+      "p_excess": 0.06778769730372075,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J0823+0159",
+      "n": 52,
+      "n_giant": 1,
+      "excess": 0.4201,
+      "gamma": NaN,
+      "p_excess": 0.06778769730372075,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J0842-4851",
+      "n": 56,
+      "n_giant": 1,
+      "excess": 0.416,
+      "gamma": NaN,
+      "p_excess": 0.07280769833782172,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1055-6905",
+      "n": 59,
+      "n_giant": 1,
+      "excess": 0.4139,
+      "gamma": NaN,
+      "p_excess": 0.07530755239722844,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1110-5637",
+      "n": 65,
+      "n_giant": 1,
+      "excess": 0.4099,
+      "gamma": NaN,
+      "p_excess": 0.08028705870685894,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1536-5433",
+      "n": 65,
+      "n_giant": 1,
+      "excess": 0.4079,
+      "gamma": NaN,
+      "p_excess": 0.08276674725222212,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1708-3426",
+      "n": 64,
+      "n_giant": 1,
+      "excess": 0.4079,
+      "gamma": NaN,
+      "p_excess": 0.08276674725222212,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J0742-2822",
+      "n": 71,
+      "n_giant": 1,
+      "excess": 0.4019,
+      "gamma": NaN,
+      "p_excess": 0.0901657711952233,
+      "heavy_tailed": false
+    },
+    {
+      "jname": "J1706-6118",
+      "n": 71,
+      "n_giant": 1,
+      "excess": 0.4019,
+      "gamma": NaN,
+      "p_excess": 0.0901657711952233,
+      "heavy_tailed": false
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source": "Parkes/UWL J0534+2200 (real, GATE-0 file)",
+  "true_dm": 56.77,
+  "recovered_dm": 56.63,
+  "butterfly_snr": 113.5,
+  "true_period_ms": 33.392,
+  "recovered_period_ms": 33.379,
+  "device": "cpu",
+  "bench_brute_cpu_s": 44.12,
+  "bench_fdmt_cpu_s": 0.45,
+  "bench_brute_gpu_s": null,
+  "bench_fdmt_gpu_s": null,
+  "bench_n_dm": 1009,
+  "real_recovered_dm": 56.59,
+  "real_butterfly_snr": 6.0,
+  "real_sp_snr": 14.0,
+  "real_dm_error_pc": 0.3
+}

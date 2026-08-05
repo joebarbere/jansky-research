@@ -1,0 +1,273 @@
+{
+  "source": "G+0.693 (Zenodo CC-BY windows)",
+  "p_published": 0.36,
+  "published_confidence": {
+    "3": 0.953344,
+    "4": 0.98320384,
+    "6": 0.997823217664
+  },
+  "true_line_density_per_kms": 0.05,
+  "p_empirical": 0.5910416666666667,
+  "p_from_density": 0.514937304271109,
+  "decoy": {
+    "n_transitions": 6,
+    "n_trials": 4000,
+    "realized_fp_rate": 0.04925,
+    "p_empirical": 0.5910416666666667,
+    "snyder_pn_empirical": 0.04262933820347056,
+    "mean_line_density_per_kms": 0.09043464085689201,
+    "p_from_density": 0.514937304271109,
+    "snyder_pn_from_density": 0.018643443492733877
+  },
+  "positive_control_matched": 5,
+  "positive_control_transitions": 6,
+  "anchor": {
+    "n_windows": 12,
+    "fwhm_kms": 20.0,
+    "n_unblended": 7,
+    "paper_n_unblended": 6,
+    "classification_agreement": 11,
+    "p_published": 0.36,
+    "pn_six": 0.0021767823359999995,
+    "confidence_six": 0.997823217664,
+    "windows": [
+      {
+        "label": "01_Erythrulose_42023077200",
+        "rest_ghz": 42.0230772,
+        "contam_frac": 0.21320908291449325,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "02_Erythrulose_44611727800",
+        "rest_ghz": 44.6117278,
+        "contam_frac": 0.3439297328712347,
+        "unblended": false,
+        "paper_unblended": false
+      },
+      {
+        "label": "03_Erythrulose_40931914300",
+        "rest_ghz": 40.9319143,
+        "contam_frac": 0.02889500433037622,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "04_Erythrulose_38345962300",
+        "rest_ghz": 38.3459623,
+        "contam_frac": 0.29634373810815656,
+        "unblended": false,
+        "paper_unblended": false
+      },
+      {
+        "label": "05_Erythrulose_35443765500",
+        "rest_ghz": 35.4437655,
+        "contam_frac": 0.16036142842260617,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "06_Erythrulose_39782323500",
+        "rest_ghz": 39.7823235,
+        "contam_frac": 0.0224892570062317,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "07_Erythrulose_34639838100",
+        "rest_ghz": 34.6398381,
+        "contam_frac": 0.31823302574910944,
+        "unblended": false,
+        "paper_unblended": false
+      },
+      {
+        "label": "08_Erythrulose_32227627400",
+        "rest_ghz": 32.2276274,
+        "contam_frac": 0.1320574942871399,
+        "unblended": true,
+        "paper_unblended": false
+      },
+      {
+        "label": "09_Erythrulose_40329796200",
+        "rest_ghz": 40.3297962,
+        "contam_frac": -0.32313604773463456,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "10_Erythrulose_33385027800",
+        "rest_ghz": 33.3850278,
+        "contam_frac": 0.006789670367480814,
+        "unblended": true,
+        "paper_unblended": true
+      },
+      {
+        "label": "11_Erythrulose_39065633200",
+        "rest_ghz": 39.0656332,
+        "contam_frac": 0.7995406570411553,
+        "unblended": false,
+        "paper_unblended": false
+      },
+      {
+        "label": "12_Erythrulose_37059884600",
+        "rest_ghz": 37.0598846,
+        "contam_frac": 0.4513864201880536,
+        "unblended": false,
+        "paper_unblended": false
+      }
+    ]
+  },
+  "confusion": {
+    "all": {
+      "stacked_center": 0.0017008118065608422,
+      "candidate_peak": 0.001993316665713137,
+      "bg_mean": 0.0012754625626117955,
+      "bg_std": 0.0008315285562818725,
+      "sigma_vs_confusion": 0.5115269232014942,
+      "p_confusion": 0.2838427947598253,
+      "n_windows": 12,
+      "n_background": 228,
+      "guard_kms": 45.0
+    },
+    "unblended": {
+      "stacked_center": 0.0015243670489406582,
+      "candidate_peak": 0.00207766015099618,
+      "bg_mean": 0.0013247106176519769,
+      "bg_std": 0.0012444661434516085,
+      "sigma_vs_confusion": 0.16043540624972014,
+      "p_confusion": 0.2907488986784141,
+      "n_windows": 6,
+      "n_background": 226,
+      "guard_kms": 45.0
+    },
+    "matched_filter": {
+      "weighting": "inverse_variance",
+      "use_template": true,
+      "sigma_vs_confusion": 0.723355708683794,
+      "p_confusion": 0.3231441048034934,
+      "n_windows": 12,
+      "n_background": 228,
+      "guard_kms": 45.0
+    },
+    "matched_filter_unblended": {
+      "weighting": "inverse_variance",
+      "use_template": true,
+      "sigma_vs_confusion": 0.10167181060856238,
+      "p_confusion": 0.43612334801762115,
+      "n_windows": 6,
+      "n_background": 226,
+      "guard_kms": 45.0
+    },
+    "robustness": [
+      {
+        "label": "straight, single-channel",
+        "weighting": "uniform",
+        "use_template": false,
+        "sigma_vs_confusion": 0.5115269232014942,
+        "p_confusion": 0.2838427947598253,
+        "n_windows": 12,
+        "n_background": 228,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "inverse-variance, single-channel",
+        "weighting": "inverse_variance",
+        "use_template": false,
+        "sigma_vs_confusion": 0.8507660613642407,
+        "p_confusion": 0.22707423580786026,
+        "n_windows": 12,
+        "n_background": 228,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "straight, matched filter",
+        "weighting": "uniform",
+        "use_template": true,
+        "sigma_vs_confusion": 0.5873541406275155,
+        "p_confusion": 0.33624454148471616,
+        "n_windows": 12,
+        "n_background": 228,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "noise-weighted matched filter",
+        "weighting": "inverse_variance",
+        "use_template": true,
+        "sigma_vs_confusion": 0.723355708683794,
+        "p_confusion": 0.3231441048034934,
+        "n_windows": 12,
+        "n_background": 228,
+        "guard_kms": 45.0
+      }
+    ],
+    "measured_p": {
+      "n_windows": 12,
+      "mean_line_density_per_kms": 0.01161703601634618,
+      "p_measured": 0.0887484440133262,
+      "p_asserted": 0.36,
+      "biased_sample": true
+    }
+  },
+  "confusion_c6h6s": {
+    "n_windows": 22,
+    "n_unblended_frozen": 9,
+    "paper_n_unblended": 22,
+    "fwhm_scan": {
+      "8": 16,
+      "10": 17,
+      "15": 13,
+      "20": 9
+    },
+    "matched_filter": {
+      "weighting": "inverse_variance",
+      "use_template": true,
+      "sigma_vs_confusion": -0.12057695779656351,
+      "p_confusion": 0.4434389140271493,
+      "n_windows": 22,
+      "n_background": 220,
+      "guard_kms": 45.0
+    },
+    "robustness": [
+      {
+        "label": "straight, single-channel",
+        "weighting": "uniform",
+        "use_template": false,
+        "sigma_vs_confusion": -0.39190618649526726,
+        "p_confusion": 0.416289592760181,
+        "n_windows": 22,
+        "n_background": 220,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "inverse-variance, single-channel",
+        "weighting": "inverse_variance",
+        "use_template": false,
+        "sigma_vs_confusion": 0.03355269291864206,
+        "p_confusion": 0.4117647058823529,
+        "n_windows": 22,
+        "n_background": 220,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "straight, matched filter",
+        "weighting": "uniform",
+        "use_template": true,
+        "sigma_vs_confusion": -0.5555021550484872,
+        "p_confusion": 0.4479638009049774,
+        "n_windows": 22,
+        "n_background": 220,
+        "guard_kms": 45.0
+      },
+      {
+        "label": "noise-weighted matched filter",
+        "weighting": "inverse_variance",
+        "use_template": true,
+        "sigma_vs_confusion": -0.12057695779656351,
+        "p_confusion": 0.4434389140271493,
+        "n_windows": 22,
+        "n_background": 220,
+        "guard_kms": 45.0
+      }
+    ]
+  }
+}

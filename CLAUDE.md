@@ -23,8 +23,11 @@ A new session in *either* repo: read this file (or jansky's `CLAUDE.md`) to lear
 
 - **Branch before committing — never commit on `main`.** Squash-merge PRs; delete the branch.
 - **85% coverage floor**, `ruff` (line-length 100) + `mypy` clean, before every PR.
-- Generated artifacts are **gitignored** (`papers/*/figures/*`, `generated/*`, `results/*`); only
-  `main.tex`/`refs.bib`/`.gitkeep` are tracked per paper. Macros come from the pipeline.
+- **Real-run outputs are committed evidence** (changed 2026-08-04 after the synthetic-clobber
+  incident): `results/*.json|csv`, `papers/*/figures/*`, and `papers/*/generated/*` are tracked
+  and reviewed in PRs. The offline Snakemake DAG (`make figures`) is CI smoke ONLY — never
+  commit its synthetic outputs; `make guard-real` gates packaging. Compiled paper PDFs stay
+  gitignored.
 - **Honest framing**: validations, limits, and negatives reported plainly; no overclaiming. The
   `science-reviewer` agent gates this.
 - **Versioning**: SemVer per [`VERSIONING.md`](VERSIONING.md) (version lives in `pyproject.toml`

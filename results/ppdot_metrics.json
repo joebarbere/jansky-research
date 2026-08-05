@@ -1,0 +1,11 @@
+{
+  "source": "ATNF Pulsar Catalogue (B/psr)",
+  "n_pulsars": 2052,
+  "frac_above_death": 0.982,
+  "n_normal": 1787,
+  "n_msp": 182,
+  "n_magnetar": 83,
+  "median_log_b_normal": 12.05,
+  "median_log_b_msp": 8.42,
+  "median_log_b_magnetar": 13.31
+}

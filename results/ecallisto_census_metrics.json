@@ -1,0 +1,8 @@
+{
+  "source": "synthetic",
+  "n_periods": 180,
+  "n_events_total": 4651,
+  "pearson_r": 0.968,
+  "spearman_rho": 0.963,
+  "slope": 0.0302
+}

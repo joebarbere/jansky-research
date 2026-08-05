@@ -1,0 +1,18 @@
+{
+  "source": "synthetic recover-a-known + real RACS-mid epoch pair (CNS5)",
+  "n_targets": 600,
+  "floor_epoch1_pct": 5.74,
+  "floor_epoch2_pct": 5.67,
+  "completeness": 1.0,
+  "purity": 1.0,
+  "var_completeness": 1.0,
+  "var_purity": 1.0,
+  "single_epoch_miss_frac": 0.229,
+  "real_n_targets_measured": 39,
+  "real_n_epoch_rows": 58,
+  "real_n_pairs_complete": 19,
+  "real_n_v_detections_5sig": 2,
+  "real_n_var_pairs_4sig": 2,
+  "real_median_5sig_vlim_mjy": 0.83,
+  "real_var_names": "CNS5  424;CNS5  425"
+}

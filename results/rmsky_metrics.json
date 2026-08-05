@@ -1,0 +1,42 @@
+{
+  "source": "Taylor+2009 NVSS RM catalogue",
+  "n_sources": 37543,
+  "enhancement_ratio": 5.4,
+  "enhancement_ratio_se": 0.15,
+  "median_abs_rm_plane": 62.1,
+  "median_abs_rm_pole": 11.5,
+  "inner_north_rm": 9.3,
+  "inner_north_se": 0.6,
+  "inner_south_rm": -23.9,
+  "inner_south_se": 0.9,
+  "inner_north_n": 9585,
+  "inner_south_n": 5248,
+  "outer_north_rm": 5.1,
+  "outer_south_rm": -6.4,
+  "profile": [
+    {
+      "b_lo": 0.0,
+      "b_hi": 10.0,
+      "median_abs_rm": 62.1,
+      "n": 3821
+    },
+    {
+      "b_lo": 10.0,
+      "b_hi": 30.0,
+      "median_abs_rm": 34.1,
+      "n": 11868
+    },
+    {
+      "b_lo": 30.0,
+      "b_hi": 60.0,
+      "median_abs_rm": 16.5,
+      "n": 15587
+    },
+    {
+      "b_lo": 60.0,
+      "b_hi": 90.0,
+      "median_abs_rm": 11.5,
+      "n": 6267
+    }
+  ]
+}

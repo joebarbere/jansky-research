@@ -1,0 +1,51 @@
+{
+  "source": "SDSS DR16Q x VLASS-SE @ (180.0,25.0)",
+  "n_stacked": 236,
+  "stacked_peak": 0.0435,
+  "stacked_rms": 0.0098,
+  "stacked_snr": 4.5,
+  "recovery_ratio": 1.0,
+  "debiased_flux": 0.0435,
+  "n_bins": 3,
+  "bins": [
+    {
+      "imag_med": 18.79,
+      "n": 79,
+      "debiased_uJy": 82.8,
+      "snr": 4.7
+    },
+    {
+      "imag_med": 19.94,
+      "n": 78,
+      "debiased_uJy": 58.3,
+      "snr": 3.4
+    },
+    {
+      "imag_med": 20.92,
+      "n": 79,
+      "debiased_uJy": 43.8,
+      "snr": 2.6
+    }
+  ],
+  "n_zbins": 3,
+  "zbins": [
+    {
+      "z_med": 0.933,
+      "n": 79,
+      "debiased_uJy": 56.5,
+      "snr": 3.5
+    },
+    {
+      "z_med": 1.977,
+      "n": 78,
+      "debiased_uJy": 72.0,
+      "snr": 4.7
+    },
+    {
+      "z_med": 2.609,
+      "n": 79,
+      "debiased_uJy": 51.4,
+      "snr": 3.1
+    }
+  ]
+}

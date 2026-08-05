@@ -1,0 +1,15 @@
+{
+  "source": "vendored verified sample (13 LPTs, per-value provenance)",
+  "n_lpt": 16,
+  "n_wd_binary": 7,
+  "n_xray": 3,
+  "n_pdot_measurements": 2,
+  "period_min_min": 7.0,
+  "period_max_hr": 6.48,
+  "median_period_min": 73.4,
+  "n_pdot_constrained": 9,
+  "n_below_death_line": 9,
+  "delta_log_median_period": 0.176,
+  "p_perm_split": 0.5219,
+  "p_perm_synthetic_split": 0.0219
+}

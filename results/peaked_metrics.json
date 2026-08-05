@@ -1,0 +1,15 @@
+{
+  "source": "TGSSxNVSSxVLASS @ (180.0, 30.0) r=2.0deg",
+  "n_nvss_vlass": 409,
+  "n_peaked": 6,
+  "n_ghz_peaked": 0,
+  "n_rising": 10,
+  "n_extended_artefact": 110,
+  "n_tgss_detected": 148,
+  "hfp_n": 100,
+  "hfp_rising_pct": 100,
+  "hfp_ghz_pct": 56,
+  "call_n": 113,
+  "call_low_flagged": 0,
+  "call_low_total": 81
+}

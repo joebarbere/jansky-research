@@ -1,0 +1,35 @@
+{
+  "source": "LPT v3 (16 LPTs) + RACS forced Stokes-V photometry (CASDA)",
+  "is_real": true,
+  "n_lpt": 16,
+  "n_wd_binary": 7,
+  "median_period_min": 73.4,
+  "period_split_p": 0.5219,
+  "binary_boundary_significant": false,
+  "injection": {
+    "v_in": -3.6,
+    "v_out": -3.481,
+    "frac_out": 0.572,
+    "class": "highly_circular",
+    "handedness": "LCP",
+    "blank_v_sig": 0.58
+  },
+  "n_targets": 16,
+  "n_measured": 15,
+  "n_v_detections": 2,
+  "n_v_secure": 1,
+  "n_v_candidate": 1,
+  "n_suspect_confusion": 1,
+  "v_detection_names": [
+    "ASKAP J165130.3-450520",
+    "ASKAP J174508.9-505149"
+  ],
+  "v_secure_names": [
+    "ASKAP J174508.9-505149"
+  ],
+  "suspect_names": [
+    "ASKAP J183950.5-075635"
+  ],
+  "n_handedness_flips": 0,
+  "median_v_limit_mjy": 0.474
+}

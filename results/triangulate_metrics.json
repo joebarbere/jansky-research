@@ -1,0 +1,17 @@
+{
+  "source": "STEREO-A+B L3 DF 20130515",
+  "n_tri": 38,
+  "harmonic": 2,
+  "sep_deg": 82.1,
+  "f_lo_mhz": 0.125,
+  "f_hi_mhz": 1.975,
+  "r_lo_rsun": 15.3,
+  "r_hi_rsun": 106.1,
+  "r_lo_au": 0.071,
+  "r_hi_au": 0.494,
+  "miss_med_rsun": 17.1,
+  "lon_med_deg": 168.9,
+  "lat_med_deg": 4.7,
+  "corr_geom_plasma": 0.989,
+  "ratio_geom_plasma": 2.18
+}
