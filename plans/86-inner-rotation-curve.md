@@ -1,6 +1,15 @@
 # 86 — `innerrc`: independent replication of the Sofue & Kohno inner rotation curve
 
-Status: 📋 planned — GATE 0 done 2026-07-31/08-01: full-text read (all 13 pp), novelty PASS,
+Status: ✅ done 2026-08-05 — **both replication legs land, GATE-2 PASS with fixes** (PRs
+#160–#165). Anchor: their ρ_DM = 0.107 arithmetic reproduces exactly (4π convention, tested);
+an unconstrained refit of their own table prefers ρ_DM = 0.24 (rms 11.8 vs 13.6), all 8
+sensitivity variants in 0.19–0.32 — the low density is degeneracy width, not tension. Raw
+HI4PI (1,113 sightlines): Table 2 reproduces at ~4% (8.8 km/s); threshold estimator measured
++17.9 km/s high of Gaussian decomposition (σ calibration 26.6 vs 9.5, bracketing their 15) —
+the `hi` caveat closed with a number; E/W asymmetry replicates in period/phase. Five
+paper-style figures + `papers/innerrc/main.tex` (compiles; macros from committed evidence
+only). Remaining: publication sequencing (Obsidian todo). CO surveys + their-exact-fit
+replication remain stretch legs. — GATE 0 done 2026-07-31/08-01: full-text read (all 13 pp), novelty PASS,
 data-access verified (details below). Standing remainder: same-week ADS re-search before the
 first commit. (Note: the local `slice/lineconf` branch also carries a "plan 85" — renumber it
 to 87 when it revives; 85 is atlas3i on main.)
