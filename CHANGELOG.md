@@ -37,6 +37,13 @@ recommend the next version number.
 
 ### Added
 
+- `innerrc` increment 2 (plan 86): the HI4PI real-data leg — 1,113 sightlines through both
+  TVM estimators close the `hi` slice's caveat with a measured number (threshold reads
+  +17.9 km/s high; per-estimator σ calibration gives 9.5 vs 26.6 km/s, bracketing the
+  paper's adopted 15); their Table 2 reproduces at the ~4% level from raw survey data; the
+  E/W asymmetry replicates qualitatively (period/phase match, softer amplitude). Fourth-
+  quadrant |sin ℓ| bug and a CDS stall (now timeout+resume+retry) found and fixed. Five
+  paper-style figures + evidence JSON committed.
 - `innerrc` increment 1 (plan 86): tooling + synthetic recover-a-known + the **offline anchor
   result** — decomposing Sofue & Kohno 2025's own published RC tables (vendored from the arXiv
   source) validates their ρ_DM = 0.107 GeV/cm³ arithmetic exactly (through the eq.-25 4π

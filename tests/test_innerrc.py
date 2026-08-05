@@ -105,6 +105,32 @@ def test_paper_table1_rho_dm_reproduces_through_convention():
     assert innerrc.rho_dm_local_gev(v_ours, 22379.1) == pytest.approx(0.107, abs=0.005)
 
 
+def test_lv_from_cube_and_tvm_spectrum_round_trip():
+    # tiny synthetic (v, b, l) cube: one drifting terminal edge per longitude column
+    vel = np.arange(-200.0, 200.0, 2.0)
+    lat = np.arange(-5.0, 5.0, 0.5)
+    lon = np.arange(20.0, 24.0, 1.0)
+    cube = np.zeros((vel.size, lat.size, lon.size))
+    vterms = [80.0, 90.0, 100.0, 110.0]
+    for j, vt in enumerate(vterms):
+        spec = innerrc.synthetic_spectrum(vel, vt, seed=j, peak_k=20.0)
+        cube[:, :, j] = spec[:, None]  # same spectrum at every latitude
+    glon, v, t_lv = innerrc.lv_from_cube(cube, 20.0, 1.0, -5.0, 0.5, -200.0, 2.0, b_max_deg=3.0)
+    assert glon[0] == pytest.approx(20.0)
+    assert t_lv.shape == (vel.size, lon.size)
+    for j, vt in enumerate(vterms):
+        est = innerrc.tvm_spectrum(v, t_lv[:, j], sign=+1, method="gaussian")
+        assert est == pytest.approx(vt, abs=8.0)
+        thr = innerrc.tvm_spectrum(v, t_lv[:, j], sign=+1, method="threshold")
+        assert thr >= est - 2.0  # threshold sits at/above the outermost component centre
+    # fourth quadrant: mirror the spectrum to negative velocities
+    neg = innerrc.synthetic_spectrum(vel, 95.0, seed=9, peak_k=20.0)[::-1]
+    est4 = innerrc.tvm_spectrum(v, neg, sign=-1, method="gaussian")
+    assert est4 == pytest.approx(-95.0, abs=8.0)
+    # empty spectrum -> nan
+    assert np.isnan(innerrc.tvm_spectrum(v, np.zeros_like(v), sign=+1))
+
+
 def test_run_anchor_offline_reproduces_paper_scale_rho_dm(tmp_path):
     m = innerrc.run_anchor(str(tmp_path), table_dir=str(TABLES))
     assert m["n_unified_rows"] > 50

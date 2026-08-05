@@ -33,6 +33,7 @@ __all__ = [
     "rho_dm_local_gev",
     "rotation_curve_weighted",
     "run_anchor",
+    "calibrate_sigma",
     "sensitivity_scan",
     "synthetic_spectrum",
     "threshold_tvm",
@@ -113,7 +114,8 @@ def gaussian_tvm(
     min_amp_k: float = 1.0,
     max_components: int = 15,
     sign: int = +1,
-) -> float:
+    return_components: bool = False,
+) -> float | tuple[float, list[tuple[float, float, float]]]:
     """Terminal velocity by Gaussian decomposition (the paper's Sec. 3.2 method).
 
     Deterministic greedy fit: repeatedly locate the strongest residual peak, fit a single
@@ -170,12 +172,18 @@ def gaussian_tvm(
             bounds=(lo_b, hi_b),
             maxfev=20000,
         )
-        refined = [(popt[j + 1], popt[j]) for j in range(0, len(popt), 3) if popt[j] >= min_amp_k]
+        refined = [
+            (popt[j + 1], popt[j], popt[j + 2])
+            for j in range(0, len(popt), 3)
+            if popt[j] >= min_amp_k
+        ]
         if refined:
-            centers = [(c, a, 0.0) for c, a in refined]
+            centers = refined
     except RuntimeError:
         pass  # keep greedy centers if refinement fails to converge
     best = max(centers, key=lambda t: sign * t[0])
+    if return_components:
+        return float(best[0]), [(float(c), float(a), float(w)) for c, a, w in centers]
     return float(best[0])
 
 
@@ -205,9 +213,10 @@ def rc_from_terminal(
     ISM velocity dispersion that inflates the envelope (15 km/s HI, 5 km/s CO in the paper).
     Works for either quadrant via ``abs``.
     """
-    ell = np.deg2rad(np.abs(np.asarray(longitudes_deg, float)))
-    r = r0_pc * np.sin(ell)
-    v = (np.abs(np.asarray(vterm_kms, float)) - sigma_v_kms) + v0_kms * np.sin(ell)
+    ell = np.deg2rad(np.asarray(longitudes_deg, float))
+    s = np.abs(np.sin(ell))  # |sin l|: fourth-quadrant longitudes (l>180 or l<0) map to +R
+    r = r0_pc * s
+    v = (np.abs(np.asarray(vterm_kms, float)) - sigma_v_kms) + v0_kms * s
     return r, v
 
 
@@ -238,6 +247,27 @@ def rotation_curve_weighted(
         out_v[k] = m
         out_dv[k] = math.sqrt(max(float(np.sum((v_kms - m) ** 2 * w) / w.sum()), 0.0))
     return grid_pc, out_v, out_dv
+
+
+def calibrate_sigma(
+    longitudes_deg: np.ndarray,
+    vterm_kms: np.ndarray,
+    *,
+    solar_window_pc: tuple[float, float] = (7000.0, 8150.0),
+    v0_kms: float = V0_KMS,
+) -> float:
+    """The paper's Sec.-3.3 dispersion calibration: choose sigma_v so the curve meets V0 at R0.
+
+    V is linear in sigma_v, so the iteration has a closed form: sigma* is the mean excess of
+    the uncorrected curve over V0 in the near-solar window (clipped at 0). Each estimator gets
+    its own calibrated sigma, exactly as the paper calibrates to its own measurement.
+    """
+    r, v = rc_from_terminal(longitudes_deg, vterm_kms, sigma_v_kms=0.0, v0_kms=v0_kms)
+    grid, vb, _ = rotation_curve_weighted(r, v, dr_pc=50.0, half_width_pc=25.0)
+    sel = (grid >= solar_window_pc[0]) & (grid <= solar_window_pc[1]) & np.isfinite(vb)
+    if not sel.any():
+        return 0.0
+    return float(max(np.mean(vb[sel]) - v0_kms, 0.0))
 
 
 # ------------------------------------------------------------------------ decomposition
@@ -471,6 +501,429 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
     return metrics
 
 
+# ------------------------------------------------------------------------- HI4PI real leg
+
+HI4PI_BASE = "https://cdsarc.cds.unistra.fr/ftp/J/A+A/594/A116/CUBES/GAL/CAR/"
+# The galactic-plane (b=0-centred) CAR tiles covering the inner Galaxy, from cubes_gal.dat.
+HI4PI_PLANE_TILES = {
+    "CAR_E01.fits": 10.0,
+    "CAR_E02.fits": 30.0,
+    "CAR_E03.fits": 50.0,
+    "CAR_E04.fits": 70.0,
+    "CAR_E05.fits": 90.0,
+    "CAR_E14.fits": 270.0,
+    "CAR_E15.fits": 290.0,
+    "CAR_E16.fits": 310.0,
+    "CAR_E17.fits": 330.0,
+    "CAR_E18.fits": 350.0,
+}
+
+
+def lv_from_cube(
+    cube: np.ndarray,
+    lon0_deg: float,
+    dlon_deg: float,
+    lat0_deg: float,
+    dlat_deg: float,
+    vel0_kms: float,
+    dvel_kms: float,
+    *,
+    b_max_deg: float = 3.0,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Collapse a (v, b, l) HI cube into a |b|-averaged longitude-velocity diagram.
+
+    Axis descriptions are the FITS reference values at pixel 0 (``lon0 + i*dlon`` etc.).
+    Returns ``(glon_deg, vel_kms, T[v, l])``. Pure array function — offline-testable.
+    """
+    nv, nb, nl = cube.shape
+    lat = lat0_deg + dlat_deg * np.arange(nb)
+    sel = np.abs(lat) <= b_max_deg
+    t_lv = np.nanmean(cube[:, sel, :], axis=1)
+    glon = lon0_deg + dlon_deg * np.arange(nl)
+    vel = vel0_kms + dvel_kms * np.arange(nv)
+    return glon % 360.0, vel, t_lv
+
+
+def tvm_spectrum(
+    vel_kms: np.ndarray,
+    spectrum: np.ndarray,
+    *,
+    sign: int,
+    method: str = "gaussian",
+    edge_threshold_k: float = 1.0,
+    window_in_kms: float = 80.0,
+    window_out_kms: float = 30.0,
+) -> float:
+    """Terminal velocity of one real HI spectrum, by either estimator, on the envelope window.
+
+    Real plane spectra are ~100 K forests; fitting the whole profile buries the faint terminal
+    component under bright inner-Galaxy emission. Both estimators therefore operate on a
+    window around the emission edge: the largest ``sign * v`` where ``T > edge_threshold_k``,
+    extended ``window_in_kms`` inward and ``window_out_kms`` outward. Within it, ``gaussian``
+    decomposes and returns the outermost component centre (the paper's method); ``threshold``
+    returns the 2 K envelope crossing (the `hi` slice's rule).
+    """
+    vel_kms = np.asarray(vel_kms, float)
+    spectrum = np.asarray(spectrum, float)
+    v_signed = sign * vel_kms
+    above = spectrum > edge_threshold_k
+    if not above.any():
+        return float("nan")
+    edge = float(np.max(v_signed[above]))
+    win = (v_signed >= edge - window_in_kms) & (v_signed <= edge + window_out_kms)
+    if win.sum() < 8:
+        return float("nan")
+    if method == "threshold":
+        t = threshold_tvm(v_signed[win], spectrum[win], threshold_k=2.0)
+        return sign * t
+    g = gaussian_tvm(v_signed[win], spectrum[win], min_amp_k=edge_threshold_k, max_components=8)
+    assert isinstance(g, float)
+    return sign * g
+
+
+def fetch_hi4pi_tile(name: str, dest_dir: str) -> str:  # pragma: no cover - network
+    """Download one HI4PI CAR tile from CDS (resumable); returns the local path."""
+    import time
+    from pathlib import Path
+    from urllib.request import Request, urlopen
+
+    dest = Path(dest_dir)
+    dest.mkdir(parents=True, exist_ok=True)
+    path = dest / name
+    if path.exists():
+        return str(path)
+    part = path.with_suffix(".part")
+    # Stall-proof: 60 s socket timeout per read, resume from the .part offset, retry with
+    # backoff (a CDS transfer hung mid-stream for hours on 2026-08-04 without this).
+    for attempt in range(8):
+        offset = part.stat().st_size if part.exists() else 0
+        req = Request(HI4PI_BASE + name)
+        if offset:
+            req.add_header("Range", f"bytes={offset}-")
+        try:
+            with urlopen(req, timeout=60) as r, open(part, "ab" if offset else "wb") as f:
+                while chunk := r.read(1 << 20):
+                    f.write(chunk)
+            part.rename(path)
+            return str(path)
+        except (TimeoutError, OSError):
+            time.sleep(min(2**attempt, 60))
+    raise OSError(f"failed to fetch {name} after 8 attempts")
+
+
+def run_hi4pi(  # pragma: no cover - network + real data (core functions tested offline)
+    out: str = ".",
+    *,
+    dest_dir: str = "data/hi4pi",
+    b_max_deg: float = 3.0,
+    lon_step: int = 2,
+    sigma_v_kms: float = 15.0,
+    delete_after: bool = False,
+    table_dir: str = "tests/data/sofue2025",
+) -> dict:
+    """The real-data leg: HI4PI tiles -> LV diagram -> both TVM estimators -> RC vs their Table 2.
+
+    Writes ``results/innerrc_hi4pi.json`` (committed evidence). ``lon_step`` subsamples the
+    0.0833-degree longitude grid (2 -> ~10 arcmin sampling, ~1200 sightlines).
+    """
+    import json
+    import os
+    from pathlib import Path
+
+    from astropy.io import fits
+
+    rows = []  # (glon, vterm_gauss, vterm_thresh)
+    fig_lv = None  # (glon, vel, T) of the l~30 tile, kept for the LV-diagram figure
+    for name in HI4PI_PLANE_TILES:
+        path = fetch_hi4pi_tile(name, dest_dir)
+        with fits.open(path, memmap=True) as hdul:
+            h = hdul[0].header
+            cube = np.asarray(hdul[0].data, float)
+            # FITS pixel 0 world values per axis (CAR projection: linear)
+            lon0 = h["CRVAL1"] + (1 - h["CRPIX1"]) * h["CDELT1"]
+            lat0 = h["CRVAL2"] + (1 - h["CRPIX2"]) * h["CDELT2"]
+            vel0 = (h["CRVAL3"] + (1 - h["CRPIX3"]) * h["CDELT3"]) / 1000.0
+            dvel = h["CDELT3"] / 1000.0
+            glon, vel, t_lv = lv_from_cube(
+                cube, lon0, h["CDELT1"], lat0, h["CDELT2"], vel0, dvel, b_max_deg=b_max_deg
+            )
+            if name == "CAR_E02.fits":
+                fig_lv = (glon.copy(), vel.copy(), t_lv.copy())
+        for i in range(0, glon.size, lon_step):
+            ell = glon[i]
+            in_q1 = 5.0 <= ell <= 89.5
+            in_q4 = 270.5 <= ell <= 355.0
+            if not (in_q1 or in_q4):
+                continue
+            sign = +1 if in_q1 else -1
+            spec = t_lv[:, i]
+            if not np.isfinite(spec).any():
+                continue
+            vg = tvm_spectrum(vel, spec, sign=sign, method="gaussian")
+            vt = tvm_spectrum(vel, spec, sign=sign, method="threshold")
+            rows.append((float(ell), float(vg), float(vt)))
+        if delete_after:
+            os.remove(path)
+        print(f"[innerrc] {name}: {len(rows)} sightlines cumulative", flush=True)
+
+    arr = np.array(rows)
+    ells, vgs, vts = arr[:, 0], arr[:, 1], arr[:, 2]
+    ok = np.isfinite(vgs) & np.isfinite(vts)
+    bias = np.abs(vts[ok]) - np.abs(vgs[ok])  # threshold minus gaussian, in |v| (envelope sense)
+    bias_kms = {
+        "median": float(np.median(bias)),
+        "mean": float(np.mean(bias)),
+        "p16": float(np.percentile(bias, 16)),
+        "p84": float(np.percentile(bias, 84)),
+    }
+    # Their Sec.-3.3 calibration, per estimator (each meets V0 at R0 by construction; the
+    # difference of the calibrated sigmas IS the estimator bias in the paper's own terms).
+    sigma_gauss = calibrate_sigma(ells[ok], vgs[ok])
+    sigma_thresh = calibrate_sigma(ells[ok], vts[ok])
+    east = ok & ((ells > 0) & (ells < 180))
+    west = ok & (ells > 180)
+    r_e, v_e = rc_from_terminal(ells[east], vgs[east], sigma_v_kms=sigma_gauss)
+    r_w, v_w = rc_from_terminal(ells[west], vgs[west], sigma_v_kms=sigma_gauss)
+    r_t, v_t = rc_from_terminal(ells[ok], vts[ok], sigma_v_kms=sigma_thresh)
+    grid = np.arange(50.0, 8200.0, 50.0)
+    _, ve_b, dve_b = rotation_curve_weighted(r_e, v_e, grid_pc=grid, half_width_pc=25.0)
+    _, vw_b, dvw_b = rotation_curve_weighted(r_w, v_w, grid_pc=grid, half_width_pc=25.0)
+    both_r = np.concatenate([r_e, r_w])
+    both_v = np.concatenate([v_e, v_w])
+    _, v_b, dv_b = rotation_curve_weighted(both_r, both_v, grid_pc=grid, half_width_pc=25.0)
+
+    paper = parse_paper_tables(table_dir)["inner"]
+    v_paper_i = np.interp(grid, paper["R_pc"], paper["V_kms"])
+    cmp_ok = np.isfinite(v_b) & (grid > 2000)  # outside the bar, where TVM is a mass tracer
+    table2 = {
+        "mean_abs_dv_kms": float(np.mean(np.abs(v_b[cmp_ok] - v_paper_i[cmp_ok]))),
+        "median_dv_kms": float(np.median(v_b[cmp_ok] - v_paper_i[cmp_ok])),
+        "n_bins": int(cmp_ok.sum()),
+    }
+    dv_ew = ve_b - vw_b
+    # fit the mid-disc window (their Sec. 5.5 region): inside ~2 kpc the bar's non-circular
+    # chaos rails any smooth fit — the first attempt hit its amplitude bound doing exactly that
+    ew_ok = np.isfinite(dv_ew) & (grid > 2000) & (grid < 8000)
+    ew = ew_asymmetry_fit(grid[ew_ok], dv_ew[ew_ok]) if ew_ok.sum() > 20 else {}
+    ew["mid_disc_rms_kms"] = (
+        float(np.sqrt(np.mean(dv_ew[ew_ok] ** 2))) if ew_ok.sum() > 0 else None
+    )
+
+    _, vt_b, _ = rotation_curve_weighted(r_t, v_t, grid_pc=grid, half_width_pc=25.0)
+    metrics = {
+        "source": f"HI4PI (CDS J/A+A/594/A116, CAR plane tiles), |b|<{b_max_deg:.1f} deg",
+        "n_sightlines": int(ok.sum()),
+        "estimator_bias_threshold_minus_gaussian_kms": bias_kms,
+        "sigma_v_calibrated_gaussian_kms": round(sigma_gauss, 2),
+        "sigma_v_calibrated_threshold_kms": round(sigma_thresh, 2),
+        "table2_comparison_R>2kpc": table2,
+        "ew_asymmetry_fit": ew,
+        "rc_grid_pc": grid.tolist(),
+        "rc_v_kms": [round(float(x), 2) if np.isfinite(x) else None for x in v_b],
+        "rc_dv_kms": [round(float(x), 2) if np.isfinite(x) else None for x in dv_b],
+        "rc_east_v_kms": [round(float(x), 2) if np.isfinite(x) else None for x in ve_b],
+        "rc_west_v_kms": [round(float(x), 2) if np.isfinite(x) else None for x in vw_b],
+    }
+    op = Path(out)
+    (op / "results").mkdir(parents=True, exist_ok=True)
+    (op / "results" / "innerrc_hi4pi.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    _figures_hi4pi(
+        op / "papers" / "innerrc" / "figures",
+        fig_lv=fig_lv,
+        grid=grid,
+        v_b=v_b,
+        dv_b=dv_b,
+        vt_b=vt_b,
+        ve_b=ve_b,
+        vw_b=vw_b,
+        paper_r=paper["R_pc"],
+        paper_v=paper["V_kms"],
+        ew=ew,
+        table_dir=table_dir,
+    )
+    return metrics
+
+
+def _figures_hi4pi(  # pragma: no cover - exercised by the real leg
+    out_dir,
+    *,
+    fig_lv,
+    grid,
+    v_b,
+    dv_b,
+    vt_b,
+    ve_b,
+    vw_b,
+    paper_r,
+    paper_v,
+    ew,
+    table_dir,
+) -> None:
+    """The source-paper-style figure set: LV diagram, decomposition, RC, E/W, anchor."""
+    from pathlib import Path
+
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    # Fig A (their Fig. 1): the |b|-averaged LV diagram with the fitted terminal envelope
+    if fig_lv is not None:
+        glon, vel, t_lv = fig_lv
+        fig, ax = plt.subplots(figsize=(7, 3.4))
+        vmax = np.nanpercentile(t_lv, 99)
+        ax.imshow(
+            t_lv,
+            origin="lower",
+            aspect="auto",
+            cmap="magma",
+            vmin=0,
+            vmax=vmax,
+            extent=[glon.min(), glon.max(), vel.min(), vel.max()],
+        )
+        env_l, env_v = [], []
+        for i in range(0, glon.size, 4):
+            vt = tvm_spectrum(vel, t_lv[:, i], sign=+1, method="gaussian")
+            if np.isfinite(vt):
+                env_l.append(glon[i])
+                env_v.append(vt)
+        ax.plot(env_l, env_v, ".", ms=2.5, color="cyan", label="Gaussian-TVM terminal velocity")
+        ax.set(
+            xlabel="Galactic longitude (deg)",
+            ylabel="$V_{LSR}$ (km/s)",
+            ylim=(-100, 200),
+            title="HI4PI longitude–velocity diagram, $|b|<3^\\circ$",
+        )
+        ax.legend(loc="upper right", fontsize=7)
+        fig.tight_layout()
+        fig.savefig(out / "innerrc_lv.pdf")
+        plt.close(fig)
+
+        # Fig B (their Fig. 2): one spectrum decomposed into Gaussian components
+        i30 = int(np.argmin(np.abs(glon - 30.0)))
+        spec = t_lv[:, i30]
+        res = tvm_spectrum_components(vel, spec, sign=+1)
+        if res is not None:
+            vterm, comps, win = res
+            fig, ax = plt.subplots(figsize=(6, 3.2))
+            ax.step(vel[win], spec[win], where="mid", lw=0.9, color="k", label="HI4PI spectrum")
+            vv = vel[win]
+            for c, a, w in comps:
+                ax.plot(vv, a * np.exp(-0.5 * ((vv - c) / max(w, 1e-3)) ** 2), lw=0.8, color="m")
+            ax.axvline(vterm, color="c", ls="--", lw=1.2, label=f"$v_t$ = {vterm:.1f} km/s")
+            ax.set(
+                xlabel="$V_{LSR}$ (km/s)",
+                ylabel="$T_B$ (K)",
+                title=f"Envelope decomposition at $\\ell$ = {glon[i30]:.1f}$^\\circ$",
+            )
+            ax.legend(fontsize=7)
+            fig.tight_layout()
+            fig.savefig(out / "innerrc_decomp.pdf")
+            plt.close(fig)
+
+    # Fig C (their Fig. 8): our binned RC vs their published Table 2, plus the threshold curve
+    fig, ax = plt.subplots(figsize=(6.5, 3.6))
+    okb = np.isfinite(v_b)
+    ax.fill_between(grid[okb], (v_b - dv_b)[okb], (v_b + dv_b)[okb], color="C0", alpha=0.25, lw=0)
+    ax.plot(grid[okb], v_b[okb], color="C0", lw=1.2, label="this work (Gaussian TVM)")
+    okt = np.isfinite(vt_b)
+    ax.plot(grid[okt], vt_b[okt], color="C2", lw=0.9, ls=":", label="threshold estimator")
+    ax.plot(paper_r, paper_v, color="C3", lw=1.0, ls="--", label="Sofue & Kohno Table 2")
+    ax.plot([R0_PC], [V0_KMS], "o", color="k", ms=5, label="Sun")
+    ax.set(xlabel="R (pc)", ylabel="V (km/s)", xlim=(0, 8400), ylim=(80, 320))
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out / "innerrc_rc.pdf")
+    plt.close(fig)
+
+    # Fig D (their Fig. 14): East vs West curves and the damped-sinusoid fit
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6.5, 4.6), sharex=True)
+    oke, okw = np.isfinite(ve_b), np.isfinite(vw_b)
+    ax1.plot(grid[oke], ve_b[oke], color="C3", lw=0.9, label="East ($\\ell>0$)")
+    ax1.plot(grid[okw], vw_b[okw], color="C0", lw=0.9, label="West ($\\ell<0$)")
+    ax1.set(ylabel="V (km/s)")
+    ax1.legend(fontsize=7)
+    both = oke & okw
+    dv_ew_line = ve_b - vw_b
+    ax2.axhline(0, color="0.6", lw=0.6)
+    ax2.plot(grid[both], dv_ew_line[both], color="k", lw=0.8, label="E $-$ W")
+    if ew:
+        model = (
+            ew["amp_kms"]
+            * np.exp(-grid / ew["damping_pc"])
+            * np.sin(2 * np.pi * (grid - ew["phase_pc"]) / ew["period_pc"])
+        )
+        ax2.plot(grid, model, color="C1", lw=1.0, ls="--", label="eq.-29 damped sinusoid")
+    ax2.set(xlabel="R (pc)", ylabel="$\\delta V$ (km/s)")
+    ax2.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out / "innerrc_ew.pdf")
+    plt.close(fig)
+
+    # Fig E (their Fig. 11): anchor decomposition of their unified RC, ours vs theirs
+    tables = parse_paper_tables(table_dir)
+    uni = tables["unified"]
+    fit = decompose_rc(uni["R_pc"], uni["V_kms"], uni["dV_kms"])
+    rr = np.linspace(20, 26000, 800)
+    fig, ax = plt.subplots(figsize=(6.5, 3.8))
+    ax.errorbar(
+        uni["R_pc"],
+        uni["V_kms"],
+        yerr=uni["dV_kms"],
+        fmt=".",
+        ms=3,
+        color="0.4",
+        lw=0.5,
+        label="their published unified RC",
+    )
+    ours = [fit[k] for k in ("v_bulge", "a_bulge", "v_disc", "a_disc", "v_halo", "h_halo")]
+    ax.plot(
+        rr,
+        rc_model(rr, *ours),
+        color="C0",
+        lw=1.3,
+        label=f"our refit ($\\rho_{{DM}}$={fit['rho_dm_gev']:.2f} GeV/cm$^3$)",
+    )
+    theirs = [406.2, 332.8, 322.4, 5624.8, 64.4 * math.sqrt(4 * math.pi), 22379.1]
+    ax.plot(
+        rr,
+        rc_model(rr, *theirs),
+        color="C3",
+        lw=1.1,
+        ls="--",
+        label="their Table 1 ($\\rho_{DM}$=0.107)",
+    )
+    ax.plot(rr, _v_plummer(rr, ours[0], ours[1]), lw=0.7, ls=":", color="C0")
+    ax.plot(rr, _v_plummer(rr, ours[2], ours[3]), lw=0.7, ls="-.", color="C0")
+    ax.plot(rr, _v_nfw(rr, ours[4], ours[5]), lw=0.7, ls="--", color="C0")
+    ax.set(xlabel="R (pc)", ylabel="V (km/s)", xscale="log", xlim=(30, 26000), ylim=(0, 320))
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out / "innerrc_decomposition.pdf")
+    plt.close(fig)
+
+
+def tvm_spectrum_components(vel_kms, spectrum, *, sign):  # pragma: no cover - figure helper
+    """Like tvm_spectrum(gaussian) but also returns the fitted components and window mask."""
+    vel_kms = np.asarray(vel_kms, float)
+    spectrum = np.asarray(spectrum, float)
+    v_signed = sign * vel_kms
+    above = spectrum > 1.0
+    if not above.any():
+        return None
+    edge = float(np.max(v_signed[above]))
+    win = (v_signed >= edge - 80.0) & (v_signed <= edge + 30.0)
+    if win.sum() < 8:
+        return None
+    res = gaussian_tvm(
+        v_signed[win], spectrum[win], min_amp_k=1.0, max_components=8, return_components=True
+    )
+    vterm, comps = res
+    comps = [(sign * c, a, w) for c, a, w in comps]
+    return sign * vterm, comps, win
+
+
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import json
@@ -478,13 +931,21 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p = argparse.ArgumentParser(description="Sofue & Kohno inner-RC replication (plan 86).")
     p.add_argument("--out", default=".")
     p.add_argument("--anchor", action="store_true", help="run the offline anchor leg")
+    p.add_argument("--hi4pi", action="store_true", help="run the HI4PI real-data leg (network)")
+    p.add_argument("--lon-step", type=int, default=2)
+    p.add_argument("--delete-after", action="store_true")
     args = p.parse_args(argv)
     if args.anchor:
         m = run_anchor(args.out)
         slim = {k: v for k, v in m.items() if k != "sensitivity_variants"}
         print(json.dumps(slim, indent=2))
         return 0
-    p.error("choose a mode (--anchor; the HI4PI leg lands in a later increment)")
+    if args.hi4pi:
+        m = run_hi4pi(args.out, lon_step=args.lon_step, delete_after=args.delete_after)
+        slim = {k: v for k, v in m.items() if not str(k).startswith("rc_")}
+        print(json.dumps(slim, indent=2))
+        return 0
+    p.error("choose a mode: --anchor or --hi4pi")
     return 2
 
 
