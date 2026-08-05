@@ -17,7 +17,7 @@ Local Dark-Matter Density}
 by the terminal-velocity method (TVM) applied to HI4PI and CO longitude--velocity data,
 published it as machine-readable tables, and decomposed it into bulge, disc, and NFW halo,
 quoting a halo-only local dark-matter density $\rho_\mathrm{DM} = 0.107$~GeV\,cm$^{-3}$ ---
-a factor $\sim$3 below the $\sim$0.3--0.5 consensus, which they frame as a lower limit. I
+a factor $\sim$3 below the $\sim$0.3~GeV\,cm$^{-3}$ consensus value, which they frame as a lower limit. I
 replicate the analysis independently at both ends. (1) From their \emph{published tables}:
 their $\rho_\mathrm{DM}$ arithmetic reproduces exactly (through the $4\pi$ convention their
 halo equations absorb), but an unconstrained refit of the same curve, same model family,
@@ -62,12 +62,13 @@ $\rho_0 = V_h^2/(G h^2)$ convention, in which their $V_h$ absorbs $\sqrt{4\pi}$ 
 the standard normalisation --- reproduce their published
 $\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$ exactly. An unconstrained least-squares
 refit prefers a more concentrated halo at \irRmsOurs~km\,s$^{-1}$ rms with
-$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$; the bulge is stable across all solutions
-(394~km\,s$^{-1}$/316~pc vs their 406/333), and a sensitivity scan over halo profile
+$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$; the bulge is nearly identical between the two solutions
+(\irVBulgeOurs~km\,s$^{-1}$/\irABulgeOurs~pc vs their 406/333), and a sensitivity scan over halo profile
 (NFW/Burkert), fit range (all $R$ vs $R>2$~kpc), and error weighting yields
 $\rho_\mathrm{DM} = \irRhoMin$--\irRhoMax\ across all \irScanN\ converging variants. None
-reproduces their corner, suggesting an additional constraint in their fit not stated in the
-paper. The conclusion is the quantified form of their own caveat: the curve constrains the
+reproduces their corner --- consistent with either an additional constraint in their fit
+beyond what the paper states, or simply a different local optimum of this highly degenerate
+six-parameter problem. The conclusion is the quantified form of their own caveat: the curve constrains the
 disc--halo split only to a width that spans the full range from their lower limit to the
 consensus density.
 
@@ -128,8 +129,8 @@ fully.
 \emph{(iii) The east--west asymmetry replicates in period and phase.} Fitting their damped
 sinusoid (their eq.~29) in the mid-disc window (2--8~kpc; inside 2~kpc the bar rails any
 smooth fit) gives amplitude \irEwAmp~km\,s$^{-1}$, period \irEwPeriod~kpc, phase
-\irEwPhase~kpc against their $\sim$14~km\,s$^{-1}$ (at 4~kpc), 4.4~kpc, 4.0~kpc --- the same
-phenomenon at softer amplitude from HI alone, with mid-disc
+\irEwPhase~kpc against their directly stated $\simeq$15~km\,s$^{-1}$ mid-disc amplitude and eq.-29
+period/phase of 4.4/4.0~kpc --- the same phenomenon at softer amplitude from HI alone, with mid-disc
 $\delta V$ rms \irEwRms~km\,s$^{-1}$; the damping length is unconstrained over our window.
 
 \begin{figure}[t]
@@ -153,8 +154,9 @@ Caveats bound both legs. The anchor refit does not replicate their exact fitting
 (weighting and algorithm are not fully specified); the sensitivity scan brackets defensible
 choices instead. The raw-data leg is HI-only against their HI+CO merge; TVM itself is not a
 clean mass tracer inside the bar \citep{chemin2015}, which both analyses exclude from
-interpretation; and terminal-velocity systematics at the $\sim$10~km\,s$^{-1}$ level
-\citep{tvmcaution} are precisely what the estimator head-to-head quantifies. Within those
+interpretation; and surrogate-model studies show terminal-velocity curves degrade substantially once a bar
+forms \citep{tvmcaution} --- the estimator-level systematics quantified here are one layer of
+that error budget. Within those
 bounds: the reference inner RC replicates from raw public data at the few-percent level;
 its published dark-matter density arithmetic is exactly correct \emph{and} its curve is
 equally consistent with the consensus local density --- the informative statement is the

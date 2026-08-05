@@ -44,7 +44,7 @@ __all__ = [
 R0_PC = 8178.0
 V0_KMS = 235.1
 G_KPC = 4.30091e-6  # G in kpc (km/s)^2 / Msun
-GEV_PER_MSUN_PC3 = 38.0  # 1 Msun/pc^3 = 38.0 GeV/cm^3 (m_p c^2 conversion)
+GEV_PER_MSUN_PC3 = 38.0  # 1 Msun/pc^3 = 38.0 GeV/cm^3 (mass-energy conversion, E=mc^2)
 
 
 # ----------------------------------------------------------------------- anchor tables
@@ -489,7 +489,12 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
         "sensitivity": {k: v for k, v in scan.items() if k != "variants"},
         "sensitivity_variants": {
             k: (
-                {kk: vv for kk, vv in v.items() if kk in ("rho_dm_gev", "rms_kms", "halo")}
+                {
+                    kk: vv
+                    for kk, vv in v.items()
+                    if kk
+                    in ("rho_dm_gev", "rms_kms", "halo", "v_bulge", "a_bulge", "v_disc", "a_disc")
+                }
                 if "rho_dm_gev" in v
                 else v
             )
@@ -701,6 +706,12 @@ def run_hi4pi(  # pragma: no cover - network + real data (core functions tested 
         "median_dv_kms": float(np.median(v_b[cmp_ok] - v_paper_i[cmp_ok])),
         "n_bins": int(cmp_ok.sum()),
     }
+    # the same comparison WITHOUT calibration (fixed sigma=15 as first attempted), committed so
+    # the findings' pre-calibration number is traceable to pipeline output
+    r_u, v_u = rc_from_terminal(ells[ok], vgs[ok], sigma_v_kms=15.0)
+    _, vu_b, _ = rotation_curve_weighted(r_u, v_u, grid_pc=grid, half_width_pc=25.0)
+    u_ok = np.isfinite(vu_b) & (grid > 2000)
+    table2["median_dv_kms_fixed_sigma15"] = float(np.median(vu_b[u_ok] - v_paper_i[u_ok]))
     dv_ew = ve_b - vw_b
     # fit the mid-disc window (their Sec. 5.5 region): inside ~2 kpc the bar's non-circular
     # chaos rails any smooth fit — the first attempt hit its amplitude bound doing exactly that
@@ -943,6 +954,8 @@ def paper_macros(out: str = ".", *, results_dir: str = "results") -> str:
         rf"\newcommand{{\irRhoTheirs}}{{{a['paper_table1_rho_dm_gev']:.3f}}}",
         rf"\newcommand{{\irRmsOurs}}{{{fit['rms_kms']:.1f}}}",
         rf"\newcommand{{\irRmsTheirs}}{{{a['paper_table1_rms_kms']:.1f}}}",
+        rf"\newcommand{{\irVBulgeOurs}}{{{fit['v_bulge']:.0f}}}",
+        rf"\newcommand{{\irABulgeOurs}}{{{fit['a_bulge']:.0f}}}",
         rf"\newcommand{{\irRhoMin}}{{{sens['rho_dm_min_gev']:.2f}}}",
         rf"\newcommand{{\irRhoMax}}{{{sens['rho_dm_max_gev']:.2f}}}",
         rf"\newcommand{{\irScanN}}{{{sens['n_converged']}}}",
