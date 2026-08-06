@@ -9,6 +9,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-08-05
+
 ### Fixed
 
 - `atlas3i` pre-submission hardening (PRs #169–#171, entries added retroactively): the
@@ -229,7 +231,8 @@ than a diff from an earlier version; every later section is a diff from its pred
   capability list over the full >40-slice toolkit (was a stale six-module snapshot), and a
   Statement of need reframed around recover-a-known + honest-null at scale.
 
-[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/joebarbere/jansky-research/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/joebarbere/jansky-research/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/joebarbere/jansky-research/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/joebarbere/jansky-research/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/joebarbere/jansky-research/compare/v1.0.1...v1.1.0
