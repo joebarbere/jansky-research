@@ -608,7 +608,7 @@ def sweep_figure(summary: dict, out_dir) -> None:
     ax.set(
         ylabel="hits per 5-min scan (16$\\sigma$)",
         title=(
-            f"GB\\_ATLAS {summary.get('band', 'L')} band: {summary['total_hits']:,} raw hits "
+            f"GB_ATLAS {summary.get('band', 'L')} band: {summary['total_hits']:,} raw hits "
             f"$\\to$ {summary['total_survivors']} on/off survivors "
             f"$\\to$ {summary['total_confirmed']} confirmed"
         ),
@@ -707,7 +707,7 @@ def survey_figure(survey: dict, out_dir) -> None:
     ax.set(
         ylabel="hits per 5-min scan (16$\\sigma$)",
         title=(
-            f"GB\\_ATLAS 1–12 GHz: {survey['total_hits']:,} raw hits "
+            f"GB_ATLAS 1–12 GHz: {survey['total_hits']:,} raw hits "
             f"$\\to$ {survey['total_survivors']} on/off survivors "
             f"$\\to$ {survey['total_confirmed']} confirmed"
         ),
