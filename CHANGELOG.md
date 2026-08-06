@@ -9,6 +9,17 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+
+- `atlas3i` pre-submission hardening (PRs #169–#171, entries added retroactively): the
+  self-citation re-pinned to v1.3.0; pre-flight review of the arXiv package caught and fixed
+  a missing figure (`main.tex` referenced `fig:survey` with no figure environment — the PDF
+  printed "Figure ??"), a 404ing Choza et al. DOI, the since-minted Jacobson-Bell RNAAS DOI,
+  and the FAST paper's DOI/initials; final reader-pass fixes: the cadence duration corrected
+  to the paper's 30 min, the EIRP-agreement claim restated with its exact substitutions
+  (δν_t = δν, β = 1) instead of "algebraically identical", and the figure title's literal
+  backslash removed at the source.
+
 ## [1.3.0] — 2026-08-05
 
 ### Added
