@@ -24,8 +24,8 @@ filter, a per-candidate drift-coherence vet on postage stamps re-read from the a
 and an ITU satellite-allocation exclusion. The null reproduces in full: \aiTotRawHits\
 raw hits reduce to \aiTotSurvivors\ two-position survivors and \aiTotConfirmed\
 confirmed candidates, and the implied narrowband limit ($\le\aiEirpMw$~mW at L band for
-$d=\aiDistanceAu$~au) is algebraically identical to the published one at unit
-dedrifting efficiency. The survivors form a physically interpretable taxonomy of
+$d=\aiDistanceAu$~au) coincides exactly with the published one for a transmitted linewidth equal to the
+channel resolution and unit dedrifting efficiency. The survivors form a physically interpretable taxonomy of
 filter evasion --- sub-threshold terrestrial carriers, chance coincidences in dense hit
 lists, and satellite downlinks that defeat two-position geometry by construction ---
 independently recovering the design rationale of BL's interference rejection. The
@@ -86,7 +86,7 @@ in every on-target scan and no off-target scan.
 
 \emph{(ii) Drift coherence.} For each survivor the pipeline re-reads $\pm$2048-channel
 postage stamps from all six scans and demands the tone track its fitted drift through
-the full $\sim$27-min cadence, with direct off-scan cleanliness at $8\sigma$ ---
+the full $\sim$30-min cadence, with direct off-scan cleanliness at $8\sigma$ ---
 subsuming the original search's asymmetric ($16\sigma$/$10\sigma$) on/off thresholds,
 which this reproduction otherwise does not replicate (a stricter symmetric choice that
 passes \emph{more} borderline interference forward; conservative for a null).
@@ -138,10 +138,12 @@ and, separately, the C band produced \emph{zero} two-position survivors across i
 4.3~GHz. The narrowband sensitivity,
 $S_\mathrm{min} = 16\,\mathrm{SEFD}/\sqrt{n_\mathrm{pol}\,\delta\nu\,\tau}$ and
 $\mathrm{EIRP} = 4\pi d^{2} S_\mathrm{min}\,\delta\nu$, gives
-$\le\aiEirpMw$~mW at L band --- and reduces algebraically to the published formulation
-\citep{gajjar2021} at unit dedrifting efficiency $\beta$, so the agreement with the
-paper's $\sim$100~mW is exact rather than coincidental (our limit is marginally
-optimistic at the highest drift rates, where $\beta<1$).
+$\le\aiEirpMw$~mW at L band. Setting the transmitted linewidth of the published
+formulation \citep{gajjar2021} equal to the channel resolution
+($\delta\nu_t = \delta\nu$) and taking unit dedrifting efficiency $\beta$, the two
+expressions coincide exactly in the combined EIRP --- so the agreement with the paper's
+$\sim$100~mW follows from shared parameters rather than coincidence (our limit is
+marginally optimistic at the highest drift rates, where $\beta<1$).
 
 \subsection{The filter-evasion taxonomy}
 The \aiTotSurvivors\ two-position survivors decompose cleanly. \emph{Sub-threshold
