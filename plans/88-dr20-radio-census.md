@@ -1,6 +1,6 @@
 # 88 — `dr20radio`: the first radio-counterpart census of the SDSS-V DR20 Black Hole Mapper
 
-Status: 📋 planned — **GATE 0 done 2026-08-07** (catalog pinned, novelty verified, rights
+Status: ✅ complete 2026-08-07 (all increments + GATE-2; see survey/dr20radio-findings.md) — GATE 0 done 2026-08-07 (catalog pinned, novelty verified, rights
 landmine scoped out; details below). Standing remainder: same-week ADS re-search before the
 first commit. (Plan 87 = lineconf, on its local branch.)
 

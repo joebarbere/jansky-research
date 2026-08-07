@@ -54,6 +54,9 @@ VLASS_FREQ_GHZ = 3.0
 VLASS_S_LIM_MJY = 1.0
 RACS_FREQ_GHZ = 0.8875
 RACS_S_LIM_MJY = 3.0
+# Hale et al. 2021 quote ~3 mJy (source-count based) and ~5 mJy (simulation based) for the
+# 95% completeness; both variants are computed so the paper can show the sensitivity.
+RACS_S_LIM_CONSERVATIVE_MJY = 5.0
 
 
 def select_quasars(
@@ -465,9 +468,17 @@ def run_north(
             radius_arcsec=radius_arcsec,
             n_trials=n_shift_trials,
         )
-        mc, _, _ = crossmatch(
-            q["ra"][carton], q["dec"][carton], ra_r, dec_r, radius_arcsec=radius_arcsec
-        )
+
+        def _cv(mask: np.ndarray, rr: np.ndarray = ra_r, dd: np.ndarray = dec_r) -> dict:
+            mm, _, _ = crossmatch(
+                q["ra"][mask], q["dec"][mask], rr, dd, radius_arcsec=radius_arcsec
+            )
+            return {
+                "n": int(mm.size),
+                "matched": int(mm.sum()),
+                "fraction": round(float(np.mean(mm)), 4) if mm.size else None,
+            }
+
         matched_any |= m
         p, lo, hi = wilson_interval(int(m.sum()), int(m.size))
         epochs[name] = {
@@ -479,9 +490,8 @@ def run_north(
             "false_match": fm,
             "corrected_fraction": round(p - fm["rate"], 5),
             "carton_validation": {
-                "n": int(mc.size),
-                "matched": int(mc.sum()),
-                "fraction": round(float(np.mean(mc)), 4) if mc.size else None,
+                "racsradio_cross_frequency": _cv(north & q["carton_racs"]),
+                "lofarradio_cross_frequency": _cv(north & q["carton_lofar"]),
             },
             "n_radio_sources": int(ra_r.size),
         }
@@ -492,8 +502,8 @@ def run_north(
         "n_quasars_clean": int((q["z"] > -1).sum()),
         "n_north_census": int(census.sum()),
         "n_north_radio_carton_excluded": int(carton.sum()),
-        "obs_breakdown_north": {
-            o: int((q["obs"][north] == o).sum()) for o in np.unique(q["obs"][north])
+        "obs_breakdown_north_census": {
+            o: int((q["obs"][census] == o).sum()) for o in np.unique(q["obs"][census])
         },
         "radius_arcsec": radius_arcsec,
         "epochs": epochs,
@@ -511,6 +521,16 @@ def run_north(
             freq_ghz=VLASS_FREQ_GHZ,
             s_lim_this_mjy=VLASS_S_LIM_MJY,
             s_lim_other_mjy=RACS_S_LIM_MJY,
+            other_freq_ghz=RACS_FREQ_GHZ,
+            bins=zbins,
+        ),
+        "luminosity_matched_conservative": luminosity_matched_fractions(
+            q["z"][census],
+            matched_any,
+            s_any,
+            freq_ghz=VLASS_FREQ_GHZ,
+            s_lim_this_mjy=VLASS_S_LIM_MJY,
+            s_lim_other_mjy=RACS_S_LIM_CONSERVATIVE_MJY,
             other_freq_ghz=RACS_FREQ_GHZ,
             bins=zbins,
         ),
@@ -628,6 +648,16 @@ def run_south(
                 s_m,
                 freq_ghz=RACS_FREQ_GHZ,
                 s_lim_this_mjy=RACS_S_LIM_MJY,
+                s_lim_other_mjy=VLASS_S_LIM_MJY,
+                other_freq_ghz=VLASS_FREQ_GHZ,
+                bins=zbins,
+            ),
+            "luminosity_matched_conservative": luminosity_matched_fractions(
+                q["z"][cen],
+                m,
+                s_m,
+                freq_ghz=RACS_FREQ_GHZ,
+                s_lim_this_mjy=RACS_S_LIM_CONSERVATIVE_MJY,
                 s_lim_other_mjy=VLASS_S_LIM_MJY,
                 other_freq_ghz=VLASS_FREQ_GHZ,
                 bins=zbins,
@@ -759,11 +789,16 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         rf"\newcommand{{\drNorthFmPct}}{{{100 * e2['false_match']['rate']:.3f}}}",
         rf"\newcommand{{\drLumNorthPct}}{{{100 * _tot(lum_n):.2f}}}",
         rf"\newcommand{{\drLumSouthPct}}{{{100 * _tot(lum_s):.2f}}}",
+        rf"\newcommand{{\drOverlapLumPct}}{{{100 * _tot(ov['luminosity_matched']):.2f}}}",
+        rf"\newcommand{{\drLumNorthConsPct}}{{{100 * _tot(n['luminosity_matched_conservative']):.2f}}}",
+        rf"\newcommand{{\drLumSouthConsPct}}{{{100 * _tot(ds['luminosity_matched_conservative']):.2f}}}",
         rf"\newcommand{{\drCartonRacsPct}}{{{100 * cv['racsradio_vs_racs_selecting_survey']['fraction']:.0f}}}",
         rf"\newcommand{{\drCartonRacsN}}{{{cv['racsradio_vs_racs_selecting_survey']['n']}}}",
         rf"\newcommand{{\drCartonLofarPct}}{{{100 * cv['lofarradio_vs_racs_cross_frequency']['fraction']:.0f}}}",
         rf"\newcommand{{\drCartonLofarN}}{{{cv['lofarradio_vs_racs_cross_frequency']['n']}}}",
-        rf"\newcommand{{\drCartonVlassEtwoPct}}{{{100 * e2['carton_validation']['fraction']:.0f}}}",
+        rf"\newcommand{{\drCartonVlassRacsPct}}{{{100 * e2['carton_validation']['racsradio_cross_frequency']['fraction']:.0f}}}",
+        rf"\newcommand{{\drCartonVlassLofarPct}}{{{100 * e2['carton_validation']['lofarradio_cross_frequency']['fraction']:.0f}}}",
+        rf"\newcommand{{\drSlimRacsCons}}{{{RACS_S_LIM_CONSERVATIVE_MJY:.1f}}}",
         rf"\newcommand{{\drRacsSrc}}{{{s['n_racs_sources']:,}}}".replace(",", r"{,}"),
         rf"\newcommand{{\drSlimVlass}}{{{VLASS_S_LIM_MJY:.1f}}}",
         rf"\newcommand{{\drSlimRacs}}{{{RACS_S_LIM_MJY:.1f}}}",
