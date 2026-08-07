@@ -1,0 +1,132 @@
+{
+  "source": "SDSS-V DR20 spAll-lite v6_2_1 allepoch x VLASS QL E2+E3 (local CIRADA)",
+  "n_spall_rows": 506550,
+  "n_quasars_clean": 276055,
+  "n_north_census": 202691,
+  "n_north_radio_carton_excluded": 280,
+  "obs_breakdown_north": {
+    "APO": 128509,
+    "LCO": 74462
+  },
+  "radius_arcsec": 2.5,
+  "epochs": {
+    "E2": {
+      "n_census": 202691,
+      "n_matched": 8465,
+      "raw_fraction": 0.04176,
+      "wilson_lo": 0.04132,
+      "wilson_hi": 0.04221,
+      "false_match": {
+        "rate": 9.22586597332886e-05,
+        "std": 2.1735933782862273e-05,
+        "n_trials": 10,
+        "radius_arcsec": 2.5
+      },
+      "corrected_fraction": 0.04167,
+      "carton_validation": {
+        "n": 280,
+        "matched": 87,
+        "fraction": 0.3107
+      },
+      "n_radio_sources": 1873524
+    },
+    "E3": {
+      "n_census": 202691,
+      "n_matched": 8900,
+      "raw_fraction": 0.04391,
+      "wilson_lo": 0.04346,
+      "wilson_hi": 0.04437,
+      "false_match": {
+        "rate": 9.472546881706637e-05,
+        "std": 2.136888942055416e-05,
+        "n_trials": 10,
+        "radius_arcsec": 2.5
+      },
+      "corrected_fraction": 0.04381,
+      "carton_validation": {
+        "n": 280,
+        "matched": 98,
+        "fraction": 0.35
+      },
+      "n_radio_sources": 2360730
+    }
+  },
+  "any_epoch": {
+    "n_matched": 9466,
+    "raw_fraction": 0.0467,
+    "wilson_lo": 0.04624,
+    "wilson_hi": 0.04717
+  },
+  "fraction_vs_z_any_epoch": {
+    "bin_lo": [
+      0.0,
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0
+    ],
+    "bin_hi": [
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      6.0
+    ],
+    "n": [
+      28505,
+      47300,
+      48266,
+      40516,
+      22717,
+      9846,
+      4937,
+      333
+    ],
+    "k": [
+      1444,
+      2194,
+      2255,
+      1764,
+      927,
+      500,
+      343,
+      24
+    ],
+    "frac": [
+      0.05066,
+      0.04638,
+      0.04672,
+      0.04354,
+      0.04081,
+      0.05078,
+      0.06948,
+      0.07207
+    ],
+    "lo": [
+      0.04937,
+      0.04543,
+      0.04577,
+      0.04254,
+      0.03951,
+      0.04861,
+      0.06594,
+      0.05915
+    ],
+    "hi": [
+      0.05197,
+      0.04736,
+      0.04769,
+      0.04456,
+      0.04214,
+      0.05304,
+      0.07318,
+      0.08756
+    ]
+  }
+}

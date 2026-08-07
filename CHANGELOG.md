@@ -11,6 +11,11 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` northern leg (plan 88): 202,691 clean DR20 quasars × VLASS E2/E3 — radio-
+  detected fraction 4.67% (any epoch, 2.5″, measured false-match 0.009%), with the
+  classic high-z selection rise; the radio-carton VLASS match rate (31–35%) reframed
+  honestly as a cross-frequency measurement (selection was at 144/888 MHz — the ~100%
+  validation belongs to the RACS leg). E3 interim-list schema handled. Evidence committed.
 - `dr20radio` increment 1 (plan 88): census tooling + synthetic recover-a-known — spAll
   quasar selection with the radio-carton circularity exclusion (verified to matter in the
   synthetic round-trip), sky cross-match, position-shift-measured false-match rates

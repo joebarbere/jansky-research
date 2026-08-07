@@ -5,8 +5,10 @@ the first optical SDSS spectra from the southern hemisphere. No radio cross-matc
 SDSS-V catalog exists (plans/88): this module matches the DR20 quasar table against VLASS
 (north, local CIRADA epoch catalogs) and RACS (south), with the false-match rate *measured*
 by position-shift trials and the radio-targeted open-fiber cartons excluded from fractions
-(they were selected BECAUSE they are radio sources — counting them would be circular; they
-serve instead as a ~100%-match pipeline validation set).
+(they were selected BECAUSE they are radio sources — counting them would be circular). Their
+match rate against the SELECTING survey (RACS, southern leg) is the ~100% pipeline validation;
+against VLASS at 3 GHz it is a cross-frequency detection fraction (steep-spectrum sources
+selected at 144/888 MHz routinely fade below VLASS depth) — measured, not assumed.
 
 Committed-real-results pattern: real legs write force-tracked ``results/dr20radio_*.json``;
 paper macros come only from committed evidence; synthetic fixtures feed tests alone.
@@ -287,11 +289,10 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
     for name in ("data/QL3.1_components.fits", "data/QL3.2_components.fits"):
         with fits.open(name, memmap=True) as hdul:
             d = hdul[1].data
-            ok = (
-                (np.asarray(d["Duplicate_flag"]) < 2)
-                & np.isin(np.asarray(d["Quality_flag"]), (0, 4))
-                & (np.char.strip(np.asarray(d["S_Code"], dtype=str)) != "E")
-            )
+            # The E3 interim lists (VLASS Memo 22) carry a simplified schema: a binary
+            # quality `Flag` (0 = good) and no Duplicate_flag/Quality_flag columns; empty
+            # islands (S_Code 'E') are already absent.
+            ok = np.asarray(d["Flag"]) == 0
             ra3.append(np.asarray(d["RA"], float)[ok])
             dec3.append(np.asarray(d["DEC"], float)[ok])
     out["E3"] = (np.concatenate(ra3), np.concatenate(dec3))
