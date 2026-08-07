@@ -64,6 +64,32 @@ match measured as always).
 
 Committed evidence: `results/dr20radio_south.json`.
 
+## Increment 3 — the luminosity-matched north/south contrast — 2026-08-07
+
+Fluxes wired through the whole chain (`crossmatch` now returns the counterpart index; the
+VLASS loaders carry `Peak_flux`; RACS fluxes were already cached). Both surveys' flux limits
+(VLASS 1.0 mJy — CIRADA reliability threshold; RACS 3.0 mJy — Hale et al. 2021 95%
+completeness) convert per-quasar to rest-1.4 GHz luminosity limits (α = −0.7 K-correction,
+Planck18); a quasar counts only if matched AND its counterpart clears the COMMON (max) limit.
+
+| leg | raw corrected | above common L limit |
+|---|---|---|
+| North (VLASS any-epoch) | 4.67% (raw) | **4.06%** |
+| Deep south (RACS, δ≤−40°) | 3.95% | **2.82%** |
+| Overlap band (RACS) | 3.76% | 3.12% |
+
+The gap survives luminosity matching — but the overlap band (same-ish sky as VLASS's 4.67%)
+shows RACS recovering less at fixed L, so a survey-side component is real: candidate causes
+are the α = −0.7 assumption (flat-spectrum cores are relatively brighter at 3 GHz, so the
+common limit filters them asymmetrically), RACS's 25″ beam (blending/position shifts vs the
+5″ radius), and hemisphere targeting-mix differences (northern BHM cartons lean
+eROSITA-selected). The paper reports the contrast with these stated as caveats — it is a
+measured survey comparison, not a hemisphere-physics claim.
+
+Figure + macros: `paper_assets` (`--paper`) renders `dr20radio_fractions.pdf` (raw and
+luminosity-matched fractions vs z, Wilson bars) and `generated/macros.tex` from the
+committed evidence only.
+
 ## Next
 
 - Increment 2: RACS southern leg (the categorical first — SDSS quasar spectra south of

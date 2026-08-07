@@ -11,6 +11,9 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` increment 3 (plan 88): luminosity-matched north/south contrast — counterpart
+  fluxes through the match chain, rest-1.4 GHz common-limit fractions (north 4.06% vs deep
+  south 2.82%, overlap 3.12%), `paper_assets` figure + macros from committed evidence.
 - `dr20radio` southern leg (plan 88): **the categorical first** — 73,074 DR20 quasars south
   of −40° (pure LCO, confirmed in-data) × RACS-low DR1 → **3.95% radio-detected** at 5″
   (measured false-match 0.06%); overlap band 3.76% vs VLASS's 4.67%; carton validation

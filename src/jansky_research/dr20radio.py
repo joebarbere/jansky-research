@@ -25,6 +25,8 @@ __all__ = [
     "crossmatch",
     "detection_fraction",
     "false_match_rate",
+    "log_luminosity_whz",
+    "luminosity_matched_fractions",
     "parse_racs_csv",
     "run_north",
     "run_south",
@@ -45,6 +47,13 @@ RADIO_CARTON_PREFIXES = (
     "openfibertargets_bhm_lofarradio",
 )
 VLASS_DEC_LIMIT_DEG = -40.0
+# Common-luminosity-limit inputs (stated, not hidden): VLASS QL per-epoch reliability
+# threshold 1.0 mJy (CIRADA catalog user guide); RACS-low DR1 95% point-source completeness
+# 3.0 mJy (Hale et al. 2021). Canonical alpha = -0.7 for the K-correction.
+VLASS_FREQ_GHZ = 3.0
+VLASS_S_LIM_MJY = 1.0
+RACS_FREQ_GHZ = 0.8875
+RACS_S_LIM_MJY = 3.0
 
 
 def select_quasars(
@@ -74,20 +83,20 @@ def crossmatch(
     dec2_deg: np.ndarray,
     *,
     radius_arcsec: float = 2.5,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Nearest-neighbour sky match of catalog 1 onto catalog 2.
 
-    Returns ``(matched_mask, sep_arcsec)`` for catalog-1 rows (sep is to the nearest
-    catalog-2 source whether or not it is within the radius).
+    Returns ``(matched_mask, sep_arcsec, idx)`` for catalog-1 rows — ``idx`` is the index of
+    the nearest catalog-2 source (for flux lookup), valid where ``matched_mask`` is True.
     """
     from astropy import units as u
     from astropy.coordinates import SkyCoord
 
     c1 = SkyCoord(np.asarray(ra1_deg, float) * u.deg, np.asarray(dec1_deg, float) * u.deg)
     c2 = SkyCoord(np.asarray(ra2_deg, float) * u.deg, np.asarray(dec2_deg, float) * u.deg)
-    _, sep, _ = c1.match_to_catalog_sky(c2)
+    idx, sep, _ = c1.match_to_catalog_sky(c2)
     sep_as = sep.arcsec
-    return sep_as <= radius_arcsec, sep_as
+    return sep_as <= radius_arcsec, sep_as, np.asarray(idx)
 
 
 def false_match_rate(
@@ -117,7 +126,7 @@ def false_match_rate(
         ang = rng.uniform(0, 2 * np.pi, size=ra_q.size)
         dec_s = np.clip(dec_q + amp * np.sin(ang), -89.9, 89.9)
         ra_s = (ra_q + amp * np.cos(ang) / np.cos(np.deg2rad(dec_s))) % 360.0
-        m, _ = crossmatch(ra_s, dec_s, ra_r, dec_r, radius_arcsec=radius_arcsec)
+        m, _, _ = crossmatch(ra_s, dec_s, ra_r, dec_r, radius_arcsec=radius_arcsec)
         rates.append(float(np.mean(m)))
     return {
         "rate": float(np.mean(rates)),
@@ -263,6 +272,75 @@ def parse_racs_csv(text: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return np.array(ra), np.array(dec), np.array(flux)
 
 
+def log_luminosity_whz(
+    z: np.ndarray,
+    s_mjy: np.ndarray,
+    *,
+    freq_ghz: float,
+    alpha: float = -0.7,
+    ref_freq_ghz: float = 1.4,
+) -> np.ndarray:
+    """log10 rest-frame 1.4 GHz spectral luminosity (W/Hz) from observed flux density.
+
+    K-corrected assuming a power law ``S ~ nu^alpha`` (alpha = -0.7, the canonical synchrotron
+    slope — an assumption the paper states, not hides): ``L = 4 pi d_L^2 S (1+z)^-(1+alpha)
+    (ref/freq)^alpha``.
+    """
+    from astropy.cosmology import Planck18
+
+    dl_m = Planck18.luminosity_distance(np.asarray(z, float)).to("m").value
+    s_si = np.asarray(s_mjy, float) * 1e-29  # mJy -> W m^-2 Hz^-1
+    with np.errstate(divide="ignore", invalid="ignore"):
+        lum = (
+            4.0
+            * np.pi
+            * dl_m**2
+            * s_si
+            * (1.0 + np.asarray(z, float)) ** (-(1.0 + alpha))
+            * (ref_freq_ghz / freq_ghz) ** alpha
+        )
+        return np.log10(lum)
+
+
+def luminosity_matched_fractions(
+    z: np.ndarray,
+    matched: np.ndarray,
+    s_matched_mjy: np.ndarray,
+    *,
+    freq_ghz: float,
+    s_lim_this_mjy: float,
+    s_lim_other_mjy: float,
+    other_freq_ghz: float,
+    bins: np.ndarray,
+    alpha: float = -0.7,
+) -> dict:
+    """Detection fractions above the COMMON luminosity limit of two surveys.
+
+    At each quasar's z, both surveys' flux limits convert to rest-1.4 GHz luminosity limits;
+    the common limit is the max. A quasar counts as detected only if matched AND its
+    counterpart luminosity clears the common limit — making north (VLASS, 3 GHz) and south
+    (RACS, 0.888 GHz) fractions comparable despite different depths and frequencies.
+    """
+    z = np.asarray(z, float)
+    lim_this = log_luminosity_whz(
+        z, np.full(z.size, s_lim_this_mjy), freq_ghz=freq_ghz, alpha=alpha
+    )
+    lim_other = log_luminosity_whz(
+        z, np.full(z.size, s_lim_other_mjy), freq_ghz=other_freq_ghz, alpha=alpha
+    )
+    common = np.maximum(lim_this, lim_other)
+    lum = np.full(z.size, -np.inf)
+    lum[matched] = log_luminosity_whz(
+        z[matched], s_matched_mjy[matched], freq_ghz=freq_ghz, alpha=alpha
+    )
+    above = np.asarray(matched, bool) & (lum >= common)
+    out = detection_fraction(z, above, bins=bins)
+    out["s_lim_this_mjy"] = s_lim_this_mjy
+    out["s_lim_other_mjy"] = s_lim_other_mjy
+    out["alpha"] = alpha
+    return out
+
+
 # ------------------------------------------------------------------------- real data legs
 
 
@@ -315,7 +393,7 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
     """Positions of quality-cut VLASS components from the local epoch catalogs.
 
     Applies the same cuts as the merged `vlass` slice: ``Duplicate_flag < 2``,
-    ``Quality_flag in (0, 4)``, ``S_Code != 'E'``. Returns ``{"E2": (ra, dec), "E3": ...}``.
+    ``Quality_flag in (0, 4)``, ``S_Code != 'E'``. Returns ``{"E2": (ra, dec, peak_mjy), ...}``.
     """
     import csv
     import gzip
@@ -323,7 +401,7 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
     from astropy.io import fits
 
     out = {}
-    ra, dec = [], []
+    ra, dec, fx = [], [], []
     with gzip.open("data/CIRADA_VLASS2QLv2_table1_components.csv.gz", "rt") as fh:
         for r in csv.DictReader(fh):
             try:
@@ -335,10 +413,11 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
                     continue
                 ra.append(float(r["RA"]))
                 dec.append(float(r["DEC"]))
+                fx.append(float(r["Peak_flux"]))
             except (KeyError, ValueError):
                 continue
-    out["E2"] = (np.array(ra), np.array(dec))
-    ra3, dec3 = [], []
+    out["E2"] = (np.array(ra), np.array(dec), np.array(fx))
+    ra3, dec3, fx3 = [], [], []
     for name in ("data/QL3.1_components.fits", "data/QL3.2_components.fits"):
         with fits.open(name, memmap=True) as hdul:
             d = hdul[1].data
@@ -348,7 +427,8 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
             ok = np.asarray(d["Flag"]) == 0
             ra3.append(np.asarray(d["RA"], float)[ok])
             dec3.append(np.asarray(d["DEC"], float)[ok])
-    out["E3"] = (np.concatenate(ra3), np.concatenate(dec3))
+            fx3.append(np.asarray(d["Peak_flux"], float)[ok])
+    out["E3"] = (np.concatenate(ra3), np.concatenate(dec3), np.concatenate(fx3))
     return out
 
 
@@ -371,10 +451,12 @@ def run_north(
     zbins = np.array([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 6.0])
     epochs = {}
     matched_any = np.zeros(int(census.sum()), dtype=bool)
-    for name, (ra_r, dec_r) in vlass.items():
-        m, _ = crossmatch(
+    s_any = np.zeros(int(census.sum()))
+    for name, (ra_r, dec_r, fx_r) in vlass.items():
+        m, _, idx = crossmatch(
             q["ra"][census], q["dec"][census], ra_r, dec_r, radius_arcsec=radius_arcsec
         )
+        s_any = np.where(m, np.maximum(s_any, fx_r[idx]), s_any)
         fm = false_match_rate(
             q["ra"][census],
             q["dec"][census],
@@ -383,7 +465,7 @@ def run_north(
             radius_arcsec=radius_arcsec,
             n_trials=n_shift_trials,
         )
-        mc, _ = crossmatch(
+        mc, _, _ = crossmatch(
             q["ra"][carton], q["dec"][carton], ra_r, dec_r, radius_arcsec=radius_arcsec
         )
         matched_any |= m
@@ -422,6 +504,16 @@ def run_north(
             "wilson_hi": round(hi_any, 5),
         },
         "fraction_vs_z_any_epoch": detection_fraction(q["z"][census], matched_any, bins=zbins),
+        "luminosity_matched": luminosity_matched_fractions(
+            q["z"][census],
+            matched_any,
+            s_any,
+            freq_ghz=VLASS_FREQ_GHZ,
+            s_lim_this_mjy=VLASS_S_LIM_MJY,
+            s_lim_other_mjy=RACS_S_LIM_MJY,
+            other_freq_ghz=RACS_FREQ_GHZ,
+            bins=zbins,
+        ),
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -507,9 +599,10 @@ def run_south(
 
     def census_block(sel: np.ndarray, label: str) -> dict:
         cen = sel & ~q["radio_carton"]
-        m, _ = crossmatch(
+        m, _, idx = crossmatch(
             q["ra"][cen], q["dec"][cen], racs["ra"], racs["dec"], radius_arcsec=radius_arcsec
         )
+        s_m = np.where(m, racs["flux"][idx], 0.0)
         fm = false_match_rate(
             q["ra"][cen],
             q["dec"][cen],
@@ -529,6 +622,16 @@ def run_south(
             "false_match": fm,
             "corrected_fraction": round(p - fm["rate"], 5),
             "fraction_vs_z": detection_fraction(q["z"][cen], m, bins=zbins),
+            "luminosity_matched": luminosity_matched_fractions(
+                q["z"][cen],
+                m,
+                s_m,
+                freq_ghz=RACS_FREQ_GHZ,
+                s_lim_this_mjy=RACS_S_LIM_MJY,
+                s_lim_other_mjy=VLASS_S_LIM_MJY,
+                other_freq_ghz=VLASS_FREQ_GHZ,
+                bins=zbins,
+            ),
             "obs_breakdown": {o: int((q["obs"][cen] == o).sum()) for o in np.unique(q["obs"][cen])},
         }
 
@@ -539,7 +642,7 @@ def run_south(
     # ~100% pipeline validation; lofarradio (144 MHz-selected) vs RACS is a cross-frequency
     # fraction, exactly like the VLASS case in increment 1.
     def carton_block(mask: np.ndarray) -> dict:
-        mm, _ = crossmatch(
+        mm, _, _ = crossmatch(
             q["ra"][mask], q["dec"][mask], racs["ra"], racs["dec"], radius_arcsec=radius_arcsec
         )
         return {
@@ -568,6 +671,108 @@ def run_south(
     return metrics
 
 
+def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pragma: no cover
+    """Figures + macros for papers/dr20radio from the COMMITTED evidence JSONs only.
+
+    The committed-real-results rule: no census runs here — absent evidence fails loudly.
+    """
+    import json
+    from pathlib import Path
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    n = json.loads((Path(results_dir) / "dr20radio_north.json").read_text())
+    s = json.loads((Path(results_dir) / "dr20radio_south.json").read_text())
+    fig_dir = Path(out) / "papers" / "dr20radio" / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
+
+    def _binned(block: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        mid = 0.5 * (np.asarray(block["bin_lo"]) + np.asarray(block["bin_hi"]))
+        kk, nn = np.asarray(block["k"], float), np.asarray(block["n"], float)
+        lo = np.array([wilson_interval(int(k), int(m))[1] for k, m in zip(kk, nn, strict=True)])
+        hi = np.array([wilson_interval(int(k), int(m))[2] for k, m in zip(kk, nn, strict=True)])
+        with np.errstate(invalid="ignore", divide="ignore"):
+            frac = np.where(nn > 0, kk / nn, np.nan)
+        return mid, frac, lo, hi
+
+    def _plot(ax: plt.Axes, block: dict, label: str, color: str, marker: str) -> None:
+        mid, frac, lo, hi = _binned(block)
+        ax.errorbar(
+            mid,
+            frac,
+            yerr=[frac - lo, hi - frac],
+            fmt=marker,
+            color=color,
+            label=label,
+            capsize=2,
+            ms=5,
+        )
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.6), sharey=True)
+    _plot(axes[0], n["fraction_vs_z_any_epoch"], "North: VLASS any-epoch (3 GHz)", "C0", "o")
+    _plot(
+        axes[0],
+        s["deep_south"]["fraction_vs_z"],
+        "South: RACS, $\\delta \\leq -40^\\circ$",
+        "C3",
+        "s",
+    )
+    _plot(axes[0], s["overlap_band"]["fraction_vs_z"], "Overlap band: RACS", "0.6", "^")
+    axes[0].set_title("Raw detection fraction (survey-native depths)")
+    _plot(axes[1], n["luminosity_matched"], "North above common $L$ limit", "C0", "o")
+    _plot(axes[1], s["deep_south"]["luminosity_matched"], "South above common $L$ limit", "C3", "s")
+    axes[1].set_title("Above the common 1.4 GHz luminosity limit")
+    for ax in axes:
+        ax.set_xlabel("redshift $z$")
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8)
+    axes[0].set_ylabel("radio-detected fraction")
+    fig.tight_layout()
+    fig.savefig(fig_dir / "dr20radio_fractions.pdf")
+    plt.close(fig)
+
+    ds, ov, ae = s["deep_south"], s["overlap_band"], n["any_epoch"]
+    cv = s["carton_validation"]
+    e2, e3 = n["epochs"]["E2"], n["epochs"]["E3"]
+    lum_n = n["luminosity_matched"]
+    lum_s = ds["luminosity_matched"]
+
+    def _tot(b: dict) -> float:
+        return float(sum(b["k"])) / float(sum(b["n"]))
+
+    lines = [
+        "% Auto-generated by jansky_research.dr20radio.paper_assets from the committed",
+        "% results/dr20radio_*.json evidence — do not edit by hand.",
+        rf"\newcommand{{\drNorthCensus}}{{{n['n_north_census']:,}}}".replace(",", r"{,}"),
+        rf"\newcommand{{\drSouthCensus}}{{{ds['n_census']:,}}}".replace(",", r"{,}"),
+        rf"\newcommand{{\drOverlapCensus}}{{{ov['n_census']:,}}}".replace(",", r"{,}"),
+        rf"\newcommand{{\drNorthAnyPct}}{{{100 * ae['raw_fraction']:.2f}}}",
+        rf"\newcommand{{\drNorthEtwoPct}}{{{100 * e2['corrected_fraction']:.2f}}}",
+        rf"\newcommand{{\drNorthEthreePct}}{{{100 * e3['corrected_fraction']:.2f}}}",
+        rf"\newcommand{{\drSouthPct}}{{{100 * ds['corrected_fraction']:.2f}}}",
+        rf"\newcommand{{\drSouthMatched}}{{{ds['n_matched']:,}}}".replace(",", r"{,}"),
+        rf"\newcommand{{\drOverlapPct}}{{{100 * ov['corrected_fraction']:.2f}}}",
+        rf"\newcommand{{\drSouthFmPct}}{{{100 * ds['false_match']['rate']:.2f}}}",
+        rf"\newcommand{{\drNorthFmPct}}{{{100 * e2['false_match']['rate']:.3f}}}",
+        rf"\newcommand{{\drLumNorthPct}}{{{100 * _tot(lum_n):.2f}}}",
+        rf"\newcommand{{\drLumSouthPct}}{{{100 * _tot(lum_s):.2f}}}",
+        rf"\newcommand{{\drCartonRacsPct}}{{{100 * cv['racsradio_vs_racs_selecting_survey']['fraction']:.0f}}}",
+        rf"\newcommand{{\drCartonRacsN}}{{{cv['racsradio_vs_racs_selecting_survey']['n']}}}",
+        rf"\newcommand{{\drCartonLofarPct}}{{{100 * cv['lofarradio_vs_racs_cross_frequency']['fraction']:.0f}}}",
+        rf"\newcommand{{\drCartonLofarN}}{{{cv['lofarradio_vs_racs_cross_frequency']['n']}}}",
+        rf"\newcommand{{\drCartonVlassEtwoPct}}{{{100 * e2['carton_validation']['fraction']:.0f}}}",
+        rf"\newcommand{{\drRacsSrc}}{{{s['n_racs_sources']:,}}}".replace(",", r"{,}"),
+        rf"\newcommand{{\drSlimVlass}}{{{VLASS_S_LIM_MJY:.1f}}}",
+        rf"\newcommand{{\drSlimRacs}}{{{RACS_S_LIM_MJY:.1f}}}",
+    ]
+    gen = Path(out) / "papers" / "dr20radio" / "generated"
+    gen.mkdir(parents=True, exist_ok=True)
+    (gen / "macros.tex").write_text("\n".join(lines) + "\n")
+
+
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import json
@@ -576,7 +781,11 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--out", default=".")
     p.add_argument("--north", action="store_true", help="run the VLASS northern leg")
     p.add_argument("--south", action="store_true", help="run the RACS southern leg")
+    p.add_argument("--paper", action="store_true", help="figures + macros from committed evidence")
     args = p.parse_args(argv)
+    if args.paper:
+        paper_assets(args.out)
+        return 0
     if args.south:
         m = run_south(args.out)
         slim = {
