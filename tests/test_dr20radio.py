@@ -25,9 +25,10 @@ def test_crossmatch_known_geometry():
     # radio source 1" from quasar 0; nothing near quasar 1
     ra_r = np.array([180.0 + 1.0 / 3600.0 / np.cos(np.deg2rad(10.0)), 200.0])
     dec_r = np.array([10.0, -5.0])
-    m, sep = dr20radio.crossmatch(ra_q, dec_q, ra_r, dec_r, radius_arcsec=2.5)
+    m, sep, idx = dr20radio.crossmatch(ra_q, dec_q, ra_r, dec_r, radius_arcsec=2.5)
     assert m.tolist() == [True, False]
     assert sep[0] == pytest.approx(1.0, abs=0.05)
+    assert idx[0] == 0  # nearest-neighbour index enables counterpart flux lookup
 
 
 def test_wilson_interval_properties():
@@ -42,7 +43,7 @@ def test_synthetic_round_trip_recovers_fraction_and_carton_circularity():
     quasar, radio_carton = dr20radio.select_quasars(s["cls"], s["zwarning"], s["firstcarton"])
     assert quasar.all()
     census = ~radio_carton
-    m, _ = dr20radio.crossmatch(
+    m, _, _ = dr20radio.crossmatch(
         s["ra_q"][census],
         s["dec_q"][census],
         s["ra_r"],
@@ -62,7 +63,7 @@ def test_synthetic_round_trip_recovers_fraction_and_carton_circularity():
     assert corrected == pytest.approx(s["true_fraction"], abs=0.03)
     # the radio-carton subset matches ~always (counterpart by construction) — the
     # circularity that must stay OUT of the census fraction
-    mc, _ = dr20radio.crossmatch(
+    mc, _, _ = dr20radio.crossmatch(
         s["ra_q"][radio_carton],
         s["dec_q"][radio_carton],
         s["ra_r"],
@@ -133,7 +134,7 @@ def test_two_survey_synthetic_fixes_the_carton_blind_spot():
     s = dr20radio.synthetic_two_surveys(seed=5, fade_fraction=0.35)
     _, radio_carton = dr20radio.select_quasars(s["cls"], s["zwarning"], s["firstcarton"])
     # vs the SELECTING survey: ~100% (counterpart by construction)
-    m_sel, _ = dr20radio.crossmatch(
+    m_sel, _, _ = dr20radio.crossmatch(
         s["ra_q"][radio_carton],
         s["dec_q"][radio_carton],
         s["ra_r"],
@@ -142,7 +143,7 @@ def test_two_survey_synthetic_fixes_the_carton_blind_spot():
     )
     assert float(np.mean(m_sel)) > 0.88
     # vs the other-frequency survey: ~fade_fraction (the increment-1 blind spot, now modeled)
-    m_oth, _ = dr20radio.crossmatch(
+    m_oth, _, _ = dr20radio.crossmatch(
         s["ra_q"][radio_carton],
         s["dec_q"][radio_carton],
         s["ra_r2"],
@@ -159,3 +160,49 @@ def test_parse_racs_csv():
     assert ra.tolist() == [3.14, 10.0]
     assert dec.tolist() == [-41.5, -50.0]
     assert flux.tolist() == [2.5, 1.1]
+
+
+def test_log_luminosity_known_value():
+    # z=1, 1 mJy at 1.4 GHz, alpha=-0.7: d_L(Planck18)=6791.3 Mpc = 2.096e26 m ->
+    # 4 pi d_L^2 = 5.52e53 m^2, x 1e-29 W/m^2/Hz x 2^-0.3 -> 4.48e24 -> log10 = 24.65
+    lg = dr20radio.log_luminosity_whz(np.array([1.0]), np.array([1.0]), freq_ghz=1.4, alpha=-0.7)
+    assert lg[0] == pytest.approx(24.65, abs=0.03)
+    # brighter flux -> proportionally higher luminosity (pure scaling)
+    lg10 = dr20radio.log_luminosity_whz(np.array([1.0]), np.array([10.0]), freq_ghz=1.4, alpha=-0.7)
+    assert lg10[0] - lg[0] == pytest.approx(1.0, abs=1e-9)
+
+
+def test_luminosity_matched_fractions_applies_common_limit():
+    rng = np.random.default_rng(7)
+    n = 2000
+    z = rng.uniform(0.5, 2.5, n)
+    matched = rng.random(n) < 0.5
+    # counterpart fluxes just above this survey's limit: 1-3x s_lim
+    s_lim = 1.0
+    s = s_lim * rng.uniform(1.0, 3.0, n)
+    bins = np.array([0.0, 1.0, 2.0, 3.0])
+    # other survey shallower by 10x at same freq -> common limit cuts everything below
+    # 10*s_lim: only counterparts with s >= 10 survive -> fraction ~ 0
+    out_deep_other = dr20radio.luminosity_matched_fractions(
+        z,
+        matched,
+        s,
+        freq_ghz=1.4,
+        s_lim_this_mjy=s_lim,
+        s_lim_other_mjy=10.0,
+        other_freq_ghz=1.4,
+        bins=bins,
+    )
+    assert sum(out_deep_other["k"]) == 0
+    # other survey deeper -> common limit is our own -> all matched count
+    out_shallow_other = dr20radio.luminosity_matched_fractions(
+        z,
+        matched,
+        s,
+        freq_ghz=1.4,
+        s_lim_this_mjy=s_lim,
+        s_lim_other_mjy=0.1,
+        other_freq_ghz=1.4,
+        bins=bins,
+    )
+    assert sum(out_shallow_other["k"]) == int(matched.sum())
