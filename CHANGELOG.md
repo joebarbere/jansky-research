@@ -9,6 +9,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+
+- `plans/88-dr20-radio-census.md` — new slice plan (`dr20radio`): the first radio-counterpart
+  census of the SDSS-V DR20 Black Hole Mapper quasars (VLASS north / RACS south). GATE 0
+  done 2026-08-07: catalog pinned to the file+column level (spAll-lite, 177 MiB, `OBS`
+  hemisphere flag), novelty verified (all prior SDSS×radio work is legacy-catalog based; the
+  southern SDSS×RACS pairing was categorically impossible before DR20), the eROSITA-rights
+  landmine scoped out (X-ray leg deferred), and the radio-targeted open-fiber carton
+  circularity identified with its exclusion baked into the plan.
+
 ## [1.3.1] — 2026-08-05
 
 ### Fixed
