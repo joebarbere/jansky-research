@@ -4,9 +4,9 @@
   "n_quasars_clean": 276055,
   "n_north_census": 202691,
   "n_north_radio_carton_excluded": 280,
-  "obs_breakdown_north": {
-    "APO": 128509,
-    "LCO": 74462
+  "obs_breakdown_north_census": {
+    "APO": 128258,
+    "LCO": 74433
   },
   "radius_arcsec": 2.5,
   "epochs": {
@@ -24,9 +24,16 @@
       },
       "corrected_fraction": 0.04167,
       "carton_validation": {
-        "n": 280,
-        "matched": 87,
-        "fraction": 0.3107
+        "racsradio_cross_frequency": {
+          "n": 53,
+          "matched": 26,
+          "fraction": 0.4906
+        },
+        "lofarradio_cross_frequency": {
+          "n": 227,
+          "matched": 61,
+          "fraction": 0.2687
+        }
       },
       "n_radio_sources": 1873524
     },
@@ -44,9 +51,16 @@
       },
       "corrected_fraction": 0.04381,
       "carton_validation": {
-        "n": 280,
-        "matched": 98,
-        "fraction": 0.35
+        "racsradio_cross_frequency": {
+          "n": 53,
+          "matched": 27,
+          "fraction": 0.5094
+        },
+        "lofarradio_cross_frequency": {
+          "n": 227,
+          "matched": 71,
+          "fraction": 0.3128
+        }
       },
       "n_radio_sources": 2360730
     }
@@ -202,6 +216,81 @@
     ],
     "s_lim_this_mjy": 1.0,
     "s_lim_other_mjy": 3.0,
+    "alpha": -0.7
+  },
+  "luminosity_matched_conservative": {
+    "bin_lo": [
+      0.0,
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0
+    ],
+    "bin_hi": [
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      6.0
+    ],
+    "n": [
+      28505,
+      47300,
+      48266,
+      40516,
+      22717,
+      9846,
+      4937,
+      333
+    ],
+    "k": [
+      775,
+      1618,
+      1764,
+      1404,
+      741,
+      394,
+      270,
+      18
+    ],
+    "frac": [
+      0.02719,
+      0.03421,
+      0.03655,
+      0.03465,
+      0.03262,
+      0.04002,
+      0.05469,
+      0.05405
+    ],
+    "lo": [
+      0.02624,
+      0.03338,
+      0.0357,
+      0.03376,
+      0.03146,
+      0.03809,
+      0.05154,
+      0.04294
+    ],
+    "hi": [
+      0.02817,
+      0.03505,
+      0.03741,
+      0.03557,
+      0.03382,
+      0.04204,
+      0.05802,
+      0.06783
+    ],
+    "s_lim_this_mjy": 1.0,
+    "s_lim_other_mjy": 5.0,
     "alpha": -0.7
   }
 }

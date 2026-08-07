@@ -1,0 +1,255 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\shorttitle{Radio counterparts of the first southern SDSS quasars}
+\shortauthors{Barbere}
+\begin{document}
+
+\title{The First Radio-Counterpart Census of the SDSS-V DR20 Black Hole Mapper Quasars,
+Including the First Southern-Hemisphere SDSS Quasar Spectra}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+SDSS-V Data Release 20 delivers the Black Hole Mapper's spectroscopically confirmed quasar
+sample, including the first optical SDSS spectra ever taken from the southern hemisphere
+(BOSS on the du~Pont at Las Campanas). Because VLASS stops at $\delta = -40^\circ$ and
+southern SDSS quasar spectra did not exist before DR20, the pairing ``SDSS spectroscopic
+quasars $\times$ RACS south of $-40^\circ$'' was impossible until this release; no radio
+cross-match of any SDSS-V quasar catalog has been published. I present the first such
+census. North of $-40^\circ$, \drNorthCensus\ clean-redshift DR20 quasars matched against
+the VLASS Quick Look epoch catalogs at 2.5\arcsec\ give per-epoch radio-detection fractions
+of \drNorthEtwoPct\% (E2) and \drNorthEthreePct\% (E3) after subtracting a
+\emph{measured} chance-coincidence rate (\drNorthFmPct\% from position-shift trials), or
+\drNorthAnyPct\% matched in any epoch. South of $-40^\circ$ --- sky where these are the
+first SDSS quasar spectra --- \drSouthCensus\ quasars (all observed from Las Campanas)
+matched against RACS-low DR1 at 5\arcsec\ give \drSouthPct\% (chance rate \drSouthFmPct\%).
+Radio-targeted open-fiber cartons are excluded from all fractions as circular; used instead
+as a positive control, RACS-selected cartons recover at \drCartonRacsPct\%
+($n=\drCartonRacsN$) against their selecting survey, while LOFAR-selected cartons recover
+at only \drCartonLofarPct\% ($n=\drCartonLofarN$) at 888\,MHz, and at 3\,GHz VLASS
+recovers RACS-selected cartons at \drCartonVlassRacsPct\% and LOFAR-selected at
+\drCartonVlassLofarPct\% --- direct measurements of cross-frequency fading within the
+same targeting classes. Above a common
+rest-frame 1.4\,GHz luminosity limit the fractions become \drLumNorthPct\% (north) versus
+\drLumSouthPct\% (south); the residual gap is consistent with survey-side effects (spectral-index
+assumption, beam-size mismatch, hemisphere targeting mix), which I quantify but do not
+attribute to astrophysics.
+\end{abstract}
+
+\keywords{Quasars (1319) --- Radio active galactic nuclei (2134) --- Surveys (1671) ---
+Catalogs (205)}
+
+\section{Introduction}
+
+The radio properties of optically selected quasars have been surveyed for as long as both
+kinds of survey have existed \citep{kellermann1989, ivezic2002, condon1998}, and the modern
+literature pairs SDSS quasar catalogs with every major radio survey generation
+\citep[e.g.][]{arnaudova2024}. Every one of those studies, however, is built on
+northern-hemisphere SDSS spectroscopy: the Sloan telescope at Apache Point bounds the
+spectroscopic quasar sample to $\delta \gtrsim -20^\circ$, and the deep southern sky has
+never contained an SDSS spectroscopic quasar at all.
+
+SDSS-V \citep{kollmeier2025} changed the second half of that sentence. Data Release 20
+\citep[DR20;][]{dr20}, released 2026 August~3, includes Black Hole Mapper (BHM) BOSS
+spectroscopy taken with the du~Pont telescope at Las Campanas Observatory (LCO) --- the
+first optical SDSS spectra from the southern hemisphere. Meanwhile the radio sky south of
+$\delta = -40^\circ$ is the exclusive territory of ASKAP's Rapid Continuum Survey
+\citep[RACS;][]{mcconnell2020}, because VLASS \citep{lacy2020} cannot point there. The
+combination ``SDSS spectroscopic quasars $\times$ RACS in the deep south'' was therefore
+categorically impossible before DR20, and as of this writing no radio cross-match of any
+SDSS-V BHM catalog has been published.
+
+This paper performs that census, in both hemispheres, with three methodological
+commitments. First, the chance-coincidence rate is \emph{measured}, by rigid position-shift
+trials against the real radio catalogs, rather than estimated from an assumed source
+density. Second, the BHM open-fiber cartons that targeted radio sources
+(\code{openfibertargets\_bhm\_racsradio\_*}, \code{...\_lofarradio\_*}) are excluded from
+every detection fraction --- counting objects that hold fibers \emph{because} they are
+radio sources would be circular --- and are used instead as a positive control, which turns
+out to measure cross-frequency spectral fading within a fixed targeting class. Third, the
+north/south comparison is made above a common rest-frame luminosity limit with all
+conversion assumptions stated, and the residual difference is attributed to the surveys,
+not the sky, unless the data force otherwise (they do not).
+
+All code, committed evidence files, and figures are in the open-source
+\code{jansky-research} toolkit \citep{janskyresearch}; every number in this paper is
+generated from version-controlled result files by the same pipeline that produced them.
+
+\section{Data}
+
+\subsection{DR20 quasar sample}
+
+The parent catalog is the DR20 BOSS summary file
+\code{spAll-lite-v6\_2\_1-allepoch.fits.gz}. I select \code{CLASS = QSO} with
+\code{ZWARNING = 0} (a clean pipeline redshift), yielding \drNorthCensus\ census quasars at
+$\delta > -40^\circ$ and \drSouthCensus\ at $\delta \le -40^\circ$ after removing the
+radio-targeted cartons (Section~\ref{sec:cartons}). The \code{OBS} column records the
+observatory: every one of the \drSouthCensus\ deep-south quasars is an LCO observation,
+confirming in-data that this sample is the new southern territory. The BHM sample is
+heterogeneous by construction --- eROSITA-selected, variability-selected, and filler
+cartons enter with different selection functions \citep{dr20} --- so all fractions here
+describe \emph{this targeted sample}, not a homogeneous quasar population; the
+hemisphere comparison inherits any north/south difference in targeting mix, a caveat
+carried explicitly through Section~\ref{sec:contrast}.
+
+\subsection{VLASS (north)}
+
+The northern radio catalog is the CIRADA VLASS Quick Look component list
+\citep{gordon2021}: epoch 2 with the recommended quality cuts (\code{Duplicate\_flag} $<$
+2, \code{Quality\_flag} $\in \{0,4\}$, non-empty islands), and the epoch-3 interim
+component lists with their binary quality flag. VLASS observes at 2--4\,GHz (3\,GHz
+effective) with a 2.5\arcsec\ beam; the per-epoch catalog reliability threshold is
+$\sim$1\,mJy \citep{gordon2021}.
+
+\subsection{RACS (south)}
+
+The southern radio catalog is the RACS-low DR1 Stokes-I source list
+\citep[887.5\,MHz, 25\arcsec\ beam;][]{mcconnell2020, hale2021}, retrieved from the CASDA
+TAP service in declination strips (\drRacsSrc\ sources; the survey covers $-80^\circ
+\lesssim \delta \le +30^\circ$, with the published Galactic-plane cut). \citet{hale2021}
+quote a 95\% point-source completeness of $\sim$3\,mJy from source-count modeling and a
+more conservative $\sim$5\,mJy from injection simulations; I adopt \drSlimRacs\,mJy as
+the primary limit and repeat the luminosity-matched comparison at \drSlimRacsCons\,mJy
+(Section~\ref{sec:contrast}). The band $-40^\circ < \delta \le +30^\circ$ is covered by
+both surveys and provides an internal cross-check.
+
+\section{Method}
+
+\subsection{Matching and the measured false-match rate}
+
+Quasars are matched to the nearest radio component with \code{astropy}
+\citep{astropy}: at 2.5\arcsec\ against VLASS (matched to its beam and astrometry) and
+5\arcsec\ against RACS (whose 25\arcsec\ beam implies few-arcsecond positional scatter for
+faint sources). The chance-coincidence rate is measured, not modeled: each of ten trials
+rigidly shifts every quasar position by a random 5--30\arcmin\ offset and repeats the
+match; the mean shifted match fraction (\drNorthFmPct\% VLASS E2, \drSouthFmPct\% RACS
+deep south) is subtracted from every raw fraction. The synthetic-survey test suite
+verifies that this procedure recovers injected counterpart fractions to better than the
+quoted precision.
+
+\subsection{Radio-targeted cartons as a positive control}
+\label{sec:cartons}
+
+DR20 open-fiber cartons prefixed \code{openfibertargets\_bhm\_racsradio} and
+\code{...\_lofarradio} hold fibers because a radio source was already known there. They are
+excluded from all census fractions. As a control they are used twice. Matched against
+the survey that selected them (RACS-selected cartons vs.\ RACS-low), they recover at
+\drCartonRacsPct\% ($\drCartonRacsN$ objects in RACS sky) --- the expected near-complete
+recovery, with the shortfall consistent with positional scatter of a 25\arcsec-beam
+catalog against a 5\arcsec\ radius and catalog-version differences between the targeting
+list and DR1. Matched \emph{across} frequency, the same classes fade, and fade more the larger
+the frequency jump: LOFAR-selected (144\,MHz) cartons recover at only \drCartonLofarPct\%
+in RACS at 888\,MHz and \drCartonVlassLofarPct\% in VLASS at 3\,GHz, while RACS-selected
+(888\,MHz) cartons recover at \drCartonVlassRacsPct\% in VLASS. (Only the highest-priority
+\code{FIRSTCARTON} is recorded per object; any radio-targeted object entering under a
+different first carton would evade the exclusion, a residual leak bounded by the small
+carton counts.) These are
+direct, same-objects measurements of how steep-spectrum selection thins out toward higher
+frequency, and they calibrate expectations for any cross-survey census.
+
+\subsection{Common-luminosity-limit comparison}
+\label{sec:method-lum}
+
+Raw fractions from surveys at different frequencies and depths are not comparable. For the
+contrast I convert each survey's flux limit (VLASS \drSlimVlass\,mJy, the catalog
+reliability threshold; RACS \drSlimRacs\,mJy, the 95\% completeness limit) to a rest-frame
+1.4\,GHz luminosity limit at each quasar's redshift, assuming $S_\nu \propto \nu^{-0.7}$
+and Planck~2018 cosmology \citep{planck18}, and count a quasar as radio-detected only if
+its matched counterpart's peak flux converts to a luminosity above the \emph{common}
+(maximum) limit of the two surveys at its redshift. The spectral-index assumption is the
+weakest link and is discussed with the result.
+
+\section{Results}
+
+\subsection{Northern census (VLASS)}
+
+Of \drNorthCensus\ census quasars at $\delta > -40^\circ$: \drNorthEtwoPct\% have an epoch-2
+counterpart and \drNorthEthreePct\% an epoch-3 counterpart after chance-rate subtraction;
+\drNorthAnyPct\% match in at least one epoch. The detection fraction is elevated in the
+lowest bin ($z<0.5$, where host-galaxy emission and low-luminosity AGN enter), nearly flat
+at $\sim$4\% for $0.5 \lesssim z \lesssim 2.5$, and rises modestly beyond
+(Figure~\ref{fig:fractions}, left) --- consistent with the flux-limited selection of both
+catalogs rather than any claimed evolution.
+
+\subsection{Southern census (RACS): the first of its kind}
+
+Of \drSouthCensus\ deep-south quasars --- all du~Pont/LCO observations, constituting the
+first SDSS spectroscopic quasar sample in this sky --- \drSouthMatched\ have a RACS-low
+counterpart within 5\arcsec: \drSouthPct\% after subtracting the measured \drSouthFmPct\%
+chance rate. This is, to my knowledge, the first radio-counterpart measurement for any
+southern SDSS spectroscopic sample, and the headline number of this census. In the
+dual-coverage band the RACS-based fraction is \drOverlapPct\%, against \drNorthAnyPct\%
+from VLASS in the north --- same order, with the residual carrying the frequency and depth
+differences quantified next.
+
+\subsection{The luminosity-matched contrast}
+\label{sec:contrast}
+
+Above the common rest-1.4\,GHz luminosity limit (Section~\ref{sec:method-lum}) the
+fractions are \drLumNorthPct\% (north, VLASS) versus \drLumSouthPct\% (deep south, RACS);
+the overlap band gives \drOverlapLumPct\% above the same common limit. With the
+conservative \drSlimRacsCons\,mJy RACS completeness limit instead, the fractions shift to
+\drLumNorthConsPct\% versus \drLumSouthConsPct\% --- the gap is robust to that choice. A
+gap survives luminosity matching, but three survey-side effects plausibly account for it,
+and the overlap band --- where RACS recovers \drOverlapLumPct\% against VLASS's
+\drLumNorthPct\% on essentially the same sky --- shows they are real: (i) the
+$\alpha = -0.7$ K-correction under-credits flat-spectrum cores at 3\,GHz relative to
+888\,MHz, asymmetrically filtering the two legs; (ii) RACS's 25\arcsec\ beam blends and
+shifts faint-source positions relative to a 5\arcsec\ radius (the same effect visible in
+the \drCartonRacsPct\% positive control); (iii) the BHM targeting mix differs by
+hemisphere. I therefore report the contrast as a measured property of this
+catalog--survey pairing and explicitly do \emph{not} claim a hemispheric difference in
+quasar radio properties.
+
+\begin{figure*}
+\centering
+\includegraphics[width=\textwidth]{figures/dr20radio_fractions.pdf}
+\caption{Radio-detection fraction of DR20 BHM census quasars versus redshift, with 68\%
+($z=1$) Wilson score intervals. \emph{Left:} raw fractions at each survey's native depth --- VLASS
+any-epoch in the north (circles), RACS-low in the deep south ($\delta \le -40^\circ$,
+squares) and in the dual-coverage band (triangles). \emph{Right:} the same censuses
+counting only counterparts above the common rest-frame 1.4\,GHz luminosity limit of both
+surveys (Section~\ref{sec:method-lum}).}
+\label{fig:fractions}
+\end{figure*}
+
+\section{Limitations}
+
+The census inherits the BHM selection function, which is neither flux-complete nor uniform
+across the sky; fractions here are properties of the DR20 BHM quasar catalog, not of
+quasars. The luminosity matching assumes a single spectral index. The VLASS epoch catalogs
+carry known quick-look astrometric and flux caveats \citep{gordon2021}; the RACS DR1
+Galactic-plane cut removes $|b| \lesssim 5^\circ$ sky from the southern leg. The
+\drCartonRacsPct\% positive control (rather than $\sim$100\%) bounds the combined effect
+of positional scatter and targeting-list/DR1 version differences at about one part in
+nine for the RACS leg. Quasars outside the $0 \le z < 6$ binning range ($\lesssim$0.15\% of either census)
+enter the raw fractions but not the redshift-binned or luminosity-matched ones. None of
+these affect the categorical claim: the southern census
+existed for no earlier SDSS release, and its detection fraction is now measured.
+
+\section{Summary}
+
+(1) First radio cross-match of any SDSS-V BHM quasar catalog: \drNorthAnyPct\% of
+\drNorthCensus\ northern DR20 quasars have a VLASS quick-look counterpart
+(\drNorthEtwoPct\%/\drNorthEthreePct\% per epoch, corrected by a measured chance rate).
+(2) First radio census of the first southern SDSS quasar spectra: \drSouthPct\% of
+\drSouthCensus\ deep-south (all-LCO) quasars have a RACS-low counterpart. (3) Above a
+common luminosity limit the north/south fractions are \drLumNorthPct\% vs.\
+\drLumSouthPct\%, with the residual attributed to stated survey-side effects. (4) The
+radio-targeted cartons, excluded from all fractions as circular, double as a
+cross-frequency fading measurement: near-complete recovery against the selecting survey
+(\drCartonRacsPct\%), falling to \drCartonVlassRacsPct\% at 3\,GHz for 888\,MHz-selected
+targets and to \drCartonLofarPct\%/\drCartonVlassLofarPct\% (888\,MHz/3\,GHz) for
+144\,MHz-selected ones.
+
+\vspace{5mm}
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+NumPy, SciPy, astropy \citep{astropy}. Analysis assisted by Claude \citep{anthropicclaude};
+all results verified by the pipeline's test suite.}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}

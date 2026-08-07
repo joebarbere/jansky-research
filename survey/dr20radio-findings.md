@@ -90,6 +90,31 @@ Figure + macros: `paper_assets` (`--paper`) renders `dr20radio_fractions.pdf` (r
 luminosity-matched fractions vs z, Wilson bars) and `generated/macros.tex` from the
 committed evidence only.
 
+## GATE-2 + paper — 2026-08-07
+
+`papers/dr20radio/main.tex` (AASTeX, 4 pp) drafted from macros generated off the committed
+evidence; science-reviewer pass returned **no blockers**, four should-fixes, all applied:
+
+- **DR20 byline**: the data-release paper's author is the SDSS Collaboration, not
+  "Almeida et al." — refs.bib and the plan corrected.
+- **RACS completeness is two numbers** (Hale et al.: ~3 mJy source-count based, ~5 mJy
+  simulation based): both stated; the luminosity-matched contrast repeated at the
+  conservative 5 mJy — north 3.45% vs south 2.39% (primary: 4.06% vs 2.82%). The gap is
+  robust to the choice.
+- **North carton validation split by selecting survey** (same lesson, third appearance):
+  at 3 GHz, RACS-selected cartons recover at 49%, LOFAR-selected at 27% — the previously
+  quoted pooled ~31% was again an average over two populations. The cross-frequency fading
+  table is now complete: selecting-survey 89%, 888 MHz→3 GHz 49%, 144 MHz→888 MHz 17%,
+  144 MHz→3 GHz 27%*. (*The 144 MHz class recovering slightly better at 3 GHz than at
+  888 MHz reflects the different comparison samples/depths, not spectra turning over —
+  noted, not interpreted.)
+- **Overlap-band luminosity-matched number surfaced** (3.12% vs north's 4.06% on shared
+  sky) — the survey-side-effects claim now cites its evidence.
+- Nits: RACS footprint wording (−80° not the TAP query bound), Wilson 68% stated, dropped
+  out-of-z-range quasars (<0.15%) noted in Limitations, FIRSTCARTON-only exclusion caveat
+  added, north z<0.5 elevation acknowledged, obs breakdown now census-only, plan status
+  updated.
+
 ## Next
 
 - Increment 2: RACS southern leg (the categorical first — SDSS quasar spectra south of

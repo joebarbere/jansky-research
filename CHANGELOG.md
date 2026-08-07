@@ -11,6 +11,11 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` paper (plan 88): `papers/dr20radio/` (AASTeX, 4 pp) — GATE-2 passed (no
+  blockers); should-fixes applied: SDSS Collaboration byline, conservative 5 mJy RACS-limit
+  variant (contrast robust: 3.45% vs 2.39%), north carton validation split by selecting
+  survey (49% RACS-selected / 27% LOFAR-selected at 3 GHz), overlap-band luminosity-matched
+  3.12% surfaced. Slices registered in the Makefile paper targets.
 - `dr20radio` increment 3 (plan 88): luminosity-matched north/south contrast — counterpart
   fluxes through the match chain, rest-1.4 GHz common-limit fractions (north 4.06% vs deep
   south 2.82%, overlap 3.12%), `paper_assets` figure + macros from committed evidence.
