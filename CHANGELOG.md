@@ -11,6 +11,11 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` increment 1 (plan 88): census tooling + synthetic recover-a-known — spAll
+  quasar selection with the radio-carton circularity exclusion (verified to matter in the
+  synthetic round-trip), sky cross-match, position-shift-measured false-match rates
+  (density-scaling verified), Wilson-interval detection fractions, and the resumable
+  spAll-lite fetcher. 7 offline tests.
 - `plans/88-dr20-radio-census.md` — new slice plan (`dr20radio`): the first radio-counterpart
   census of the SDSS-V DR20 Black Hole Mapper quasars (VLASS north / RACS south). GATE 0
   done 2026-08-07: catalog pinned to the file+column level (spAll-lite, 177 MiB, `OBS`
