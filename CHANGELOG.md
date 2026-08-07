@@ -11,6 +11,11 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` southern leg (plan 88): **the categorical first** — 73,074 DR20 quasars south
+  of −40° (pure LCO, confirmed in-data) × RACS-low DR1 → **3.95% radio-detected** at 5″
+  (measured false-match 0.06%); overlap band 3.76% vs VLASS's 4.67%; carton validation
+  split by selecting survey resolves the pooled 66%: racsradio×RACS 88.9% (the pipeline
+  validation) vs lofarradio×RACS 17.2% (cross-frequency fading). Evidence committed.
 - `dr20radio` increment 2 code (plan 88): the RACS southern leg — strip-wise resumable
   RACS-low DR1 fetcher (CASDA sync TAP, 1° Dec strips, verified live: 2,123,638 sources),
   `run_south` (deep-south categorical-first census + the −40..+30 overlap band for the

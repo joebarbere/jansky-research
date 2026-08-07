@@ -35,6 +35,35 @@ north of −40°, 280 radio-carton objects excluded from fractions.
 
 Committed evidence: `results/dr20radio_north.json`.
 
+## Increment 2 — the southern leg (the categorical first) — done 2026-08-07
+
+RACS-low DR1 fetched strip-wise from CASDA TAP (115 × 1° Dec strips, resumable, 2,123,638
+sources cached locally), matched at 5″ (RACS's 25″ beam motivates the wider radius; false
+match measured as always).
+
+| block | n quasars | matched | corrected fraction |
+|---|---|---|---|
+| **δ ≤ −40° (SDSS × RACS: first ever possible)** | **73,074** | 2,930 | **3.95%** |
+| −40° < δ ≤ +30° (VLASS cross-check band) | 174,171 | 6,626 | 3.76% |
+
+- The deep-south census is **pure LCO** (73,074/73,074) — the du Pont exclusivity the
+  categorical-first claim rests on, confirmed in the data itself.
+- Overlap-band consistency: RACS 3.76% vs VLASS 4.67% in comparable sky — same order, with
+  the difference carrying the frequency/depth information the luminosity-matched contrast
+  (increment 3) will quantify properly.
+- Deep-south z-trend: elevated at z<0.5 (6.6% — host/low-z AGN effects), flat ≈3.4–3.9%
+  through the bulk, rising at z>4 on small numbers (11%, n=73).
+- **Carton validation, split by selecting survey (the increment-1 lesson paying off):**
+  racsradio cartons match RACS at **88.9%** (56/63 — the near-expected pipeline validation;
+  the residual is plausibly catalog-version/Galactic-cut differences between the targeting
+  product and the DR1 galactic-cut source list, noted for the paper), while lofarradio
+  cartons match at **17.2%** (5/29) — 144 MHz-selected steep-spectrum sources mostly fade
+  below 888 MHz, the same cross-frequency physics as the 31–35% VLASS figure. The pooled
+  66% that first came out was two clean populations averaged; the two-survey synthetic now
+  regression-tests this whole class of confusion.
+
+Committed evidence: `results/dr20radio_south.json`.
+
 ## Next
 
 - Increment 2: RACS southern leg (the categorical first — SDSS quasar spectra south of
