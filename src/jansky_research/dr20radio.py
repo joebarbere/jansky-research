@@ -25,9 +25,12 @@ __all__ = [
     "crossmatch",
     "detection_fraction",
     "false_match_rate",
+    "parse_racs_csv",
     "run_north",
+    "run_south",
     "select_quasars",
     "synthetic_survey",
+    "synthetic_two_surveys",
     "wilson_interval",
 ]
 
@@ -213,6 +216,53 @@ def synthetic_survey(
     }
 
 
+RACS_TAP_SYNC = "https://casda.csiro.au/casda_vo_tools/tap/sync"
+RACS_TABLE = "AS110.racs_dr1_sources_galacticcut_v2021_08_v02"  # 2,123,638 sources (Hale+ 2021)
+
+
+def synthetic_two_surveys(
+    *,
+    fade_fraction: float = 0.35,
+    seed: int = 0,
+    **kwargs,
+) -> dict:
+    """Two-survey variant of :func:`synthetic_survey` — the increment-1 blind spot, fixed.
+
+    The base survey acts as the SELECTING survey: every radio-carton quasar has a counterpart
+    there by construction. The second ("matching") survey keeps only ``fade_fraction`` of the
+    carton counterparts (spectral fading between observing frequencies) while ordinary
+    counterparts carry over unchanged — so a census pipeline must see carton-match ~100%
+    against the selecting survey but only ~``fade_fraction`` against the other one.
+    """
+    s = synthetic_survey(seed=seed, **kwargs)
+    rng = np.random.default_rng(seed + 1)
+    n_carton = int((np.char.startswith(s["firstcarton"], "openfibertargets")).sum())
+    # the last n_carton radio sources are the carton counterparts (see synthetic_survey)
+    keep = np.ones(s["ra_r"].size, dtype=bool)
+    carton_slice = np.arange(s["ra_r"].size - n_carton, s["ra_r"].size)
+    keep[carton_slice] = rng.random(n_carton) < fade_fraction
+    s["ra_r2"] = s["ra_r"][keep]
+    s["dec_r2"] = s["dec_r"][keep]
+    s["fade_fraction"] = fade_fraction
+    return s
+
+
+def parse_racs_csv(text: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Parse a RACS TAP CSV chunk into ``(ra, dec, peak_flux_mjy)`` arrays."""
+    ra, dec, flux = [], [], []
+    for line in text.splitlines()[1:]:
+        parts = line.split(",")
+        if len(parts) != 3:
+            continue
+        try:
+            ra.append(float(parts[0]))
+            dec.append(float(parts[1]))
+            flux.append(float(parts[2]))
+        except ValueError:
+            continue
+    return np.array(ra), np.array(dec), np.array(flux)
+
+
 # ------------------------------------------------------------------------- real data legs
 
 
@@ -376,6 +426,142 @@ def run_north(
     return metrics
 
 
+def fetch_racs_positions(
+    dest_dir: str = "data/racs_dr1",
+    *,
+    dec_min: float = -85.0,
+    dec_max: float = 30.0,
+    strip_deg: float = 1.0,
+) -> dict:  # pragma: no cover - network
+    """Fetch the RACS-low DR1 source positions by resumable 1-degree Dec strips.
+
+    Each strip is cached as ``<dest>/strip_<dec>.csv`` (a completed strip is never re-fetched);
+    the consolidated arrays are returned and cached as ``<dest>/racs_positions.npz``.
+    """
+    import time
+    from pathlib import Path
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+
+    dest = Path(dest_dir)
+    dest.mkdir(parents=True, exist_ok=True)
+    npz = dest / "racs_positions.npz"
+    if npz.exists():
+        d = np.load(npz)
+        return {"ra": d["ra"], "dec": d["dec"], "flux": d["flux"]}
+    ras, decs, fluxes = [], [], []
+    lo = dec_min
+    while lo < dec_max:
+        hi = min(lo + strip_deg, dec_max)
+        cache = dest / f"strip_{lo:+.0f}.csv"
+        if not cache.exists():
+            q = f"SELECT ra, dec, peak_flux FROM {RACS_TABLE} WHERE dec >= {lo} AND dec < {hi}"
+            params = urlencode({"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": q})
+            for attempt in range(6):
+                try:
+                    with urlopen(f"{RACS_TAP_SYNC}?{params}", timeout=180) as r:
+                        text = r.read().decode()
+                    if not text.startswith("ra"):
+                        raise OSError("unexpected TAP response")
+                    cache.write_text(text)
+                    break
+                except (TimeoutError, OSError):
+                    time.sleep(min(2**attempt, 60))
+            else:
+                raise OSError(f"RACS strip {lo} failed after retries")
+            print(f"[dr20radio] RACS strip {lo:+.0f}: cached", flush=True)
+        ra, dec, fx = parse_racs_csv(cache.read_text())
+        ras.append(ra)
+        decs.append(dec)
+        fluxes.append(fx)
+        lo = hi
+    out = {
+        "ra": np.concatenate(ras),
+        "dec": np.concatenate(decs),
+        "flux": np.concatenate(fluxes),
+    }
+    np.savez_compressed(npz, ra=out["ra"], dec=out["dec"], flux=out["flux"])
+    return out
+
+
+def run_south(
+    out: str = ".", *, radius_arcsec: float = 5.0, n_shift_trials: int = 10
+) -> dict:  # pragma: no cover - network + bulk data (pure pieces tested offline)
+    """Real leg B: the categorical first — DR20 quasars south of -40 deg vs RACS-low DR1.
+
+    Also computes the overlap band (-40..+30) for the VLASS cross-check, and validates the
+    racsradio carton against its SELECTING survey (expected ~100%). RACS-low's 25" beam
+    motivates the wider default match radius (5"), with the false-match rate measured as
+    always. Writes ``results/dr20radio_south.json``.
+    """
+    import json
+    from pathlib import Path
+
+    spall = fetch_spall()
+    q = read_spall_quasars(spall)
+    racs = fetch_racs_positions()
+    zbins = np.array([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 6.0])
+
+    def census_block(sel: np.ndarray, label: str) -> dict:
+        cen = sel & ~q["radio_carton"]
+        m, _ = crossmatch(
+            q["ra"][cen], q["dec"][cen], racs["ra"], racs["dec"], radius_arcsec=radius_arcsec
+        )
+        fm = false_match_rate(
+            q["ra"][cen],
+            q["dec"][cen],
+            racs["ra"],
+            racs["dec"],
+            radius_arcsec=radius_arcsec,
+            n_trials=n_shift_trials,
+        )
+        p, lo_w, hi_w = wilson_interval(int(m.sum()), int(m.size))
+        return {
+            "label": label,
+            "n_census": int(m.size),
+            "n_matched": int(m.sum()),
+            "raw_fraction": round(p, 5),
+            "wilson_lo": round(lo_w, 5),
+            "wilson_hi": round(hi_w, 5),
+            "false_match": fm,
+            "corrected_fraction": round(p - fm["rate"], 5),
+            "fraction_vs_z": detection_fraction(q["z"][cen], m, bins=zbins),
+            "obs_breakdown": {o: int((q["obs"][cen] == o).sum()) for o in np.unique(q["obs"][cen])},
+        }
+
+    deep_south = q["dec"] <= VLASS_DEC_LIMIT_DEG
+    overlap = (q["dec"] > VLASS_DEC_LIMIT_DEG) & (q["dec"] <= 30.0)
+    # Carton validation against the SELECTING survey. All radio cartons are pooled here
+    # (racsradio + lofarradio); if the pooled rate reads low, the racsradio-only split needs
+    # the per-object carton string added to read_spall_quasars — noted in the metrics.
+    carton_south = q["radio_carton"] & (q["dec"] <= 30.0)
+    mc, _ = crossmatch(
+        q["ra"][carton_south],
+        q["dec"][carton_south],
+        racs["ra"],
+        racs["dec"],
+        radius_arcsec=radius_arcsec,
+    )
+    metrics = {
+        "source": f"SDSS-V DR20 spAll-lite x RACS-low DR1 ({RACS_TABLE})",
+        "n_racs_sources": int(racs["ra"].size),
+        "radius_arcsec": radius_arcsec,
+        "deep_south": census_block(deep_south, "dec <= -40 (SDSS x RACS: categorical first)"),
+        "overlap_band": census_block(overlap, "-40 < dec <= +30 (VLASS cross-check band)"),
+        "carton_validation_vs_selecting_survey": {
+            "n": int(mc.size),
+            "matched": int(mc.sum()),
+            "fraction": round(float(np.mean(mc)), 4) if mc.size else None,
+            "note": "all radio cartons incl. lofar-selected; racsradio-only split needs the"
+            " carton string retained per-object (added if this validation reads low)",
+        },
+    }
+    op = Path(out)
+    (op / "results").mkdir(parents=True, exist_ok=True)
+    (op / "results" / "dr20radio_south.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    return metrics
+
+
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import json
@@ -383,13 +569,26 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p = argparse.ArgumentParser(description="DR20 BHM x VLASS/RACS radio census (plan 88).")
     p.add_argument("--out", default=".")
     p.add_argument("--north", action="store_true", help="run the VLASS northern leg")
+    p.add_argument("--south", action="store_true", help="run the RACS southern leg")
     args = p.parse_args(argv)
+    if args.south:
+        m = run_south(args.out)
+        slim = {
+            k: (
+                {kk: vv for kk, vv in v.items() if kk != "fraction_vs_z"}
+                if isinstance(v, dict) and "fraction_vs_z" in v
+                else v
+            )
+            for k, v in m.items()
+        }
+        print(json.dumps(slim, indent=2))
+        return 0
     if args.north:
         m = run_north(args.out)
         slim = {k: v for k, v in m.items() if k != "fraction_vs_z_any_epoch"}
         print(json.dumps(slim, indent=2))
         return 0
-    p.error("choose a mode: --north (RACS southern leg lands in increment 2)")
+    p.error("choose a mode: --north or --south")
     return 2
 
 
