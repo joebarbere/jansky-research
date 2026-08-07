@@ -298,12 +298,15 @@ def read_spall_quasars(path: str) -> dict:
         zw = np.asarray(d["ZWARNING"])
         carton = d["FIRSTCARTON"]
         quasar, radio_carton = select_quasars(cls, zw, carton)
+        carton_s = np.char.strip(np.asarray(carton, dtype=str))
         return {
             "ra": np.asarray(d["RACAT"], float)[quasar],
             "dec": np.asarray(d["DECCAT"], float)[quasar],
             "z": np.asarray(d["Z"], float)[quasar],
             "obs": np.char.strip(np.asarray(d["OBS"], dtype=str))[quasar],
             "radio_carton": radio_carton[quasar],
+            "carton_racs": np.char.startswith(carton_s, "openfibertargets_bhm_racsradio")[quasar],
+            "carton_lofar": np.char.startswith(carton_s, "openfibertargets_bhm_lofarradio")[quasar],
             "n_total_rows": int(len(d)),
         }
 
@@ -531,29 +534,32 @@ def run_south(
 
     deep_south = q["dec"] <= VLASS_DEC_LIMIT_DEG
     overlap = (q["dec"] > VLASS_DEC_LIMIT_DEG) & (q["dec"] <= 30.0)
-    # Carton validation against the SELECTING survey. All radio cartons are pooled here
-    # (racsradio + lofarradio); if the pooled rate reads low, the racsradio-only split needs
-    # the per-object carton string added to read_spall_quasars — noted in the metrics.
-    carton_south = q["radio_carton"] & (q["dec"] <= 30.0)
-    mc, _ = crossmatch(
-        q["ra"][carton_south],
-        q["dec"][carton_south],
-        racs["ra"],
-        racs["dec"],
-        radius_arcsec=radius_arcsec,
-    )
+
+    # Carton validation split by SELECTING survey: racsradio cartons vs RACS is the true
+    # ~100% pipeline validation; lofarradio (144 MHz-selected) vs RACS is a cross-frequency
+    # fraction, exactly like the VLASS case in increment 1.
+    def carton_block(mask: np.ndarray) -> dict:
+        mm, _ = crossmatch(
+            q["ra"][mask], q["dec"][mask], racs["ra"], racs["dec"], radius_arcsec=radius_arcsec
+        )
+        return {
+            "n": int(mm.size),
+            "matched": int(mm.sum()),
+            "fraction": round(float(np.mean(mm)), 4) if mm.size else None,
+        }
+
+    in_racs_sky = q["dec"] <= 30.0
+    carton_racs_v = carton_block(q["carton_racs"] & in_racs_sky)
+    carton_lofar_v = carton_block(q["carton_lofar"] & in_racs_sky)
     metrics = {
         "source": f"SDSS-V DR20 spAll-lite x RACS-low DR1 ({RACS_TABLE})",
         "n_racs_sources": int(racs["ra"].size),
         "radius_arcsec": radius_arcsec,
         "deep_south": census_block(deep_south, "dec <= -40 (SDSS x RACS: categorical first)"),
         "overlap_band": census_block(overlap, "-40 < dec <= +30 (VLASS cross-check band)"),
-        "carton_validation_vs_selecting_survey": {
-            "n": int(mc.size),
-            "matched": int(mc.sum()),
-            "fraction": round(float(np.mean(mc)), 4) if mc.size else None,
-            "note": "all radio cartons incl. lofar-selected; racsradio-only split needs the"
-            " carton string retained per-object (added if this validation reads low)",
+        "carton_validation": {
+            "racsradio_vs_racs_selecting_survey": carton_racs_v,
+            "lofarradio_vs_racs_cross_frequency": carton_lofar_v,
         },
     }
     op = Path(out)
