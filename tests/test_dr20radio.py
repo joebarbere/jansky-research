@@ -127,3 +127,35 @@ def test_read_spall_quasars_on_synthetic_fits(tmp_path):
     assert q["ra"].size == 4  # 6 - GALAXY - ZWARNING!=0
     assert q["radio_carton"].sum() == 1
     assert set(q["obs"]) <= {"APO", "LCO"}
+
+
+def test_two_survey_synthetic_fixes_the_carton_blind_spot():
+    s = dr20radio.synthetic_two_surveys(seed=5, fade_fraction=0.35)
+    _, radio_carton = dr20radio.select_quasars(s["cls"], s["zwarning"], s["firstcarton"])
+    # vs the SELECTING survey: ~100% (counterpart by construction)
+    m_sel, _ = dr20radio.crossmatch(
+        s["ra_q"][radio_carton],
+        s["dec_q"][radio_carton],
+        s["ra_r"],
+        s["dec_r"],
+        radius_arcsec=s["radius_arcsec"],
+    )
+    assert float(np.mean(m_sel)) > 0.88
+    # vs the other-frequency survey: ~fade_fraction (the increment-1 blind spot, now modeled)
+    m_oth, _ = dr20radio.crossmatch(
+        s["ra_q"][radio_carton],
+        s["dec_q"][radio_carton],
+        s["ra_r2"],
+        s["dec_r2"],
+        radius_arcsec=s["radius_arcsec"],
+    )
+    assert float(np.mean(m_oth)) == pytest.approx(s["fade_fraction"], abs=0.12)
+    assert float(np.mean(m_sel)) - float(np.mean(m_oth)) > 0.3
+
+
+def test_parse_racs_csv():
+    text = "ra,dec,peak_flux\n3.14,-41.5,2.5\nbad,row\n10.0,-50.0,1.1\n"
+    ra, dec, flux = dr20radio.parse_racs_csv(text)
+    assert ra.tolist() == [3.14, 10.0]
+    assert dec.tolist() == [-41.5, -50.0]
+    assert flux.tolist() == [2.5, 1.1]

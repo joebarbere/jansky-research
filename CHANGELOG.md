@@ -11,6 +11,11 @@ recommend the next version number.
 
 ### Added
 
+- `dr20radio` increment 2 code (plan 88): the RACS southern leg — strip-wise resumable
+  RACS-low DR1 fetcher (CASDA sync TAP, 1° Dec strips, verified live: 2,123,638 sources),
+  `run_south` (deep-south categorical-first census + the −40..+30 overlap band for the
+  VLASS cross-check + carton validation against the SELECTING survey), and the two-survey
+  synthetic that models the spectral-fading blind spot increment 1 exposed. 9 tests.
 - `dr20radio` northern leg (plan 88): 202,691 clean DR20 quasars × VLASS E2/E3 — radio-
   detected fraction 4.67% (any epoch, 2.5″, measured false-match 0.009%), with the
   classic high-z selection rise; the radio-carton VLASS match rate (31–35%) reframed
