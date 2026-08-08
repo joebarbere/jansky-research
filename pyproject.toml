@@ -39,7 +39,7 @@ workflow = ["snakemake>=8.0; python_version >= '3.11'"]
 # The pure-PyTorch Fast DM Transform (plan 34). Pinned to the CPU wheel index below so CI/tests
 # never pull multi-GB accelerator wheels; the GPU benchmark leg runs from a ROCm venv with this
 # repo importable (see plans/34). Tests `importorskip("torch")`, so core CI stays torch-free.
-fdmt = ["torch>=2.4"]
+fdmt = ["torch>=2.13.0"]
 # Neural simulation-based inference for the RACS Stokes-V coherent-emitter population (plan 40).
 # Pulls torch; kept OUT of core/CI like fdmt. Tests `importorskip("sbi")`, so the pure-NumPy
 # forward model / summary statistics stay testable in core CI; NPE training runs from the ROCm
