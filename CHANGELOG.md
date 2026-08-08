@@ -9,6 +9,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-07
+
 ### Added
 
 - `dr20radio` paper (plan 88): `papers/dr20radio/` (AASTeX, 4 pp) — GATE-2 passed (no
