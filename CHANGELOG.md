@@ -9,6 +9,51 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-08-10
+
+### Added
+- **`report.preserve_live_macros`** — merges `generated/macros.tex` across run modes instead of
+  overwriting it, so a run may only *add* information: a real value always beats a placeholder
+  and never the reverse. Wired into `typeii`, `rmstructure`, `torchdsp` and `singlepulse`.
+- **`papers/<slice>/arxiv.yaml`** — a tracked, hand-authored override the arXiv assembler merges
+  over its auto-extracted metadata. `arxiv-submission/` stays a disposable build artifact, so
+  `make arxiv` is idempotent and the human decisions are reviewable in a PR. Written for
+  `innerrc`, `peaked`, `frblens`, `vgpra`, `rmdipole`, `pte2`, `rfitrend`, `glitchpop`, `typeii`.
+- **`arxiv-submit` resolves `\citet` from `refs.bib`** into natbib textual form, handling
+  comma-form and braced compound surnames and `and others`.
+- **`rmstructure.N_SYNTHETIC_REALIZATIONS`** and the ensemble macros `\rmsSynRatioEns`,
+  `\rmsSynRatioEnsSd`, `\rmsSynNReal` — the honest uncertainty on a recover-a-known over a
+  correlated random field.
+- **`benchmark_device` / `benchmark_hardware`** in `torchdsp` and `singlepulse` results, so a
+  GPU timing run can be recorded without mislabelling CPU-run science as GPU.
+- **GPU benchmarks measured** on this workstation's AMD Radeon RX 7600 XT (gfx1102,
+  torch 2.12.1+rocm7.1): `torchfdmt` brute-force dedispersion **1.5 s** GPU vs 37.9 s CPU;
+  `torchdsp` FFA **0.65 s** vs 7.27 s, SumThreshold **7.63 s** vs 3.04 s — confirming with
+  numbers the paper's claim that its per-series loop is GPU-hostile.
+- **`tests/test_report.py`** — including the collision case `preserve_live_macros` deliberately
+  does *not* rescue, which is the argument for namespacing.
+- New blocking validations in the arXiv assembler: unresolvable `\citet`, an abstract starting
+  lowercase, macros with no committed value, non-S-parameter and wrong-port-count Touchstone,
+  and a self-parse of the generated YAML.
+
+### Changed
+- **Every mode-dependent `typeii` macro is namespaced `tiiSyn*`/`tiiReal*`.** `\tiiSource`,
+  `\tiiNEvents`, `\tiiCompleteness`, `\tiiPurity` and `\tiiComp*` previously meant different
+  things in the two run modes while sharing one name, so merging could not arbitrate and an
+  offline rebuild turned `\tiiNEvents` from 768 real observing days into 48 synthetic events —
+  under prose reading *"…days, zero failures"*. `papers/typeii/main.tex` cites the namespace it
+  actually means.
+- **`rmstructure`'s recover-a-known no longer overclaims.** *"recovers an injected plane
+  enhancement (4.64 ± 0.35 for an amplitude boost of 5)"* became *"responds to an injected
+  low-latitude amplitude boost (3.15 ± 1.11 across 30 field realizations; the
+  single-realization bootstrap, 4.64 ± 0.35, understates that scatter threefold)"*. The
+  bootstrap resamples within one field realization and so measures sampling noise rather than
+  realization variance; the default seed sat 1.3σ high. *"…for an amplitude boost of 5"* is gone
+  because the statistic is a band-average over |b| < 10 deg of a profile 5 deg wide and was
+  never going to equal the injected peak.
+- `make arxiv` packages every paper and fails at the end with the list, instead of stopping at
+  the first failure and silently skipping the rest.
+
 ### Fixed
 - **Four papers' abstracts cited macros that had been blanked to `--`.** Not uncomputed —
   *clobbered*: each slice has two run modes producing different metrics (offline synthetic
@@ -39,7 +84,6 @@ recommend the next version number.
 - `tests/test_report.py`: unit tests for `preserve_live_macros`, including the collision case
   it deliberately does **not** rescue (which is why namespacing was also required).
 
-### Fixed with the GPU and an authoritative source
 - **The two GPU benchmarks were measured**, on this workstation's AMD Radeon RX 7600 XT
   (gfx1102, torch 2.12.1+rocm7.1). `torchfdmt`: brute-force dedispersion **1.5 s** on GPU
   against 37.9 s on CPU. `torchdsp`: FFA **0.65 s** GPU against 7.27 s CPU, and SumThreshold

@@ -60,6 +60,29 @@ the macros, call `_write_macros` on the real path afterwards. This is the mirror
 2026-08-04 synthetic-clobber incident: same root cause (one artifact, two writers), opposite
 direction.
 
+**Crossref settles a citation in one call, with no search budget.**
+`curl -s https://api.crossref.org/works/<doi>` returns the authoritative author list, article
+number, volume and title from the DOI already in the `.bib` entry. It caught `lawrance2024`
+carrying an author who was never on the paper and a page number that was an article id.
+Prefer it to any search — this is the tractable form of *a search summary is not a source*.
+
+**A read-only reviewer can still mutate the repo, by running the code.** The science reviewer
+made no edits and nonetheless left `results/typeii_metrics.json` gutted, because *checking
+determinism* meant re-running an offline mode that writes to the repo root. Check
+`git status` after any agent that executes slice code, and treat "no file edits" as a claim
+about intent, not about effect.
+
+**Overclaiming can live in a verb.** `rmstructure` said the pipeline "recovers" an injected
+enhancement; the honest verb was "responds to". Nothing numeric had to change for the sentence
+to become true — and no test can see the difference. When a validation sentence and its number
+disagree in strength, the sentence is usually the thing that is wrong.
+
+**Do not manufacture an expectation to make a measurement look predicted.** When my
+closed-form estimate of `rmstructure`'s statistic gave 12.8 against a measured 3.15, the
+tempting move was to keep hunting for a model that reproduced 3.15 and present it as "matches
+expectation". The honest output is the empirical ensemble plus an explicit statement of what
+is *not* modelled.
+
 **Merging is not enough — mode-dependent macros must be NAMESPACED.** `preserve_live_macros`
 only arbitrates real-vs-placeholder. When one macro *name* means different things in the two
 modes, both runs write a real value and there is nothing to arbitrate: `\tiiNEvents` meant
