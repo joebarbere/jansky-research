@@ -441,7 +441,11 @@ def _write_macros(m: dict, path) -> None:
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text("\n".join(lines) + "\n")
+    # Merge rather than overwrite: this run knows only its own mode's metrics and would
+    # otherwise blank the other mode's macros with '--'. See report.preserve_live_macros.
+    from .report import preserve_live_macros
+
+    p.write_text(preserve_live_macros("\n".join(lines) + "\n", p))
 
 
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI

@@ -36,6 +36,61 @@ A new session in *either* repo: read this file (or jansky's `CLAUDE.md`) to lear
 - Commit footer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
   PR footer: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
+## Where numbers go missing (lessons, 2026-08-10)
+
+Every one of these produced prose that **still read as a finished claim with the number gone**
+— never a crash, never a wrong value, just a hole that parses. Check for them explicitly; the
+test suite cannot see any of them.
+
+**A slice with two run modes has two sets of metrics, and one `macros.tex`.** The offline
+synthetic validation and the real census (and CPU vs GPU) each emit the *other* mode's macros
+as `--`, because their own metrics dict has no such keys. Whichever ran last silently blanked
+the other's numbers. Four papers shipped abstracts citing blanked macros:
+*"the detector separates type II from type III and RFI at purity --"*. The abstracts cite
+**both** namespaces, so no single run can populate them — the file has to accumulate.
+`report.preserve_live_macros` now enforces the invariant the two-namespace design assumed:
+**a run may only add information; a real value always beats a placeholder, never the reverse.**
+Call it from every `_write_macros`.
+
+**Running an offline mode in the repo root destroys the real results JSON.** `run(".",
+offline=True)` overwrites `results/<slice>_metrics.json` with synthetic output — verified live:
+`typeii` lost 3429 lines and `is_real` flipped True→False. `make guard-real` catches this
+*at packaging time*, which is late. **Run offline modes with `out=<tmpdir>`** and, if you need
+the macros, call `_write_macros` on the real path afterwards. This is the mirror of the
+2026-08-04 synthetic-clobber incident: same root cause (one artifact, two writers), opposite
+direction.
+
+**Merging is not enough — mode-dependent macros must be NAMESPACED.** `preserve_live_macros`
+only arbitrates real-vs-placeholder. When one macro *name* means different things in the two
+modes, both runs write a real value and there is nothing to arbitrate: `\tiiNEvents` meant
+768 real observing days in the paper's prose and 48 synthetic events offline, so a rebuild
+turned *"768 days, zero failures"* into *"48 days, zero failures"* — a wrong published number,
+worse than the blank it replaced. Every mode-dependent macro is now `<slice>Syn*`/`<slice>Real*`.
+Caught by the science reviewer, which reproduced the clobber on itself while checking
+determinism.
+
+**A bootstrap SE is not the uncertainty when the input is one random-field realization.**
+`rmstructure`'s synthetic validation quotes 4.64 +/- 0.35 for an injected boost of 5. The
+bootstrap resamples sources *within one fixed field*, so it misses the realization variance:
+across 30 seeds the recovered ratio has mean **3.15** and std **1.11** — 3.2x the quoted SE —
+with seed 0 (the published number) a high outlier at 4.64. Any injection test on a correlated
+field must vary the field seed, not just resample within it.
+
+**`--` in a macro means "the results JSON had null here".** It reads as an en-dash in a table
+and as a hole in a sentence. The arXiv assembler now blocks on it; do not "fix" it with an
+`arxiv.yaml` override, which hides a paper problem behind a packaging file.
+
+**Regex traps that silently drop numbers**, all found in `assemble_arxiv.py` in one session:
+`\newcommand{\x}{...}` matched with `[^{}]*` **skips every value containing braces** (any
+exponent, subscript or `\mathrm{}`), and the macro then vanishes entirely — `p=\rfRealHUMAINP`
+became `p=,`. `re.sub`'s replacement is a **template**, so a value containing a backslash
+raises `bad escape` or expands a group reference; pass a callable. And `re.sub` with the `s`
+flag makes `.` match newlines, which ate a whole config file.
+
+**`\citet` is not deletable.** A textual citation is the grammatical subject of its sentence;
+dropping it leaves an abstract starting *"derived the definitive modern..."*. It is resolved
+from `refs.bib` now.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

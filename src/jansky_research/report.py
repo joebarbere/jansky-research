@@ -8,13 +8,14 @@ paper regenerates from the pipeline.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import numpy as np
 
 from . import frbstats
 
-__all__ = ["make_figures", "write_macros"]
+__all__ = ["make_figures", "preserve_live_macros", "write_macros"]
 
 
 def _fmt_p(p: float) -> str:
@@ -134,3 +135,55 @@ def write_macros(metrics: dict, path: str | Path) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n")
     return out
+
+
+# --------------------------------------------------------------------------------------
+# Cross-run macro preservation
+# --------------------------------------------------------------------------------------
+
+#: What a macro writer emits when a metric is absent from *this* run's metrics dict.
+MACRO_PLACEHOLDER = "--"
+
+
+def preserve_live_macros(new_text: str, path: str | Path) -> str:
+    """Never overwrite a real macro value with a placeholder.
+
+    Several slices run in two modes that produce **different metrics** — an offline synthetic
+    validation and a real-data census; a CPU benchmark and a GPU one — and each mode's writer
+    emits the *other* mode's macros as ``--`` because its own metrics dict has no such keys.
+    Since both modes write the same ``generated/macros.tex``, whichever ran last silently
+    blanked the other's numbers.
+
+    That is not hypothetical. Four papers shipped abstracts citing macros that had been
+    blanked this way, so their prose read as a finished claim with the number gone:
+
+        "the detector separates type II from type III and RFI at purity --"
+
+    and the reader has no way to tell it was ever computed. The abstracts cite *both*
+    namespaces, so no single run can populate them — the file has to accumulate.
+
+    This merges: any macro the new run would write as a placeholder keeps its existing value
+    if the file on disk has a real one. A run can therefore only ever *add* information, which
+    is the invariant the two-namespace design assumed and did not enforce.
+
+    Note the asymmetry — a real value always beats a placeholder, never the reverse — so a
+    genuine recomputation still overwrites, and only blanking is prevented.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return new_text
+    pattern = re.compile(r"\\newcommand\{\\([A-Za-z]+)\}\{(.*)\}\s*$")
+    existing: dict[str, str] = {}
+    for line in path.read_text(errors="ignore").splitlines():
+        m = pattern.match(line.strip())
+        if m and m.group(2).strip() != MACRO_PLACEHOLDER:
+            existing[m.group(1)] = m.group(2)
+
+    out = []
+    for line in new_text.splitlines():
+        m = pattern.match(line.strip())
+        if m and m.group(2).strip() == MACRO_PLACEHOLDER and m.group(1) in existing:
+            out.append(rf"\newcommand{{\{m.group(1)}}}{{{existing[m.group(1)]}}}")
+        else:
+            out.append(line)
+    return "\n".join(out) + ("\n" if new_text.endswith("\n") else "")

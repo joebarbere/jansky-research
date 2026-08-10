@@ -10,6 +10,50 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **Four papers' abstracts cited macros that had been blanked to `--`.** Not uncomputed —
+  *clobbered*: each slice has two run modes producing different metrics (offline synthetic
+  validation vs real census, CPU vs GPU), both write the same `generated/macros.tex`, and each
+  emits the other mode's macros as `--`. Whichever ran last silently won. The abstracts cite
+  **both** namespaces, so no single run can populate them.
+  - `report.preserve_live_macros` merges instead of overwriting: a run may only *add*
+    information, a real value always beats a placeholder and never the reverse. Wired into
+    `typeii`, `rmstructure`, `torchdsp` and `singlepulse`.
+  - **Merging alone was insufficient.** `typeii` left `\tiiSource`, `\tiiNEvents`,
+    `\tiiCompleteness`, `\tiiPurity` and `\tiiComp*` un-namespaced, so both modes wrote real
+    values and nothing could arbitrate: an offline rebuild turned `\tiiNEvents` from 768 real
+    observing days into 48 synthetic events, under prose reading *"…days, zero failures"*.
+    Every mode-dependent macro is now `tiiSyn*`/`tiiReal*`, and `papers/typeii/main.tex` cites
+    the namespace it actually means. Caught by the science reviewer.
+  - Recovered: `typeii` purity **1.0**, completeness **0.917**, curve 0.333/0.625/0.917/1.0 at
+    SNR 2/2.5/3/4; `rmstructure` synthetic recovery **4.64 ± 0.35**.
+  - `torchfdmt` and `torchdsp` still block — their GPU benchmarks need a ROCm run, which this
+    machine cannot do. The merge means a future GPU run will no longer be wiped by a CPU one.
+- **Running an offline mode in the repo root destroys the real results JSON.**
+  `typeii.run(".", offline=True)` overwrote `results/typeii_metrics.json` with synthetic
+  output — 3429 lines deleted, `is_real` True→False, `event_list` gone. Reproduced twice
+  (once by me, once by the reviewer). `make guard-real` catches it only at packaging time.
+  Documented in `CLAUDE.md`: run offline modes with `out=<tmpdir>`.
+- `papers/peaked/arxiv.yaml`: restored the scope-limiting caveat *"a tooling and methodology
+  contribution, not a discovery"*, which the first trim dropped. That is a disclaimer against
+  over-reading the 6-candidate list, not connective tissue.
+- `tests/test_report.py`: unit tests for `preserve_live_macros`, including the collision case
+  it deliberately does **not** rescue (which is why namespacing was also required).
+
+### Known issues (not fixed — need a decision)
+- **`rmstructure`'s synthetic recovery claim overstates its precision.** The abstract reads
+  "recovers an injected plane enhancement (4.64 ± 0.35 for an amplitude boost of 5)". The
+  bootstrap resamples sources within one fixed field realization, so it misses the realization
+  variance: across 30 field seeds the recovered ratio has **mean 3.15, std 1.11** (3.2× the
+  quoted SE), range 0.95–5.23, with the published seed-0 value of 4.64 a high outlier. Raised
+  by the science reviewer and independently reproduced. The sentence needs an author decision
+  before this paper is submitted; the numbers were not changed here.
+- **`papers/typeii/refs.bib` `lawrance2024` may have a wrong author list and page number.**
+  The reviewer reports the authors as Lawrance, Devi, Chandra & Miteva (not "Moni-Bidin") and
+  article id 75 (not page 58). **Unverified** — this session's web-search budget was exhausted
+  before it could be checked against a primary source, and swapping one unverified citation
+  for another is exactly the failure this repo just recorded a lesson about.
+
+### Fixed
 
 - `arxiv-submit`: the assembler silently mangled abstracts containing textual citations or
   Greek letters, and the damage read as finished prose. `\citet{key}` was deleted outright,

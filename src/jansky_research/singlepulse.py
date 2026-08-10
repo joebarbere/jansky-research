@@ -271,7 +271,11 @@ def _write_macros(m: dict, path) -> None:
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text("\n".join(lines) + "\n")
+    # Merge rather than overwrite: a CPU run has no GPU benchmark keys and would blank
+    # the GPU macros a previous run wrote. See report.preserve_live_macros.
+    from .report import preserve_live_macros
+
+    p.write_text(preserve_live_macros("\n".join(lines) + "\n", p))
 
 
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
