@@ -76,6 +76,12 @@ across 30 seeds the recovered ratio has mean **3.15** and std **1.11** — 3.2x 
 with seed 0 (the published number) a high outlier at 4.64. Any injection test on a correlated
 field must vary the field seed, not just resample within it.
 
+**A GPU benchmark is not a "real vs synthetic" property.** `torchdsp` used one `device` field
+to label both the science leg and the timing run, so recording a real GPU benchmark meant
+mislabelling CPU-run science as GPU. Separate them (`benchmark_device`, `benchmark_hardware`).
+The ROCm venv is `~/.venvs/rocm-test` (Python 3.14, outside the repo's `<3.13` pin) — run with
+`PYTHONPATH=src:../jansky/src ~/.venvs/rocm-test/bin/python`, not `uv run`.
+
 **`--` in a macro means "the results JSON had null here".** It reads as an en-dash in a table
 and as a hole in a sentence. The arXiv assembler now blocks on it; do not "fix" it with an
 `arxiv.yaml` override, which hides a paper problem behind a packaging file.

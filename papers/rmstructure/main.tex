@@ -17,8 +17,10 @@ over 87.5\% of the sky --- released without a systematic Galactic structure-func
 and its validation: a second-order RM structure function, \emph{noise-debiased} by subtracting
 the per-pair measurement variance \citep[the convention of][]{haverkorn2004}, with source-level
 bootstrap errors and recorded (unique-)pair subsampling. On a synthetic RM screen the pipeline
-recovers an injected plane enhancement (\rmsSynRatio$\pm$\rmsSynRatioSe\ for an amplitude boost
-of 5) and an injected 2$^\circ$ coherence scale within the Gaussian-ACF factor
+responds to an injected low-latitude amplitude boost
+(\rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ across \rmsSynNReal\ field realizations; the
+single-realization bootstrap, \rmsSynRatio$\pm$\rmsSynRatioSe, understates that scatter
+threefold) and recovers an injected 2$^\circ$ coherence scale within the Gaussian-ACF factor
 $2\sqrt{\ln 2}\approx1.67$ and the log-bin resolution; a pure-noise sky debiases to
 $\mathrm{SF}\approx0$. Applied to the DR2 goodRM sample (\rmsRealN\ components at S/N
 $\ge 8$ --- matching the release's pre-deduplication goodRM count to one row), the latitude
@@ -54,7 +56,8 @@ faint-grid SFs. Errors come from bootstrap resampling of \emph{sources} (pairs a
 pair counts are capped with the subsample fraction recorded. Validation: (i) a pure-noise sky
 debiases to $\mathrm{SF}\approx0$; (ii) a synthetic Gaussian-blob screen with a 2$^\circ$
 coherence scale and a 5$\times$ plane amplitude boost returns an enhancement ratio of
-\rmsSynRatio$\pm$\rmsSynRatioSe, a low-$|b|$/high-$|b|$ SF plateau ratio $\gg$1
+\rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ over \rmsSynNReal\ realizations
+(single-realization bootstrap \rmsSynRatio$\pm$\rmsSynRatioSe), a low-$|b|$/high-$|b|$ SF plateau ratio $\gg$1
 (fixture values in the \code{rmsSyn} macro namespace), and a half-plateau break
 consistent with the injected scale times the Gaussian-ACF factor $2\sqrt{\ln 2}\approx1.67$
 (the binned estimator resolves this only to the log-bin width, $\sim$30\% at that scale).

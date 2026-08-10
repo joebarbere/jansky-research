@@ -8,11 +8,13 @@
   "device": "cpu",
   "bench_brute_cpu_s": 44.12,
   "bench_fdmt_cpu_s": 0.45,
-  "bench_brute_gpu_s": null,
-  "bench_fdmt_gpu_s": null,
+  "bench_brute_gpu_s": 1.5,
+  "bench_fdmt_gpu_s": 0.44,
   "bench_n_dm": 1009,
   "real_recovered_dm": 56.59,
   "real_butterfly_snr": 6.0,
   "real_sp_snr": 14.0,
-  "real_dm_error_pc": 0.3
+  "real_dm_error_pc": 0.3,
+  "benchmark_device": "cuda",
+  "benchmark_hardware": "AMD Radeon RX 7600 XT (gfx1102), torch 2.12.1+rocm7.1"
 }

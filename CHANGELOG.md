@@ -39,64 +39,31 @@ recommend the next version number.
 - `tests/test_report.py`: unit tests for `preserve_live_macros`, including the collision case
   it deliberately does **not** rescue (which is why namespacing was also required).
 
-### Known issues (not fixed — need a decision)
-- **`rmstructure`'s synthetic recovery claim overstates its precision.** The abstract reads
-  "recovers an injected plane enhancement (4.64 ± 0.35 for an amplitude boost of 5)". The
-  bootstrap resamples sources within one fixed field realization, so it misses the realization
-  variance: across 30 field seeds the recovered ratio has **mean 3.15, std 1.11** (3.2× the
-  quoted SE), range 0.95–5.23, with the published seed-0 value of 4.64 a high outlier. Raised
-  by the science reviewer and independently reproduced. The sentence needs an author decision
-  before this paper is submitted; the numbers were not changed here.
-- **`papers/typeii/refs.bib` `lawrance2024` may have a wrong author list and page number.**
-  The reviewer reports the authors as Lawrance, Devi, Chandra & Miteva (not "Moni-Bidin") and
-  article id 75 (not page 58). **Unverified** — this session's web-search budget was exhausted
-  before it could be checked against a primary source, and swapping one unverified citation
-  for another is exactly the failure this repo just recorded a lesson about.
+### Fixed with the GPU and an authoritative source
+- **The two GPU benchmarks were measured**, on this workstation's AMD Radeon RX 7600 XT
+  (gfx1102, torch 2.12.1+rocm7.1). `torchfdmt`: brute-force dedispersion **1.5 s** on GPU
+  against 37.9 s on CPU. `torchdsp`: FFA **0.65 s** GPU against 7.27 s CPU, and SumThreshold
+  **7.63 s** GPU against 3.04 s CPU — confirming, with numbers, the paper's claim that its
+  per-series loop is GPU-hostile. **Every paper now packages clean.**
+- `torchdsp`: split `benchmark_device` from `device`. One field was labelling both the science
+  leg and the timing run, so a real GPU benchmark could only be recorded by mislabelling the
+  CPU-run science as GPU. The results JSON now carries `benchmark_hardware` too.
+- **`rmstructure` no longer overclaims its recover-a-known.** The abstract said it "recovers an
+  injected plane enhancement (4.64 ± 0.35 for an amplitude boost of 5)". Two problems: the
+  bootstrap resamples within *one* field realization and so measures sampling noise rather than
+  the realization variance of a correlated random field, and the default seed sits high. Across
+  30 realizations the recovered ratio is **3.15 ± 1.11** — 3.2× the quoted error, with seed 0's
+  4.64 a high outlier. `run(offline=True)` now computes the ensemble
+  (`N_SYNTHETIC_REALIZATIONS = 30`) and emits `\rmsSynRatioEns`/`\rmsSynRatioEnsSd`, and the
+  paper reports it: *"responds to an injected low-latitude amplitude boost (3.15 ± 1.11 across
+  30 field realizations; the single-realization bootstrap, 4.64 ± 0.35, understates that
+  scatter threefold)"*. "Recovers … for an amplitude boost of 5" is gone: the statistic is a
+  band-average over |b| < 10 deg of a profile 5 deg wide, so it was never going to equal the
+  injected peak, and comparing them implied a target the measurement cannot reach.
+- **`papers/typeii/refs.bib` `lawrance2024` corrected against Crossref** (DOI
+  10.1007/s11207-024-02317-8): authors are Lawrance, Devi, Chandra & Miteva — "Moni-Bidin" was
+  not an author — and it is article **75**, not page 58.
 
-### Fixed
-
-- `arxiv-submit`: the assembler silently mangled abstracts containing textual citations or
-  Greek letters, and the damage read as finished prose. `\citet{key}` was deleted outright,
-  so an abstract opening "\citet{sofue2025} derived..." became "derived the definitive
-  modern..." — a sentence with no subject. `\rho` and `\pi` were absent from the symbol
-  table, so `$\rho_\mathrm{DM} = 0.107$` extracted as " = 0.107" and `$4\pi$` as "4".
-  `\citet` now leaves a visible `[CITE:key]` marker, `validate()` treats that marker (and a
-  lowercase first word) as **blocking errors**, and the Greek set is extended. Found while
-  preparing the `innerrc` package; re-running the assembler across the other papers shows
-  `spectra` and `vgpra` had the same latent defect.
-- `arxiv-submit`: **the generated `metadata.yaml` required hand-editing and was overwritten
-  by every `make arxiv`** — a footgun that silently destroyed the fix for the problem above.
-  Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the assembler
-  merges over the auto-extracted ones, so regeneration is idempotent and the decision is
-  reviewable in a PR.
-- `arxiv-submit`: **`\citet{key}` is now resolved from `refs.bib`** to its natbib textual form
-  ("de Gasperin et al. (2018)", "Zhu & Zheng (2025)"), handling comma-form and braced compound
-  surnames and `and others`. This fixes the common case with no override at all — 9 papers.
-- `arxiv-submit`: **macros whose value contained braces were never loaded**, because the
-  `\newcommand` regex used `[^{}]*`. Any value with an exponent, subscript or `\mathrm{}` was
-  dropped, and the abstract's `\rfRealHUMAINP` then fell through the generic macro strip and
-  vanished — leaving prose reading `p=,`: a stated significance with the number silently gone.
-  Now brace-matched. Affected `dr20radio`, `frbperiod`, `frbstats`, `glitchpop`, `offsets`,
-  `rfitrend`.
-- `arxiv-submit`: `_apply_macros` passed macro values to `re.sub` as **replacement templates**,
-  so any value containing a backslash raised `bad escape` (or silently expanded a group
-  reference). Only surfaced once brace-nested values started loading. Now a literal callable.
-- `arxiv-submit`: the generator emitted **invalid YAML** for any multi-line override (only the
-  abstract's first line was indented) and now parses its own output as a validation step.
-- `arxiv-submit`: **new blocking check for macros with no committed value.** A metric that is
-  `null` in the results JSON renders as `--`, which in a sentence reads as a hole — *"the
-  detector separates type II from type III and RFI at purity --"* — while the prose around it
-  still parses as a claim. Flags `typeii` (`\tiiPurity` + three completeness macros),
-  `torchfdmt` (`\spBruteGpu`), `torchdsp` (two GPU benchmarks), `rmstructure` (an injected
-  recovery and its error). **These are paper problems, not packaging problems**, and are left
-  flagged deliberately: each needs the metric computed or the sentence rewritten.
-- `make arxiv` **stopped at the first paper with a blocking error and silently skipped every
-  paper after it**, so a partial run looked like a complete one. It now packages all of them
-  and fails at the end with the list.
-- Abstracts over arXiv's ~1920-char limit trimmed into tracked `arxiv.yaml` overrides for
-  `frblens`, `glitchpop`, `peaked`, `pte2`, `rfitrend`, `rmdipole` and `vgpra` (and `innerrc`
-  for its citation). Trims cut connective tissue and closing "…are the contribution" summaries
-  only; a mechanical guard rejected any trim that dropped a numeric result.
 
 ## [1.4.0] - 2026-08-07
 

@@ -125,6 +125,12 @@ def structure_function(
     }
 
 
+#: Field realizations averaged for the offline recover-a-known. One realization's bootstrap
+#: measures sampling noise inside that field, not the field-to-field scatter, and on this
+#: screen the two differ by ~3x.
+N_SYNTHETIC_REALIZATIONS = 30
+
+
 def synthetic_rm_screen(
     n_sources: int = 1500,
     *,
@@ -331,6 +337,18 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     pole = 15.0 if offline else 60.0  # the synthetic patch spans only ±20 deg
     ratio = enhancement_ratio(s["rm"], s["gal_b"], pole_deg=pole)
     ratio_se = _ratio_bootstrap_se(s["rm"], s["gal_b"], pole_deg=pole)
+    ratio_ens = ratio_ens_se = None
+    if offline:
+        # The bootstrap resamples sources WITHIN one fixed field realization, so it measures
+        # sampling noise and not the realization variance of a correlated random field. On
+        # this screen it understates the true scatter by ~3x, and the default seed happens to
+        # sit high -- which turned a validation claim into a lucky draw. Quote the ensemble.
+        ens = [
+            enhancement_ratio((t := synthetic_rm_screen(seed=k))["rm"], t["gal_b"], pole_deg=pole)
+            for k in range(N_SYNTHETIC_REALIZATIONS)
+        ]
+        ratio_ens = float(np.mean(ens))
+        ratio_ens_se = float(np.std(ens, ddof=1))
     break_lo = _sf_break(sf_lo["sep_deg"], sf_lo["sf"])
     break_hi = _sf_break(sf_hi["sep_deg"], sf_hi["sf"])
 
@@ -341,6 +359,10 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         "n_sources": int(s["rm"].size),
         "enhancement_ratio": round(float(ratio), 2),
         "enhancement_ratio_se": round(float(ratio_se), 2),
+        # Offline only: the honest uncertainty on a recover-a-known over a random field.
+        "enhancement_ratio_ensemble": None if ratio_ens is None else round(ratio_ens, 2),
+        "enhancement_ratio_ensemble_sd": None if ratio_ens_se is None else round(ratio_ens_se, 2),
+        "n_realizations": N_SYNTHETIC_REALIZATIONS if offline else None,
         "sf_plateau_low_b": round(float(np.nanmedian(sf_lo["sf"][-3:])), 1),
         "sf_plateau_high_b": round(float(np.nanmedian(sf_hi["sf"][-3:])), 1),
         "sf_break_low_b_deg": round(break_lo, 2) if np.isfinite(break_lo) else None,
@@ -432,6 +454,9 @@ def _write_macros(m: dict, path) -> None:
             rf"\newcommand{{\{ns}N}}{{{g('n_sources')}}}",
             rf"\newcommand{{\{ns}Ratio}}{{{g('enhancement_ratio')}}}",
             rf"\newcommand{{\{ns}RatioSe}}{{{g('enhancement_ratio_se')}}}",
+            rf"\newcommand{{\{ns}RatioEns}}{{{g('enhancement_ratio_ensemble')}}}",
+            rf"\newcommand{{\{ns}RatioEnsSd}}{{{g('enhancement_ratio_ensemble_sd')}}}",
+            rf"\newcommand{{\{ns}NReal}}{{{g('n_realizations')}}}",
             rf"\newcommand{{\{ns}PlatLo}}{{{g('sf_plateau_low_b')}}}",
             rf"\newcommand{{\{ns}PlatHi}}{{{g('sf_plateau_high_b')}}}",
             rf"\newcommand{{\{ns}BreakLo}}{{{g('sf_break_low_b_deg')}}}",

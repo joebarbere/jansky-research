@@ -766,7 +766,12 @@ def _write_macros(m: dict, path: str | Path) -> None:
         for macro, key in keys:
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
         for macro, key in bench_keys:
-            gpu_src = m.get("benchmark") if m.get("device") != "cpu" else None
+            # `device` labels the SCIENCE leg; `benchmark_device` labels the timing run.
+            # They differ legitimately: the real CHIME leg ran on CPU while the benchmark was
+            # measured on the RX 7600 XT. Overloading one field for both would either mislabel
+            # CPU science as GPU or discard a real GPU measurement.
+            bench_dev = m.get("benchmark_device") or m.get("device")
+            gpu_src = m.get("benchmark") if bench_dev != "cpu" else None
             gpu = (gpu_src or {}).get(key) if live else None
             # the CPU column comes from benchmark_cpu, or from `benchmark` ONLY when the run
             # itself was on CPU -- never silently label GPU timings as CPU
