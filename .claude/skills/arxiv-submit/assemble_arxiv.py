@@ -133,6 +133,65 @@ def _latex_to_text(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+#: Hand-authored overrides live here, next to the paper and **tracked in git**. Everything in
+#: ``arxiv-submission/`` is generated and disposable; anything a human had to decide belongs in
+#: this file instead, or ``make arxiv`` silently destroys it.
+OVERRIDE_NAME = "arxiv.yaml"
+
+
+def load_overrides(paper: Path) -> dict:
+    """Read ``papers/<slice>/arxiv.yaml`` if present.
+
+    The auto-extracted abstract cannot always be right: turning ``\\citet{sofue2025}`` into
+    "Sofue & Kohno (2025)" needs the bibliography, and no amount of regex gets there. So the
+    generator's job is to get close and *say when it could not*, and this file is where the
+    human's answer lives — in source control, reviewable in a PR, and immune to regeneration.
+    """
+    path = paper / OVERRIDE_NAME
+    if not path.is_file():
+        return {}
+    try:
+        import yaml
+    except ImportError:  # pragma: no cover - pyyaml is a project dependency
+        raise SystemExit(f"{path} exists but pyyaml is not installed") from None
+    data = yaml.safe_load(path.read_text()) or {}
+    if not isinstance(data, dict):
+        raise SystemExit(f"{path} must be a YAML mapping of metadata fields")
+    unknown = set(data) - OVERRIDABLE
+    if unknown:
+        raise SystemExit(
+            f"{path}: unknown field(s) {sorted(unknown)}; overridable: {sorted(OVERRIDABLE)}"
+        )
+    return data
+
+
+#: Fields ``arxiv.yaml`` may override. Deliberately not the file list or the tarball — those
+#: are derived from the source and a human editing them would be papering over a real problem.
+OVERRIDABLE = {
+    "title",
+    "authors",
+    "abstract",
+    "primary_category",
+    "cross_lists",
+    "comments",
+    "license",
+    "report_number",
+    "journal_ref",
+    "doi",
+    "orcid",
+}
+
+
+def _indent(block: str, prefix: str = "  ") -> str:
+    """Indent every line of a YAML literal block.
+
+    Only the first line used to be indented, which was invisible while the abstract was a
+    single auto-extracted line and produced invalid YAML the moment an override supplied a
+    wrapped one.
+    """
+    return "\n".join(prefix + line if line.strip() else "" for line in block.splitlines())
+
+
 def find_main_tex(paper: Path) -> Path:
     cands = [p for p in paper.glob("*.tex") if "\\documentclass" in p.read_text(errors="ignore")]
     if not cands:
@@ -174,14 +233,17 @@ def validate(paper: Path, main: Path, abstract: str, files: list[Path]) -> list[
     # two known failure modes into blocking errors so a human has to look.
     if "[CITE:" in abstract:
         errs.append(
-            "abstract contains a textual citation (\\citet) that cannot be auto-expanded — "
-            "replace each [CITE:key] with the author-year text by hand, e.g. "
-            "'Sofue & Kohno (2025)'"
+            "abstract contains a textual citation (\\citet) that cannot be auto-expanded. "
+            f"Write the real abstract into papers/<slice>/{OVERRIDE_NAME} under 'abstract:' "
+            "with each [CITE:key] replaced by author-year text, e.g. 'Sofue & Kohno (2025)'. "
+            "Do NOT edit arxiv-submission/metadata.yaml — it is regenerated and your edit "
+            "would be lost."
         )
     if abstract and abstract[0].islower():
         errs.append(
             "abstract begins with a lowercase word, which usually means a leading macro was "
-            "stripped and the first sentence lost its subject — check it against the .tex"
+            f"stripped and the first sentence lost its subject. Fix it in papers/<slice>/"
+            f"{OVERRIDE_NAME}, not in the generated metadata.yaml"
         )
     text = main.read_text(errors="ignore")
     for inp in re.findall(r"\\(?:input|includegraphics(?:\[[^\]]*\])?|plotone)\{([^}]+)\}", text):
@@ -415,18 +477,32 @@ def main() -> int:
     abm = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
     abstract = _latex_to_text(_apply_macros(abm.group(1), macros)) if abm else "TODO: abstract"
 
+    # Hand-authored answers win over anything auto-extracted, and they validate as the real
+    # thing — so a correct arxiv.yaml clears the [CITE:] error rather than merely silencing it.
+    overrides = load_overrides(paper)
+    title = overrides.get("title", title)
+    authors = overrides.get("authors", authors)
+    abstract = overrides.get("abstract", abstract).strip()
+
     files, warns = collect(paper, main_tex)
     errs = validate(paper, main_tex, abstract, files)
 
     # Auto-fill what we can read from the source: the ORCID in \author[ORCID]{...}, and a
     # comments line seeded from the figure count (page count still needs the human / the PDF).
     om = re.search(r"\\author\[(\d{4}-\d{4}-\d{4}-[\dXx]{4})\]", text)
-    orcid = om.group(1) if om else "TODO"
+    orcid = overrides.get("orcid", om.group(1) if om else "TODO")
     n_fig = sum(1 for f in files if f.suffix == ".pdf")
-    comments = f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research"
+    comments = overrides.get(
+        "comments",
+        f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research",
+    )
 
     # Suggest which arXiv groups this paper belongs in (primary + cross-lists).
     primary_cat, cross_cats, cat_why = suggest_categories(paper.name, title, abstract)
+    primary_cat = overrides.get("primary_category", primary_cat)
+    cross_cats = overrides.get("cross_lists", cross_cats)
+    if overrides:
+        cat_why = f"{cat_why} (some fields overridden by {OVERRIDE_NAME})"
     _scopes = {**ASTRO_CATEGORIES, **_NONASTRO_CATEGORIES}
     cat_ref = "\n".join(f"#   {c:<17}{_scopes.get(c, '')}" for c in [primary_cat, *cross_cats])
     cross_yaml = ", ".join(cross_cats)
@@ -436,28 +512,50 @@ def main() -> int:
         for f in files:
             tf.add(f, arcname=str(f.relative_to(paper)))
 
+    provenance = (
+        f"# {len(overrides)} field(s) came from {paper}/{OVERRIDE_NAME}: "
+        f"{', '.join(sorted(overrides))}"
+        if overrides
+        else f"# no {OVERRIDE_NAME} — every value below is auto-extracted or a TODO"
+    )
     (out / "metadata.yaml").write_text(
-        f"""# arXiv submission metadata — fill every TODO, then upload at https://arxiv.org/submit
+        f"""# GENERATED — do not edit. `make arxiv` overwrites this file.
+# Hand-authored values belong in {paper}/{OVERRIDE_NAME} (tracked in git); this is a build
+# artifact assembled from the .tex plus that override.
+{provenance}
+#
+# arXiv submission metadata — fill every TODO, then upload at https://arxiv.org/submit
 title: {title!r}
 authors:        # full names + affiliations, in order (an AI/LLM is NOT an eligible author)
 {chr(10).join("  - " + repr(x) for x in authors) or "  - TODO"}
 abstract: |
-  {abstract}
+{_indent(abstract)}
 # categories — SUGGESTED ({cat_why}). Confirm the primary is the single best fit and
 # each cross-list genuinely targets a *different* readership (arXiv allows up to ~3):
 {cat_ref}
 primary_category: {primary_cat}
 cross_lists: [{cross_yaml}]
 comments: {comments!r}
-license: CC BY 4.0       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
-report_number: null
-journal_ref: null        # add after journal acceptance
-doi: null
+license: {overrides.get("license", "CC BY 4.0")}       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
+report_number: {overrides.get("report_number") or "null"}
+journal_ref: {overrides.get("journal_ref") or "null"}        # add after journal acceptance
+doi: {overrides.get("doi") or "null"}
 msc_class: null          # math.* only
 acm_class: null          # cs.* only
 orcid: {orcid}              # set on the arXiv account/profile too
 """
     )
+
+    # A generator that emits a file it cannot itself parse is broken, and the failure shows
+    # up as a confusing error in whatever reads it next. Check here, at the source.
+    try:
+        import yaml as _yaml
+
+        _yaml.safe_load((out / "metadata.yaml").read_text())
+    except ImportError:  # pragma: no cover - pyyaml is a project dependency
+        pass
+    except Exception as exc:  # noqa: BLE001 - any parse failure is the same bug
+        errs.append(f"generated metadata.yaml is not valid YAML ({exc.__class__.__name__})")
 
     lines = [
         "# arXiv submission checklist",
@@ -465,6 +563,11 @@ orcid: {orcid}              # set on the arXiv account/profile too
         f"- main file: `{main_tex.name}`",
         f"- package: `{tar}` ({len(files)} files)",
         f"- abstract: {len(abstract)} / {ABSTRACT_MAX} chars",
+        (
+            f"- overrides: `{paper}/{OVERRIDE_NAME}` supplies {', '.join(sorted(overrides))}"
+            if overrides
+            else f"- overrides: none (no `{paper}/{OVERRIDE_NAME}`)"
+        ),
         "",
         "## Validation",
         *(f"- ❌ {e}" for e in errs),

@@ -23,8 +23,29 @@ precise step-by-step for the web upload. The user performs the final upload at
      **suggested primary category + cross-lists** — see *Choosing the categories* below),
      `TODO` otherwise.
    - `CHECKLIST.md` — the web-upload steps + validation results.
-3. **Fill the metadata with the user.** Walk through `metadata.yaml` and confirm/complete each field
-   (below). Extract title/authors/abstract from the `.tex` automatically; ask for the rest.
+3. **Fill the metadata via `papers/<slice>/arxiv.yaml` — never by editing `metadata.yaml`.**
+   `arxiv-submission/` is a **build artifact**: gitignored, and rewritten by every `make arxiv`.
+   Anything a human decided goes in the tracked override file next to the paper, which the
+   assembler merges over the auto-extracted values:
+
+   ```yaml
+   # papers/innerrc/arxiv.yaml  (tracked in git)
+   abstract: |
+     Sofue & Kohno (2025) derived the definitive modern inner rotation curve ...
+   comments: '3 pages, 5 figures. Code and data: doi:10.5281/zenodo.21482378'
+   primary_category: astro-ph.GA
+   cross_lists: [astro-ph.IM]
+   ```
+
+   Overridable: `title`, `authors`, `abstract`, `primary_category`, `cross_lists`, `comments`,
+   `license`, `report_number`, `journal_ref`, `doi`, `orcid`. The generated `metadata.yaml`
+   records which fields came from the override, and the checklist names the file.
+
+   **Why this exists:** the abstract usually *needs* a human. `\citet{sofue2025}` has to become
+   "Sofue & Kohno (2025)", and that needs the bibliography, not a regex — so the extractor
+   leaves a `[CITE:key]` marker and `validate()` blocks until a real abstract is supplied.
+   Before the override existed, the only way to fix it was to edit the generated file, and the
+   next `make arxiv` threw the fix away.
 4. **Validate** (the assembler checks these; fix any failures before submitting):
    - LaTeX **source** is strongly preferred over PDF-only (PDF-only is allowed but flagged/penalised
      and can't be reprocessed). For AASTeX/BibTeX, **include the compiled `.bbl`** — arXiv runs

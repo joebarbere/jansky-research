@@ -20,8 +20,23 @@ recommend the next version number.
   lowercase first word) as **blocking errors**, and the Greek set is extended. Found while
   preparing the `innerrc` package; re-running the assembler across the other papers shows
   `spectra` and `vgpra` had the same latent defect.
-- `vgpra`: its auto-extracted abstract is 2014 chars, over arXiv's ~1920 limit. Flagged by
-  the same pass; not fixed here (needs an author trim, not a script change).
+- `arxiv-submit`: **the generated `metadata.yaml` required hand-editing and was overwritten
+  by every `make arxiv`** — a footgun that silently destroyed the fix for the very problem
+  above. Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the
+  assembler merges over the auto-extracted ones, so regeneration is idempotent and the
+  decision is reviewable in a PR. Added `papers/innerrc/arxiv.yaml`.
+- `arxiv-submit`: the generator emitted **invalid YAML** for any multi-line override (only the
+  abstract's first line was indented). Fixed, and it now parses its own output as a
+  validation step — a generator that cannot read what it wrote is broken.
+- `make arxiv` **stopped at the first paper with a blocking error and silently skipped every
+  paper after it**, so a partial run looked like a complete one. It now packages all of them
+  and fails at the end with the list. This surfaced that **13 papers have blocking errors**,
+  most pre-existing and previously hidden: 8 with the `\citet` defect above, and 8 whose
+  abstracts exceed arXiv's ~1920-char limit (`peaked` 2048, `rmdipole` 2234, `frblens` 2026,
+  `typeii` 1963, `rfitrend` 2434, `vgpra` 2014, `pte2` 2301, `glitchpop` 2520). Verified
+  pre-existing by re-running the previous assembler. Not fixed here: each needs an author
+  trim or an `arxiv.yaml`, not a script change. `atlas3i`, `innerrc`, `hi` and `dr20radio`
+  validate clean.
 
 ## [1.4.0] - 2026-08-07
 
