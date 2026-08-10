@@ -9,6 +9,20 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+
+- `arxiv-submit`: the assembler silently mangled abstracts containing textual citations or
+  Greek letters, and the damage read as finished prose. `\citet{key}` was deleted outright,
+  so an abstract opening "\citet{sofue2025} derived..." became "derived the definitive
+  modern..." — a sentence with no subject. `\rho` and `\pi` were absent from the symbol
+  table, so `$\rho_\mathrm{DM} = 0.107$` extracted as " = 0.107" and `$4\pi$` as "4".
+  `\citet` now leaves a visible `[CITE:key]` marker, `validate()` treats that marker (and a
+  lowercase first word) as **blocking errors**, and the Greek set is extended. Found while
+  preparing the `innerrc` package; re-running the assembler across the other papers shows
+  `spectra` and `vgpra` had the same latent defect.
+- `vgpra`: its auto-extracted abstract is 2014 chars, over arXiv's ~1920 limit. Flagged by
+  the same pass; not fixed here (needs an author trim, not a script change).
+
 ## [1.4.0] - 2026-08-07
 
 ### Added

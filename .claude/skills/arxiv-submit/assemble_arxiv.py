@@ -79,6 +79,18 @@ _SYMBOLS = {
     r"\mu": "mu",
     r"\nu": "nu",
     r"\sigma": "sigma",
+    r"\rho": "rho",
+    r"\pi": "pi",
+    r"\tau": "tau",
+    r"\lambda": "lambda",
+    r"\theta": "theta",
+    r"\epsilon": "epsilon",
+    r"\varepsilon": "epsilon",
+    r"\omega": "omega",
+    r"\Omega": "Omega",
+    r"\Delta": "Delta",
+    r"\Sigma": "Sigma",
+    r"\Lambda": "Lambda",
     r"\chi": "chi",
     r"\phi": "phi",
     r"\arcdeg": " deg",
@@ -99,7 +111,11 @@ def _latex_to_text(s: str) -> str:
     s = re.sub(
         r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s
     )
-    s = re.sub(r"\\cite[tp]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
+    # \citet{key} is textual ("Smith (2020) showed...") and carries the sentence's subject;
+    # \citep{key} is parenthetical and can go. Deleting a \citet silently produces a
+    # grammatical fragment that reads as finished prose. Mark it instead.
+    s = re.sub(r"\\citet\*?(\[[^\]]*\])*\{([^}]*)\}", r"[CITE:\2]", s)
+    s = re.sub(r"\\cite[p]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
     s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
     # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
     s = re.sub(r"_\{([^{}]*)\}", r"\1", s)
@@ -153,6 +169,20 @@ def validate(paper: Path, main: Path, abstract: str, files: list[Path]) -> list[
     errs = []
     if len(abstract) > ABSTRACT_MAX:
         errs.append(f"abstract is {len(abstract)} chars (> {ABSTRACT_MAX})")
+    # The auto-extracted abstract is a best effort and it fails *plausibly*: a dropped
+    # \citet or symbol leaves prose that still reads like prose. These two checks turn the
+    # two known failure modes into blocking errors so a human has to look.
+    if "[CITE:" in abstract:
+        errs.append(
+            "abstract contains a textual citation (\\citet) that cannot be auto-expanded — "
+            "replace each [CITE:key] with the author-year text by hand, e.g. "
+            "'Sofue & Kohno (2025)'"
+        )
+    if abstract and abstract[0].islower():
+        errs.append(
+            "abstract begins with a lowercase word, which usually means a leading macro was "
+            "stripped and the first sentence lost its subject — check it against the .tex"
+        )
     text = main.read_text(errors="ignore")
     for inp in re.findall(r"\\(?:input|includegraphics(?:\[[^\]]*\])?|plotone)\{([^}]+)\}", text):
         if inp.startswith("/") or inp.startswith(".."):
