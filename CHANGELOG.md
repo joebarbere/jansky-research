@@ -9,50 +9,105 @@ recommend the next version number.
 
 ## [Unreleased]
 
-### Fixed
+## [1.5.0] - 2026-08-10
 
-- `arxiv-submit`: the assembler silently mangled abstracts containing textual citations or
-  Greek letters, and the damage read as finished prose. `\citet{key}` was deleted outright,
-  so an abstract opening "\citet{sofue2025} derived..." became "derived the definitive
-  modern..." — a sentence with no subject. `\rho` and `\pi` were absent from the symbol
-  table, so `$\rho_\mathrm{DM} = 0.107$` extracted as " = 0.107" and `$4\pi$` as "4".
-  `\citet` now leaves a visible `[CITE:key]` marker, `validate()` treats that marker (and a
-  lowercase first word) as **blocking errors**, and the Greek set is extended. Found while
-  preparing the `innerrc` package; re-running the assembler across the other papers shows
-  `spectra` and `vgpra` had the same latent defect.
-- `arxiv-submit`: **the generated `metadata.yaml` required hand-editing and was overwritten
-  by every `make arxiv`** — a footgun that silently destroyed the fix for the problem above.
-  Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the assembler
-  merges over the auto-extracted ones, so regeneration is idempotent and the decision is
-  reviewable in a PR.
-- `arxiv-submit`: **`\citet{key}` is now resolved from `refs.bib`** to its natbib textual form
-  ("de Gasperin et al. (2018)", "Zhu & Zheng (2025)"), handling comma-form and braced compound
-  surnames and `and others`. This fixes the common case with no override at all — 9 papers.
-- `arxiv-submit`: **macros whose value contained braces were never loaded**, because the
-  `\newcommand` regex used `[^{}]*`. Any value with an exponent, subscript or `\mathrm{}` was
-  dropped, and the abstract's `\rfRealHUMAINP` then fell through the generic macro strip and
-  vanished — leaving prose reading `p=,`: a stated significance with the number silently gone.
-  Now brace-matched. Affected `dr20radio`, `frbperiod`, `frbstats`, `glitchpop`, `offsets`,
-  `rfitrend`.
-- `arxiv-submit`: `_apply_macros` passed macro values to `re.sub` as **replacement templates**,
-  so any value containing a backslash raised `bad escape` (or silently expanded a group
-  reference). Only surfaced once brace-nested values started loading. Now a literal callable.
-- `arxiv-submit`: the generator emitted **invalid YAML** for any multi-line override (only the
-  abstract's first line was indented) and now parses its own output as a validation step.
-- `arxiv-submit`: **new blocking check for macros with no committed value.** A metric that is
-  `null` in the results JSON renders as `--`, which in a sentence reads as a hole — *"the
-  detector separates type II from type III and RFI at purity --"* — while the prose around it
-  still parses as a claim. Flags `typeii` (`\tiiPurity` + three completeness macros),
-  `torchfdmt` (`\spBruteGpu`), `torchdsp` (two GPU benchmarks), `rmstructure` (an injected
-  recovery and its error). **These are paper problems, not packaging problems**, and are left
-  flagged deliberately: each needs the metric computed or the sentence rewritten.
-- `make arxiv` **stopped at the first paper with a blocking error and silently skipped every
-  paper after it**, so a partial run looked like a complete one. It now packages all of them
-  and fails at the end with the list.
-- Abstracts over arXiv's ~1920-char limit trimmed into tracked `arxiv.yaml` overrides for
-  `frblens`, `glitchpop`, `peaked`, `pte2`, `rfitrend`, `rmdipole` and `vgpra` (and `innerrc`
-  for its citation). Trims cut connective tissue and closing "…are the contribution" summaries
-  only; a mechanical guard rejected any trim that dropped a numeric result.
+### Added
+- **`report.preserve_live_macros`** — merges `generated/macros.tex` across run modes instead of
+  overwriting it, so a run may only *add* information: a real value always beats a placeholder
+  and never the reverse. Wired into `typeii`, `rmstructure`, `torchdsp` and `singlepulse`.
+- **`papers/<slice>/arxiv.yaml`** — a tracked, hand-authored override the arXiv assembler merges
+  over its auto-extracted metadata. `arxiv-submission/` stays a disposable build artifact, so
+  `make arxiv` is idempotent and the human decisions are reviewable in a PR. Written for
+  `innerrc`, `peaked`, `frblens`, `vgpra`, `rmdipole`, `pte2`, `rfitrend`, `glitchpop`, `typeii`.
+- **`arxiv-submit` resolves `\citet` from `refs.bib`** into natbib textual form, handling
+  comma-form and braced compound surnames and `and others`.
+- **`rmstructure.N_SYNTHETIC_REALIZATIONS`** and the ensemble macros `\rmsSynRatioEns`,
+  `\rmsSynRatioEnsSd`, `\rmsSynNReal` — the honest uncertainty on a recover-a-known over a
+  correlated random field.
+- **`benchmark_device` / `benchmark_hardware`** in `torchdsp` and `singlepulse` results, so a
+  GPU timing run can be recorded without mislabelling CPU-run science as GPU.
+- **GPU benchmarks measured** on this workstation's AMD Radeon RX 7600 XT (gfx1102,
+  torch 2.12.1+rocm7.1): `torchfdmt` brute-force dedispersion **1.5 s** GPU vs 37.9 s CPU;
+  `torchdsp` FFA **0.65 s** vs 7.27 s, SumThreshold **7.63 s** vs 3.04 s — confirming with
+  numbers the paper's claim that its per-series loop is GPU-hostile.
+- **`tests/test_report.py`** — including the collision case `preserve_live_macros` deliberately
+  does *not* rescue, which is the argument for namespacing.
+- New blocking validations in the arXiv assembler: unresolvable `\citet`, an abstract starting
+  lowercase, macros with no committed value, non-S-parameter and wrong-port-count Touchstone,
+  and a self-parse of the generated YAML.
+
+### Changed
+- **Every mode-dependent `typeii` macro is namespaced `tiiSyn*`/`tiiReal*`.** `\tiiSource`,
+  `\tiiNEvents`, `\tiiCompleteness`, `\tiiPurity` and `\tiiComp*` previously meant different
+  things in the two run modes while sharing one name, so merging could not arbitrate and an
+  offline rebuild turned `\tiiNEvents` from 768 real observing days into 48 synthetic events —
+  under prose reading *"…days, zero failures"*. `papers/typeii/main.tex` cites the namespace it
+  actually means.
+- **`rmstructure`'s recover-a-known no longer overclaims.** *"recovers an injected plane
+  enhancement (4.64 ± 0.35 for an amplitude boost of 5)"* became *"responds to an injected
+  low-latitude amplitude boost (3.15 ± 1.11 across 30 field realizations; the
+  single-realization bootstrap, 4.64 ± 0.35, understates that scatter threefold)"*. The
+  bootstrap resamples within one field realization and so measures sampling noise rather than
+  realization variance; the default seed sat 1.3σ high. *"…for an amplitude boost of 5"* is gone
+  because the statistic is a band-average over |b| < 10 deg of a profile 5 deg wide and was
+  never going to equal the injected peak.
+- `make arxiv` packages every paper and fails at the end with the list, instead of stopping at
+  the first failure and silently skipping the rest.
+
+### Fixed
+- **Four papers' abstracts cited macros that had been blanked to `--`.** Not uncomputed —
+  *clobbered*: each slice has two run modes producing different metrics (offline synthetic
+  validation vs real census, CPU vs GPU), both write the same `generated/macros.tex`, and each
+  emits the other mode's macros as `--`. Whichever ran last silently won. The abstracts cite
+  **both** namespaces, so no single run can populate them.
+  - `report.preserve_live_macros` merges instead of overwriting: a run may only *add*
+    information, a real value always beats a placeholder and never the reverse. Wired into
+    `typeii`, `rmstructure`, `torchdsp` and `singlepulse`.
+  - **Merging alone was insufficient.** `typeii` left `\tiiSource`, `\tiiNEvents`,
+    `\tiiCompleteness`, `\tiiPurity` and `\tiiComp*` un-namespaced, so both modes wrote real
+    values and nothing could arbitrate: an offline rebuild turned `\tiiNEvents` from 768 real
+    observing days into 48 synthetic events, under prose reading *"…days, zero failures"*.
+    Every mode-dependent macro is now `tiiSyn*`/`tiiReal*`, and `papers/typeii/main.tex` cites
+    the namespace it actually means. Caught by the science reviewer.
+  - Recovered: `typeii` purity **1.0**, completeness **0.917**, curve 0.333/0.625/0.917/1.0 at
+    SNR 2/2.5/3/4; `rmstructure` synthetic recovery **4.64 ± 0.35**.
+  - `torchfdmt` and `torchdsp` still block — their GPU benchmarks need a ROCm run, which this
+    machine cannot do. The merge means a future GPU run will no longer be wiped by a CPU one.
+- **Running an offline mode in the repo root destroys the real results JSON.**
+  `typeii.run(".", offline=True)` overwrote `results/typeii_metrics.json` with synthetic
+  output — 3429 lines deleted, `is_real` True→False, `event_list` gone. Reproduced twice
+  (once by me, once by the reviewer). `make guard-real` catches it only at packaging time.
+  Documented in `CLAUDE.md`: run offline modes with `out=<tmpdir>`.
+- `papers/peaked/arxiv.yaml`: restored the scope-limiting caveat *"a tooling and methodology
+  contribution, not a discovery"*, which the first trim dropped. That is a disclaimer against
+  over-reading the 6-candidate list, not connective tissue.
+- `tests/test_report.py`: unit tests for `preserve_live_macros`, including the collision case
+  it deliberately does **not** rescue (which is why namespacing was also required).
+
+- **The two GPU benchmarks were measured**, on this workstation's AMD Radeon RX 7600 XT
+  (gfx1102, torch 2.12.1+rocm7.1). `torchfdmt`: brute-force dedispersion **1.5 s** on GPU
+  against 37.9 s on CPU. `torchdsp`: FFA **0.65 s** GPU against 7.27 s CPU, and SumThreshold
+  **7.63 s** GPU against 3.04 s CPU — confirming, with numbers, the paper's claim that its
+  per-series loop is GPU-hostile. **Every paper now packages clean.**
+- `torchdsp`: split `benchmark_device` from `device`. One field was labelling both the science
+  leg and the timing run, so a real GPU benchmark could only be recorded by mislabelling the
+  CPU-run science as GPU. The results JSON now carries `benchmark_hardware` too.
+- **`rmstructure` no longer overclaims its recover-a-known.** The abstract said it "recovers an
+  injected plane enhancement (4.64 ± 0.35 for an amplitude boost of 5)". Two problems: the
+  bootstrap resamples within *one* field realization and so measures sampling noise rather than
+  the realization variance of a correlated random field, and the default seed sits high. Across
+  30 realizations the recovered ratio is **3.15 ± 1.11** — 3.2× the quoted error, with seed 0's
+  4.64 a high outlier. `run(offline=True)` now computes the ensemble
+  (`N_SYNTHETIC_REALIZATIONS = 30`) and emits `\rmsSynRatioEns`/`\rmsSynRatioEnsSd`, and the
+  paper reports it: *"responds to an injected low-latitude amplitude boost (3.15 ± 1.11 across
+  30 field realizations; the single-realization bootstrap, 4.64 ± 0.35, understates that
+  scatter threefold)"*. "Recovers … for an amplitude boost of 5" is gone: the statistic is a
+  band-average over |b| < 10 deg of a profile 5 deg wide, so it was never going to equal the
+  injected peak, and comparing them implied a target the measurement cannot reach.
+- **`papers/typeii/refs.bib` `lawrance2024` corrected against Crossref** (DOI
+  10.1007/s11207-024-02317-8): authors are Lawrance, Devi, Chandra & Miteva — "Moni-Bidin" was
+  not an author — and it is article **75**, not page 58.
+
 
 ## [1.4.0] - 2026-08-07
 

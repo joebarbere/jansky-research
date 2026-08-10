@@ -1,0 +1,30 @@
+# Hand-authored arXiv metadata for papers/typeii — TRACKED IN GIT.
+#
+# The paper's own abstract is 1970 characters, over arXiv's ~1920-char metadata limit.
+# Trimming cut connective tissue and shortened the closing summary; every numeric result is
+# preserved, checked mechanically. Note the purity/completeness numbers here were recovered:
+# they had been blanked by the real census overwriting the synthetic validation's macros.
+
+abstract: |
+  Type II solar radio bursts trace CME-driven coronal shocks by their slow frequency drift,
+  and the published OVRO-LWA real-time burst detector handles only the fast type III beam
+  bursts --- so the type II detector on this archive is an open gap. We build one: a slow-
+  drift ridge tracker with a fundamental--harmonic discriminator, distinguishing type II from
+  type III by three physical signatures (drift rate < 1 MHz/s vs tens--hundreds; duration of
+  minutes vs seconds; a fundamental+harmonic band pair at ratio 2). We validate it on a
+  synthetic census of mixed difficulty (strong, single-lane and near-threshold type IIs among
+  type III contaminants and narrowband RFI): the detector separates type II from type III and
+  RFI at purity 1.0, with a completeness that is honestly SNR-dependent --- 1.0 for strong
+  bursts, 0.917 at SNR 3, falling to 0.333 near the detection threshold (SNR 2). We then
+  stream the full 332-candidate real census: every observing day over 2024--2026 read straight
+  from AWS Open Data (Stokes-I plane only, range-read and downsampled in memory, nothing to
+  disk; 48 days, zero failures). The result is a null. The 332 candidates (0.432/day, 4x the
+  literature type II rate) are false-positive dominated: their matched-CME median speed 472.5
+  km/s is the background CME population (median 378.0 km/s), not the fast, wide drivers real
+  type II require; the burst drift is uncorrelated with the matched CME speed (Pearson
+  r=0.058); and 0.828 of the ``bursts'' fill the entire detection window --- persistent
+  RFI/background structure tracked as a slow drift, not minutes-long transients. A blind slow-
+  drift spectral detector therefore does not yield a usable type II census in OVRO-LWA's RFI-
+  heavy 15--85 MHz band --- precisely why the archive's real-time detector is type-III-only.
+  The detector, its SNR-completeness curve, and this characterized limitation are the
+  contribution.

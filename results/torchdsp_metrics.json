@@ -35,10 +35,19 @@
   "crab_ffa_resolution_ms": 0.53,
   "crab_fold_snr_at_published": 2.2,
   "benchmark": {
+    "device": "cuda",
+    "chirp_s": 2.11,
+    "chirp_msamples": 67.1,
+    "sumthreshold_s": 7.63,
+    "ffa_s": 0.65
+  },
+  "benchmark_cpu": {
     "device": "cpu",
     "chirp_s": 1.92,
     "chirp_msamples": 67.1,
     "sumthreshold_s": 2.66,
     "ffa_s": 8.42
-  }
+  },
+  "benchmark_device": "cuda",
+  "benchmark_hardware": "AMD Radeon RX 7600 XT (gfx1102), torch 2.12.1+rocm7.1"
 }

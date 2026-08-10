@@ -19,12 +19,13 @@ abstract: |
   by definition, so a TGSS detection excludes them --- we instead treat a TGSS non-detection
   as an upper limit S150<25 mJy, giving a lower bound on alpha low. (ii) The NVSS resolution
   mismatch (45arcsec versus 2.5arcsec) fakes steep turnovers for extended sources --- a floor
-  alpha high>-2 rejects them (110 of 409 in our field). Over a 2 deg cone the method yields 6
-  peaked candidates, all VLASS-steady (GPS-like, not blazars); one is a known Fermi BL Lac
-  that the variability flag missed but SIMBAD caught --- blazar rejection needs the catalogue
-  cross-ID, not variability alone. Two recover-a-known tests validate the selection function.
-  Against the GLEAM-selected, MHz-peaked Callingham et al. (2017) sample the method correctly
-  flags none of the 0/81 sources whose turnover lies below the 150 MHz floor (high purity),
-  and against the Dallacasa et al. (2000) bright High-Frequency-Peaker sample it recovers 100%
-  as optically-thick-rising and 56% as still rising at 3 GHz. The three SED classes thus map
-  cleanly onto the MHz-peaked, intermediate, and GHz-peaked turnover regimes.
+  alpha high>-2 rejects them (110 of 409 in our field). Over a 2 deg cone it yields 6 peaked
+  candidates, all VLASS-steady (GPS-like, not blazars); one is a known Fermi BL Lac the
+  variability flag missed but SIMBAD caught: blazar rejection needs the catalogue cross-ID,
+  not variability alone. Two recover-a-known tests validate the selection function. Against
+  the GLEAM-selected, MHz-peaked Callingham et al. (2017) sample the method correctly flags
+  none of the 0/81 sources whose turnover lies below the 150 MHz floor (high purity), and
+  against the Dallacasa et al. (2000) bright High-Frequency-Peaker sample it recovers 100% as
+  optically-thick-rising and 56% as still rising at 3 GHz. The three SED classes map onto the
+  MHz-peaked, intermediate and GHz-peaked regimes. This is a tooling and methodology
+  contribution, not a discovery.

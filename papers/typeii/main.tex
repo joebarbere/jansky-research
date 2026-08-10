@@ -18,11 +18,11 @@ three physical signatures (drift rate $\lesssim$1~MHz/s vs tens--hundreds; durat
 seconds; a fundamental$+$harmonic band pair at ratio $\sim$2). We validate it on a synthetic
 census of mixed difficulty (strong, single-lane, and near-threshold-SNR type IIs among type III
 contaminants and narrowband RFI): the detector separates type II from type III and RFI at purity
-\tiiPurity, with a completeness that is honestly SNR-dependent --- \tiiCompSnrfour\ for strong
-bursts, \tiiCompSnrthree\ at SNR~3, falling to \tiiCompSnrtwo\ near the detection threshold
+\tiiSynPurity, with a completeness that is honestly SNR-dependent --- \tiiSynCompSnrfour\ for strong
+bursts, \tiiSynCompSnrthree\ at SNR~3, falling to \tiiSynCompSnrtwo\ near the detection threshold
 (SNR~2). We then stream the full \tiiRealNTypeII-candidate real census: every observing day over
 2024--2026 read straight from AWS Open Data (Stokes-I plane only, range-read and downsampled in
-memory, nothing to disk; \tiiNEvents\ days, zero failures). \textbf{The result is a null.} The
+memory, nothing to disk; \tiiRealNEvents\ days, zero failures). \textbf{The result is a null.} The
 \tiiRealNTypeII\ candidates ($\tiiRealDetRate$/day, $\sim$4$\times$ the literature type II rate)
 are false-positive dominated: their matched-CME median speed \tiiRealMatchCmeMed~km/s is the
 \emph{background} CME population (median \tiiRealBgCmeMed~km/s), not the fast, wide drivers real
@@ -80,14 +80,14 @@ the established type II driver bias \citep{gopalswamy2005}.
 \label{sec:results}
 We run the detector on a mixed synthetic census --- \tiiSynNTypeII\ recovered type II bursts of
 varied difficulty (strong$+$harmonic, single-lane, and near-threshold SNR), among type III
-contaminants and narrowband-RFI spectra. It separates the classes at purity \tiiPurity\ (no type
+contaminants and narrowband-RFI spectra. It separates the classes at purity \tiiSynPurity\ (no type
 III or RFI is misclassified as type II), and its completeness is, honestly, SNR-dependent rather
 than a single saturated number:
 \begin{center}
 \begin{tabular}{lcccc}
 \hline
 injected SNR & 2 & 2.5 & 3 & 4 \\
-completeness & \tiiCompSnrtwo & \tiiCompSnrtwofive & \tiiCompSnrthree & \tiiCompSnrfour \\
+completeness & \tiiSynCompSnrtwo & \tiiSynCompSnrtwofive & \tiiSynCompSnrthree & \tiiSynCompSnrfour \\
 \hline
 \end{tabular}
 \end{center}
@@ -110,7 +110,7 @@ dynamic spectrum confirmed on first contact, axes time/frequency/1/Stokes), so w
 open the S3 FITS lazily (astropy \code{use\_fsspec}), range-read only the Stokes-I plane in
 frequency chunks, and block-average to $\sim$4~s bins on the fly, so a day is processed entirely in
 memory with nothing on disk, then freed. We ran every observing day 2024-04 to 2026-07
-(\tiiNEvents\ days, zero failures), sliding a 15-minute window across each and classifying.
+(\tiiRealNEvents\ days, zero failures), sliding a 15-minute window across each and classifying.
 
 \textbf{The candidate list is false-positive dominated.} The run yields \tiiRealNTypeII\ candidates
 --- \tiiRealDetRate/day, about four times the metric type II rate of the RSTN Cycle-24 catalogue
