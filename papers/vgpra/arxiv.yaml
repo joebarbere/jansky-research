@@ -1,0 +1,30 @@
+# Hand-authored arXiv metadata for papers/vgpra — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2017 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and the closing "...are the contribution" summary; every
+# numeric result is preserved, checked mechanically against the source abstract.
+
+abstract: |
+  The rotation periods anchoring the System III longitude systems of Uranus (17.24+/-0.01 h)
+  and Neptune (16.11 h) were fixed by the Voyager 2 Planetary Radio Astronomy (PRA) experiment
+  during the 1986 and 1989 flybys and, for the radio data, never reanalysed with modern
+  statistics --- even as Lamy et al. (2025) recently shifted Uranus's period by 28 s using
+  Hubble UV aurorae. We ask a narrow, answerable question: what do the Voyager radio data
+  yield under a blind modern periodogram, using none of the emission-beaming or magnetic-
+  longitude modelling of the original determinations? From the open PDS-PPI PRA low-band
+  6-second encounter volumes we build a band-integrated flux series and search it with a Lomb
+  --Scargle periodogram over a wide, un-tuned 14--20 h window, taking a rotation-block
+  bootstrap and the peak's spread across frequency sub-bands as the uncertainties. The result
+  is a controlled null. The pipeline is validated end-to-end: on a synthetic flyby searched in
+  the same wide window it recovers an injected period (17.24 h 17.22252 h) to 1 min. On the
+  real data it recovers neither planet: the Uranus peak wanders between sub-bands (18.44362 h,
+  sub-band spread 1.75737 h, offset +1.2 h from 17.24 h; not recovered, no) and the Neptune
+  peak rails to the search bound (20.0 h; not recovered, no). Because the method demonstrably
+  works when a clean rotational signal is present, the real-data failure is a genuine
+  limitation of blind total-power analysis, not a pipeline artifact: the ice-giant total-power
+  radio flux is not a clean rotational sinusoid, and recovering the periods requires the
+  geometric modelling of the original analyses. Even in the best case the flyby precision
+  ceiling is 1--2 h, hundreds of times coarser than the modern Hubble result. This
+  demonstrates why the historical Voyager radio periods needed the methods they used.

@@ -1,0 +1,30 @@
+# Hand-authored arXiv metadata for papers/peaked — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2098 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and closing summary sentences; every numeric result is
+# preserved, checked mechanically against the source abstract.
+
+abstract: |
+  Gigahertz-Peaked-Spectrum (GPS) and Compact-Steep-Spectrum (CSS) sources are compact, young
+  radio AGN whose spectrum rises then falls, peaking in the 0.1--3 GHz band; identifying them
+  needs three frequencies. We build a small, tested, CPU-only tool that selects peaked-
+  spectrum candidates from three public continuum surveys --- TGSS 150 MHz, NVSS 1.4 GHz, and
+  VLASS 3 GHz --- by their spectral curvature, the difference of a low (alpha low, 1501400
+  MHz) and a high (alpha high, 14003000 MHz) two-point index. Curvature is far more robust to
+  a constant TGSS flux-scale offset than a single steep cut, and alpha high is TGSS-
+  independent. A naive 'detected in all three, rising then falling' selection returns zero
+  candidates: two selection effects with clean fixes. (i) Peaked sources are faint at 150 MHz
+  by definition, so a TGSS detection excludes them --- we instead treat a TGSS non-detection
+  as an upper limit S150<25 mJy, giving a lower bound on alpha low. (ii) The NVSS resolution
+  mismatch (45arcsec versus 2.5arcsec) fakes steep turnovers for extended sources --- a floor
+  alpha high>-2 rejects them (110 of 409 in our field). Over a 2 deg cone the method yields 6
+  peaked candidates, all VLASS-steady (GPS-like, not blazars); one is a known Fermi BL Lac
+  that the variability flag missed but SIMBAD caught --- blazar rejection needs the catalogue
+  cross-ID, not variability alone. Two recover-a-known tests validate the selection function.
+  Against the GLEAM-selected, MHz-peaked Callingham et al. (2017) sample the method correctly
+  flags none of the 0/81 sources whose turnover lies below the 150 MHz floor (high purity),
+  and against the Dallacasa et al. (2000) bright High-Frequency-Peaker sample it recovers 100%
+  as optically-thick-rising and 56% as still rising at 3 GHz. The three SED classes thus map
+  cleanly onto the MHz-peaked, intermediate, and GHz-peaked turnover regimes.

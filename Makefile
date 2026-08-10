@@ -80,11 +80,20 @@ paper: paper-image ## Build every papers/<slice>/*.tex (main + e.g. rnaas) in th
 	done
 
 arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/arxiv-submission/)
-	@for s in $(SLICES); do \
+# Packages EVERY paper, then fails if any had blocking errors. It used to `exit 1` on the
+# first failure, which meant one paper with a bad abstract silently skipped every paper after
+# it in the list — you got a green-looking run and a missing package.
+	@failed=""; \
+	for s in $(SLICES); do \
 		echo "==> packaging papers/$$s"; \
 		uv run python .claude/skills/arxiv-submit/assemble_arxiv.py \
-			--paper papers/$$s --out papers/$$s/arxiv-submission || exit 1; \
-	done
+			--paper papers/$$s --out papers/$$s/arxiv-submission || failed="$$failed $$s"; \
+	done; \
+	if [ -n "$$failed" ]; then \
+		echo; echo "papers with blocking errors:$$failed"; \
+		echo "see papers/<slice>/arxiv-submission/CHECKLIST.md for each"; \
+		exit 1; \
+	fi
 
 guard-real: ## Fail if any results/*.json is synthetic-sourced (papers must not mislabel synthetic output)
 	uv run python scripts/guard_real_results.py

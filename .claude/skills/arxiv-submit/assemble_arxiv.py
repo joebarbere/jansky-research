@@ -43,12 +43,28 @@ def _load_macros(paper: Path, main: Path) -> dict[str, str]:
         f = paper / (inp if inp.endswith(".tex") else inp + ".tex")
         if f.exists():
             text += "\n" + f.read_text(errors="ignore")
-    return dict(re.findall(r"\\newcommand\{\\(\w+)\}\{([^{}]*)\}", text))
+    # Brace-matched, not `[^{}]*`. A value containing braces — any exponent, subscript or
+    # \mathrm{} — failed to match at all, so the macro was never loaded, and the abstract's
+    # `\rfRealHUMAINP` then fell through to the generic macro strip and vanished. The result
+    # was prose reading "p=," : a stated significance with the number silently gone.
+    macros: dict[str, str] = {}
+    for m in re.finditer(r"\\newcommand\{\\(\w+)\}\{", text):
+        depth, start = 1, m.end()
+        for i in range(start, len(text)):
+            depth += (text[i] == "{") - (text[i] == "}")
+            if depth == 0:
+                macros[m.group(1)] = text[start:i]
+                break
+    return macros
 
 
 def _apply_macros(s: str, macros: dict[str, str]) -> str:
+    # `lambda _: val`, not `val`: re.sub treats a string replacement as a *template*, so a
+    # macro value containing a backslash (\times, \emph, ...) either raises "bad escape" or
+    # silently expands a group reference. Now that brace-nested values load, most of the
+    # interesting ones contain backslashes.
     for name, val in sorted(macros.items(), key=lambda kv: -len(kv[0])):
-        s = re.sub(rf"\\{name}(?![a-zA-Z])", val, s)
+        s = re.sub(rf"\\{name}(?![a-zA-Z])", lambda _, v=val: v, s)
     return s
 
 
@@ -79,6 +95,18 @@ _SYMBOLS = {
     r"\mu": "mu",
     r"\nu": "nu",
     r"\sigma": "sigma",
+    r"\rho": "rho",
+    r"\pi": "pi",
+    r"\tau": "tau",
+    r"\lambda": "lambda",
+    r"\theta": "theta",
+    r"\epsilon": "epsilon",
+    r"\varepsilon": "epsilon",
+    r"\omega": "omega",
+    r"\Omega": "Omega",
+    r"\Delta": "Delta",
+    r"\Sigma": "Sigma",
+    r"\Lambda": "Lambda",
     r"\chi": "chi",
     r"\phi": "phi",
     r"\arcdeg": " deg",
@@ -95,11 +123,29 @@ _SYMBOLS = {
 }
 
 
-def _latex_to_text(s: str) -> str:
+def _cite_text(keys: str, bib: dict[str, str]) -> str:
+    """Render \\citet{a,b} as natbib would, or leave a [CITE:] marker if unresolvable."""
+    parts = [k.strip() for k in keys.split(",") if k.strip()]
+    rendered = [bib.get(k) for k in parts]
+    if not all(rendered):
+        return "[CITE:" + keys + "]"
+    return "; ".join(r for r in rendered if r)
+
+
+def _latex_to_text(s: str, bib: dict[str, str] | None = None) -> str:
+    bib = bib or {}
     s = re.sub(
         r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s
     )
-    s = re.sub(r"\\cite[tp]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
+    # \citet{key} is textual ("Smith (2020) showed...") and carries the sentence's subject;
+    # \citep{key} is parenthetical and can go. Deleting a \citet silently produces a
+    # grammatical fragment that reads as finished prose. Mark it instead.
+    s = re.sub(
+        r"\\citet\*?(?:\[[^\]]*\])*\{([^}]*)\}",
+        lambda m: _cite_text(m.group(1), bib),
+        s,
+    )
+    s = re.sub(r"\\cite[p]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
     s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
     # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
     s = re.sub(r"_\{([^{}]*)\}", r"\1", s)
@@ -115,6 +161,125 @@ def _latex_to_text(s: str) -> str:
         s = s.replace("\\" + esc, esc)
     s = re.sub(r"\s+([,.;:])", r"\1", s)  # drop spaces left before punctuation by \cite removal
     return re.sub(r"\s+", " ", s).strip()
+
+
+#: Hand-authored overrides live here, next to the paper and **tracked in git**. Everything in
+#: ``arxiv-submission/`` is generated and disposable; anything a human had to decide belongs in
+#: this file instead, or ``make arxiv`` silently destroys it.
+OVERRIDE_NAME = "arxiv.yaml"
+
+
+def load_overrides(paper: Path) -> dict:
+    """Read ``papers/<slice>/arxiv.yaml`` if present.
+
+    The auto-extracted abstract cannot always be right: turning ``\\citet{sofue2025}`` into
+    "Sofue & Kohno (2025)" needs the bibliography, and no amount of regex gets there. So the
+    generator's job is to get close and *say when it could not*, and this file is where the
+    human's answer lives — in source control, reviewable in a PR, and immune to regeneration.
+    """
+    path = paper / OVERRIDE_NAME
+    if not path.is_file():
+        return {}
+    try:
+        import yaml
+    except ImportError:  # pragma: no cover - pyyaml is a project dependency
+        raise SystemExit(f"{path} exists but pyyaml is not installed") from None
+    data = yaml.safe_load(path.read_text()) or {}
+    if not isinstance(data, dict):
+        raise SystemExit(f"{path} must be a YAML mapping of metadata fields")
+    unknown = set(data) - OVERRIDABLE
+    if unknown:
+        raise SystemExit(
+            f"{path}: unknown field(s) {sorted(unknown)}; overridable: {sorted(OVERRIDABLE)}"
+        )
+    return data
+
+
+#: Fields ``arxiv.yaml`` may override. Deliberately not the file list or the tarball — those
+#: are derived from the source and a human editing them would be papering over a real problem.
+OVERRIDABLE = {
+    "title",
+    "authors",
+    "abstract",
+    "primary_category",
+    "cross_lists",
+    "comments",
+    "license",
+    "report_number",
+    "journal_ref",
+    "doi",
+    "orcid",
+}
+
+
+def load_bib_authors(paper: Path) -> dict[str, str]:
+    """Map each BibTeX key to its natbib textual form, e.g. ``de Gasperin et al. (2018)``.
+
+    A textual citation carries the subject of its sentence, so the extracted abstract needs
+    the author-year *text*, not a deletion and not a marker. That text is already in
+    ``refs.bib``; resolving it here means the common case needs no human override at all.
+
+    Surname extraction handles the two BibTeX conventions in these files: ``Kramer, M.``
+    (comma form) and ``{de Gasperin}, F.`` (braced compound surname). ``and others`` becomes
+    "et al.", as natbib renders it.
+    """
+    bib = paper / "refs.bib"
+    if not bib.is_file():
+        return {}
+    out: dict[str, str] = {}
+    for entry in re.split(r"@\w+\s*\{", bib.read_text(errors="ignore"))[1:]:
+        key = entry.split(",", 1)[0].strip()
+        author = _bib_field(entry, "author")
+        year = _bib_field(entry, "year")
+        if not key or not author or not year:
+            continue
+        names = [n.strip() for n in re.split(r"\s+and\s+", author) if n.strip()]
+        etal = any(n.lower() == "others" for n in names)
+        names = [n for n in names if n.lower() != "others"]
+        surnames = [n for n in (_surname(n) for n in names) if n]
+        if not surnames:
+            continue  # e.g. author = {others} — nothing to render, leave it unresolved
+        if etal or len(surnames) > 2:
+            who = f"{surnames[0]} et al."
+        elif len(surnames) == 2:
+            who = f"{surnames[0]} & {surnames[1]}"
+        elif surnames:
+            who = surnames[0]
+        else:
+            continue
+        out[key] = f"{who} ({year})"
+    return out
+
+
+def _bib_field(entry: str, field: str) -> str:
+    """Pull one brace-delimited BibTeX field, tolerating nested braces."""
+    m = re.search(rf"\b{field}\s*=\s*\{{", entry, re.I)
+    if not m:
+        return ""
+    depth, start = 1, m.end()
+    for i in range(start, len(entry)):
+        depth += (entry[i] == "{") - (entry[i] == "}")
+        if depth == 0:
+            return " ".join(entry[start:i].split())
+    return ""
+
+
+def _surname(name: str) -> str:
+    """``Kramer, M.`` -> Kramer; ``{de Gasperin}, F.`` -> de Gasperin; ``F. Kramer`` -> Kramer."""
+    name = name.strip()
+    if "," in name:
+        name = name.split(",", 1)[0]
+    return name.replace("{", "").replace("}", "").strip() or name
+
+
+def _indent(block: str, prefix: str = "  ") -> str:
+    """Indent every line of a YAML literal block.
+
+    Only the first line used to be indented, which was invisible while the abstract was a
+    single auto-extracted line and produced invalid YAML the moment an override supplied a
+    wrapped one.
+    """
+    return "\n".join(prefix + line if line.strip() else "" for line in block.splitlines())
 
 
 def find_main_tex(paper: Path) -> Path:
@@ -149,10 +314,39 @@ def collect(paper: Path, main: Path) -> tuple[list[Path], list[str]]:
     return list(dict.fromkeys(files)), warn
 
 
+#: What the paper_macros generators emit when a metric is None/non-finite (see e.g.
+#: ``jansky_research.typeii``'s ``g()``). In a table it reads as "not measured"; in a sentence
+#: it reads as a hole — "at purity --" — and the prose around it still parses as a claim.
+MACRO_PLACEHOLDER = "--"
+
+
+def placeholder_macros_in(block: str, macros: dict[str, str]) -> list[str]:
+    """Macros used in ``block`` whose committed value is the not-measured placeholder."""
+    used = set(re.findall(r"\\([a-zA-Z]+)", block))
+    return sorted(name for name in used if macros.get(name, "").strip() == MACRO_PLACEHOLDER)
+
+
 def validate(paper: Path, main: Path, abstract: str, files: list[Path]) -> list[str]:
     errs = []
     if len(abstract) > ABSTRACT_MAX:
         errs.append(f"abstract is {len(abstract)} chars (> {ABSTRACT_MAX})")
+    # The auto-extracted abstract is a best effort and it fails *plausibly*: a dropped
+    # \citet or symbol leaves prose that still reads like prose. These two checks turn the
+    # two known failure modes into blocking errors so a human has to look.
+    if "[CITE:" in abstract:
+        errs.append(
+            "abstract contains a textual citation (\\citet) that cannot be auto-expanded. "
+            f"Write the real abstract into papers/<slice>/{OVERRIDE_NAME} under 'abstract:' "
+            "with each [CITE:key] replaced by author-year text, e.g. 'Sofue & Kohno (2025)'. "
+            "Do NOT edit arxiv-submission/metadata.yaml — it is regenerated and your edit "
+            "would be lost."
+        )
+    if abstract and abstract[0].islower():
+        errs.append(
+            "abstract begins with a lowercase word, which usually means a leading macro was "
+            f"stripped and the first sentence lost its subject. Fix it in papers/<slice>/"
+            f"{OVERRIDE_NAME}, not in the generated metadata.yaml"
+        )
     text = main.read_text(errors="ignore")
     for inp in re.findall(r"\\(?:input|includegraphics(?:\[[^\]]*\])?|plotone)\{([^}]+)\}", text):
         if inp.startswith("/") or inp.startswith(".."):
@@ -383,20 +577,50 @@ def main() -> int:
     title = _latex_to_text(_apply_macros(_braced(text, "title") or "TODO: title", macros))
     authors = [_latex_to_text(a) for a in re.findall(r"\\author(?:\[[^\]]*\])?\{([^}]*)\}", text)]
     abm = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
-    abstract = _latex_to_text(_apply_macros(abm.group(1), macros)) if abm else "TODO: abstract"
+    bib = load_bib_authors(paper)
+    abstract = _latex_to_text(_apply_macros(abm.group(1), macros), bib) if abm else "TODO: abstract"
+
+    # Hand-authored answers win over anything auto-extracted, and they validate as the real
+    # thing — so a correct arxiv.yaml clears the [CITE:] error rather than merely silencing it.
+    overrides = load_overrides(paper)
+    title = overrides.get("title", title)
+    authors = overrides.get("authors", authors)
+    abstract = overrides.get("abstract", abstract).strip()
 
     files, warns = collect(paper, main_tex)
     errs = validate(paper, main_tex, abstract, files)
 
+    # A macro whose committed value is "--" leaves a hole in a sentence that still reads like
+    # a claim: "the detector separates type II from type III and RFI at purity --". The
+    # evidence JSON has null there. That is a paper problem, not a packaging one, and it must
+    # not be trimmed or overridden away.
+    if abm:
+        holes = placeholder_macros_in(abm.group(1), macros)
+        if holes:
+            named = ", ".join("\\" + h for h in holes)
+            errs.append(
+                f"abstract cites macro(s) with no committed value ({named} = "
+                f"'{MACRO_PLACEHOLDER}') — the results JSON has null for these, so the "
+                "abstract states a claim with the number missing. Compute the metric or "
+                "rewrite the sentence; do NOT paper over it in arxiv.yaml"
+            )
+
     # Auto-fill what we can read from the source: the ORCID in \author[ORCID]{...}, and a
     # comments line seeded from the figure count (page count still needs the human / the PDF).
     om = re.search(r"\\author\[(\d{4}-\d{4}-\d{4}-[\dXx]{4})\]", text)
-    orcid = om.group(1) if om else "TODO"
+    orcid = overrides.get("orcid", om.group(1) if om else "TODO")
     n_fig = sum(1 for f in files if f.suffix == ".pdf")
-    comments = f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research"
+    comments = overrides.get(
+        "comments",
+        f"TODO pages, {n_fig} figures. Code and data: github.com/joebarbere/jansky-research",
+    )
 
     # Suggest which arXiv groups this paper belongs in (primary + cross-lists).
     primary_cat, cross_cats, cat_why = suggest_categories(paper.name, title, abstract)
+    primary_cat = overrides.get("primary_category", primary_cat)
+    cross_cats = overrides.get("cross_lists", cross_cats)
+    if overrides:
+        cat_why = f"{cat_why} (some fields overridden by {OVERRIDE_NAME})"
     _scopes = {**ASTRO_CATEGORIES, **_NONASTRO_CATEGORIES}
     cat_ref = "\n".join(f"#   {c:<17}{_scopes.get(c, '')}" for c in [primary_cat, *cross_cats])
     cross_yaml = ", ".join(cross_cats)
@@ -406,28 +630,50 @@ def main() -> int:
         for f in files:
             tf.add(f, arcname=str(f.relative_to(paper)))
 
+    provenance = (
+        f"# {len(overrides)} field(s) came from {paper}/{OVERRIDE_NAME}: "
+        f"{', '.join(sorted(overrides))}"
+        if overrides
+        else f"# no {OVERRIDE_NAME} — every value below is auto-extracted or a TODO"
+    )
     (out / "metadata.yaml").write_text(
-        f"""# arXiv submission metadata — fill every TODO, then upload at https://arxiv.org/submit
+        f"""# GENERATED — do not edit. `make arxiv` overwrites this file.
+# Hand-authored values belong in {paper}/{OVERRIDE_NAME} (tracked in git); this is a build
+# artifact assembled from the .tex plus that override.
+{provenance}
+#
+# arXiv submission metadata — fill every TODO, then upload at https://arxiv.org/submit
 title: {title!r}
 authors:        # full names + affiliations, in order (an AI/LLM is NOT an eligible author)
 {chr(10).join("  - " + repr(x) for x in authors) or "  - TODO"}
 abstract: |
-  {abstract}
+{_indent(abstract)}
 # categories — SUGGESTED ({cat_why}). Confirm the primary is the single best fit and
 # each cross-list genuinely targets a *different* readership (arXiv allows up to ~3):
 {cat_ref}
 primary_category: {primary_cat}
 cross_lists: [{cross_yaml}]
 comments: {comments!r}
-license: CC BY 4.0       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
-report_number: null
-journal_ref: null        # add after journal acceptance
-doi: null
+license: {overrides.get("license", "CC BY 4.0")}       # or CC BY-SA 4.0 | CC BY-NC-SA 4.0 | CC0 | arXiv non-exclusive
+report_number: {overrides.get("report_number") or "null"}
+journal_ref: {overrides.get("journal_ref") or "null"}        # add after journal acceptance
+doi: {overrides.get("doi") or "null"}
 msc_class: null          # math.* only
 acm_class: null          # cs.* only
 orcid: {orcid}              # set on the arXiv account/profile too
 """
     )
+
+    # A generator that emits a file it cannot itself parse is broken, and the failure shows
+    # up as a confusing error in whatever reads it next. Check here, at the source.
+    try:
+        import yaml as _yaml
+
+        _yaml.safe_load((out / "metadata.yaml").read_text())
+    except ImportError:  # pragma: no cover - pyyaml is a project dependency
+        pass
+    except Exception as exc:  # noqa: BLE001 - any parse failure is the same bug
+        errs.append(f"generated metadata.yaml is not valid YAML ({exc.__class__.__name__})")
 
     lines = [
         "# arXiv submission checklist",
@@ -435,6 +681,11 @@ orcid: {orcid}              # set on the arXiv account/profile too
         f"- main file: `{main_tex.name}`",
         f"- package: `{tar}` ({len(files)} files)",
         f"- abstract: {len(abstract)} / {ABSTRACT_MAX} chars",
+        (
+            f"- overrides: `{paper}/{OVERRIDE_NAME}` supplies {', '.join(sorted(overrides))}"
+            if overrides
+            else f"- overrides: none (no `{paper}/{OVERRIDE_NAME}`)"
+        ),
         "",
         "## Validation",
         *(f"- ❌ {e}" for e in errs),

@@ -1,0 +1,30 @@
+# Hand-authored arXiv metadata for papers/rmdipole — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2234 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and closing summary sentences; every numeric result is
+# preserved, checked mechanically against the source abstract.
+
+abstract: |
+  Every test of the cosmic dipole anomaly to date uses source counts or flux densities; none
+  uses Faraday rotation measures (RMs). The kinematic (observer-motion) expectation for RM is
+  a Doppler rescaling, RM obs = RM (1+betacos theta)^2 --- a signed dipole of fractional
+  amplitude 2beta 2.5x10^(-3), two orders of magnitude below catalogue sensitivity and largely
+  absorbed by foreground subtraction. We instead ask the question a detection could answer: is
+  the extragalactic RM sky isotropic at dipole order? SPICE-RACS DR2 is the first catalogue
+  large enough. From 102830 quality-flagged (goodRM, S/N>8) components at |b|>45 deg we form
+  extragalactic residuals with the catalogue's nearest-neighbour Galactic-RM subtraction, fit
+  a monopole+dipole model to the noise-debiased residual RM power and to |residual|, and
+  calibrate significance with footprint-preserving Dec-band scrambles --- the survey's Dec +49
+  deg footprint is the dominant systematic, so the scramble null is load-bearing. The pipeline
+  recovers an injected power dipole on the real footprint (amplitude 0.3 0.2812+/-0.0087, apex
+  within 6 deg). On the real sky the power statistic rejects its scramble null (amplitude
+  0.5289+/-0.0649, p= 0.001) --- but the rejection is carried entirely by the top 1% of
+  |residual|: clipping those 1029 sources returns the sky to consistency with isotropy (p=
+  0.933), the outlier-robust |residual| statistic on the widest sample is likewise isotropic
+  (p= 0.956), and every variant's apex lies 80--150 deg from the CMB dipole apex. The
+  catalogued noise power carries its own small dipole (0.0366) pointing elsewhere, excluding
+  mis-modelled noise. We conclude the extragalactic RM sky is isotropic at dipole order once a
+  1% outlier tail is removed, with no evidence for any CMB-aligned dipole; the outlier-tail
+  anisotropy is a systematics statement, not a cosmological one.

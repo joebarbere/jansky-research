@@ -1,0 +1,31 @@
+# Hand-authored arXiv metadata for papers/glitchpop — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2533 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and the closing summary; every numeric result is
+# preserved, checked mechanically against the source abstract.
+
+abstract: |
+  The Jodrell Bank catalogue holds 727 glitches from 220 pulsars; the last population-
+  statistics paper stops at end-2018 (543/178), so 184 glitches have never entered a
+  population analysis, which characterised glitch sizes, not waiting times. Howitt et al.
+  (2018) classified per-pulsar waiting times, but only for the few most-glitching pulsars,
+  pre-2018, without gap-robustness. We extend that to the full 5-glitch sample and diff across
+  the post-2018 data. We classify each pulsar's inter-glitch waiting times as exponential
+  (memoryless Poisson, the null), quasi-periodic (Vela/J0537-like), or clustered, from a
+  coefficient of variation calibrated against the null with a parametric bootstrap. The load-
+  bearing step is monitoring-gap excision: the catalogue conflates real inter-glitch intervals
+  with ones in which a pulsar kept glitching unobserved, and one such gap misclassifies even
+  the textbook quasi-periodic glitcher J0537-6910 (its 2264-day RXTE gap lifts the raw
+  coefficient of variation to 2). After excising waits far longer than a pulsar's median, the
+  classifier recovers both known quasi-periodic glitchers (J0537-6910, Vela); a synthetic
+  recover-a-known separates injected exponential and quasi-periodic processes at a false-
+  positive rate of 0.0938. Of 31 pulsars above the count cut (magnetars excluded), 10 are
+  quasi-periodic, 20 exponential. Under an all-Poisson null only 1.55 false quasi-periodics
+  are expected, so the fraction is highly significant (binomial p=2x10^(-6)), though 1--2
+  borderline members are likely spurious. Only 1 pulsar is clustered: gap excision removes
+  exactly the long gaps that produce clustering, so long-gap clustering is structurally under-
+  detected -- a method asymmetry, not evidence against the clustering Zhu & Zheng (2025)
+  report. Adding the post-2018 glitches flips 1 classification (J2229+6114) of the 28
+  classifiable in both epochs and makes 3 newly classifiable.

@@ -9,6 +9,51 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+
+- `arxiv-submit`: the assembler silently mangled abstracts containing textual citations or
+  Greek letters, and the damage read as finished prose. `\citet{key}` was deleted outright,
+  so an abstract opening "\citet{sofue2025} derived..." became "derived the definitive
+  modern..." — a sentence with no subject. `\rho` and `\pi` were absent from the symbol
+  table, so `$\rho_\mathrm{DM} = 0.107$` extracted as " = 0.107" and `$4\pi$` as "4".
+  `\citet` now leaves a visible `[CITE:key]` marker, `validate()` treats that marker (and a
+  lowercase first word) as **blocking errors**, and the Greek set is extended. Found while
+  preparing the `innerrc` package; re-running the assembler across the other papers shows
+  `spectra` and `vgpra` had the same latent defect.
+- `arxiv-submit`: **the generated `metadata.yaml` required hand-editing and was overwritten
+  by every `make arxiv`** — a footgun that silently destroyed the fix for the problem above.
+  Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the assembler
+  merges over the auto-extracted ones, so regeneration is idempotent and the decision is
+  reviewable in a PR.
+- `arxiv-submit`: **`\citet{key}` is now resolved from `refs.bib`** to its natbib textual form
+  ("de Gasperin et al. (2018)", "Zhu & Zheng (2025)"), handling comma-form and braced compound
+  surnames and `and others`. This fixes the common case with no override at all — 9 papers.
+- `arxiv-submit`: **macros whose value contained braces were never loaded**, because the
+  `\newcommand` regex used `[^{}]*`. Any value with an exponent, subscript or `\mathrm{}` was
+  dropped, and the abstract's `\rfRealHUMAINP` then fell through the generic macro strip and
+  vanished — leaving prose reading `p=,`: a stated significance with the number silently gone.
+  Now brace-matched. Affected `dr20radio`, `frbperiod`, `frbstats`, `glitchpop`, `offsets`,
+  `rfitrend`.
+- `arxiv-submit`: `_apply_macros` passed macro values to `re.sub` as **replacement templates**,
+  so any value containing a backslash raised `bad escape` (or silently expanded a group
+  reference). Only surfaced once brace-nested values started loading. Now a literal callable.
+- `arxiv-submit`: the generator emitted **invalid YAML** for any multi-line override (only the
+  abstract's first line was indented) and now parses its own output as a validation step.
+- `arxiv-submit`: **new blocking check for macros with no committed value.** A metric that is
+  `null` in the results JSON renders as `--`, which in a sentence reads as a hole — *"the
+  detector separates type II from type III and RFI at purity --"* — while the prose around it
+  still parses as a claim. Flags `typeii` (`\tiiPurity` + three completeness macros),
+  `torchfdmt` (`\spBruteGpu`), `torchdsp` (two GPU benchmarks), `rmstructure` (an injected
+  recovery and its error). **These are paper problems, not packaging problems**, and are left
+  flagged deliberately: each needs the metric computed or the sentence rewritten.
+- `make arxiv` **stopped at the first paper with a blocking error and silently skipped every
+  paper after it**, so a partial run looked like a complete one. It now packages all of them
+  and fails at the end with the list.
+- Abstracts over arXiv's ~1920-char limit trimmed into tracked `arxiv.yaml` overrides for
+  `frblens`, `glitchpop`, `peaked`, `pte2`, `rfitrend`, `rmdipole` and `vgpra` (and `innerrc`
+  for its citation). Trims cut connective tissue and closing "…are the contribution" summaries
+  only; a mechanical guard rejected any trim that dropped a numeric result.
+
 ## [1.4.0] - 2026-08-07
 
 ### Added
