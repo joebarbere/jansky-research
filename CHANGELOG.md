@@ -21,22 +21,38 @@ recommend the next version number.
   preparing the `innerrc` package; re-running the assembler across the other papers shows
   `spectra` and `vgpra` had the same latent defect.
 - `arxiv-submit`: **the generated `metadata.yaml` required hand-editing and was overwritten
-  by every `make arxiv`** — a footgun that silently destroyed the fix for the very problem
-  above. Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the
-  assembler merges over the auto-extracted ones, so regeneration is idempotent and the
-  decision is reviewable in a PR. Added `papers/innerrc/arxiv.yaml`.
+  by every `make arxiv`** — a footgun that silently destroyed the fix for the problem above.
+  Hand-authored values now live in a tracked `papers/<slice>/arxiv.yaml` which the assembler
+  merges over the auto-extracted ones, so regeneration is idempotent and the decision is
+  reviewable in a PR.
+- `arxiv-submit`: **`\citet{key}` is now resolved from `refs.bib`** to its natbib textual form
+  ("de Gasperin et al. (2018)", "Zhu & Zheng (2025)"), handling comma-form and braced compound
+  surnames and `and others`. This fixes the common case with no override at all — 9 papers.
+- `arxiv-submit`: **macros whose value contained braces were never loaded**, because the
+  `\newcommand` regex used `[^{}]*`. Any value with an exponent, subscript or `\mathrm{}` was
+  dropped, and the abstract's `\rfRealHUMAINP` then fell through the generic macro strip and
+  vanished — leaving prose reading `p=,`: a stated significance with the number silently gone.
+  Now brace-matched. Affected `dr20radio`, `frbperiod`, `frbstats`, `glitchpop`, `offsets`,
+  `rfitrend`.
+- `arxiv-submit`: `_apply_macros` passed macro values to `re.sub` as **replacement templates**,
+  so any value containing a backslash raised `bad escape` (or silently expanded a group
+  reference). Only surfaced once brace-nested values started loading. Now a literal callable.
 - `arxiv-submit`: the generator emitted **invalid YAML** for any multi-line override (only the
-  abstract's first line was indented). Fixed, and it now parses its own output as a
-  validation step — a generator that cannot read what it wrote is broken.
+  abstract's first line was indented) and now parses its own output as a validation step.
+- `arxiv-submit`: **new blocking check for macros with no committed value.** A metric that is
+  `null` in the results JSON renders as `--`, which in a sentence reads as a hole — *"the
+  detector separates type II from type III and RFI at purity --"* — while the prose around it
+  still parses as a claim. Flags `typeii` (`\tiiPurity` + three completeness macros),
+  `torchfdmt` (`\spBruteGpu`), `torchdsp` (two GPU benchmarks), `rmstructure` (an injected
+  recovery and its error). **These are paper problems, not packaging problems**, and are left
+  flagged deliberately: each needs the metric computed or the sentence rewritten.
 - `make arxiv` **stopped at the first paper with a blocking error and silently skipped every
   paper after it**, so a partial run looked like a complete one. It now packages all of them
-  and fails at the end with the list. This surfaced that **13 papers have blocking errors**,
-  most pre-existing and previously hidden: 8 with the `\citet` defect above, and 8 whose
-  abstracts exceed arXiv's ~1920-char limit (`peaked` 2048, `rmdipole` 2234, `frblens` 2026,
-  `typeii` 1963, `rfitrend` 2434, `vgpra` 2014, `pte2` 2301, `glitchpop` 2520). Verified
-  pre-existing by re-running the previous assembler. Not fixed here: each needs an author
-  trim or an `arxiv.yaml`, not a script change. `atlas3i`, `innerrc`, `hi` and `dr20radio`
-  validate clean.
+  and fails at the end with the list.
+- Abstracts over arXiv's ~1920-char limit trimmed into tracked `arxiv.yaml` overrides for
+  `frblens`, `glitchpop`, `peaked`, `pte2`, `rfitrend`, `rmdipole` and `vgpra` (and `innerrc`
+  for its citation). Trims cut connective tissue and closing "…are the contribution" summaries
+  only; a mechanical guard rejected any trim that dropped a numeric result.
 
 ## [1.4.0] - 2026-08-07
 

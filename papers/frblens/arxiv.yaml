@@ -1,0 +1,31 @@
+# Hand-authored arXiv metadata for papers/frblens — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2026 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and the closing "...are the contribution" summary; every
+# numeric result is preserved, checked mechanically against the source abstract.
+
+abstract: |
+  A strongly lensed one-off fast radio burst masquerades as a repeater whose ``bursts'' arrive
+  in image multiplets with a mutual time delay fixed (at the solar-system barycenter) to
+  milliseconds. The theory is a decade old; no catalogue-level search has been published,
+  existing FRB lensing searches all being in the intra-burst mus--ms regime. We run the first,
+  on the CHIME/FRB Catalog 2 repeaters: per source, we barycenter the catalogue's topocentric
+  TOAs (the annual Roemer term would otherwise drift a fixed delay by up to +/-150 s in
+  topocentric pair delays --- far beyond tolerance), then scan all burst-pair delays >1 d for
+  a recurring delay Delta shared by the maximum number of disjoint pairs matching within 5 s
+  and consistent in DM within each source's own fitted-DM scatter. Significance comes from a
+  null that first contact with the real catalogue proved load-bearing: permuting each burst's
+  position within its transit window while keeping its day --- so activity epochs, clustering,
+  and periodic windows survive into every null realisation, and only sub-window fixed-delay
+  coherence (the actual lensing signature) can score. A day-scrambling null, by contrast,
+  false-positives the three most clustered repeaters in the catalogue; we document that
+  failure mode rather than hide it. Injections at the real burst trains --- through the same
+  barycentring, DM cut, and transit-window selection as the search --- map the sensitivity
+  region and expose a transit-survey selection: both images are jointly detectable only when
+  Delta is within the transit window of an integer number of sidereal days. The search returns
+  0 detections among 33\ repeaters searched (cleanest non-detection p=0.81), giving the first
+  empirical upper limit on the lensed-repeater fraction: <0.0908 per searched repeater (95%
+  confidence, within the mapped sensitivity region). The expected yield at lensing optical
+  depth 10^(-4) was zero.

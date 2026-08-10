@@ -1,0 +1,30 @@
+# Hand-authored arXiv metadata for papers/pte2 — TRACKED IN GIT.
+#
+# arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
+# and only because the paper's own abstract is 2301 characters — over arXiv's ~1920-char
+# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
+# Trimming removed connective tissue and closing summary sentences; every numeric result is
+# preserved, checked mechanically against the source abstract.
+
+abstract: |
+  The Parkes Transient Events II database collects 165,592 single pulses from 363 pulsars
+  reprocessed from the 1997--2001 Parkes Multibeam archive. Its release paper fits log-normal
+  or Gaussian fluence distributions to the 98 highest-count pulsars and the earlier HTRU-V
+  census fit log-normals across 315, so a generic energy-distribution census is not new. We
+  instead run a uniform per-source giant-pulse test across all 363: for each pulsar we ask
+  whether its single-pulse S/N distribution carries an extreme tail its own log-normal bulk
+  cannot produce, decided by a Poisson excess above a detection-floor-robust threshold, and
+  rank the excess against spin-down luminosity Edot from the ATNF catalogue. On injected
+  synthetic pulse sets it recovers heavy tails with completeness rising from 0.325 at low
+  pulse count to 1.0 at high count, at a false-positive rate of 0.05. The real census is an
+  honest null. Of 136 pulsars above the count cut, 26 (~19%) show a significant high-S/N
+  excess above their log-normal bulk, and three facts undercut a giant-pulse interpretation.
+  (i) The excess does not correlate with spin-down luminosity (rho=-0.027, p=0.756; Mann--
+  Whitney on log E p=0.130), contrary to the giant-pulse-- E expectation. (ii) It is
+  detection-power limited: heavy-tailed sources have 2.4x more pulses (median 552.5 vs 227.5;
+  p=0.020) and the flagged fraction rises from 0.088 in the low-count half to 0.294 in the
+  high-count half, so the 19% is a power floor, not a clean incidence. (iii) Of the few
+  flagged sources with enough giant pulses to fit a tail index, that index is steep (median
+  11.58), i.e. the excess does not extend into a shallow ( 2--3) power law --- evidence
+  against, not for, a classic giant-pulse tail; and none of the archetypal giant-pulse pulsars
+  (Crab, B1937+21, Vela) survive the count cut in this 1997--2001 sample.

@@ -43,12 +43,28 @@ def _load_macros(paper: Path, main: Path) -> dict[str, str]:
         f = paper / (inp if inp.endswith(".tex") else inp + ".tex")
         if f.exists():
             text += "\n" + f.read_text(errors="ignore")
-    return dict(re.findall(r"\\newcommand\{\\(\w+)\}\{([^{}]*)\}", text))
+    # Brace-matched, not `[^{}]*`. A value containing braces — any exponent, subscript or
+    # \mathrm{} — failed to match at all, so the macro was never loaded, and the abstract's
+    # `\rfRealHUMAINP` then fell through to the generic macro strip and vanished. The result
+    # was prose reading "p=," : a stated significance with the number silently gone.
+    macros: dict[str, str] = {}
+    for m in re.finditer(r"\\newcommand\{\\(\w+)\}\{", text):
+        depth, start = 1, m.end()
+        for i in range(start, len(text)):
+            depth += (text[i] == "{") - (text[i] == "}")
+            if depth == 0:
+                macros[m.group(1)] = text[start:i]
+                break
+    return macros
 
 
 def _apply_macros(s: str, macros: dict[str, str]) -> str:
+    # `lambda _: val`, not `val`: re.sub treats a string replacement as a *template*, so a
+    # macro value containing a backslash (\times, \emph, ...) either raises "bad escape" or
+    # silently expands a group reference. Now that brace-nested values load, most of the
+    # interesting ones contain backslashes.
     for name, val in sorted(macros.items(), key=lambda kv: -len(kv[0])):
-        s = re.sub(rf"\\{name}(?![a-zA-Z])", val, s)
+        s = re.sub(rf"\\{name}(?![a-zA-Z])", lambda _, v=val: v, s)
     return s
 
 
@@ -107,14 +123,28 @@ _SYMBOLS = {
 }
 
 
-def _latex_to_text(s: str) -> str:
+def _cite_text(keys: str, bib: dict[str, str]) -> str:
+    """Render \\citet{a,b} as natbib would, or leave a [CITE:] marker if unresolvable."""
+    parts = [k.strip() for k in keys.split(",") if k.strip()]
+    rendered = [bib.get(k) for k in parts]
+    if not all(rendered):
+        return "[CITE:" + keys + "]"
+    return "; ".join(r for r in rendered if r)
+
+
+def _latex_to_text(s: str, bib: dict[str, str] | None = None) -> str:
+    bib = bib or {}
     s = re.sub(
         r"\\(emph|textit|textbf|code|texttt|mathrm|mathit|text|textsc)\{([^{}]*)\}", r"\2", s
     )
     # \citet{key} is textual ("Smith (2020) showed...") and carries the sentence's subject;
     # \citep{key} is parenthetical and can go. Deleting a \citet silently produces a
     # grammatical fragment that reads as finished prose. Mark it instead.
-    s = re.sub(r"\\citet\*?(\[[^\]]*\])*\{([^}]*)\}", r"[CITE:\2]", s)
+    s = re.sub(
+        r"\\citet\*?(?:\[[^\]]*\])*\{([^}]*)\}",
+        lambda m: _cite_text(m.group(1), bib),
+        s,
+    )
     s = re.sub(r"\\cite[p]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
     s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
     # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
@@ -182,6 +212,66 @@ OVERRIDABLE = {
 }
 
 
+def load_bib_authors(paper: Path) -> dict[str, str]:
+    """Map each BibTeX key to its natbib textual form, e.g. ``de Gasperin et al. (2018)``.
+
+    A textual citation carries the subject of its sentence, so the extracted abstract needs
+    the author-year *text*, not a deletion and not a marker. That text is already in
+    ``refs.bib``; resolving it here means the common case needs no human override at all.
+
+    Surname extraction handles the two BibTeX conventions in these files: ``Kramer, M.``
+    (comma form) and ``{de Gasperin}, F.`` (braced compound surname). ``and others`` becomes
+    "et al.", as natbib renders it.
+    """
+    bib = paper / "refs.bib"
+    if not bib.is_file():
+        return {}
+    out: dict[str, str] = {}
+    for entry in re.split(r"@\w+\s*\{", bib.read_text(errors="ignore"))[1:]:
+        key = entry.split(",", 1)[0].strip()
+        author = _bib_field(entry, "author")
+        year = _bib_field(entry, "year")
+        if not key or not author or not year:
+            continue
+        names = [n.strip() for n in re.split(r"\s+and\s+", author) if n.strip()]
+        etal = any(n.lower() == "others" for n in names)
+        names = [n for n in names if n.lower() != "others"]
+        surnames = [n for n in (_surname(n) for n in names) if n]
+        if not surnames:
+            continue  # e.g. author = {others} — nothing to render, leave it unresolved
+        if etal or len(surnames) > 2:
+            who = f"{surnames[0]} et al."
+        elif len(surnames) == 2:
+            who = f"{surnames[0]} & {surnames[1]}"
+        elif surnames:
+            who = surnames[0]
+        else:
+            continue
+        out[key] = f"{who} ({year})"
+    return out
+
+
+def _bib_field(entry: str, field: str) -> str:
+    """Pull one brace-delimited BibTeX field, tolerating nested braces."""
+    m = re.search(rf"\b{field}\s*=\s*\{{", entry, re.I)
+    if not m:
+        return ""
+    depth, start = 1, m.end()
+    for i in range(start, len(entry)):
+        depth += (entry[i] == "{") - (entry[i] == "}")
+        if depth == 0:
+            return " ".join(entry[start:i].split())
+    return ""
+
+
+def _surname(name: str) -> str:
+    """``Kramer, M.`` -> Kramer; ``{de Gasperin}, F.`` -> de Gasperin; ``F. Kramer`` -> Kramer."""
+    name = name.strip()
+    if "," in name:
+        name = name.split(",", 1)[0]
+    return name.replace("{", "").replace("}", "").strip() or name
+
+
 def _indent(block: str, prefix: str = "  ") -> str:
     """Indent every line of a YAML literal block.
 
@@ -222,6 +312,18 @@ def collect(paper: Path, main: Path) -> tuple[list[Path], list[str]]:
         if f.exists():
             files.append(f)
     return list(dict.fromkeys(files)), warn
+
+
+#: What the paper_macros generators emit when a metric is None/non-finite (see e.g.
+#: ``jansky_research.typeii``'s ``g()``). In a table it reads as "not measured"; in a sentence
+#: it reads as a hole — "at purity --" — and the prose around it still parses as a claim.
+MACRO_PLACEHOLDER = "--"
+
+
+def placeholder_macros_in(block: str, macros: dict[str, str]) -> list[str]:
+    """Macros used in ``block`` whose committed value is the not-measured placeholder."""
+    used = set(re.findall(r"\\([a-zA-Z]+)", block))
+    return sorted(name for name in used if macros.get(name, "").strip() == MACRO_PLACEHOLDER)
 
 
 def validate(paper: Path, main: Path, abstract: str, files: list[Path]) -> list[str]:
@@ -475,7 +577,8 @@ def main() -> int:
     title = _latex_to_text(_apply_macros(_braced(text, "title") or "TODO: title", macros))
     authors = [_latex_to_text(a) for a in re.findall(r"\\author(?:\[[^\]]*\])?\{([^}]*)\}", text)]
     abm = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.S)
-    abstract = _latex_to_text(_apply_macros(abm.group(1), macros)) if abm else "TODO: abstract"
+    bib = load_bib_authors(paper)
+    abstract = _latex_to_text(_apply_macros(abm.group(1), macros), bib) if abm else "TODO: abstract"
 
     # Hand-authored answers win over anything auto-extracted, and they validate as the real
     # thing — so a correct arxiv.yaml clears the [CITE:] error rather than merely silencing it.
@@ -486,6 +589,21 @@ def main() -> int:
 
     files, warns = collect(paper, main_tex)
     errs = validate(paper, main_tex, abstract, files)
+
+    # A macro whose committed value is "--" leaves a hole in a sentence that still reads like
+    # a claim: "the detector separates type II from type III and RFI at purity --". The
+    # evidence JSON has null there. That is a paper problem, not a packaging one, and it must
+    # not be trimmed or overridden away.
+    if abm:
+        holes = placeholder_macros_in(abm.group(1), macros)
+        if holes:
+            named = ", ".join("\\" + h for h in holes)
+            errs.append(
+                f"abstract cites macro(s) with no committed value ({named} = "
+                f"'{MACRO_PLACEHOLDER}') — the results JSON has null for these, so the "
+                "abstract states a claim with the number missing. Compute the metric or "
+                "rewrite the sentence; do NOT paper over it in arxiv.yaml"
+            )
 
     # Auto-fill what we can read from the source: the ORCID in \author[ORCID]{...}, and a
     # comments line seeded from the figure count (page count still needs the human / the PDF).
