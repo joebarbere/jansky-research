@@ -201,3 +201,56 @@ checkout — the skips are now hard assertions), and a paragraph from the round-
 survived declaring α = 0 "the defensible statement of the north–south comparison", i.e. the
 exact opposite of the new abstract. Round 1 → round 2 → round 3 each found an error in the
 paragraph written to fix the previous round.
+
+## Referee round 4 (2026-08-12) — the round that simplified the paper
+
+Both round-3 future-work items were implemented, and both changed the answer. Then the
+referee found that the most important thing in the paper was an identity nobody had written
+down.
+
+**The luminosity matching is a redshift-independent flux cut.** The K-correction cancels
+between a source and its own survey's limit, and between the two survey limits, so
+"above the common luminosity limit" is algebraically
+`S_VLASS ≥ max(S_V_lim, S_R_lim·(ν_V/ν_R)^α)` — no z, no cosmology. Verified numerically at
+four redshifts. This collapses the whole systematic budget to one number and answers the
+double-counting worry: **α enters at exactly one place**, the cross-survey limit translation,
+so a source's own index does no work at all. It is also why the per-source draw shifts both
+fractions and barely moves their ratio.
+
+**I made the same error I had criticised, from the other side.** Round 2 killed the 5 mJy
+RACS variant because it rescales both legs identically. My round-3 "mirror" VLASS variant is
+*the same check relabelled*: RACS 5 mJy gives cuts (1.994, 5.000) and VLASS 2 mJy gives
+(2.000, 5.014) — identical, with identical southern fractions. Raising **either** limit
+deepens **both** cuts. The 28% gap reduction I reported as "the contrast is materially
+definitional" was common-mode normalisation.
+
+The fix is the scale-free statement: **report the ratio.** Across every limit variant the
+ratio moves only 1.443–1.472 (2%), while the pp gap moves by a quarter. The ratio at the
+measured index is **1.47**, and its real uncertainty is the index alone (1.39–1.61).
+
+**α depends on which survey selects you, by more than any other term.** The Kaplan–Meier
+estimate conditions on a RACS detection — it keeps the steep sources a cut discards, but
+drops the 2,179 quasars VLASS saw and RACS did not, which are the flat ones. That tilts it
+steep by the mirror of the mechanism that tilts the joint-detection median flat. With both
+tails censored no point estimate is identified, so `censored_median_bounds` reports what is:
+over all 8,805 either-survey detections the median lies in **[−0.63, −0.39]**. The
+RACS-conditioned −0.755 lies outside it — different populations, not a contradiction, but
+the point. No single value is adopted as "the" index.
+
+**The steep bright bin was substantially a beam.** Per-bin integrated-flux KM (the referee's
+"single change"): the three faint bins shift by ≤0.03, the brightest by **+0.120**
+(−0.905 → −0.784), four times the global resolution term. A flux dependence survives, but
+"the brightest sources are genuinely steeper" was overstated.
+
+Also fixed: ±0.35 was a full **span** written as a half-width, asserting twice the evidence
+and contradicting the paper's own "−0.6 to −0.9" (now quoted as endpoints); the Limitations
+paragraph still called the resolution term unquantified while the abstract counted it inside
+the budget; "unbiased over the whole range" (KM is unbiased under *independent* censoring,
+and here the censoring limit is a function of S_RACS, on which α depends); "converging
+toward"; two sentences quoting endpoints where a difference was meant; the flux bins didn't
+partition the sample (18% below 3 mJy unbinned); and the RACS declination floor, stated as
+−80° in the Data section while the catalogue's sources reach −84.7°.
+
+The KM unit test could not fail in the regime that matters — it only asserted "better than
+the naive median", which is nearly free. It now asserts recovery to 0.05 and adds a
+dependent-censoring case that documents the bias rather than asserting it away.

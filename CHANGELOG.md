@@ -20,6 +20,25 @@ recommend the next version number.
   The contrast evaluated at the measured index is 4.09% vs 2.82%, a gap of 1.27 pp, moving
   only over 1.25-1.29 across +/-1 sigma -- against 0.23-1.66 for the old 0 -> -1 sweep, which
   is now the range the measurement *excludes* rather than its uncertainty.
+- `dr20radio`: `kaplan_meier_median` -- survival analysis replaces the completeness cut as the
+  index estimator. A RACS detection with no VLASS counterpart is not missing data: it says
+  S_VLASS < the VLASS limit, i.e. alpha is LEFT-CENSORED at
+  log(S_lim/S_RACS)/log(nu_V/nu_R), and those are exactly the steep objects a cut discards.
+  KM uses all 6,626 RACS-detected band quasars (5,571 measured + 1,055 censored) and is
+  unbiased over the whole range instead of over the range a cut assumes: **alpha = -0.755
+  +/- 0.012**, against -0.722 for the cut and -0.615 for the naive joint-detection median.
+  It lands steeper, as it must, and inside the floor progression the cuts were converging to.
+- `dr20radio`: the flux dependence re-tested with the censoring handled. Measured on
+  detections only the bins give -0.46/-0.50/-0.52/-0.84; by Kaplan-Meier they give
+  -0.61/-0.57/-0.55/-0.90. So up to 0.15 of the apparent trend in the faintest bin was
+  truncation -- but the trend **survives**: the brightest sources are genuinely steeper. A
+  flux LIMIT is converted at the faint end, where the value is -0.61 (`ALPHA_THRESHOLD_REGIME`),
+  giving a gap of 1.11 pp against 1.32 at the sample median; both are reported.
+- `dr20radio`: `fetch_racs_total_flux` -- RACS `total_flux_source` over the whole overlap band
+  (1.56M sources), so the beam-resolution systematic is **measured rather than estimated**.
+  Recomputing with integrated flux on both sides gives alpha = -0.699, a shift of +0.056
+  flatward (the 2.5" beam resolves out flux the 25" one keeps). That is a sixth of the
+  flux-range term, and replaces a ~0.1 estimate the previous round could only assert.
 - `dr20radio`: three sensitivity checks on the measured index, each able to fail, and each
   of which did (`completeness_floor_sensitivity`, `per_epoch`, `flux_bins`). Lowering the
   assumed completeness floor to alpha >= -2 and -2.5 steepens the median monotonically

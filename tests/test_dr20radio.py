@@ -303,9 +303,14 @@ def test_measured_alpha_constants_match_committed_measurement():
     # reads from it; a skip here would disable the guard precisely in a fresh CI checkout,
     # which is where the hard-coded ALPHA_MEASURED most needs checking.
     assert results.exists(), "results/dr20radio_alpha.json is committed evidence and must exist"
-    fc = json.loads(results.read_text())["flux_complete"]
-    assert dr20radio.ALPHA_MEASURED == pytest.approx(fc["median"], abs=5e-5)
-    assert dr20radio.ALPHA_MEASURED_SE == pytest.approx(fc["median_boot_se"], abs=5e-5)
+    m = json.loads(results.read_text())
+    km = m["kaplan_meier"]
+    assert dr20radio.ALPHA_MEASURED == pytest.approx(km["median"], abs=5e-5)
+    assert dr20radio.ALPHA_MEASURED_SE == pytest.approx(km["median_boot_se"], abs=5e-5)
+    # the faint-bin value used for converting a flux LIMIT tracks the faintest committed bin
+    assert dr20radio.ALPHA_THRESHOLD_REGIME == pytest.approx(
+        m["flux_bins"][0]["median_km"], abs=5e-5
+    )
     # the sweep the census runs must actually contain the three measured points
     for a in dr20radio.ALPHA_MEASURED_SWEEP:
         key = f"{a:g}"
@@ -394,13 +399,24 @@ def test_alpha_systematics_are_recorded_and_the_floor_test_can_fail():
     # "upper bound on flatness" framing is wrong and must be rewritten
     meds = [floors[k]["median"] for k in ("-1.5", "-2", "-2.5")]
     assert meds == sorted(meds, reverse=True), f"floor sensitivity is no longer monotonic: {meds}"
+    # the censored estimator must sit inside that progression -- it is what the cuts converge
+    # toward, and if it fell outside, the paper's framing of the cuts would be wrong
+    km = m["kaplan_meier"]["median"]
+    assert min(meds) <= km <= max(meds), f"KM {km} is outside the floor progression {meds}"
 
     # both epochs and all flux bins present, with the max-of-epochs value bracketed
     assert set(m["per_epoch"]) == {"E2", "E3"}
     ep = [m["per_epoch"][k]["median"] for k in ("E2", "E3")]
     assert min(ep) <= m["flux_complete"]["median"] <= max(ep)
-    assert len(m["flux_bins"]) == 3
-    assert all(b["n"] > 0 and b["median"] is not None for b in m["flux_bins"])
+    assert len(m["flux_bins"]) == 4
+    assert all(b["n_km"] > 0 and b["median_km"] is not None for b in m["flux_bins"])
+    # the detections-only column must be FLATTER than the censored one in every bin: that
+    # difference is the truncation artefact, and its sign is the whole argument for using KM
+    for b in m["flux_bins"]:
+        assert b["median_detected"] >= b["median_km"], (
+            f"bin {b['s_racs_lo_mjy']} has detections-only steeper than KM -- "
+            "the truncation cannot do that"
+        )
 
 
 def test_vlass_conservative_variant_can_move_the_ratio():
@@ -424,3 +440,156 @@ def test_vlass_conservative_variant_can_move_the_ratio():
     )
     # it must actually change the answer -- a check that cannot fail is not a check
     assert abs(gap_c - gap) > 0.1 * gap, "the VLASS-limit variant barely moves the gap"
+
+
+def test_kaplan_meier_recovers_a_known_median_and_uses_censored_information():
+    """KM must reproduce the plain median with no censoring, and must beat a completeness cut
+    when the censoring is informative -- which is the entire argument for using it here."""
+    rng = np.random.default_rng(5)
+    x = rng.normal(-0.75, 0.9, 4000)
+
+    # no censoring -> the survival-analysis median (smallest t with S(t) <= 0.5, which for an
+    # even sample is the lower of the two central values, unlike np.median's average)
+    out = dr20radio.kaplan_meier_median(x, np.zeros(x.size, bool), right_censored=False)
+    assert out["median"] == pytest.approx(np.median(x), abs=0.02)
+    assert out["n_censored"] == 0 and out["n_events"] == x.size
+
+    # left-censor the steep tail at a per-object limit, as the real data are: the naive median
+    # of the survivors is biased FLAT, and KM recovers the truth from the same information
+    limit = rng.normal(-1.2, 0.5, x.size)
+    censored = x < limit
+    observed = np.where(censored, limit, x)
+    naive = float(np.median(x[~censored]))
+    km = dr20radio.kaplan_meier_median(observed, censored, right_censored=False)
+    assert censored.sum() > 0.05 * x.size, "test setup censors too little to be meaningful"
+    assert naive > np.median(x), "censoring the steep tail must bias the naive median flat"
+    # not merely "better than naive" -- that is nearly free. KM must actually recover it.
+    assert km["median"] == pytest.approx(np.median(x), abs=0.05)
+    assert abs(km["median"] - np.median(x)) < abs(naive - np.median(x))
+
+    # ...and when the censoring is INFORMATIVE (limit tied to the value), KM's independence
+    # assumption fails and it should NOT be trusted. Documented rather than asserted away:
+    # this is the regime the real data are in, since a_lim is a function of S_RACS and alpha
+    # depends on S_RACS.
+    dep_limit = x + rng.normal(0.4, 0.1, x.size)  # limit tracks the value itself
+    dep_cens = x < dep_limit
+    dep = dr20radio.kaplan_meier_median(
+        np.where(dep_cens, dep_limit, x), dep_cens, right_censored=False
+    )
+    assert dep["n_censored"] > 0.5 * x.size
+    # Under heavy informative censoring the median is not even identified -- survival never
+    # reaches 0.5 -- and the estimator says so instead of returning a number. That is the
+    # failure mode the paper's dependent-censoring caveat is about.
+    assert dep["median"] is None or abs(dep["median"] - np.median(x)) > 0.05
+
+
+def test_kaplan_meier_median_is_none_when_the_tail_is_all_censored():
+    """If survival never reaches 0.5 the median is not defined, and the estimator must say so
+    rather than return the last event as though it were one."""
+    v = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    out = dr20radio.kaplan_meier_median(v, np.array([False, True, True, True, True]))
+    assert out["median"] is None
+    assert out["survival_at_last_event"] > 0.5
+
+
+def test_integrated_flux_systematic_is_measured_and_flatward():
+    """Peak fluxes across a 2.5" and a 25" beam bias alpha steep; integrated flux must move it
+    the other way. The paper calls this a measured systematic, so the sign has to hold."""
+    import json
+    from pathlib import Path
+
+    m = json.loads(Path("results/dr20radio_alpha.json").read_text())
+    it = m["integrated_flux"]
+    assert it["available"], "the integrated-flux leg is quoted in the paper and must be present"
+    assert it["shift_from_peak"] > 0, (
+        "integrated flux must be flatward of peak -- the finer beam resolves out flux"
+    )
+    assert it["n"] == m["kaplan_meier"]["n"], "both legs must use the same censored sample"
+    # and it must be the smaller systematic the paper claims it is
+    bins = [b["median_km"] for b in m["flux_bins"]]
+    assert it["shift_from_peak"] < max(bins) - min(bins)
+
+
+def test_censored_median_bounds_bracket_the_truth():
+    """With both tails censored no point estimate is identified, only bounds -- and the bounds
+    must contain the truth, collapse to it when nothing is censored, and widen when the
+    censoring hides more."""
+    rng = np.random.default_rng(9)
+    x = rng.normal(-0.7, 0.8, 3000)
+    truth = float(np.median(x))
+
+    tight = dr20radio.censored_median_bounds(x, np.zeros(x.size, int))
+    assert tight["lo"] == pytest.approx(truth, abs=0.02)
+    assert tight["hi"] == pytest.approx(truth, abs=0.02)
+
+    # censor the steep tail from the left and the flat tail from the right
+    lo_lim, hi_lim = np.percentile(x, 20), np.percentile(x, 80)
+    kind = np.where(x < lo_lim, -1, np.where(x > hi_lim, 1, 0))
+    val = np.where(kind == -1, lo_lim, np.where(kind == 1, hi_lim, x))
+    b = dr20radio.censored_median_bounds(val, kind)
+    assert b["lo"] <= truth <= b["hi"], "the bounds must contain the median they bound"
+    assert b["hi"] - b["lo"] >= tight["hi"] - tight["lo"]
+    assert b["n_left_censored"] > 0 and b["n_right_censored"] > 0
+
+
+def test_luminosity_matching_is_a_redshift_independent_flux_cut():
+    """The paper states an identity that makes its whole systematic budget one number: the
+    K-correction cancels between a source and its own survey's limit, so the common-luminosity
+    condition is algebraically a flux cut with no z dependence. If that ever stops holding,
+    the budget and the per-source-alpha argument both need rewriting."""
+    z = np.array([0.2, 0.8, 1.7, 3.0, 5.0])
+    alpha = -0.7546
+    predicted_cut = max(
+        dr20radio.VLASS_S_LIM_MJY,
+        dr20radio.RACS_S_LIM_MJY * (dr20radio.VLASS_FREQ_GHZ / dr20radio.RACS_FREQ_GHZ) ** alpha,
+    )
+    for s_mjy in (0.9 * predicted_cut, 1.1 * predicted_cut):
+        lum = dr20radio.log_luminosity_whz(
+            z, np.full(z.size, s_mjy), freq_ghz=dr20radio.VLASS_FREQ_GHZ, alpha=alpha
+        )
+        common = np.maximum(
+            dr20radio.log_luminosity_whz(
+                z,
+                np.full(z.size, dr20radio.VLASS_S_LIM_MJY),
+                freq_ghz=dr20radio.VLASS_FREQ_GHZ,
+                alpha=alpha,
+            ),
+            dr20radio.log_luminosity_whz(
+                z,
+                np.full(z.size, dr20radio.RACS_S_LIM_MJY),
+                freq_ghz=dr20radio.RACS_FREQ_GHZ,
+                alpha=alpha,
+            ),
+        )
+        clears = lum >= common
+        assert clears.all() or (~clears).all(), "the cut must not depend on redshift"
+        assert bool(clears[0]) == (s_mjy >= predicted_cut)
+
+
+def test_ratio_is_limit_invariant_while_the_pp_gap_is_not():
+    """The scale-free statement. Raising either survey's limit deepens both cuts, shrinking
+    both fractions and the pp gap while leaving the ratio alone -- so a pp gap that moves
+    under a deeper cut is measuring normalisation, not contrast. This is the check that
+    would have caught reading a 28% gap reduction as a physical result."""
+    import json
+    from pathlib import Path
+
+    n = json.loads(Path("results/dr20radio_north.json").read_text())
+    s = json.loads(Path("results/dr20radio_south.json").read_text())["deep_south"]
+    tot = lambda b: sum(b["k"]) / sum(b["n"])  # noqa: E731
+    key = f"{dr20radio.ALPHA_MEASURED:g}"
+    variants = [
+        (n["luminosity_matched_alpha"][key], s["luminosity_matched_alpha"][key]),
+        (n["luminosity_matched_conservative"], s["luminosity_matched_conservative"]),
+        *(
+            (
+                n["luminosity_matched_vlass_conservative"][f"{v:g}"],
+                s["luminosity_matched_vlass_conservative"][f"{v:g}"],
+            )
+            for v in dr20radio.VLASS_S_LIM_CONSERVATIVE_MJY
+        ),
+    ]
+    ratios = [tot(a) / tot(b) for a, b in variants]
+    gaps = [100 * (tot(a) - tot(b)) for a, b in variants]
+    assert max(ratios) / min(ratios) - 1 < 0.05, f"ratio should be limit-invariant: {ratios}"
+    assert max(gaps) / min(gaps) > 1.2, f"the pp gap should NOT be: {gaps}"

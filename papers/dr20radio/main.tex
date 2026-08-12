@@ -34,20 +34,25 @@ recovers RACS-selected cartons at \drCartonVlassRacsPct\% and LOFAR-selected at
 surveys differing in both frequency and depth. The comparison of the two
 hemispheres above a common rest-frame 1.4\,GHz luminosity limit depends entirely on the
 assumed radio spectral index, which spans a factor seven in the resulting gap over
-$\drAlphaHi \ge \alpha \ge \drAlphaLo$; I therefore \emph{measure} it, using the
-\drAlphaMeasN\ quasars in the survey-overlap band detected by both VLASS and RACS above the
-flux where the joint-detection requirement cannot bias the distribution, obtaining
-$\alpha = \drAlphaMeasFull \pm \drAlphaMeasSeFull$~(stat)~$\pm \drAlphaSysSpan$~(sys), where
-the systematic is the span across three checks that each moved it --- the assumed
-completeness floor, the epoch choice, and the flux range measured over --- and dominates the
-statistical error by an order of magnitude. At the measured index the fractions are
-\drLumNorthMeasPct\% (north) versus \drLumSouthMeasPct\% (south), a gap of \drGapMeasPp\
-percentage points (\drGapMeasLoPp--\drGapMeasHiPp\ across $\pm1\sigma$ in $\alpha$). Equalising the two
-surveys' limits --- VLASS quotes a per-epoch reliability threshold where RACS quotes a 95\%
-completeness limit --- reduces that gap by \drGapVlassDropPct\%, to \drGapVlassConsB\
-percentage points. The residual is consistent with survey-side effects (beam-size mismatch,
-hemisphere targeting mix), which I identify but do not fully quantify, and I attribute none
-of it to astrophysics.
+$\drAlphaHi \ge \alpha \ge \drAlphaLo$; I therefore \emph{measure} it, from the
+\drAlphaMeasN\ RACS-detected quasars in the survey-overlap band, treating the \drAlphaKmCens\
+without a VLASS counterpart as the left-censored observations they are (Kaplan--Meier), which
+uses the steep sources a completeness cut would discard, obtaining
+$\alpha = \drAlphaMeasFull \pm \drAlphaMeasSeFull$~(stat) with a systematic
+\emph{range} of \drAlphaSysLo\ to \drAlphaSysHi\ --- a span, not a $\pm$ --- set by four
+checks that each moved it --- the assumed
+completeness floor, the epoch choice, the flux range measured over, and peak versus
+integrated flux --- and dominates the statistical error by an order of magnitude. The index also
+depends on flux, so the gap is \drGapMeasPp\ percentage points at the sample median and
+\drGapFaintPp\ at the faint-end value appropriate to converting a flux limit
+(\drLumNorthMeasPct\% versus \drLumSouthMeasPct\% in the former case). Because the comparison reduces algebraically to a pair of
+flux cuts, a difference in percentage points inherits the overall normalisation and falls
+whenever either survey's limit is raised; the north/south \emph{ratio} does not, and is
+\drRatioMeas, stable to \drRatioLimSpreadPct\% across every flux-limit variant tried. Its
+uncertainty is the spectral index alone (\drRatioAlphaLo--\drRatioAlphaHi), and the index in
+turn depends on which survey selects the sample by more than any other systematic. The
+residual is consistent with survey-side effects (beam-size mismatch, hemisphere targeting
+mix), and I attribute none of it to astrophysics.
 \end{abstract}
 
 \keywords{Quasars (1319) --- Radio active galactic nuclei (2134) --- Surveys (1671) ---
@@ -191,31 +196,43 @@ $S_\mathrm{RACS} > \drAlphaComplMjy$\,mJy $= S^\mathrm{VLASS}_\mathrm{lim}
 (\nu_\mathrm{VLASS}/\nu_\mathrm{RACS})^{1.5}$ removes the truncation for every
 $\alpha \ge -1.5$, at the cost of \drAlphaTruncPct\% of the sample.
 
-Three checks bound how far that median can be trusted, and all three move it. \emph{(a) The
-completeness floor is an assumption, not a fact.} The cut above removes truncation only for
-$\alpha \ge -1.5$, and the sample's own 16th percentile (\drAlphaMeasPlo) is steeper than
-that, so for the steepest sixth the truncation is still active. Re-cutting at
-$\alpha \ge -2$ ($S_\mathrm{RACS} > \drAlphaFloorBCut$\,mJy) and $\alpha \ge -2.5$
-($> \drAlphaFloorCCut$\,mJy) gives medians of \drAlphaFloorB\ and \drAlphaFloorC: the median
-steepens monotonically as the floor is lowered, so \drAlphaMeas\ is an \emph{upper bound on
-flatness} rather than an unbiased value. \emph{(b) The VLASS flux is the brightest across the
+Three checks bound how far that median can be trusted, and all three move it. \emph{(a) A completeness cut is an assumption, and the
+censored estimator shows what it costs.} Cutting at $\alpha \ge -1.5$ leaves the truncation
+active for the steepest sixth of the sample (its 16th percentile, \drAlphaMeasPlo, is steeper
+than the floor). Re-cutting at $\alpha \ge -2$ ($S_\mathrm{RACS} > \drAlphaFloorBCut$\,mJy)
+and $\alpha \ge -2.5$ ($> \drAlphaFloorCCut$\,mJy) gives \drAlphaFloorB\ and \drAlphaFloorC,
+steepening monotonically as the floor is lowered on ever smaller samples. The Kaplan--Meier
+value, which assumes no floor at all and keeps every object, sits inside that progression at
+\drAlphaMeas, inside the range the cut-based estimates span. \emph{(b) The VLASS flux is the brightest across the
 epoch catalogs}, which is correct for a detection census and biased high for a flux ratio ---
 both noise and genuine variability push a maximum up, and 3\,GHz variability is largest for
 compact flat-spectrum sources, so the bias is flatward. Single-epoch medians are
-\drAlphaEpochA\ and \drAlphaEpochB, bracketing the max-of-epochs value. \emph{(c) The index
-depends on flux.} In $S_\mathrm{RACS}$ bins the median runs \drAlphaBinA, \drAlphaBinB\ and
-\drAlphaBinC\ from the faintest to the brightest, so a single number is not transferable
-across the flux range --- and the flux-complete sample is only \drAlphaComplFracPct\% of the
-band, selected well above the threshold regime where the K-correction actually decides
-detections. The span of the median across all three checks is \drAlphaSysSpan, and it is
-quoted as the systematic in Section~\ref{sec:contrast}.
+\drAlphaEpochA\ and \drAlphaEpochB, bracketing the max-of-epochs value. \emph{(c) The index depends on flux, and the dependence is
+real.} In $S_\mathrm{RACS}$ bins the Kaplan--Meier median runs \drAlphaBinFaint, \drAlphaBinA,
+\drAlphaBinB\ and \drAlphaBinC\ from the faintest to the brightest. Measured on detections
+only, the same bins give a trend inflated by up to \drAlphaBinArt\ in the faintest bin, where
+the censoring bites hardest --- so part of an apparent flux trend can be manufactured by the
+truncation. Repeating the bins with integrated flux separates the rest: the three faint bins
+shift by $\le 0.03$, while the brightest moves from \drAlphaBinC\ to \drAlphaBinCInt, a shift
+of $+\drAlphaBinCShift$ --- four times the global resolution term. The steep bright bin is
+therefore substantially a beam effect, not a spectral one, which is what one expects where
+extended and blended sources concentrate. A flux dependence survives both corrections, but it
+is smaller than the peak-flux bins suggest and should not be read as ``brighter quasars have
+steeper spectra''. This matters for how the index is used. A flux \emph{limit} is
+converted at the faint end, where the value is \drAlphaFaint, not at the bright end that
+dominates the sample median; evaluating the comparison there gives a gap of \drGapFaintPp\
+percentage points against \drGapMeasPp\ at the sample median. The median across all four checks spans \drAlphaSysLo\ to
+\drAlphaSysHi\ (a width of \drAlphaSysSpan), quoted as the systematic \emph{range} in
+Section~\ref{sec:contrast} --- not as a $\pm$, which would assert twice the evidence.
 
-A fourth systematic is identified but not quantified here: both fluxes are \emph{peak}
-fluxes, from a 2.5\arcsec\ beam and a 25\arcsec\ one. Structure on intermediate scales costs
-the VLASS peak more than the RACS peak, and RACS blending of neighbours adds flux at
-888\,MHz, both biasing $\alpha$ steep; a 10\% error in the flux ratio is 0.08 in $\alpha$.
-Repeating with integrated fluxes, or restricting to sources unresolved in both, would settle
-it and is left for future work.
+\emph{(d) The beams differ by a factor of ten, so the flux
+definition matters.} The indices above use \emph{peak} fluxes from a 2.5\arcsec\ beam and a
+25\arcsec\ one; structure on intermediate scales costs the VLASS peak more than the RACS
+peak, biasing $\alpha$ steep. Repeating the whole estimate with \emph{integrated} flux on
+both sides --- VLASS's from the same component catalogs, RACS's from the survey's
+\code{total\_flux\_source} --- gives \drAlphaIntKm, i.e.\ a shift of $+\drAlphaIntShift$,
+flatward as expected. That is a measured systematic rather than an assumed one, and it is
+smaller than the flux-range term by a factor of six.
 
 Two limits of the measurement should also be stated. It is a property of the
 radio-\emph{detected} quasars: the undetected majority may have a different index
@@ -242,6 +259,29 @@ should be read as single-index quantities.
 
 \subsection{Common-luminosity-limit comparison}
 \label{sec:method-lum}
+
+One property of this construction is worth stating up front, because it makes everything that
+follows transparent. Writing the K-corrected luminosity as
+$L \propto d_L^2(z)\,S\,(1+z)^{-(1+\alpha)}(\nu_\mathrm{ref}/\nu)^{\alpha}$, the cosmological
+and $(1+z)$ factors are identical for a source and for its own survey's limit, and cancel;
+so do they between the two surveys' limits. The condition ``above the common luminosity
+limit'' is therefore \emph{algebraically a redshift-independent flux cut}:
+\begin{equation}
+S_\mathrm{VLASS} \ge \max\!\left(S^\mathrm{V}_\mathrm{lim},\;
+S^\mathrm{R}_\mathrm{lim}\,(\nu_\mathrm{V}/\nu_\mathrm{R})^{\alpha}\right)
+\quad\text{(north)},
+\end{equation}
+and the mirror expression in the south. The spectral index enters the comparison at exactly
+one place --- translating one survey's limit to the other's frequency --- and nowhere else;
+in particular a source's own index cancels against its own survey's limit. That is why a
+per-source index (Section~\ref{sec:method-alpha}) shifts both fractions but barely moves
+their ratio, and it reduces the entire systematic budget to a single number,
+$S^\mathrm{R}_\mathrm{lim}(\nu_\mathrm{V}/\nu_\mathrm{R})^{\alpha}$, which at the measured
+index is \drNorthEffCut\,mJy against the VLASS catalogue's own \drSlimVlass\,mJy floor. The
+northern leg is thus counted down to $1.2\times$ its catalogue's threshold while the southern
+is counted at its 95\% completeness limit --- a real asymmetry, and a different one from the
+apparent 2.5$\times$ that comparing \drNorthEffCut\ with \drSlimRacs\,mJy would suggest
+(those two are equal by construction).
 
 Raw fractions from surveys at different frequencies and depths are not comparable. For the
 contrast I convert each survey's flux limit (VLASS \drSlimVlass\,mJy, the catalog
@@ -299,23 +339,48 @@ a factor of seven, which would leave the comparison uninterpretable.
 
 It need not be assumed. The overlap band is covered by \emph{both} surveys, so a quasar
 detected twice yields a two-point spectral index directly (Section~\ref{sec:method-alpha}).
-Of \drAlphaBandN\ band quasars, \drAlphaJointN\ are detected by both VLASS and RACS. That
-joint-detection sample is truncated --- at the RACS limit a steep source has already fallen
-below the VLASS limit at 3\,GHz --- so its median, \drAlphaJointMed, is biased flat.
-Above $S_\mathrm{RACS} = \drAlphaComplMjy$\,mJy the truncation cannot operate for any
-$\alpha \ge -1.5$, and the \drAlphaMeasN\ quasars in that flux-complete sample give
+Of \drAlphaBandN\ band quasars, \drAlphaJointN\ are detected by both VLASS and RACS. Taking
+the median of those alone is wrong: the sample is truncated, because at the RACS limit a
+steep source has already fallen below the VLASS limit at 3\,GHz, and the median comes out
+flat at \drAlphaJointMed. Cutting to a flux above which the truncation cannot operate
+($S_\mathrm{RACS} > \drAlphaComplMjy$\,mJy, safe for any $\alpha \ge -1.5$) gives
+\drAlphaCutMed\ from \drAlphaCutN\ quasars, but that is unbiased only over the range the cut
+assumes and throws away a quarter of the sample.
+
+Neither is necessary. A RACS detection with no VLASS counterpart is not missing information:
+it says $S_\mathrm{VLASS} < S^\mathrm{VLASS}_\mathrm{lim}$, hence
+$\alpha < \log(S^\mathrm{VLASS}_\mathrm{lim}/S_\mathrm{RACS}) /
+\log(\nu_\mathrm{VLASS}/\nu_\mathrm{RACS})$ --- a left-censored observation, and precisely
+the steep objects a completeness cut discards. A Kaplan--Meier estimate uses all
+\drAlphaMeasN\ RACS-detected band quasars (\drAlphaKmEvents\ measured, \drAlphaKmCens\
+censored) rather than discarding the steep ones, and gives
 
 \begin{equation}
-\alpha = \drAlphaMeasFull \pm \drAlphaMeasSeFull\ \mathrm{(stat)} \pm \drAlphaSysSpan\ \mathrm{(sys)},
+\alpha = \drAlphaMeasFull \pm \drAlphaMeasSeFull\ \mathrm{(stat)},\quad
+\text{systematic range } \drAlphaSysLo \text{ to } \drAlphaSysHi,
 \end{equation}
 
-the median with its bootstrap standard error and a systematic term that dominates it by more
-than an order of magnitude. The systematic is not an estimate --- it is the span of the median
-across three checks that were run because each could have failed, and each did move it
-(Section~\ref{sec:method-alpha}): the assumed completeness floor, the choice of VLASS epoch,
-and the flux range the index is measured over. The measurement is therefore best read as
-$\alpha \simeq -0.7$ to $-0.9$: consistent with the canonical $-0.7$, and firmly excluding the
-flat spectrum that would close the gap. Evaluating the comparison at the
+the Kaplan--Meier median with its bootstrap standard error and a systematic term that
+dominates it by more than an order of magnitude. The systematic is not an estimate --- it is
+the span of the median across four checks that were run because each could have failed, and
+each did move it (Section~\ref{sec:method-alpha}): the assumed completeness floor, the choice
+of VLASS epoch, the flux range the index is measured over, and peak versus integrated flux
+across the two surveys' very different beams. The measurement is therefore
+best read as $\alpha \simeq -0.6$ to $-0.9$: consistent with the canonical $-0.7$, and firmly
+excluding the flat spectrum that would close the gap.
+
+That estimate conditions on a RACS detection, and the mirror censoring matters as much as the
+one it fixes. \drAlphaRightCens\ band quasars are detected by VLASS and \emph{not} by RACS ---
+right-censored observations, and by construction the flat ones. Keeping the steep tail while
+dropping the flat tail tilts the median steep by exactly the mechanism that tilts the
+joint-detection median flat. With both tails censored no point estimate is identified, but the
+median is bounded: over all \drAlphaBoundN\ either-survey detections it must lie in
+$[\drAlphaBoundLo, \drAlphaBoundHi]$. The RACS-conditioned $\drAlphaMeasFull$ lies outside
+that interval, which is not a contradiction --- they describe different populations --- but is
+the point: \emph{the index depends on which survey selects the sample, by more than any other
+term in the budget.} A RACS-selected sample gives $\drAlphaMeasFull$; an either-survey sample
+is bounded flatward of $\drAlphaBoundHi$. Both are reported, and no single value is adopted as
+``the'' index of the census. Evaluating the comparison at the
 measured index gives \drLumNorthMeasPct\% (north) against \drLumSouthMeasPct\% (south), a gap
 of \drGapMeasPp\ percentage points, and propagating the $\pm1\sigma$ index moves that gap only
 over \drGapMeasLoPp--\drGapMeasHiPp, and giving every quasar its own index rather than the
@@ -332,17 +397,19 @@ differs by hemisphere. The overlap band points the same way --- RACS recovers
 the full northern census, \drNorthOutsideRacsPct\% of which lies north of the RACS
 footprint, so that is not a strictly matched-sky comparison either.
 
-A third effect is larger than any of these, and unlike the spectral index it cannot be
-measured away. The two surveys' quoted limits are not the same kind of number: VLASS's
-\drSlimVlass\,mJy is a per-epoch \emph{reliability} threshold and RACS's \drSlimRacs\,mJy is
-a 95\% \emph{completeness} limit, so at the measured index the north is cut at
-\drNorthEffCut\,mJy against the south's \drSlimRacs\,mJy. Raising the VLASS limit to
-\drSlimVlassConsA\ and \drSlimVlassConsB\,mJy --- the mirror of the conservative RACS
-variant, and the side that can actually move the ratio --- takes the gap from \drGapMeasPp\
-to \drGapVlassConsA\ and \drGapVlassConsB\ percentage points, a reduction of
-\drGapVlassDropPct\%. The contrast is therefore materially but not wholly a consequence of
-how the two surveys' limits are defined: it shrinks by more than a quarter under a
-like-for-like limit and does not vanish. I therefore
+\textbf{Report the ratio, not the difference.} Because the comparison is a pair of flux cuts
+(Section~\ref{sec:method-lum}), raising \emph{either} survey's limit deepens both cuts and
+shrinks both fractions. A difference in percentage points inherits that normalisation and
+falls whenever either limit rises; the ratio does not. Across every limit variant tried ---
+the conservative \drSlimRacsCons\,mJy RACS limit, and VLASS limits of \drSlimVlassConsA\ and
+\drSlimVlassConsB\,mJy --- the ratio moves only over \drRatioLimLo--\drRatioLimHi, i.e.\
+\drRatioLimSpreadPct\%, while the percentage-point gap moves by a quarter. The gap's apparent
+sensitivity to the flux limits is normalisation, not contrast. (An earlier version of this
+paper read that gap reduction as evidence that the contrast was largely definitional; it is
+not, and the ratio is what shows this.) The contrast is therefore quoted as
+$\drRatioMeas$ at the measured index, robust to both surveys' limit choices at the
+\drRatioLimSpreadPct\% level, and its real uncertainty is the spectral index alone:
+\drRatioAlphaLo--\drRatioAlphaHi\ over the index's plausible range. I
 report the gap as a measured quantity of this catalog--survey pairing at a stated pair of
 limits, and explicitly do \emph{not} claim a hemispheric difference in quasar radio
 properties.
@@ -365,18 +432,21 @@ $\alpha=\drAlphaLo$ it widens to \drGapSteepPp\ (Section~\ref{sec:contrast}).}
 
 The census inherits the BHM selection function, which is neither flux-complete nor uniform
 across the sky; fractions here are properties of the DR20 BHM quasar catalog, not of
-quasars. The luminosity matching applies a single spectral index to a population whose measured index
-has a standard deviation of \drAlphaMeasSd. Measuring the index removed the dominant
+quasars. The luminosity matching applies a single spectral index to a population whose index distribution has a standard
+deviation of \drAlphaMeasSd\ in the flux-complete joint-detection sample --- a breadth that
+is partly instrumental, since its tails extend past $|\alpha| = 3$ where no synchrotron
+source lies and beam effects must dominate. Measuring the index removed the dominant
 assumption but did not make the comparison assumption-free, and the residual terms are
-unequal in size. The statistical error on the median moves the contrast by
-\drGapMeasLoPp--\drGapMeasHiPp\ percentage points and the population scatter by
-\drGapPsShiftPp\ --- both small. The systematic on the index itself is \drAlphaSysSpan, an
-order of magnitude larger, and a fourth term (peak fluxes across a 2.5\arcsec\ and a
-25\arcsec\ beam) is identified but unquantified. Larger than any of these is the definitional
+unequal in size. The statistical error on the median moves the contrast over
+\drGapMeasLoPp--\drGapMeasHiPp\ percentage points (a shift of 0.02) and the population
+scatter by \drGapPsShiftPp\ --- both small. The systematic \emph{range} on the index itself,
+\drAlphaSysLo\ to \drAlphaSysHi, is an order of magnitude wider, and it includes the
+peak-versus-integrated-flux term, which is measured here ($+\drAlphaIntShift$ globally,
+$+\drAlphaBinCShift$ in the brightest flux bin) rather than assumed. Larger than any of these is the definitional
 asymmetry between the two surveys' limits, which alone accounts for \drGapVlassDropPct\% of
-the gap. The scatter is also \emph{not} negligible for the fractions individually, which fall
-by \drLumNorthMeasPct--\drLumNorthPsPct\ and \drLumSouthMeasPct--\drLumSouthPsPct\ percentage
-points under per-source indices; it is the difference that is robust. Finally, the index is a
+the gap. The scatter is also \emph{not} negligible for the fractions individually, which fall from
+\drLumNorthMeasPct\% to \drLumNorthPsPct\% and from \drLumSouthMeasPct\% to
+\drLumSouthPsPct\% under per-source indices --- about 0.3 percentage points each; it is the difference that is robust. Finally, the index is a
 property of the radio-detected, comparatively bright quasars in the overlap band alone: the
 undetected majority may differ, and the deep-south census --- the paper's headline sample ---
 has no VLASS coverage at all, so no existing survey pair can test the transfer there. The VLASS epoch catalogs
@@ -406,12 +476,12 @@ existed for no earlier SDSS release, and its detection fraction is now measured.
 (\drNorthEtwoPct\%/\drNorthEthreePct\% per epoch, corrected by a measured chance rate).
 (2) First radio census of the first southern SDSS quasar spectra: \drSouthPct\% of
 \drSouthCensus\ deep-south (all-LCO) quasars have a RACS-low counterpart. (3) The radio spectral index of the census's own
-detected quasars is measured from the survey-overlap band, $\alpha = \drAlphaMeas \pm
-\drAlphaMeasSe$ (\drAlphaMeasN\ objects, flux-complete), which removes the assumption that
-otherwise dominates the cross-frequency comparison; above a common luminosity limit
-evaluated at that index the north/south fractions are \drLumNorthMeasPct\% vs.\
-\drLumSouthMeasPct\%, a gap of \drGapMeasPp\ percentage points attributed to stated
-survey-side effects. (4) The
+detected quasars is measured from the survey-overlap band by survival analysis over all
+\drAlphaMeasN\ RACS detections, $\alpha = \drAlphaMeasFull \pm \drAlphaMeasSeFull$~(stat), systematic
+range \drAlphaSysLo\ to \drAlphaSysHi, removing the assumption that otherwise dominates the
+cross-frequency comparison; the resulting north/south ratio is \drRatioMeas\
+(\drRatioLimSpreadPct\% stable across flux-limit variants, \drRatioAlphaLo--\drRatioAlphaHi\
+across the index's systematic range), attributed to stated survey-side effects. (4) The
 radio-targeted cartons, excluded from all fractions as circular, double as a
 cross-survey recovery measurement: near-complete recovery against the selecting survey
 (\drCartonRacsPct\%), falling to \drCartonVlassRacsPct\% at 3\,GHz for 888\,MHz-selected

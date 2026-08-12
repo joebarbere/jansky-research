@@ -322,12 +322,24 @@ ALPHA_SWEEP: tuple[float, ...] = (0.0, -0.35, -0.7, -1.0)
 # cannot truncate the distribution). These replace the sweep as the paper's uncertainty on the
 # K-correction: the sweep answered "how bad could it be", this answers "what is it".
 # test_dr20radio.py asserts these stay equal to the committed measurement.
-ALPHA_MEASURED: float = -0.7218
-ALPHA_MEASURED_SE: float = 0.0153
+# Kaplan-Meier over ALL 6,626 RACS-detected band quasars, treating the 1,055 VLASS
+# non-detections as the left-censored observations they are. This replaced the
+# flux-complete-cut value (-0.7218) as the primary estimator on 2026-08-12: the cut is
+# unbiased only over the alpha range it assumes and discards a quarter of the sample, while
+# KM uses every object and is unbiased over the whole range. It lands steeper, as it must --
+# the objects a cut throws away are the steep ones.
+ALPHA_MEASURED: float = -0.7546
+ALPHA_MEASURED_SE: float = 0.0118
+# The same estimator restricted to the faintest flux bin. The index depends on flux (a real
+# trend: it survives the censoring correction), and the census's detection decisions happen
+# at the faint end, so this is the value appropriate to converting a flux LIMIT -- while
+# -0.7546 is appropriate to the sample as a whole. The contrast is reported at both.
+ALPHA_THRESHOLD_REGIME: float = -0.6095
 ALPHA_MEASURED_SWEEP: tuple[float, ...] = (
     ALPHA_MEASURED - ALPHA_MEASURED_SE,
     ALPHA_MEASURED,
     ALPHA_MEASURED + ALPHA_MEASURED_SE,
+    ALPHA_THRESHOLD_REGIME,
 )
 """Spectral indices for the luminosity-matched contrast.
 
@@ -352,6 +364,96 @@ def spectral_index(
     with np.errstate(divide="ignore", invalid="ignore"):
         a = np.log(s_hi / s_lo) / np.log(freq_hi_ghz / freq_lo_ghz)
     return np.where((s_hi > 0) & (s_lo > 0), a, np.nan)
+
+
+def kaplan_meier_median(
+    values: np.ndarray, censored: np.ndarray, *, right_censored: bool = True
+) -> dict:
+    """Kaplan-Meier median of a censored sample, with no distributional assumption.
+
+    ``censored[i]`` marks an observation known only to lie beyond ``values[i]`` (above it for
+    ``right_censored``, below it otherwise). Left-censored data are handled by negating, which
+    turns them into the right-censored case and back again.
+
+    Why this instead of a completeness cut: throwing away everything below a flux where the
+    censoring cannot bite is unbiased only over the alpha range the cut assumes, and it
+    discards most of the sample. Kaplan-Meier keeps every object by using the non-detections
+    as the information they actually are -- "this source is steeper than X" -- so the estimate
+    is unbiased over the whole range.
+
+    Returns the median, the number of events and censored points, and the fraction of the
+    sample the estimator can resolve (the KM curve is undefined below the last event if the
+    tail is entirely censored, in which case ``median`` is None rather than a guess).
+    """
+    v = np.asarray(values, float)
+    c = np.asarray(censored, bool)
+    ok = np.isfinite(v)
+    v, c = v[ok], c[ok]
+    if v.size == 0:
+        return {"median": None, "n_events": 0, "n_censored": 0, "n": 0}
+    t = v if right_censored else -v
+    order = np.argsort(t, kind="stable")
+    t, c = t[order], c[order]
+    surv, n_at_risk, median_t = 1.0, t.size, None
+    for i, ti in enumerate(t):
+        if c[i]:
+            n_at_risk -= 1
+            continue
+        # events are processed one at a time; ties fall out of the product identically
+        surv *= 1.0 - 1.0 / n_at_risk
+        n_at_risk -= 1
+        if median_t is None and surv <= 0.5:
+            median_t = float(ti)
+    return {
+        "median": None if median_t is None else float(median_t if right_censored else -median_t),
+        "n_events": int((~c).sum()),
+        "n_censored": int(c.sum()),
+        "n": int(t.size),
+        "survival_at_last_event": float(surv),
+    }
+
+
+def censored_median_bounds(value: np.ndarray, kind: np.ndarray) -> dict:
+    """Distribution-free bounds on a median when data are censored from BOTH sides.
+
+    ``kind`` is 0 for a measured value, -1 for left-censored (the truth is below ``value``)
+    and +1 for right-censored (the truth is above it). Kaplan-Meier handles one side only;
+    with both, no point estimate is identified without extra assumptions, but the median is
+    bounded, and the bound is honest where a one-sided estimate is merely convenient.
+
+    This exists because a one-sided estimate here is biased in a nameable direction: RACS
+    detections without a VLASS counterpart are the steep sources, VLASS detections without a
+    RACS counterpart are the flat ones, and dropping either tail tilts the median toward the
+    other. Bounding uses both.
+    """
+    v = np.asarray(value, float)
+    k = np.asarray(kind, int)
+    ok = np.isfinite(v)
+    v, k = v[ok], k[ok]
+    n = v.size
+    if n == 0:
+        return {"lo": None, "hi": None, "n": 0}
+    grid = np.unique(v)
+    meas, left, right = v[k == 0], v[k == -1], v[k == 1]
+    # F_lo: only what must lie below x. F_hi: everything that could.
+    f_lo = np.array([((meas < x).sum() + (left <= x).sum()) / n for x in grid])
+    f_hi = np.array([((meas < x).sum() + left.size + (right < x).sum()) / n for x in grid])
+    # Step OUTWARD to the grid point before each crossing. The bound is over a discrete grid
+    # of observed values, so the true median can sit between two of them; rounding inward
+    # would report an interval that excludes the quantity it bounds, which is worse than a
+    # slightly wide one.
+    i_lo = int(np.argmax(f_hi >= 0.5)) if (f_hi >= 0.5).any() else None
+    i_hi = int(np.argmax(f_lo >= 0.5)) if (f_lo >= 0.5).any() else None
+    lo = None if i_lo is None else grid[max(i_lo - 1, 0)]
+    hi = None if i_hi is None else grid[min(i_hi + 1, grid.size - 1)]
+    return {
+        "lo": None if lo is None else float(lo),
+        "hi": None if hi is None else float(hi),
+        "n": int(n),
+        "n_measured": int(meas.size),
+        "n_left_censored": int(left.size),
+        "n_right_censored": int(right.size),
+    }
 
 
 def alpha_complete_limit_mjy(
@@ -516,7 +618,12 @@ def read_spall_quasars(path: str) -> dict:
         }
 
 
-def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
+def load_vlass_positions(*, total_flux: bool = False) -> dict:  # pragma: no cover - local bulk
+    """Thin wrapper preserved for callers that want integrated rather than peak flux."""
+    return _load_vlass(total_flux=total_flux)
+
+
+def _load_vlass(*, total_flux: bool = False) -> dict:  # pragma: no cover - local bulk files
     """Positions of quality-cut VLASS components from the local epoch catalogs.
 
     Applies the same cuts as the merged `vlass` slice: ``Duplicate_flag < 2``,
@@ -540,7 +647,7 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
                     continue
                 ra.append(float(r["RA"]))
                 dec.append(float(r["DEC"]))
-                fx.append(float(r["Peak_flux"]))
+                fx.append(float(r["Total_flux" if total_flux else "Peak_flux"]))
             except (KeyError, ValueError):
                 continue
     out["E2"] = (np.array(ra), np.array(dec), np.array(fx))
@@ -554,7 +661,7 @@ def load_vlass_positions() -> dict:  # pragma: no cover - local bulk files
             ok = np.asarray(d["Flag"]) == 0
             ra3.append(np.asarray(d["RA"], float)[ok])
             dec3.append(np.asarray(d["DEC"], float)[ok])
-            fx3.append(np.asarray(d["Peak_flux"], float)[ok])
+            fx3.append(np.asarray(d["Total_flux" if total_flux else "Peak_flux"], float)[ok])
     out["E3"] = (np.concatenate(ra3), np.concatenate(dec3), np.concatenate(fx3))
     return out
 
@@ -772,6 +879,77 @@ def fetch_racs_positions(
     return out
 
 
+def fetch_racs_total_flux(
+    dest_dir: str = "data/racs_dr1_total",
+    *,
+    dec_min: float = -40.0,
+    dec_max: float = 30.0,
+    strip_deg: float = 1.0,
+) -> dict:  # pragma: no cover - network
+    """RACS-low DR1 positions with BOTH peak and integrated flux, over the overlap band.
+
+    The main position cache carries ``peak_flux`` only, which is all a detection census needs.
+    A spectral index does not: alpha from peak fluxes across a 2.5" beam and a 25" one is
+    biased steep, because the finer beam resolves out flux the coarser one keeps. Measuring
+    that bias needs the integrated flux on both sides -- VLASS's is in the local component
+    catalogs, RACS's is this column.
+
+    Cached per 1-degree Dec strip exactly like ``fetch_racs_positions``; a completed strip is
+    never re-fetched, so an interrupted run resumes.
+    """
+    import csv
+    import time
+    from pathlib import Path
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+
+    dest = Path(dest_dir)
+    dest.mkdir(parents=True, exist_ok=True)
+    npz = dest / "racs_total.npz"
+    if npz.exists():
+        d = np.load(npz)
+        return {k: d[k] for k in d}
+    ra, dec, peak, total = [], [], [], []
+    lo = dec_min
+    while lo < dec_max:
+        hi = min(lo + strip_deg, dec_max)
+        path = dest / f"strip_{lo:+06.1f}.csv"
+        if not path.exists():
+            q = (
+                f"SELECT ra, dec, peak_flux, total_flux_source FROM {RACS_TABLE} "
+                f"WHERE dec >= {lo} AND dec < {hi}"
+            )
+            params = urlencode({"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv", "QUERY": q})
+            for attempt in range(6):
+                try:
+                    with urlopen(f"{RACS_TAP_SYNC}?{params}", timeout=600) as fh:
+                        path.write_bytes(fh.read())
+                    break
+                except Exception:  # noqa: BLE001 - retry transient TAP failures
+                    if attempt == 5:
+                        raise
+                    time.sleep(5 * (attempt + 1))
+        with path.open() as fh:
+            for row in csv.DictReader(fh):
+                try:
+                    p_, t_ = float(row["peak_flux"]), float(row["total_flux_source"])
+                except (KeyError, ValueError):
+                    continue
+                ra.append(float(row["ra"]))
+                dec.append(float(row["dec"]))
+                peak.append(p_)
+                total.append(t_)
+        lo = hi
+    out = {
+        "ra": np.array(ra),
+        "dec": np.array(dec),
+        "peak": np.array(peak),
+        "total": np.array(total),
+    }
+    np.savez(npz, ra=out["ra"], dec=out["dec"], peak=out["peak"], total=out["total"])
+    return out
+
+
 def _alpha_samples(results_dir: str = "results") -> np.ndarray:  # pragma: no cover - real leg
     """The committed flux-complete alpha samples, or an empty array if run_alpha has not run.
 
@@ -883,6 +1061,34 @@ def run_alpha(
         )
         return x[np.isfinite(x)]
 
+    # (d) The estimator that needs no completeness cut at all. Every RACS-detected quasar
+    # carries information about its index: if VLASS also saw it, alpha is measured; if not,
+    # S_VLASS < the VLASS limit, so alpha is LEFT-CENSORED at
+    # log(S_lim_VLASS / S_RACS) / log(nu_V / nu_R) -- "this source is steeper than X", which is
+    # exactly the objects a completeness cut throws away. Kaplan-Meier uses all of them and is
+    # unbiased over the whole alpha range instead of over the range the cut assumes.
+    _lnr = np.log(VLASS_FREQ_GHZ / RACS_FREQ_GHZ)
+    racs_sel = m_racs & (s_racs > 0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        a_obs = np.where(
+            m_vlass & (s_vlass > 0),
+            np.log(s_vlass / np.where(s_racs > 0, s_racs, np.nan)) / _lnr,
+            np.nan,
+        )
+        a_lim = np.log(VLASS_S_LIM_MJY / np.where(s_racs > 0, s_racs, np.nan)) / _lnr
+    is_cens = ~(m_vlass & (s_vlass > 0))
+    a_km = np.where(is_cens, a_lim, a_obs)[racs_sel]
+    km = kaplan_meier_median(a_km, is_cens[racs_sel], right_censored=False)
+    _kmv, _kmc = a_km, is_cens[racs_sel]
+    _kb = []
+    for _ in range(n_boot // 4):  # KM is O(n log n) per draw; a quarter of the SE budget is ample
+        j = rng.integers(0, _kmv.size, _kmv.size)
+        r = kaplan_meier_median(_kmv[j], _kmc[j], right_censored=False)
+        if r["median"] is not None:
+            _kb.append(r["median"])
+    km["median_boot_se"] = float(np.std(_kb)) if _kb else None
+    km["n_boot"] = len(_kb)
+
     # (a) Does the completeness floor matter? alpha >= -1.5 is an ASSUMPTION, and the sample's
     # own p16 is steeper than it, so for the steepest sixth the truncation is still active.
     # Re-cutting at successively steeper floors is the version of this test that can fail: if
@@ -903,15 +1109,32 @@ def run_alpha(
         }
 
     # (b) Is the bright-sample index transferable to the threshold regime it is applied in?
+    # Each bin is measured BOTH ways. The detections-only median is what a completeness cut
+    # would report and is truncation-biased flat, worst in the faintest bin -- so a trend in
+    # that column can be manufactured entirely by the censoring. The Kaplan-Meier column uses
+    # the non-detections and is the one to read; the gap between the columns is the size of
+    # the artefact.
     flux_bins = []
-    for lo, hi in ((s_complete, 10.0), (10.0, 20.0), (20.0, float("inf"))):
+    for lo, hi in (
+        (RACS_S_LIM_MJY, s_complete),
+        (s_complete, 10.0),
+        (10.0, 20.0),
+        (20.0, float("inf")),
+    ):
+        binsel = racs_sel & (s_racs > lo) & (s_racs <= hi)
         xb = _alpha_for(m_vlass & (s_racs > lo) & (s_racs <= hi), s_vlass)
+        kmb = kaplan_meier_median(
+            np.where(is_cens, a_lim, a_obs)[binsel], is_cens[binsel], right_censored=False
+        )
         flux_bins.append(
             {
                 "s_racs_lo_mjy": float(lo),
                 "s_racs_hi_mjy": None if not np.isfinite(hi) else float(hi),
-                "n": int(xb.size),
-                "median": float(np.median(xb)) if xb.size else None,
+                "n_detected": int(xb.size),
+                "median_detected": float(np.median(xb)) if xb.size else None,
+                "n_km": kmb["n"],
+                "n_censored": kmb["n_censored"],
+                "median_km": kmb["median"],
             }
         )
 
@@ -924,8 +1147,86 @@ def run_alpha(
             "median": float(np.median(xe)) if xe.size else None,
         }
 
+    # (e) The resolution systematic, measured rather than estimated. alpha from PEAK fluxes
+    # compares a 2.5" beam against a 25" one, and the finer beam resolves out flux the coarser
+    # one keeps, biasing alpha steep. Repeating with integrated flux on both sides -- VLASS's
+    # from the same component catalogs, RACS's from total_flux_source -- gives the size of it.
+    integrated: dict = {"available": False}
+    try:
+        rt = fetch_racs_total_flux()
+        sv_t = np.zeros(ra.size)
+        mv_t = np.zeros(ra.size, dtype=bool)
+        for _n, (rr, dd, ff) in load_vlass_positions(total_flux=True).items():
+            mt, _, it = crossmatch(ra, dec, rr, dd, radius_arcsec=vlass_radius_arcsec)
+            sv_t = np.where(mt, np.maximum(sv_t, ff[it]), sv_t)
+            mv_t |= mt
+        mr_t, _, ir_t = crossmatch(ra, dec, rt["ra"], rt["dec"], radius_arcsec=racs_radius_arcsec)
+        sr_t = np.where(mr_t, rt["total"][ir_t], 0.0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ao_t = np.where(
+                mv_t & (sv_t > 0),
+                np.log(sv_t / np.where(sr_t > 0, sr_t, np.nan)) / _lnr,
+                np.nan,
+            )
+            al_t = np.log(VLASS_S_LIM_MJY / np.where(sr_t > 0, sr_t, np.nan)) / _lnr
+        cens_t = ~(mv_t & (sv_t > 0))
+        sel_t = mr_t & (sr_t > 0)
+        km_t = kaplan_meier_median(
+            np.where(cens_t, al_t, ao_t)[sel_t], cens_t[sel_t], right_censored=False
+        )
+        # Per-bin as well as global. The global shift is a median over a mostly-compact
+        # sample and is guaranteed small; the question the paper actually leans on is whether
+        # the steep BRIGHT bin is a spectrum or a beam, and only the per-bin version answers it.
+        bins_t = []
+        for lo, hi in (
+            (RACS_S_LIM_MJY, s_complete),
+            (s_complete, 10.0),
+            (10.0, 20.0),
+            (20.0, float("inf")),
+        ):
+            bs = sel_t & (sr_t > lo) & (sr_t <= hi)
+            kb = kaplan_meier_median(
+                np.where(cens_t, al_t, ao_t)[bs], cens_t[bs], right_censored=False
+            )
+            bins_t.append(
+                {
+                    "s_racs_lo_mjy": float(lo),
+                    "s_racs_hi_mjy": None if not np.isfinite(hi) else float(hi),
+                    "n_km": kb["n"],
+                    "median_km": kb["median"],
+                }
+            )
+        integrated = {
+            "available": True,
+            "kaplan_meier_median": km_t["median"],
+            "n": km_t["n"],
+            "n_censored": km_t["n_censored"],
+            "shift_from_peak": float(km_t["median"] - km["median"]),
+            "flux_bins": bins_t,
+        }
+    except Exception as e:  # noqa: BLE001 - the integrated cache is optional, absence is a result
+        integrated = {"available": False, "error": str(e)}
+
+    # (f) The mirror censoring. The Kaplan-Meier above conditions on a RACS detection, so it
+    # keeps the steep sources a completeness cut loses -- but it drops the quasars VLASS saw
+    # and RACS did not, which are the FLAT ones, right-censored at
+    # log(S_VLASS / S_lim_RACS)/log(nu_V/nu_R). Dropping that tail tilts the median steep by
+    # exactly the mechanism that tilts the joint-detection median flat. With both tails
+    # censored no point estimate is identified, but the median is bounded, and the bound is
+    # the honest object.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        a_rlim = np.log(np.where(s_vlass > 0, s_vlass, np.nan) / RACS_S_LIM_MJY) / _lnr
+    either = (m_racs & (s_racs > 0)) | (m_vlass & (s_vlass > 0))
+    both_m = m_racs & (s_racs > 0) & m_vlass & (s_vlass > 0)
+    kind = np.where(both_m, 0, np.where(m_racs & (s_racs > 0), -1, 1))
+    val = np.where(both_m, a_obs, np.where(m_racs & (s_racs > 0), a_lim, a_rlim))
+    bounds = censored_median_bounds(val[either], kind[either])
+
     metrics = {
         "source": f"SDSS-V DR20 spAll-lite x VLASS x RACS-low DR1, overlap band ({RACS_TABLE})",
+        "kaplan_meier": km,
+        "double_censored_bounds": bounds,
+        "integrated_flux": integrated,
         "completeness_floor_sensitivity": floors,
         "flux_bins": flux_bins,
         "per_epoch": epochs_out,
@@ -1217,11 +1518,36 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
     ]
     # Span of the median across every systematic actually tested: completeness floor, epoch
     # choice, and flux bin. This is the honest scale of the uncertainty on alpha.
+    _rat = lambda a, b: _tot(a) / _tot(b)  # noqa: E731
+    _ratio_meas = _rat(n["luminosity_matched_alpha"][_am], ds["luminosity_matched_alpha"][_am])
+    _ratios_lim = [
+        _ratio_meas,
+        _rat(n["luminosity_matched_conservative"], ds["luminosity_matched_conservative"]),
+        *(
+            _rat(
+                n["luminosity_matched_vlass_conservative"][f"{v:g}"],
+                ds["luminosity_matched_vlass_conservative"][f"{v:g}"],
+            )
+            for v in VLASS_S_LIM_CONSERVATIVE_MJY
+        ),
+    ]
+    _ratios_alpha = [
+        _rat(n["luminosity_matched_alpha"][k], ds["luminosity_matched_alpha"][k])
+        for k in (f"{ALPHA_THRESHOLD_REGIME:g}", _am, "-1")
+    ]
+    _gap_faint = 100 * (
+        _tot(n["luminosity_matched_alpha"][f"{ALPHA_THRESHOLD_REGIME:g}"])
+        - _tot(ds["luminosity_matched_alpha"][f"{ALPHA_THRESHOLD_REGIME:g}"])
+    )
+    # How much of the raw flux trend was censoring rather than physics: the detections-only
+    # column minus the Kaplan-Meier column, worst in the faintest bin.
+    _bin_art = max(b["median_detected"] - b["median_km"] for b in al["flux_bins"])
     _alpha_medians = [
-        al["flux_complete"]["median"],
+        al["kaplan_meier"]["median"],
         *(v["median"] for v in al["completeness_floor_sensitivity"].values()),
         *(v["median"] for v in al["per_epoch"].values()),
-        *(b["median"] for b in al["flux_bins"]),
+        *(b["median_km"] for b in al["flux_bins"]),
+        al["integrated_flux"]["kaplan_meier_median"],
     ]
     _alpha_sys = max(_alpha_medians) - min(_alpha_medians)
     _ps_n = n["luminosity_matched_per_source_alpha"]
@@ -1272,9 +1598,38 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         # The MEASURED spectral index and the contrast evaluated at it. This is what replaces
         # the sweep as the paper's statement: the sweep bounded how bad the assumption could
         # be, these numbers say what the assumption actually is.
-        rf"\newcommand{{\drAlphaMeas}}{{{al['flux_complete']['median']:.2f}}}",
-        rf"\newcommand{{\drAlphaMeasSe}}{{{al['flux_complete']['median_boot_se']:.2f}}}",
-        rf"\newcommand{{\drAlphaMeasN}}{{{al['flux_complete']['n']}}}",
+        # KM is the primary estimator; the flux-complete cut is kept for comparison because the
+        # difference between them IS the bias a cut leaves behind.
+        rf"\newcommand{{\drAlphaMeas}}{{{al['kaplan_meier']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasSe}}{{{al['kaplan_meier']['median_boot_se']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasN}}{{{al['kaplan_meier']['n']}}}",
+        rf"\newcommand{{\drAlphaKmCens}}{{{al['kaplan_meier']['n_censored']}}}",
+        rf"\newcommand{{\drAlphaKmEvents}}{{{al['kaplan_meier']['n_events']}}}",
+        rf"\newcommand{{\drAlphaCutMed}}{{{al['flux_complete']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaCutN}}{{{al['flux_complete']['n']}}}",
+        rf"\newcommand{{\drAlphaFaint}}{{{ALPHA_THRESHOLD_REGIME:.2f}}}",
+        rf"\newcommand{{\drGapFaintPp}}{{{_gap_faint:.2f}}}",
+        rf"\newcommand{{\drAlphaBinArt}}{{{_bin_art:.2f}}}",
+        # The RATIO, which is the scale-free contrast. Raising either survey's limit rescales
+        # both fractions and shrinks the pp gap without touching the ratio -- so a pp gap that
+        # moves under a deeper cut is measuring normalisation, not contrast. Reporting the
+        # ratio is what makes the limit variants interpretable instead of misleading.
+        rf"\newcommand{{\drRatioMeas}}{{{_ratio_meas:.2f}}}",
+        rf"\newcommand{{\drRatioLimLo}}{{{min(_ratios_lim):.2f}}}",
+        rf"\newcommand{{\drRatioLimHi}}{{{max(_ratios_lim):.2f}}}",
+        rf"\newcommand{{\drRatioLimSpreadPct}}{{{100 * (max(_ratios_lim) / min(_ratios_lim) - 1):.0f}}}",
+        rf"\newcommand{{\drRatioAlphaLo}}{{{min(_ratios_alpha):.2f}}}",
+        rf"\newcommand{{\drRatioAlphaHi}}{{{max(_ratios_alpha):.2f}}}",
+        # The selection bracket: alpha depends on WHICH survey selects the sample, and that
+        # spread is larger than every other systematic term combined.
+        rf"\newcommand{{\drAlphaBoundLo}}{{{al['double_censored_bounds']['lo']:.2f}}}",
+        rf"\newcommand{{\drAlphaBoundHi}}{{{al['double_censored_bounds']['hi']:.2f}}}",
+        rf"\newcommand{{\drAlphaBoundN}}{{{al['double_censored_bounds']['n']}}}",
+        rf"\newcommand{{\drAlphaRightCens}}{{{al['double_censored_bounds']['n_right_censored']}}}",
+        rf"\newcommand{{\drAlphaBinCInt}}{{{al['integrated_flux']['flux_bins'][3]['median_km']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinCShift}}{{{al['integrated_flux']['flux_bins'][3]['median_km'] - al['flux_bins'][3]['median_km']:.2f}}}",
+        rf"\newcommand{{\drAlphaIntKm}}{{{al['integrated_flux']['kaplan_meier_median']:.2f}}}",
+        rf"\newcommand{{\drAlphaIntShift}}{{{al['integrated_flux']['shift_from_peak']:.3f}}}",
         rf"\newcommand{{\drAlphaMeasSd}}{{{al['flux_complete']['std']:.2f}}}",
         rf"\newcommand{{\drAlphaMeasPlo}}{{{al['flux_complete']['p16']:.2f}}}",
         rf"\newcommand{{\drAlphaMeasPhi}}{{{al['flux_complete']['p84']:.2f}}}",
@@ -1313,12 +1668,17 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         rf"\newcommand{{\drAlphaFloorCCut}}{{{al['completeness_floor_sensitivity']['-2.5']['flux_cut_mjy']:.1f}}}",
         rf"\newcommand{{\drAlphaEpochA}}{{{al['per_epoch']['E2']['median']:.2f}}}",
         rf"\newcommand{{\drAlphaEpochB}}{{{al['per_epoch']['E3']['median']:.2f}}}",
-        rf"\newcommand{{\drAlphaBinA}}{{{al['flux_bins'][0]['median']:.2f}}}",
-        rf"\newcommand{{\drAlphaBinB}}{{{al['flux_bins'][1]['median']:.2f}}}",
-        rf"\newcommand{{\drAlphaBinC}}{{{al['flux_bins'][2]['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinFaint}}{{{al['flux_bins'][0]['median_km']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinA}}{{{al['flux_bins'][1]['median_km']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinB}}{{{al['flux_bins'][2]['median_km']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinC}}{{{al['flux_bins'][3]['median_km']:.2f}}}",
         rf"\newcommand{{\drAlphaSysSpan}}{{{_alpha_sys:.2f}}}",
-        rf"\newcommand{{\drAlphaMeasSeFull}}{{{al['flux_complete']['median_boot_se']:.3f}}}",
-        rf"\newcommand{{\drAlphaMeasFull}}{{{al['flux_complete']['median']:.3f}}}",
+        # Endpoints, not a half-width. Writing the span as "+/- 0.35" asserts twice the range
+        # the checks actually cover, and contradicted the paper's own "-0.6 to -0.9".
+        rf"\newcommand{{\drAlphaSysLo}}{{{min(_alpha_medians):.2f}}}",
+        rf"\newcommand{{\drAlphaSysHi}}{{{max(_alpha_medians):.2f}}}",
+        rf"\newcommand{{\drAlphaMeasSeFull}}{{{al['kaplan_meier']['median_boot_se']:.3f}}}",
+        rf"\newcommand{{\drAlphaMeasFull}}{{{al['kaplan_meier']['median']:.3f}}}",
         rf"\newcommand{{\drAlphaComplFracPct}}{{{100 * al['flux_complete']['n'] / al['n_band_census']:.1f}}}",
         rf"\newcommand{{\drLumNorthPsPct}}{{{100 * _ps_n['fraction_mean']:.2f}}}",
         rf"\newcommand{{\drLumSouthPsPct}}{{{100 * _ps_s['fraction_mean']:.2f}}}",

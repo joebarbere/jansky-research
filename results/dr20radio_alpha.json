@@ -1,5 +1,55 @@
 {
  "source": "SDSS-V DR20 spAll-lite x VLASS x RACS-low DR1, overlap band (AS110.racs_dr1_sources_galacticcut_v2021_08_v02)",
+ "kaplan_meier": {
+  "median": -0.7546411528842496,
+  "n_events": 5571,
+  "n_censored": 1055,
+  "n": 6626,
+  "survival_at_last_event": 0.01049747364959632,
+  "median_boot_se": 0.01182758905262679,
+  "n_boot": 500
+ },
+ "double_censored_bounds": {
+  "lo": -0.628281981414961,
+  "hi": -0.38805055972899816,
+  "n": 8805,
+  "n_measured": 5571,
+  "n_left_censored": 1055,
+  "n_right_censored": 2179
+ },
+ "integrated_flux": {
+  "available": true,
+  "kaplan_meier_median": -0.6985482208191898,
+  "n": 6626,
+  "n_censored": 1055,
+  "shift_from_peak": 0.05609293206505983,
+  "flux_bins": [
+   {
+    "s_racs_lo_mjy": 3.0,
+    "s_racs_hi_mjy": 6.214831230786548,
+    "n_km": 1128,
+    "median_km": -0.6041143478791927
+   },
+   {
+    "s_racs_lo_mjy": 6.214831230786548,
+    "s_racs_hi_mjy": 10.0,
+    "n_km": 609,
+    "median_km": -0.5485374986619549
+   },
+   {
+    "s_racs_lo_mjy": 10.0,
+    "s_racs_hi_mjy": 20.0,
+    "n_km": 862,
+    "median_km": -0.5198032360002254
+   },
+   {
+    "s_racs_lo_mjy": 20.0,
+    "s_racs_hi_mjy": null,
+    "n_km": 3184,
+    "median_km": -0.7843670499439445
+   }
+  ]
+ },
  "completeness_floor_sensitivity": {
   "-1.5": {
    "flux_cut_mjy": 6.214831230786548,
@@ -19,22 +69,40 @@
  },
  "flux_bins": [
   {
+   "s_racs_lo_mjy": 3.0,
+   "s_racs_hi_mjy": 6.214831230786548,
+   "n_detected": 859,
+   "median_detected": -0.45952046806732444,
+   "n_km": 1020,
+   "n_censored": 161,
+   "median_km": -0.609528269771428
+  },
+  {
    "s_racs_lo_mjy": 6.214831230786548,
    "s_racs_hi_mjy": 10.0,
-   "n": 547,
-   "median": -0.49729309065475197
+   "n_detected": 547,
+   "median_detected": -0.49729309065475197,
+   "n_km": 598,
+   "n_censored": 51,
+   "median_km": -0.5662515304268246
   },
   {
    "s_racs_lo_mjy": 10.0,
    "s_racs_hi_mjy": 20.0,
-   "n": 807,
-   "median": -0.5179380987389227
+   "n_detected": 807,
+   "median_detected": -0.5179380987389227,
+   "n_km": 837,
+   "n_censored": 30,
+   "median_km": -0.5504623119152399
   },
   {
    "s_racs_lo_mjy": 20.0,
    "s_racs_hi_mjy": null,
-   "n": 2836,
-   "median": -0.8435522012140697
+   "n_detected": 2836,
+   "median_detected": -0.8435522012140697,
+   "n_km": 2980,
+   "n_censored": 144,
+   "median_km": -0.9046352200466599
   }
  ],
  "per_epoch": {
@@ -60,7 +128,7 @@
   "label": "all joint detections (truncation-biased flat)",
   "n": 5571,
   "median": -0.6150916023348979,
-  "median_boot_se": 0.013494091896843238,
+  "median_boot_se": 0.01371122634506995,
   "mean": -0.7250973366169408,
   "std": 0.8935653314001899,
   "p16": -1.416273470251964,
@@ -71,7 +139,7 @@
   "label": "S_RACS > 6.21 mJy (unbiased for alpha >= -1.5)",
   "n": 4190,
   "median": -0.7217630626851812,
-  "median_boot_se": 0.015253855872968762,
+  "median_boot_se": 0.014740646150697409,
   "mean": -0.8661875238475034,
   "std": 0.9325194424010559,
   "p16": -1.6682698279912933,
