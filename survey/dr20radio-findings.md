@@ -99,8 +99,13 @@ evidence; science-reviewer pass returned **no blockers**, four should-fixes, all
   "Almeida et al." — refs.bib and the plan corrected.
 - **RACS completeness is two numbers** (Hale et al.: ~3 mJy source-count based, ~5 mJy
   simulation based): both stated; the luminosity-matched contrast repeated at the
-  conservative 5 mJy — north 3.45% vs south 2.39% (primary: 4.06% vs 2.82%). The gap is
-  robust to the choice.
+  conservative 5 mJy — north 3.45% vs south 2.39% (primary: 4.06% vs 2.82%).
+  **Superseded 2026-08-12 (referee round):** this was reported as showing the gap robust to
+  the choice. It shows nothing of the kind — the common luminosity limit is the RACS one in
+  *both* legs, so raising the flux floor rescales north and south identically and the ratio
+  cannot move (1.4391 → 1.4434). The parameter the contrast actually depends on is the
+  assumed spectral index: sweeping α over 0…−1 moves the gap 0.23 → 1.66 pp. See the
+  `luminosity_matched_alpha` block in `results/dr20radio_{north,south}.json`.
 - **North carton validation split by selecting survey** (same lesson, third appearance):
   at 3 GHz, RACS-selected cartons recover at 49%, LOFAR-selected at 27% — the previously
   quoted pooled ~31% was again an average over two populations. The cross-frequency fading
@@ -120,3 +125,39 @@ evidence; science-reviewer pass returned **no blockers**, four should-fixes, all
 - Increment 2: RACS southern leg (the categorical first — SDSS quasar spectra south of
   −40° × RACS), racsradio-carton validation against its selecting survey, two-survey
   synthetic variant, north/south contrast at matched luminosity limits.
+
+## Referee round 2 (2026-08-12) — after the α demotion
+
+The revised draft went back to the referee. Verdict: **major revision**, 16 findings. All the
+new α macros recomputed correctly, but the paragraph written to *repair* the first-round
+finding contained a fresh error, which is the finding worth remembering:
+
+1. **BLOCKER (my own regression).** The new sentence gave the northern α-sweep range as
+   `\drLumNorthFlatPct--\drLumNorthConsPct` = 3.06–3.45%. `\drLumNorthConsPct` is the 5 mJy
+   conservative variant — a *different axis*, and the very one the same paragraph had just
+   declared incapable of testing this. The real range is 3.06–**4.37%**. The range endpoint
+   had no macro, so I reached for the nearest-looking name. Fixed by emitting
+   `\drLumNorthSteepPct`/`\drLumSouthSteepPct`: **if a range needs an endpoint, the endpoint
+   gets its own macro.**
+2. **"Unchanged to three decimal places" was false** — 1.4391 vs 1.4434 differ *in* the third
+   decimal. Now quoted as the two ratios via `\drRatioFid`/`\drRatioCons`, a 0.3% shift.
+3. **The stated mechanism was false at the end of the sweep that sets the headline.** The
+   common limit is the larger of the two K-corrected limits; RACS binds for α ≳ −0.9, but
+   between −0.7 and −1 the VLASS limit overtakes it (3 mJy at 888 MHz → 1.90 mJy at 1.4 GHz,
+   against 1 mJy at 3 GHz → 2.14 mJy). So at α = −1 about a quarter of the gap comes from the
+   *south falling*, not the north rising. Now stated with the crossover.
+4. **The southern denominator was never intersected with the RACS footprint.** `deep_south` is
+   a pure declination cut, so quasars in RACS-low DR1's |b| ≲ 5° hole entered the denominator
+   as guaranteed non-detections. Measured rather than assumed: **52 objects, 0.071%**, none
+   below the −85° floor. Now computed by `run_south` into `racs_footprint` and reported in
+   Limitations as a bound. The bias is ~50× smaller than the fraction itself.
+5. **The carton "same-objects" claim was wrong** — the 888 MHz leg is a small, more southerly
+   subset of the 3 GHz leg's sky, and the rates differ by ~1σ on samples of tens. Downgraded
+   from "does *not* track the frequency jump / depth dominates" to a consistency statement.
+6. **A sign error in the K-correction would have inverted the paper and no test would see it.**
+   `tests/test_dr20radio.py::test_k_correction_sign_and_alpha_monotonicity` now pins the sign,
+   the RACS→VLASS crossover, and monotonicity in α.
+
+Also fixed: Limitations/Introduction/figure caption did not carry the demotion (the paper had
+it in the abstract and summary only); "nearly flat at ~4%" described a decline significant at
+many σ; `\drNorthAnyPct` is raw, not chance-corrected.

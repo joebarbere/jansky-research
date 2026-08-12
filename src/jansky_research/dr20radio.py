@@ -305,6 +305,16 @@ def log_luminosity_whz(
         return np.log10(lum)
 
 
+ALPHA_SWEEP: tuple[float, ...] = (0.0, -0.35, -0.7, -1.0)
+"""Spectral indices for the luminosity-matched contrast.
+
+The K-correction is the only thing making the 3 GHz (VLASS) and 888 MHz (RACS) legs
+comparable, and it is not a measured quantity -- so the contrast has to be reported as a
+range across it, not at one value. At alpha = -0.7 the north's effective flux cut is
+1.28 mJy against the south's 3.0 mJy; at alpha = 0 both become 3.0 mJy.
+"""
+
+
 def luminosity_matched_fractions(
     z: np.ndarray,
     matched: np.ndarray,
@@ -524,6 +534,20 @@ def run_north(
             other_freq_ghz=RACS_FREQ_GHZ,
             bins=zbins,
         ),
+        "luminosity_matched_alpha": {
+            f"{a:g}": luminosity_matched_fractions(
+                q["z"][census],
+                matched_any,
+                s_any,
+                freq_ghz=VLASS_FREQ_GHZ,
+                s_lim_this_mjy=VLASS_S_LIM_MJY,
+                s_lim_other_mjy=RACS_S_LIM_MJY,
+                other_freq_ghz=RACS_FREQ_GHZ,
+                bins=zbins,
+                alpha=a,
+            )
+            for a in ALPHA_SWEEP
+        },
         "luminosity_matched_conservative": luminosity_matched_fractions(
             q["z"][census],
             matched_any,
@@ -539,6 +563,11 @@ def run_north(
     (op / "results").mkdir(parents=True, exist_ok=True)
     (op / "results" / "dr20radio_north.json").write_text(json.dumps(metrics, indent=2) + "\n")
     return metrics
+
+
+# RACS-low DR1 sky coverage, for the footprint diagnostic in run_south.
+RACS_PLANE_CUT_DEG: float = 5.0
+RACS_DEC_FLOOR_DEG: float = -85.0
 
 
 def fetch_racs_positions(
@@ -652,6 +681,20 @@ def run_south(
                 other_freq_ghz=VLASS_FREQ_GHZ,
                 bins=zbins,
             ),
+            "luminosity_matched_alpha": {
+                f"{a:g}": luminosity_matched_fractions(
+                    q["z"][cen],
+                    m,
+                    s_m,
+                    freq_ghz=RACS_FREQ_GHZ,
+                    s_lim_this_mjy=RACS_S_LIM_MJY,
+                    s_lim_other_mjy=VLASS_S_LIM_MJY,
+                    other_freq_ghz=VLASS_FREQ_GHZ,
+                    bins=zbins,
+                    alpha=a,
+                )
+                for a in ALPHA_SWEEP
+            },
             "luminosity_matched_conservative": luminosity_matched_fractions(
                 q["z"][cen],
                 m,
@@ -681,6 +724,29 @@ def run_south(
             "fraction": round(float(np.mean(mm)), 4) if mm.size else None,
         }
 
+    # Footprint diagnostic (added 2026-08-12 after a referee asked what the denominator
+    # includes). `deep_south` is a pure declination cut, so quasars in RACS-low DR1's
+    # Galactic-plane hole (|b| <~ 5) or below its dec floor sit in the denominator of the
+    # headline fraction as guaranteed non-detections. Reporting the count converts a silent
+    # one-sided bias into a stated — and, as it turns out, negligible — bound.
+    import astropy.units as u
+    from astropy.coordinates import SkyCoord
+
+    # Same mask census_block applies, so this describes the census's own denominator rather
+    # than the raw declination cut (they differ by the 10 excluded radio-carton objects).
+    _cen = deep_south & ~q["radio_carton"]
+    _b = SkyCoord(q["ra"][_cen] * u.deg, q["dec"][_cen] * u.deg).galactic.b.deg
+    _uncovered = (np.abs(_b) < RACS_PLANE_CUT_DEG) | (q["dec"][_cen] < RACS_DEC_FLOOR_DEG)
+    footprint = {
+        "n_deep_south": int(_cen.sum()),
+        "n_in_plane_hole": int((np.abs(_b) < RACS_PLANE_CUT_DEG).sum()),
+        "n_below_dec_floor": int((q["dec"][_cen] < RACS_DEC_FLOOR_DEG).sum()),
+        "n_uncovered": int(_uncovered.sum()),
+        "uncovered_fraction": round(float(_uncovered.mean()), 6),
+        "plane_cut_deg": RACS_PLANE_CUT_DEG,
+        "dec_floor_deg": RACS_DEC_FLOOR_DEG,
+    }
+
     in_racs_sky = q["dec"] <= 30.0
     carton_racs_v = carton_block(q["carton_racs"] & in_racs_sky)
     carton_lofar_v = carton_block(q["carton_lofar"] & in_racs_sky)
@@ -689,6 +755,7 @@ def run_south(
         "n_racs_sources": int(racs["ra"].size),
         "radius_arcsec": radius_arcsec,
         "deep_south": census_block(deep_south, "dec <= -40 (SDSS x RACS: categorical first)"),
+        "racs_footprint": footprint,
         "overlap_band": census_block(overlap, "-40 < dec <= +30 (VLASS cross-check band)"),
         "carton_validation": {
             "racsradio_vs_racs_selecting_survey": carton_racs_v,
@@ -766,6 +833,7 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
 
     ds, ov, ae = s["deep_south"], s["overlap_band"], n["any_epoch"]
     cv = s["carton_validation"]
+    fp = s["racs_footprint"]
     e2, e3 = n["epochs"]["E2"], n["epochs"]["E3"]
     lum_n = n["luminosity_matched"]
     lum_s = ds["luminosity_matched"]
@@ -790,6 +858,39 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         rf"\newcommand{{\drLumNorthPct}}{{{100 * _tot(lum_n):.2f}}}",
         rf"\newcommand{{\drLumSouthPct}}{{{100 * _tot(lum_s):.2f}}}",
         rf"\newcommand{{\drOverlapLumPct}}{{{100 * _tot(ov['luminosity_matched']):.2f}}}",
+        # The contrast as a RANGE over spectral index. alpha is not measured for this sample
+        # and the gap is dominated by it: 0.23 pp at alpha=0 against 1.66 pp at alpha=-1. The
+        # 5 mJy variant cannot show this because it rescales both legs identically.
+        # Two figures that were hard-typed in the paper until 2026-08-12, both derivable from
+        # this same committed evidence. Out-of-range quasars fall outside the 0 <= z < 6 binning
+        # and so enter the raw fractions but not the binned/luminosity-matched ones. The northern
+        # census above dec +30 lies outside the RACS footprint entirely, which is why the
+        # north-vs-overlap comparison is not a matched-sky one.
+        rf"\newcommand{{\drOutZNorthPct}}{{{100 * (1 - sum(n['fraction_vs_z_any_epoch']['n']) / n['n_north_census']):.2f}}}",
+        rf"\newcommand{{\drOutZSouthPct}}{{{100 * (1 - sum(ds['fraction_vs_z']['n']) / ds['n_census']):.2f}}}",
+        rf"\newcommand{{\drNorthOutsideRacsPct}}{{{100 * (1 - ov['n_census'] / n['n_north_census']):.1f}}}",
+        rf"\newcommand{{\drAlphaLo}}{{{min(ALPHA_SWEEP):g}}}",
+        rf"\newcommand{{\drAlphaHi}}{{{max(ALPHA_SWEEP):g}}}",
+        rf"\newcommand{{\drLumNorthFlatPct}}{{{100 * _tot(n['luminosity_matched_alpha']['0']):.2f}}}",
+        rf"\newcommand{{\drLumSouthFlatPct}}{{{100 * _tot(ds['luminosity_matched_alpha']['0']):.2f}}}",
+        rf"\newcommand{{\drGapFlatPp}}{{{100 * (_tot(n['luminosity_matched_alpha']['0']) - _tot(ds['luminosity_matched_alpha']['0'])):.2f}}}",
+        rf"\newcommand{{\drGapSteepPp}}{{{100 * (_tot(n['luminosity_matched_alpha']['-1']) - _tot(ds['luminosity_matched_alpha']['-1'])):.2f}}}",
+        rf"\newcommand{{\drGapFidPp}}{{{100 * (_tot(lum_n) - _tot(lum_s)):.2f}}}",
+        # The steep end of the sweep. Emitted because the first revision reached for
+        # \drLumNorthConsPct (the 5 mJy variant, 3.45%) to close the range "3.06--...", which is a
+        # different axis entirely and understated the sweep by a full percentage point. A referee
+        # caught it. If a range needs an endpoint, the endpoint gets its own macro.
+        rf"\newcommand{{\drLumNorthSteepPct}}{{{100 * _tot(n['luminosity_matched_alpha']['-1']):.2f}}}",
+        rf"\newcommand{{\drLumSouthSteepPct}}{{{100 * _tot(ds['luminosity_matched_alpha']['-1']):.2f}}}",
+        # The two ratios the retired 5 mJy check moves between. Quoted so the "it cannot test the
+        # asymmetry" argument is checkable rather than asserted.
+        rf"\newcommand{{\drRatioFid}}{{{_tot(lum_n) / _tot(lum_s):.4f}}}",
+        # What fraction of the southern census sits in sky RACS-low DR1 never covered. A referee
+        # asked; the answer is small, but "small" had to be measured rather than assumed.
+        rf"\newcommand{{\drSouthUncovPct}}{{{100 * fp['uncovered_fraction']:.3f}}}",
+        rf"\newcommand{{\drSouthUncovN}}{{{fp['n_uncovered']}}}",
+        rf"\newcommand{{\drRacsPlaneCutDeg}}{{{fp['plane_cut_deg']:g}}}",
+        rf"\newcommand{{\drRatioCons}}{{{_tot(n['luminosity_matched_conservative']) / _tot(ds['luminosity_matched_conservative']):.4f}}}",
         rf"\newcommand{{\drLumNorthConsPct}}{{{100 * _tot(n['luminosity_matched_conservative']):.2f}}}",
         rf"\newcommand{{\drLumSouthConsPct}}{{{100 * _tot(ds['luminosity_matched_conservative']):.2f}}}",
         rf"\newcommand{{\drCartonRacsPct}}{{{100 * cv['racsradio_vs_racs_selecting_survey']['fraction']:.0f}}}",

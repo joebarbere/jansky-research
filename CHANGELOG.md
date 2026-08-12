@@ -9,6 +9,59 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- `dr20radio`: spectral-index sweep (`ALPHA_SWEEP = 0, -0.35, -0.7, -1.0`) on the
+  luminosity-matched fractions in both legs, committed to `results/dr20radio_{north,south}.json`
+  under `luminosity_matched_alpha`. This is the sensitivity test the published 5 mJy
+  "robustness check" could not perform: because the common luminosity limit is the RACS one in
+  both legs, raising the flux floor rescales north and south identically and leaves their ratio
+  unchanged (1.4391 -> 1.4434), whereas alpha moves it 1.08 -> 1.61.
+- `make release-check` — verifies a tagged release carries the hand-built papers asset. The
+  CI-built papers are synthetic and must never be attached; the upload is deliberately manual.
+- `papers/atlas3i/arxiv.yaml` — restores the hand-curated arXiv metadata (astro-ph.IM primary,
+  astro-ph.EP cross, page counts, cleaned abstract) that a `make arxiv` run had silently
+  overwritten with keyword-inferred guesses.
+
+### Changed
+- `dr20radio`: the north/south contrast is now reported as a **range over spectral index**
+  (0.23-1.66 percentage points) rather than a single 4.06%/2.82% pair, in the abstract,
+  Section 4.3, and the summary. The apparent hemispheric difference is principally an artefact
+  of the cross-frequency K-correction, not a measured property of the two populations; at
+  alpha = 0 it nearly vanishes. No astrophysical inference is drawn from it.
+- `dr20radio`: two hard-typed figures replaced with pipeline-generated macros — the
+  out-of-redshift-range census fraction (`\drOutZNorthPct`/`\drOutZSouthPct`) and the northern
+  census fraction lying outside the RACS footprint (`\drNorthOutsideRacsPct`).
+- `atlas3i`: seven referee findings applied to `main.tex` and `rnaas.tex`, including the
+  drift-grid caveat on the EIRP limit; `\aiTotScans` added so the scan count is evidence-backed.
+
+- `innerrc`: the sensitivity scan now excludes variants with a fitted parameter on a bound
+  (`bound_contact`, `railed_variants`, `n_fitted`), commits the full per-variant parameter
+  vector including `v_halo`/`h_halo`, and reports `chi2_per_n` plus the primary fit's 1-sigma
+  rho_DM interval from its own covariance.
+- `innerrc`: the anchor now scores the paper's Table-1 solution in chi2 and measures its
+  outer-curve (R > 8 kpc) residual, committed as `paper_table1_chi2_per_n` /
+  `paper_table1_outer` / `paper_table1_params`.
+
+### Changed
+- `innerrc`: **the compatibility-with-consensus claim moved off the variant scan and onto the
+  fit's own covariance.** rho_DM = 0.24 with 1-sigma 0.16-0.31 (the scan's old 0.19-0.32 had
+  its maximum set by a variant with v_bulge at exactly the 800 km/s bound; 6 of its 8 variants
+  are railed, and the 2 interior ones span only 0.20-0.24). The anchor result is also restated:
+  their published halo sits +1.33 sigma per point below their own curve beyond 8 kpc over 32
+  points, chi2/N 3.18 vs 1.92, so the refit is not merely "another corner of a degeneracy".
+- `innerrc`: three overclaims corrected against committed evidence -- the bar-region inner peak
+  does *not* reproduce (-36 km/s over 28 bins inside 2 kpc; their 255 km/s peak at 550 pc reads
+  214 km/s at 1450 pc), the E/W asymmetry replicates *qualitatively* (period 36% long, damping
+  railed, fit seeded at their published answer), and the estimator calibration route is not an
+  independent confirmation (algebraically the same statistic on a sub-sample).
+
+### Fixed
+- `dr20radio` `refs.bib`: `arnaudova2024` title was the Macfarlane et al. 2021 title. Corrected
+  to "Exploring the radio loudness of SDSS quasars with spectral stacking" against Crossref
+  (10.1093/mnras/stae233).
+- `dr20radio` Limitations now states that the two legs are not matched-sky samples: 14.1% of the
+  northern census lies north of the RACS footprint and is unobservable from the south at any depth.
+
 ## [1.5.0] - 2026-08-10
 
 ### Added

@@ -97,3 +97,28 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+      # The citable papers zip must be built LOCALLY from real results and uploaded by hand --
+      # CI's papers are synthetic (see the artifact step above), and attaching those to a
+      # release would ship synthetic output as evidence. Automating this would be a bug, not a
+      # convenience. What was missing is a reminder: v1.4.0 and v1.5.0 both shipped without the
+      # asset because the step lives only in a comment.
+      - name: Remind that the real papers zip is a MANUAL upload
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "::warning title=Manual step outstanding::${TAG} has no papers asset yet. \
+          Build it locally from REAL results and upload: \
+          make papers-zip TAG=${TAG} && gh release upload ${TAG} dist/jansky-research-papers-${TAG}.zip"
+          {
+            echo "### Manual step outstanding"
+            echo
+            echo 'CI papers are **synthetic** and are never attached to a release. Build the'
+            echo 'citable zip locally from real results (guarded by `make guard-real`) and upload:'
+            echo
+            echo '```'
+            echo "make papers-zip TAG=${TAG}"
+            echo "gh release upload ${TAG} dist/jansky-research-papers-${TAG}.zip"
+            echo '```'
+            echo
+            echo 'Check any time with `make release-check`.'
+          } >> "$GITHUB_STEP_SUMMARY"

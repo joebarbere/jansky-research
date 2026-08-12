@@ -95,9 +95,10 @@ Forty slices plus a synthesis, honestly tallied:
 | Environment-split HI mass function (FASHI DR1) | `jansky_research.fashienv` | ✅/➖ first environment split of the FASHI HIMF (41,741 sources): **void knee suppressed −0.26 dex (2.9σ) vs walls**, an independent FAST measurement of the ALFALFA void HIMF (Moorman+2014); group knee survivor-biased +0.19 dex (stated); DR1 first leg (DR2 embargoed to ~Aug 2026), absolute slope caveated |
 | SBI population inference for RACS Stokes-V emitters | `jansky_research.svsbi` | ✅/➖ first SBI of the M-dwarf coherent-emitter population: **first calibrated beaming-fraction posterior f_beam = 0.30 (90% CI 0.07–0.53)**, SBC-validated coverage; LF weakly constrained (beaming–luminosity degeneracy, honest); NPE trained on the ROCm GPU |
 | LPT catalogue v3 + Stokes-V forced photometry | `jansky_research.lptv` | ✅/➖ extends the LPT catalogue to **16 members** (3 verified 2026 rows); the ~78-min binary boundary **still not significant at N=16** (p=0.52); first systematic multi-epoch forced Stokes-V at all LPT positions → **1 secure + 1 candidate single-epoch circular burst detection** + a uniform V-limit table (0.47 mJy median; persistent circular pol not a class property; confusion-vetoed, honest) |
-| Inner Milky Way RC replication (plan 86) | `jansky_research.innerrc` | ✅ two-leg replication of Sofue & Kohno 2025: their ρ_DM arithmetic validates exactly, and their own published curve prefers **ρ_DM ≈ 0.19–0.32 GeV/cm³** across the disc–halo degeneracy (their 0.107 is one corner — a quantified lower-limit, not tension); their Table 2 reproduces from raw HI4PI at ~4%; the threshold-vs-decomposition estimator bias measured at **+17.9 km/s** on 1,113 real spectra (closing the `hi` slice's documented caveat); E/W asymmetry replicates in period/phase |
+| Inner Milky Way RC replication (plan 86) | `jansky_research.innerrc` | ✅ two-leg replication of Sofue & Kohno 2025: their ρ_DM arithmetic validates exactly, and an interior refit of their own published curve gives **ρ_DM = 0.24 GeV/cm³** at better rms — a factor 2.3 above their 0.107, so that value is not uniquely determined by their curve (the wider 0.19–0.32 scan range was withdrawn 2026-08-12: 6 of its 8 variants have a fit parameter railed against a bound; the 1σ interval **0.16–0.31** from the fit's own covariance is what reaches the consensus, and their published halo underfits their own outer curve by +1.33σ/point beyond 8 kpc); their Table 2 reproduces from raw HI4PI at ~9 km/s for R > 2 kpc; the threshold-vs-decomposition estimator bias measured at **+17.9 km/s** on 1,113 real spectra (closing the `hi` slice's documented caveat); E/W asymmetry replicates qualitatively (period 36% long) |
 | BL 3I/ATLAS GBT reproduction (plan 85) | `jansky_research.atlas3i` | ✅ independent reproduction of the Breakthrough Listen 3I/ATLAS L-band nondetection (arXiv:2512.19763) from the public GB_ATLAS archive: physical-units de-Doppler + ABACAD on/off + drift-coherence stamp vet + satellite-band exclusion over all six L nodes (939–2064 MHz) → **the null reproduces** (1.12M raw hits → 261 survivors → 0 confirmed) with a matching **99.2 mW** EIRP limit (Horizons-pinned 1.798 au); the survivors are a taxonomy of two-position-filter evasion (sub-threshold OFF carriers, Iridium/Inmarsat downlinks) |
-| DR20 BHM radio-counterpart census (plan 88) | `jansky_research.dr20radio` | ✅ first radio cross-match of any SDSS-V BHM quasar catalog, four days after the DR20 release: north 202,691 quasars × VLASS → 4.67% any-epoch (measured chance rate 0.009%); **the categorical first** — 73,074 quasars south of δ=−40° (the first southern SDSS spectra, all LCO) × RACS-low → **3.95%**; luminosity-matched contrast 4.06% vs 2.82% (robust at the conservative RACS limit), attributed to stated survey-side effects; radio-targeted cartons excluded as circular and repurposed as a cross-frequency fading measurement (89% selecting survey → 49%/27%/17% across frequency jumps) |
+| DR20 BHM radio-counterpart census (plan 88) | `jansky_research.dr20radio` | ✅ first radio cross-match of any SDSS-V BHM quasar catalog, four days after the DR20 release: north 202,691 quasars × VLASS → 4.67% any-epoch (measured chance rate 0.009%); **the categorical first** — 73,074 quasars south of δ=−40° (the first southern SDSS spectra, all LCO) × RACS-low → **3.95%**; luminosity-matched contrast **reported as a range** — the gap spans 0.23–1.66 pp across 0 ≥ α ≥ −1 and nearly vanishes at flat spectrum, so it is principally an artefact of the cross-frequency K-correction and no astrophysical inference is drawn (the earlier "robust at the conservative RACS limit" check was vacuous: that limit binds both legs identically); radio-targeted cartons excluded as circular and repurposed as a cross-frequency recovery bound (89% selecting survey → 49%/27%/17%, consistent within their binomial errors) |
+| Inner Milky Way rotation-curve replication | `innerrc/` | two-leg replication (their published tables + raw HI4PI) of Sofue & Kohno 2025's inner RC and low halo-only local dark-matter density | 98% | **major revision** ([referee 2026-08-12](survey/innerrc-findings.md)) | ✅ 2026-08-12 — 19 findings, both blockers fixed |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 A long run of recover-a-known validations and methodology contributions, two honest negatives (the USS
@@ -129,52 +130,52 @@ an eligible author). Each is built reproducibly with containerized tectonic, tak
 number from a pipeline-generated `generated/macros.tex` (no figure typed by hand), and is honest
 about what it is — mostly recover-a-known validations and methodology, with two honest negatives:
 
-| Paper | `papers/…` | Framing |
-|-------|-----------|---------|
-| FRB burst statistics, validated on CHIME/FRB Cat 1 | `frbstats/` | validation (tested, reproducible tool) |
-| Recovering FRB 20180916B's 16.35-day period | `frbperiod/` | validation |
-| The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation |
-| A SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative |
-| TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative |
-| VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) |
-| Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations |
-| Measuring the turnover: southern peaked sources from GLEAM-X + RACS | `southern/` | methodology + measured-turnover candidate list |
-| The AGN radio–optical offset excess and its alignment with the jet (ICRF3 × Gaia × MOJAVE) | `offsets/` | reproduction (excess + jet alignment) + reproducible catalogue |
-| The steep radio spectra of pulsars from the ATNF catalogue | `pulsarspec/` | reproduction + MSP/normal comparison |
-| Image-plane stacking with injection-recovery: SDSS quasars in VLASS-SE | `stacking/` | methodology + calibrated population-mean flux |
-| Multi-decade parsec-scale VLBI variability from Astrogeo | `vlbi/` | control-floor method + recover-a-known (OJ 287, BL Lac) |
-| A solar type III exciter speed from an e-Callisto dynamic spectrum | `solarbursts/` | method + recover-a-known |
-| The Galactic Faraday rotation sky from the Taylor et al. 2009 RM catalogue | `rmsky/` | reproduction (plane enhancement + sign antisymmetry) |
-| The pulsar P–Ṗ diagram from the ATNF catalogue | `ppdot/` | reproduction + population classes |
-| Tracking an inner-heliosphere type III beam with Wind/WAVES | `windwaves/` | method + recover-a-known (to the Alfvén surface) |
-| Tracking a type III beam to 0.4 AU with STEREO/WAVES | `swaves/` | method + recover-a-known (genuinely interplanetary) |
-| 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check |
-| Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) |
-| A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance |
-| A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result |
-| A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) |
-| A coverage-corrected type III occurrence census (method + recover-a-known) | `ecallisto_census/` | census statistic + recover-a-known validation toward a multi-cycle census |
-| A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark |
-| Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census |
-| A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) |
-| LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions |
-| Cassini SKR proximity census | `skr/` | rotation-period anchor (0.05%) + 1/r² sensitivity-null bounding of the SKR occurrence-vs-range trend to a ~1.4× near-null |
-| OVRO-LWA type II burst census | `typeii/` | slow-drift detector + in-memory streaming of the whole 2024–2026 archive → an honest null (blind spectral census is false-positive dominated) |
-| e-Callisto megaconstellation RFI trend | `rfitrend/` | notch-robust narrowband-UEM-line metric over 2012–2026 + pipeline cross-station coherence verdict → a systematics-limited null (stations trend in opposite signs; no Starlink attribution) |
-| BL 3I/ATLAS GBT L-band reproduction | `atlas3i/` | independent pipeline over the public archive → the null reproduces (261 survivors, 0 confirmed) + the filter-evasion taxonomy (satellite downlinks defeat two-position filters by design) |
-| DR20 BHM radio-counterpart census | `dr20radio/` | first radio census of the first southern SDSS quasar spectra (RACS 3.95%, VLASS north 4.67%) + luminosity-matched north/south contrast with measured chance rates and carton cross-frequency controls |
-| Voyager 2 PRA ice-giant rotation periods | `vgpra/` | blind Lomb-Scargle of the PRA flux + rotation-block bootstrap → a controlled null (synthetic recovers an injected period; neither real Uranus/Neptune period is recovered — historical geometric modelling was essential) |
-| PTE-II per-source giant-pulse census | `pte2/` | floor-robust giant-pulse excess test over 363 Parkes pulsars + ATNF Ė cross-match → an honest null (detection-power-limited heavy-tail fraction; no Ė trend; tails too steep for classic giant pulses) |
-| JBO glitch waiting-time classification | `glitchpop/` | monitoring-gap-robust per-pulsar waiting-time classification of the live JBO catalogue (exp/quasi-periodic) + post-2018 change table; recover-a-known passes (J0537 & Vela quasi-periodic, gap excision required) |
-| RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate |
-| Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit |
-| The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) |
-| Uniform Cat-2 repeater timing census | `frbwait/` | anchor recovery + population k census + honest no-new-periods verdict |
-| Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson |
-| torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks |
-| A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table |
-| The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation |
-| SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE |
+| Paper | `papers/…` | Framing | Tests | Gate | Reviewed |
+|-------|-----------|---------|-------|------|----------|
+| FRB burst statistics, validated on CHIME/FRB Cat 1 | `frbstats/` | validation (tested, reproducible tool) | 97% | — | — |
+| Recovering FRB 20180916B's 16.35-day period | `frbperiod/` | validation | 100% | — | — |
+| The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation | 99% | [findings](survey/hi-findings.md) | — |
+| A SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + honest negative | 100% | — | — |
+| TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative | 99% | — | — |
+| VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) | 92% | [findings](survey/vlass-findings.md) | — |
+| Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations | 98% | [findings](survey/peaked-findings.md) | — |
+| Measuring the turnover: southern peaked sources from GLEAM-X + RACS | `southern/` | methodology + measured-turnover candidate list | 97% | [findings](survey/southern-findings.md) | — |
+| The AGN radio–optical offset excess and its alignment with the jet (ICRF3 × Gaia × MOJAVE) | `offsets/` | reproduction (excess + jet alignment) + reproducible catalogue | 99% | [findings](survey/offsets-findings.md) | — |
+| The steep radio spectra of pulsars from the ATNF catalogue | `pulsarspec/` | reproduction + MSP/normal comparison | 100% | [findings](survey/pulsarspec-findings.md) | — |
+| Image-plane stacking with injection-recovery: SDSS quasars in VLASS-SE | `stacking/` | methodology + calibrated population-mean flux | 99% | [findings](survey/stacking-findings.md) | — |
+| Multi-decade parsec-scale VLBI variability from Astrogeo | `vlbi/` | control-floor method + recover-a-known (OJ 287, BL Lac) | 100% | [findings](survey/vlbi-findings.md) | — |
+| A solar type III exciter speed from an e-Callisto dynamic spectrum | `solarbursts/` | method + recover-a-known | 97% | [findings](survey/solarbursts-findings.md) | — |
+| The Galactic Faraday rotation sky from the Taylor et al. 2009 RM catalogue | `rmsky/` | reproduction (plane enhancement + sign antisymmetry) | 98% | [findings](survey/rmsky-findings.md) | — |
+| The pulsar P–Ṗ diagram from the ATNF catalogue | `ppdot/` | reproduction + population classes | 100% | [findings](survey/ppdot-findings.md) | — |
+| Tracking an inner-heliosphere type III beam with Wind/WAVES | `windwaves/` | method + recover-a-known (to the Alfvén surface) | 98% | [findings](survey/windwaves-findings.md) | — |
+| Tracking a type III beam to 0.4 AU with STEREO/WAVES | `swaves/` | method + recover-a-known (genuinely interplanetary) | 100% | [findings](survey/swaves-findings.md) | — |
+| 3D triangulation of a type III source with STEREO-A+B direction-finding | `triangulate/` | method + independent geometric-vs-plasma distance cross-check | 97% | [findings](survey/triangulate-findings.md) | — |
+| Recovering the canonical 1.4 GHz Euclidean source counts from NVSS | `sourcecounts/` | reproduction (Hopkins 2003) | 100% | [findings](survey/sourcecounts-findings.md) | — |
+| A type III beam from the corona to 0.4 AU, geometrically validated | `type3synthesis/` | synthesis + same-event geometric check on the model distance | 99% | [findings](survey/type3synthesis-findings.md) | — |
+| A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result | 100% | [findings](survey/stokesv-findings.md) | — |
+| A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) | — | — | — |
+| A coverage-corrected type III occurrence census (method + recover-a-known) | `ecallisto_census/` | census statistic + recover-a-known validation toward a multi-cycle census | 100% | — | — |
+| A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark | **0%** ⚠️ skipped | [findings](survey/torchfdmt-findings.md) | — |
+| Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census | 100% | — | — |
+| A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) | 100% | [GATE-2](survey/lpt-findings.md) | — |
+| LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions | 98% | [GATE-2](survey/lptv-findings.md) | — |
+| Cassini SKR proximity census | `skr/` | rotation-period anchor (0.05%) + 1/r² sensitivity-null bounding of the SKR occurrence-vs-range trend to a ~1.4× near-null | 96% | [GATE-2](survey/skr-findings.md) | — |
+| OVRO-LWA type II burst census | `typeii/` | slow-drift detector + in-memory streaming of the whole 2024–2026 archive → an honest null (blind spectral census is false-positive dominated) | 96% | [GATE-2](survey/typeii-findings.md) | — |
+| e-Callisto megaconstellation RFI trend | `rfitrend/` | notch-robust narrowband-UEM-line metric over 2012–2026 + pipeline cross-station coherence verdict → a systematics-limited null (stations trend in opposite signs; no Starlink attribution) | 91% | [GATE-2](survey/rfitrend-findings.md) | — |
+| BL 3I/ATLAS GBT L-band reproduction | `atlas3i/` | independent pipeline over the public archive → the null reproduces (261 survivors, 0 confirmed) + the filter-evasion taxonomy (satellite downlinks defeat two-position filters by design) | 99% | **minor revision** ([referee 2026-08-11](survey/atlas3i-findings.md)) | ✅ 2026-08-11 — 7 findings fixed |
+| DR20 BHM radio-counterpart census | `dr20radio/` | first radio census of the first southern SDSS quasar spectra (RACS 3.95%, VLASS north 4.67%) + a north/south contrast reported as an **α-dependent range** (0.23–1.66 pp), with measured chance rates, a measured RACS-footprint bound, and carton cross-frequency controls | 99% | **major revision** ([2 referee rounds](survey/dr20radio-findings.md)) | ✅ 2026-08-12 — 22 findings fixed over 2 rounds |
+| Voyager 2 PRA ice-giant rotation periods | `vgpra/` | blind Lomb-Scargle of the PRA flux + rotation-block bootstrap → a controlled null (synthetic recovers an injected period; neither real Uranus/Neptune period is recovered — historical geometric modelling was essential) | 96% | [GATE-2](survey/vgpra-findings.md) | — |
+| PTE-II per-source giant-pulse census | `pte2/` | floor-robust giant-pulse excess test over 363 Parkes pulsars + ATNF Ė cross-match → an honest null (detection-power-limited heavy-tail fraction; no Ė trend; tails too steep for classic giant pulses) | 97% | [GATE-2](survey/pte2-findings.md) | — |
+| JBO glitch waiting-time classification | `glitchpop/` | monitoring-gap-robust per-pulsar waiting-time classification of the live JBO catalogue (exp/quasi-periodic) + post-2018 change table; recover-a-known passes (J0537 & Vela quasi-periodic, gap excision required) | 95% | [GATE-2](survey/glitchpop-findings.md) | — |
+| RM structure functions from SPICE-RACS DR1 | `rmstructure/` | method + recover-a-known + bounded high-\|b\| estimate | 96% | [GATE-2](survey/rmstructure-findings.md) | — |
+| Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit | 100% | [GATE-2](survey/junodam-findings.md) | — |
+| The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) | 98% | [GATE-2](survey/rmdipole-findings.md) | — |
+| Uniform Cat-2 repeater timing census | `frbwait/` | anchor recovery + population k census + honest no-new-periods verdict | 98% | [GATE-2](survey/frbwait-findings.md) | — |
+| Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson | 98% | [GATE-2](survey/frblens-findings.md) | — |
+| torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks | **0%** ⚠️ skipped | [GATE-2](survey/torchdsp-findings.md) | — |
+| A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table | 94% | [findings](survey/wdpulsar-findings.md) | — |
+| The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation | 96% | [GATE-2](survey/fashienv-findings.md) | — |
+| SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | [GATE-2](survey/svsbi-findings.md) | — |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
 job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,

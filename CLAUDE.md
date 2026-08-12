@@ -120,6 +120,43 @@ flag makes `.` match newlines, which ate a whole config file.
 dropping it leaves an abstract starting *"derived the definitive modern..."*. It is resolved
 from `refs.bib` now.
 
+**A robustness check that cannot vary what it claims to test is worse than none.**
+`dr20radio` reported its north/south contrast as "robust" because it survived a conservative
+5 mJy RACS limit. That check was vacuous by construction: the common luminosity limit is the
+*RACS* one in **both** legs, so raising the flux floor rescales north and south identically and
+the ratio cannot move (1.4391 -> 1.4434). The parameter the contrast actually depends on is the
+assumed spectral index in the cross-frequency K-correction, which is not measured for the
+sample: sweeping alpha from 0 to -1 moves the gap 0.23 -> 1.66 pp, and at alpha = 0 it nearly
+vanishes. **Ask what a robustness check is free to change.** If the perturbed quantity enters
+both arms of a comparison through the same term, it tests precision, not the claim — and it
+lends the claim a credibility it never earned.
+
+**A fitted parameter sitting on its bound is not a converged fit.** `innerrc`'s sensitivity
+scan reported `n_converged: 8` and a range 0.19--0.32 GeV/cm^3 because `curve_fit` did not
+raise. Two of the eight variants have `v_bulge` at **exactly** 800.0000 km/s — the upper bound
+in `decompose_rc` — and the variant supplying the quoted maximum (`\irRhoMax` = 0.3223, the
+number carrying "fully compatible with the consensus density") is one of them. SciPy reports
+success for a solution glued to a wall. **Record per-variant whether any parameter is at or
+near a bound, and exclude those from any quoted range**; a bound is a modelling choice, so a
+result that rests on one is reporting the choice, not the data.
+
+**A committed results file can omit the numbers its own headline is computed from.**
+`innerrc` filtered its sensitivity variants down to a curated key list before writing them,
+dropping `v_halo` and `h_halo` — the only two parameters `rho_dm_gev` is derived from. The
+quoted maximum was therefore unauditable from the evidence, and the railed halo bound behind
+three variants was invisible. Commit the whole fit; a curated subset of a fit is not evidence.
+
+**Do not assume a derived quantity is monotonic in its inputs.** Propagating `innerrc`'s halo
+uncertainties by pairing `(v+dv, h-dh)` gave a 1-sigma maximum of 0.24; the true maximum is
+0.31, because rho_DM *rises* with the NFW scale radius at R0. Scan all corners (or sample)
+rather than reasoning about which one is extremal — a wrong corner understates an interval
+without ever looking wrong.
+
+**A `make` variable that is not the one the target reads fails silently and slowly.**
+`make paper SLICE=dr20radio` looked like a single-paper build and rebuilt all 44 (the variable
+is `SLICES`). Make does not warn about unused command-line variables. `SLICE` now narrows
+`SLICES` and errors on an unknown name.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

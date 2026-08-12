@@ -320,6 +320,37 @@ def rc_model(
     )
 
 
+# Fit bounds, hoisted out of decompose_rc so `bound_contact` can report against them.
+# v_bulge's upper bound is the one that matters: the data themselves cap it, because
+# components add in quadrature and the observed curve peaks at ~255 km/s, while the Plummer
+# term peaks at 0.620 * v_bulge -> v_bulge <= ~410. The historic 800 is far above that, and
+# variants that excise the inner curve (R > 2 kpc) leave the bulge unconstrained and run
+# straight to it. Kept at 800 so the published fits are unchanged; railed variants are now
+# flagged and excluded from quoted ranges instead of being silently counted as converged.
+FIT_PARAM_NAMES = ("v_bulge", "a_bulge", "v_disc", "a_disc", "v_halo", "h_halo")
+FIT_LOWER = (50.0, 50.0, 50.0, 1000.0, 10.0, 3000.0)
+FIT_UPPER = (800.0, 2000.0, 600.0, 20000.0, 500.0, 100000.0)
+BOUND_CONTACT_TOL = 0.01  # within 1% of the span of a bound counts as railed
+
+
+def bound_contact(fit: dict, *, tol: float = BOUND_CONTACT_TOL) -> list[str]:
+    """Names of fitted parameters sitting at (or within ``tol`` of) a bound.
+
+    A `curve_fit` that does not raise is not the same as a converged fit: a parameter glued to
+    a wall means the data did not determine it, and any quantity derived from it is reporting
+    the bound rather than the measurement. Added 2026-08-12 after a referee found the quoted
+    dark-matter-density maximum came from a variant with v_bulge at exactly 800.0.
+    """
+    railed = []
+    for name, lo, hi in zip(FIT_PARAM_NAMES, FIT_LOWER, FIT_UPPER, strict=True):
+        if name not in fit:
+            continue
+        v, span = float(fit[name]), hi - lo
+        if v <= lo + tol * span or v >= hi - tol * span:
+            railed.append(name)
+    return railed
+
+
 def decompose_rc(
     r_pc: np.ndarray,
     v_kms: np.ndarray,
@@ -349,17 +380,38 @@ def decompose_rc(
         v_kms[ok],
         p0=p0,
         sigma=sigma,
-        bounds=([50, 50, 50, 1000, 10, 3000], [800, 2000, 600, 20000, 500, 100000]),
+        bounds=(list(FIT_LOWER), list(FIT_UPPER)),
         maxfev=20000,
     )
     perr = np.sqrt(np.diag(pcov))
-    names = ["v_bulge", "a_bulge", "v_disc", "a_disc", "v_halo", "h_halo"]
+    names = list(FIT_PARAM_NAMES)
     out: dict = {n: float(v) for n, v in zip(names, popt, strict=True)}
     out.update({f"d{n}": float(e) for n, e in zip(names, perr, strict=True)})
     out["halo"] = halo
     resid = v_kms[ok] - f(r_pc[ok], *popt)
     out["rms_kms"] = float(np.sqrt(np.mean(resid**2)))
+    out["n_points"] = int(ok.sum())
+    # chi2/N alongside rms: rms is not comparable across variants that fit different point
+    # sets (the R > 2 kpc variants drop the 39 highest-residual inner rows), and the referee's
+    # point about the outer curve is only visible in chi2.
+    if sigma is not None:
+        out["chi2_per_n"] = float(np.mean((resid / sigma) ** 2))
     out["rho_dm_gev"] = rho_dm_local_gev(out["v_halo"], out["h_halo"], halo=halo)
+    # 1-sigma corners of rho_DM from the halo parameters' own uncertainties. This is the
+    # honest carrier of any "compatible with X" statement — unlike the variant scan, it cannot
+    # be manufactured by a bound.
+    # All four corners, not an assumed pairing: rho is not monotonic in h (at R0 = 8.2 kpc it
+    # *rises* with the NFW scale radius), so guessing which corner is extremal gets it wrong —
+    # the (v+dv, h-dh) pairing gives 0.244 where the true 1-sigma maximum is 0.309.
+    _corners = [
+        rho_dm_local_gev(
+            out["v_halo"] + a * out["dv_halo"], out["h_halo"] + b * out["dh_halo"], halo=halo
+        )
+        for a in (-1, 1)
+        for b in (-1, 1)
+    ]
+    out["rho_dm_gev_lo"], out["rho_dm_gev_hi"] = float(min(_corners)), float(max(_corners))
+    out["railed_params"] = bound_contact(out)
     return out
 
 
@@ -402,12 +454,25 @@ def sensitivity_scan(r_pc: np.ndarray, v_kms: np.ndarray, dv_kms: np.ndarray | N
                     )
                 except Exception as e:  # noqa: BLE001 - a non-converging variant is a result
                     variants[key] = {"error": str(e)}
-    rhos = [v["rho_dm_gev"] for v in variants.values() if "rho_dm_gev" in v]
+    # A variant only counts toward the quoted range if every fitted parameter is interior.
+    # Before 2026-08-12 the range was taken over all eight, and its maximum came from a fit
+    # with v_bulge at exactly the 800 km/s bound: excising R < 2 kpc removes all the data that
+    # constrains the bulge, so (v_bulge, a_bulge) slide along the Plummer degeneracy ridge
+    # until they hit walls. Railed variants are kept in the output — a reader should see them
+    # — but they are reported separately and never set a quoted bound.
+    ok_v = {k: v for k, v in variants.items() if "rho_dm_gev" in v and not v["railed_params"]}
+    railed = {k: v["railed_params"] for k, v in variants.items() if v.get("railed_params")}
+    rhos = [v["rho_dm_gev"] for v in ok_v.values()]
+    all_rhos = [v["rho_dm_gev"] for v in variants.values() if "rho_dm_gev" in v]
     return {
         "variants": variants,
         "rho_dm_min_gev": float(min(rhos)),
         "rho_dm_max_gev": float(max(rhos)),
         "n_converged": len(rhos),
+        "n_fitted": len(all_rhos),
+        "railed_variants": railed,
+        "rho_dm_min_gev_incl_railed": float(min(all_rhos)),
+        "rho_dm_max_gev_incl_railed": float(max(all_rhos)),
     }
 
 
@@ -475,9 +540,24 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
     )
     v_paper = rc_model(uni["R_pc"], *paper.values())
     paper_rms = float(np.sqrt(np.mean((uni["V_kms"] - v_paper) ** 2)))
+    # chi2/N for their solution on the same points, so it is comparable with the refit's, and
+    # the outer-curve residual that the rms comparison hides: beyond 8 kpc their published halo
+    # sits systematically below their own unified curve, which is exactly where rho_DM(R0) is
+    # set. Reporting rms alone made a structured bias look like a wash.
+    _res = (uni["V_kms"] - v_paper) / uni["dV_kms"]
+    paper_chi2 = float(np.mean(_res**2))
+    _outer = uni["R_pc"] > 8000.0
+    paper_outer = {
+        "n": int(_outer.sum()),
+        "mean_resid_sigma": float(np.mean(_res[_outer])),
+        "rms_kms": float(np.sqrt(np.mean((uni["V_kms"][_outer] - v_paper[_outer]) ** 2))),
+    }
     paper_rho = rho_dm_local_gev(paper["v_halo"], paper["h_halo"])  # == their 0.107 if consistent
     metrics = {
         "source": "Sofue & Kohno 2025 published RC tables (arXiv:2509.23581 source, vendored)",
+        "paper_table1_params": paper,
+        "paper_table1_chi2_per_n": paper_chi2,
+        "paper_table1_outer": paper_outer,
         "n_inner_rows": int(tables["inner"]["R_pc"].size),
         "n_unified_rows": int(uni["R_pc"].size),
         "anchor_fit": fit,
@@ -487,19 +567,10 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
         "rho_dm_ratio_vs_paper": fit["rho_dm_gev"] / 0.107,
         "r_max_pc": float(uni["R_pc"].max()),
         "sensitivity": {k: v for k, v in scan.items() if k != "variants"},
-        "sensitivity_variants": {
-            k: (
-                {
-                    kk: vv
-                    for kk, vv in v.items()
-                    if kk
-                    in ("rho_dm_gev", "rms_kms", "halo", "v_bulge", "a_bulge", "v_disc", "a_disc")
-                }
-                if "rho_dm_gev" in v
-                else v
-            )
-            for k, v in scan["variants"].items()
-        },
+        # The whole fit, not a curated subset. This used to drop v_halo and h_halo — the only
+        # two numbers rho_dm_gev is computed from — so a reader could not check the quoted
+        # maximum, nor see that the variant producing it had a parameter on a bound.
+        "sensitivity_variants": {k: v for k, v in scan["variants"].items()},
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -934,7 +1005,9 @@ def tvm_spectrum_components(vel_kms, spectrum, *, sign):  # pragma: no cover - f
     return sign * vterm, comps, win
 
 
-def paper_macros(out: str = ".", *, results_dir: str = "results") -> str:
+def paper_macros(
+    out: str = ".", *, results_dir: str = "results", table_dir: str = "tests/data/sofue2025"
+) -> str:
     """Generate papers/innerrc/generated/macros.tex from the COMMITTED evidence JSONs only.
 
     The committed-real-results rule: no run happens here — if the evidence files are absent
@@ -947,6 +1020,18 @@ def paper_macros(out: str = ".", *, results_dir: str = "results") -> str:
     h = json.loads((Path(results_dir) / "innerrc_hi4pi.json").read_text())
     fit, sens = a["anchor_fit"], a["sensitivity"]
     bias, ew = h["estimator_bias_threshold_minus_gaussian_kms"], h["ew_asymmetry_fit"]
+    # Inside 2 kpc the committed HI-only curve and their (CO-dominated) inner table disagree,
+    # and the paper claimed the opposite ("the bar-region inner peak reproduce fully"). Both
+    # sides are already committed evidence, so the disagreement is measured here rather than
+    # described: their inner table is vendored, our curve is in the hi4pi results JSON.
+    _inner = parse_paper_tables(table_dir)["inner"]
+    _g = np.asarray(h["rc_grid_pc"], float)
+    _v = np.asarray(h["rc_v_kms"], float)
+    _sel = np.isfinite(_v) & (_g < 2000.0)
+    _theirs = np.interp(_g[_sel], _inner["R_pc"], _inner["V_kms"])
+    _dv_inner = float(np.mean(_v[_sel] - _theirs))
+    _ipk = int(np.nanargmax(_inner["V_kms"]))
+    _opk = int(np.argmax(_v[_sel]))
     lines = [
         "% Auto-generated by jansky_research.innerrc.paper_macros from the committed",
         "% results/innerrc_*.json evidence — do not edit by hand.",
@@ -959,6 +1044,31 @@ def paper_macros(out: str = ".", *, results_dir: str = "results") -> str:
         rf"\newcommand{{\irRhoMin}}{{{sens['rho_dm_min_gev']:.2f}}}",
         rf"\newcommand{{\irRhoMax}}{{{sens['rho_dm_max_gev']:.2f}}}",
         rf"\newcommand{{\irScanN}}{{{sens['n_converged']}}}",
+        rf"\newcommand{{\irScanNFitted}}{{{sens['n_fitted']}}}",
+        rf"\newcommand{{\irScanNRailed}}{{{len(sens['railed_variants'])}}}",
+        # The honest carrier of "compatible with the consensus density": the primary fit's own
+        # halo-parameter uncertainties, which no bound can manufacture. The variant scan cannot
+        # play that role -- six of its eight variants have a parameter on a wall.
+        rf"\newcommand{{\irRhoLo}}{{{fit['rho_dm_gev_lo']:.2f}}}",
+        rf"\newcommand{{\irRhoHi}}{{{fit['rho_dm_gev_hi']:.2f}}}",
+        rf"\newcommand{{\irChiOurs}}{{{fit['chi2_per_n']:.2f}}}",
+        rf"\newcommand{{\irChiTheirs}}{{{a['paper_table1_chi2_per_n']:.2f}}}",
+        rf"\newcommand{{\irOuterN}}{{{a['paper_table1_outer']['n']}}}",
+        rf"\newcommand{{\irOuterBiasSig}}{{{a['paper_table1_outer']['mean_resid_sigma']:.2f}}}",
+        # How far the fitted E/W period sits from the one their eq. 29 quotes. The paper called
+        # this "replicates in period and phase"; it is a 36% disagreement.
+        rf"\newcommand{{\irInnerDv}}{{{_dv_inner:.0f}}}",
+        rf"\newcommand{{\irInnerN}}{{{int(_sel.sum())}}}",
+        rf"\newcommand{{\irPeakTheirs}}{{{_inner['V_kms'][_ipk]:.0f}}}",
+        rf"\newcommand{{\irPeakTheirsR}}{{{_inner['R_pc'][_ipk]:.0f}}}",
+        rf"\newcommand{{\irPeakOurs}}{{{_v[_sel][_opk]:.0f}}}",
+        rf"\newcommand{{\irPeakOursR}}{{{_g[_sel][_opk]:.0f}}}",
+        # Both already committed; neither had a macro, so the paper could not cite the
+        # uncalibrated offset that exposes how much of the Table-2 agreement is pinned, nor
+        # the fit residual that shows the sinusoid explains under half the E/W variance.
+        rf"\newcommand{{\irTabTwoFixedSigma}}{{{h['table2_comparison_R>2kpc']['median_dv_kms_fixed_sigma15']:.1f}}}",
+        rf"\newcommand{{\irEwFitRms}}{{{ew['rms_kms']:.1f}}}",
+        rf"\newcommand{{\irEwPeriodOffPct}}{{{100 * abs(ew['period_pc'] - 4400.0) / 4400.0:.0f}}}",
         rf"\newcommand{{\irUniRows}}{{{a['n_unified_rows']}}}",
         rf"\newcommand{{\irInnerRows}}{{{a['n_inner_rows']}}}",
         rf"\newcommand{{\irRmax}}{{{a['r_max_pc'] / 1000:.1f}}}",

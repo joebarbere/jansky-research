@@ -206,3 +206,54 @@ def test_luminosity_matched_fractions_applies_common_limit():
         bins=bins,
     )
     assert sum(out_shallow_other["k"]) == int(matched.sum())
+
+
+def test_k_correction_sign_and_alpha_monotonicity():
+    """Pin the sign of the K-correction and the direction of the alpha sweep.
+
+    The paper's north/south contrast is dominated by `alpha`, so a sign error here would
+    silently invert the published conclusion: flat spectra would become the gap-maximising
+    case instead of the gap-minimising one, and every number in Section 4.3 would still
+    render. Nothing in the suite covered a non-fiducial alpha before 2026-08-12.
+    """
+    # A steep-spectrum source is BRIGHTER at low frequency, so extrapolating an 888 MHz
+    # limit UP to 1.4 GHz must LOWER it, while extrapolating a 3 GHz limit DOWN must RAISE
+    # it. At alpha = 0 both are unchanged: that is the assumption-free case the paper quotes.
+    for alpha, racs_expected, vlass_expected in [
+        (0.0, 3.0, 1.0),
+        (-0.7, 3.0 * (1400 / 888.0) ** -0.7, 1.0 * (1400 / 3000.0) ** -0.7),
+    ]:
+        racs = 3.0 * (1400 / 888.0) ** alpha
+        vlass = 1.0 * (1400 / 3000.0) ** alpha
+        assert racs == pytest.approx(racs_expected)
+        assert vlass == pytest.approx(vlass_expected)
+    # The published crossover: RACS binds the common limit until alpha ~ -0.9, then VLASS does.
+    assert 3.0 * (1400 / 888.0) ** -0.7 > 1.0 * (1400 / 3000.0) ** -0.7
+    assert 3.0 * (1400 / 888.0) ** -1.0 < 1.0 * (1400 / 3000.0) ** -1.0
+
+    # Same sample, same fluxes, sweeping alpha: the count above the common limit must move
+    # monotonically, and must NOT be flat (a dropped alpha would make every variant equal).
+    rng = np.random.default_rng(11)
+    n = 4000
+    z = rng.uniform(0.5, 2.5, n)
+    matched = rng.random(n) < 0.5
+    s = rng.uniform(1.0, 12.0, n)
+    bins = np.array([0.0, 1.0, 2.0, 3.0])
+    counts = [
+        sum(
+            dr20radio.luminosity_matched_fractions(
+                z,
+                matched,
+                s,
+                freq_ghz=3.0,
+                s_lim_this_mjy=1.0,
+                s_lim_other_mjy=3.0,
+                other_freq_ghz=0.888,
+                bins=bins,
+                alpha=alpha,
+            )["k"]
+        )
+        for alpha in dr20radio.ALPHA_SWEEP
+    ]
+    assert counts == sorted(counts), f"steepening alpha must not reduce the count: {counts}"
+    assert counts[0] < counts[-1], f"alpha had no effect at all: {counts}"

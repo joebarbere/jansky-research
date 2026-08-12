@@ -25,7 +25,8 @@ and an ITU satellite-allocation exclusion. The null reproduces in full: \aiTotRa
 raw hits reduce to \aiTotSurvivors\ two-position survivors and \aiTotConfirmed\
 confirmed candidates, and the implied narrowband limit ($\le\aiEirpMw$~mW at L band for
 $d=\aiDistanceAu$~au) coincides exactly with the published one for a transmitted linewidth equal to the
-channel resolution and unit dedrifting efficiency. The survivors form a physically interpretable taxonomy of
+channel resolution and unit dedrifting efficiency --- a condition met only on the drift
+grid, off which the coarse grid step costs up to a factor $\sim$3. The survivors form a physically interpretable taxonomy of
 filter evasion --- sub-threshold terrestrial carriers, chance coincidences in dense hit
 lists, and satellite downlinks that defeat two-position geometry by construction ---
 independently recovering the design rationale of BL's interference rejection. The
@@ -66,10 +67,12 @@ were mapped by reading every node's header remotely (HTTP range requests): L spa
 \aiLBandLo--\aiLBandHi~MHz over \aiLNodes\ nodes, S \aiSBandLo--\aiSBandHi~MHz
 (\aiSNodes), C \aiCBandLo--\aiCBandHi~MHz (\aiCNodes), and X
 \aiXBandLo--\aiXBandHi~MHz (\aiXNodes). Twelve additional C/X-band recordings duplicate
-bank-boundary coverage byte-for-byte and were searched once. The recorded spans exceed
+bank-boundary \emph{frequency} coverage and were assumed redundant and searched once;
+byte-level identity was not verified. The recorded spans exceed
 the passbands the original analysis quotes (L: 1.1--1.9~GHz; X: 7.6--11.7~GHz); the
 band-edge roll-off regions are included here and flagged where they matter. In total:
-\aiTotNodes\ unique node-cadences, 366 fine-resolution scans.
+\aiTotNodes\ unique node-cadences, \aiTotScans\ fine-resolution scans
+(366 files were transferred; one node was re-run and its first pass retained).
 
 \section{Methods}
 The pipeline (\code{atlas3i} in \code{jansky-research}; \citealt{janskyresearch}) is
@@ -87,9 +90,12 @@ in every on-target scan and no off-target scan.
 \emph{(ii) Drift coherence.} For each survivor the pipeline re-reads $\pm$2048-channel
 postage stamps from all six scans and demands the tone track its fitted drift through
 the full $\sim$30-min cadence, with direct off-scan cleanliness at $8\sigma$ ---
-subsuming the original search's asymmetric ($16\sigma$/$10\sigma$) on/off thresholds,
-which this reproduction otherwise does not replicate (a stricter symmetric choice that
-passes \emph{more} borderline interference forward; conservative for a null).
+subsuming the original search's asymmetric ($16\sigma$/$10\sigma$) on/off thresholds.
+The L-band leg was run with a stricter symmetric $16\sigma$ on both positions --- which
+passes \emph{more} borderline interference forward, conservative for a null --- while the
+S/C/X legs used the asymmetric $16\sigma$/$10\sigma$ convention. Two-position survivor
+counts are therefore not directly comparable between L and S/C/X: a $10\sigma$ off-scan
+veto removes candidates a $16\sigma$ veto retains.
 Exactly-zero drift is flagged terrestrial.
 
 \emph{(iii) Frequency allocation.} Survivors inside ITU satellite-downlink allocations
@@ -99,8 +105,9 @@ rejects them by geometry --- the same rationale as BL's exclusion masks.
 
 Every stage is validated offline on a synthetic cadence containing an injected drifting
 tone (recovered), an always-on interferer (rejected by geometry), and a DC spike
-(excised); the detector's false-positive rate and recovery completeness were calibrated
-in a companion injection-recovery benchmark \citep{janskyresearch}. The 3I/ATLAS
+(excised). The detector is validated by single-tone round-trip on that synthetic cadence;
+its recovery completeness as a function of signal-to-noise and drift rate has \emph{not}
+been measured for this implementation. The 3I/ATLAS
 geocentric distance at the cadence epoch, $d=\aiDistanceAu$~au, is taken from JPL
 Horizons.
 
@@ -142,8 +149,17 @@ $\le\aiEirpMw$~mW at L band. Setting the transmitted linewidth of the published
 formulation \citep{gajjar2021} equal to the channel resolution
 ($\delta\nu_t = \delta\nu$) and taking unit dedrifting efficiency $\beta$, the two
 expressions coincide exactly in the combined EIRP --- so the agreement with the paper's
-$\sim$100~mW follows from shared parameters rather than coincidence (our limit is
-marginally optimistic at the highest drift rates, where $\beta<1$).
+$\sim$100~mW follows from shared parameters rather than coincidence.
+
+This limit is quoted at $\beta=1$, which holds only for a tone landing on a drift grid
+point. The $129$-point grid steps by $0.0625$~Hz\,s$^{-1}$, $6.7\times$ coarser than the
+matched step $\delta\nu/\tau = 0.0093$~Hz\,s$^{-1}$; a worst-case off-grid tone smears over
+$3.4$ channels in a scan, and because the shift-and-sum uses integer channel shifts the
+peak-channel signal-to-noise falls roughly linearly with that smearing. The effective limit
+for off-grid drift rates is therefore up to $\sim3\times$ weaker than the quoted value.
+This applies at \emph{all} drift rates, not only large ones, and includes the
+$\sim$0.17~Hz\,s$^{-1}$ Earth-rotation drift expected for a transmitter on the target.
+A matched-step search would remove the penalty at proportionally greater cost.
 
 \subsection{The filter-evasion taxonomy}
 The \aiTotSurvivors\ two-position survivors decompose cleanly. \emph{Sub-threshold
@@ -187,8 +203,9 @@ robust to full independent reanalysis of the released data across the complete
 to become routine for high-visibility technosignature results.
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
-NumPy, h5py, astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
-verified by the pipeline's test suite.}
+NumPy, h5py, astropy. Analysis assisted by Claude \citep{anthropicclaude}. The
+pipeline's scientific kernels are covered by an offline test suite; the network and
+real-data drivers are not unit-tested.}
 
 \bibliography{refs}
 \bibliographystyle{aasjournal}
