@@ -153,6 +153,16 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A rule stated in this file is not a rule the repo follows — audit it.** Three
+CLAUDE.md requirements were checked mechanically on 2026-08-12 and each was met by a small
+minority of slices: `preserve_live_macros` ("call it from every `_write_macros`") was called
+by **5 of 42**; the `\software{}` block citing `jansky-research` was present in **4 of 46**
+papers; 41 `refs.bib` files lacked the `janskyresearch` entry entirely. The
+`preserve_live_macros` gap was live, not cosmetic: `make figures` runs all 33 offline slices
+with `--out .` in the repo root, so one invocation would have blanked every real macro in 33
+papers. **Periodically grep for each stated invariant rather than assuming new code inherited
+it** — the cost is one command per rule.
+
 **Accumulated hedging is its own distortion.** After four review rounds `dr20radio` spent
 46% of its length on the one derived quantity it concludes is a survey artefact, while the two
 clean census results shared 22 lines. Every qualification was individually true and the whole
