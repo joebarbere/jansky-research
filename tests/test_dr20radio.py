@@ -419,27 +419,36 @@ def test_alpha_systematics_are_recorded_and_the_floor_test_can_fail():
         )
 
 
-def test_vlass_conservative_variant_can_move_the_ratio():
-    """The RACS-side conservative variant provably cannot move the north/south ratio; the
-    VLASS-side one must be able to, or it is the same vacuous check on a new axis."""
+def test_vlass_conservative_variant_is_present_but_not_an_independent_axis():
+    """This test used to be named for the ratio and assert on the gap, which hid the finding.
+
+    The VLASS-limit variant was added as the "mirror" of the RACS one, on the theory that
+    raising the VLASS limit could move the north/south ratio where raising the RACS limit
+    could not. It cannot: raising EITHER limit deepens BOTH cuts (see
+    test_luminosity_matching_is_a_redshift_independent_flux_cut), so at the measured index
+    RACS 5 mJy and VLASS 2 mJy land on nearly the same pair of effective cuts. The variant is
+    kept because the paper quotes it as evidence of ratio-invariance -- which is the opposite
+    of what it was built for, and the reason the naming mattered.
+    """
     import json
     from pathlib import Path
 
     n = json.loads(Path("results/dr20radio_north.json").read_text())
     s = json.loads(Path("results/dr20radio_south.json").read_text())["deep_south"]
-    tot = lambda b: sum(b["k"]) / sum(b["n"])  # noqa: E731
-    key = f"{dr20radio.ALPHA_MEASURED:g}"
-    gap = tot(n["luminosity_matched_alpha"][key]) - tot(s["luminosity_matched_alpha"][key])
     for v in dr20radio.VLASS_S_LIM_CONSERVATIVE_MJY:
         vk = f"{v:g}"
         assert vk in n["luminosity_matched_vlass_conservative"]
         assert vk in s["luminosity_matched_vlass_conservative"]
-    worst = f"{max(dr20radio.VLASS_S_LIM_CONSERVATIVE_MJY):g}"
-    gap_c = tot(n["luminosity_matched_vlass_conservative"][worst]) - tot(
-        s["luminosity_matched_vlass_conservative"][worst]
+
+    # the effective cuts of RACS-5mJy and VLASS-2mJy coincide -- they are one axis, not two
+    r = (dr20radio.VLASS_FREQ_GHZ / dr20radio.RACS_FREQ_GHZ) ** dr20radio.ALPHA_MEASURED
+    racs5 = (
+        max(dr20radio.VLASS_S_LIM_MJY, dr20radio.RACS_S_LIM_CONSERVATIVE_MJY * r),
+        max(dr20radio.RACS_S_LIM_CONSERVATIVE_MJY, dr20radio.VLASS_S_LIM_MJY / r),
     )
-    # it must actually change the answer -- a check that cannot fail is not a check
-    assert abs(gap_c - gap) > 0.1 * gap, "the VLASS-limit variant barely moves the gap"
+    vlass2 = (max(2.0, dr20radio.RACS_S_LIM_MJY * r), max(dr20radio.RACS_S_LIM_MJY, 2.0 / r))
+    assert racs5[0] == pytest.approx(vlass2[0], rel=0.02)
+    assert racs5[1] == pytest.approx(vlass2[1], rel=0.02)
 
 
 def test_kaplan_meier_recovers_a_known_median_and_uses_censored_information():

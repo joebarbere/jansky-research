@@ -254,3 +254,33 @@ partition the sample (18% below 3 mJy unbinned); and the RACS declination floor,
 The KM unit test could not fail in the regime that matters — it only asserted "better than
 the naive median", which is nearly free. It now asserts recovery to 0.05 and adds a
 dependent-censoring case that documents the bias rather than asserting it away.
+
+## Shortened (2026-08-12, post-round-4)
+
+Four rounds of review had left 46% of the paper (229 of 499 lines) on the one derived
+quantity that the paper itself concludes is a survey-comparison artefact, while the two
+headline census results — which are α-free and were clean from round 1 — got 22 lines
+between them. The qualifications had accumulated past what the evidence required, which is
+its own kind of dishonesty: it signals that the contrast is the paper's main result.
+
+Cut 499 → 361 lines (241 deleted, 103 added), 5 pages:
+
+- §3.3 (spectral index) 82 → 34 lines. Keeps the two-point measurement, the selection
+  bracket, and a one-sentence summary of the four systematic checks; the per-check
+  blow-by-blow now lives only in `results/dr20radio_alpha.json`, which the section points to.
+- §4.3 (contrast) 112 → 46 lines, reorganised around three claims instead of a narrative:
+  it is a ratio not a difference, its uncertainty is the index, and what remains is not
+  attributable to the sky.
+- Limitations 41 → 27 lines, grouped as selection / footprints / catalogues.
+- Abstract and Summary item (3) rewritten to state the conclusion rather than the method.
+
+**The Limitations paragraph still contained the retracted 28% claim** — the one §4.3 had
+withdrawn in the same round. Fourth consecutive round in which the error was in the paragraph
+that was not edited. Verified after the cut that none of the retracted-claim macros
+(`\drGapVlassDropPct`, `\drGapVlassConsA/B`, `\drGapFaintPp`, `\drAlphaSysSpan`) is cited
+anywhere, and that no macro is used-but-undefined.
+
+Also replaced `test_vlass_conservative_variant_can_move_the_ratio`, which was named for the
+ratio and asserted on the gap — the naming hid the finding. It now asserts what is actually
+true: RACS 5 mJy and VLASS 2 mJy land on the same pair of effective cuts (within 2%), so the
+"mirror" variant is one axis with the original, not two.

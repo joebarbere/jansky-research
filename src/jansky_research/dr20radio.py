@@ -1618,6 +1618,7 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         rf"\newcommand{{\drRatioLimLo}}{{{min(_ratios_lim):.2f}}}",
         rf"\newcommand{{\drRatioLimHi}}{{{max(_ratios_lim):.2f}}}",
         rf"\newcommand{{\drRatioLimSpreadPct}}{{{100 * (max(_ratios_lim) / min(_ratios_lim) - 1):.0f}}}",
+        rf"\newcommand{{\drRatioAlphaFlat}}{{{_rat(n['luminosity_matched_alpha']['0'], ds['luminosity_matched_alpha']['0']):.2f}}}",
         rf"\newcommand{{\drRatioAlphaLo}}{{{min(_ratios_alpha):.2f}}}",
         rf"\newcommand{{\drRatioAlphaHi}}{{{max(_ratios_alpha):.2f}}}",
         # The selection bracket: alpha depends on WHICH survey selects the sample, and that
