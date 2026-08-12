@@ -121,6 +121,19 @@ absorbed into the merged `torchfdmt` slice (`plans/34`). Once the rooftop statio
 calibrated spectra, self-collected data joins the public-archive slices — `fable-ideas.md`
 carries a station track (S1–S8) for that too.
 
+
+### Running the full test suite locally
+
+CI installs the CPU torch wheel (`uv sync --extra fdmt`), so the `fdmt`, `singlepulse` and
+`torchdsp` tests all run there. A plain `uv sync` omits them: they `importorskip("torch")`
+and the three modules report 0% coverage, which understates the suite by ~7 points
+(89.9% without, **96.5%** with). To reproduce CI locally:
+
+```bash
+uv sync --extra fdmt   # once; ~200 MB CPU wheel from the pinned index
+make cov
+```
+
 ## Papers
 
 Every slice is written up as its own **AASTeX paper** under `papers/<slice>/` (authored by Joseph
@@ -154,7 +167,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A reproducible RACS Stokes-V coherent-emitter pipeline (and single-epoch limits) | `stokesv/` | tooling + honest single-epoch/variability result | 100% | [findings](survey/stokesv-findings.md) | — |
 | A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) | — | — | — |
 | A coverage-corrected type III occurrence census (method + recover-a-known) | `ecallisto_census/` | census statistic + recover-a-known validation toward a multi-cycle census | 100% | — | — |
-| A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark | **0%** ⚠️ skipped | [findings](survey/torchfdmt-findings.md) | — |
+| A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark | 100% | [findings](survey/torchfdmt-findings.md) | — |
 | Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census | 100% | — | — |
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) | 100% | [GATE-2](survey/lpt-findings.md) | — |
 | LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions | 98% | [GATE-2](survey/lptv-findings.md) | — |
@@ -172,7 +185,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) | 98% | [GATE-2](survey/rmdipole-findings.md) | — |
 | Uniform Cat-2 repeater timing census | `frbwait/` | anchor recovery + population k census + honest no-new-periods verdict | 98% | [GATE-2](survey/frbwait-findings.md) | — |
 | Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson | 98% | [GATE-2](survey/frblens-findings.md) | — |
-| torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks | **0%** ⚠️ skipped | [GATE-2](survey/torchdsp-findings.md) | — |
+| torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks | 93% | [GATE-2](survey/torchdsp-findings.md) | — |
 | A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table | 94% | [findings](survey/wdpulsar-findings.md) | — |
 | The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation | 96% | [GATE-2](survey/fashienv-findings.md) | — |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | [GATE-2](survey/svsbi-findings.md) | — |
