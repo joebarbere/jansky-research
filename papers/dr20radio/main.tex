@@ -22,7 +22,7 @@ census. North of $-40^\circ$, \drNorthCensus\ clean-redshift DR20 quasars matche
 the VLASS Quick Look epoch catalogs at 2.5\arcsec\ give per-epoch radio-detection fractions
 of \drNorthEtwoPct\% (E2) and \drNorthEthreePct\% (E3) after subtracting a
 \emph{measured} chance-coincidence rate (\drNorthFmPct\% from position-shift trials), or
-\drNorthAnyPct\% matched in any epoch. South of $-40^\circ$ --- sky where these are the
+\drNorthAnyPct\% matched in any epoch (raw, uncorrected). South of $-40^\circ$ --- sky where these are the
 first SDSS quasar spectra --- \drSouthCensus\ quasars (all observed from Las Campanas)
 matched against RACS-low DR1 at 5\arcsec\ give \drSouthPct\% (chance rate \drSouthFmPct\%).
 Radio-targeted open-fiber cartons are excluded from all fractions as circular; used instead
@@ -30,12 +30,17 @@ as a positive control, RACS-selected cartons recover at \drCartonRacsPct\%
 ($n=\drCartonRacsN$) against their selecting survey, while LOFAR-selected cartons recover
 at only \drCartonLofarPct\% ($n=\drCartonLofarN$) at 888\,MHz, and at 3\,GHz VLASS
 recovers RACS-selected cartons at \drCartonVlassRacsPct\% and LOFAR-selected at
-\drCartonVlassLofarPct\% --- direct measurements of cross-frequency fading within the
-same targeting classes. Above a common
-rest-frame 1.4\,GHz luminosity limit the fractions become \drLumNorthPct\% (north) versus
-\drLumSouthPct\% (south); the residual gap is consistent with survey-side effects (spectral-index
-assumption, beam-size mismatch, hemisphere targeting mix), which I quantify but do not
-attribute to astrophysics.
+\drCartonVlassLofarPct\% --- recovery rates for the same targeting classes across
+surveys differing in both frequency and depth. Comparing the two hemispheres above a common
+rest-frame 1.4\,GHz luminosity limit requires a radio spectral index, so I measure it from
+quasars the surveys share rather than assuming one: $\alpha \simeq -0.6$ to $-0.9$, with the
+spread set by which survey selects the sample rather than by measurement error. The
+comparison reduces algebraically to a pair of flux cuts, so a difference in percentage points
+inherits the overall normalisation and falls whenever either limit is raised; the ratio does
+not, and is \drRatioMeas --- stable to \drRatioLimSpreadPct\% across every flux-limit variant,
+and uncertain over \drRatioAlphaLo--\drRatioAlphaHi\ from the index alone. It is a property
+of this catalogue--survey pairing, consistent with survey-side effects (limit definitions,
+beam-size mismatch, hemisphere targeting mix), and I attribute none of it to astrophysics.
 \end{abstract}
 
 \keywords{Quasars (1319) --- Radio active galactic nuclei (2134) --- Surveys (1671) ---
@@ -71,7 +76,8 @@ radio sources would be circular --- and are used instead as a positive control, 
 out to measure cross-frequency spectral fading within a fixed targeting class. Third, the
 north/south comparison is made above a common rest-frame luminosity limit with all
 conversion assumptions stated, and the residual difference is attributed to the surveys,
-not the sky, unless the data force otherwise (they do not).
+not the sky, and its dominant systematic --- the assumed spectral index --- is swept rather
+than fixed, so the size of any residual is reported as a range.
 
 All code, committed evidence files, and figures are in the open-source
 \code{jansky-research} toolkit \citep{janskyresearch}; every number in this paper is
@@ -101,7 +107,7 @@ The northern radio catalog is the CIRADA VLASS Quick Look component list
 2, \code{Quality\_flag} $\in \{0,4\}$, non-empty islands), and the epoch-3 interim
 component lists with their binary quality flag. VLASS observes at 2--4\,GHz (3\,GHz
 effective) with a 2.5\arcsec\ beam; the per-epoch catalog reliability threshold is
-$\sim$1\,mJy \citep{gordon2021}.
+$\sim$\drSlimVlass\,mJy \citep{gordon2021}.
 
 \subsection{RACS (south)}
 
@@ -109,7 +115,7 @@ The southern radio catalog is the RACS-low DR1 Stokes-I source list
 \citep[887.5\,MHz, 25\arcsec\ beam;][]{mcconnell2020, hale2021}, retrieved from the CASDA
 TAP service in declination strips (\drRacsSrc\ sources; the survey covers $-80^\circ
 \lesssim \delta \le +30^\circ$, with the published Galactic-plane cut). \citet{hale2021}
-quote a 95\% point-source completeness of $\sim$3\,mJy from source-count modeling and a
+quote a 95\% point-source completeness of $\sim$\drSlimRacs\,mJy from source-count modeling and a
 more conservative $\sim$5\,mJy from injection simulations; I adopt \drSlimRacs\,mJy as
 the primary limit and repeat the luminosity-matched comparison at \drSlimRacsCons\,mJy
 (Section~\ref{sec:contrast}). The band $-40^\circ < \delta \le +30^\circ$ is covered by
@@ -123,11 +129,11 @@ Quasars are matched to the nearest radio component with \code{astropy}
 \citep{astropy}: at 2.5\arcsec\ against VLASS (matched to its beam and astrometry) and
 5\arcsec\ against RACS (whose 25\arcsec\ beam implies few-arcsecond positional scatter for
 faint sources). The chance-coincidence rate is measured, not modeled: each of ten trials
-rigidly shifts every quasar position by a random 5--30\arcmin\ offset and repeats the
+displaces every quasar position by an independently drawn 5--30\arcmin\ offset and repeats the
 match; the mean shifted match fraction (\drNorthFmPct\% VLASS E2, \drSouthFmPct\% RACS
 deep south) is subtracted from every raw fraction. The synthetic-survey test suite
-verifies that this procedure recovers injected counterpart fractions to better than the
-quoted precision.
+verifies that this procedure recovers injected counterpart fractions to within 3 percentage
+points of truth --- a check on the pipeline logic, not on the precision quoted here.
 
 \subsection{Radio-targeted cartons as a positive control}
 \label{sec:cartons}
@@ -139,18 +145,84 @@ the survey that selected them (RACS-selected cartons vs.\ RACS-low), they recove
 \drCartonRacsPct\% ($\drCartonRacsN$ objects in RACS sky) --- the expected near-complete
 recovery, with the shortfall consistent with positional scatter of a 25\arcsec-beam
 catalog against a 5\arcsec\ radius and catalog-version differences between the targeting
-list and DR1. Matched \emph{across} frequency, the same classes fade, and fade more the larger
-the frequency jump: LOFAR-selected (144\,MHz) cartons recover at only \drCartonLofarPct\%
+list and DR1. Matched \emph{across} frequency, the same classes recover far less often. The pattern
+does not obviously track the size of the frequency jump --- the 144\,MHz class recovers at
+least as well at 3\,GHz as at 888\,MHz, though on samples small enough that the two rates
+differ by only about $1\sigma$ --- which is at least consistent with survey depth mattering
+as much as the spectral lever: VLASS reaches \drSlimVlass\,mJy against RACS's
+\drSlimRacs\,mJy. These are recovery rates across surveys differing in \emph{both} frequency
+and depth, and this census cannot separate the two terms: LOFAR-selected (144\,MHz) cartons recover at only \drCartonLofarPct\%
 in RACS at 888\,MHz and \drCartonVlassLofarPct\% in VLASS at 3\,GHz, while RACS-selected
 (888\,MHz) cartons recover at \drCartonVlassRacsPct\% in VLASS. (Only the highest-priority
 \code{FIRSTCARTON} is recorded per object; any radio-targeted object entering under a
 different first carton would evade the exclusion, a residual leak bounded by the small
-carton counts.) These are
-direct, same-objects measurements of how steep-spectrum selection thins out toward higher
-frequency, and they calibrate expectations for any cross-survey census.
+carton counts.) These are not same-object measurements: the 888\,MHz leg is restricted to
+$\delta \le +30^\circ$ and is a small, more southerly subset of the sky covered by the
+3\,GHz leg, and the carton samples are small enough ($n$ of order tens for the RACS legs)
+that the two rates are consistent within their binomial uncertainties. They bound how far
+steep-spectrum selection thins out toward higher frequency, and calibrate expectations for
+any cross-survey census; they do not resolve a frequency dependence.
+
+\subsection{The spectral index, and why it is not one number}
+\label{sec:method-alpha}
+
+The overlap band ($-40^\circ < \delta \le +30^\circ$) lies inside both footprints, so a
+quasar detected in each gives $\alpha = \log(S_\mathrm{V}/S_\mathrm{R})/\log(\nu_\mathrm{V}/
+\nu_\mathrm{R})$ directly, with no assumption. Each survey is matched at its own radius
+(\drAlphaVlassRad\arcsec\ and \drAlphaRacsRad\arcsec\ for beams of \drAlphaVlassBeam\arcsec\
+and \drAlphaRacsBeam\arcsec), cartons excluded as everywhere else.
+
+The result depends on who is asked. Requiring both detections truncates the steep sources
+(at the RACS limit they have already dropped below the VLASS limit by 3\,GHz) and gives
+\drAlphaJointMed. Treating the \drAlphaKmCens\ RACS detections without a VLASS counterpart as
+the left-censored observations they are, a Kaplan--Meier estimate over all \drAlphaMeasN\
+RACS detections gives $\drAlphaMeasFull \pm \drAlphaMeasSeFull$. But that keeps the steep
+tail while dropping the flat one: \drAlphaRightCens\ band quasars are seen by VLASS and not
+by RACS, right-censored by construction. With both tails censored no median is identified,
+only bounded --- over all \drAlphaBoundN\ either-survey detections it lies in
+$[\drAlphaBoundLo, \drAlphaBoundHi]$.
+
+Four further checks each move the median, and none is negligible against the
+$\pm\drAlphaMeasSeFull$ statistical error: the assumed completeness floor
+(\drAlphaMeas\ $\to$ \drAlphaFloorC\ as it is lowered), the choice of VLASS epoch
+(\drAlphaEpochA\ vs \drAlphaEpochB), the flux range measured over (\drAlphaBinFaint\ to
+\drAlphaBinC\ across $S_\mathrm{RACS}$ bins), and peak versus integrated flux across a
+2.5\arcsec\ and a 25\arcsec\ beam ($+\drAlphaIntShift$ globally, $+\drAlphaBinCShift$ in the
+brightest bin, which is therefore substantially a beam effect rather than a spectral one).
+Together these span \drAlphaSysLo\ to \drAlphaSysHi.
+
+The honest summary is that this population has no single spectral index: it is
+$\alpha \simeq -0.6$ to $-0.9$, selection-dependent at a level exceeding every other
+systematic, and firmly distinguishable only from the flat spectrum. That is enough to
+K-correct a survey limit, and not enough to support a precise cross-hemisphere contrast ---
+which is the conclusion of Section~\ref{sec:contrast}. Full per-check numbers are in the
+committed \code{results/dr20radio\_alpha.json}.
 
 \subsection{Common-luminosity-limit comparison}
 \label{sec:method-lum}
+
+One property of this construction is worth stating up front, because it makes everything that
+follows transparent. Writing the K-corrected luminosity as
+$L \propto d_L^2(z)\,S\,(1+z)^{-(1+\alpha)}(\nu_\mathrm{ref}/\nu)^{\alpha}$, the cosmological
+and $(1+z)$ factors are identical for a source and for its own survey's limit, and cancel;
+so do they between the two surveys' limits. The condition ``above the common luminosity
+limit'' is therefore \emph{algebraically a redshift-independent flux cut}:
+\begin{equation}
+S_\mathrm{VLASS} \ge \max\!\left(S^\mathrm{V}_\mathrm{lim},\;
+S^\mathrm{R}_\mathrm{lim}\,(\nu_\mathrm{V}/\nu_\mathrm{R})^{\alpha}\right)
+\quad\text{(north)},
+\end{equation}
+and the mirror expression in the south. The spectral index enters the comparison at exactly
+one place --- translating one survey's limit to the other's frequency --- and nowhere else;
+in particular a source's own index cancels against its own survey's limit. That is why a
+per-source index (Section~\ref{sec:method-alpha}) shifts both fractions but barely moves
+their ratio, and it reduces the entire systematic budget to a single number,
+$S^\mathrm{R}_\mathrm{lim}(\nu_\mathrm{V}/\nu_\mathrm{R})^{\alpha}$, which at the measured
+index is \drNorthEffCut\,mJy against the VLASS catalogue's own \drSlimVlass\,mJy floor. The
+northern leg is thus counted down to $1.2\times$ its catalogue's threshold while the southern
+is counted at its 95\% completeness limit --- a real asymmetry, and a different one from the
+apparent 2.5$\times$ that comparing \drNorthEffCut\ with \drSlimRacs\,mJy would suggest
+(those two are equal by construction).
 
 Raw fractions from surveys at different frequencies and depths are not comparable. For the
 contrast I convert each survey's flux limit (VLASS \drSlimVlass\,mJy, the catalog
@@ -168,8 +240,9 @@ weakest link and is discussed with the result.
 Of \drNorthCensus\ census quasars at $\delta > -40^\circ$: \drNorthEtwoPct\% have an epoch-2
 counterpart and \drNorthEthreePct\% an epoch-3 counterpart after chance-rate subtraction;
 \drNorthAnyPct\% match in at least one epoch. The detection fraction is elevated in the
-lowest bin ($z<0.5$, where host-galaxy emission and low-luminosity AGN enter), nearly flat
-at $\sim$4\% for $0.5 \lesssim z \lesssim 2.5$, and rises modestly beyond
+lowest bin ($z<0.5$, where host-galaxy emission and low-luminosity AGN enter), declines
+gently across $0.5 \lesssim z \lesssim 2.5$ (4.6\% to 4.1\%, a trend well outside the
+$\sim$0.1\,pp binomial errors), and rises to $\sim$7\% beyond
 (Figure~\ref{fig:fractions}, left) --- consistent with the flux-limited selection of both
 catalogs rather than any claimed evolution.
 
@@ -181,27 +254,41 @@ counterpart within 5\arcsec: \drSouthPct\% after subtracting the measured \drSou
 chance rate. This is, to my knowledge, the first radio-counterpart measurement for any
 southern SDSS spectroscopic sample, and the headline number of this census. In the
 dual-coverage band the RACS-based fraction is \drOverlapPct\%, against \drNorthAnyPct\%
-from VLASS in the north --- same order, with the residual carrying the frequency and depth
-differences quantified next.
+from VLASS in the north --- same order, with the residual carrying frequency and depth
+differences whose dominant term is bounded next.
 
-\subsection{The luminosity-matched contrast}
+\subsection{The cross-hemisphere comparison, and what it is worth}
 \label{sec:contrast}
 
-Above the common rest-1.4\,GHz luminosity limit (Section~\ref{sec:method-lum}) the
-fractions are \drLumNorthPct\% (north, VLASS) versus \drLumSouthPct\% (deep south, RACS);
-the overlap band gives \drOverlapLumPct\% above the same common limit. With the
-conservative \drSlimRacsCons\,mJy RACS completeness limit instead, the fractions shift to
-\drLumNorthConsPct\% versus \drLumSouthConsPct\% --- the gap is robust to that choice. A
-gap survives luminosity matching, but three survey-side effects plausibly account for it,
-and the overlap band --- where RACS recovers \drOverlapLumPct\% against VLASS's
-\drLumNorthPct\% on essentially the same sky --- shows they are real: (i) the
-$\alpha = -0.7$ K-correction under-credits flat-spectrum cores at 3\,GHz relative to
-888\,MHz, asymmetrically filtering the two legs; (ii) RACS's 25\arcsec\ beam blends and
-shifts faint-source positions relative to a 5\arcsec\ radius (the same effect visible in
-the \drCartonRacsPct\% positive control); (iii) the BHM targeting mix differs by
-hemisphere. I therefore report the contrast as a measured property of this
-catalog--survey pairing and explicitly do \emph{not} claim a hemispheric difference in
-quasar radio properties.
+Above the common limit (Section~\ref{sec:method-lum}) the fractions are \drLumNorthMeasPct\%
+in the north and \drLumSouthMeasPct\% in the south at the measured index. That difference is
+the weakest number in this paper, and three properties bound how it should be read.
+
+\emph{It is a ratio, not a difference.} Since the comparison is a pair of flux cuts, raising
+either survey's limit deepens both and shrinks both fractions; a difference in percentage
+points inherits that normalisation and falls, while the ratio does not. Across every limit
+variant tried --- the conservative \drSlimRacsCons\,mJy RACS limit and VLASS limits of
+\drSlimVlassConsA\ and \drSlimVlassConsB\,mJy --- the ratio moves only
+\drRatioLimLo--\drRatioLimHi\ (\drRatioLimSpreadPct\%) while the percentage-point gap moves
+by a quarter. The contrast is \drRatioMeas, stable against both surveys' flux-limit choices.
+
+\emph{Its uncertainty is the spectral index, and that index is selection-dependent.} Over the
+index's range (Section~\ref{sec:method-alpha}) the ratio spans
+\drRatioAlphaLo--\drRatioAlphaHi; at $\alpha = 0$ it would be \drRatioAlphaFlat. Nothing else
+in the analysis moves it comparably: the population scatter in $\alpha$, tested by giving
+every quasar its own index, shifts each fraction by $\sim$0.3 percentage points and their
+ratio hardly at all.
+
+\emph{What remains is not attributable to the sky.} The northern leg is counted down to
+$1.2\times$ its catalogue's own threshold while the southern is counted at a 95\%
+completeness limit; RACS's 25\arcsec\ beam blends and shifts faint sources against a
+5\arcsec\ radius, the same effect visible in the \drCartonRacsPct\% positive control; the BHM
+targeting mix differs by hemisphere; and \drNorthOutsideRacsPct\% of the northern census lies
+outside the RACS footprint entirely, so the two legs are not matched-sky samples. I therefore
+report \drRatioMeas\ as a property of this catalogue--survey pairing, and claim no
+hemispheric difference in quasar radio properties. Readers wanting a cross-hemisphere
+measurement rather than a cross-survey one should wait for RACS-mid and VLASS at comparable
+depth and resolution.
 
 \begin{figure*}
 \centering
@@ -209,25 +296,41 @@ quasar radio properties.
 \caption{Radio-detection fraction of DR20 BHM census quasars versus redshift, with 68\%
 ($z=1$) Wilson score intervals. \emph{Left:} raw fractions at each survey's native depth --- VLASS
 any-epoch in the north (circles), RACS-low in the deep south ($\delta \le -40^\circ$,
-squares) and in the dual-coverage band (triangles). \emph{Right:} the same censuses
+squares) and in the dual-coverage band (triangles). \emph{Right (fiducial $\alpha=-0.7$):} the same censuses
 counting only counterparts above the common rest-frame 1.4\,GHz luminosity limit of both
-surveys (Section~\ref{sec:method-lum}).}
+surveys (Section~\ref{sec:method-lum}). The panel separation is specific to that spectral
+index: at $\alpha=\drAlphaHi$ it shrinks to \drGapFlatPp\ percentage points and at
+$\alpha=\drAlphaLo$ it widens to \drGapSteepPp\ (Section~\ref{sec:contrast}).}
 \label{fig:fractions}
 \end{figure*}
 
 \section{Limitations}
 
-The census inherits the BHM selection function, which is neither flux-complete nor uniform
-across the sky; fractions here are properties of the DR20 BHM quasar catalog, not of
-quasars. The luminosity matching assumes a single spectral index. The VLASS epoch catalogs
-carry known quick-look astrometric and flux caveats \citep{gordon2021}; the RACS DR1
-Galactic-plane cut removes $|b| \lesssim 5^\circ$ sky from the southern leg. The
-\drCartonRacsPct\% positive control (rather than $\sim$100\%) bounds the combined effect
-of positional scatter and targeting-list/DR1 version differences at about one part in
-nine for the RACS leg. Quasars outside the $0 \le z < 6$ binning range ($\lesssim$0.15\% of either census)
-enter the raw fractions but not the redshift-binned or luminosity-matched ones. None of
-these affect the categorical claim: the southern census
-existed for no earlier SDSS release, and its detection fraction is now measured.
+\emph{Selection.} The census inherits the BHM selection function, which is neither
+flux-complete nor uniform across the sky: the fractions are properties of the DR20 BHM quasar
+catalogue, not of quasars. The spectral index is measured on radio-detected, comparatively
+bright quasars in the overlap band alone; the undetected majority may differ, and the
+deep-south census --- this paper's headline sample --- has no VLASS coverage at all, so no
+existing survey pair can test the transfer there.
+
+\emph{Footprints.} RACS-low DR1 excludes $|b| \lesssim \drRacsPlaneCutDeg^\circ$, and the
+southern census is a declination cut that does not exclude that hole: \drSouthUncovN\ quasars
+(\drSouthUncovPct\%) sit in sky the survey never covered and enter the denominator as
+guaranteed non-detections, biasing the southern fraction low by that amount --- a factor
+$\sim$50 smaller than the fraction itself, and a measured bound rather than an assumption.
+None lie below the catalogue's declination floor. Conversely \drNorthOutsideRacsPct\% of the
+northern census lies north of the RACS footprint, so the two legs are differently-shaped sky
+regions rather than two views of one.
+
+\emph{Catalogues.} The VLASS epoch catalogues carry known quick-look astrometric and flux
+caveats \citep{gordon2021}. The \drCartonRacsPct\% positive control (rather than
+$\sim$100\%) bounds the combined effect of positional scatter and targeting-list/DR1 version
+differences at about one part in nine for the RACS leg. Quasars outside the $0 \le z < 6$
+binning range (\drOutZNorthPct\%/\drOutZSouthPct\% of the northern/southern census) enter the
+raw fractions but not the binned or luminosity-matched ones.
+
+None of these affects the categorical claim: the southern census existed for no earlier SDSS
+release, and its detection fraction is now measured.
 
 \section{Summary}
 
@@ -235,11 +338,14 @@ existed for no earlier SDSS release, and its detection fraction is now measured.
 \drNorthCensus\ northern DR20 quasars have a VLASS quick-look counterpart
 (\drNorthEtwoPct\%/\drNorthEthreePct\% per epoch, corrected by a measured chance rate).
 (2) First radio census of the first southern SDSS quasar spectra: \drSouthPct\% of
-\drSouthCensus\ deep-south (all-LCO) quasars have a RACS-low counterpart. (3) Above a
-common luminosity limit the north/south fractions are \drLumNorthPct\% vs.\
-\drLumSouthPct\%, with the residual attributed to stated survey-side effects. (4) The
+\drSouthCensus\ deep-south (all-LCO) quasars have a RACS-low counterpart. (3) The radio spectral index is measured rather than assumed,
+from quasars the two surveys share: $\alpha \simeq -0.6$ to $-0.9$, selection-dependent by
+more than any other systematic. The north/south comparison above a common limit is
+\drRatioMeas\ as a ratio --- \drRatioLimSpreadPct\% stable against both surveys' flux-limit
+choices, \drRatioAlphaLo--\drRatioAlphaHi\ across the index --- and is attributed to stated
+survey-side effects, not to the sky. (4) The
 radio-targeted cartons, excluded from all fractions as circular, double as a
-cross-frequency fading measurement: near-complete recovery against the selecting survey
+cross-survey recovery measurement: near-complete recovery against the selecting survey
 (\drCartonRacsPct\%), falling to \drCartonVlassRacsPct\% at 3\,GHz for 888\,MHz-selected
 targets and to \drCartonLofarPct\%/\drCartonVlassLofarPct\% (888\,MHz/3\,GHz) for
 144\,MHz-selected ones.

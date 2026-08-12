@@ -9,6 +9,110 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- `dr20radio`: **the spectral index is now measured, not assumed** (`run_alpha`, new
+  `results/dr20radio_alpha.json`). The survey-overlap band (-40 < dec <= +30) is covered by
+  both VLASS and RACS, so a quasar detected twice gives a two-point alpha directly: 5,571 of
+  174,171 band quasars are detected by both. That joint sample is truncation-biased flat
+  (median -0.62), because at the RACS limit a steep source has already fallen below the VLASS
+  limit at 3 GHz; above S_RACS > 6.2 mJy the truncation cannot operate for any alpha >= -1.5,
+  and those 4,190 quasars give **alpha = -0.72 +/- 0.02**. The canonical -0.7 is right.
+  The contrast evaluated at the measured index is 4.09% vs 2.82%, a gap of 1.27 pp, moving
+  only over 1.25-1.29 across +/-1 sigma -- against 0.23-1.66 for the old 0 -> -1 sweep, which
+  is now the range the measurement *excludes* rather than its uncertainty.
+- `dr20radio`: `kaplan_meier_median` -- survival analysis replaces the completeness cut as the
+  index estimator. A RACS detection with no VLASS counterpart is not missing data: it says
+  S_VLASS < the VLASS limit, i.e. alpha is LEFT-CENSORED at
+  log(S_lim/S_RACS)/log(nu_V/nu_R), and those are exactly the steep objects a cut discards.
+  KM uses all 6,626 RACS-detected band quasars (5,571 measured + 1,055 censored) and is
+  unbiased over the whole range instead of over the range a cut assumes: **alpha = -0.755
+  +/- 0.012**, against -0.722 for the cut and -0.615 for the naive joint-detection median.
+  It lands steeper, as it must, and inside the floor progression the cuts were converging to.
+- `dr20radio`: the flux dependence re-tested with the censoring handled. Measured on
+  detections only the bins give -0.46/-0.50/-0.52/-0.84; by Kaplan-Meier they give
+  -0.61/-0.57/-0.55/-0.90. So up to 0.15 of the apparent trend in the faintest bin was
+  truncation -- but the trend **survives**: the brightest sources are genuinely steeper. A
+  flux LIMIT is converted at the faint end, where the value is -0.61 (`ALPHA_THRESHOLD_REGIME`),
+  giving a gap of 1.11 pp against 1.32 at the sample median; both are reported.
+- `dr20radio`: `fetch_racs_total_flux` -- RACS `total_flux_source` over the whole overlap band
+  (1.56M sources), so the beam-resolution systematic is **measured rather than estimated**.
+  Recomputing with integrated flux on both sides gives alpha = -0.699, a shift of +0.056
+  flatward (the 2.5" beam resolves out flux the 25" one keeps). That is a sixth of the
+  flux-range term, and replaces a ~0.1 estimate the previous round could only assert.
+- `dr20radio`: three sensitivity checks on the measured index, each able to fail, and each
+  of which did (`completeness_floor_sensitivity`, `per_epoch`, `flux_bins`). Lowering the
+  assumed completeness floor to alpha >= -2 and -2.5 steepens the median monotonically
+  (-0.722 -> -0.779 -> -0.856), so -0.722 is an **upper bound on flatness**; single VLASS
+  epochs give -0.703/-0.781 against -0.722 for the max-of-epochs (a positively biased
+  estimator for a flux ratio); and the median runs -0.50/-0.52/-0.84 across S_RACS bins, so
+  it is not transferable across flux. The paper now quotes alpha = -0.722 +/- 0.015 (stat)
+  +/- 0.36 (sys) -- the bootstrap SE is the smallest term in the budget by an order of
+  magnitude -- and identifies a fourth, unquantified term (peak fluxes across a 2.5" and a
+  25" beam, ~0.08 in alpha per 10% flux-ratio error).
+- `dr20radio`: `VLASS_S_LIM_CONSERVATIVE_MJY` and `luminosity_matched_vlass_conservative` --
+  the MIRROR of the RACS conservative variant, and the side that can actually move the ratio.
+  VLASS's 1 mJy is a per-epoch *reliability* threshold while RACS's 3 mJy is a 95%
+  *completeness* limit, so at the measured index the north is cut at 1.25 mJy against the
+  south's 3.0. Equalising them takes the gap 1.27 -> 1.10 -> 0.91 pp, a 28% reduction: the
+  contrast is materially but not wholly a consequence of how the two limits are defined.
+- `dr20radio`: `luminosity_matched_per_source_alpha` tests the single-index approximation by
+  giving every quasar its own index drawn from the measured distribution. This reports a bias
+  rather than a variance on purpose: the realization spread is 0.016 pp and would make any
+  breadth of distribution look harmless. The scatter shifts each fraction by ~0.3 pp (to
+  3.83%/2.53%) but is nearly common-mode, moving the gap by 0.03 pp. The paper now states
+  both -- the contrast survives the scatter, the absolute fractions do not.
+- `dr20radio`: spectral-index sweep (`ALPHA_SWEEP = 0, -0.35, -0.7, -1.0`) on the
+  luminosity-matched fractions in both legs, committed to `results/dr20radio_{north,south}.json`
+  under `luminosity_matched_alpha`. This is the sensitivity test the published 5 mJy
+  "robustness check" could not perform: because the common luminosity limit is the RACS one in
+  both legs, raising the flux floor rescales north and south identically and leaves their ratio
+  unchanged (1.4391 -> 1.4434), whereas alpha moves it 1.08 -> 1.61.
+- `make release-check` — verifies a tagged release carries the hand-built papers asset. The
+  CI-built papers are synthetic and must never be attached; the upload is deliberately manual.
+- `papers/atlas3i/arxiv.yaml` — restores the hand-curated arXiv metadata (astro-ph.IM primary,
+  astro-ph.EP cross, page counts, cleaned abstract) that a `make arxiv` run had silently
+  overwritten with keyword-inferred guesses.
+
+### Changed
+- `dr20radio`: the north/south contrast is now reported as a **range over spectral index**
+  (0.23-1.66 percentage points) rather than a single 4.06%/2.82% pair, in the abstract,
+  Section 4.3, and the summary. The apparent hemispheric difference is principally an artefact
+  of the cross-frequency K-correction, not a measured property of the two populations; at
+  alpha = 0 it nearly vanishes. No astrophysical inference is drawn from it.
+- `dr20radio`: two hard-typed figures replaced with pipeline-generated macros — the
+  out-of-redshift-range census fraction (`\drOutZNorthPct`/`\drOutZSouthPct`) and the northern
+  census fraction lying outside the RACS footprint (`\drNorthOutsideRacsPct`).
+- `atlas3i`: seven referee findings applied to `main.tex` and `rnaas.tex`, including the
+  drift-grid caveat on the EIRP limit; `\aiTotScans` added so the scan count is evidence-backed.
+
+- `innerrc`: the sensitivity scan now excludes variants with a fitted parameter on a bound
+  (`bound_contact`, `railed_variants`, `n_fitted`), commits the full per-variant parameter
+  vector including `v_halo`/`h_halo`, and reports `chi2_per_n` plus the primary fit's 1-sigma
+  rho_DM interval from its own covariance.
+- `innerrc`: the anchor now scores the paper's Table-1 solution in chi2 and measures its
+  outer-curve (R > 8 kpc) residual, committed as `paper_table1_chi2_per_n` /
+  `paper_table1_outer` / `paper_table1_params`.
+
+### Changed
+- `innerrc`: **the compatibility-with-consensus claim moved off the variant scan and onto the
+  fit's own covariance.** rho_DM = 0.24 with 1-sigma 0.16-0.31 (the scan's old 0.19-0.32 had
+  its maximum set by a variant with v_bulge at exactly the 800 km/s bound; 6 of its 8 variants
+  are railed, and the 2 interior ones span only 0.20-0.24). The anchor result is also restated:
+  their published halo sits +1.33 sigma per point below their own curve beyond 8 kpc over 32
+  points, chi2/N 3.18 vs 1.92, so the refit is not merely "another corner of a degeneracy".
+- `innerrc`: three overclaims corrected against committed evidence -- the bar-region inner peak
+  does *not* reproduce (-36 km/s over 28 bins inside 2 kpc; their 255 km/s peak at 550 pc reads
+  214 km/s at 1450 pc), the E/W asymmetry replicates *qualitatively* (period 36% long, damping
+  railed, fit seeded at their published answer), and the estimator calibration route is not an
+  independent confirmation (algebraically the same statistic on a sub-sample).
+
+### Fixed
+- `dr20radio` `refs.bib`: `arnaudova2024` title was the Macfarlane et al. 2021 title. Corrected
+  to "Exploring the radio loudness of SDSS quasars with spectral stacking" against Crossref
+  (10.1093/mnras/stae233).
+- `dr20radio` Limitations now states that the two legs are not matched-sky samples: 14.1% of the
+  northern census lies north of the RACS footprint and is unobservable from the south at any depth.
+
 ## [1.5.0] - 2026-08-10
 
 ### Added

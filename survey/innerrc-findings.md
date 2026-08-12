@@ -86,3 +86,61 @@ Figs. 1/2/8/14/11).
   their Table 2 inner RC from raw survey data.
 - E/W asymmetry from the two quadrants; sawtooth residual check.
 - GATE-2, paper.
+
+## Referee round (2026-08-12) — verdict: major revision, 19 findings
+
+Two blockers, both in the anchor leg, both invisible to the test suite:
+
+1. **`\irRhoMax` = 0.32 was a boundary artifact.** `decompose_rc` bounds `v_bulge` at
+   800 km/s; the variant supplying the quoted maximum (`nfw:R>2kpc:w`) sat at **exactly**
+   800.0. `sensitivity_scan` counted it as converged because `curve_fit` did not raise.
+   Mechanism: excising `R < 2 kpc` removes every point that constrains the bulge, so
+   `(v_bulge, a_bulge)` slide along the Plummer degeneracy ridge until they hit walls.
+   Adding a bound-contact check found it is worse than the referee could see from the
+   committed subset — **6 of 8 variants are railed**, three of them on `h_halo`'s lower
+   bound, which was invisible because `sensitivity_variants` filtered `v_halo`/`h_halo`
+   *out of the committed evidence* (finding 5: the only two numbers `rho_dm_gev` is computed
+   from were not committed). Interior range: **0.20–0.24**, from 2 variants.
+2. **"Spans the full range from their lower limit to the consensus density"** asserted an
+   interval [0.107, 0.3] that no committed number supports — the scan never reaches 0.107.
+
+The fix moved the compatibility claim onto the primary fit's own covariance, which was
+already committed and unused: ρ_DM = 0.24, **1σ 0.16–0.31**, which reaches the consensus
+honestly and cannot be manufactured by a bound. Note the corner calculation is not a matter
+of pairing the extremes — ρ is *not* monotonic in `h_halo` at R₀ (it rises with the NFW
+scale radius), so the naive `(v+dv, h−dh)` pairing gives 0.24 where the true 1σ maximum is
+0.31. All four corners are scanned.
+
+**The result got stronger, not weaker.** Comparing by rms (13.6 vs 11.8) made the two
+solutions look like alternative corners of one degeneracy. In χ²/N they are not (3.18 vs
+1.92), and the difference is not spread over the curve: beyond 8 kpc — exactly where
+ρ_DM(R₀) is set — their published halo sits **+1.33σ per point** below their own unified
+curve over 32 independent points. That is a one-sided bias, not scatter. The paper now says
+what it actually shows: *their published curve prefers more local dark matter than their
+published decomposition reports.*
+
+Three further overclaims, all fixed against committed evidence:
+
+- **"the bar-region inner peak reproduce fully"** — it does not. Inside 2 kpc this HI-only
+  curve runs **−36 km/s** low over 28 bins, and their 255 km/s peak at 550 pc appears here as
+  214 km/s at 1450 pc. Their inner curve is CO-dominated; this is a limitation of the
+  replication, now stated as one.
+- **"replicates in period and phase"** — the period is **36% longer**, the damping length
+  rails against its bound, the fit is *seeded at their published period and phase* (so the
+  phase agreement is partly anchored by construction), and the sinusoid accounts for under
+  half the variance (5.9 vs 8.0 km/s). The findings file already said "qualitatively"; the
+  abstract had upgraded it. Reverted to what was measured.
+- **"the calibration route confirms it independently"** — it is not independent. V is linear
+  in σ_v and both estimators are calibrated on the same sightlines with the same weights, so
+  the difference in required dispersions is *algebraically the same statistic* restricted to
+  the solar-circle window. Also "a difference equal to the direct bias" (17.17 vs 17.94) is
+  agreement within spread, not equality.
+
+Also: the Table-2 agreement is now stated with its zero point (a one-parameter calibration
+pinned on 7.0–8.15 kpc; the uncalibrated median offset is −14.5 km/s, already committed and
+previously unmacroed), "unconstrained refit" → "bounded" with the bounds stated, "reproduces
+exactly" → "to the precision they quote", and `chemin2015`'s title corrected against Crossref.
+
+`tests/test_innerrc.py` now fails if the primary refit has any parameter on a bound, if the
+quoted range includes a railed variant, or if a committed variant drops the halo parameters
+its ρ is computed from.

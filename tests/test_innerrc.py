@@ -137,6 +137,75 @@ def test_run_anchor_offline_reproduces_paper_scale_rho_dm(tmp_path):
     fit = m["anchor_fit"]
     # the decomposition must land in the paper's regime: a low (<0.3 consensus) halo-only DMD
     assert 0.02 < fit["rho_dm_gev"] < 0.5
-    assert m["sensitivity"]["n_converged"] >= 4
-    assert m["sensitivity"]["rho_dm_max_gev"] >= m["sensitivity"]["rho_dm_min_gev"]
+    # n_converged counts variants with every parameter INTERIOR, not merely variants where
+    # curve_fit returned. Most of this scan rails (excising R < 2 kpc leaves the bulge
+    # unconstrained), so the bar is deliberately low — the point is that the quoted range is
+    # built only from fits the data actually determined.
+    sens = m["sensitivity"]
+    assert sens["n_converged"] >= 2
+    assert sens["n_converged"] <= sens["n_fitted"]
+    assert sens["rho_dm_max_gev"] >= sens["rho_dm_min_gev"]
+    for key, railed in sens["railed_variants"].items():
+        assert railed, f"{key} listed as railed with no parameter named"
+    assert fit["railed_params"] == []
     assert (tmp_path / "results" / "innerrc_anchor.json").exists()
+
+
+def test_bound_contact_flags_railed_parameters():
+    """A `curve_fit` that does not raise is not the same as a converged fit.
+
+    Before 2026-08-12 the sensitivity scan reported `n_converged: 8` and a rho_DM range whose
+    maximum came from a variant with v_bulge at exactly 800.0 km/s — the upper bound. SciPy
+    reports success for a solution glued to a wall, so nothing caught it; the number then
+    carried the paper's "fully compatible with the consensus density" claim.
+    """
+    from jansky_research.innerrc import FIT_LOWER, FIT_PARAM_NAMES, FIT_UPPER, bound_contact
+
+    interior = dict(
+        zip(
+            FIT_PARAM_NAMES,
+            [(lo + hi) / 2 for lo, hi in zip(FIT_LOWER, FIT_UPPER, strict=True)],
+            strict=True,
+        )
+    )
+    assert bound_contact(interior) == []
+
+    for i, name in enumerate(FIT_PARAM_NAMES):
+        at_upper = dict(interior, **{name: FIT_UPPER[i]})
+        at_lower = dict(interior, **{name: FIT_LOWER[i]})
+        assert bound_contact(at_upper) == [name]
+        assert bound_contact(at_lower) == [name]
+        # just inside the tolerance band still counts as railed
+        span = FIT_UPPER[i] - FIT_LOWER[i]
+        assert bound_contact(dict(interior, **{name: FIT_UPPER[i] - 0.005 * span})) == [name]
+        # clearly interior does not
+        assert bound_contact(dict(interior, **{name: FIT_UPPER[i] - 0.2 * span})) == []
+
+
+def test_committed_anchor_fit_is_interior_and_scan_excludes_railed():
+    """The published refit must not rest on a bound, and the quoted range must exclude ones
+    that do. This is the assertion whose absence let a boundary artifact reach an abstract."""
+    import json
+    from pathlib import Path
+
+    results = Path("results/innerrc_anchor.json")
+    if not results.exists():  # pragma: no cover - real-results file absent in a bare checkout
+        pytest.skip("committed anchor results not present")
+    a = json.loads(results.read_text())
+
+    assert a["anchor_fit"]["railed_params"] == [], (
+        "the primary refit has a parameter on a bound; its rho_DM reports the bound, not the data"
+    )
+    quoted = [
+        v["rho_dm_gev"]
+        for v in a["sensitivity_variants"].values()
+        if "rho_dm_gev" in v and not v["railed_params"]
+    ]
+    assert quoted, "no interior variants remain"
+    assert a["sensitivity"]["rho_dm_min_gev"] == pytest.approx(min(quoted))
+    assert a["sensitivity"]["rho_dm_max_gev"] == pytest.approx(max(quoted))
+    assert a["sensitivity"]["n_converged"] == len(quoted)
+    # every variant must carry the halo parameters its rho_DM is computed from
+    for key, v in a["sensitivity_variants"].items():
+        if "rho_dm_gev" in v:
+            assert "v_halo" in v and "h_halo" in v, f"{key} drops the parameters behind its rho"

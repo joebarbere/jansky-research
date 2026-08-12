@@ -99,8 +99,13 @@ evidence; science-reviewer pass returned **no blockers**, four should-fixes, all
   "Almeida et al." — refs.bib and the plan corrected.
 - **RACS completeness is two numbers** (Hale et al.: ~3 mJy source-count based, ~5 mJy
   simulation based): both stated; the luminosity-matched contrast repeated at the
-  conservative 5 mJy — north 3.45% vs south 2.39% (primary: 4.06% vs 2.82%). The gap is
-  robust to the choice.
+  conservative 5 mJy — north 3.45% vs south 2.39% (primary: 4.06% vs 2.82%).
+  **Superseded 2026-08-12 (referee round):** this was reported as showing the gap robust to
+  the choice. It shows nothing of the kind — the common luminosity limit is the RACS one in
+  *both* legs, so raising the flux floor rescales north and south identically and the ratio
+  cannot move (1.4391 → 1.4434). The parameter the contrast actually depends on is the
+  assumed spectral index: sweeping α over 0…−1 moves the gap 0.23 → 1.66 pp. See the
+  `luminosity_matched_alpha` block in `results/dr20radio_{north,south}.json`.
 - **North carton validation split by selecting survey** (same lesson, third appearance):
   at 3 GHz, RACS-selected cartons recover at 49%, LOFAR-selected at 27% — the previously
   quoted pooled ~31% was again an average over two populations. The cross-frequency fading
@@ -120,3 +125,162 @@ evidence; science-reviewer pass returned **no blockers**, four should-fixes, all
 - Increment 2: RACS southern leg (the categorical first — SDSS quasar spectra south of
   −40° × RACS), racsradio-carton validation against its selecting survey, two-survey
   synthetic variant, north/south contrast at matched luminosity limits.
+
+## Referee round 2 (2026-08-12) — after the α demotion
+
+The revised draft went back to the referee. Verdict: **major revision**, 16 findings. All the
+new α macros recomputed correctly, but the paragraph written to *repair* the first-round
+finding contained a fresh error, which is the finding worth remembering:
+
+1. **BLOCKER (my own regression).** The new sentence gave the northern α-sweep range as
+   `\drLumNorthFlatPct--\drLumNorthConsPct` = 3.06–3.45%. `\drLumNorthConsPct` is the 5 mJy
+   conservative variant — a *different axis*, and the very one the same paragraph had just
+   declared incapable of testing this. The real range is 3.06–**4.37%**. The range endpoint
+   had no macro, so I reached for the nearest-looking name. Fixed by emitting
+   `\drLumNorthSteepPct`/`\drLumSouthSteepPct`: **if a range needs an endpoint, the endpoint
+   gets its own macro.**
+2. **"Unchanged to three decimal places" was false** — 1.4391 vs 1.4434 differ *in* the third
+   decimal. Now quoted as the two ratios via `\drRatioFid`/`\drRatioCons`, a 0.3% shift.
+3. **The stated mechanism was false at the end of the sweep that sets the headline.** The
+   common limit is the larger of the two K-corrected limits; RACS binds for α ≳ −0.9, but
+   between −0.7 and −1 the VLASS limit overtakes it (3 mJy at 888 MHz → 1.90 mJy at 1.4 GHz,
+   against 1 mJy at 3 GHz → 2.14 mJy). So at α = −1 about a quarter of the gap comes from the
+   *south falling*, not the north rising. Now stated with the crossover.
+4. **The southern denominator was never intersected with the RACS footprint.** `deep_south` is
+   a pure declination cut, so quasars in RACS-low DR1's |b| ≲ 5° hole entered the denominator
+   as guaranteed non-detections. Measured rather than assumed: **52 objects, 0.071%**, none
+   below the −85° floor. Now computed by `run_south` into `racs_footprint` and reported in
+   Limitations as a bound. The bias is ~50× smaller than the fraction itself.
+5. **The carton "same-objects" claim was wrong** — the 888 MHz leg is a small, more southerly
+   subset of the 3 GHz leg's sky, and the rates differ by ~1σ on samples of tens. Downgraded
+   from "does *not* track the frequency jump / depth dominates" to a consistency statement.
+6. **A sign error in the K-correction would have inverted the paper and no test would see it.**
+   `tests/test_dr20radio.py::test_k_correction_sign_and_alpha_monotonicity` now pins the sign,
+   the RACS→VLASS crossover, and monotonicity in α.
+
+Also fixed: Limitations/Introduction/figure caption did not carry the demotion (the paper had
+it in the abstract and summary only); "nearly flat at ~4%" described a decline significant at
+many σ; `\drNorthAnyPct` is raw, not chance-corrected.
+
+## Referee round 3 (2026-08-12) — after measuring α
+
+The referee's round-2 recommendation was implemented: α is measured from the survey-overlap
+band instead of assumed. It independently reproduced the per-source-α result (north 3.83%,
+south 2.53%, gap 1.30 pp) from the committed sweep before reading the implementation, and
+reconciled all 16 new macros. Verdict nonetheless **major revision**, and it was right — the
+three sensitivity checks it demanded all failed in the direction it predicted:
+
+| check | result |
+|---|---|
+| completeness floor α ≥ −1.5 / −2 / −2.5 | median **steepens monotonically**: −0.722 → −0.779 → −0.856 |
+| VLASS epoch E2 / E3 / max-of-epochs | −0.703 / −0.781 / −0.722 — the max is flatward of the mean |
+| S_RACS flux bins (6.2–10, 10–20, >20 mJy) | −0.50 / −0.52 / −0.84 — strongly flux-dependent |
+
+**The ±0.02 was never the uncertainty.** The bootstrap SE (0.015) is the *smallest* term in
+the budget by an order of magnitude; the span of the median across the three checks is
+**0.36**. The paper now quotes α = −0.722 ± 0.015 (stat) ± 0.36 (sys), reads the measurement
+as α ≃ −0.7 to −0.9, and states that −0.722 is an **upper bound on flatness** rather than an
+unbiased value. A fourth term — both fluxes are *peak* fluxes from a 2.5″ and a 25″ beam,
+worth ~0.08 in α per 10% flux-ratio error — is identified and explicitly not quantified.
+
+**The check that could not fail, again, on a new axis.** Round 2 killed the 5 mJy RACS
+variant because raising the RACS limit rescales both legs identically. The referee noted the
+*mirror* check had still never been run: VLASS's 1 mJy is a per-epoch **reliability**
+threshold while RACS's 3 mJy is a 95% **completeness** limit — not the same kind of number —
+and the north's effective cut at the measured α is 1.25 mJy against the south's 3.0. Raising
+the VLASS limit to 2 and 3 mJy takes the gap 1.27 → 1.10 → **0.91 pp**, a 28% reduction.
+The contrast survives but is materially a consequence of how the two limits are defined.
+
+I wrote "most of the contrast is attributable to the limit asymmetry" into the draft *before*
+running that sweep. It is 28%, not most. Corrected before compiling — but the sentence had
+already been committed to the file, which is the same failure the round-2 blocker was.
+
+Two mechanical blockers, both mine: the α evidence file was **untracked** (so the paper's
+central new result was not reproducible, and both guard tests `pytest.skip`ped in a fresh
+checkout — the skips are now hard assertions), and a paragraph from the round-2 revision
+survived declaring α = 0 "the defensible statement of the north–south comparison", i.e. the
+exact opposite of the new abstract. Round 1 → round 2 → round 3 each found an error in the
+paragraph written to fix the previous round.
+
+## Referee round 4 (2026-08-12) — the round that simplified the paper
+
+Both round-3 future-work items were implemented, and both changed the answer. Then the
+referee found that the most important thing in the paper was an identity nobody had written
+down.
+
+**The luminosity matching is a redshift-independent flux cut.** The K-correction cancels
+between a source and its own survey's limit, and between the two survey limits, so
+"above the common luminosity limit" is algebraically
+`S_VLASS ≥ max(S_V_lim, S_R_lim·(ν_V/ν_R)^α)` — no z, no cosmology. Verified numerically at
+four redshifts. This collapses the whole systematic budget to one number and answers the
+double-counting worry: **α enters at exactly one place**, the cross-survey limit translation,
+so a source's own index does no work at all. It is also why the per-source draw shifts both
+fractions and barely moves their ratio.
+
+**I made the same error I had criticised, from the other side.** Round 2 killed the 5 mJy
+RACS variant because it rescales both legs identically. My round-3 "mirror" VLASS variant is
+*the same check relabelled*: RACS 5 mJy gives cuts (1.994, 5.000) and VLASS 2 mJy gives
+(2.000, 5.014) — identical, with identical southern fractions. Raising **either** limit
+deepens **both** cuts. The 28% gap reduction I reported as "the contrast is materially
+definitional" was common-mode normalisation.
+
+The fix is the scale-free statement: **report the ratio.** Across every limit variant the
+ratio moves only 1.443–1.472 (2%), while the pp gap moves by a quarter. The ratio at the
+measured index is **1.47**, and its real uncertainty is the index alone (1.39–1.61).
+
+**α depends on which survey selects you, by more than any other term.** The Kaplan–Meier
+estimate conditions on a RACS detection — it keeps the steep sources a cut discards, but
+drops the 2,179 quasars VLASS saw and RACS did not, which are the flat ones. That tilts it
+steep by the mirror of the mechanism that tilts the joint-detection median flat. With both
+tails censored no point estimate is identified, so `censored_median_bounds` reports what is:
+over all 8,805 either-survey detections the median lies in **[−0.63, −0.39]**. The
+RACS-conditioned −0.755 lies outside it — different populations, not a contradiction, but
+the point. No single value is adopted as "the" index.
+
+**The steep bright bin was substantially a beam.** Per-bin integrated-flux KM (the referee's
+"single change"): the three faint bins shift by ≤0.03, the brightest by **+0.120**
+(−0.905 → −0.784), four times the global resolution term. A flux dependence survives, but
+"the brightest sources are genuinely steeper" was overstated.
+
+Also fixed: ±0.35 was a full **span** written as a half-width, asserting twice the evidence
+and contradicting the paper's own "−0.6 to −0.9" (now quoted as endpoints); the Limitations
+paragraph still called the resolution term unquantified while the abstract counted it inside
+the budget; "unbiased over the whole range" (KM is unbiased under *independent* censoring,
+and here the censoring limit is a function of S_RACS, on which α depends); "converging
+toward"; two sentences quoting endpoints where a difference was meant; the flux bins didn't
+partition the sample (18% below 3 mJy unbinned); and the RACS declination floor, stated as
+−80° in the Data section while the catalogue's sources reach −84.7°.
+
+The KM unit test could not fail in the regime that matters — it only asserted "better than
+the naive median", which is nearly free. It now asserts recovery to 0.05 and adds a
+dependent-censoring case that documents the bias rather than asserting it away.
+
+## Shortened (2026-08-12, post-round-4)
+
+Four rounds of review had left 46% of the paper (229 of 499 lines) on the one derived
+quantity that the paper itself concludes is a survey-comparison artefact, while the two
+headline census results — which are α-free and were clean from round 1 — got 22 lines
+between them. The qualifications had accumulated past what the evidence required, which is
+its own kind of dishonesty: it signals that the contrast is the paper's main result.
+
+Cut 499 → 361 lines (241 deleted, 103 added), 5 pages:
+
+- §3.3 (spectral index) 82 → 34 lines. Keeps the two-point measurement, the selection
+  bracket, and a one-sentence summary of the four systematic checks; the per-check
+  blow-by-blow now lives only in `results/dr20radio_alpha.json`, which the section points to.
+- §4.3 (contrast) 112 → 46 lines, reorganised around three claims instead of a narrative:
+  it is a ratio not a difference, its uncertainty is the index, and what remains is not
+  attributable to the sky.
+- Limitations 41 → 27 lines, grouped as selection / footprints / catalogues.
+- Abstract and Summary item (3) rewritten to state the conclusion rather than the method.
+
+**The Limitations paragraph still contained the retracted 28% claim** — the one §4.3 had
+withdrawn in the same round. Fourth consecutive round in which the error was in the paragraph
+that was not edited. Verified after the cut that none of the retracted-claim macros
+(`\drGapVlassDropPct`, `\drGapVlassConsA/B`, `\drGapFaintPp`, `\drAlphaSysSpan`) is cited
+anywhere, and that no macro is used-but-undefined.
+
+Also replaced `test_vlass_conservative_variant_can_move_the_ratio`, which was named for the
+ratio and asserted on the gap — the naming hid the finding. It now asserts what is actually
+true: RACS 5 mJy and VLASS 2 mJy land on the same pair of effective cuts (within 2%), so the
+"mirror" variant is one axis with the original, not two.

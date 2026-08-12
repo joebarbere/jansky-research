@@ -3,10 +3,21 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper guard-real papers-zip arxiv reproduce clean
+.PHONY: release-check help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper guard-real papers-zip arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi lptv skr typeii rfitrend vgpra pte2 glitchpop atlas3i innerrc dr20radio
+
+# `make paper SLICE=dr20radio` is the natural thing to type, and before 2026-08-12 it silently
+# did nothing: the variable is SLICES, so an unrecognised SLICE= was ignored and all 44 papers
+# rebuilt (~40 min in the container) while looking like a single-paper build. SLICE now narrows
+# SLICES, and an unknown name is a hard error rather than a slow no-op.
+ifdef SLICE
+SLICES := $(filter $(SLICE),$(SLICES))
+ifeq ($(strip $(SLICES)),)
+$(error SLICE=$(SLICE) matches no slice. Run `make help` or see the SLICES list at the top of this file.)
+endif
+endif
 
 # Compose command. Fedora/podman often has no `podman compose` provider; `podman-compose`
 # is the reliable driver. No install needed if you have uv:  COMPOSE="uvx podman-compose"
@@ -78,6 +89,22 @@ paper: paper-image ## Build every papers/<slice>/*.tex (main + e.g. rnaas) in th
 				tectonic --keep-intermediates --keep-logs "$$(basename $$tex)" || exit 1; \
 		done; \
 	done
+
+release-check: ## List released tags whose papers zip was never uploaded (the manual step)
+# The papers zip cannot be built in CI -- CI's papers are synthetic, and attaching those to a
+# citable release would ship synthetic output as evidence. So the upload is deliberately manual,
+# and this is what catches a release where it was forgotten (v1.4.0 and v1.5.0 both were).
+	@missing=""; \
+	for tag in $$(gh release list --limit 30 --json tagName -q '.[].tagName'); do \
+		assets=$$(gh release view "$$tag" --json assets -q '.assets|map(.name)|join(",")'); \
+		case "$$assets" in *papers*) ;; *) missing="$$missing $$tag";; esac; \
+	done; \
+	if [ -n "$$missing" ]; then \
+		echo "releases with no papers zip:$$missing"; \
+		echo "fix: make papers-zip TAG=<tag> && gh release upload <tag> dist/jansky-research-papers-<tag>.zip"; \
+		exit 1; \
+	fi; \
+	echo "release-check: OK -- every release has its papers zip"
 
 arxiv: ## Assemble + validate an arXiv package for every paper (papers/<slice>/arxiv-submission/)
 # Packages EVERY paper, then fails if any had blocking errors. It used to `exit 1` on the

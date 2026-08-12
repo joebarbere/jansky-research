@@ -120,6 +120,118 @@ flag makes `.` match newlines, which ate a whole config file.
 dropping it leaves an abstract starting *"derived the definitive modern..."*. It is resolved
 from `refs.bib` now.
 
+**A robustness check that cannot vary what it claims to test is worse than none.**
+`dr20radio` reported its north/south contrast as "robust" because it survived a conservative
+5 mJy RACS limit. That check was vacuous by construction: the common luminosity limit is the
+*RACS* one in **both** legs, so raising the flux floor rescales north and south identically and
+the ratio cannot move (1.4391 -> 1.4434). The parameter the contrast actually depends on is the
+assumed spectral index in the cross-frequency K-correction, which is not measured for the
+sample: sweeping alpha from 0 to -1 moves the gap 0.23 -> 1.66 pp, and at alpha = 0 it nearly
+vanishes. **Ask what a robustness check is free to change.** If the perturbed quantity enters
+both arms of a comparison through the same term, it tests precision, not the claim — and it
+lends the claim a credibility it never earned.
+
+**A fitted parameter sitting on its bound is not a converged fit.** `innerrc`'s sensitivity
+scan reported `n_converged: 8` and a range 0.19--0.32 GeV/cm^3 because `curve_fit` did not
+raise. Two of the eight variants have `v_bulge` at **exactly** 800.0000 km/s — the upper bound
+in `decompose_rc` — and the variant supplying the quoted maximum (`\irRhoMax` = 0.3223, the
+number carrying "fully compatible with the consensus density") is one of them. SciPy reports
+success for a solution glued to a wall. **Record per-variant whether any parameter is at or
+near a bound, and exclude those from any quoted range**; a bound is a modelling choice, so a
+result that rests on one is reporting the choice, not the data.
+
+**When a systematic acts on a large ensemble, the number to report is a bias, not a variance.**
+`dr20radio` applies one spectral index to ~10^5 quasars. Asking "how much does the answer move
+if I draw each source's index from the measured distribution?" and quoting the *spread across
+realizations* gives 0.016 pp — because a fraction over 10^5 objects averages the draw away as
+1/sqrt(N), so any breadth of distribution looks harmless. The scatter's real effect is a
+**shift**: the detection criterion is a threshold, thresholds are not linear in alpha, and the
+steep and flat halves do not cancel. Measured, it moves each fraction by ~0.3 pp (7-10%
+relative) while moving their *difference* by only 0.03. Both facts had to go in the paper —
+the contrast survives the scatter, the absolute fractions do not. This is the same shape as
+the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure that cannot see
+the effect it is meant to bound. Before quoting a spread, ask what would make it small
+regardless of the truth.
+
+**Accumulated hedging is its own distortion.** After four review rounds `dr20radio` spent
+46% of its length on the one derived quantity it concludes is a survey artefact, while the two
+clean census results shared 22 lines. Every qualification was individually true and the whole
+was misleading: length signals importance, so a heavily-caveated section reads as the paper's
+headline. When a result survives review by being qualified rather than by being confirmed,
+**shorten it to the conclusion and move the workings to the committed JSON.** Cutting 499 to
+361 lines made the paper more honest, not less complete.
+
+**A difference is not scale-free; a ratio is.** `dr20radio` compared two survey legs above a
+common limit and reported the contrast in percentage points. Raising *either* survey's flux
+limit deepens *both* cuts, shrinking both fractions and therefore the pp gap, while leaving
+their ratio alone. So a pp gap that moves under a deeper cut is measuring normalisation, not
+contrast — and I read a 28% reduction as "the contrast is materially definitional" when the
+ratio had moved 2%. **Before interpreting a difference as sensitive to a parameter, check
+whether the ratio moves too.** Note this is the same error the 5 mJy variant made, arrived at
+from the opposite direction: I built the "mirror" check, and it landed on the same axis
+(RACS 5 mJy gives cuts (1.994, 5.000); VLASS 2 mJy gives (2.000, 5.014)).
+
+**Look for the algebraic identity before building machinery around a quantity.** Four rounds
+of sweeps, censored estimators and systematic budgets went into `dr20radio`'s
+luminosity-matched comparison before anyone wrote down that the K-correction cancels between
+a source and its own survey's limit — making the whole thing a redshift-independent flux cut
+with alpha entering at exactly one place. That one line answers the double-counting question,
+explains why a per-source index moves both fractions but not their ratio, and collapses the
+systematic budget to a single number. **Simplify the estimator algebraically first; the
+machinery you then need is much smaller.**
+
+**Fixing censoring on one side can bias you as hard as the side you fixed.** Kaplan-Meier
+over RACS-detected quasars correctly keeps the steep sources a completeness cut discards —
+and silently drops the 2,179 detected by VLASS but not RACS, which are the flat ones. Same
+mechanism, opposite sign. When data are censored from both sides no median is identified;
+bound it (`censored_median_bounds`) rather than picking whichever one-sided estimate is
+convenient. And KM is unbiased under *independent* censoring: here the censoring limit is a
+function of the same flux the estimand depends on, so "unbiased" was the wrong word.
+
+**When you kill a robustness check, run its mirror before claiming the axis is closed.**
+`dr20radio`'s 5 mJy RACS variant was shown vacuous in one round; the VLASS-side variant --- the
+one that *can* move the ratio, because VLASS quotes a per-epoch reliability threshold where
+RACS quotes a 95% completeness limit --- had still never been run a round later. It moves the
+gap 1.27 -> 0.91 pp. Removing a bad check leaves a hole exactly where a real check belongs.
+
+**A measured systematic is only an improvement if its own systematics are measured too.**
+Replacing an assumed alpha with a measured one felt like closing the issue, and the quoted
++/-0.015 bootstrap SE made it look settled. Three checks that could each have failed --- vary
+the assumed completeness floor, use one epoch instead of the max, bin by flux --- moved the
+median by 0.06, 0.08 and 0.34. The statistical error was the smallest term by an order of
+magnitude. **Before quoting a measurement's precision, list what you assumed to obtain it and
+vary each one.** If the checks are chosen so they cannot fail, the precision is decoration.
+
+**Write the number after you run it, not before.** Having decided to add the VLASS-limit
+sweep, I wrote "most of the contrast is attributable to the limit asymmetry" into the draft
+and then ran it: the answer was 28%, and the gap survived. The sentence was in the file
+before any evidence existed for it. Order the work so the prose cannot precede the number.
+
+**A flux-limited sample cannot measure a spectral-index distribution without a completeness
+cut.** Requiring detection in *both* of two surveys truncates asymmetrically — at the
+shallower survey's limit a steep source has already dropped below the deeper survey's limit at
+the higher frequency — so the joint-detection median comes out too flat. Measured: -0.62 for
+all 5571 joint detections against -0.72 for the 4190 above the flux where the truncation
+cannot operate for any alpha >= -1.5. The bias is 0.1 in alpha, the same size as the effect
+being measured. `alpha_complete_limit_mjy` computes the threshold; quote the complete sample.
+
+**A committed results file can omit the numbers its own headline is computed from.**
+`innerrc` filtered its sensitivity variants down to a curated key list before writing them,
+dropping `v_halo` and `h_halo` — the only two parameters `rho_dm_gev` is derived from. The
+quoted maximum was therefore unauditable from the evidence, and the railed halo bound behind
+three variants was invisible. Commit the whole fit; a curated subset of a fit is not evidence.
+
+**Do not assume a derived quantity is monotonic in its inputs.** Propagating `innerrc`'s halo
+uncertainties by pairing `(v+dv, h-dh)` gave a 1-sigma maximum of 0.24; the true maximum is
+0.31, because rho_DM *rises* with the NFW scale radius at R0. Scan all corners (or sample)
+rather than reasoning about which one is extremal — a wrong corner understates an interval
+without ever looking wrong.
+
+**A `make` variable that is not the one the target reads fails silently and slowly.**
+`make paper SLICE=dr20radio` looked like a single-paper build and rebuilt all 44 (the variable
+is `SLICES`). Make does not warn about unused command-line variables. `SLICE` now narrows
+`SLICES` and errors on an unknown name.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

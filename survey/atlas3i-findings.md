@@ -141,3 +141,48 @@ survivors from the local files, deletes the scans (peak disk ≈ 60 GB; ~2¼ h p
 for the band). Per-node JSONs in `results/atlas3i_blc*_L.json` are checkpoints — rerunning
 skips completed nodes. Offline round-trip (synthetic cadence, no network): `run()` /
 `python -m jansky_research.atlas3i`.
+
+
+## Referee-style review, 2026-08-11 — verdict: minor revision
+
+A researcher/referee role-play pair (`.claude/agents/paper-presenter.md`, `paper-referee.md`)
+read the paper against its committed evidence. Both were read-only; `results/` was verified
+byte-unchanged after each. **Seven findings were fixed the same day.** The two that mattered:
+
+**The sensitivity claim was optimistic, and it is the paper's argument.** The drift search uses
+129 points over ±4 Hz s⁻¹ — a step of 0.0625 Hz s⁻¹, **6.7× coarser** than the matched
+δν/τ = 0.0093 Hz s⁻¹ that turboSETI uses. A worst-case off-grid tone smears over 3.4 channels
+in a scan, and because `dedoppler` uses integer channel shifts the peak-channel S/N falls
+roughly linearly with that smearing, so β ≈ 0.3 worst case: the effective limit is up to ~3×
+weaker than the quoted 99.2 mW. The old caveat ("marginally optimistic at the highest drift
+rates") pointed away from the problem — grid coarseness applies at *all* drift rates, including
+the ~0.17 Hz s⁻¹ Earth-rotation drift expected for a transmitter on this target. A reproduction
+that finds nothing only strengthens a null if it was at least as sensitive as the original, so
+this was load-bearing. Now stated plainly in the body and both abstracts.
+
+**The Methods misdescribed 54 of the 60 nodes.** The paper claimed it did *not* replicate BL's
+asymmetric 16σ/10σ thresholds. The code defaults to `threshold_off = 10.0`, and the committed
+ON/OFF hit ratios show it was used for S/C/X: L 1.06, S 1.87, C 2.32, X 2.19. L alone was
+symmetric. Table 1's survivor column therefore mixes two configurations, and C band's zero
+survivors are partly a threshold effect rather than purely a quiet band. Corrected, with the
+non-comparability stated.
+
+Also fixed: the "366 fine-resolution scans" (a *transfer* count — the evidence holds **360**;
+now `\aiTotScans`, derived, so it cannot drift again); "byte-for-byte" duplicate nodes, which
+were never checksummed, softened to duplicate *frequency* coverage with the assumption stated;
+an injection-recovery calibration cited from `driftsearch.py`, which benchmarks a **different**
+detector — the teaching-grade one this module exists because it failed on real Voyager data —
+removed, with completeness now declared unmeasured; "all results verified by the pipeline's
+test suite" narrowed to what is true (the kernels are covered offline; the network and
+real-data drivers are not); and two citations completed from Crossref (`jacobsonbell2025` →
+RNAAS **9**, 351; `ata3i` → AJ **172**, 1).
+
+**Not fixed, and open:** the EIRP limit is L-band-only (SEFD = 10 Jy nominal) but is written
+into all 60 result JSONs including S/C/X, where GBT's SEFD differs; 54 of 60 nodes therefore
+contribute a null with no stated sensitivity. The 95 h / 3.7 TB cost figures reconstruct
+arithmetically from per-node rates but have no run log behind them.
+
+**The highest-value next step is a measurement, not an edit:** an injection grid at *off-grid*
+drift rates would replace both the β caveat and the removed calibration with a measured
+recovery curve, turning "the null reproduces" into "the null reproduces, and here is the
+completeness at which it does".

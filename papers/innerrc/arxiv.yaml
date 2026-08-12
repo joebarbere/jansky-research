@@ -16,6 +16,13 @@
 # from papers/innerrc/generated/macros.tex, which is itself generated from the committed
 # results/innerrc_*.json evidence.
 
+# REVISED 2026-08-12. The abstract below is hand-maintained, which means a paper revision does
+# NOT propagate into it -- the same override that protects curated metadata from `make arxiv`
+# also shields a stale claim. The previous version stated "all 8 variants ... land in
+# 0.19-0.32: the published curve is fully compatible with the consensus density"; that range's
+# maximum came from a fit with v_bulge on its bound. Whenever main.tex's abstract changes,
+# change this one in the same commit.
+
 abstract: |
   Sofue & Kohno (2025) derived the definitive modern inner rotation curve (RC) of the Milky
   Way by the terminal-velocity method (TVM) applied to HI4PI and CO longitude-velocity data,
@@ -23,26 +30,30 @@ abstract: |
   quoting a halo-only local dark-matter density $\rho_{\rm DM} = 0.107$ GeV cm$^{-3}$ -- a
   factor $\sim$3 below the $\sim$0.3 GeV cm$^{-3}$ consensus value, which they frame as a
   lower limit. I replicate the analysis independently at both ends. (1) From their published
-  tables: their $\rho_{\rm DM}$ arithmetic reproduces exactly (through the $4\pi$ convention
-  their halo equations absorb), but an unconstrained refit of the same curve, same model
-  family, fits marginally better (11.8 vs 13.6 km s$^{-1}$ rms) at $\rho_{\rm DM} = 0.24$ GeV
-  cm$^{-3}$, and all 8 variants of a profile/range/weighting sensitivity scan land in
-  0.19-0.32: the published curve is fully compatible with the consensus density, and the
-  factor-3 gap is disc-halo degeneracy width, not tension. (2) From raw HI4PI data (1113
-  tangent-point sightlines in both quadrants): their Table 2 curve reproduces at the
-  $\sim$8.8 km s$^{-1}$ level, their east-west asymmetry replicates in period and phase, and
-  a head-to-head of terminal-velocity estimators measures the fixed-threshold rule to read
-  $+17.9$ km s$^{-1}$ high of Gaussian decomposition -- with the calibrated dispersion
-  corrections of the two estimators (9.5 vs 26.6 km s$^{-1}$) bracketing the paper's adopted
-  15 km s$^{-1}$.
+  tables: their $\rho_{\rm DM}$ arithmetic reproduces to the precision they quote (through
+  the $4\pi$ convention their halo equations absorb), but a bounded refit of the same curve,
+  same model family, fits better (11.8 vs 13.6 km s$^{-1}$ rms; $\chi^2/N$ = 1.92 vs 3.18) at
+  $\rho_{\rm DM} = 0.24$ GeV cm$^{-3}$ (1$\sigma$ 0.16-0.31 from the fitted halo
+  parameters), with the improvement concentrated beyond 8 kpc, where their published halo
+  sits 1.33$\sigma$ per point below their own curve across 32 points. Their 0.107 is
+  therefore not the value their curve demands, and the consensus density lies inside the
+  refit's 1$\sigma$ interval. (2) From raw HI4PI data (1113 tangent-point
+  sightlines in both quadrants): their Table 2 curve reproduces to a mean $|\Delta V|$ = 8.8
+  km s$^{-1}$ over 2-8.15 kpc after a one-parameter dispersion calibration pinned at the solar
+  circle, their east-west asymmetry replicates qualitatively (same sign and comparable phase,
+  but a period 36% longer), and a head-to-head of terminal-velocity estimators measures the
+  fixed-threshold rule to read $+17.9$ km s$^{-1}$ high of Gaussian decomposition -- with the
+  calibrated dispersion corrections of the two estimators (9.5 vs 26.6 km s$^{-1}$) bracketing
+  the paper's adopted 15 km s$^{-1}$. Inside 2 kpc, where their curve is CO-dominated, this
+  HI-only curve does not reproduce their inner peak.
 
-# 3 pages / 5 figures counted from the compiled PDF; the extractor can count figures but not
-# pages (it never runs LaTeX).
-comments: '3 pages, 5 figures. Code and data: doi:10.5281/zenodo.21482378'
+# 4 pages / 5 figures counted from the compiled PDF; the extractor can count figures but not
+# pages (it never runs LaTeX). Page count rose from 3 with the 2026-08-12 revision.
+comments: '4 pages, 5 figures. Code and data: doi:10.5281/zenodo.21482378'
 
 # The headline result is a Milky Way rotation curve and a dark-matter density, so the science
 # domain is primary; IM rides along because the contribution includes an open reproduction
-# pipeline. This matches the assembler's own suggestion — recorded here so it is a decision
+# pipeline. This matches the assembler's own suggestion -- recorded here so it is a decision
 # rather than a default.
 primary_category: astro-ph.GA
 cross_lists: [astro-ph.IM]

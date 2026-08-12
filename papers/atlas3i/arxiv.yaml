@@ -1,0 +1,40 @@
+# Hand-authored arXiv metadata for papers/atlas3i — TRACKED IN GIT.
+#
+# THIS FILE EXISTS BECAUSE ITS ABSENCE CAUSED A REGRESSION. The curated values below were
+# previously hand-edited into arxiv-submission/metadata.yaml, which is a generated build
+# artifact; a `make arxiv` run on 2026-08-10 regenerated it and silently replaced them with
+# keyword-inferred guesses (astro-ph.GA primary, astro-ph.SR cross — both wrong for a SETI
+# reproduction) and a `TODO pages` comment. atlas3i is the paper closest to submission, so the
+# loss would have shipped. `arxiv.yaml` is exactly the mechanism that prevents this; atlas3i
+# simply never got one, because it was already validating clean and nothing flagged it.
+
+# Categories match the paper being reproduced, arXiv:2512.19763 (IM primary, EP cross). A
+# technosignature reproduction is instrumentation/methods, not galactic astronomy: the
+# assembler's keyword fallback inferred GA+SR from words like "Green Bank" and "receivers".
+primary_category: astro-ph.IM
+cross_lists: [astro-ph.EP]
+
+comments: '4 pages, 1 figure, 1 table. Code and data: doi:10.5281/zenodo.21482378 (v1.3.1); companion RNAAS note submitted'
+
+# The auto-extracted abstract carries stray "\" artifacts from LaTeX thin-space macros inside
+# numbers ("1,938,860\ raw hits"). arXiv stores the abstract as near-plain text, so they would
+# render literally. Written out here with the separators normalised.
+abstract: |
+  Breakthrough Listen (BL) searched the interstellar object 3I/ATLAS for radio technosignatures
+  with the Green Bank Telescope at 1--12 GHz during its 2025 December close approach and
+  reported a nondetection down to 100 mW equivalent isotropic radiated power (EIRP), releasing
+  all data publicly. Technosignature nulls are almost never independently re-examined. I
+  reprocess the complete released archive -- 60 unique 187.5 MHz compute-node cadences across
+  the four receivers -- with a fully independent open-source pipeline: a physical-units
+  brute-force de-Doppler search (+/-4 Hz s^(-1), 16 sigma against robust per-drift noise), the
+  ABACAD on/off sky filter, a per-candidate drift-coherence vet on postage stamps re-read from
+  the archive, and an ITU satellite-allocation exclusion. The null reproduces in full:
+  1,938,860 raw hits reduce to 294 two-position survivors and 0 confirmed candidates, and the
+  implied narrowband limit (99.2 mW at L band for d = 1.798 au) coincides exactly with the
+  published one for a transmitted linewidth equal to the channel resolution and unit
+  dedrifting efficiency -- a condition met only on the drift grid, off which the coarse grid
+  step costs up to a factor ~3. The survivors form a physically interpretable taxonomy of filter
+  evasion -- sub-threshold terrestrial carriers, chance coincidences in dense hit lists, and
+  satellite downlinks that defeat two-position geometry by construction -- independently
+  recovering the design rationale of BL's interference rejection. The entire reproduction cost
+  95 h of active compute and 3.7 TB of transfer on a single desktop computer.
