@@ -161,3 +161,43 @@ finding contained a fresh error, which is the finding worth remembering:
 Also fixed: Limitations/Introduction/figure caption did not carry the demotion (the paper had
 it in the abstract and summary only); "nearly flat at ~4%" described a decline significant at
 many σ; `\drNorthAnyPct` is raw, not chance-corrected.
+
+## Referee round 3 (2026-08-12) — after measuring α
+
+The referee's round-2 recommendation was implemented: α is measured from the survey-overlap
+band instead of assumed. It independently reproduced the per-source-α result (north 3.83%,
+south 2.53%, gap 1.30 pp) from the committed sweep before reading the implementation, and
+reconciled all 16 new macros. Verdict nonetheless **major revision**, and it was right — the
+three sensitivity checks it demanded all failed in the direction it predicted:
+
+| check | result |
+|---|---|
+| completeness floor α ≥ −1.5 / −2 / −2.5 | median **steepens monotonically**: −0.722 → −0.779 → −0.856 |
+| VLASS epoch E2 / E3 / max-of-epochs | −0.703 / −0.781 / −0.722 — the max is flatward of the mean |
+| S_RACS flux bins (6.2–10, 10–20, >20 mJy) | −0.50 / −0.52 / −0.84 — strongly flux-dependent |
+
+**The ±0.02 was never the uncertainty.** The bootstrap SE (0.015) is the *smallest* term in
+the budget by an order of magnitude; the span of the median across the three checks is
+**0.36**. The paper now quotes α = −0.722 ± 0.015 (stat) ± 0.36 (sys), reads the measurement
+as α ≃ −0.7 to −0.9, and states that −0.722 is an **upper bound on flatness** rather than an
+unbiased value. A fourth term — both fluxes are *peak* fluxes from a 2.5″ and a 25″ beam,
+worth ~0.08 in α per 10% flux-ratio error — is identified and explicitly not quantified.
+
+**The check that could not fail, again, on a new axis.** Round 2 killed the 5 mJy RACS
+variant because raising the RACS limit rescales both legs identically. The referee noted the
+*mirror* check had still never been run: VLASS's 1 mJy is a per-epoch **reliability**
+threshold while RACS's 3 mJy is a 95% **completeness** limit — not the same kind of number —
+and the north's effective cut at the measured α is 1.25 mJy against the south's 3.0. Raising
+the VLASS limit to 2 and 3 mJy takes the gap 1.27 → 1.10 → **0.91 pp**, a 28% reduction.
+The contrast survives but is materially a consequence of how the two limits are defined.
+
+I wrote "most of the contrast is attributable to the limit asymmetry" into the draft *before*
+running that sweep. It is 28%, not most. Corrected before compiling — but the sentence had
+already been committed to the file, which is the same failure the round-2 blocker was.
+
+Two mechanical blockers, both mine: the α evidence file was **untracked** (so the paper's
+central new result was not reproducible, and both guard tests `pytest.skip`ped in a fresh
+checkout — the skips are now hard assertions), and a paragraph from the round-2 revision
+survived declaring α = 0 "the defensible statement of the north–south comparison", i.e. the
+exact opposite of the new abstract. Round 1 → round 2 → round 3 each found an error in the
+paragraph written to fix the previous round.

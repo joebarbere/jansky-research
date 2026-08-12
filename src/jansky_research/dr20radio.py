@@ -57,6 +57,16 @@ RACS_S_LIM_MJY = 3.0
 # Hale et al. 2021 quote ~3 mJy (source-count based) and ~5 mJy (simulation based) for the
 # 95% completeness; both variants are computed so the paper can show the sensitivity.
 RACS_S_LIM_CONSERVATIVE_MJY = 5.0
+# The MIRROR variant, added 2026-08-12. Raising the RACS limit provably cannot move the
+# north/south ratio (the common limit is the RACS one in both legs, so it rescales them
+# identically) -- so the only "conservative" check in this module was one that could not fail.
+# The VLASS side is the one with leverage: VLASS's 1 mJy is a per-epoch RELIABILITY threshold
+# while RACS's 3 mJy is a 95% COMPLETENESS limit, which are not the same kind of number, and
+# the northern fraction is steeply sensitive to its own cut.
+VLASS_S_LIM_CONSERVATIVE_MJY: tuple[float, float] = (2.0, 3.0)
+# Synthesised-beam FWHMs, quoted in the papers to justify the two match radii.
+VLASS_BEAM_ARCSEC = 2.5
+RACS_BEAM_ARCSEC = 25.0
 
 
 def select_quasars(
@@ -280,7 +290,7 @@ def log_luminosity_whz(
     s_mjy: np.ndarray,
     *,
     freq_ghz: float,
-    alpha: float = -0.7,
+    alpha: float | np.ndarray = -0.7,
     ref_freq_ghz: float = 1.4,
 ) -> np.ndarray:
     """log10 rest-frame 1.4 GHz spectral luminosity (W/Hz) from observed flux density.
@@ -306,6 +316,19 @@ def log_luminosity_whz(
 
 
 ALPHA_SWEEP: tuple[float, ...] = (0.0, -0.35, -0.7, -1.0)
+# The MEASURED spectral index and its +/-1 bootstrap SE, from the flux-complete joint-detection
+# sample in results/dr20radio_alpha.json (run_alpha, 2026-08-12: 4190 quasars detected by both
+# VLASS and RACS in the overlap band, above the flux where the joint-detection requirement
+# cannot truncate the distribution). These replace the sweep as the paper's uncertainty on the
+# K-correction: the sweep answered "how bad could it be", this answers "what is it".
+# test_dr20radio.py asserts these stay equal to the committed measurement.
+ALPHA_MEASURED: float = -0.7218
+ALPHA_MEASURED_SE: float = 0.0153
+ALPHA_MEASURED_SWEEP: tuple[float, ...] = (
+    ALPHA_MEASURED - ALPHA_MEASURED_SE,
+    ALPHA_MEASURED,
+    ALPHA_MEASURED + ALPHA_MEASURED_SE,
+)
 """Spectral indices for the luminosity-matched contrast.
 
 The K-correction is the only thing making the 3 GHz (VLASS) and 888 MHz (RACS) legs
@@ -313,6 +336,97 @@ comparable, and it is not a measured quantity -- so the contrast has to be repor
 range across it, not at one value. At alpha = -0.7 the north's effective flux cut is
 1.28 mJy against the south's 3.0 mJy; at alpha = 0 both become 3.0 mJy.
 """
+
+
+def spectral_index(
+    s_hi_mjy: np.ndarray, s_lo_mjy: np.ndarray, *, freq_hi_ghz: float, freq_lo_ghz: float
+) -> np.ndarray:
+    """Two-point spectral index alpha, in the convention S ~ nu^alpha.
+
+    Negative alpha is a steep (falling) spectrum. Non-positive fluxes give NaN rather than an
+    exception: a catalog peak flux can be <= 0 after deconvolution and such rows must drop out
+    of a distribution, not poison it.
+    """
+    s_hi = np.asarray(s_hi_mjy, float)
+    s_lo = np.asarray(s_lo_mjy, float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        a = np.log(s_hi / s_lo) / np.log(freq_hi_ghz / freq_lo_ghz)
+    return np.where((s_hi > 0) & (s_lo > 0), a, np.nan)
+
+
+def alpha_complete_limit_mjy(
+    *,
+    s_lim_hi_mjy: float,
+    freq_hi_ghz: float,
+    freq_lo_ghz: float,
+    alpha_min: float = -1.5,
+) -> float:
+    """Low-frequency flux above which a source of any ``alpha >= alpha_min`` stays detectable.
+
+    Requiring a detection in BOTH surveys truncates the alpha distribution: at the shallower
+    survey's limit a steep source has already fallen below the deeper survey's limit at the
+    higher frequency, so it is missing from the joint sample and the measured median comes out
+    too flat. Above the flux returned here that truncation cannot operate for any
+    ``alpha >= alpha_min``, so the sub-sample is unbiased over that range -- at the cost of
+    sample size. Quote both, and never quote the joint-sample median alone.
+    """
+    return float(s_lim_hi_mjy * (freq_hi_ghz / freq_lo_ghz) ** (-alpha_min))
+
+
+def luminosity_matched_per_source_alpha(
+    z: np.ndarray,
+    matched: np.ndarray,
+    s_matched_mjy: np.ndarray,
+    *,
+    freq_ghz: float,
+    s_lim_this_mjy: float,
+    s_lim_other_mjy: float,
+    other_freq_ghz: float,
+    bins: np.ndarray,
+    alpha_samples: np.ndarray,
+    n_real: int = 20,
+    seed: int = 0,
+) -> dict:
+    """The comparison with each quasar given its OWN spectral index, drawn from the measured
+    distribution, instead of one median index for the whole population.
+
+    This measures a bias, not a variance. Drawing per-source indices and looking at the spread
+    across realizations would be self-deceiving: the fraction averages over ~10^5 sources, so
+    realization scatter falls as 1/sqrt(N) and comes out negligible no matter how broad the
+    index distribution is. That is the same trap as quoting a bootstrap SE for something the
+    bootstrap cannot see. What the population scatter actually does is shift the answer,
+    because the detection criterion is a threshold and a threshold is not linear in alpha: the
+    steep and flat halves of the distribution do not cancel. So the quantity to report is the
+    DIFFERENCE between this and the single-median-index result, with the (small) realization
+    spread quoted alongside only to show it is small.
+    """
+    rng = np.random.default_rng(seed)
+    z = np.asarray(z, float)
+    matched = np.asarray(matched, bool)
+    samples = np.asarray(alpha_samples, float)
+    samples = samples[np.isfinite(samples)]
+    totals = []
+    for _ in range(n_real):
+        a_i = rng.choice(samples, size=z.size, replace=True)
+        lim_this = log_luminosity_whz(
+            z, np.full(z.size, s_lim_this_mjy), freq_ghz=freq_ghz, alpha=a_i
+        )
+        lim_other = log_luminosity_whz(
+            z, np.full(z.size, s_lim_other_mjy), freq_ghz=other_freq_ghz, alpha=a_i
+        )
+        lum = np.full(z.size, -np.inf)
+        lum[matched] = log_luminosity_whz(
+            z[matched], s_matched_mjy[matched], freq_ghz=freq_ghz, alpha=a_i[matched]
+        )
+        above = matched & (lum >= np.maximum(lim_this, lim_other))
+        totals.append(float(np.mean(above[np.isfinite(z)])))
+    return {
+        "fraction_mean": float(np.mean(totals)),
+        "fraction_realization_sd": float(np.std(totals)),
+        "n_real": n_real,
+        "n_alpha_samples": int(samples.size),
+        "seed": seed,
+    }
 
 
 def luminosity_matched_fractions(
@@ -461,6 +575,7 @@ def run_north(
     census = north & ~q["radio_carton"]
     carton = north & q["radio_carton"]
     vlass = load_vlass_positions()
+    _asamp = _alpha_samples()
     zbins = np.array([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 6.0])
     epochs = {}
     matched_any = np.zeros(int(census.sum()), dtype=bool)
@@ -546,7 +661,7 @@ def run_north(
                 bins=zbins,
                 alpha=a,
             )
-            for a in ALPHA_SWEEP
+            for a in (*ALPHA_SWEEP, *ALPHA_MEASURED_SWEEP)
         },
         "luminosity_matched_conservative": luminosity_matched_fractions(
             q["z"][census],
@@ -557,6 +672,35 @@ def run_north(
             s_lim_other_mjy=RACS_S_LIM_CONSERVATIVE_MJY,
             other_freq_ghz=RACS_FREQ_GHZ,
             bins=zbins,
+        ),
+        "luminosity_matched_vlass_conservative": {
+            f"{v:g}": luminosity_matched_fractions(
+                q["z"][census],
+                matched_any,
+                s_any,
+                freq_ghz=VLASS_FREQ_GHZ,
+                s_lim_this_mjy=v,
+                s_lim_other_mjy=RACS_S_LIM_MJY,
+                other_freq_ghz=RACS_FREQ_GHZ,
+                bins=zbins,
+                alpha=ALPHA_MEASURED,
+            )
+            for v in VLASS_S_LIM_CONSERVATIVE_MJY
+        },
+        "luminosity_matched_per_source_alpha": (
+            luminosity_matched_per_source_alpha(
+                q["z"][census],
+                matched_any,
+                s_any,
+                freq_ghz=VLASS_FREQ_GHZ,
+                s_lim_this_mjy=VLASS_S_LIM_MJY,
+                s_lim_other_mjy=RACS_S_LIM_MJY,
+                other_freq_ghz=RACS_FREQ_GHZ,
+                bins=zbins,
+                alpha_samples=_asamp,
+            )
+            if _asamp.size
+            else None
         ),
     }
     op = Path(out)
@@ -628,6 +772,190 @@ def fetch_racs_positions(
     return out
 
 
+def _alpha_samples(results_dir: str = "results") -> np.ndarray:  # pragma: no cover - real leg
+    """The committed flux-complete alpha samples, or an empty array if run_alpha has not run.
+
+    The census legs use these for the per-source-index comparison. Absence is not an error:
+    run_alpha is a separate leg and a census run must still work before it has been executed.
+    """
+    import json
+    from pathlib import Path
+
+    path = Path(results_dir) / "dr20radio_alpha.json"
+    if not path.exists():
+        return np.array([])
+    return np.asarray(json.loads(path.read_text()).get("alpha_samples_flux_complete", []), float)
+
+
+def run_alpha(
+    out: str = ".",
+    *,
+    vlass_radius_arcsec: float = 2.5,
+    racs_radius_arcsec: float = 5.0,
+    alpha_min_complete: float = -1.5,
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> dict:  # pragma: no cover - network + bulk local data (pure pieces tested offline)
+    """Real leg C: MEASURE the spectral index instead of assuming it.
+
+    The K-correction is the only thing making a 3 GHz and an 888 MHz survey comparable, and
+    the north/south contrast in Section 4.3 turned out to be dominated by it: sweeping alpha
+    over 0..-1 moved the gap from 0.23 to 1.66 percentage points. alpha need not be assumed.
+    The overlap band (-40 < dec <= +30) is covered by BOTH surveys, so every quasar detected
+    twice yields a two-point alpha, and the census's own median can replace the canonical
+    -0.7.
+
+    Two numbers come out, and the paper must quote both. The joint-detection sample is
+    truncated -- a steep source at the RACS limit has already dropped below the VLASS limit at
+    3 GHz -- so its median is biased flat. Above ``alpha_complete_limit_mjy`` that truncation
+    cannot operate for any ``alpha >= alpha_min_complete``, giving a smaller unbiased sample.
+
+    Writes ``results/dr20radio_alpha.json``.
+    """
+    import json
+    from pathlib import Path
+
+    rng = np.random.default_rng(seed)
+    q = read_spall_quasars(fetch_spall())
+    band = (q["dec"] > VLASS_DEC_LIMIT_DEG) & (q["dec"] <= 30.0) & ~q["radio_carton"]
+    ra, dec = q["ra"][band], q["dec"][band]
+
+    # VLASS: same construction as run_north -- brightest peak across the epoch catalogs. That
+    # max-of-epochs is right for a detection census and WRONG for a flux ratio, where it is a
+    # positively biased estimator (noise and real variability both push it up, and 3 GHz
+    # variability is largest for compact flat-spectrum sources, so the bias is flatward).
+    # Each epoch is therefore also kept separately, and the spread between them is reported.
+    s_vlass = np.zeros(ra.size)
+    m_vlass = np.zeros(ra.size, dtype=bool)
+    per_epoch: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for _name, (ra_r, dec_r, fx_r) in load_vlass_positions().items():
+        m, _, idx = crossmatch(ra, dec, ra_r, dec_r, radius_arcsec=vlass_radius_arcsec)
+        s_vlass = np.where(m, np.maximum(s_vlass, fx_r[idx]), s_vlass)
+        m_vlass |= m
+        per_epoch[_name] = (m, np.where(m, fx_r[idx], 0.0))
+
+    racs = fetch_racs_positions()
+    m_racs, _, idx_r = crossmatch(
+        ra, dec, racs["ra"], racs["dec"], radius_arcsec=racs_radius_arcsec
+    )
+    s_racs = np.where(m_racs, racs["flux"][idx_r], 0.0)
+
+    both = m_vlass & m_racs & (s_vlass > 0) & (s_racs > 0)
+    a = spectral_index(
+        s_vlass[both], s_racs[both], freq_hi_ghz=VLASS_FREQ_GHZ, freq_lo_ghz=RACS_FREQ_GHZ
+    )
+    a = a[np.isfinite(a)]
+
+    s_complete = alpha_complete_limit_mjy(
+        s_lim_hi_mjy=VLASS_S_LIM_MJY,
+        freq_hi_ghz=VLASS_FREQ_GHZ,
+        freq_lo_ghz=RACS_FREQ_GHZ,
+        alpha_min=alpha_min_complete,
+    )
+    unb = both & (s_racs > s_complete)
+    a_unb = spectral_index(
+        s_vlass[unb], s_racs[unb], freq_hi_ghz=VLASS_FREQ_GHZ, freq_lo_ghz=RACS_FREQ_GHZ
+    )
+    a_unb = a_unb[np.isfinite(a_unb)]
+
+    def _block(x: np.ndarray, label: str) -> dict:
+        if x.size == 0:
+            return {"label": label, "n": 0}
+        boot = np.array(
+            [np.median(rng.choice(x, size=x.size, replace=True)) for _ in range(n_boot)]
+        )
+        return {
+            "label": label,
+            "n": int(x.size),
+            "median": float(np.median(x)),
+            "median_boot_se": float(np.std(boot)),
+            "mean": float(np.mean(x)),
+            "std": float(np.std(x)),
+            "p16": float(np.percentile(x, 16)),
+            "p84": float(np.percentile(x, 84)),
+            "frac_steeper_than_canonical": float(np.mean(x < -0.7)),
+        }
+
+    def _alpha_for(mask: np.ndarray, s_hi: np.ndarray) -> np.ndarray:
+        sel = mask & m_racs & (s_hi > 0) & (s_racs > 0)
+        x = spectral_index(
+            s_hi[sel], s_racs[sel], freq_hi_ghz=VLASS_FREQ_GHZ, freq_lo_ghz=RACS_FREQ_GHZ
+        )
+        return x[np.isfinite(x)]
+
+    # (a) Does the completeness floor matter? alpha >= -1.5 is an ASSUMPTION, and the sample's
+    # own p16 is steeper than it, so for the steepest sixth the truncation is still active.
+    # Re-cutting at successively steeper floors is the version of this test that can fail: if
+    # the median steepens monotonically, -0.72 is an upper bound on flatness, not a value.
+    floors = {}
+    for a_min in (-1.5, -2.0, -2.5):
+        lim = alpha_complete_limit_mjy(
+            s_lim_hi_mjy=VLASS_S_LIM_MJY,
+            freq_hi_ghz=VLASS_FREQ_GHZ,
+            freq_lo_ghz=RACS_FREQ_GHZ,
+            alpha_min=a_min,
+        )
+        xa = _alpha_for(m_vlass & (s_racs > lim), s_vlass)
+        floors[f"{a_min:g}"] = {
+            "flux_cut_mjy": float(lim),
+            "n": int(xa.size),
+            "median": float(np.median(xa)) if xa.size else None,
+        }
+
+    # (b) Is the bright-sample index transferable to the threshold regime it is applied in?
+    flux_bins = []
+    for lo, hi in ((s_complete, 10.0), (10.0, 20.0), (20.0, float("inf"))):
+        xb = _alpha_for(m_vlass & (s_racs > lo) & (s_racs <= hi), s_vlass)
+        flux_bins.append(
+            {
+                "s_racs_lo_mjy": float(lo),
+                "s_racs_hi_mjy": None if not np.isfinite(hi) else float(hi),
+                "n": int(xb.size),
+                "median": float(np.median(xb)) if xb.size else None,
+            }
+        )
+
+    # (c) How much of the index comes from taking the max over epochs?
+    epochs_out = {}
+    for name, (me, se) in per_epoch.items():
+        xe = _alpha_for(me & (s_racs > s_complete), se)
+        epochs_out[name] = {
+            "n": int(xe.size),
+            "median": float(np.median(xe)) if xe.size else None,
+        }
+
+    metrics = {
+        "source": f"SDSS-V DR20 spAll-lite x VLASS x RACS-low DR1, overlap band ({RACS_TABLE})",
+        "completeness_floor_sensitivity": floors,
+        "flux_bins": flux_bins,
+        "per_epoch": epochs_out,
+        "band": "-40 < dec <= +30 (both surveys cover it)",
+        "n_band_census": int(band.sum()),
+        "n_vlass_matched": int(m_vlass.sum()),
+        "n_racs_matched": int(m_racs.sum()),
+        "n_both": int(both.sum()),
+        "vlass_radius_arcsec": vlass_radius_arcsec,
+        "racs_radius_arcsec": racs_radius_arcsec,
+        "freq_hi_ghz": VLASS_FREQ_GHZ,
+        "freq_lo_ghz": RACS_FREQ_GHZ,
+        "joint_detection": _block(a, "all joint detections (truncation-biased flat)"),
+        "flux_complete": _block(
+            a_unb, f"S_RACS > {s_complete:.2f} mJy (unbiased for alpha >= {alpha_min_complete:g})"
+        ),
+        # The samples themselves, so the per-source-alpha comparison in the census legs draws
+        # from committed evidence rather than from a re-run.
+        "alpha_samples_flux_complete": [round(float(x), 4) for x in a_unb],
+        "completeness_flux_mjy": s_complete,
+        "alpha_min_complete": alpha_min_complete,
+        "canonical_alpha": -0.7,
+        "n_boot": n_boot,
+        "seed": seed,
+    }
+    Path(out, "results").mkdir(parents=True, exist_ok=True)
+    Path(out, "results", "dr20radio_alpha.json").write_text(json.dumps(metrics, indent=1))
+    return metrics
+
+
 def run_south(
     out: str = ".", *, radius_arcsec: float = 5.0, n_shift_trials: int = 10
 ) -> dict:  # pragma: no cover - network + bulk data (pure pieces tested offline)
@@ -644,6 +972,7 @@ def run_south(
     spall = fetch_spall()
     q = read_spall_quasars(spall)
     racs = fetch_racs_positions()
+    _asamp = _alpha_samples()
     zbins = np.array([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 6.0])
 
     def census_block(sel: np.ndarray, label: str) -> dict:
@@ -681,6 +1010,35 @@ def run_south(
                 other_freq_ghz=VLASS_FREQ_GHZ,
                 bins=zbins,
             ),
+            "luminosity_matched_vlass_conservative": {
+                f"{v:g}": luminosity_matched_fractions(
+                    q["z"][cen],
+                    m,
+                    s_m,
+                    freq_ghz=RACS_FREQ_GHZ,
+                    s_lim_this_mjy=RACS_S_LIM_MJY,
+                    s_lim_other_mjy=v,
+                    other_freq_ghz=VLASS_FREQ_GHZ,
+                    bins=zbins,
+                    alpha=ALPHA_MEASURED,
+                )
+                for v in VLASS_S_LIM_CONSERVATIVE_MJY
+            },
+            "luminosity_matched_per_source_alpha": (
+                luminosity_matched_per_source_alpha(
+                    q["z"][cen],
+                    m,
+                    s_m,
+                    freq_ghz=RACS_FREQ_GHZ,
+                    s_lim_this_mjy=RACS_S_LIM_MJY,
+                    s_lim_other_mjy=VLASS_S_LIM_MJY,
+                    other_freq_ghz=VLASS_FREQ_GHZ,
+                    bins=zbins,
+                    alpha_samples=_asamp,
+                )
+                if _asamp.size
+                else None
+            ),
             "luminosity_matched_alpha": {
                 f"{a:g}": luminosity_matched_fractions(
                     q["z"][cen],
@@ -693,7 +1051,7 @@ def run_south(
                     bins=zbins,
                     alpha=a,
                 )
-                for a in ALPHA_SWEEP
+                for a in (*ALPHA_SWEEP, *ALPHA_MEASURED_SWEEP)
             },
             "luminosity_matched_conservative": luminosity_matched_fractions(
                 q["z"][cen],
@@ -834,6 +1192,11 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
     ds, ov, ae = s["deep_south"], s["overlap_band"], n["any_epoch"]
     cv = s["carton_validation"]
     fp = s["racs_footprint"]
+    al = json.loads((Path(results_dir) / "dr20radio_alpha.json").read_text())
+    # Sweep keys for the measured alpha and its +/-1 SE, formatted exactly as the runs wrote
+    # them. Derived from the same constants the runs used, so a drift in either shows up as a
+    # KeyError here rather than as a silently wrong number in the paper.
+    _am, _am_lo, _am_hi = (f"{a:g}" for a in (ALPHA_MEASURED, *sorted(ALPHA_MEASURED_SWEEP)[::2]))
     e2, e3 = n["epochs"]["E2"], n["epochs"]["E3"]
     lum_n = n["luminosity_matched"]
     lum_s = ds["luminosity_matched"]
@@ -841,6 +1204,32 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
     def _tot(b: dict) -> float:
         return float(sum(b["k"])) / float(sum(b["n"]))
 
+    _gap_meas = 100 * (
+        _tot(n["luminosity_matched_alpha"][_am]) - _tot(ds["luminosity_matched_alpha"][_am])
+    )
+    _gap_vc = [
+        100
+        * (
+            _tot(n["luminosity_matched_vlass_conservative"][f"{v:g}"])
+            - _tot(ds["luminosity_matched_vlass_conservative"][f"{v:g}"])
+        )
+        for v in VLASS_S_LIM_CONSERVATIVE_MJY
+    ]
+    # Span of the median across every systematic actually tested: completeness floor, epoch
+    # choice, and flux bin. This is the honest scale of the uncertainty on alpha.
+    _alpha_medians = [
+        al["flux_complete"]["median"],
+        *(v["median"] for v in al["completeness_floor_sensitivity"].values()),
+        *(v["median"] for v in al["per_epoch"].values()),
+        *(b["median"] for b in al["flux_bins"]),
+    ]
+    _alpha_sys = max(_alpha_medians) - min(_alpha_medians)
+    _ps_n = n["luminosity_matched_per_source_alpha"]
+    _ps_s = ds["luminosity_matched_per_source_alpha"]
+    _gap_se = [
+        100 * (_tot(n["luminosity_matched_alpha"][k]) - _tot(ds["luminosity_matched_alpha"][k]))
+        for k in (_am_lo, _am_hi)
+    ]
     lines = [
         "% Auto-generated by jansky_research.dr20radio.paper_assets from the committed",
         "% results/dr20radio_*.json evidence — do not edit by hand.",
@@ -880,6 +1269,62 @@ def paper_assets(out: str = ".", *, results_dir: str = "results") -> None:  # pr
         # \drLumNorthConsPct (the 5 mJy variant, 3.45%) to close the range "3.06--...", which is a
         # different axis entirely and understated the sweep by a full percentage point. A referee
         # caught it. If a range needs an endpoint, the endpoint gets its own macro.
+        # The MEASURED spectral index and the contrast evaluated at it. This is what replaces
+        # the sweep as the paper's statement: the sweep bounded how bad the assumption could
+        # be, these numbers say what the assumption actually is.
+        rf"\newcommand{{\drAlphaMeas}}{{{al['flux_complete']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasSe}}{{{al['flux_complete']['median_boot_se']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasN}}{{{al['flux_complete']['n']}}}",
+        rf"\newcommand{{\drAlphaMeasSd}}{{{al['flux_complete']['std']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasPlo}}{{{al['flux_complete']['p16']:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasPhi}}{{{al['flux_complete']['p84']:.2f}}}",
+        rf"\newcommand{{\drAlphaJointMed}}{{{al['joint_detection']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaJointN}}{{{al['joint_detection']['n']}}}",
+        rf"\newcommand{{\drAlphaComplMjy}}{{{al['completeness_flux_mjy']:.1f}}}",
+        rf"\newcommand{{\drAlphaBandN}}{{{al['n_band_census']}}}",
+        rf"\newcommand{{\drAlphaVlassRad}}{{{al['vlass_radius_arcsec']:g}}}",
+        rf"\newcommand{{\drAlphaRacsRad}}{{{al['racs_radius_arcsec']:g}}}",
+        rf"\newcommand{{\drAlphaVlassBeam}}{{{VLASS_BEAM_ARCSEC:g}}}",
+        rf"\newcommand{{\drAlphaRacsBeam}}{{{RACS_BEAM_ARCSEC:g}}}",
+        rf"\newcommand{{\drAlphaTruncPct}}{{{100 * (1 - al['flux_complete']['n'] / al['joint_detection']['n']):.0f}}}",
+        rf"\newcommand{{\drLumNorthMeasPct}}{{{100 * _tot(n['luminosity_matched_alpha'][_am]):.2f}}}",
+        rf"\newcommand{{\drLumSouthMeasPct}}{{{100 * _tot(ds['luminosity_matched_alpha'][_am]):.2f}}}",
+        rf"\newcommand{{\drGapMeasPp}}{{{100 * (_tot(n['luminosity_matched_alpha'][_am]) - _tot(ds['luminosity_matched_alpha'][_am])):.2f}}}",
+        # min/max, not lo-alpha/hi-alpha: a steeper alpha widens the gap, so keying these to
+        # the alpha endpoints put the larger number in the macro named "Lo".
+        rf"\newcommand{{\drGapMeasLoPp}}{{{min(_gap_se):.2f}}}",
+        rf"\newcommand{{\drGapMeasHiPp}}{{{max(_gap_se):.2f}}}",
+        # The population-scatter check: each quasar given its OWN index drawn from the measured
+        # distribution, instead of one median index for everyone. It shifts both fractions by
+        # ~0.3 pp and the GAP by only 0.03 -- so the contrast survives the scatter but the
+        # absolute fractions do not, and the paper has to say both.
+        # The VLASS-limit mirror sweep, and the systematic budget on the measured index. The
+        # bootstrap SE (0.015) is the SMALLEST of these terms by an order of magnitude; quoting
+        # it alone as the uncertainty was the same mistake in a new place.
+        rf"\newcommand{{\drNorthEffCut}}{{{RACS_S_LIM_MJY * (VLASS_FREQ_GHZ / RACS_FREQ_GHZ) ** ALPHA_MEASURED:.2f}}}",
+        rf"\newcommand{{\drSlimVlassConsA}}{{{VLASS_S_LIM_CONSERVATIVE_MJY[0]:g}}}",
+        rf"\newcommand{{\drSlimVlassConsB}}{{{VLASS_S_LIM_CONSERVATIVE_MJY[1]:g}}}",
+        rf"\newcommand{{\drGapVlassConsA}}{{{_gap_vc[0]:.2f}}}",
+        rf"\newcommand{{\drGapVlassConsB}}{{{_gap_vc[1]:.2f}}}",
+        rf"\newcommand{{\drGapVlassDropPct}}{{{100 * (1 - _gap_vc[1] / _gap_meas):.0f}}}",
+        rf"\newcommand{{\drAlphaFloorB}}{{{al['completeness_floor_sensitivity']['-2']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaFloorC}}{{{al['completeness_floor_sensitivity']['-2.5']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaFloorBCut}}{{{al['completeness_floor_sensitivity']['-2']['flux_cut_mjy']:.1f}}}",
+        rf"\newcommand{{\drAlphaFloorCCut}}{{{al['completeness_floor_sensitivity']['-2.5']['flux_cut_mjy']:.1f}}}",
+        rf"\newcommand{{\drAlphaEpochA}}{{{al['per_epoch']['E2']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaEpochB}}{{{al['per_epoch']['E3']['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinA}}{{{al['flux_bins'][0]['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinB}}{{{al['flux_bins'][1]['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaBinC}}{{{al['flux_bins'][2]['median']:.2f}}}",
+        rf"\newcommand{{\drAlphaSysSpan}}{{{_alpha_sys:.2f}}}",
+        rf"\newcommand{{\drAlphaMeasSeFull}}{{{al['flux_complete']['median_boot_se']:.3f}}}",
+        rf"\newcommand{{\drAlphaMeasFull}}{{{al['flux_complete']['median']:.3f}}}",
+        rf"\newcommand{{\drAlphaComplFracPct}}{{{100 * al['flux_complete']['n'] / al['n_band_census']:.1f}}}",
+        rf"\newcommand{{\drLumNorthPsPct}}{{{100 * _ps_n['fraction_mean']:.2f}}}",
+        rf"\newcommand{{\drLumSouthPsPct}}{{{100 * _ps_s['fraction_mean']:.2f}}}",
+        rf"\newcommand{{\drGapPsPp}}{{{100 * (_ps_n['fraction_mean'] - _ps_s['fraction_mean']):.2f}}}",
+        rf"\newcommand{{\drGapPsShiftPp}}{{{100 * ((_ps_n['fraction_mean'] - _ps_s['fraction_mean']) - (_tot(n['luminosity_matched_alpha'][_am]) - _tot(ds['luminosity_matched_alpha'][_am]))):.2f}}}",
+        rf"\newcommand{{\drPsRealSd}}{{{100 * max(_ps_n['fraction_realization_sd'], _ps_s['fraction_realization_sd']):.3f}}}",
         rf"\newcommand{{\drLumNorthSteepPct}}{{{100 * _tot(n['luminosity_matched_alpha']['-1']):.2f}}}",
         rf"\newcommand{{\drLumSouthSteepPct}}{{{100 * _tot(ds['luminosity_matched_alpha']['-1']):.2f}}}",
         # The two ratios the retired 5 mJy check moves between. Quoted so the "it cannot test the

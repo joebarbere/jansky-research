@@ -10,6 +10,38 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `dr20radio`: **the spectral index is now measured, not assumed** (`run_alpha`, new
+  `results/dr20radio_alpha.json`). The survey-overlap band (-40 < dec <= +30) is covered by
+  both VLASS and RACS, so a quasar detected twice gives a two-point alpha directly: 5,571 of
+  174,171 band quasars are detected by both. That joint sample is truncation-biased flat
+  (median -0.62), because at the RACS limit a steep source has already fallen below the VLASS
+  limit at 3 GHz; above S_RACS > 6.2 mJy the truncation cannot operate for any alpha >= -1.5,
+  and those 4,190 quasars give **alpha = -0.72 +/- 0.02**. The canonical -0.7 is right.
+  The contrast evaluated at the measured index is 4.09% vs 2.82%, a gap of 1.27 pp, moving
+  only over 1.25-1.29 across +/-1 sigma -- against 0.23-1.66 for the old 0 -> -1 sweep, which
+  is now the range the measurement *excludes* rather than its uncertainty.
+- `dr20radio`: three sensitivity checks on the measured index, each able to fail, and each
+  of which did (`completeness_floor_sensitivity`, `per_epoch`, `flux_bins`). Lowering the
+  assumed completeness floor to alpha >= -2 and -2.5 steepens the median monotonically
+  (-0.722 -> -0.779 -> -0.856), so -0.722 is an **upper bound on flatness**; single VLASS
+  epochs give -0.703/-0.781 against -0.722 for the max-of-epochs (a positively biased
+  estimator for a flux ratio); and the median runs -0.50/-0.52/-0.84 across S_RACS bins, so
+  it is not transferable across flux. The paper now quotes alpha = -0.722 +/- 0.015 (stat)
+  +/- 0.36 (sys) -- the bootstrap SE is the smallest term in the budget by an order of
+  magnitude -- and identifies a fourth, unquantified term (peak fluxes across a 2.5" and a
+  25" beam, ~0.08 in alpha per 10% flux-ratio error).
+- `dr20radio`: `VLASS_S_LIM_CONSERVATIVE_MJY` and `luminosity_matched_vlass_conservative` --
+  the MIRROR of the RACS conservative variant, and the side that can actually move the ratio.
+  VLASS's 1 mJy is a per-epoch *reliability* threshold while RACS's 3 mJy is a 95%
+  *completeness* limit, so at the measured index the north is cut at 1.25 mJy against the
+  south's 3.0. Equalising them takes the gap 1.27 -> 1.10 -> 0.91 pp, a 28% reduction: the
+  contrast is materially but not wholly a consequence of how the two limits are defined.
+- `dr20radio`: `luminosity_matched_per_source_alpha` tests the single-index approximation by
+  giving every quasar its own index drawn from the measured distribution. This reports a bias
+  rather than a variance on purpose: the realization spread is 0.016 pp and would make any
+  breadth of distribution look harmless. The scatter shifts each fraction by ~0.3 pp (to
+  3.83%/2.53%) but is nearly common-mode, moving the gap by 0.03 pp. The paper now states
+  both -- the contrast survives the scatter, the absolute fractions do not.
 - `dr20radio`: spectral-index sweep (`ALPHA_SWEEP = 0, -0.35, -0.7, -1.0`) on the
   luminosity-matched fractions in both legs, committed to `results/dr20radio_{north,south}.json`
   under `luminosity_matched_alpha`. This is the sensitivity test the published 5 mJy

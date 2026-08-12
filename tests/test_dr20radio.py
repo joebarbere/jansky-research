@@ -257,3 +257,170 @@ def test_k_correction_sign_and_alpha_monotonicity():
     ]
     assert counts == sorted(counts), f"steepening alpha must not reduce the count: {counts}"
     assert counts[0] < counts[-1], f"alpha had no effect at all: {counts}"
+
+
+def test_spectral_index_round_trip_and_sign():
+    """alpha is defined S ~ nu^alpha, so a source fainter at high frequency is NEGATIVE."""
+    s_lo = np.array([10.0, 10.0, 10.0])
+    # flat, steep (half the flux per e-fold up), and inverted
+    for alpha in (0.0, -0.7, -1.5, 0.5):
+        s_hi = s_lo * (3.0 / 0.8875) ** alpha
+        got = dr20radio.spectral_index(s_hi, s_lo, freq_hi_ghz=3.0, freq_lo_ghz=0.8875)
+        assert got == pytest.approx(alpha)
+    # a steep spectrum really is fainter at the higher frequency
+    assert (s_lo * (3.0 / 0.8875) ** -0.7 < s_lo).all()
+    # non-positive fluxes drop out rather than raising or returning +-inf
+    bad = dr20radio.spectral_index(
+        np.array([1.0, 0.0, -1.0]), np.array([1.0, 1.0, 1.0]), freq_hi_ghz=3.0, freq_lo_ghz=0.9
+    )
+    assert np.isfinite(bad[0]) and np.isnan(bad[1]) and np.isnan(bad[2])
+
+
+def test_alpha_complete_limit_removes_the_truncation():
+    """Above the returned flux, no source with alpha >= alpha_min can be missing from the
+    joint-detection sample. This is the whole basis of the unbiased sub-sample."""
+    s_lim_hi, f_hi, f_lo, a_min = 1.0, 3.0, 0.8875, -1.5
+    lim = dr20radio.alpha_complete_limit_mjy(
+        s_lim_hi_mjy=s_lim_hi, freq_hi_ghz=f_hi, freq_lo_ghz=f_lo, alpha_min=a_min
+    )
+    # a source AT the limit with the steepest allowed index still clears the high-freq limit
+    assert lim * (f_hi / f_lo) ** a_min == pytest.approx(s_lim_hi)
+    # ...and anything steeper than alpha_min would not, which is why the bound is stated
+    assert lim * (f_hi / f_lo) ** (a_min - 0.3) < s_lim_hi
+    # below the limit, a steep source is lost -> that is the flat bias the paper reports
+    assert 0.5 * lim * (f_hi / f_lo) ** a_min < s_lim_hi
+
+
+def test_measured_alpha_constants_match_committed_measurement():
+    """`ALPHA_MEASURED` is hard-coded so the census runs can sweep it, which means it can
+    drift away from the measurement it came from. The paper quotes both, so a drift would
+    print a measured index next to a contrast evaluated at a different one."""
+    import json
+    from pathlib import Path
+
+    results = Path("results/dr20radio_alpha.json")
+    # NOT a skip. This file is tracked committed evidence, and every alpha macro in the paper
+    # reads from it; a skip here would disable the guard precisely in a fresh CI checkout,
+    # which is where the hard-coded ALPHA_MEASURED most needs checking.
+    assert results.exists(), "results/dr20radio_alpha.json is committed evidence and must exist"
+    fc = json.loads(results.read_text())["flux_complete"]
+    assert dr20radio.ALPHA_MEASURED == pytest.approx(fc["median"], abs=5e-5)
+    assert dr20radio.ALPHA_MEASURED_SE == pytest.approx(fc["median_boot_se"], abs=5e-5)
+    # the sweep the census runs must actually contain the three measured points
+    for a in dr20radio.ALPHA_MEASURED_SWEEP:
+        key = f"{a:g}"
+        north = json.loads(Path("results/dr20radio_north.json").read_text())
+        assert key in north["luminosity_matched_alpha"], f"census never evaluated alpha={key}"
+
+
+def test_joint_detection_median_is_biased_flat():
+    """The committed measurement must show the truncation bias in the direction the method
+    section claims -- if it ever came out the other way, the flux-complete cut is wrong."""
+    import json
+    from pathlib import Path
+
+    results = Path("results/dr20radio_alpha.json")
+    # NOT a skip. This file is tracked committed evidence, and every alpha macro in the paper
+    # reads from it; a skip here would disable the guard precisely in a fresh CI checkout,
+    # which is where the hard-coded ALPHA_MEASURED most needs checking.
+    assert results.exists(), "results/dr20radio_alpha.json is committed evidence and must exist"
+    m = json.loads(results.read_text())
+    assert m["joint_detection"]["median"] > m["flux_complete"]["median"], (
+        "the joint-detection sample should be biased FLAT relative to the flux-complete one"
+    )
+    assert m["flux_complete"]["n"] < m["joint_detection"]["n"]
+
+
+def test_per_source_alpha_is_a_bias_not_a_variance():
+    """Per-source indices must change the ANSWER, and the realization spread must be small.
+
+    If the spread across realizations were the headline, any breadth of index distribution
+    would look harmless, because a fraction over N sources averages the draw away as
+    1/sqrt(N). That is the shape of the `rmstructure` error -- an uncertainty estimated by a
+    procedure that cannot see the effect it is supposed to bound.
+    """
+    rng = np.random.default_rng(3)
+    n = 20000
+    z = rng.uniform(0.5, 2.5, n)
+    matched = rng.random(n) < 0.5
+    s = rng.uniform(1.0, 12.0, n)
+    bins = np.array([0.0, 1.0, 2.0, 3.0])
+    kw = dict(
+        freq_ghz=3.0,
+        s_lim_this_mjy=1.0,
+        s_lim_other_mjy=3.0,
+        other_freq_ghz=0.888,
+        bins=bins,
+    )
+    broad = rng.normal(-0.7, 0.9, 4000)
+    out = dr20radio.luminosity_matched_per_source_alpha(
+        z, matched, s, alpha_samples=broad, n_real=8, seed=1, **kw
+    )
+    single = dr20radio.luminosity_matched_fractions(z, matched, s, alpha=-0.7, **kw)
+    single_frac = sum(single["k"]) / sum(single["n"])
+
+    # the realization spread is small -- this is the number that would have been misleading
+    assert out["fraction_realization_sd"] < 0.01
+    # ...while the scatter genuinely shifts the answer away from the single-index result
+    assert abs(out["fraction_mean"] - single_frac) > out["fraction_realization_sd"]
+    # a degenerate "distribution" of one repeated value must reproduce the single-index case
+    degenerate = dr20radio.luminosity_matched_per_source_alpha(
+        z, matched, s, alpha_samples=np.full(500, -0.7), n_real=2, seed=1, **kw
+    )
+    assert degenerate["fraction_mean"] == pytest.approx(single_frac, abs=1e-12)
+    assert degenerate["fraction_realization_sd"] == pytest.approx(0.0, abs=1e-12)
+
+
+def test_alpha_systematics_are_recorded_and_the_floor_test_can_fail():
+    """The three checks that bound the measured index must all be committed, and the
+    completeness-floor one must be reported in a form that could have contradicted the paper.
+
+    A completeness cut at alpha >= -1.5 is an assumption; the sample's own p16 is steeper. If
+    the median steepens as the floor is lowered, the headline value is an upper bound on
+    flatness, not an unbiased estimate -- which is what the committed run shows. A test that
+    only asserted the cut's algebra would never have surfaced that.
+    """
+    import json
+    from pathlib import Path
+
+    m = json.loads(Path("results/dr20radio_alpha.json").read_text())
+    floors = m["completeness_floor_sensitivity"]
+    assert set(floors) == {"-1.5", "-2", "-2.5"}
+    # a stricter floor must demand a brighter cut and retain fewer sources
+    cuts = [floors[k]["flux_cut_mjy"] for k in ("-1.5", "-2", "-2.5")]
+    ns = [floors[k]["n"] for k in ("-1.5", "-2", "-2.5")]
+    assert cuts == sorted(cuts) and ns == sorted(ns, reverse=True)
+    # the paper states the median steepens monotonically -- if that ever reverses, the
+    # "upper bound on flatness" framing is wrong and must be rewritten
+    meds = [floors[k]["median"] for k in ("-1.5", "-2", "-2.5")]
+    assert meds == sorted(meds, reverse=True), f"floor sensitivity is no longer monotonic: {meds}"
+
+    # both epochs and all flux bins present, with the max-of-epochs value bracketed
+    assert set(m["per_epoch"]) == {"E2", "E3"}
+    ep = [m["per_epoch"][k]["median"] for k in ("E2", "E3")]
+    assert min(ep) <= m["flux_complete"]["median"] <= max(ep)
+    assert len(m["flux_bins"]) == 3
+    assert all(b["n"] > 0 and b["median"] is not None for b in m["flux_bins"])
+
+
+def test_vlass_conservative_variant_can_move_the_ratio():
+    """The RACS-side conservative variant provably cannot move the north/south ratio; the
+    VLASS-side one must be able to, or it is the same vacuous check on a new axis."""
+    import json
+    from pathlib import Path
+
+    n = json.loads(Path("results/dr20radio_north.json").read_text())
+    s = json.loads(Path("results/dr20radio_south.json").read_text())["deep_south"]
+    tot = lambda b: sum(b["k"]) / sum(b["n"])  # noqa: E731
+    key = f"{dr20radio.ALPHA_MEASURED:g}"
+    gap = tot(n["luminosity_matched_alpha"][key]) - tot(s["luminosity_matched_alpha"][key])
+    for v in dr20radio.VLASS_S_LIM_CONSERVATIVE_MJY:
+        vk = f"{v:g}"
+        assert vk in n["luminosity_matched_vlass_conservative"]
+        assert vk in s["luminosity_matched_vlass_conservative"]
+    worst = f"{max(dr20radio.VLASS_S_LIM_CONSERVATIVE_MJY):g}"
+    gap_c = tot(n["luminosity_matched_vlass_conservative"][worst]) - tot(
+        s["luminosity_matched_vlass_conservative"][worst]
+    )
+    # it must actually change the answer -- a check that cannot fail is not a check
+    assert abs(gap_c - gap) > 0.1 * gap, "the VLASS-limit variant barely moves the gap"

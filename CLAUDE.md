@@ -140,6 +140,46 @@ success for a solution glued to a wall. **Record per-variant whether any paramet
 near a bound, and exclude those from any quoted range**; a bound is a modelling choice, so a
 result that rests on one is reporting the choice, not the data.
 
+**When a systematic acts on a large ensemble, the number to report is a bias, not a variance.**
+`dr20radio` applies one spectral index to ~10^5 quasars. Asking "how much does the answer move
+if I draw each source's index from the measured distribution?" and quoting the *spread across
+realizations* gives 0.016 pp — because a fraction over 10^5 objects averages the draw away as
+1/sqrt(N), so any breadth of distribution looks harmless. The scatter's real effect is a
+**shift**: the detection criterion is a threshold, thresholds are not linear in alpha, and the
+steep and flat halves do not cancel. Measured, it moves each fraction by ~0.3 pp (7-10%
+relative) while moving their *difference* by only 0.03. Both facts had to go in the paper —
+the contrast survives the scatter, the absolute fractions do not. This is the same shape as
+the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure that cannot see
+the effect it is meant to bound. Before quoting a spread, ask what would make it small
+regardless of the truth.
+
+**When you kill a robustness check, run its mirror before claiming the axis is closed.**
+`dr20radio`'s 5 mJy RACS variant was shown vacuous in one round; the VLASS-side variant --- the
+one that *can* move the ratio, because VLASS quotes a per-epoch reliability threshold where
+RACS quotes a 95% completeness limit --- had still never been run a round later. It moves the
+gap 1.27 -> 0.91 pp. Removing a bad check leaves a hole exactly where a real check belongs.
+
+**A measured systematic is only an improvement if its own systematics are measured too.**
+Replacing an assumed alpha with a measured one felt like closing the issue, and the quoted
++/-0.015 bootstrap SE made it look settled. Three checks that could each have failed --- vary
+the assumed completeness floor, use one epoch instead of the max, bin by flux --- moved the
+median by 0.06, 0.08 and 0.34. The statistical error was the smallest term by an order of
+magnitude. **Before quoting a measurement's precision, list what you assumed to obtain it and
+vary each one.** If the checks are chosen so they cannot fail, the precision is decoration.
+
+**Write the number after you run it, not before.** Having decided to add the VLASS-limit
+sweep, I wrote "most of the contrast is attributable to the limit asymmetry" into the draft
+and then ran it: the answer was 28%, and the gap survived. The sentence was in the file
+before any evidence existed for it. Order the work so the prose cannot precede the number.
+
+**A flux-limited sample cannot measure a spectral-index distribution without a completeness
+cut.** Requiring detection in *both* of two surveys truncates asymmetrically — at the
+shallower survey's limit a steep source has already dropped below the deeper survey's limit at
+the higher frequency — so the joint-detection median comes out too flat. Measured: -0.62 for
+all 5571 joint detections against -0.72 for the 4190 above the flux where the truncation
+cannot operate for any alpha >= -1.5. The bias is 0.1 in alpha, the same size as the effect
+being measured. `alpha_complete_limit_mjy` computes the threshold; quote the complete sample.
+
 **A committed results file can omit the numbers its own headline is computed from.**
 `innerrc` filtered its sensitivity variants down to a curated key list before writing them,
 dropping `v_halo` and `h_halo` — the only two parameters `rho_dm_gev` is derived from. The
