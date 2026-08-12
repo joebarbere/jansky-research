@@ -153,6 +153,33 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A difference is not scale-free; a ratio is.** `dr20radio` compared two survey legs above a
+common limit and reported the contrast in percentage points. Raising *either* survey's flux
+limit deepens *both* cuts, shrinking both fractions and therefore the pp gap, while leaving
+their ratio alone. So a pp gap that moves under a deeper cut is measuring normalisation, not
+contrast — and I read a 28% reduction as "the contrast is materially definitional" when the
+ratio had moved 2%. **Before interpreting a difference as sensitive to a parameter, check
+whether the ratio moves too.** Note this is the same error the 5 mJy variant made, arrived at
+from the opposite direction: I built the "mirror" check, and it landed on the same axis
+(RACS 5 mJy gives cuts (1.994, 5.000); VLASS 2 mJy gives (2.000, 5.014)).
+
+**Look for the algebraic identity before building machinery around a quantity.** Four rounds
+of sweeps, censored estimators and systematic budgets went into `dr20radio`'s
+luminosity-matched comparison before anyone wrote down that the K-correction cancels between
+a source and its own survey's limit — making the whole thing a redshift-independent flux cut
+with alpha entering at exactly one place. That one line answers the double-counting question,
+explains why a per-source index moves both fractions but not their ratio, and collapses the
+systematic budget to a single number. **Simplify the estimator algebraically first; the
+machinery you then need is much smaller.**
+
+**Fixing censoring on one side can bias you as hard as the side you fixed.** Kaplan-Meier
+over RACS-detected quasars correctly keeps the steep sources a completeness cut discards —
+and silently drops the 2,179 detected by VLASS but not RACS, which are the flat ones. Same
+mechanism, opposite sign. When data are censored from both sides no median is identified;
+bound it (`censored_median_bounds`) rather than picking whichever one-sided estimate is
+convenient. And KM is unbiased under *independent* censoring: here the censoring limit is a
+function of the same flux the estimand depends on, so "unbiased" was the wrong word.
+
 **When you kill a robustness check, run its mirror before claiming the axis is closed.**
 `dr20radio`'s 5 mJy RACS variant was shown vacuous in one round; the VLASS-side variant --- the
 one that *can* move the ratio, because VLASS quotes a per-epoch reliability threshold where
