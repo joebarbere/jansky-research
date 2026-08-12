@@ -153,6 +153,14 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**Accumulated hedging is its own distortion.** After four review rounds `dr20radio` spent
+46% of its length on the one derived quantity it concludes is a survey artefact, while the two
+clean census results shared 22 lines. Every qualification was individually true and the whole
+was misleading: length signals importance, so a heavily-caveated section reads as the paper's
+headline. When a result survives review by being qualified rather than by being confirmed,
+**shorten it to the conclusion and move the workings to the committed JSON.** Cutting 499 to
+361 lines made the paper more honest, not less complete.
+
 **A difference is not scale-free; a ratio is.** `dr20radio` compared two survey legs above a
 common limit and reported the contrast in percentage points. Raising *either* survey's flux
 limit deepens *both* cuts, shrinking both fractions and therefore the pp gap, while leaving
