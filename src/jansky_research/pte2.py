@@ -225,6 +225,173 @@ def inject_recover_tail(*, counts=(80, 150, 300, 600), n_each: int = 40, seed: i
     }
 
 
+def fit_energy_tail_truncated(sn: np.ndarray, *, k_sigma: float = 3.0, sig: float = 0.05) -> dict:
+    """The floor-corrected giant-pulse excess test.
+
+    The original estimator took mu = median and sigma = P84 - median of the OBSERVED log-S/N,
+    then expected n_right * sf(3)/0.5 pulses above mu + 3 sigma. That is unbiased only if the
+    detection floor removed nothing: a floor that removes a fraction f of the underlying
+    pulses shifts the observed median up to the (1+f)/2 quantile and compresses the observed
+    P84 - median, so the "3 sigma" threshold sits closer than 3 true sigma and every source
+    shows a spurious excess (2.03x at f = 0.3; the committed census's aggregate obs/exp of
+    1.85 implies f ~ 0.25-0.3 -- a referee derived this in closed form and the census
+    confirmed it in every count bin).
+
+    The fix: treat the floor as a KNOWN left-truncation at the observed minimum and fit
+    (mu, sigma) by truncated-normal maximum likelihood. The expected count above
+    mu + k sigma among the n observed pulses is then n * sf(k) / sf((a - mu)/sigma), which is
+    correct for any f. Reports f_hat = Phi((a - mu)/sigma), the estimated truncated fraction.
+    """
+    from scipy import stats
+    from scipy.optimize import minimize
+
+    lx = np.log(np.asarray(sn, float))
+    n = int(lx.size)
+    a = float(lx.min()) - 1e-9  # the known truncation point: nothing below the floor survives
+
+    def nll(theta: np.ndarray) -> float:
+        mu, ls = theta
+        sig_ = np.exp(ls)
+        z = (lx - mu) / sig_
+        za = (a - mu) / sig_
+        return float(n * np.log(stats.norm.sf(za) + 1e-300) + 0.5 * np.sum(z**2) + n * ls)
+
+    x0 = np.array(
+        [float(np.median(lx)), np.log(max(float(np.percentile(lx, 84.13) - np.median(lx)), 1e-3))]
+    )
+    r = minimize(
+        nll, x0, method="Nelder-Mead", options={"xatol": 1e-6, "fatol": 1e-9, "maxiter": 2000}
+    )
+    mu, sig_ = float(r.x[0]), float(np.exp(r.x[1]))
+    za = (a - mu) / sig_
+    f_hat = float(stats.norm.cdf(za))
+    thresh = mu + k_sigma * sig_
+    n_giant = int((lx > thresh).sum())
+    n_exp = float(n * stats.norm.sf(k_sigma) / max(stats.norm.sf(za), 1e-300))
+    p_excess = float(stats.poisson.sf(n_giant - 1, n_exp)) if n_giant > 0 else 1.0
+    heavy = bool(n_giant >= 3 and n_giant > n_exp and p_excess < sig)
+    return {
+        "mu": round(mu, 4),
+        "sigma": round(sig_, 4),
+        "f_hat": round(f_hat, 4),
+        "n_giant": n_giant,
+        "n_exp": round(n_exp, 3),
+        "p_excess": p_excess,
+        "heavy_tailed": heavy,
+        "converged": bool(r.success),
+    }
+
+
+def census_statistics(rows: list[dict]) -> dict:
+    """Population-level statistics over a completed census, from the committed rows alone.
+
+    Added 2026-08-13 after a referee recomputed all of these from results/pte2_census.json and
+    found the paper's headline did not survive them. Everything here derives from the census
+    file, so it is committed evidence about committed evidence -- reproducible offline.
+
+    - Multiple comparisons: 136 tests at p<0.05 expect ~6.8 chance positives, which the paper
+      never stated. Benjamini-Hochberg and Bonferroni counts are what the headline can carry.
+    - The aggregate observed/expected giant ratio: for a truly floor-robust estimator on
+      log-normal sources this is 1; the census gives 1.85, the signature of the left-truncation
+      bias in the median/P84 estimator (a floor removing fraction f of pulses shifts both).
+    - The per-count-bin heavy fraction, which is NOT monotonic in count -- it peaks at 400-800
+      pulses and falls to 0.14 in the highest-power bin, contradicting the "more power on more
+      pulses" mechanism the paper asserted from a two-bin split.
+    - The partial Spearman of excess vs log Edot CONTROLLING for log n: `excess` is count-biased
+      (rho = -0.36 with log n) and Edot correlates with count, so the raw correlation carried a
+      spurious negative term; controlling for count flips the sign to +0.10 (still null).
+    - The Vuong table for every flagged source with >= 8 giants: a promised diagnostic that was
+      computed and never reported. Its only significant value (J1243-6423, p = 3e-6) PREFERS
+      the log-normal -- which supports the paper's null and should have been shown.
+    """
+    from scipy import stats
+
+    if isinstance(rows, dict):
+        rows = rows["all"]
+    fitted = [r for r in rows if r.get("p_excess") is not None]
+    n = len(fitted)
+    pvals = np.array([r["p_excess"] for r in fitted])
+    heavy = np.array([bool(r["heavy_tailed"]) for r in fitted])
+    counts = np.array([r["n"] for r in fitted])
+    n_giant = np.array([r["n_giant"] for r in fitted])
+    n_exp = np.array([r["n_exp"] for r in fitted])
+
+    # Benjamini-Hochberg at 0.05
+    order = np.argsort(pvals)
+    bh_thresh = 0.05 * (np.arange(1, n + 1) / n)
+    passed = pvals[order] <= bh_thresh
+    n_bh = int(np.max(np.nonzero(passed)[0]) + 1) if passed.any() else 0
+    n_bonf = int((pvals < 0.05 / n).sum())
+
+    bins = [(50, 100), (100, 200), (200, 400), (400, 800), (800, 1600), (1600, 10**9)]
+    per_bin = []
+    for lo, hi in bins:
+        sel = (counts >= lo) & (counts < hi)
+        per_bin.append(
+            {
+                "count_lo": lo,
+                "count_hi": None if hi >= 10**9 else hi,
+                "n": int(sel.sum()),
+                "heavy_frac": round(float(heavy[sel].mean()), 3) if sel.any() else None,
+                "obs_over_exp": (
+                    round(float(n_giant[sel].sum() / max(n_exp[sel].sum(), 1e-9)), 2)
+                    if sel.any()
+                    else None
+                ),
+            }
+        )
+
+    # partial Spearman excess vs log Edot | log n
+    edot_rows = [r for r in fitted if r.get("edot") is not None]
+    partial = None
+    if len(edot_rows) > 10:
+        ex = np.array([r["excess"] for r in edot_rows])
+        le = np.log10([r["edot"] for r in edot_rows])
+        ln = np.log10([r["n"] for r in edot_rows])
+        rex = stats.rankdata(ex)
+        rle = stats.rankdata(le)
+        rln = stats.rankdata(ln)
+
+        def _resid(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+            k = np.polyfit(b, a, 1)
+            return a - np.polyval(k, b)
+
+        r_p, p_p = stats.pearsonr(_resid(rex, rln), _resid(rle, rln))
+        partial = {
+            "rho_partial": round(float(r_p), 3),
+            "p_partial": round(float(p_p), 4),
+            "rho_excess_logn": round(float(stats.spearmanr(ex, ln).statistic), 3),
+            "rho_edot_logn": round(float(stats.spearmanr(le, ln).statistic), 3),
+            "n": len(edot_rows),
+        }
+
+    vuong = [
+        {
+            "name": r["jname"],
+            "n_giant": r["n_giant"],
+            "gamma": r.get("gamma"),
+            "gamma_err": r.get("gamma_err"),
+            "vuong": r.get("vuong"),
+            "vuong_p": r.get("vuong_p"),
+        }
+        for r in fitted
+        if r["heavy_tailed"] and r["n_giant"] >= 8
+    ]
+    return {
+        "n_fitted": n,
+        "n_heavy_nominal": int(heavy.sum()),
+        "n_heavy_bh05": n_bh,
+        "n_heavy_bonferroni": n_bonf,
+        "expected_chance_at_005": round(0.05 * n, 1),
+        "aggregate_obs_over_exp": round(float(n_giant.sum() / n_exp.sum()), 3),
+        "sum_n_giant": int(n_giant.sum()),
+        "sum_n_exp": round(float(n_exp.sum()), 1),
+        "heavy_frac_by_count_bin": per_bin,
+        "edot_partial": partial,
+        "vuong_flagged": vuong,
+    }
+
+
 def census(per_pulsar: dict, *, min_pulses: int = MIN_PULSES) -> list[dict]:
     """Run `fit_energy_tail` for every pulsar with >= ``min_pulses`` single pulses.
 
@@ -435,6 +602,38 @@ def _figure(m: dict, out_dir: str | Path) -> None:
     plt.close(fig)
 
 
+def _stats_macros() -> list[str]:
+    """Macros from results/pte2_stats.json -- the bracketing statistics a referee demanded.
+
+    Read from the committed file, never recomputed at write time, so what the paper quotes is
+    what a reader can check.
+    """
+    import json
+
+    path = Path("results/pte2_stats.json")
+    if not path.is_file():
+        return []
+    st = json.loads(path.read_text())
+    nv, tr = st["naive"], st["truncated"]
+    return [
+        "% Bracketing statistics (results/pte2_stats.json): the naive floor-ignorant null vs",
+        "% the floor-marginalised truncated-normal null. Neither endpoint is the answer; the",
+        "% bracket is.",
+        rf"\newcommand{{\ptStatBH}}{{{nv['n_heavy_bh05']}}}",
+        rf"\newcommand{{\ptStatBonf}}{{{nv['n_heavy_bonferroni']}}}",
+        rf"\newcommand{{\ptStatChance}}{{{nv['expected_chance_at_005']:g}}}",
+        rf"\newcommand{{\ptStatAggRatio}}{{{nv['aggregate_obs_over_exp']:.2f}}}",
+        rf"\newcommand{{\ptStatSumGiant}}{{{nv['sum_n_giant']}}}",
+        rf"\newcommand{{\ptStatSumExp}}{{{nv['sum_n_exp']:g}}}",
+        rf"\newcommand{{\ptStatRhoPartial}}{{{nv['edot_partial']['rho_partial']:g}}}",
+        rf"\newcommand{{\ptStatRhoPartialP}}{{{nv['edot_partial']['p_partial']:g}}}",
+        rf"\newcommand{{\ptStatRhoExN}}{{{nv['edot_partial']['rho_excess_logn']:g}}}",
+        rf"\newcommand{{\ptTruncNHeavy}}{{{tr['k_sweep']['3']['n_heavy']}}}",
+        rf"\newcommand{{\ptTruncFMedian}}{{{tr['f_hat_summary']['median']:g}}}",
+        rf"\newcommand{{\ptTruncFNine}}{{{tr['n_fhat_gt_09']}}}",
+    ]
+
+
 def _write_macros(m: dict, path: str | Path) -> None:
     """Emit both namespaces: ptSyn* (recover-a-known, always live) + ptReal* (the real census)."""
     from .report import _fmt_p
@@ -452,6 +651,7 @@ def _write_macros(m: dict, path: str | Path) -> None:
         "% Auto-generated by jansky_research.pte2._write_macros -- do not edit.",
         "% ptSyn* = synthetic recover-a-known (always live); ptReal* = the real PTE-II census.",
         rf"\newcommand{{\ptSource}}{{{m['source']}}}",
+        *_stats_macros(),
         rf"\newcommand{{\ptSynFP}}{{{g(syn, 'false_positive_rate')}}}",
         rf"\newcommand{{\ptSynRecovered}}{{{'yes' if syn.get('recovered') else 'no'}}}",
         rf"\newcommand{{\ptSynCompLow}}{{{cov.get('n80', '--')}}}",

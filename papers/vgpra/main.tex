@@ -12,7 +12,7 @@ Uranus and Neptune Radio Rotation Periods}
 \begin{abstract}
 The rotation periods anchoring the System~III longitude systems of Uranus ($17.24\pm0.01$~h) and
 Neptune ($16.11$~h) were fixed by the Voyager~2 Planetary Radio Astronomy (PRA) experiment during
-the 1986 and 1989 flybys \citep{warwick1986,warwick1989} and, for the radio data, never reanalysed
+the 1986 and 1989 flybys \citep{warwick1986,warwick1989} and, for the radio data, not reanalysed blind
 with modern statistics --- even as \citet{lamy2025} recently shifted Uranus's period by 28~s using
 Hubble UV aurorae. We ask a narrow, answerable question: what do the Voyager radio data yield under a
 \emph{blind} modern periodogram, using none of the emission-beaming or magnetic-longitude modelling
@@ -28,7 +28,10 @@ Neptune peak rails to the search bound (\vgRealNPeriod~h; not recovered, \vgReal
 the method demonstrably works when a clean rotational signal is present, the real-data failure is a
 genuine limitation of blind total-power analysis, not a pipeline artifact: the ice-giant total-power
 radio flux is not a clean rotational sinusoid, and recovering the periods requires the geometric
-modelling of the original analyses. Even in the best case the flyby precision ceiling is $\sim$1--2~h,
+modelling of the original analyses. This blind, total-power analysis places no useful bound:
+its window resolution is $\sim$\vgRealURes--\vgRealNRes~h and its peak is unconstrained within
+the search window. That is a property of \emph{this method on this data}, not of the flybys ---
+the modelled 1993 reanalysis reached $\pm 0.006$~h ($\pm 22$~s) from the same Neptune data,
 hundreds of times coarser than the modern Hubble result. The contribution is a reproducible,
 modern-statistical demonstration of exactly why the historical Voyager radio periods needed the
 sophisticated methods they used --- and of how little a naive periodogram of these short flybys can
@@ -49,7 +52,7 @@ System~III longitude systems still in use.
 Two facts motivate a fresh look. First, \citet{lamy2025} used 11~yr of Hubble UV aurora tracking to
 refine Uranus's period to $\vgRealULamy\pm0.000010$~h --- a 28~s shift and a $10^3$-fold precision gain
 over the Voyager value, highlighting that the \emph{radio} value was a single brief-flyby measurement
-never revisited with modern statistics. Second, the PRA refurbishing effort \citep{cecconi2017}
+revisited only by \citet{lecacheux1993}, whose $16.108\pm0.006$~h refinement is itself finer than the modern Hubble shift --- but never with a blind, un-modelled search. Second, the PRA refurbishing effort \citep{cecconi2017}
 reprocessed only Jupiter and Saturn, leaving the ice-giant volumes an unworked archive. The original
 period determinations were not simple periodograms: they folded in magnetic-field models and emission
 beaming. We therefore ask the complementary, honest question --- how much does a \emph{blind} modern
@@ -63,7 +66,7 @@ We use the open PDS-PPI PRA low-band 6-second RDR encounter volumes \citep{pdspp
 spacecraft-event date and second-of-day plus eight sweeps of one status word and 70 channel
 intensities in millibell, the sweeps spaced 6~s apart. The 70 low-band channels run from 1326.0 to
 1.2~kHz in 19.2~kHz steps. Expanding the sweeps gives a 6-second-cadence dynamic spectrum spanning
-$\sim$\vgRealUSpan~h at Uranus and $\sim$\vgRealNSpan~h at Neptune --- of order 15--30 rotations.
+$\sim$\vgRealUSpan~h at Uranus and $\sim$\vgRealNSpan~h at Neptune --- of order 18--31 rotations.
 
 \section{Method}
 \label{sec:method}
@@ -101,17 +104,40 @@ present, so a failure on the real data is a property of the data, not the pipeli
 On the real encounter volumes the blind periodogram recovers \emph{neither} rotation period
 (Table~\ref{tab:periods}).
 
-\textbf{Uranus.} The peak sits at \vgRealUPeriod~h, offset $+1.2$~h from the historical $17.24$~h, and
-is \emph{not} band-robust: across four sub-bands it wanders with a spread of \vgRealUSpread~h. It is
-not a recovery (\vgRealURecovers); the historical and Hubble values fall inside the $\pm\vgRealUUnc$~h
-band only because that band is nearly two hours wide, a vacuous consistency.
+\textbf{Uranus.} The peak sits at \vgRealUPeriod~h, offset $+1.2$~h from the historical
+\vgRealUHist~h --- \emph{1.1 window-resolution elements} (\vgRealURes~h at this baseline), so
+the offset alone is marginal. The verdict rests on achromaticity: across three \emph{disjoint}
+thirds of the 100--1000~kHz analysis band the peak wanders with a spread of \vgRealUSpread~h,
+so it is not a stable coherent line and not a recovery (\vgRealURecovers). (An earlier
+version's band set included one band extending above the analysis band, which alone decided
+this verdict; the disjoint in-band set reaches the same conclusion on independent channels.)
+The peak is nonetheless \emph{significant} against a scramble null
+(FAP $\le \vgRealUFap$ over \vgRealUNIndep\ independent frequencies) --- there is coherent
+structure in the series; it is not at the rotation period. The historical and Hubble values
+fall inside the $\pm\vgRealUUnc$~h band only because that band is nearly as wide as the
+search window ($\sigma/W = 0.32$, against 0.29 for a uniform distribution) --- the bootstrap
+is reporting an unconstrained peak, not an uncertainty, and we do not quote it as one.
 
-\textbf{Neptune.} The peak rails to the upper search bound (\vgRealNPeriod~h), offset far from
-$16.11$~h --- the signature of a periodogram dominated by the red-noise / flyby-envelope continuum
-rather than a rotational line. It is neither recovered (\vgRealNRecovers) nor consistent
-(\vgRealNHistOK). We note explicitly that a narrower search window \emph{can} place the Neptune peak
-near $16$~h, but that only demonstrates the result's window-dependence: with an un-tuned wide window
-there is no stable rotational peak.
+\textbf{Neptune.} The peak rails to the upper search bound (\vgRealNPeriod~h) --- a bound,
+not an estimate, so no consistency statement with the historical $\vgRealNHist \pm 0.05$~h is
+possible (the macro reports ``\vgRealNHistOK''). The offset from 16.11~h is 7+ resolution
+elements, a real mismatch; the railing is the signature of a periodogram dominated by the
+red-noise / flyby-envelope continuum rather than a rotational line. Full disclosure of the analysis history, since this paper's title contains ``blind'': an
+\emph{earlier} version of this analysis used a narrower search window and reported Neptune as
+recovered near 16~h; widening the window moved the peak to the bound, exposing the earlier
+result as a window artifact, and the recovery criterion's band-robustness and railing clauses
+were added \emph{after} that episode. The window and criterion published here were then frozen
+and applied identically to both planets and to the control. A narrower window still places the
+Neptune peak near 16~h; that demonstrates window-dependence, not a rotation.
+
+\textbf{Selection function.} Injecting a fractional sinusoid at each historical period into
+the \emph{real} flux series --- red noise, flyby envelope and detrend included --- and
+re-running the blind search recovers modulation depths down to \vgRealUMinDepth\% (Uranus) and
+\vgRealNMinDepth\% (Neptune) in $\ge$90\% of phase draws. Any rotational total-power
+modulation deeper than that would have been found; none is. This, not the synthetic spike
+train, is the operative validation: the synthetic control (which passes the full three-clause
+criterion, \vgSynFullOK, with seed-to-seed scatter \vgSynSeedSd~h across \vgSynSeedN\ seeds)
+proves the machinery, while the injection bounds the sky.
 
 \textbf{Interpretation.} The blind total-power periodogram does not recover the ice-giant rotation
 periods, while recovering a clean injected signal in the identical analysis. The auroral total-power

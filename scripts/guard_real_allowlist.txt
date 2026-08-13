@@ -11,3 +11,7 @@ ecallisto_census_metrics.json
 # real census derives from the force-tracked results/stokesv_discovery_realtargets.csv.
 # Source-field split is queued in the committed-real-results migration.
 stokesv_discovery_metrics.json
+# The vgpra VALIDATION leg's metrics, committed 2026-08-13 so the four synthetic numbers the
+# abstracts quote are checkable evidence rather than macro-file survivals (referee finding).
+# Synthetic by design -- it is the recover-a-known, not a real-data result.
+vgpra_synthetic_metrics.json

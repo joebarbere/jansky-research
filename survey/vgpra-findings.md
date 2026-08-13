@@ -105,3 +105,37 @@ Offline (metric + synthetic recover-a-known + tests + real-sample parser test):
 `uv run python -m jansky_research.vgpra --offline --out .`
 Real (downloads both PDS-PPI volumes): `uv run python scripts/vgpra_real.py --cache /tmp/vgpra`
 (writes `results/vgpra_metrics.json`, `is_real=True`).
+
+## Referee round (2026-08-13) — 17 findings, 3 blockers; the null survives, restated honestly
+
+**The Uranus verdict was decided by an out-of-band band.** Of the four "sub-bands", one was
+the analysis band itself, two were nested (26/31 shared channels), and the fourth extended
+288 kHz *above* the analysis band — and dropping that fourth flipped `recovers_hist` to True
+(spread 1.76 → 0.19 h). The bands are now three **disjoint thirds** of 100–1000 kHz. Result:
+the spread across genuinely independent in-band channels is still 1.90 h, so **the null
+survives the fix** — it now stands on honest grounds.
+
+**The null had no significance and no selection function; now it has both.** A scramble FAP
+(≤0.005 over ~7–11 independent frequencies) shows both real peaks are *significant coherent
+modulations* — just not at the historical periods (Uranus 1.1 resolution elements away;
+Neptune railed). And injection-recovery into the **real** flux series (red noise, envelope,
+detrend included) bounds the sky: modulation deeper than **20% (Uranus) / 10% (Neptune)**
+would have been recovered in ≥90% of phase draws. None is.
+
+**The control is now graded by the real criterion.** `synthetic_flyby` gained a spectral
+axis so `band_stability` — the statistic that decides the verdict — is validated on a known
+positive (passes the full three-clause rule). Seed-to-seed scatter across 30 realizations is
+0.015 h, comparable to the within-realization bootstrap (0.020 h) — *not* the rmstructure 3×
+blowout, and now measured rather than assumed.
+
+**Claims retracted:** the "flyby precision ceiling ~1–2 h" (contradicted by the paper's own
+synthetic at 74 s and by Lecacheux+1993's ±22 s from the same Neptune data — a reference that
+sat uncited in the paper's own refs.bib while the abstract said "never reanalysed"); the
+±1.94 h "uncertainty" (σ/W = 0.32 vs 0.29 for uniform — an unconstrained peak, not an error
+bar, no longer typeset as ±); Neptune's knife-edge "not consistent" (33-second margin on a
+railed peak → now "railed; no consistency statement possible"). The analysis history — an
+earlier narrow window reported Neptune as recovered; widening exposed it — is now disclosed
+in the paper, since the title says "blind". The figure now shows the full 14–20 h window
+with the real Uranus and Neptune periodograms (it previously showed a 1.4 h window centred
+on the known answer, with no real data). Synthetic metrics are committed evidence
+(results/vgpra_synthetic_metrics.json, guard-allowlisted).

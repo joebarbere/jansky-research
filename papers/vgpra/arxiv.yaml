@@ -1,3 +1,6 @@
+# STALE as of 2026-08-13: the paper now reports a scramble FAP, an injection-recovery
+# selection function, disjoint achromaticity bands and a disclosed analysis history;
+# this override predates all of that. REGENERATE before any submission.
 # Hand-authored arXiv metadata for papers/vgpra — TRACKED IN GIT.
 #
 # arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
@@ -18,7 +21,7 @@ abstract: |
   --Scargle periodogram over a wide, un-tuned 14--20 h window, taking a rotation-block
   bootstrap and the peak's spread across frequency sub-bands as the uncertainties. The result
   is a controlled null. The pipeline is validated end-to-end: on a synthetic flyby searched in
-  the same wide window it recovers an injected period (17.24 h 17.22252 h) to 1 min. On the
+  the same wide window it recovers an injected period (17.24 h -> 17.22252 h) to ~1 min. On the
   real data it recovers neither planet: the Uranus peak wanders between sub-bands (18.44362 h,
   sub-band spread 1.75737 h, offset +1.2 h from 17.24 h; not recovered, no) and the Neptune
   peak rails to the search bound (20.0 h; not recovered, no). Because the method demonstrably

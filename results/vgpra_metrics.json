@@ -10,12 +10,11 @@
       "boot_sigma_hr": 1.94272,
       "n_binned": 3059,
       "band_peaks_hr": [
-        18.4439,
-        18.4293,
-        18.0282,
-        14.2603
+        18.4087,
+        20.0,
+        15.412
       ],
-      "band_spread_hr": 1.75737,
+      "band_spread_hr": 1.90212,
       "total_unc_hr": 1.94272,
       "offset_from_hist_hr": 1.20362,
       "rayleigh_period_hr": 14.72424,
@@ -26,6 +25,41 @@
       "at_window_edge": false,
       "recovers_hist": false,
       "consistent_hist": true,
+      "significance": {
+        "peak_period_hr": 18.44362,
+        "peak_power": 0.00716,
+        "scramble_fap": 0.005,
+        "n_scramble": 200,
+        "n_indep_freq": 6.7,
+        "resolution_hr": 1.091
+      },
+      "injection": {
+        "injected_period_hr": 17.24,
+        "resolution_hr": 0.953,
+        "curve": [
+          {
+            "depth": 0.02,
+            "recovered_frac": 0.0
+          },
+          {
+            "depth": 0.05,
+            "recovered_frac": 0.375
+          },
+          {
+            "depth": 0.1,
+            "recovered_frac": 0.625
+          },
+          {
+            "depth": 0.2,
+            "recovered_frac": 1.0
+          },
+          {
+            "depth": 0.4,
+            "recovered_frac": 1.0
+          }
+        ],
+        "min_depth_recovered": 0.2
+      },
       "consistent_lamy": true
     },
     "NEPTUNE": {
@@ -36,12 +70,11 @@
       "boot_sigma_hr": 1.94042,
       "n_binned": 5039,
       "band_peaks_hr": [
-        20.0,
-        18.6007,
-        18.5921,
+        18.4889,
+        18.5674,
         20.0
       ],
-      "band_spread_hr": 0.70181,
+      "band_spread_hr": 0.69456,
       "total_unc_hr": 1.94042,
       "offset_from_hist_hr": 3.89,
       "rayleigh_period_hr": 15.95265,
@@ -51,7 +84,42 @@
       "n_samples": 288224,
       "at_window_edge": true,
       "recovers_hist": false,
-      "consistent_hist": false
+      "consistent_hist": null,
+      "significance": {
+        "peak_period_hr": 20.0,
+        "peak_power": 0.00498,
+        "scramble_fap": 0.005,
+        "n_scramble": 200,
+        "n_indep_freq": 10.8,
+        "resolution_hr": 0.794
+      },
+      "injection": {
+        "injected_period_hr": 16.11,
+        "resolution_hr": 0.515,
+        "curve": [
+          {
+            "depth": 0.02,
+            "recovered_frac": 0.375
+          },
+          {
+            "depth": 0.05,
+            "recovered_frac": 0.625
+          },
+          {
+            "depth": 0.1,
+            "recovered_frac": 1.0
+          },
+          {
+            "depth": 0.2,
+            "recovered_frac": 1.0
+          },
+          {
+            "depth": 0.4,
+            "recovered_frac": 1.0
+          }
+        ],
+        "min_depth_recovered": 0.1
+      }
     }
   }
 }
