@@ -81,3 +81,47 @@ recovering the ALFALFA void-HIMF suppression from FAST data.
 
 `uv run python -m jansky_research.fashienv --out .` (VizieR fetches, ~min). Offline CI leg:
 `--offline`. DR2 swap: point `fetch_fashi_dr1` at the DR2 table when it publishes (~Aug 2026).
+
+## Referee round (2026-08-12) — the variance was fine; the biases are not
+
+**A test that could have failed, and didn't.** The referee expected a void jackknife to kill
+the 2.93σ offset, on the grounds that the quoted error is Poisson counting noise within one
+realisation and cannot see void-to-void variance. Measured by deleting each of the 186
+occupied voids in turn and refitting: **jackknife error 0.039 dex**, *smaller* than the fit
+error of 0.087, so the offset strengthens to 6.5σ on that axis. A bootstrap over voids agrees
+(0.031). Sample variance across voids is **not** what limits this measurement. Both numbers
+are now committed; the expectation was wrong and the paper says so.
+
+**What does limit it is bias, which no resampling can see.** Two, both acting in the direction
+of the reported signal, and both now stated where the reader meets them:
+
+- *1/V_max assumes uniform density within the accessible volume* — exactly false for a sample
+  selected *by* density. For the void bin the accessible volume is the union of void spheres,
+  whose fraction falls to zero at the near and far edges of the box while staying finite for
+  the wall bin; since V_max is mass-dependent, so is the distortion, and it suppresses φ at the
+  high-mass end of the void bin. The offset is now framed as an upper bound on any true
+  suppression, with SWML named as the standard fix and explicitly not attempted.
+- *The "wall" bin is a Cartesian bounding box of a wedge-shaped survey.* Now quantified in the
+  evidence file, which never carried it: **n_wall = 24,175 — 58% of all of DR1** — with a knee
+  of 9.954 against the all-sky 9.944, i.e. **0.010 dex apart, a fifth of its own error**. The
+  comparison is closer to *void versus everything* than to void versus wall.
+
+**Numbers that were hard-typed and wrong.** The paper quoted the void knee error as ±0.08
+against a committed 0.071, and the wall as ±0.05; combined those give 0.094, which does not
+reproduce the quoted 0.087 (√(0.071²+0.05²) = 0.0868 does). Both are macros now. The claim
+that "every number above is pipeline-generated" is narrowed to the data-derived ones, since
+literature values, the flux limit and catalogue sizes are hard-typed.
+
+**Independence overstated.** FAST against Arecibo is an independent HI measurement, but the
+*environment* half of both comes from the same SDSS DR7 parent and largely the same voids —
+a deeper HI sample over much the same volume, not an independent realisation of large-scale
+structure.
+
+Open and reported, not fixed: the single void-finder headline (plan 45 says never to quote
+one); beam confusion, which plan 45 required and which reproduces the sign of both offsets;
+the injection validation, which places galaxies uniformly in comoving volume and so switches
+off the one systematic that matters; the α–M* covariance, discarded by keeping only
+`sqrt(diag(pcov))`; `curve_fit` without `absolute_sigma=True`; `n_bins` silently dropped from
+every metrics dict by an `isinstance(v, float)` filter; the EdS distance-frame variant quoted
+as "~1σ" with no committed number; and `FASHI_FLUX_LIMIT = 0.30`, which sets every V_max and
+appears nowhere in the paper.

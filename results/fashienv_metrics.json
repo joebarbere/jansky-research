@@ -4,6 +4,17 @@
   "n_sources": 41741,
   "n_classifiable_void": 26713,
   "n_in_void": 2538,
+  "n_wall": 24175,
+  "n_field": 20594,
+  "void_jackknife": {
+    "n_voids": 1163,
+    "n_occupied": 186,
+    "n_ok": 186,
+    "mean_offset": -0.2561,
+    "jackknife_err": 0.0391,
+    "min_offset": -0.2694,
+    "max_offset": -0.2466
+  },
   "n_group_members": 6119,
   "himf_global": {
     "log_phi_star": -2.893,

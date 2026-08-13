@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import pytest
 
 from jansky_research import fashienv as fe
 
@@ -128,3 +129,48 @@ def test_write_macros_placeholder(tmp_path):
     txt = p.read_text()
     assert r"\newcommand{\feRealVoidLogMStar}{--}" in txt
     assert r"\newcommand{\feSynVoidLogMStar}{--}" in txt
+
+
+def test_void_jackknife_measures_sample_variance_and_is_committed():
+    """The error the fit errors cannot see -- and a test that could have gone either way.
+
+    The quoted knee-offset error is Poisson counting noise within one realisation of
+    large-scale structure. For a void statistic the usual worry is that void-to-void variance
+    dominates it, which counting noise cannot see (the `rmstructure` failure mode). Deleting
+    each occupied void in turn and refitting measures it directly. Here it comes out SMALLER
+    than the fit error, so the offset survives -- but the number has to be committed either
+    way, because the paper's argument now depends on it.
+    """
+    from pathlib import Path
+
+    path = Path("results/fashienv_metrics.json")
+    if not path.exists():  # pragma: no cover - absent in a bare checkout
+        pytest.skip("committed fashienv results not present")
+    m = json.loads(path.read_text())
+    jk = m.get("void_jackknife")
+    assert jk and jk.get("jackknife_err") is not None, "the paper quotes this; commit it"
+    assert 0 < jk["n_occupied"] <= jk["n_voids"]
+    assert jk["n_ok"] == jk["n_occupied"]
+    # the jackknife mean must sit on the full-sample offset, or the resampling is wrong
+    assert jk["mean_offset"] == pytest.approx(m["void_knee_offset"], abs=0.01)
+    assert jk["min_offset"] <= m["void_knee_offset"] <= jk["max_offset"]
+
+
+def test_comparison_bin_size_is_committed():
+    """The "wall" bin is a bounding box, not a footprint, and holds most of the catalogue.
+
+    n_wall and n_field were absent from the evidence file, so a reader could not learn how big
+    the comparison sample was -- and it is 58% of all of DR1, with a knee 0.010 dex from the
+    all-sky fit. That is the single most important number for reading this result.
+    """
+    from pathlib import Path
+
+    path = Path("results/fashienv_metrics.json")
+    if not path.exists():  # pragma: no cover - absent in a bare checkout
+        pytest.skip("committed fashienv results not present")
+    m = json.loads(path.read_text())
+    assert "n_wall" in m and "n_field" in m
+    assert m["n_wall"] + m["n_in_void"] == m["n_classifiable_void"]
+    # if the wall bin ever stops matching the global fit, the "void versus everything"
+    # framing in the paper needs revisiting
+    assert abs(m["himf_wall"]["log_m_star"] - m["himf_global"]["log_m_star"]) < 0.05

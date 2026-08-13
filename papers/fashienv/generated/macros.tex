@@ -15,6 +15,10 @@
 \newcommand{\feSynVoidKneeOffset}{--}
 \newcommand{\feSynVoidKneeErr}{--}
 \newcommand{\feSynVoidKneeSigma}{--}
+\newcommand{\feSynVoidLogMStarErr}{--}
+\newcommand{\feSynWallLogMStarErr}{--}
+\newcommand{\feSynNWall}{--}
+\newcommand{\feSynNField}{--}
 \newcommand{\feSynGroupKneeOffset}{--}
 \newcommand{\feSynGroupKneeErr}{--}
 \newcommand{\feSynGroupKneeSigma}{--}
@@ -31,8 +35,17 @@
 \newcommand{\feRealVoidKneeOffset}{-0.256}
 \newcommand{\feRealVoidKneeErr}{0.087}
 \newcommand{\feRealVoidKneeSigma}{2.93}
+\newcommand{\feRealVoidLogMStarErr}{0.071}
+\newcommand{\feRealWallLogMStarErr}{0.05}
+\newcommand{\feRealNWall}{24175}
+\newcommand{\feRealNField}{20594}
 \newcommand{\feRealGroupKneeOffset}{0.192}
 \newcommand{\feRealGroupKneeErr}{0.073}
 \newcommand{\feRealGroupKneeSigma}{2.64}
 \newcommand{\feRealNInVoid}{2538}
 \newcommand{\feRealNGroupMembers}{6119}
+% Delete-one-void jackknife on the knee offset: the sample-variance error the fit
+% errors cannot see, because those are Poisson counts within one realisation.
+\newcommand{\feRealVoidJkErr}{0.039}
+\newcommand{\feRealVoidJkSigma}{6.5}
+\newcommand{\feRealVoidNOcc}{186}
