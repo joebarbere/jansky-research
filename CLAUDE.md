@@ -153,6 +153,15 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**Run the test even when you expect it to fail the claim — it may not.** The referee
+expected a void jackknife to destroy `fashienv`'s 2.9-sigma HIMF knee offset, and I expected
+it too (the quoted error was Poisson-within-one-realisation, the `rmstructure` shape exactly).
+Measured: jackknife 0.039 dex against a 0.087 fit error, so the offset *strengthened*. The
+value of running it was not the verdict but the relocation — it proved the problem is **bias,
+not variance**, and no amount of resampling would ever have found the two biases that do limit
+that measurement. **A resampling test bounds variance; it is silent on bias, so passing one
+is not a clean bill of health.**
+
 **A null result divides by sensitivity, not by sample size.** `frblens` searched 33 FRB
 repeaters, found none lensed, and quoted f < 2.996/33 = 0.091. That is right only if every
 source was fully sensitive. Measured, the mean injection efficiency was **0.24** and four

@@ -187,7 +187,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson | 98% | **major revision** ([referee 2026-08-12](survey/frblens-findings.md)) | ✅ 2026-08-12 — 16 findings; limit corrected 4× weaker |
 | torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks | 93% | [GATE-2](survey/torchdsp-findings.md) | — |
 | A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table | 94% | [findings](survey/wdpulsar-findings.md) | — |
-| The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation | 96% | [GATE-2](survey/fashienv-findings.md) | — |
+| The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation | 96% | **major revision** ([referee 2026-08-12](survey/fashienv-findings.md)) | ✅ 2026-08-12 — 20 findings; offset reframed as an upper bound |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* retracted to a lower limit |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
