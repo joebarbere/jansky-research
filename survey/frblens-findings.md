@@ -74,3 +74,53 @@ drawn N(0, √2·σ_DM) — the cut now costs injections what it costs real pair
 
 `uv run python -m jansky_research.frblens --n-scramble 200 --out .` (~2 min CPU with the local
 mirror). Offline CI leg: `--offline`.
+
+## Referee round (2026-08-12) — the limit was four times too tight
+
+**The denominator was the source count, not the sensitivity.** A null bounds the lensed
+fraction at −ln(1−C)/N only if every searched source was fully sensitive. The efficiency had
+been measured for exactly one train (FRB20220912A, the deepest of 33), and the paper argued
+the other 32 being shallower made the limit "conservative in depth" — which is backwards.
+Assuming ε = 1 for sources where it is smaller makes the denominator too *large* and the limit
+too *tight*.
+
+Measured properly — injecting into every searched train, at the census's own detection
+threshold rather than the fivefold looser one the map had been using:
+
+| | published | corrected |
+|---|---|---|
+| denominator | 33 (source count) | **8.27** (Σεᵢ) |
+| mean efficiency | assumed 1 | **0.24** |
+| sources with ε = 0 | — | **4** |
+| **limit** | **f < 0.091** | **f < 0.368** |
+
+Four sources carry too few bursts for any injected image train to beat the phase-scramble
+null, so they constrain nothing while inflating a count-based denominator. Every per-source
+row in the results file is bit-identical after the change; only the limit moved.
+
+**The map's threshold was looser than the census's.** `run()` called `sensitivity_map` with
+`n_scramble//5`, so `detection_p` defaulted to 2/41 = 0.049 while a real source needed
+2/201 = 0.0099 to count as a detection. Cells were therefore called "sensitive" that the
+census could not have detected in — again tightening the limit.
+
+**The injection grid could not go dark where it mattered.** Seven of nine delays sat exactly
+on the sidereal comb and two were deliberately off it, so the only dark cells were the
+controls and the magnification axis contributed nothing (every ratio down to 0.1 was
+recovered). The grid now runs to 0.02 in magnification and includes delays at ~3 and ~9
+minutes off the comb, which measures the transit window's width instead of asserting it.
+
+**The abstract targeted an object the pipeline excludes.** It opened on a lensed *one-off*
+masquerading as a repeater. The ≥5-burst cut and the M_max ≥ 2 requirement exclude that
+channel entirely: a galaxy-lens one-off gives 2–4 images, and **30 of 33 sources have
+M_max = 1, of which 29 have p = 1.000 exactly**. Both cited theory papers are about lensed
+*repeaters*, which is also what the title says. Reframed.
+
+Also corrected: σ_DM was quoted as "2–7 pc cm⁻³ for the most active repeaters" against a
+committed median of 0.4, a range of 0.2–8.4, and 9 of 33 sources sitting at the 1 pc cm⁻³
+floor — only 2 of 33 fall in the quoted band. "All p ≥ 0.81" against a minimum of 0.806. And
+the Roemer drift, quoted as ±150 s at Δ = 26 d, is ±230 s by the paper's own 9 s/day rule
+(and 221 s from 2 × 499 s × sin(π·26/365.25)); the derived "two orders of magnitude beyond
+our tolerance" is 46×.
+
+Open: committing the per-cell sensitivity grid rather than one scalar; including the figure
+(the paper has none); a lens-mass range; the top-32 truncation in the candidate-delay scan.

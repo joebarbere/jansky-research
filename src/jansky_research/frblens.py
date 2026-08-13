@@ -288,6 +288,60 @@ def inject_lensed_train(
     return out
 
 
+def efficiency_per_source(
+    trains: dict,
+    *,
+    delays: np.ndarray,
+    mag_ratios: np.ndarray,
+    detection_p: float,
+    n_scramble: int = 50,
+    seed: int = 0,
+) -> dict:
+    """Injection efficiency for EVERY searched source, at the census's own detection threshold.
+
+    The limit is ``-ln(1-C) / sum_i eps_i``, not ``-ln(1-C) / N``. Those coincide only if every
+    source is perfectly efficient. Measuring eps on one source and dividing by N assumes
+    eps = 1 for the other 32, which makes the denominator too LARGE and the limit too TIGHT --
+    the opposite of conservative. (The published version measured the deepest train only, and
+    described the resulting bias in the wrong direction.)
+
+    Efficiency is also evaluated at the threshold the census actually used. Running the map at
+    a fifth of the scrambles, as before, gave it ``detection_p = 2/41 = 0.049`` while a real
+    source needed ``2/201 = 0.0099`` to count -- so cells were called "sensitive" that the
+    census could not have detected in, again tightening the limit.
+    """
+    per: dict[str, float] = {}
+    for name, tr in trains.items():
+        good = np.isfinite(tr["mjd"])
+        if int(good.sum()) < 5:
+            continue
+        dm_i = tr["dm"][good]
+        sigma = float(1.4826 * np.nanmedian(np.abs(dm_i - np.nanmedian(dm_i))))
+        m = sensitivity_map(
+            tr["mjd"][good],
+            tr["fluence"][good],
+            delays=delays,
+            mag_ratios=mag_ratios,
+            n_scramble=n_scramble,
+            detection_p=detection_p,
+            bary_fn=barycentric_offset_fn(tr["ra"], tr["dec"]),
+            dm=dm_i,
+            dm_sigma=sigma,
+            dm_tol=max(1.0, 3.0 * np.sqrt(2.0) * sigma),
+            seed=seed,
+        )
+        per[name] = float(m["sensitive_fraction"])
+    eps_sum = float(sum(per.values()))
+    return {
+        "per_source": {k: round(v, 4) for k, v in sorted(per.items())},
+        "n_sources": len(per),
+        "eps_sum": round(eps_sum, 4),
+        "eps_mean": round(eps_sum / len(per), 4) if per else 0.0,
+        "detection_p": detection_p,
+        "n_scramble": n_scramble,
+    }
+
+
 def sensitivity_map(
     mjds: np.ndarray,
     fluence: np.ndarray,
@@ -357,12 +411,21 @@ def sensitivity_map(
     }
 
 
-def lensed_fraction_limit(n_searched: int, n_detected: int = 0, *, cl: float = 0.95) -> float:
+def lensed_fraction_limit(
+    n_searched: int, n_detected: int = 0, *, cl: float = 0.95, eps_sum: float | None = None
+) -> float:
     """Upper limit on the lensed-repeater fraction from ``n_detected`` among ``n_searched``.
 
-    Poisson upper limit on the mean count (3.0 for 0 detected at 95%), divided by the number of
-    repeaters searched. Quoted per searched repeater within the sensitivity region mapped by
-    injections --- NOT an absolute optical-depth statement (the paper states the scope).
+    The denominator is the summed injection efficiency ``sum_i eps_i``, not the raw count of
+    searched sources. Dividing by N asserts eps = 1 for every source, which is false here by a
+    factor of four: measured at the census's own detection threshold the mean efficiency is
+    0.25, and several searched sources have eps = 0 -- they carry too few bursts for any
+    injected image train to beat the phase-scramble null, so they contribute no constraint
+    while inflating the denominator.
+
+    ``eps_sum=None`` falls back to ``n_searched`` and is retained only for the offline fixture;
+    the real leg must pass a measured sum. Quoted per searched repeater within the mapped
+    sensitivity region -- NOT an absolute optical-depth statement.
     """
     from scipy import stats
 
@@ -370,7 +433,10 @@ def lensed_fraction_limit(n_searched: int, n_detected: int = 0, *, cl: float = 0
         mu_up = -np.log(1.0 - cl)
     else:
         mu_up = 0.5 * stats.chi2.ppf(cl, 2 * (n_detected + 1))
-    return float(mu_up / max(n_searched, 1))
+    denom = float(n_searched if eps_sum is None else eps_sum)
+    if denom <= 0:
+        return float("nan")
+    return float(mu_up / denom)
 
 
 def run(out: str = ".", *, offline: bool = True, n_scramble: int = 100) -> dict:
@@ -467,6 +533,22 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 100) -> dict:
         # sensitivity map on the highest-count repeater (the census's deepest train) --
         # through the SAME machinery: barycentring, DM cut with image fit scatter, transit
         # selection. The other searched trains are shallower and necessarily less sensitive.
+        eff = efficiency_per_source(
+            trains,
+            delays=np.concatenate(
+                [
+                    np.arange(2, 30, 4) * SIDEREAL_DAY,
+                    np.array([2, 6, 10]) * SIDEREAL_DAY + 0.002,
+                    np.array([2, 6, 10]) * SIDEREAL_DAY + 0.006,
+                    np.array([10.3, 33.7]),
+                ]
+            ),
+            # pushed down until cells go dark: the published grid stopped at 0.1 and every
+            # cell there was still recovered, so the magnification axis carried no information
+            mag_ratios=np.array([0.02, 0.05, 0.1, 0.3, 1.0]),
+            detection_p=2.0 / (n_scramble + 1),
+            n_scramble=n_scramble,
+        )
         big = max(trains.items(), key=lambda kv: kv[1]["n_bursts"])
         big_good = np.isfinite(big[1]["mjd"])
         big_dm = big[1]["dm"][big_good]
@@ -482,9 +564,15 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 100) -> dict:
             dm_sigma=big_sigma,
             dm_tol=max(1.0, 3.0 * np.sqrt(2.0) * big_sigma),
         )
-        extra = {"sensitivity_source": big[0]}
+        extra = {"sensitivity_source": big[0], "efficiency": eff}
 
-    limit = lensed_fraction_limit(n_searched, len(detections))
+    # Divide by the summed efficiency where it has been measured (real leg only).
+    _eps = None
+    if not offline:
+        _per = extra.get("efficiency", {}).get("per_source", {})
+        _names = {r["name"] for r in rows}
+        _eps = sum(v for k, v in _per.items() if k in _names) or None
+    limit = lensed_fraction_limit(n_searched, len(detections), eps_sum=_eps)
     metrics = {
         "source": source,
         "is_real": not offline,
@@ -557,9 +645,22 @@ def _write_macros(m: dict, path: str | Path) -> None:
         "% Auto-generated by jansky_research.frblens._write_macros -- do not edit.",
         "% Synthetic (flSyn*) and real (flReal*) namespaces are BOTH always emitted; the",
         "% inactive namespace holds placeholders, so synthetic numbers can never masquerade",
-        "% under flReal* (an offline rebuild resets flReal* to placeholders by design).",
+        "% under flReal*. The file is MERGED, not overwritten (report.preserve_live_macros).",
         rf"\newcommand{{\flSource}}{{{m['source']}}}",
     ]
+    eff = m.get("efficiency")
+    if eff:
+        lines += [
+            "% The injection efficiency of EVERY searched source, at the census's own",
+            "% detection threshold. The limit divides by this sum, not by the source count:",
+            "% dividing by N asserts eps = 1 everywhere, which overstates the limit 4x here.",
+            rf"\newcommand{{\flRealEpsSum}}{{{eff['eps_sum']:.1f}}}",
+            rf"\newcommand{{\flRealEpsMean}}{{{eff['eps_mean']:.2f}}}",
+            rf"\newcommand{{\flRealEpsZero}}{{{sum(1 for v in eff['per_source'].values() if v == 0)}}}",
+            rf"\newcommand{{\flRealEpsMax}}{{{max(eff['per_source'].values()):.2f}}}",
+            rf"\newcommand{{\flRealDetP}}{{{eff['detection_p']:.4f}}}",
+            rf"\newcommand{{\flRealLimitNaive}}{{{-__import__('math').log(0.05) / m['n_searched']:.3f}}}",
+        ]
     keys = (
         ("NSearched", "n_searched"),
         ("NDet", "n_detections"),
