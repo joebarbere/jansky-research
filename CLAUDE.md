@@ -153,6 +153,16 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A null result divides by sensitivity, not by sample size.** `frblens` searched 33 FRB
+repeaters, found none lensed, and quoted f < 2.996/33 = 0.091. That is right only if every
+source was fully sensitive. Measured, the mean injection efficiency was **0.24** and four
+sources had eps = **0** -- too few bursts for any injected signal to beat the null, so they
+constrained nothing while inflating the denominator. The honest limit is 2.996/sum(eps) =
+0.368, **four times weaker**. The paper had also argued that measuring efficiency on only the
+deepest source made the limit "conservative", which is backwards: assuming eps = 1 where it is
+smaller tightens the limit. **Before quoting "we searched N and saw none", ask how many of the
+N the search could actually have seen into.**
+
 **A "forced" measurement that searches is a noise maximum.** `stokesv_discovery`'s method
 section said "forced peak flux at the propagated pixel"; the code took the brightest Stokes-I
 pixel within 12" and read V there. The census exposed it without any new data: **I > 0 for 54
