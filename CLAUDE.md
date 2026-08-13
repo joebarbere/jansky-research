@@ -153,6 +153,23 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A "forced" measurement that searches is a noise maximum.** `stokesv_discovery`'s method
+section said "forced peak flux at the propagated pixel"; the code took the brightest Stokes-I
+pixel within 12" and read V there. The census exposed it without any new data: **I > 0 for 54
+of 54** quiescent targets, p = 2^-54 for a genuine fixed-pixel measurement. On blank sky a
+peak search returns the largest of several independent beams, so it is positive essentially
+always and biased high, and the companion quantity is read wherever that maximum fell. For an
+upper-limit census at known positions this invalidates the limits. **Test a photometry routine
+on pure noise: forced should go negative about half the time.**
+
+**When two quantities fall by the same fraction, suspect the calibration.** `stokesv_discovery`
+reported a 10-sigma inter-epoch decline in Stokes V. Stokes I fell 26% and V 23% over the same
+pair, leaving V/I constant to 3.4% -- which is what a flux-scale difference between two
+independently calibrated observations does, and is not what a change of emission state need
+do. The quoted significance carried image noise only; a 5% per-epoch scale term takes it to
+3.5 sigma. **Before quoting a significance on a difference of two epochs, ask what else moved
+by the same factor.**
+
 **A test can lock a defect in.** `test_run_offline_writes_artifacts` asserted
 `\svbSynNTargets` must *not* exist — i.e. it required the un-namespaced behaviour that let an
 offline rebuild write the synthetic parent size (400 stars) into the macro the abstract used

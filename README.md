@@ -168,7 +168,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | A streaming e-Callisto burst-ingest pipeline with cross-station coincidence QC | `ecallisto_pipeline/` | automation pattern + coincidence-vetted burst events (rejects single-station RFI) | — | — | — |
 | A coverage-corrected type III occurrence census (method + recover-a-known) | `ecallisto_census/` | census statistic + recover-a-known validation toward a multi-cycle census | 100% | — | — |
 | A pure-PyTorch Fast DM Transform (device-portable dedispersion) | `torchfdmt/` | tool + oracle validation + real Crab recover-a-known + honest CPU/GPU benchmark | 100% | [findings](survey/torchfdmt-findings.md) | — |
-| Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census | 100% | — | — |
+| Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs | `stokesv_discovery/` | method + GJ 65 variability recovery + upper-limit census | 100% | **major revision** ([referee 2026-08-12](survey/stokesv-discovery-findings.md)) | ✅ 2026-08-12 — 13 findings; 10σ demoted to marginal |
 | A provenance-carrying LPT population catalogue | `lpt/` | verified table + regenerable P–Ṗ statistics (novelty scoped vs the review's own diagram) | 100% | [GATE-2](survey/lpt-findings.md) | — |
 | LPT catalogue v3 + Stokes-V forced photometry | `lptv/` | 3 verified 2026 rows (N=16) + first systematic multi-epoch forced-V limit table at all LPT positions | 98% | [GATE-2](survey/lptv-findings.md) | — |
 | Cassini SKR proximity census | `skr/` | rotation-period anchor (0.05%) + 1/r² sensitivity-null bounding of the SKR occurrence-vs-range trend to a ~1.4× near-null | 96% | [GATE-2](survey/skr-findings.md) | — |
