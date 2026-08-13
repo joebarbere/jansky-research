@@ -153,6 +153,16 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A .bib entry's coordinates outlive its title and DOI — adjudicate, don't search.** 19
+citation defects were unfixable by fuzzy title search but all fell to one procedure: pull the
+recorded DOI's full Crossref metadata and compare it field-by-field against the entry's own
+author/journal/volume/pages. Five entries had the RIGHT DOI under a wrong title (a repair pass
+that trusted titles would have "corrected" them into error); the wrong DOIs were mostly the
+*adjacent* identifier (e085 for e084, 169090 for 169089, pages 120 for 112) — constructed by
+pattern instead of looked up. **Never construct an identifier; look it up, and when repairing
+one, decide which field is broken before changing any.** Also: `export.arxiv.org` 301s HTTP to
+HTTPS — an API that returns empty may just need `-L`.
+
 **Run the test even when you expect it to fail the claim — it may not.** The referee
 expected a void jackknife to destroy `fashienv`'s 2.9-sigma HIMF knee offset, and I expected
 it too (the quoted error was Poisson-within-one-realisation, the `rmstructure` shape exactly).
