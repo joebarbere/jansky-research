@@ -184,7 +184,7 @@ about what it is — mostly recover-a-known validations and methodology, with tw
 | Jovian DAM occurrence from Juno/Waves | `junodam/` | census method + proximity result + reduced Io-region contrast from orbit | 100% | [GATE-2](survey/junodam-findings.md) | — |
 | The first RM dipole/isotropy test (SPICE-RACS DR2) | `rmdipole/` | method + injection validation + honest isotropy result (tail-carried anisotropy disclosed as systematics) | 98% | [GATE-2](survey/rmdipole-findings.md) | — |
 | Uniform Cat-2 repeater timing census | `frbwait/` | anchor recovery + population k census + honest no-new-periods verdict | 98% | [GATE-2](survey/frbwait-findings.md) | — |
-| Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson | 98% | [GATE-2](survey/frblens-findings.md) | — |
+| Lensed-repeater search in Cat 2 | `frblens/` | first empirical lensed-fraction limit + transit selection function + null-design lesson | 98% | **major revision** ([referee 2026-08-12](survey/frblens-findings.md)) | ✅ 2026-08-12 — 16 findings; limit corrected 4× weaker |
 | torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs on ROCm + honest benchmarks | 93% | [GATE-2](survey/torchdsp-findings.md) | — |
 | A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table | 94% | [findings](survey/wdpulsar-findings.md) | — |
 | The environment-split FASHI HI mass function | `fashienv/` | first env split of the FASHI HIMF + injection-validated 1/Vmax + ALFALFA void confirmation | 96% | [GATE-2](survey/fashienv-findings.md) | — |
