@@ -10,6 +10,69 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `scripts/triage_papers.py` — a mechanical first-pass review over all 46 papers, checking
+  only defect classes found in real papers this cycle: cited `--` placeholders, un-namespaced
+  mode-dependent macros, hard-typed numbers duplicating macros, DOIs whose Crossref metadata
+  contradicts the entry, `author = {others}`, missing evidence, and retracted verbs. Ships
+  with an evidence-alias map for pre-convention filenames and a reasoned allowlist for
+  adjudicated coincidences. Final state: zero HIGH, zero MED across all 46 papers.
+- `svsbi`: `prior_sensitivity` — the same census re-inferred under a widened prior box over
+  multiple torch seeds (torch was previously unseeded, so NPE training was irreproducible).
+  Verdict per parameter is committed: `log_Lbreak` is prior-driven (+0.96 dex when the box
+  widens, against 0.02–0.14 seed scatter), `f_beam` is prior-located, only the slope median
+  is data-driven. The prior box itself is now in the evidence file.
+- `stokesv.measure_circular_pol`: a genuinely forced mode (`search_arcsec <= 0`) that reads
+  the pixel at the propagated position. The default 12″ mode is a peak search — on blank sky
+  a noise-maximum statistic (54/54 quiescent census targets had I > 0, p = 2⁻⁵⁴ for a true
+  fixed-pixel measurement) — and the docstring now says which is which. A test pins the
+  distinction: forced photometry on noise goes negative about half the time.
+- `frblens`: `efficiency_per_source` — injection efficiency for every searched train at the
+  census's own detection threshold, and `lensed_fraction_limit(..., eps_sum=)` divides by
+  Σε rather than the source count.
+- `fashienv`: `void_jackknife_offset` — delete-one-void jackknife on the knee offset, plus
+  `n_wall`/`n_field` committed (the comparison bin held 58% of DR1 and its size was nowhere
+  in the evidence).
+
+### Changed
+- **`svsbi`'s headline is retracted to a lower limit**: the one detection does not "pin"
+  log L\* (the posterior piled against the prior wall and its median tracked the box); the
+  census supports log L\* ≳ 13.9. `f_beam` is stated as the product of emitter fraction,
+  beaming and duty cycle — the model cannot separate them. `\svbNTargets`/`\svbSource` are
+  namespaced (an offline rebuild previously wrote the 400-star synthetic parent size under
+  the macro the abstract used for the 38-target real census).
+- **`stokesv_discovery`'s 10σ inter-epoch decline is demoted to marginal**: I and V fell
+  together (V/I constant to 3.4%), the flux-scale signature; 5.2σ/3.5σ at a 3%/5% per-epoch
+  scale term. The title's "Variability Recovery" is now "Recovery". One system, not two rows:
+  BL and UV Cet share a beam and the photometry was bit-identical.
+- **`frblens`'s limit is 4× weaker and now honest**: f < 0.37, dividing by measured Σε = 8.3
+  (mean efficiency 0.24; four searched sources have ε = 0 and constrain nothing). The
+  abstract's lensed-one-off framing is corrected to lensed repeaters — the ≥5-burst and
+  M_max ≥ 2 cuts exclude the one-off channel entirely (30/33 sources have M_max = 1).
+- **`fashienv`'s offset is reframed as an upper bound**: the void jackknife *strengthens* it
+  (0.039 dex vs the 0.087 fit error — sample variance is not the limiter), so the paper now
+  names the two biases that are, both acting in the signal's direction: the 1/Vmax
+  uniform-density assumption, and a bounding-box comparison bin 0.010 dex from the all-sky fit.
+- 33 modules now route `_write_macros` through `report.preserve_live_macros` (5 of 42 did,
+  against the stated repo rule); a single `make figures` would previously have blanked every
+  real macro in 33 papers. All 46 papers now carry the `\software{}` block citing
+  `jansky-research` (4 did).
+
+### Fixed
+- 19 citation defects across 12 papers, each verified against Crossref/arXiv metadata and
+  annotated in the .bib: five entries had the right DOI under a wrong title, most wrong DOIs
+  were the *adjacent* identifier (constructed by pattern instead of looked up), one paper was
+  cited under the wrong first author (Ye et al. 2016, not "Gurnett et al.") with the prose
+  corrected to match, and five `author = {others}` entries are filled in from the arXiv API —
+  including `fashi_groups`, which the fashienv novelty claim depends on, and `racslow2`,
+  published since the entry was written and now carrying its PASA coordinates.
+- Two arXiv-assembler bugs that reached a submission payload: `\rightarrow` had no symbol
+  mapping so `$V=9.26\rightarrow7.11$` rendered as the nonexistent flux "9.267.11 mJy", and
+  `\citealt` (textual) was deleted like parenthetical `\citep`, leaving "(catalogue, )".
+- Nine hard-typed prose numbers replaced with the macros recording the same quantity;
+  `rfitrend`'s empty stable-line list now renders "none" instead of the repo's
+  missing-value marker "--".
+
+### Added
 - `dr20radio`: **the spectral index is now measured, not assumed** (`run_alpha`, new
   `results/dr20radio_alpha.json`). The survey-overlap band (-40 < dec <= +30) is covered by
   both VLASS and RACS, so a quasar detected twice gives a two-point alpha directly: 5,571 of

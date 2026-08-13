@@ -311,7 +311,7 @@ Every new slice paper / RNAAS note `\software{}`-cites **`jansky-research`** (th
 concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{janskyresearch}`
 `refs.bib` entry from `papers/vgpra/` or `papers/spectra/`. See the `research-publish` skill.
 
-**Merged slices:** forty plus the type III synthesis — the authoritative per-slice table
+**Merged slices:** forty-four — the authoritative per-slice table
 (tool + outcome) is in `README.md`. Each has a paper under `papers/<slice>/`. Publishing steps
 (Zenodo → JOSS → RNAAS → arXiv) are tracked in Joe's personal notes, outside this repo
 (Obsidian vault: `efforts/radio_astronomy/research_paper_todo.md`).
@@ -331,6 +331,15 @@ concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{ja
 - Earlier blockers are resolved: CASDA recovered (`stokesv` complete, both legs; the discovery
   census is merged as `stokesv_discovery`); the southern GLEAM-X×RACS curvature catalogue is
   merged (`southern`).
+
+- **Review campaign (2026-08):** every paper now passes the mechanical triage
+  (`uv run python scripts/triage_papers.py` — zero HIGH/MED findings; run it before any
+  submission and after any paper edit). Seven papers have had the full presenter/referee
+  round (`.claude/agents/paper-{presenter,referee}.md`, both read-only): atlas3i, dr20radio
+  (5 rounds), innerrc, svsbi, stokesv_discovery, frblens, fashienv — each verdict and every
+  retraction is in its `survey/<slice>-findings.md`, and the README papers table tracks the
+  Reviewed column. Deep-review the remaining papers before submitting any of them; the triage
+  finding history says the referee pays for itself.
 
 ## Layout
 
