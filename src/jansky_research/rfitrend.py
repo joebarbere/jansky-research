@@ -628,11 +628,22 @@ def _write_macros(m: dict, path: str | Path) -> None:
         lines.append(rf"\newcommand{{\rfReal{name}NMonths}}{{{g(d, 'n_months')}}}")
         sl = d.get("stable_lines") or []
         lines.append(
-            rf"\newcommand{{\rfReal{name}Lines}}{{{', '.join(f'{x:g}' for x in sl) or '--'}}}"
+            # "none" for an empty result, NOT "--". A station with no stable lines is a
+            # measurement; "--" is this repo's marker for a value the results JSON did not
+            # have, and the same table row uses \nodata for genuinely inapplicable cells. All
+            # three rendered identically before, so a reader could not tell "we looked and
+            # found none" from "this number is missing".
+            rf"\newcommand{{\rfReal{name}Lines}}{{{', '.join(f'{x:g}' for x in sl) or 'none'}}}"
         )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text("\n".join(lines) + "\n")
+    # Merge rather than overwrite: this run knows only its own mode's metrics and
+    # would otherwise blank the other mode's macros with '--'. `make figures`
+    # runs every slice offline in the repo root, so without this an offline
+    # rebuild silently empties this paper. See report.preserve_live_macros.
+    from .report import preserve_live_macros
+
+    p.write_text(preserve_live_macros("\n".join(lines) + "\n", p))
 
 
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI

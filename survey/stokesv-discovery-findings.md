@@ -37,3 +37,49 @@ be used). PM propagation validated live: Barnard's star moved 39.8″ between th
 - Leakage floor is per-field; a beam-position-dependent model would sharpen faint candidates.
 - Reproduce: `uv run python scripts/stokesv_discovery_real.py` (needs `CASDA_USERNAME` +
   `~/.casda_pw`; ~2 h; resumable) then `uv run python -m jansky_research.stokesv_discovery --out .`.
+
+## Referee round (2026-08-12) — three blockers, all confirmed by recomputation
+
+**The photometry was not forced.** The Method said "forced peak flux at the propagated pixel";
+`measure_circular_pol` took the brightest Stokes-I pixel within 12″ and read V there. On blank
+sky that is a noise-maximum statistic, and the census showed it: **I > 0 for 54 of 54**
+quiescent targets (p = 2⁻⁵⁴ for a genuine fixed-pixel measurement) at median I/σ = 2.2. So each
+quiescent "limit" was measured up to about one synthesized beam from the star. A genuinely
+forced mode (`search_arcsec <= 0`, reading the pixel containing the position) is now
+implemented, the docstring — which claimed "forced ... at a locked (ra, dec)" and then
+described a peak search in the next sentence — is corrected, and a test pins the distinction:
+forced photometry on noise goes negative about half the time, the 12″ search never does.
+Re-measuring the census in forced mode needs a CASDA re-fetch of all 120 cutouts (none are
+cached) and is the outstanding item.
+
+**The 10σ GJ 65 decline is image noise only.** I fell 15.99 → 11.87 mJy (−26%) and V 9.26 →
+7.11 (−23%), leaving V/I constant to 3.4% — the signature of a flux-scale difference between
+two independently calibrated observations, not of a change in emission state. With a per-epoch
+scale term: **5.2σ at 3%, 3.5σ at 5%, 1.8σ at 10%**. The committed table records no tile or
+beam position, so the systematic cannot be bounded from shipped evidence. Reported now as a
+marginal decline, and the title's "a GJ 65 Variability Recovery" is now "a GJ 65 Recovery".
+
+**One system, four rows.** CNS5 424 and CNS5 425 (BL and UV Ceti, 2″ apart, one beam) carry
+**bit-identical** photometry at both epochs. `\svdRealDet` counts systems, but the prose said
+"target rows", inflating one measurement into two in the place a skimming reader looks.
+
+**Two arXiv-assembler bugs, fixed in the assembler rather than papered over.** The generated
+abstract contained `9.267.11 mJy` — a flux that does not exist — because `\rightarrow` had no
+symbol mapping and the generic `\[a-zA-Z]+ → ''` sweep fused the operands of
+`$V=9.26\rightarrow7.11$`. And `\citealt`, which is natbib's *textual* form, was deleted
+alongside the parenthetical `\citep`, leaving `(it appears in the blind V catalogue, )`. Both
+now handled; arrows map to `->` and `\citealt`/`\citeauthor` resolve from refs.bib like
+`\citet`. This affected every paper, not just this one.
+
+Also: RACS-mid was cited to `mcconnell2020`/`hale2021`, which are both RACS-**low** — the
+design paper and the low-band source catalogue. Duchesne et al. 2023 (PASA 40, e034,
+Crossref-verified) is the RACS-mid data release, and is where the beam, astrometry and
+flux-scale accuracy this paper needs are characterised. The abstract's claim that a leakage
+floor "guards" the killer systematic is corrected: it is exercised in simulation only and
+cannot be computed for this sample (the floor is a multiple of the *bright*-source median
+|V|/I, and this census's median I/σ is 2.2). And the synthetic validation's 1.0/1.0 is
+restated as what it is — injected emitters sit 3.5–14× above the floor, contaminants at about
+a seventh of it, so it establishes the selection arithmetic, not sensitivity near the boundary.
+
+Open: the forced re-measurement; per-target limits as a machine-readable table; recording
+tile/beam position so the flux-scale term can be bounded; and a real-data figure.

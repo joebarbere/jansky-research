@@ -21,8 +21,15 @@ where the optical catalogues apply, the \emph{void} HIMF knee is suppressed rela
 $\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex
 (\feRealVoidKneeSigma$\sigma$; void $\log M^*/M_\odot = \feRealVoidLogMStar$ from
 \feRealNInVoid\ void galaxies, wall $\feRealWallLogMStar$) --- consistent in sign, and somewhat
-larger in magnitude, with the ALFALFA void HIMF \citep[$\sim$0.14~dex;][]{moorman2014},
-recovered independently from an entirely different survey. Group members show the opposite
+larger in magnitude, with the ALFALFA void HIMF \citep[$\sim$0.14~dex;][]{moorman2014}. The HI
+measurement is independent --- FAST against Arecibo --- but the \emph{environment} half of both
+comes from the same SDSS DR7 parent sample and largely the same voids, so this is a deeper HI
+sample over much the same volume, not an independent realisation of large-scale structure.
+Sample variance across voids is not what limits the result (a delete-one-void jackknife gives
+\feRealVoidJkErr~dex, smaller than the fit error); two biases are, both acting in the direction
+of the signal --- the $1/V_{\rm max}$ uniform-density assumption, which the environment split
+violates by construction, and a comparison bin approximated by a bounding box that holds 58\%
+of the catalogue. We therefore report the offset as an upper bound on any true suppression. Group members show the opposite
 offset, $\Delta\log M^*=+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex
 (\feRealGroupKneeSigma$\sigma$, \feRealNGroupMembers\ members), which we read with its survivor
 bias explicit: in a flux-limited HI sample the group galaxies that \emph{retain} detectable HI
@@ -59,6 +66,7 @@ and gas-fraction-at-fixed-$M_*$ statistics are out of reach; the HIMF itself, sp
 environment, is the cleanest self-contained measurement the data support.
 
 \section{Data and Method}
+\label{sec:data}
 \label{sec:method}
 From FASHI DR1 (VizieR \code{J/other/SCPMA/67.19511}) we take each source's position, redshift,
 integrated flux, distance, and precomputed $\log M_{\rm HI}$. We classify environment two ways.
@@ -68,11 +76,26 @@ $H_0$-independent for comoving distance;][]{douglass2023}, a galaxy is a void me
 inside any sphere and a wall galaxy if it lies inside the void-survey volume but outside every
 sphere; galaxies beyond that volume (most of FASHI's southern and high-redshift sky) are
 unclassifiable and excluded, leaving \feRealNInVoid\ void and the surrounding wall galaxies in
-the SDSS cap. (The classifiable volume is approximated by a padded bounding box around the void
-spheres --- crude but honest: its corners can leak a few unclassifiable field galaxies into the
-wall bin, an effect that pushes the wall knee toward the global value and therefore, if
-anything, weakens the reported void--wall contrast.) \emph{Groups}: a galaxy within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of any
+the SDSS cap. (The classifiable volume is approximated by a padded bounding box around
+the void spheres. The SDSS cap is a wedge and its bounding box is several times its volume, so
+the leak is not small: the wall bin holds \feRealNWall\ galaxies, 58\% of all of DR1, and its
+knee \feRealWallLogMStar\ sits 0.010\,dex from the all-sky fit \feRealGlobalLogMStar --- a
+fifth of its own error. The comparison is therefore closer to \emph{void versus everything}
+than to void versus wall. The leak dilutes the wall bin toward the global population and so, if
+anything, weakens the reported contrast; but a genuine footprint mask, not a bounding box, is
+what this measurement wants and does not yet have.) \emph{Groups}: a galaxy within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of any
 Tempel+2017 group is a member (\feRealNGroupMembers\ in the cap), the rest field.
+
+The estimator has a known weakness that this particular measurement walks into.
+$1/V_{\rm max}$ assumes each source is uniformly distributed within its accessible volume ---
+which is exactly false for a sample selected \emph{by} its density environment. For the void
+bin the accessible volume is not the survey cone but the union of void spheres inside it, and
+that fraction falls to zero at the near and far edges of the box while staying finite for the
+wall bin. Because $V_{\rm max}$ is mass-dependent (brighter galaxies reach further, sampling
+more void-free volume), the distortion is mass-dependent too, and it suppresses $\phi$ at the
+high-mass end of the void bin --- the sign of the reported signal. A density-insensitive
+estimator (SWML) is the standard answer and is not attempted here; until it is, the offset
+should be read as an upper bound on any true suppression rather than a measurement of it.
 
 For each environment we build the HIMF by the $1/V_{\rm max}$ method \citep{schmidt1968}: each
 source contributes $1/V_i$ to its mass bin, where $V_i$ is the comoving volume out to the
@@ -105,8 +128,19 @@ limit rather than the survey completeness function.}
 
 \textbf{Voids.} The void HIMF knee sits below the wall value by
 $\Delta\log M^* = \feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex, a
-\feRealVoidKneeSigma$\sigma$ suppression (void $\log M^* = \feRealVoidLogMStar\pm$0.08, wall
-$\feRealWallLogMStar\pm$0.05). It is consistent in sign, and somewhat larger, than the ALFALFA
+\feRealVoidKneeSigma$\sigma$ suppression (void
+$\log M^* = \feRealVoidLogMStar\pm\feRealVoidLogMStarErr$, wall
+$\feRealWallLogMStar\pm\feRealWallLogMStarErr$).
+
+Those are Poisson counting errors within one realisation of large-scale structure, which
+cannot see how much voids differ from one another --- the variance that usually dominates a
+void statistic. Deleting each of the \feRealVoidNOcc\ occupied voids in turn and refitting
+gives a jackknife error of \feRealVoidJkErr\,dex, \emph{smaller} than the fit error, so the
+offset strengthens to \feRealVoidJkSigma$\sigma$ on that axis rather than weakening; a
+bootstrap over voids agrees (0.031). Sample variance across voids is therefore not what limits
+this measurement. What limits it is bias, not variance, and resampling cannot see bias:
+the $1/V_{\rm max}$ density assumption (below) and the bounding-box comparison bin
+(Section~\ref{sec:data}) both act in the direction of the reported signal. It is consistent in sign, and somewhat larger, than the ALFALFA
 void-HIMF knee suppression \citep[$-0.14$~dex, $\sim$2$\sigma$;][]{moorman2014} --- an
 independent measurement from a different telescope, sky, and pipeline, not merely a
 consistency check. We flag a real sensitivity: the void membership depends on the adopted
@@ -165,7 +199,7 @@ on the \code{jansky} project. The author acknowledges the collaborative contribu
 Claude.
 \end{acknowledgments}
 
-\software{Claude \citep{anthropicclaude}, astroquery, NumPy, SciPy, Matplotlib,
+\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude}, astroquery, NumPy, SciPy, Matplotlib,
 jansky \citep{jansky}}
 
 \bibliography{refs}

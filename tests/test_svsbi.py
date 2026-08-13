@@ -165,7 +165,11 @@ def test_run_offline_writes_artifacts(tmp_path):
     assert saved["n_targets"] == m["n_targets"]
     assert (tmp_path / "papers" / "svsbi" / "figures" / "svsbi.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "svsbi" / "generated" / "macros.tex").read_text()
-    assert r"\newcommand{\svbSynNTargets}" not in macros  # NTargets is namespace-free
+    # NTargets IS namespaced, as of 2026-08-12. This assertion previously required the
+    # opposite and so locked the defect in: un-namespaced, an offline rebuild wrote the
+    # synthetic parent size (400) into the macro the abstract uses for the real census (38).
+    assert r"\newcommand{\svbSynNTargets}{400}" in macros
+    assert r"\newcommand{\svbNTargets}" not in macros
     assert r"\newcommand{\svbRealFbeam}{--}" in macros
 
 
@@ -181,3 +185,70 @@ def test_write_macros_placeholder(tmp_path):
 def test_ks_uniform_zero_for_uniform_ranks():
     ranks = np.arange(150)  # perfectly uniform
     assert sv._ks_uniform(ranks, 150) < 0.02
+
+
+def test_source_and_ntargets_are_namespaced():
+    """These two were emitted once, outside the mode loop, from whichever leg ran.
+
+    An offline rebuild therefore wrote the SYNTHETIC parent size (400 stars) into the same
+    macro the abstract uses for the real census (38 M dwarfs) -- a wrong number, not a blank,
+    so neither the '--' placeholder nor the arXiv assembler's check could catch it. That is
+    the `\tiiNEvents` incident (768 real observing days -> 48 synthetic events) exactly.
+    """
+    import json
+    from pathlib import Path
+
+    macros = Path("papers/svsbi/generated/macros.tex")
+    if not macros.exists():  # pragma: no cover - absent in a bare checkout
+        pytest.skip("generated macros not present")
+    text = macros.read_text()
+    # the un-namespaced names must not exist at all
+    assert r"\newcommand{\svbNTargets}" not in text
+    assert r"\newcommand{\svbSource}" not in text
+    assert r"\newcommand{\svbRealNTargets}" in text
+    assert r"\newcommand{\svbSynNTargets}" in text
+    # and the real one must match the committed census
+    m = json.loads(Path("results/svsbi_metrics.json").read_text())
+    assert rf"\newcommand{{\svbRealNTargets}}{{{m['n_targets']}}}" in text
+
+
+def test_prior_sensitivity_is_committed_and_flags_the_break_as_prior_driven():
+    """The experiment that decides what this paper may claim.
+
+    A posterior median that follows its prior wall is reporting the box, not the data. The
+    committed run must show that for log_Lbreak -- if it ever stops showing it, the paper's
+    retraction of the "pins" claim needs revisiting, in either direction.
+    """
+    import json
+    from pathlib import Path
+
+    m = json.loads(Path("results/svsbi_metrics.json").read_text())
+    ps = m.get("prior_sensitivity")
+    assert ps, "prior_sensitivity is quoted in the paper and must be committed"
+    pub, wide = ps["published_box"], ps["wide_box"]
+    # the wide box must actually be wider, or the test is vacuous
+    assert wide["prior_high"][1] > pub["prior_high"][1]
+    assert wide["prior_low"][0] < pub["prior_low"][0]
+    # the break must be flagged prior-driven, and by a margin over the seed noise
+    assert ps["prior_driven"]["log_Lbreak"] is True
+    shift = abs(ps["median_shift_wide_minus_published"]["log_Lbreak"])
+    seed_sd = max(pub["median_seed_sd"]["log_Lbreak"], wide["median_seed_sd"]["log_Lbreak"])
+    assert shift > 3 * seed_sd, f"shift {shift} not clear of seed noise {seed_sd}"
+    # every parameter must have a per-seed record, or the seed scatter is not evidenced
+    for box in (pub, wide):
+        for name in ("lf_slope", "log_Lbreak", "f_beam"):
+            assert len(box["median_per_seed"][name]) == len(ps["seeds"])
+
+
+def test_prior_box_is_committed_so_width_ratios_are_checkable():
+    """The paper quotes posterior/prior width ratios; without the bounds in the evidence file
+    a reader has to open the source to check them."""
+    import json
+    from pathlib import Path
+
+    m = json.loads(Path("results/svsbi_metrics.json").read_text())
+    assert m.get("prior_low") and m.get("prior_high")
+    assert m["theta_names"] == list(sv.THETA_NAMES)
+    lo, hi = sv.prior_bounds()
+    assert m["prior_low"] == [float(v) for v in lo]
+    assert m["prior_high"] == [float(v) for v in hi]

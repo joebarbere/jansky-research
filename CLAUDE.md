@@ -153,6 +153,65 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**Run the test even when you expect it to fail the claim — it may not.** The referee
+expected a void jackknife to destroy `fashienv`'s 2.9-sigma HIMF knee offset, and I expected
+it too (the quoted error was Poisson-within-one-realisation, the `rmstructure` shape exactly).
+Measured: jackknife 0.039 dex against a 0.087 fit error, so the offset *strengthened*. The
+value of running it was not the verdict but the relocation — it proved the problem is **bias,
+not variance**, and no amount of resampling would ever have found the two biases that do limit
+that measurement. **A resampling test bounds variance; it is silent on bias, so passing one
+is not a clean bill of health.**
+
+**A null result divides by sensitivity, not by sample size.** `frblens` searched 33 FRB
+repeaters, found none lensed, and quoted f < 2.996/33 = 0.091. That is right only if every
+source was fully sensitive. Measured, the mean injection efficiency was **0.24** and four
+sources had eps = **0** -- too few bursts for any injected signal to beat the null, so they
+constrained nothing while inflating the denominator. The honest limit is 2.996/sum(eps) =
+0.368, **four times weaker**. The paper had also argued that measuring efficiency on only the
+deepest source made the limit "conservative", which is backwards: assuming eps = 1 where it is
+smaller tightens the limit. **Before quoting "we searched N and saw none", ask how many of the
+N the search could actually have seen into.**
+
+**A "forced" measurement that searches is a noise maximum.** `stokesv_discovery`'s method
+section said "forced peak flux at the propagated pixel"; the code took the brightest Stokes-I
+pixel within 12" and read V there. The census exposed it without any new data: **I > 0 for 54
+of 54** quiescent targets, p = 2^-54 for a genuine fixed-pixel measurement. On blank sky a
+peak search returns the largest of several independent beams, so it is positive essentially
+always and biased high, and the companion quantity is read wherever that maximum fell. For an
+upper-limit census at known positions this invalidates the limits. **Test a photometry routine
+on pure noise: forced should go negative about half the time.**
+
+**When two quantities fall by the same fraction, suspect the calibration.** `stokesv_discovery`
+reported a 10-sigma inter-epoch decline in Stokes V. Stokes I fell 26% and V 23% over the same
+pair, leaving V/I constant to 3.4% -- which is what a flux-scale difference between two
+independently calibrated observations does, and is not what a change of emission state need
+do. The quoted significance carried image noise only; a 5% per-epoch scale term takes it to
+3.5 sigma. **Before quoting a significance on a difference of two epochs, ask what else moved
+by the same factor.**
+
+**A test can lock a defect in.** `test_run_offline_writes_artifacts` asserted
+`\svbSynNTargets` must *not* exist — i.e. it required the un-namespaced behaviour that let an
+offline rebuild write the synthetic parent size (400 stars) into the macro the abstract used
+for the real census (38). The test passed for months *because* the bug was present. When a
+test encodes "X must not exist", ask whether X is the fix.
+
+**To tell a measurement from a prior, move the prior.** `svsbi` reported a break luminosity of
+14.5 from a posterior whose mass piled against a box closed at 15. Widening the box to 16.5
+moved the median to 15.5 — a 0.96 dex shift against a 0.02–0.14 seed scatter. The number was
+reporting the wall. A posterior/prior width ratio does not catch this (the ratio was 0.41,
+i.e. "informative"); only re-inference under a different box does. Applies to any bounded
+parameter: **quote a bounded fit only after showing the bound does not set it.**
+
+**A rule stated in this file is not a rule the repo follows — audit it.** Three
+CLAUDE.md requirements were checked mechanically on 2026-08-12 and each was met by a small
+minority of slices: `preserve_live_macros` ("call it from every `_write_macros`") was called
+by **5 of 42**; the `\software{}` block citing `jansky-research` was present in **4 of 46**
+papers; 41 `refs.bib` files lacked the `janskyresearch` entry entirely. The
+`preserve_live_macros` gap was live, not cosmetic: `make figures` runs all 33 offline slices
+with `--out .` in the repo root, so one invocation would have blanked every real macro in 33
+papers. **Periodically grep for each stated invariant rather than assuming new code inherited
+it** — the cost is one command per rule.
+
 **Accumulated hedging is its own distortion.** After four review rounds `dr20radio` spent
 46% of its length on the one derived quantity it concludes is a survey artefact, while the two
 clean census results shared 22 lines. Every qualification was individually true and the whole

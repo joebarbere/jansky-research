@@ -10,7 +10,8 @@ The First Catalogue-Level Search for Recurring Image Delays}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-A strongly lensed one-off fast radio burst masquerades as a repeater whose ``bursts'' arrive
+A strongly lensed \emph{repeating} fast radio burst produces, for every intrinsic burst, a
+train whose images arrive
 in image multiplets with a mutual time delay fixed (at the solar-system barycenter) to
 milliseconds \citep{dailu2017,li2018}. The theory is a decade old; no observational
 catalogue-level search has been published --- existing FRB lensing searches are all in the
@@ -18,7 +19,7 @@ intra-burst $\mu$s--ms regime \citep{leung2022,kader2022,cat1lens,microlens2026}
 first, on the CHIME/FRB Catalog 2 repeaters \citep[83 sources, of which 33 have the $\ge$5
 bursts and $>$2-day spans the statistic needs;][]{cat2}: per source, we barycenter the
 catalogue's topocentric TOAs (the annual Roemer term would otherwise drift a fixed delay by
-up to $\pm$150\,s in topocentric pair delays --- far beyond tolerance), then scan all
+up to $\pm$230\,s in topocentric pair delays --- far beyond tolerance), then scan all
 burst-pair delays $>$1\,d for a recurring delay $\Delta$ shared by the maximum number of
 disjoint pairs matching within 5\,s and consistent in DM within each source's own fitted-DM
 scatter. Significance comes from a null that first contact with the real catalogue proved
@@ -31,8 +32,10 @@ the real burst trains --- through the same barycentring, DM cut, and transit-win
 as the search --- map the sensitivity region and expose a transit-survey selection: both
 images are jointly detectable only when $\Delta$ is within the transit window of an integer
 number of sidereal days. The search returns \flRealNDet\ detections among \flRealNSearched\
-repeaters searched (cleanest non-detection $p=0.81$), giving the first empirical upper limit
+repeaters searched (cleanest non-detection $p=0.806$), giving the first empirical upper limit
 on the lensed-repeater fraction: $<$\flRealLimit\ per searched repeater (95\% confidence,
+dividing by the summed injection efficiency $\sum_i \epsilon_i = \flRealEpsSum$ rather than by
+the source count, which would overstate the limit fourfold,
 within the mapped sensitivity region). The expected yield at lensing optical depth
 $\sim$$10^{-4}$ was zero; the limit, the machinery, and the honestly-mapped selection
 function are the contribution.
@@ -62,7 +65,7 @@ Per repeater with $\ge$5 bursts and a span $>$2\,d (33 of the 83), we use the
 first-component \code{mjd\_400} TOAs --- which are \emph{topocentric} (Catalog 2, Appendix
 A). A lens delay is fixed only at the barycenter: the annual Roemer term makes a fixed
 barycentric delay drift in topocentric pair delays by $\sim$$\Delta\times9$\,s per day of
-delay (e.g.\ $\pm$150\,s at $\Delta=26$\,d) --- two orders of magnitude beyond our matching
+delay (e.g.\ $\pm$230\,s at $\Delta=26$\,d) --- some 46$\times$ our 5\,s matching
 tolerance, so the search would be blind to real signals in the raw TOAs. We therefore
 barycenter every TOA (astropy, CHIME's location, per-source catalogue positions; arcminute
 positional uncertainty contributes $<$0.2\,s) and search in the barycentric frame. Every
@@ -74,8 +77,9 @@ catalogue TOA errors are ms-scale (repeater median 1.2\,ms, maximum 0.15\,s), a
 is $<$0.2\,s, and secular delay drift \citep{dailu2017} is sub-second over the span --- 5\,s
 covers all of these with margin while staying far inside the $\sim$15-min transit window.
 Matched pairs must also agree in DM within $3\sqrt{2}\,\sigma_{\rm DM}$ of the source's own
-fitted-DM scatter ($\sigma_{\rm DM}$ = robust per-source scatter of \code{dm\_fitb}, 2--7
-pc\,cm$^{-3}$ for the most active repeaters --- a naive 1\,pc\,cm$^{-3}$ ``measurement
+fitted-DM scatter ($\sigma_{\rm DM}$ = robust per-source scatter of \code{dm\_fitb}, median 0.4 and
+0.2--8.4 across the sample, with 9 of 33 sources at the 1\,pc\,cm$^{-3}$ floor --- a naive
+1\,pc\,cm$^{-3}$ ``measurement
 floor'' would reject the majority of \emph{genuine} image pairs, whose independently fitted
 DMs scatter just like intrinsic bursts'). The per-source statistic is the maximum count
 $M_{\max}$.
@@ -102,15 +106,26 @@ limit is scoped to the sensitive region.
 
 \section{Results}
 Zero of \flRealNSearched\ searched repeaters show a significant recurring delay (all
-$p\ge0.81$ against 200 phase scrambles; $p=(k{+}1)/(n{+}1)$). With \flRealNDet\ detections,
-the 95\% Poisson upper limit on the lensed fraction is $2.996/\flRealNSearched\ = $
-\flRealLimit\ per searched repeater, applicable within the mapped sensitivity region: delays
-at integer sidereal days out to $\sim$26\,d and magnification ratios down to each source's
-fluence floor. The injection map is computed for the deepest train (FRB 20220912A, 373
-bursts; sensitive over \flRealSensFrac\ of its grid, whose dark cells are the deliberately
-off-comb delays and the lowest magnification ratio); the other 32 searched trains are
-shallower and necessarily less sensitive, so the limit is conservative in depth but the
-region is mapped from the best case --- both stated. This is consistent with --- and the
+$p>0.8$ against 200 phase scrambles; $p=(k{+}1)/(n{+}1)$). With \flRealNDet\ detections the 95\% Poisson upper
+limit on the mean lensed count is 2.996, and the fraction follows on dividing by the summed
+injection efficiency:
+\begin{equation}
+f < \frac{2.996}{\sum_i \epsilon_i} = \flRealLimit,
+\end{equation}
+applicable within the mapped region --- delays at integer sidereal days out to $\sim$26\,d,
+magnification ratios to 0.02.
+
+The denominator matters more than the numerator here. Dividing instead by the source count
+gives \flRealLimitNaive, which is what this analysis reported before the efficiency was
+measured for anything but the deepest train --- and it is wrong by a factor of four, in the
+optimistic direction. Injecting into \emph{every} searched train, at the census's own
+detection threshold ($p \le \flRealDetP$, not the fivefold looser one the map previously
+used), gives a mean efficiency of \flRealEpsMean\ and $\sum_i \epsilon_i = \flRealEpsSum$
+against \flRealNSearched\ sources: the best train reaches \flRealEpsMax, and
+\flRealEpsZero\ sources have $\epsilon = 0$ --- too few bursts for any injected image train to
+beat the phase-scramble null, so they contribute no constraint at all while inflating a
+count-based denominator. A limit is a statement about how many lensed systems could have
+hidden in the search, and a source the search cannot see into hides all of them. This is consistent with --- and the
 first empirical statement about --- the $\sim$$10^{-4}$ optical-depth expectation
 \citep{lensreview}.
 
@@ -133,6 +148,10 @@ the limit.
 \textit{Reproducibility.} \code{jansky\_research.frblens}; every number above is
 pipeline-generated (\code{results/frblens\_metrics.json} $\to$ macros). Data: CANFAR DOI
 10.11570/25.0066 mirror of the ApJS machine-readable table \citep{cat2}.
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+NumPy, SciPy, Astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
+verified by the pipeline's test suite.}
 
 \bibliography{refs}
 \bibliographystyle{aasjournal}

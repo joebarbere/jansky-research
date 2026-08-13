@@ -16,6 +16,13 @@
   doi     = {10.1007/s11433-023-2219-7},
   note    = {VizieR J/other/SCPMA/67.19511},
 }
+% UNVERIFIED, 2026-08-12. This entry renders in the .bbl as literally "others. 2025, arXiv
+% e-prints" and it is the citation the paper's novelty claim depends on ("the sole
+% environment study to date used 230 group galaxies"). arXiv egress is blocked from this
+% environment and Crossref has no DOI for it, so the author list could not be resolved.
+% A HUMAN MUST verify arXiv:2510.22902 and fill in the authors before submission -- if the
+% preprint does not exist or does not say this, the novelty claim needs rewriting, not the
+% bibliography.
 @article{fashi_groups,
   author  = {others},
   title   = {The {HI} Content of Group Galaxies from {FASHI}},
@@ -53,10 +60,12 @@
   pages   = {3559--3570},
   doi     = {10.1093/mnras/stu1674},
 }
+% Corrected 2026-08-12: the DOI was right but the title and author list belonged to a
+% different paper. Verified: curl -s https://api.crossref.org/works/10.1093/mnras/sty521
 @article{jones2018,
-  author  = {Jones, M. G. and Papastergis, E. and Pan, Z. and others},
-  title   = {The Effect of Large-Scale Environment on the Low-Mass End of the {HI} Mass
-             Function},
+  author  = {Jones, M. G. and Haynes, M. P. and Giovanelli, R. and Moorman, C.},
+  title   = {The {ALFALFA} {HI} mass function: a dichotomy in the low-mass slope and a
+             locally suppressed `knee' mass},
   journal = {Monthly Notices of the Royal Astronomical Society},
   year    = {2018},
   volume  = {477},
@@ -106,4 +115,14 @@
   year         = {2026},
   howpublished = {\url{https://www.anthropic.com}},
   note         = {Model and system cards: \url{https://www.anthropic.com/system-cards}; accessed 2026},
+}
+
+@misc{janskyresearch,
+  author       = {Barbere, Joseph},
+  title        = {jansky-research: A CPU-first, reproducible toolkit for amateur
+                  radio-astronomy analyses},
+  year         = {2026},
+  doi          = {10.5281/zenodo.21482378},
+  note         = {Zenodo concept DOI; resolves to the latest release},
+  howpublished = {\url{https://doi.org/10.5281/zenodo.21482378}},
 }

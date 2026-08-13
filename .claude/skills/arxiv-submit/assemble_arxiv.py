@@ -83,6 +83,15 @@ _SYMBOLS = {
     r"\leq": "<=",
     r"\geq": ">=",
     r"\ll": "<<",
+    # Arrows had no entry, so the generic "\\[a-zA-Z]+ -> ''" sweep below deleted them and
+    # FUSED the operands: "$V=9.26\\rightarrow7.11$~mJy" rendered as "9.267.11 mJy" in the
+    # stokesv_discovery arXiv abstract -- a number that does not exist, in the payload meant
+    # for the submission form. Any symbol that separates two operands must map to something.
+    r"\rightarrow": " -> ",
+    r"\to": " -> ",
+    r"\leftarrow": " <- ",
+    r"\Rightarrow": " => ",
+    r"\longrightarrow": " -> ",
     r"\gg": ">>",
     r"\lesssim": "<~",
     r"\gtrsim": ">~",
@@ -146,7 +155,16 @@ def _latex_to_text(s: str, bib: dict[str, str] | None = None) -> str:
         s,
     )
     s = re.sub(r"\\cite[p]?\*?(\[[^\]]*\])*\{[^}]*\}", "", s)
-    s = re.sub(r"\\(citealt|citeauthor|ref|label)\*?\{[^}]*\}", "", s)
+    # \citealt and \citeauthor are TEXTUAL too -- natbib's "author year" and "author" without
+    # parentheses. They were deleted alongside the parenthetical forms, which left the
+    # sentence's own punctuation behind: "(it appears in the blind V catalogue, )".
+    # Resolve them the way \citet already is.
+    s = re.sub(
+        r"\\(?:citealt|citeauthor)\*?(?:\[[^\]]*\])*\{([^}]*)\}",
+        lambda m: _cite_text(m.group(1), bib),
+        s,
+    )
+    s = re.sub(r"\\(ref|label)\*?\{[^}]*\}", "", s)
     # sub/superscripts: keep the content inline so e.g. R_0 -> R0, ^{-1/2} -> ^(-1/2)
     s = re.sub(r"_\{([^{}]*)\}", r"\1", s)
     s = re.sub(r"\^\{([^{}]*)\}", r"^(\1)", s)

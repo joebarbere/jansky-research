@@ -177,3 +177,48 @@ def test_write_macros_placeholder(tmp_path):
     txt = p.read_text()
     assert r"\newcommand{\flRealNSearched}{--}" in txt
     assert r"\newcommand{\flSynNSearched}{--}" in txt
+
+
+def test_limit_divides_by_summed_efficiency_not_source_count():
+    """The correction that moved this paper's headline by 4x.
+
+    "We searched N sources and saw none" bounds the lensed fraction at -ln(1-C)/N only if
+    every source was fully sensitive. Measured at the census's own detection threshold the
+    mean efficiency here is 0.24, and four sources have eps = 0 -- too few bursts for any
+    injected image train to beat the phase-scramble null, so they constrain nothing while
+    inflating a count-based denominator.
+    """
+    import math
+
+    # eps = 1 everywhere reduces to the naive form
+    assert fl.lensed_fraction_limit(10, 0, eps_sum=10.0) == pytest.approx(
+        fl.lensed_fraction_limit(10, 0)
+    )
+    # a partially sensitive sample gives a WEAKER (larger) limit, never a tighter one
+    weak = fl.lensed_fraction_limit(10, 0, eps_sum=2.5)
+    assert weak > fl.lensed_fraction_limit(10, 0)
+    assert weak == pytest.approx(-math.log(0.05) / 2.5)
+    # a sample nothing could be detected in bounds nothing
+    assert math.isnan(fl.lensed_fraction_limit(10, 0, eps_sum=0.0))
+
+
+def test_committed_limit_uses_the_measured_efficiency():
+    """The committed number must be the efficiency-corrected one, not the count-based one."""
+    import math
+    from pathlib import Path
+
+    path = Path("results/frblens_metrics.json")
+    if not path.exists():  # pragma: no cover - absent in a bare checkout
+        pytest.skip("committed frblens results not present")
+    m = json.loads(path.read_text())
+    eff = m.get("efficiency")
+    assert eff, "the efficiency leg is quoted in the paper and must be committed"
+    names = {r["name"] for r in m["rows"]}
+    eps = sum(v for k, v in eff["per_source"].items() if k in names)
+    assert m["lensed_fraction_limit_95"] == pytest.approx(-math.log(0.05) / eps, abs=5e-4)
+    # ...and materially weaker than the count-based one, or the fix did nothing
+    assert m["lensed_fraction_limit_95"] > 2.0 * (-math.log(0.05) / m["n_searched"])
+    # measured at the census's own threshold, not a looser one
+    assert eff["detection_p"] == pytest.approx(2.0 / 201.0, abs=1e-4)
+    # every searched source needs an entry, or the sum is over the wrong set
+    assert names <= set(eff["per_source"])
