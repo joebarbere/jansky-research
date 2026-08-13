@@ -39,6 +39,28 @@ PAPERS = ROOT / "papers"
 RESULTS = ROOT / "results"
 CACHE = Path("/tmp/triage_crossref_cache.json")
 
+# Slices whose evidence predates the <slug>_metrics.json convention. Each mapping is taken
+# from the module's own write call, not guessed: frbstats (the oldest slice) writes the bare
+# metrics.json; hi writes rotation_curve.json; spectra's slice was named "uss" internally;
+# the torchfdmt paper is backed by the fdmt+singlepulse modules. Aliased here rather than
+# renaming the committed files, because the modules and their tests read these paths and a
+# rename would churn real evidence for a cosmetic gain.
+HARD_TYPED_OK = {
+    ("pte2", "0.05"),  # conventional p-threshold; equality with \ptSynFP is coincidence
+    ("vgpra", "17.24"),  # Voyager-era literature constant; the injection was chosen to match
+    ("dr20radio", "2.5"),  # "the apparent 2.5x" is a flux RATIO (3.0/1.2), not the 2.5" beam
+}
+
+EVIDENCE_ALIAS = {
+    "frbstats": ["metrics.json"],
+    "hi": ["rotation_curve.json"],
+    "spectra": ["uss_metrics.json"],
+    "driftsearch": ["drift_metrics.json"],
+    "frbperiod": ["period_metrics.json"],
+    "torchfdmt": ["singlepulse_metrics.json"],
+    "ecallisto_pipeline": ["ecallisto_metrics.json"],
+}
+
 # Verbs this repo has retracted. "recovers" where the honest word was "responds to"; "pins"
 # for a parameter sitting on its prior bound; "confirms" for a non-rejection; "unbiased" for a
 # Kaplan-Meier under dependent censoring; "complete and pure" for a test that could not fail.
@@ -119,12 +141,19 @@ def check_paper(paper: Path, *, network: bool, cache: dict) -> list[tuple[str, s
                 )
             )
 
-    # 3. hard-typed numbers that duplicate a committed macro value
+    # 3. hard-typed numbers that duplicate a committed macro value.
+    # Adjudicated coincidences are allowlisted: equality of a prose number and a macro is not
+    # always provenance. pte2's "p<0.05" is the conventional significance threshold, which the
+    # synthetic false-positive rate happens to equal -- substituting \ptSynFP there would
+    # claim the threshold was measured. vgpra's "17.24 h" is the Voyager-era literature
+    # constant quoted in historical context; \vgSynInjected was CHOSEN to equal it.
     prose = re.sub(r"\\newcommand\{[^}]*\}\{[^}]*\}", "", tex)
     for name, val in macros.items():
         v = val.strip()
         if not re.fullmatch(r"-?\d+\.\d+", v) or abs(float(v)) < 0.01:
             continue  # integers and tiny values collide with section numbers etc.
+        if (paper.name, v) in HARD_TYPED_OK:
+            continue
         if re.search(rf"(?<![\d.]){re.escape(v)}(?![\d.])", prose) and name in used:
             out.append(("MED", "hard-typed", f"{v} appears in prose and as \\{name}"))
 
@@ -156,6 +185,8 @@ def check_paper(paper: Path, *, network: bool, cache: dict) -> list[tuple[str, s
     # 5. evidence
     slug = paper.name
     cand = list(RESULTS.glob(f"{slug}*.json"))
+    if not cand and slug in EVIDENCE_ALIAS:
+        cand = [RESULTS / n for n in EVIDENCE_ALIAS[slug] if (RESULTS / n).is_file()]
     if not cand:
         out.append(("MED", "no-evidence", f"no results/{slug}*.json"))
     else:

@@ -79,7 +79,7 @@ smear, so its $S/N$ on a smeared pulse exceeds the one-sample-per-channel oracle
 The real-data validation uses a small (3.25~MB) public SIGPROC filterbank from the
 \code{sigpyproc3} repository \citep{sigpyproc}: a Parkes/UWL observation of the Crab pulsar
 (PSR~B0531+21), 832 channels over 702--4030~MHz, 0.512~ms sampling, 2.1~s. The catalogued
-dispersion measure is 56.77~pc\,cm$^{-3}$ \citep{manchester2005}, and the full 463~ms band sweep
+dispersion measure is \spTrueDm~pc\,cm$^{-3}$ \citep{manchester2005}, and the full 463~ms band sweep
 is visible within the file. After per-channel robust normalisation (median/MAD bandpass removal
 with clipping as a light RFI guard), the FDMT butterfly peaks at
 $\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$ ($\spRealDmErr\%$ from the catalogue), and a boxcar matched

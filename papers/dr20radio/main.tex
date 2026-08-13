@@ -19,7 +19,7 @@ southern SDSS quasar spectra did not exist before DR20, the pairing ``SDSS spect
 quasars $\times$ RACS south of $-40^\circ$'' was impossible until this release; no radio
 cross-match of any SDSS-V quasar catalog has been published. I present the first such
 census. North of $-40^\circ$, \drNorthCensus\ clean-redshift DR20 quasars matched against
-the VLASS Quick Look epoch catalogs at 2.5\arcsec\ give per-epoch radio-detection fractions
+the VLASS Quick Look epoch catalogs at \drAlphaVlassRad\arcsec\ give per-epoch radio-detection fractions
 of \drNorthEtwoPct\% (E2) and \drNorthEthreePct\% (E3) after subtracting a
 \emph{measured} chance-coincidence rate (\drNorthFmPct\% from position-shift trials), or
 \drNorthAnyPct\% matched in any epoch (raw, uncorrected). South of $-40^\circ$ --- sky where these are the
@@ -106,7 +106,7 @@ The northern radio catalog is the CIRADA VLASS Quick Look component list
 \citep{gordon2021}: epoch 2 with the recommended quality cuts (\code{Duplicate\_flag} $<$
 2, \code{Quality\_flag} $\in \{0,4\}$, non-empty islands), and the epoch-3 interim
 component lists with their binary quality flag. VLASS observes at 2--4\,GHz (3\,GHz
-effective) with a 2.5\arcsec\ beam; the per-epoch catalog reliability threshold is
+effective) with a \drAlphaVlassBeam\arcsec\ beam; the per-epoch catalog reliability threshold is
 $\sim$\drSlimVlass\,mJy \citep{gordon2021}.
 
 \subsection{RACS (south)}
@@ -126,7 +126,7 @@ both surveys and provides an internal cross-check.
 \subsection{Matching and the measured false-match rate}
 
 Quasars are matched to the nearest radio component with \code{astropy}
-\citep{astropy}: at 2.5\arcsec\ against VLASS (matched to its beam and astrometry) and
+\citep{astropy}: at \drAlphaVlassRad\arcsec\ against VLASS (matched to its beam and astrometry) and
 5\arcsec\ against RACS (whose 25\arcsec\ beam implies few-arcsecond positional scatter for
 faint sources). The chance-coincidence rate is measured, not modeled: each of ten trials
 displaces every quasar position by an independently drawn 5--30\arcmin\ offset and repeats the
@@ -187,7 +187,7 @@ $\pm\drAlphaMeasSeFull$ statistical error: the assumed completeness floor
 (\drAlphaMeas\ $\to$ \drAlphaFloorC\ as it is lowered), the choice of VLASS epoch
 (\drAlphaEpochA\ vs \drAlphaEpochB), the flux range measured over (\drAlphaBinFaint\ to
 \drAlphaBinC\ across $S_\mathrm{RACS}$ bins), and peak versus integrated flux across a
-2.5\arcsec\ and a 25\arcsec\ beam ($+\drAlphaIntShift$ globally, $+\drAlphaBinCShift$ in the
+\drAlphaVlassBeam\arcsec\ and a 25\arcsec\ beam ($+\drAlphaIntShift$ globally, $+\drAlphaBinCShift$ in the
 brightest bin, which is therefore substantially a beam effect rather than a spectral one).
 Together these span \drAlphaSysLo\ to \drAlphaSysHi.
 
