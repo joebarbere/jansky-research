@@ -1,0 +1,37 @@
+# Hand-authored arXiv metadata for papers/stokesv_discovery -- TRACKED IN GIT.
+#
+# Created 2026-08-12 after a referee round found the generated abstract carried a flux value
+# that does not exist: "$V=9.26\rightarrow7.11$~mJy" rendered as "9.267.11 mJy", because the
+# assembler had no mapping for \rightarrow and its generic macro sweep fused the operands.
+# A \citealt was deleted as though parenthetical, leaving "catalogue, )". Both are fixed in
+# assemble_arxiv.py, so this file is not hiding those bugs -- it exists because the extracted
+# abstract runs ~2500 characters against arXiv's ~1920 limit, and because the significance
+# statement needs to be exact.
+abstract: |
+  Circular polarization is a near-unambiguous flag of coherent radio emission, but a single
+  survey epoch undercounts the flaring-emitter population: an emitter caught between bursts
+  shows nothing. We present a targeted, reproducible two-epoch Stokes-V photometry pipeline
+  for the nearest M dwarfs, applied to CASDA cutouts of RACS-mid at MJD 59233 and 60769 -- a
+  4.2-yr same-band pair at 1367.5 MHz. Of 60 CNS5 targets, 39 returned measurements and 19
+  have both epochs; the remainder were lost to archive-access failures rather than to
+  non-detection. Exactly one system is detected above 5 sigma in V: GJ 65 (BL + UV Ceti,
+  which share a beam and so give one independent measurement, not two), at V = 9.26 +/- 0.15
+  mJy and 7.11 +/- 0.15 mJy. That decline is 10 sigma against image noise alone, but Stokes I
+  fell 26% and V 23% across the same pair, leaving the circular fraction constant to 3.4% --
+  the signature of an epoch-to-epoch flux-scale difference rather than a change of emission
+  state. Including a per-epoch scale term of 3-5% reduces it to 5.2-3.5 sigma, so we report a
+  marginal same-band decline, not an established variability recovery. Every other measured
+  target is quiescent, with a median 5 sigma V upper limit of 0.83 mJy (per-target range
+  0.65-2.87). We give the per-target limits rather than the median alone, and state the
+  selection function -- including that the leakage floor is exercised in simulation but not
+  applied to the real census, whose median I/sigma of 2.2 is too low to measure one from.
+  This is a methods and recover-a-known contribution with an upper-limit census, not a
+  discovery claim.
+
+# 4 pages, 1 figure, counted from the compiled PDF; the extractor cannot count pages.
+comments: '4 pages, 1 figure. Code and data: doi:10.5281/zenodo.21482378'
+
+# A targeted census of stellar coherent emission: the science domain is stellar, and the
+# contribution includes an open pipeline, so IM rides along.
+primary_category: astro-ph.SR
+cross_lists: [astro-ph.IM]

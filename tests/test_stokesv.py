@@ -208,3 +208,43 @@ def test_run_real_merges_forced_photometry(monkeypatch, tmp_path):
     assert m["n_v_circular"] == 2 and m["frac_v_circular"] == 0.5  # variability-limited V
     macros = (tmp_path / "papers" / "stokesv" / "generated" / "macros.tex").read_text()
     assert r"\svNmeasured}{4}" in macros and r"\svIrec" in macros
+
+
+def test_forced_mode_is_signed_on_blank_sky_while_the_peak_search_is_not():
+    """The distinction that invalidated a census of upper limits.
+
+    A 12" peak search over blank sky returns the largest of several independent beams, so its
+    I is positive essentially always and V is read wherever that maximum fell -- up to a beam
+    from the star. In the real RACS-mid M-dwarf census this gave I > 0 for 54 of 54 quiescent
+    targets, p = 2^-54 for a genuine fixed-pixel measurement. Forced mode reads the pixel at
+    the position, so on blank sky it is signed and mean-zero, which is what an upper limit at
+    a known position requires.
+    """
+    from astropy.wcs import WCS
+
+    rng = np.random.default_rng(0)
+    n = 81
+    w = WCS(naxis=2)
+    w.wcs.crpix = [n // 2 + 1, n // 2 + 1]
+    w.wcs.cdelt = [-1.0 / 3600.0, 1.0 / 3600.0]  # 1"/pixel
+    w.wcs.crval = [180.0, -30.0]
+    w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+    signs, peaks = [], []
+    for _ in range(60):
+        img_i = rng.normal(0.0, 1.0, (n, n))
+        img_v = rng.normal(0.0, 1.0, (n, n))
+        forced = stokesv.measure_circular_pol(img_i, img_v, w, 180.0, -30.0, search_arcsec=0.0)
+        searched = stokesv.measure_circular_pol(img_i, img_v, w, 180.0, -30.0, search_arcsec=12.0)
+        signs.append(forced["i_peak"])
+        peaks.append(searched["i_peak"])
+        assert forced["forced"] is True and searched["forced"] is False
+        assert forced["offset_arcsec"] < 1.5
+
+    signs, peaks = np.asarray(signs), np.asarray(peaks)
+    # forced: signed and mean-zero on blank sky
+    assert (signs < 0).sum() > 15, "forced photometry on noise must go negative about half the time"
+    assert abs(signs.mean()) < 0.5
+    # peak search: essentially always positive, and biased high
+    assert (peaks > 0).all(), "a 12-arcsec peak search over noise should never return negative I"
+    assert peaks.mean() > 2.0 * abs(signs.mean()) + 1.0

@@ -1,31 +1,43 @@
 \documentclass[twocolumn]{aastex631}
 \input{generated/macros}
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{Two-epoch RACS Stokes-V forced photometry of nearby M dwarfs}
+\shorttitle{Two-epoch RACS Stokes-V photometry of nearby M dwarfs}
 \shortauthors{Barbere}
 \begin{document}
-\title{Two-Epoch Forced Stokes-V Photometry of the Nearest M Dwarfs in RACS-mid:
-Method, a GJ 65 Variability Recovery, and Upper Limits}
+\title{Two-Epoch Stokes-V Photometry of the Nearest M Dwarfs in RACS-mid:
+Method, a GJ 65 Recovery, and Upper Limits}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
 Circular polarization is a near-unambiguous flag of coherent radio emission, but a single survey
 epoch undercounts the flaring-emitter population --- an emitter caught between bursts shows
-nothing. We present a targeted, reproducible two-epoch Stokes-V forced-photometry pipeline for the
+nothing. We present a targeted, reproducible two-epoch Stokes-V photometry pipeline for the
 nearest M dwarfs: Gaia proper motions propagate each CNS5 \citep{golovin2023} position to each
 observation's epoch (mandatory --- Barnard's star moves $\sim$40$''$ between the epochs used),
-CASDA SODA cutouts of RACS-mid \citep{mcconnell2020,hale2021} images at MJD $\approx$59233 and
-60769 (a 4.2-yr same-band pair at 1367.5~MHz) yield forced $I$ and $V$ at each propagated
-position, and a per-epoch leakage floor guards the killer systematic (off-axis $I\rightarrow V$
-leakage). On a synthetic epoch pair with injected steady emitters, single-epoch flares, and
-leakage contaminants, the pipeline's selection is complete and pure (\svdComp/\svdPur) and the
+CASDA SODA cutouts of RACS-mid \citep{duchesne2023} images at MJD $\approx$59233 and
+60769 (a 4.2-yr same-band pair at 1367.5~MHz) yield $I$ and $V$ near each propagated
+position. A per-epoch leakage floor against the killer systematic (off-axis
+$I\rightarrow V$ leakage) is implemented and exercised in simulation, but it is \emph{not}
+applied to the real census: the floor is defined as a multiple of the field median $|V|/I$ of
+\emph{bright} sources, and this sample's median $I/\sigma_I$ is 2.2, so the quantity it would
+be computed from is noise- rather than leakage-dominated. GJ 65 at $|V|/I = 0.58$ is two
+orders of magnitude clear of any plausible leakage, so the detection is unaffected; the
+quiescent limits have not been checked against a measured leakage level. On a synthetic epoch pair with injected steady emitters, single-epoch flares, and
+leakage contaminants, the pipeline's selection separates the two injected populations
+perfectly (\svdComp/\svdPur) --- though the injected emitters sit 3.5--14$\times$ above the
+floor and the contaminants roughly a seventh of it, so this establishes that the selection
+arithmetic is right, not that it is sensitive near the decision boundary and the
 two-epoch step flags exactly the flares (completeness \svdVarComp); a fraction \svdMissFrac\ of
 injected emitters are invisible to any single epoch. On the real sky (\svdRealN\ nearest M dwarfs
 measured; \svdRealPairs\ complete epoch pairs) the pipeline recovers the prototype coherent
 emitter --- the GJ 65 system (BL+UV Ceti; also in the RACS-low2 blind V catalogue,
-\citealt{racs8_2026}) --- at $V=9.26\rightarrow7.11$~mJy between epochs, a $10\sigma$
-inter-epoch change at 1367.5~MHz, while every other target is quiescent with a median $5\sigma$
+\citealt{racs8_2026}) --- at $V=9.26\rightarrow7.11$~mJy between epochs. That decline is
+$10\sigma$ against image noise alone, but $I$ fell by 26\% and $V$ by 23\% over the same pair,
+leaving the circular fraction constant to 3.4\%, which is the signature of an epoch-to-epoch
+flux-scale difference rather than a change of emission state; including a per-epoch scale term
+of 3--5\% \citep{duchesne2023} reduces it to 5.2--3.5$\sigma$. Every other target is quiescent
+with a median $5\sigma$
 $V$ limit of \svdRealVlim~mJy. This is a methods + recover-a-known contribution with an
 upper-limit census, not a discovery claim.
 \end{abstract}
@@ -48,8 +60,8 @@ Targets are the nearest CNS5 M dwarfs (red Gaia colour, Dec $<+40^\circ$, sorted
 Each position is propagated with its Gaia DR3 proper motion to each image's observation MJD ---
 at RACS-mid resolution this is not optional: the highest-proper-motion targets move tens of
 arcseconds between the epochs. For each target and epoch we stage the RACS-mid \code{taylor.0}
-restored $I$ and $V$ images via CASDA SODA, measure the forced peak flux at the propagated pixel
-with a local-annulus rms error, and apply the per-epoch leakage floor (7$\times$ the field median
+restored $I$ and $V$ images via CASDA SODA, measure Stokes I and V at the propagated position
+with a local-annulus rms error, and (in simulation only, see above) apply the per-epoch leakage floor (7$\times$ the field median
 $|V|/I$). Two-epoch variability uses the signed fluxes, $|V_2-V_1|/\sqrt{\sigma_1^2+\sigma_2^2}$,
 so a handedness flip registers. The synthetic epoch-pair fixture injects steady emitters,
 single-epoch flares, and leakage-only contaminants: selection completeness \svdComp, purity
@@ -59,13 +71,24 @@ emitters missed by epoch~1 alone --- the quantified rationale for multi-epoch $V
 \section{Results on the real sky}
 Of 60 targets, \svdRealN\ returned measurements in at least one epoch and \svdRealPairs\ have
 both (CASDA staging failures account for the rest --- an availability, not detection, effect;
-the failure list ships with the reproduction script). \svdRealDet\ target rows exceed $5\sigma$
-in $V$: both are the GJ 65 system (BL+UV Ceti, one beam), detected at $V=9.26\pm0.15$~mJy
-(MJD 59233) and $7.11\pm0.15$~mJy (MJD 60769) --- deep circular polarization in both epochs and
-a $10\sigma$ inter-epoch decline at 1367.5~MHz. GJ 65 is a known radio star (it appears in the
-RACS-low2 blind V catalogue, \citealt{racs8_2026}); the recovery validates the pipeline, and the
-same-band 4.2-yr $V$ change is the kind of measurement blind single-epoch catalogues do not
-provide. Every other measured target is quiescent, with a median $5\sigma$ $V$ upper limit of
+the failure list ships with the reproduction script). Exactly \emph{one system} exceeds $5\sigma$ in $V$: GJ 65.
+It appears as four catalogue rows (BL and UV Ceti, two epochs) whose photometry is
+bit-identical, because the two CNS5 entries are 2\arcsec\ apart and fall in the same beam ---
+one independent measurement, not two, and \svdRealDet\ counts systems rather than rows. It is
+detected at $V=9.26\pm0.15$~mJy (MJD 59233) and $7.11\pm0.15$~mJy (MJD 60769). GJ 65 is a known
+radio star (it appears in the RACS-low2 blind $V$ catalogue, \citealt{racs8_2026}), so the
+recovery validates the pipeline.
+
+The $4.2$-yr decline needs more care than the $10\sigma$ that image noise alone implies.
+Stokes $I$ fell from 15.99 to 11.87~mJy ($-26$\%) while $V$ fell from 9.26 to 7.11 ($-23$\%),
+so the circular fraction is constant to 3.4\% (0.579 to 0.599). A genuine change of emission
+state need not preserve $V/I$; a difference in the absolute flux scale between two
+independently calibrated RACS-mid observations does exactly that. Adding a per-epoch scale
+term in quadrature gives $5.2\sigma$ at 3\% and $3.5\sigma$ at 5\%, against the $9.99\sigma$
+from image noise. Since the committed photometry table records no tile or primary-beam
+position, the systematic cannot be bounded from the shipped evidence, and the honest statement
+is a \emph{marginal} same-band decline consistent with, but not established above, the
+epoch-to-epoch flux-scale uncertainty \citep{duchesne2023}. Every other measured target is quiescent, with a median $5\sigma$ $V$ upper limit of
 \svdRealVlim~mJy --- at 3~pc that is a luminosity limit at or near the lower boundary of known M-dwarf coherent-burst
 luminosities ($\sim$10$^{13}$~erg\,s$^{-1}$\,Hz$^{-1}$), i.e.\ consistent with duty cycles well
 below unity.

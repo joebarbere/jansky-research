@@ -251,15 +251,25 @@ def measure_circular_pol(
     search_arcsec: float = 12.0,
     rms_annulus_arcsec: tuple[float, float] = (30.0, 90.0),
 ) -> dict[str, float]:
-    r"""Forced Stokes-I & V photometry at a locked ``(ra, dec)`` (mirrors ``vlass.measure_image_flux``).
+    r"""Stokes-I & V photometry at or near a propagated ``(ra, dec)``.
 
-    Finds the Stokes-I peak within ``search_arcsec`` of the target, then reads Stokes V **at that same
-    pixel** (V can be either sign) --- the physically correct forced measurement for a point-like
-    coherent emitter, where the circular-polarization peak coincides with the total-intensity peak.
+    Two modes, and the difference matters for a census of NON-detections:
+
+    ``search_arcsec > 0`` (default 12) finds the brightest Stokes-I pixel within that radius and
+    reads V at the same pixel. That suits a source known to be there, but on a blank field it is
+    a *noise-maximum* statistic: the returned I is the largest of the several independent beams
+    inside the disc, so it is positive essentially always, and V is read wherever that maximum
+    happened to fall. In the RACS-mid M-dwarf census this produced I > 0 for 54 of 54 quiescent
+    targets (p = 2^-54 for a genuine fixed-pixel measurement) at a median offset of ~9", about
+    one synthesized beam from the star.
+
+    ``search_arcsec <= 0`` is genuinely forced: it reads the single pixel containing ``(ra, dec)``.
+    That is the mode an upper-limit census wants, because the limit then applies *at the stellar
+    position* and the I distribution is signed and mean-zero on blank sky.
+
     Local RMS for each Stokes comes from an annulus. Returns ``i_peak``, ``v_peak`` (signed),
-    ``i_rms``, ``v_rms``, ``frac_pol`` ($|V|/I$), and ``offset_arcsec`` (I-peak vs target). Measuring
-    at the locked position reaches *below* the blind extraction threshold and turns a non-detection
-    into an honest upper limit, rather than missing the source.
+    ``i_rms``, ``v_rms``, ``frac_pol`` (|V|/I), ``offset_arcsec`` (measured pixel vs target) and
+    ``forced`` (whether the position was locked).
     """
     from astropy import units as u
     from astropy.coordinates import SkyCoord
@@ -273,13 +283,19 @@ def measure_circular_pol(
     yy, xx = np.mgrid[0:ny, 0:nx]
     rr = np.hypot(xx - float(px), yy - float(py)) * scale
     nan = float("nan")
-    near = (rr <= search_arcsec) & np.isfinite(image_i)
-    if not near.any():
-        return dict.fromkeys(
-            ("i_peak", "v_peak", "i_rms", "v_rms", "frac_pol", "offset_arcsec"), nan
-        )
-    region = np.where(near, image_i, -np.inf)
-    iy, ix = np.unravel_index(int(np.argmax(region)), region.shape)
+    keys = ("i_peak", "v_peak", "i_rms", "v_rms", "frac_pol", "offset_arcsec")
+    if search_arcsec <= 0.0:
+        # Genuinely forced: the pixel containing the propagated position, no search.
+        iy, ix = int(round(float(py))), int(round(float(px)))
+        if not (0 <= iy < ny and 0 <= ix < nx) or not np.isfinite(image_i[iy, ix]):
+            return {**dict.fromkeys(keys, nan), "forced": True}
+    else:
+        near = (rr <= search_arcsec) & np.isfinite(image_i)
+        if not near.any():
+            return {**dict.fromkeys(keys, nan), "forced": False}
+        region = np.where(near, image_i, -np.inf)
+        _iy, _ix = np.unravel_index(int(np.argmax(region)), region.shape)
+        iy, ix = int(_iy), int(_ix)
     i_peak = float(image_i[iy, ix])
     v_peak = float(image_v[iy, ix])  # Stokes V at the I-peak pixel (signed)
     offset = float(np.hypot(ix - float(px), iy - float(py)) * scale)
@@ -293,6 +309,7 @@ def measure_circular_pol(
         "v_rms": float(np.std(v_ann)) if v_ann.size > 20 else nan,
         "frac_pol": abs(v_peak) / i_peak if i_peak > 0 else nan,
         "offset_arcsec": offset,
+        "forced": search_arcsec <= 0.0,
     }
 
 
