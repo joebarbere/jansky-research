@@ -153,6 +153,19 @@ the `rmstructure` bootstrap-SE error: an uncertainty estimated by a procedure th
 the effect it is meant to bound. Before quoting a spread, ask what would make it small
 regardless of the truth.
 
+**A test can lock a defect in.** `test_run_offline_writes_artifacts` asserted
+`\svbSynNTargets` must *not* exist — i.e. it required the un-namespaced behaviour that let an
+offline rebuild write the synthetic parent size (400 stars) into the macro the abstract used
+for the real census (38). The test passed for months *because* the bug was present. When a
+test encodes "X must not exist", ask whether X is the fix.
+
+**To tell a measurement from a prior, move the prior.** `svsbi` reported a break luminosity of
+14.5 from a posterior whose mass piled against a box closed at 15. Widening the box to 16.5
+moved the median to 15.5 — a 0.96 dex shift against a 0.02–0.14 seed scatter. The number was
+reporting the wall. A posterior/prior width ratio does not catch this (the ratio was 0.41,
+i.e. "informative"); only re-inference under a different box does. Applies to any bounded
+parameter: **quote a bounded fit only after showing the bound does not set it.**
+
 **A rule stated in this file is not a rule the repo follows — audit it.** Three
 CLAUDE.md requirements were checked mechanically on 2026-08-12 and each was met by a small
 minority of slices: `preserve_live_macros` ("call it from every `_write_macros`") was called

@@ -10,37 +10,176 @@
   "beaming_monotonic": true,
   "luminosity_monotonic": true,
   "posterior_median": {
-    "lf_slope": 1.371,
+    "lf_slope": 1.356,
     "log_Lbreak": 14.547,
-    "f_beam": 0.349
+    "f_beam": 0.341
   },
   "posterior_ci90": {
     "lf_slope": [
-      1.054,
-      2.002
+      1.053,
+      1.919
     ],
     "log_Lbreak": [
-      13.826,
-      14.945
+      13.93,
+      14.932
     ],
     "f_beam": [
-      0.089,
-      0.554
+      0.105,
+      0.551
     ]
   },
   "posterior_prior_width_ratio": {
-    "lf_slope": 0.53,
-    "log_Lbreak": 0.41,
-    "f_beam": 0.89
+    "lf_slope": 0.48,
+    "log_Lbreak": 0.37,
+    "f_beam": 0.85
   },
   "sbc_ks": {
     "lf_slope": 0.087,
-    "log_Lbreak": 0.047,
-    "f_beam": 0.1
+    "log_Lbreak": 0.06,
+    "f_beam": 0.107
   },
-  "sbc_ks_max": 0.1,
+  "sbc_ks_max": 0.107,
   "sbc_ks_crit": 0.111,
   "sbc_calibrated": true,
-  "n_sims": 12000,
+  "n_sims": 4000,
+  "prior_sensitivity": {
+    "n_sims": 4000,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "published_box": {
+      "prior_low": [
+        1.0,
+        12.0,
+        0.02
+      ],
+      "prior_high": [
+        3.0,
+        15.0,
+        0.6
+      ],
+      "median_per_seed": {
+        "lf_slope": [
+          1.4042,
+          1.3672,
+          1.3965
+        ],
+        "log_Lbreak": [
+          14.5035,
+          14.4719,
+          14.5292
+        ],
+        "f_beam": [
+          0.3334,
+          0.357,
+          0.354
+        ]
+      },
+      "median_mean": {
+        "lf_slope": 1.3893,
+        "log_Lbreak": 14.5015,
+        "f_beam": 0.3482
+      },
+      "median_seed_sd": {
+        "lf_slope": 0.0159,
+        "log_Lbreak": 0.0234,
+        "f_beam": 0.0105
+      },
+      "ci90_seed0": {
+        "lf_slope": [
+          1.0605,
+          1.9115
+        ],
+        "log_Lbreak": [
+          13.8968,
+          14.9335
+        ],
+        "f_beam": [
+          0.1016,
+          0.5497
+        ]
+      }
+    },
+    "wide_box": {
+      "prior_low": [
+        0.5,
+        12.0,
+        0.02
+      ],
+      "prior_high": [
+        3.0,
+        16.5,
+        0.6
+      ],
+      "median_per_seed": {
+        "lf_slope": [
+          1.3153,
+          1.3587,
+          1.3678
+        ],
+        "log_Lbreak": [
+          15.4801,
+          15.279,
+          15.6289
+        ],
+        "f_beam": [
+          0.2535,
+          0.2662,
+          0.2802
+        ]
+      },
+      "median_mean": {
+        "lf_slope": 1.3473,
+        "log_Lbreak": 15.4627,
+        "f_beam": 0.2666
+      },
+      "median_seed_sd": {
+        "lf_slope": 0.0229,
+        "log_Lbreak": 0.1434,
+        "f_beam": 0.0109
+      },
+      "ci90_seed0": {
+        "lf_slope": [
+          0.7098,
+          1.8314
+        ],
+        "log_Lbreak": [
+          14.6248,
+          16.3514
+        ],
+        "f_beam": [
+          0.0573,
+          0.5057
+        ]
+      }
+    },
+    "median_shift_wide_minus_published": {
+      "lf_slope": -0.042,
+      "log_Lbreak": 0.9612,
+      "f_beam": -0.0816
+    },
+    "prior_driven": {
+      "lf_slope": false,
+      "log_Lbreak": true,
+      "f_beam": true
+    }
+  },
+  "prior_low": [
+    1.0,
+    12.0,
+    0.02
+  ],
+  "prior_high": [
+    3.0,
+    15.0,
+    0.6
+  ],
+  "theta_names": [
+    "lf_slope",
+    "log_Lbreak",
+    "f_beam"
+  ],
   "n_v_detections_observed": 1
 }

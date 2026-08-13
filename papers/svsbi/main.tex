@@ -18,18 +18,25 @@ detectable beam at us) --- are known only qualitatively \citep{callingham2021,pr
 build the first such inference. A forward model draws a coherent-emitter population (a power-law
 luminosity function with an exponential break, plus a beaming fraction), folds it through the
 real per-target distances, Stokes-V noise, and instrumental-leakage floor of a RACS Stokes-V
-census (\svbNTargets\ nearby M dwarfs with two-epoch forced photometry, of which
+census (\svbRealNTargets\ nearby M dwarfs with two-epoch photometry --- of 60 targeted, the
+rest lost to archive-access failures rather than to non-detection, a selection the inference
+treats as independent of source brightness without being able to test it --- of which
 \svbRealNDet\ is a confident detection --- the single unresolved GJ 65 system), and a neural
 posterior estimator \citep{papamakarios2016,sbi_toolkit} infers the three population parameters.
 The forward model and its summary statistics are validated by monotonicity recover-a-knowns, and
 the trained posterior passes simulation-based calibration \citep[SBC;][]{talts2018} at the formal
 Kolmogorov threshold (max KS $= \svbRealKsMax$ vs the 95\% critical value $\svbRealKsCrit$ at 150
-trials), so its credible intervals have nominal coverage. The result is deliberately modest and
+trials), i.e.\ is consistent with nominal coverage --- though at that
+sample size the test cannot exclude appreciable miscalibration, and SBC is by construction
+blind to the failure mode at issue here: a posterior that returns the prior passes it exactly. The result is deliberately modest and
 honestly bounded: with a single detection the \textbf{beaming fraction is barely updated from the
 prior} (posterior $f_{\rm beam} = \svbRealFbeam$, 90\% CI $\svbRealFbeamLo$--$\svbRealFbeamHi$,
-whose width is \svbRealFbeamWidthRatio\ of the prior's), while the luminosity-function break is
-the better-constrained parameter (that one bright detection's flux pins
-$\log_{10} L^* = \svbRealLogLbreak$). We claim not a measurement of the beaming fraction but the
+whose width is \svbRealFbeamWidthRatio\ of the prior's), and the luminosity-function break is
+\emph{not} constrained at all: re-inferring under a widened prior box moves its median by
+\svbPriorLogLShift\ dex (\svbPriorLogLPub\ $\to$ \svbPriorLogLWide) against a seed-to-seed
+scatter of \svbPriorLogLSeedSd, so the published value was reporting where the box was closed.
+The data support a one-sided statement only, $\log_{10} L^* \gtrsim \svbLogLLimit$, set by the
+single detection's own luminosity. We claim not a measurement of the beaming fraction but the
 first \emph{calibrated} framework for it: the deliverable is the SBC-validated pipeline --- which
 conditions on any RACS Stokes-V target list and sharpens directly as the censuses grow --- not a
 tight number.
@@ -84,25 +91,42 @@ posterior is worth reporting; SBC is the gate.
 
 \section{Results}
 \label{sec:results}
-The census contributes \svbRealNDet\ confident Stokes-V detection among \svbNTargets\ M dwarfs
+The census contributes \svbRealNDet\ confident Stokes-V detection among \svbRealNTargets\ M dwarfs
 (the single unresolved GJ 65 system). Conditioned on that, the posterior is \textbf{calibrated}
 (SBC passes the formal threshold) and, as expected for one detection, mostly \textbf{prior-wide}:
 \begin{itemize}
 \item \textbf{Beaming fraction} $f_{\rm beam} = \svbRealFbeam$, 90\% credible interval
-$\svbRealFbeamLo$--$\svbRealFbeamHi$ --- but this interval is \svbRealFbeamWidthRatio\ of the
-prior's width, and the median sits near the prior midpoint: a single detection barely updates
-the beaming prior. We therefore claim the first \emph{calibrated} constraint on this quantity ---
+$\svbRealFbeamLo$--$\svbRealFbeamHi$, against a prior of
+$\mathcal{U}(\svbPriorFbeamLo, \svbPriorFbeamHi)$ --- the interval is
+\svbRealFbeamWidthRatio\ of the prior's width, and the median sits near the prior midpoint: a
+single detection barely updates the beaming prior. Note also what this parameter is: the
+forward model draws a luminosity for \emph{every} star in the parent sample and then applies
+one Bernoulli trial, so the inferred quantity is the product of the coherent-emitter fraction,
+the beaming fraction and the duty cycle over the two epochs --- not the beaming fraction alone.
+The census cannot separate the three. We therefore claim the first \emph{calibrated} constraint on this quantity ---
 the interval's coverage is validated --- while stating plainly that it is near-vacuous, not a
 measurement. It is consistent with the tens-of-percent values the literature assumes
 \citep{callingham2021,pritchard2021}.
-\item \textbf{Luminosity function.} The break is the better-constrained parameter,
-$\log_{10}L^* = \svbRealLogLbreak$ (90\% CI $\svbRealLogLbreakLo$--$\svbRealLogLbreakHi$, about a
-third of the prior width): the one bright detection's flux, at GJ 65's true 2.7-pc distance,
-sets the bright-end scale. The slope $\svbRealSlope$ (90\% CI
-$\svbRealSlopeLo$--$\svbRealSlopeHi$) is only modestly constrained. With a single detection the
-population cannot separate ``a few luminous beamers'' from ``many faint ones'' --- the
-beaming--luminosity degeneracy --- which is why the beaming fraction, not the luminosity scale,
-is the parameter left near its prior.
+\item \textbf{Luminosity function.} The break \emph{appears} better constrained,
+$\log_{10}L^* = \svbRealLogLbreak$ (90\% CI $\svbRealLogLbreakLo$--$\svbRealLogLbreakHi$), but
+it is not. Its posterior piles against the top of the prior box, and the test for that is to
+move the box: re-inferring with the break prior extended to $\svbPriorBoxHi$ and the slope
+floor dropped below its theoretical value, over \svbPriorNSeeds\ training seeds each, moves the
+median from \svbPriorLogLPub\ to \svbPriorLogLWide --- a shift of \svbPriorLogLShift\ dex
+against a seed-to-seed scatter of \svbPriorLogLSeedSd. The median tracks the wall. What the
+census actually supports is the one-sided statement $\log_{10}L^* \gtrsim \svbLogLLimit$, which
+is set by the single detection's own luminosity and is stable under both tests.
+
+The same experiment moves $f_{\rm beam}$ from \svbPriorFbeamPub\ to \svbPriorFbeamWide, so the
+beaming posterior is not merely prior-\emph{wide} but prior-\emph{located}, and it responds to
+priors on parameters other than its own --- the beaming--luminosity degeneracy, visible
+directly. Only the slope median survives the widening (\svbPriorSlopePub\ $\to$
+\svbPriorSlopeWide, against a seed scatter of \svbPriorSlopeSeedSd), though its lower credible
+bound was itself truncated by the floor at $\svbPriorSlopeLo$ and is not meaningful either.
+
+With a single detection the population cannot separate ``a few luminous beamers'' from ``many
+faint ones''. The honest reading is that \emph{no} parameter of this model is measured by one
+detection; what the census delivers is a lower limit on $L^*$ and a calibrated framework.
 \end{itemize}
 The scientific content is deliberately modest and honestly bounded: a one-detection census
 yields a posterior that is calibrated but, for the beaming fraction, near-prior-width. The value

@@ -82,3 +82,51 @@ Offline (physics + tests): `uv run python -m jansky_research.svsbi --offline --o
 Real (NPE, ROCm GPU): `PYTHONPATH=src:../jansky/src ~/.venvs/rocm-test/bin/python -m
 jansky_research.svsbi --device cuda --n-sims 12000 --out .` (sbi installed in the venv; ~min).
 CPU also works (`--device cpu`, slower). New dep: the `[sbi]` extra (`uv sync --extra sbi`).
+
+## Referee round (2026-08-12) — the prior was doing the work
+
+Verdict **major revision**, 20 findings. The decisive one: two of three parameters had
+posterior mass piled against a prior bound (5% of `log_Lbreak`'s mass in the top 1.8% of its
+box, `lf_slope`'s in the bottom 2.7%), so their published medians were partly reporting where
+the box was closed. The only way to tell a measurement from a boundary is to move the
+boundary.
+
+**Experiment.** Re-inferred the same census under a widened box (`log_Lbreak` to 16.5, slope
+floor to 0.5), three training seeds each:
+
+| parameter | published box | wide box | shift | seed scatter | verdict |
+|---|---|---|---|---|---|
+| `lf_slope` | 1.389 | 1.347 | −0.04 | 0.02 | data-driven (median) |
+| `log_Lbreak` | 14.502 | **15.463** | **+0.96** | 0.02–0.14 | **prior-driven** |
+| `f_beam` | 0.348 | 0.267 | −0.08 | 0.011 | **prior-driven** |
+
+`log_Lbreak`'s median tracks the wall — a 0.96 dex move, 7–40× the seed noise. The abstract's
+claim that the detection "pins" it is withdrawn; the census supports the one-sided statement
+**log L\* ≳ 13.9**, set by the single detection's own luminosity. `f_beam` is not merely
+prior-*wide* but prior-*located*, and it moves when priors on *other* parameters change —
+the beaming–luminosity degeneracy, visible directly. Only the slope median survives, and its
+lower credible bound was itself truncated by the floor.
+
+**Torch was never seeded.** Only NumPy was, so simulations and SBC draws were reproducible
+while NPE training was not — three runs recorded in this repo differ by more than the SBC pass
+margin. Now seeded; the run committed here is reproducible, and the seed scatter is measured
+and reported rather than being absorbed into the quoted posterior width.
+
+**A test had locked the defect in.** `\svbNTargets` and `\svbSource` were emitted once,
+outside the mode loop, so an offline rebuild wrote the *synthetic* parent size (400 stars)
+into the macro the abstract uses for the real census (38) — a wrong number rather than a
+blank, invisible to both the `--` placeholder and the arXiv assembler. That is the
+`\tiiNEvents` incident again. Both are namespaced now, and
+`test_run_offline_writes_artifacts` — which asserted `\svbSynNTargets` must *not* exist,
+i.e. required the buggy behaviour — has been corrected.
+
+Also recorded: `f_beam` is not the beaming fraction. The forward model draws a luminosity for
+*every* star and applies one Bernoulli trial, so the inferred quantity is the product of the
+coherent-emitter fraction, the beaming fraction and the duty cycle. The paper now says so.
+The census selection (60 targeted → 38 usable, the rest lost to archive-access failures) is
+now stated where the sample is introduced. SBC's blindness to an uninformative posterior — it
+passes exactly when the network returns the prior — is stated in the abstract.
+
+Still open (reported, not fixed): the SBC test's power at n=150; the broken figure whose left
+panel is identically zero; committing the raw SBC ranks; the leakage-floor uncertainty
+propagation that plan 40 pre-registered.

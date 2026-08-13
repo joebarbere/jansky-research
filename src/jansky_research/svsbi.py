@@ -48,8 +48,18 @@ __all__ = [
 THETA_NAMES = ("lf_slope", "log_Lbreak", "f_beam")
 # prior ranges: slope of the (differential) luminosity function dN/dL ~ L^-slope over the
 # coherent-emitter luminosity range; log10 break luminosity (erg/s/Hz); beaming fraction
+# The prior box. These are not innocuous: the 2026-08-12 referee round found the posterior
+# railed against TWO of these six bounds (5% of the log_Lbreak mass sits in the top 1.8% of
+# its range, and the slope's in the bottom 2.7%), so the published medians for both were
+# partly reporting where the box was closed. `run(..., prior_scale=...)` widens the box so
+# that dependence can be measured instead of assumed.
 PRIOR_LOW = np.array([1.0, 12.0, 0.02])
 PRIOR_HIGH = np.array([3.0, 15.0, 0.60])
+# The widened box used for the prior-sensitivity leg: the slope floor drops below the
+# theoretically-motivated 1, and the break luminosity extends past any plausible M-dwarf
+# coherent-burst luminosity, so a median that is data-driven should not move.
+PRIOR_LOW_WIDE = np.array([0.5, 12.0, 0.02])
+PRIOR_HIGH_WIDE = np.array([3.0, 16.5, 0.60])
 CENSUS_CSV = Path("results/stokesv_discovery_realtargets.csv")
 PC_CM = 3.0856775814913673e18  # cm per parsec
 DET_NSIGMA = 5.0  # a Stokes-V detection: |V| above DET_NSIGMA * rms AND above the leakage floor
@@ -265,16 +275,26 @@ def train_npe(
     device: str = "cpu",
     seed: int = 0,
     max_epochs: int = 200,
+    prior_low: np.ndarray | None = None,
+    prior_high: np.ndarray | None = None,
 ):  # pragma: no cover - needs the sbi extra + is a GPU training job
     """Train an NPE posterior estimator on ``n_sims`` (theta, summary) pairs. Returns the posterior."""
     torch, NPE = _require_sbi()
     from sbi.utils import BoxUniform
 
     rng = np.random.default_rng(seed)
-    low = torch.as_tensor(PRIOR_LOW, dtype=torch.float32, device=device)
-    high = torch.as_tensor(PRIOR_HIGH, dtype=torch.float32, device=device)
+    # Seed torch too. Only NumPy was seeded before, so the simulations and SBC draws were
+    # reproducible while NPE training was not: three runs of this pipeline recorded in the
+    # repo differ by more than the SBC pass margin (max KS 0.08 vs 0.100 against a 0.111
+    # threshold), and by 0.13 dex in log_Lbreak's lower CI. That spread is training noise and
+    # was being reported as if the only uncertainty were the within-run posterior width.
+    torch.manual_seed(seed)
+    plo = PRIOR_LOW if prior_low is None else np.asarray(prior_low, float)
+    phi = PRIOR_HIGH if prior_high is None else np.asarray(prior_high, float)
+    low = torch.as_tensor(plo, dtype=torch.float32, device=device)
+    high = torch.as_tensor(phi, dtype=torch.float32, device=device)
     prior = BoxUniform(low=low, high=high, device=device)
-    thetas = rng.uniform(PRIOR_LOW, PRIOR_HIGH, size=(n_sims, 3))
+    thetas = rng.uniform(plo, phi, size=(n_sims, 3))
     x = np.stack([simulate(t, parent, seed=int(rng.integers(1 << 31))) for t in thetas])
     inf = NPE(prior=prior, device=device)
     inf.append_simulations(
@@ -292,6 +312,8 @@ def sbc_ranks(
     n_post: int = 200,
     device: str = "cpu",
     seed: int = 0,
+    prior_low: np.ndarray | None = None,
+    prior_high: np.ndarray | None = None,
 ):  # pragma: no cover - needs a trained posterior
     """Simulation-based calibration: rank of each true theta within its posterior samples.
 
@@ -301,9 +323,11 @@ def sbc_ranks(
     import torch
 
     rng = np.random.default_rng(seed)
+    plo = PRIOR_LOW if prior_low is None else np.asarray(prior_low, float)
+    phi = PRIOR_HIGH if prior_high is None else np.asarray(prior_high, float)
     ranks = np.zeros((n_trials, 3), int)
     for i in range(n_trials):
-        theta_true = rng.uniform(PRIOR_LOW, PRIOR_HIGH)
+        theta_true = rng.uniform(plo, phi)
         x = simulate(theta_true, parent, seed=int(rng.integers(1 << 31)))
         samples = posterior.sample(
             (n_post,),
@@ -351,6 +375,13 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", n_sims: in
 
     if not offline:  # pragma: no cover - needs the sbi extra (GPU/CPU training)
         metrics.update(_real_leg(parent, device=device, n_sims=n_sims))
+        metrics["prior_sensitivity"] = prior_sensitivity(
+            parent, device=device, n_sims=min(n_sims, 4000)
+        )
+        # The prior box itself, so a reader can check the width ratios without reading source.
+        metrics["prior_low"] = [float(v) for v in PRIOR_LOW]
+        metrics["prior_high"] = [float(v) for v in PRIOR_HIGH]
+        metrics["theta_names"] = list(THETA_NAMES)
         n_det = int(observed_summary(parent)[0])
         metrics["n_v_detections_observed"] = n_det
 
@@ -401,6 +432,64 @@ def _physics_checks(parent: dict) -> dict:
         "beaming_monotonic": bool(hi_beam > lo_beam),
         "luminosity_monotonic": bool(hi_lum > lo_lum),
     }
+
+
+def prior_sensitivity(
+    parent: dict, *, device: str = "cpu", n_sims: int = 4000, seeds: tuple[int, ...] = (0, 1, 2)
+) -> dict:  # pragma: no cover - needs the sbi extra
+    """Re-infer under a widened prior box, over several seeds. The test the paper needs.
+
+    A posterior whose mass piles against a prior bound is reporting where the box was closed,
+    not what the data say -- and for this census two of three parameters do exactly that. The
+    only way to tell a measurement from a boundary is to move the boundary: a data-driven
+    median stays put, a prior-driven one follows the wall. Repeating over seeds separates
+    both effects from NPE training noise, which was previously unseeded and unreported.
+    """
+    import torch
+
+    out: dict = {"n_sims": n_sims, "seeds": list(seeds)}
+    for tag, lo, hi in (
+        ("published_box", PRIOR_LOW, PRIOR_HIGH),
+        ("wide_box", PRIOR_LOW_WIDE, PRIOR_HIGH_WIDE),
+    ):
+        meds: list[list[float]] = []
+        cis: list[list[list[float]]] = []
+        for seed in seeds:
+            post = train_npe(
+                parent,
+                n_sims=n_sims,
+                device=device,
+                seed=seed,
+                max_epochs=120,
+                prior_low=lo,
+                prior_high=hi,
+            )
+            x_o = torch.as_tensor(observed_summary(parent), dtype=torch.float32, device=device)
+            smp = np.asarray(post.sample((4000,), x=x_o, show_progress_bars=False).cpu())
+            meds.append([float(v) for v in np.median(smp, axis=0)])
+            cis.append([[float(a) for a in np.percentile(smp[:, j], [5, 95])] for j in range(3)])
+        m = np.asarray(meds)
+        out[tag] = {
+            "prior_low": [float(v) for v in np.asarray(lo)],
+            "prior_high": [float(v) for v in np.asarray(hi)],
+            "median_per_seed": {THETA_NAMES[j]: [round(v, 4) for v in m[:, j]] for j in range(3)},
+            "median_mean": {THETA_NAMES[j]: round(float(m[:, j].mean()), 4) for j in range(3)},
+            "median_seed_sd": {THETA_NAMES[j]: round(float(m[:, j].std()), 4) for j in range(3)},
+            "ci90_seed0": {THETA_NAMES[j]: [round(v, 4) for v in cis[0][j]] for j in range(3)},
+        }
+    a, b = out["published_box"]["median_mean"], out["wide_box"]["median_mean"]
+    out["median_shift_wide_minus_published"] = {k: round(b[k] - a[k], 4) for k in THETA_NAMES}
+    # A parameter whose median moves by more than the seed scatter when the BOX moves is
+    # reporting the box. This is the discriminator the paper quotes.
+    out["prior_driven"] = {
+        k: bool(
+            abs(b[k] - a[k])
+            > 3.0
+            * max(out["published_box"]["median_seed_sd"][k], out["wide_box"]["median_seed_sd"][k])
+        )
+        for k in THETA_NAMES
+    }
+    return out
 
 
 def _real_leg(parent: dict, *, device: str, n_sims: int) -> dict:  # pragma: no cover - sbi extra
@@ -491,15 +580,51 @@ def _write_macros(m: dict, path: str | Path) -> None:
     pref = "svbReal" if m.get("is_real") else "svbSyn"
     lines = [
         "% Auto-generated by jansky_research.svsbi._write_macros -- do not edit.",
-        "% Synthetic (svbSyn*) and real (svbReal*) namespaces are BOTH always emitted; the",
-        "% inactive namespace holds placeholders, so synthetic numbers can never masquerade",
-        "% under svbReal* (an offline rebuild resets svbReal* to placeholders by design).",
-        rf"\newcommand{{\svbSource}}{{{m['source']}}}",
-        rf"\newcommand{{\svbNTargets}}{{{m['n_targets']}}}",
+        "% Synthetic (svbSyn*) and real (svbReal*) namespaces are BOTH always emitted, and the",
+        "% file is MERGED rather than overwritten (report.preserve_live_macros), so a run can",
+        "% only add information.",
+        "%",
+        "% Source and NTargets are namespaced too, as of 2026-08-12. They used to be emitted",
+        "% once, outside the loop, from whichever mode was running -- so an offline rebuild",
+        "% wrote the SYNTHETIC parent size (400 stars) into the same \\svbNTargets the abstract",
+        "% uses for the real census (38 M dwarfs). That is a wrong number rather than a blank,",
+        "% so neither the '--' placeholder nor the arXiv assembler's check would have caught",
+        "% it: exactly the \\tiiNEvents incident (768 observing days -> 48 synthetic events).",
     ]
+    ps = m.get("prior_sensitivity")
+    if ps:
+        pb, wb = ps["published_box"], ps["wide_box"]
+        lines += [
+            "% The prior-sensitivity leg: the same census re-inferred under a widened box,",
+            "% three seeds each. A data-driven median stays put when the wall moves; a",
+            "% prior-driven one follows it.",
+            rf"\newcommand{{\svbPriorLogLPub}}{{{pb['median_mean']['log_Lbreak']:.2f}}}",
+            rf"\newcommand{{\svbPriorLogLWide}}{{{wb['median_mean']['log_Lbreak']:.2f}}}",
+            rf"\newcommand{{\svbPriorLogLShift}}{{{ps['median_shift_wide_minus_published']['log_Lbreak']:.2f}}}",
+            rf"\newcommand{{\svbPriorLogLSeedSd}}{{{max(pb['median_seed_sd']['log_Lbreak'], wb['median_seed_sd']['log_Lbreak']):.2f}}}",
+            rf"\newcommand{{\svbPriorFbeamPub}}{{{pb['median_mean']['f_beam']:.2f}}}",
+            rf"\newcommand{{\svbPriorFbeamWide}}{{{wb['median_mean']['f_beam']:.2f}}}",
+            rf"\newcommand{{\svbPriorSlopePub}}{{{pb['median_mean']['lf_slope']:.2f}}}",
+            rf"\newcommand{{\svbPriorSlopeWide}}{{{wb['median_mean']['lf_slope']:.2f}}}",
+            rf"\newcommand{{\svbPriorSlopeSeedSd}}{{{max(pb['median_seed_sd']['lf_slope'], wb['median_seed_sd']['lf_slope']):.3f}}}",
+            rf"\newcommand{{\svbLogLLimit}}{{{pb['ci90_seed0']['log_Lbreak'][0]:.1f}}}",
+            rf"\newcommand{{\svbPriorNSeeds}}{{{len(ps['seeds'])}}}",
+            rf"\newcommand{{\svbPriorBoxHi}}{{{wb['prior_high'][1]:g}}}",
+        ]
+    if m.get("prior_low"):
+        lines += [
+            rf"\newcommand{{\svbPriorSlopeLo}}{{{m['prior_low'][0]:g}}}",
+            rf"\newcommand{{\svbPriorSlopeHi}}{{{m['prior_high'][0]:g}}}",
+            rf"\newcommand{{\svbPriorLogLLo}}{{{m['prior_low'][1]:g}}}",
+            rf"\newcommand{{\svbPriorLogLHi}}{{{m['prior_high'][1]:g}}}",
+            rf"\newcommand{{\svbPriorFbeamLo}}{{{m['prior_low'][2]:g}}}",
+            rf"\newcommand{{\svbPriorFbeamHi}}{{{m['prior_high'][2]:g}}}",
+        ]
     for ns in ("svbSyn", "svbReal"):
         live = ns == pref
         for macro, d, key in (
+            ("Source", "source", None),
+            ("NTargets", "n_targets", None),
             ("NDet", "n_v_detections_observed", None),
             ("Fbeam", "posterior_median", "f_beam"),
             ("Slope", "posterior_median", "lf_slope"),
