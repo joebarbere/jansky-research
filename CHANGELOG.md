@@ -9,6 +9,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-08-13
+
 ### Added
 - `scripts/triage_papers.py` — a mechanical first-pass review over all 46 papers, checking
   only defect classes found in real papers this cycle: cited `--` placeholders, un-namespaced
