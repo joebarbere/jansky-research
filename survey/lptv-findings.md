@@ -146,7 +146,7 @@ existence proof — ten epochs, one pulse). Epoch composition corrected (no RACS
 50/81 low-band epochs are the 2024 pass); "exact permutation" corrected to what it is; the
 novelty claim narrowed to "first targeted, multi-epoch, uniform".
 
-## Phase-fold check of the J183950 recovery (2026-08-14)
+## Phase-fold check of the J183950 recovery (2026-08-14) — SUPERSEDED same day, see below
 
 Folding all ten epoch MJDs (committed in results/lptv_realtargets.csv) on the catalogued
 23,221.74-s period (data/lpt_sample.csv), relative to the detection epoch:
@@ -187,3 +187,84 @@ discovery ephemeris (arXiv:2501.09133) is the decisive follow-up and is listed b
    consistent.
 4. **Handedness**: our V is +65 mJy (one sign, 40%); compare against the published
    polarization behaviour of pulse vs interpulse.
+
+
+## The identity check supersedes the fold (2026-08-14, later)
+
+Fetching the discovery paper's source (arXiv:2501.09133, Lee et al.) settles the recovery
+beyond any statistical argument: its observation table lists **SBID 57929 — 2024-01-26
+03:12:35, RACS-low, 887.5 MHz — as the discovery observation itself**, and that is the same
+scheduling block as our detection epoch. Our census blindly re-found the discovery pulse.
+
+Quantitative cross-checks, all consistent:
+- Their published pulse: **0.70 Jy decaying to 0.03 Jy** across the 15-min block. Averaged
+  over the integration that is ~0.2 Jy — against our block-integrated forced **I = 164 mJy**.
+- Their published circular fraction: **37%** — against our **|V|/I = 40%**.
+- Their period 23,221.740 ± 0.332 s matches the catalogue value our fold used, and with the
+  paper's exact start time our epoch sits ~12 min from the predicted pulse centre, within
+  their reported ToA jitter.
+
+Two corrections to the earlier entry. First, the phase-fold table used the CSV's `epoch_mjd`,
+which is quantized to 0.1 day (±72 min) — at a 6.45-h period that quantization swamps
+minute-level phase statements, so the fold was decoration, not evidence; the identity makes
+it unnecessary. Second, the framing "caught an unknown pulse" is wrong in the other
+direction: this is a **blind end-to-end recover-a-known** — the pipeline, pointed at a
+catalogue position with no knowledge of the epoch, re-found a published Jy-level pulse at
+199σ with polarization intact, after its earlier peak-search configuration had wrongly
+vetoed the same signal as confusion. That is the stronger and honest claim, and the paper
+now makes it with the discovery paper cited (lee2025 added to refs.bib).
+
+Consequence for the VAST follow-up idea: still live — the discovery paper's own archival
+search (their Methods) found no additional archival pulses, so a VAST-epoch extension should
+be framed as extending their archival null with V-sensitive forced photometry, not as
+virgin territory.
+
+
+## Round-2 referee (2026-08-14) — major revision, applied same day
+
+Seventeen findings; verdict major. The campaign's lesson held for the second time running: the
+rehabilitation paragraph written the same morning contained three of the errors ("blind" for a
+test that cannot fail; numbers living only in a .bib comment; the beam-attenuated 164 mJy used
+where the peak-search 241 mJy is the right comparator). The two blockers were mine from the
+first rewrite: the abstract's rescoped-negative numbers (median I/sigma = 1.9; |V|/I limits
+49–114%) still traced to the superseded peak-search CSV — on the forced CSV the median signed
+I/sigma is −0.14 and the fractional-polarization constraint is vacuous (undefined for half the
+sample) — and the offset argument for J165130.3's promotion was circular (under locked
+photometry offset_arcsec is pixel rounding, bounded at half a pixel diagonal; 0.85″ was also
+the survey median misattributed to one source, the row value being 0.44″).
+
+Everything applied:
+- Rescoped negative recomputed from the forced CSV and stated honestly: Stokes I consistent
+  with zero at every non-detection position → the census constrains polarized *flux* only and
+  places no |V|/I constraint on any undetected source (stronger and simpler than 49–114%).
+- J165130.3 promotion re-based on recovered flux at the locked pixel (83% of peak-search I,
+  95% of V) instead of the inert offset.
+- J183950: "blind end-to-end validation" → guaranteed-not-blind recovery of the published
+  pulse in its own discovery block (SBID 57929 identity), explicitly excluded from any
+  pulse-rate reading; decay-average arithmetic shown (213 mJy exp. average vs 241 mJy
+  peak-search, 13%); forced 164 mJy identified as beam-attenuated (0.68 ratio in both I and V
+  — itself the single-point-source signature); beam fraction corrected (a third of ~15″, not
+  a fifth); "matches" → "consistent with"; 199σ qualified as statistics-only. Evidence
+  committed: results/lptv_j183950_adjudication.json.
+- Confusion veto described as superseded (structurally inert under locked photometry);
+  secure/candidate and handedness-flip language dropped as vacuous.
+- Stale two-detection fragments fixed (Results opening, contribution sentence, figure caption
+  — which promised detection markers the figure never had).
+- Epoch composition: no RACS-low1 anywhere; abstract now names RACS-low2 + RACS-mid + the
+  2023–24 low pass (the findings file had recorded this as fixed in round 1; the paper hadn't
+  been).
+- "Thirteen sets of limits" → twelve + one uncovered. Phase coverage 27–75% cumulative (the
+  27–43% range had silently excluded J170036.6 at 74.6%), independence assumption stated,
+  "single-visit" corrected (~4% per visit).
+- Validation paragraph honest about being a smoke test far from decision boundaries; parent
+  stokesv recovery flagged as 12″ peak-search mode. Reproducibility claim scoped to what is
+  actually pipeline-generated. Instrument parameters cited at point of use.
+- **Real catalogue error found by the referee's name-vs-coordinate sweep**: the ASKAP
+  J1832−0911 row carried an erroneous name (J183244.5−091121, 59″ from its coordinate). The
+  coordinate matches the published VLBA position (18:32:48.4589 −09:11:15.297, wang2025) to
+  2″, so the nine-epoch limit is on the real source; the *name* was the transcription error.
+  Corrected in data/lpt_sample.csv, results CSV/JSON, v_table.tex; disclosed in the paper.
+  Catalogue coordinate quantization (3-decimal degrees = 3.6″ for 13/16 rows) now stated as a
+  systematic.
+- wang2025 and chime1634 now cited; wang2025 coordinates verified via Crossref (Nature 642,
+  583–586).

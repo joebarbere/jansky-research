@@ -4,7 +4,19 @@ All notable changes to `jansky-research` are documented here. The format is base
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows
 [Semantic Versioning](https://semver.org/) as codified in [`VERSIONING.md`](VERSIONING.md).
 
-Every PR adds an entry to `## [Unreleased]`. `scripts/next_version.py` reads that section to
+Every PR adds an entry to `## [Unreleased]
+
+### Fixed
+- `lptv` round-2 referee pass (major): rescoped negative recomputed from the forced CSV
+  (median I/sigma = -0.14, no |V|/I constraint on non-detections — the 1.9 / 49–114% figures
+  traced to the superseded peak-search data); J165130.3 promotion re-based on locked-pixel
+  flux recovery; J183950.5 bright epoch identified as the published discovery observation
+  (SBID 57929, lee2025) and reframed as a guaranteed (non-blind) known-pulse recovery with
+  committed adjudication evidence (`results/lptv_j183950_adjudication.json`); ASKAP
+  J1832-0911 catalogue row's erroneous name corrected (coordinate always matched the VLBA
+  position); stale two-detection text, figure caption, epoch-composition, limit-count, and
+  phase-coverage errors fixed.
+`. `scripts/next_version.py` reads that section to
 recommend the next version number.
 
 ## [Unreleased]

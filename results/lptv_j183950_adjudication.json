@@ -1,0 +1,39 @@
+{
+  "_comment": "Committed evidence for the ASKAP J183950.5-075635 (ASKAP J1839-0756) bright-epoch adjudication in papers/lptv. Each value carries its source. Recorded 2026-08-14; the CASDA TAP queries were run live 2026-08-14 (see survey/lptv-findings.md for the session log).",
+  "detection_epoch": {
+    "obs_id": "ASKAP-57929",
+    "epoch_mjd_csv": 60335.1,
+    "forced_i_mjy": 164.026,
+    "forced_v_mjy": 65.151,
+    "forced_v_over_i": 0.397,
+    "peak_search_i_mjy": 240.81,
+    "peak_search_v_mjy": 96.09,
+    "peak_search_offset_arcsec": 5.34,
+    "forced_to_peak_ratio_i": 0.681,
+    "forced_to_peak_ratio_v": 0.678,
+    "source_forced": "results/lptv_realtargets.csv (committed, forced search_arcsec=0)",
+    "source_peak": "git show ef15eb0^:results/lptv_realtargets.csv (superseded 12-arcsec peak search)"
+  },
+  "discovery_paper": {
+    "arxiv": "2501.09133",
+    "bib_key": "lee2025",
+    "title": "The emission of interpulses by a 6.45-hour period coherent radio transient",
+    "discovery_sbid": 57929,
+    "discovery_start_utc": "2024-01-26 03:12:35",
+    "discovery_duration": "00:14:56",
+    "discovery_band_mhz": 887.5,
+    "pulse_peak_jy": 0.70,
+    "pulse_end_jy": 0.03,
+    "published_circular_fraction": 0.37,
+    "period_s": 23221.740,
+    "period_err_s": 0.332,
+    "note": "SBID 57929 in the paper's observation table IS the discovery observation; identical to our detection epoch obs_id ASKAP-57929. Exponential average of the published 0.70->0.03 Jy decay over 15 min = (700-30)/ln(700/30) = 213 mJy, against our peak-search 241 mJy (13% agreement); the forced 164 mJy is beam-attenuated by ~0.68 because the source sits ~5 arcsec from the catalogue position."
+  },
+  "casda_catalogue_queries_2026_08_14": {
+    "blind_v_catalogue_sources_within_60_arcsec": 0,
+    "blind_v_table": "AS110.racs_low2_v_v01",
+    "i_catalogue_sources_above_4_mjy_within_2_arcmin": 0,
+    "i_table": "AS110.racs_low2_v02",
+    "note": "The blind V catalogue derives from a different (off-state) epoch, so its emptiness rules out a persistent polarized neighbour, not the pulse itself."
+  }
+}

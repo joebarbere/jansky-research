@@ -17,8 +17,9 @@ confirmed members with the three 2026 discoveries \citep{deruiter2026,vaster2026
 verified against its source-name convention. At \lvNLpt\ members the hinted $\sim$78-minute period
 boundary between white-dwarf-binary and other LPTs is \textbf{still not significant} (permutation
 $p = \lvPeriodSplitP$). We then perform what has not been done before: systematic multi-epoch forced
-Stokes-V (circular-polarization) photometry at every LPT position across the RACS-low1, RACS-low2,
-and RACS-mid epochs \citep{mcconnell2020,racslow2}. Per-source polarization is known for a handful of
+Stokes-V (circular-polarization) photometry at every LPT position across the RACS
+\citep{mcconnell2020} epochs that cover it: RACS-low2 \citep{racslow2}, RACS-mid, and the
+2023--24 low-band pass. Per-source polarization is known for a handful of
 LPTs and RACS-low2 published a blind V catalogue that did not target them, but no uniform V survey of
 the class exists. The tested forced-photometry pipeline (a synthetic circularly-polarized injection
 is recovered; a blank field yields an honest limit; the photometry re-measured 2026-08-14 with
@@ -26,18 +27,18 @@ the position genuinely locked, after review showed the original was a 12\arcsec\
 Across the \lvRealNMeasured\ RACS-covered LPTs we find \emph{three} single-epoch
 circularly-polarized detections at the catalogue positions: ASKAP J1745$-$5051 ($I\approx22$~mJy,
 $15\%$ circular, $21.6\sigma$, consistent with its magnetic-CV nature); ASKAP
-J165130.3$-$450520 ($67\%$ circular at $11.9\sigma$ --- formerly a positional candidate, now
-at 0.85\arcsec); and ASKAP J183950.5$-$075635, a single-night $I=164$~mJy, $40\%$-circular
-pulse (MJD 60335) formerly mis-vetoed as confusion --- there is no catalogued neighbour
-within 2\arcmin, and the survey's own blind V catalogue (a different, off-state epoch) is
-empty there. All other epochs and sources are limits (median best-epoch $3\sigma$ limit
+J165130.3$-$450520 ($67\%$ circular at $11.9\sigma$; formerly a positional candidate, the
+locked-pixel measurement recovers 95\% of the peak-search $V$); and ASKAP
+J183950.5$-$075635, whose bright epoch (MJD 60335) is the \emph{discovery observation} of
+its published Jy-level pulse --- $40\%$ circular against the published 37\% --- formerly
+mis-vetoed as confusion by the earlier peak search. All other epochs and sources are limits (median best-epoch $3\sigma$ limit
 \lvRealMedianVLimit\,mJy; per-epoch median 0.73~mJy). All three signals are single-epoch
 burst states. The non-detections are limits on circularly polarized \emph{flux}, not on
-fractional polarization --- the undetected sources are undetected in Stokes~I too, so the
-implied $|V|/I$ limits are 49--114\% and even fully circular emission is not excluded for
-most of the sample. RACS snapshots catch LPT pulses with their circular polarization intact;
-the uniform V-limit table, three burst detections, and the reusable vetted machinery are the
-deliverable.
+fractional polarization: at every non-detection position Stokes~I is itself consistent with
+zero (median forced $I/\sigma_I = -0.14$ per epoch), so the census places no constraint on
+$|V|/I$ for any undetected source. RACS snapshots catch LPT pulses with their circular
+polarization intact; the uniform V-limit table, two serendipitous burst detections plus the
+recovered known pulse, and the reusable vetted machinery are the deliverable.
 \end{abstract}
 
 \keywords{Radio transient sources (2008) --- Neutron stars (1108) --- White dwarf stars (1799) ---
@@ -59,8 +60,13 @@ systematic multi-epoch forced-V photometry at every LPT position.
 \section{The v3 catalogue}
 \label{sec:cat}
 We add the three 2026 discoveries to the vendored, per-value-provenanced table, transcribing each
-value from its discovery paper and checking the RA/Dec against the source-name sexagesimal (all
-agree to $<$1\arcsec). The catalogue now holds \lvNLpt\ confirmed LPTs (median period
+value from its discovery paper and checking the RA/Dec against the source-name sexagesimal (the
+three additions agree to $<$1\arcsec). The same check applied to the inherited rows caught one
+error --- in the \emph{name}, not the coordinate: the row for ASKAP J1832$-$0911 carried an
+erroneous full-precision designation 59\arcsec\ from its coordinate, while the coordinate itself
+matches the published VLBA position \citep{wang2025} to 2\arcsec; v3 corrects the name.
+Thirteen of the sixteen rows store positions at 3-decimal-degree precision (a 3.6\arcsec\
+quantum), which the forced photometry below inherits as a positional systematic. The catalogue now holds \lvNLpt\ confirmed LPTs (median period
 \lvMedianPeriodMin\,min), \lvNWdBinary\ of them white-dwarf binaries or candidates. Re-running the
 period-split test --- a 20{,}000-draw permutation test on the white-dwarf-binary-versus-rest median
 $\log$-period difference (a normal-approximation rank test is unreliable at this $N$) --- gives
@@ -77,8 +83,9 @@ over-interpret a small sample.
 \caption{\emph{Left:} the v3 LPT period distribution (\lvNLpt\ members); the dashed line marks the
 hinted $\sim$78-minute white-dwarf-binary/other boundary, which is not significant (permutation
 $p=\lvPeriodSplitP$). \emph{Right:} the forced Stokes-V census across the \lvRealNMeasured\
-RACS-covered LPTs --- the distribution of $3\sigma$ circular-polarization limits (median
-\lvRealMedianVLimit~mJy), with the one secure and one candidate single-epoch detection marked.}
+RACS-covered LPTs --- the distribution of best-epoch $3\sigma$ circular-polarization limits (median
+\lvRealMedianVLimit~mJy). The three single-epoch detections (2.4, 3.3, and 65~mJy in $|V|$)
+lie off the plotted range and are not shown.}
 \label{fig:lptv}
 \end{figure*}
 
@@ -88,20 +95,25 @@ For each LPT we query the CASDA ObsCore for every RACS restored image containing
 both a Stokes-I and a Stokes-V product, stage a SODA cutout of each, and run forced $I{+}V$
 photometry at the catalogue position (the tested \code{measure\_circular\_pol}, locking the
 measurement so a non-detection becomes an honest limit). A V detection must clear both $5\sigma$
-and a $0.6\%$-of-$I$ instrumental-leakage veto (the characteristic ASKAP on-axis leakage level).
-A second, \emph{confusion} veto guards against the forced-photometry peak locking onto a nearby
-bright source: a detection is flagged suspect when the peak is both off-centre ($>$4\arcsec) and a
-gross Stokes-I outlier ($>$10$\times$ the source's median across its own epochs) --- the signature
-of a confusing source rather than the LPT. Upper limits are the deepest $3\sigma$ across a
-source's epochs, and we flag any inter-epoch handedness (LCP$\leftrightarrow$RCP) change among
-detections. Validation: offline, a synthetic RACS-like cutout with an injected $|V|/I = 0.6$
-source is recovered (class \lvInjClass) and a blank field yields no false detection; the same
-forced-photometry code recovers known circular emitters in the parent \code{stokesv} slice.
+and a $0.6\%$-of-$I$ instrumental-leakage veto (the characteristic ASKAP on-axis leakage level;
+\citealt{racslow2}). The pipeline retains a \emph{confusion} veto from its earlier peak-search
+configuration (suspect when the measured peak is $>$4\arcsec\ off-centre \emph{and} a
+$>$10$\times$ Stokes-I outlier); under locked-position photometry the offset is pixel-rounding
+arithmetic bounded by half a pixel diagonal, so the off-centre clause can never fire and the veto
+is superseded --- the failure mode it guarded against (the peak wandering to a neighbour) no
+longer exists. Association is instead assessed directly, by the flux recovered at the locked
+catalogue pixel. Upper limits are the deepest (best-epoch) $3\sigma$ across a source's epochs.
+Validation: offline, a synthetic RACS-like cutout with an injected $|V|/I = 0.6$ source ---
+2$\times$ the classifier boundary --- is recovered (class \lvInjClass) and a single blank field
+yields no false detection; this is a smoke test of the chain, not a calibration of the decision
+boundaries. The parent \code{stokesv} slice recovers known circular emitters with the same
+photometry code, though under its default 12\arcsec\ peak-search mode rather than the locked
+mode used here.
 
 \begin{table}
 \centering
 \caption{The v3 Stokes-V table (per LPT; the machine-readable version is in
-\code{results/lptv\_vtable.json}). Limits are $3\sigma$; ``class'' is the $|V|/I$ category where
+\code{results/lptv\_vtable.json}). Limits are best-epoch $3\sigma$; ``class'' is the $|V|/I$ category where
 detected; ``flip'' marks an inter-epoch handedness change. Uncovered = outside the RACS
 footprint.}
 \label{tab:vtable}
@@ -115,59 +127,77 @@ name & $P$ (min) & ep. & $V$ (mJy) & class & flip \\
 \end{table}
 
 \section{Results and Conclusions}
-Across the \lvRealNMeasured\ RACS-covered LPTs (Table~\ref{tab:vtable}), one source yields a
-secure circularly-polarized detection and one a candidate, each in a \emph{single} epoch, with
-the remaining epochs of both and all other targets yielding limits (median $3\sigma$ Stokes-V
-limit \lvRealMedianVLimit\,mJy; \lvRealNFlips\ handedness changes among detections). ASKAP
+Across the \lvRealNMeasured\ RACS-covered LPTs (Table~\ref{tab:vtable}), three sources yield
+circularly-polarized detections, each in a \emph{single} epoch, with the remaining epochs of all
+three and every other target yielding limits (median best-epoch $3\sigma$ Stokes-V limit
+\lvRealMedianVLimit\,mJy). ASKAP
 J1745$-$5051, the accreting-white-dwarf LPT, is the \textbf{secure} case: bright ($I\approx22$~mJy),
 on-centre ($0.7\arcsec$), at $|V|/I\approx15\%$ with $21.6\sigma$ in $V$ --- $25\times$ above the
 $0.6\%$ on-axis leakage floor and above even a pessimistic several-per-cent off-axis leakage, and
 leakage would not switch on for a single epoch the way this burst does; the $15\%$ fraction is
 consistent with its magnetic-CV nature. ASKAP J165130.3$-$450520, one of the two 2026 VASTER
-additions, \textbf{strengthens under forced photometry}: with the measurement locked to the
-catalogue position (offset 0.85\arcsec, against 3.2\arcsec\ for the earlier peak search) it is
-$67\%$ circular at $11.9\sigma$ in the single epoch where Stokes~I rises to $3.6$~mJy. The
-positional ambiguity that made it a candidate is resolved; we report it as a detection.
+additions, \textbf{strengthens under forced photometry}: the measurement locked to the catalogue
+pixel recovers $I=3.6$, $V=2.4$~mJy --- 83\% and 95\% of the earlier peak-search values --- at
+$11.9\sigma$ in $V$ and $67\%$ circular in its single bright epoch. That the locked pixel
+recovers nearly all of the peak-search flux places the polarized emission at the catalogue
+position to well within a beam; the 3.2\arcsec\ peak wander that made it a candidate is
+consistent with noise-driven peak displacement at this signal-to-noise. We report it as a
+detection.
 
 The third source is the most instructive. Under the earlier peak search, ASKAP
 J183950.5$-$075635's bright epoch ($240$~mJy at a $5.3\arcsec$ offset) was vetoed as ``a
-nearby confusing source''. That veto was wrong twice over. First, $5.3\arcsec$ is a fifth of
-the RACS-low beam --- not a separable neighbour. Second, and decisively: forced photometry at
-the catalogue position reads $I=164$~mJy, $V=+65$~mJy ($|V|/I = 40\%$, $199\sigma$) in that
-single epoch (MJD 60335), with all nine other epochs consistent with zero --- including the
-following night --- and the survey's own blind leakage-corrected V catalogue contains no
-source within $60\arcsec$ (it derives from a different epoch, when the source was off), and
-no I-catalogue source brighter than 4~mJy within 2\arcmin\ (so there is no neighbour to
-confuse with). A single bright, strongly circularly polarized, night-scale transient at the
-position of this source is not a contaminant: it is what this source \emph{does} --- its
-published pulses are of exactly this brightness, duration and polarization. We therefore
-report it as a single-epoch pulse recovery in survey imaging, caught in the $\sim$39\% of
-its 6.4-h period that our epochs sample. The
-picture is therefore three detections and thirteen sets of limits --- and the negative half
-must be stated for what it is. The non-detections are limits on circularly polarized
-\emph{flux} ($\sim$0.5~mJy best-epoch, 0.73~mJy per-epoch median), not on fractional
-polarization: the undetected sources are undetected in Stokes~I too (median $I/\sigma_I =
-1.9$ per epoch), so the implied $|V|/I$ limits are 49--114\% and the census does not exclude
-even fully circular emission for most of the sample. CHIME J1634+44 --- published at
-$\sim$100\% circular polarization, the class's natural archetype --- is among the
-non-detections at $<$0.41~mJy: a flux non-recovery, not a polarization statement. What the
-census does establish is that RACS snapshots \emph{can} catch LPT pulses, three times over,
-with the burst-state circular polarization intact --- the coherent-emission diagnostic in
-survey imaging. Because RACS integrates $\sim$15 min per field, a source active for a small fraction of its
-period is diluted by $\sim T/w$ even when strongly polarized in burst, and a limit on the
-snapshot mean is $T/w$ times weaker on the pulse flux. Phase coverage varies enormously
-across this sample: the short-period sources ($P<20$~min) are sampled many times over, while
-the four longest-period sources have 27--43\% single-visit phase coverage --- for them a
-non-detection is the \emph{expected} outcome of an off-state and constrains little. The
-J183950 recovery is the existence proof: ten epochs, one pulse. Two follow-ons are immediate through the
-same pipeline: the deeper, wider RACS-low2 V epochs as they are released \citep{racslow2}, and
+nearby confusing source''. That veto was wrong twice over. First, $5.3\arcsec$ is about a
+third of the $\sim$15\arcsec\ RACS-low beam \citep{mcconnell2020} --- not a separable
+neighbour; indeed the forced-to-peak flux ratio (0.68 in both $I$ and $V$, identically) is
+exactly the beam response of a single point source measured $\sim$5\arcsec\ off its true
+position, part of which is the catalogue coordinate's own 3.6\arcsec\ quantization. Second,
+and decisively: the epoch \emph{is} the discovery observation of this source. SBID 57929 is
+the 2024-01-26 RACS-low block in which its published pulse --- 0.70~Jy decaying to 0.03~Jy
+across the 15 minutes, 37\% circularly polarized --- was first found \citep{lee2025}. The
+committed adjudication (\code{results/lptv\_j183950\_adjudication.json}) collects the
+cross-checks: the published decay averaged over the block is
+$(700-30)/\ln(700/30) = 213$~mJy, against our peak-search 241~mJy (13\% agreement; the forced
+164~mJy is that flux beam-attenuated by the $\sim$5\arcsec\ offset); our $|V|/I = 40\%$ is
+consistent with the published 37\%; and the survey's own blind V catalogue is empty within
+60\arcsec\ (a different, off-state epoch) with no I-catalogue source above 4~mJy within
+2\arcmin, so no neighbour existed to confuse with. We are explicit about what this is and is
+not: because the discovery block necessarily enters our epoch list, re-finding the pulse was
+guaranteed, not blind --- this epoch cannot count toward any pulse-rate estimate. What it
+does provide is an end-to-end check on real data that the locked photometry chain recovers a
+known Jy-level LPT pulse with its polarization intact ($199\sigma$ formally, though at this
+brightness the error budget is dominated by systematics the local-annulus rms cannot see),
+and the demonstration that the earlier peak-search veto produced a false rejection. The
+picture is therefore three detections and twelve sets of limits (a sixteenth target lies
+outside the RACS footprint and yields none) --- and the negative half must be stated for what
+it is. The non-detections are limits on circularly polarized \emph{flux} ($\sim$0.5~mJy
+best-epoch, 0.73~mJy per-epoch median), not on fractional polarization: at every
+non-detection position Stokes~I is itself consistent with zero (median forced
+$I/\sigma_I = -0.14$ per epoch), so a $|V|/I$ ratio is unconstrained --- the census does not
+exclude even fully circular emission for any undetected source. CHIME J1634+44 --- published
+at $\sim$100\% circular polarization \citep{chime1634}, the class's natural archetype --- is
+among the non-detections at $<$0.41~mJy: a flux non-recovery, not a polarization statement.
+What the census does establish is that RACS snapshots \emph{can} catch LPT pulses with the
+burst-state circular polarization intact --- twice serendipitously, and once by re-finding a
+known pulse in its discovery block. Because RACS integrates $\sim$15 min per field
+\citep{mcconnell2020}, a source active for a small fraction of its period is diluted by
+$\sim T/w$ even when strongly polarized in burst, and a limit on the snapshot mean is $T/w$
+times weaker on the pulse flux. Phase coverage varies enormously across this sample: the
+short-period sources ($P<20$~min) are sampled many times over, while the four longest-period
+covered sources accumulate only 27--75\% cumulative phase coverage across all their epochs
+(a single 15-min visit covers $\sim$4\% of a 6.5-h period, and the cumulative figure assumes
+the visits land at independent phases) --- for them a non-detection is the \emph{expected}
+outcome of an off-state and constrains little. Two follow-ons are immediate through the same
+pipeline: the deeper, wider RACS-low2 V epochs as they are released \citep{racslow2}, and
 phase-resolved polarimetry of the burst windows which snapshot imaging cannot reach. The v3
-catalogue, the two serendipitous burst detections, and the reusable vetted V machinery are the
-contribution.
+catalogue, the two serendipitous burst detections plus the recovered known pulse, and the
+reusable vetted V machinery are the contribution.
 
 \textit{Reproducibility.} \code{jansky\_research.lptv} (catalogue + offline validation) $+$
-\code{scripts/lptv\_real.py} (the resumable CASDA V sweep); every number above is
-pipeline-generated (\code{results/lptv\_metrics.json} $\to$ macros and Table~\ref{tab:vtable}).
+\code{scripts/lptv\_real.py} (the resumable CASDA V sweep). The catalogue-level numbers are
+pipeline-generated (\code{results/lptv\_metrics.json} $\to$ macros and Table~\ref{tab:vtable});
+the per-detection numbers quoted in the text are transcribed from the committed
+\code{results/lptv\_realtargets.csv}, \code{lptv\_vtable.json}, and
+\code{lptv\_j183950\_adjudication.json}.
 Catalogue: \code{data/lpt\_sample.csv} (per-value provenance).
 
 \section*{AI use disclosure}
