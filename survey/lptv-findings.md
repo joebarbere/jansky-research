@@ -268,3 +268,41 @@ Everything applied:
   systematic.
 - wang2025 and chime1634 now cited; wang2025 coordinates verified via Crossref (Nature 642,
   583–586).
+
+
+## All three detections are published epochs (2026-08-14, post-round-2)
+
+Prompted by the J1839 identity result, the same adjudication was run against the other two
+detections' discovery papers (e-print sources fetched from arXiv). The pattern completes —
+**every detection in the census is an epoch its discovery paper already reported**:
+
+- **ASKAP J174508.9−505149**: our detection epoch ASKAP-20398 is the RACS-mid observation the
+  discovery search ran on; the discovery paper's own table reports the source there at
+  22.9 ± 2.3 mJy/beam (arXiv:2606.04232, now cited as rose2026) vs our forced 21.6 mJy.
+- **ASKAP J165130.3−450520**: the VASTER paper's archival search (61 ASKAP observations of the
+  field, Apr 2019 – Nov 2024) reports exactly one detection — a RACS epoch on 2024-11-21 at
+  ~4 mJy, ~60% circular, at pulse phase ≈ −0.1 on their timing solution. That is our
+  detection epoch (MJD 60635.2); ours reads 3.6 mJy at 67%.
+- **ASKAP J183950.5−075635**: the discovery observation itself (previous entry).
+
+The paper is reframed accordingly (zero new detections; three independent forced
+re-measurements of published epochs, consistent in flux and circular fraction in all three
+cases — an end-to-end validation spanning 3.6–164 mJy). Evidence:
+`results/lptv_detection_provenance.json`.
+
+The general lesson, worth carrying to any archival census: **before calling an archival
+detection new, check the discovery paper's own observation tables and archival-search
+sections for that epoch.** Discovery papers of transients routinely sweep the same public
+archive the census uses, so the priors are heavily against novelty for anything bright.
+
+## VAST extension launched (2026-08-14)
+
+`scripts/lptv_vast_real.py`: same forced photometry, `obs_collection='VAST'` (12-min epochs,
+same filename conventions, fortnightly cadence). 966 potential V epochs across 10 covered
+sources (J1745−5051, both CHIME sources, ILT J1101, GLEAM-X J0704, J144834 uncovered).
+Fixes baked in from round 2: full-precision `epoch_mjd` (t_min to ~1 s, so phase arithmetic
+is possible from the committed CSV) and per-row `duration_s` (obscore t_exptime). The
+novelty argument: VAST observing continues through 2026-08 (MJD 61222) while every
+discovery paper's archival search stops in/before Nov 2024 — the post-cutoff epochs are
+unsearched. Sources with the most epochs: J1424 (129), J1651 (110), J170036 (106), J1755
+(104), GCRT J1745−3009 (99), GLEAM-X J1627 (99), J1832−0911 (97), J1839−0756 (92).

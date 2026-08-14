@@ -1,0 +1,23 @@
+{
+  "_comment": "Adjudication of all three lptv census detections against their discovery papers' own reported epochs (checked 2026-08-14 from the arXiv e-print sources). Every detection epoch in this census turns out to be an epoch already reported in the respective discovery paper: the census independently re-measures published detections; it contains zero new detections. Companion file: lptv_j183950_adjudication.json (the detailed J1839 case).",
+  "askap_j1745_5051": {
+    "census_row": {"obs_id": "ASKAP-20398", "epoch_mjd": 59210.1, "forced_i_mjy": 21.59, "forced_v_mjy": -3.245, "v_over_i": 0.15, "v_sigma": 21.6},
+    "discovery_paper": {"arxiv": "2606.04232", "bib_key": "rose2026"},
+    "published_match": "Extended Table: 22.9 +/- 2.3 mJy/beam at 1.365 GHz in SBID 20398 -- the RACS-mid epoch on which the paper's untargeted circular-polarization search (the search that discovered the source) ran.",
+    "verdict": "Census detection epoch = the discovery-search epoch. Flux consistent (21.6 vs 22.9 +/- 2.3). Not serendipitous."
+  },
+  "askap_j165130_450520": {
+    "census_row": {"obs_id": "ASKAP-68311", "epoch_mjd": 60635.2, "forced_i_mjy": 3.615, "forced_v_mjy": 2.437, "v_over_i": 0.67, "v_sigma": 11.9},
+    "discovery_paper": {"arxiv": "2606.20067", "bib_key": "vaster2026"},
+    "published_match": "Section 4 archival search: of 61 archival ASKAP observations of the field (April 2019 - November 2024, including fortnightly VAST monitoring since late 2022), the source was detected in exactly one -- a RACS observation on 21 November 2024 (= MJD 60635) at ~4 mJy with ~60% circular polarization; their timing solution places that detection at pulse phase ~ -0.1.",
+    "verdict": "Census detection epoch = the single archival detection already reported by the discovery paper. Flux and fraction consistent (3.6 mJy / 67% vs ~4 mJy / ~60%). Not serendipitous."
+  },
+  "askap_j183950_075635": {
+    "census_row": {"obs_id": "ASKAP-57929", "epoch_mjd": 60335.1, "forced_i_mjy": 164.03, "forced_v_mjy": 65.15, "v_over_i": 0.40, "v_sigma": 199},
+    "discovery_paper": {"arxiv": "2501.09133", "bib_key": "lee2025"},
+    "published_match": "SBID 57929 is the discovery observation itself (2024-01-26; 0.70 Jy decaying to 0.03 Jy, 37% circular). See lptv_j183950_adjudication.json.",
+    "verdict": "Census detection epoch = the discovery observation. Not serendipitous."
+  },
+  "implication_for_the_census": "All three detections are independent forced re-measurements of published detection epochs, with fluxes and circular fractions consistent with the published values in each case. They validate the locked-photometry chain end to end on real LPT pulses spanning 3.6 mJy to 164 mJy, and they contribute nothing to a pulse-discovery or pulse-rate claim. The census's original results are the uniform V-limit table and the vacuity of fractional-polarization constraints at the non-detection positions.",
+  "note_on_j165130_archival_context": "The VASTER paper's 1-of-61 archival detection rate for J165130.3 means a VAST-epoch extension of this census re-treads their archival search for this field in Stokes I; the uniform forced V limits per epoch remain unpublished."
+}

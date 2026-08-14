@@ -25,20 +25,23 @@ the class exists. The tested forced-photometry pipeline (a synthetic circularly-
 is recovered; a blank field yields an honest limit; the photometry re-measured 2026-08-14 with
 the position genuinely locked, after review showed the original was a 12\arcsec\ peak search).
 Across the \lvRealNMeasured\ RACS-covered LPTs we find \emph{three} single-epoch
-circularly-polarized detections at the catalogue positions: ASKAP J1745$-$5051 ($I\approx22$~mJy,
-$15\%$ circular, $21.6\sigma$, consistent with its magnetic-CV nature); ASKAP
-J165130.3$-$450520 ($67\%$ circular at $11.9\sigma$; formerly a positional candidate, the
-locked-pixel measurement recovers 95\% of the peak-search $V$); and ASKAP
-J183950.5$-$075635, whose bright epoch (MJD 60335) is the \emph{discovery observation} of
-its published Jy-level pulse --- $40\%$ circular against the published 37\% --- formerly
-mis-vetoed as confusion by the earlier peak search. All other epochs and sources are limits (median best-epoch $3\sigma$ limit
+circularly-polarized detections at the catalogue positions --- and adjudicating each against
+its discovery paper shows all three are independent re-measurements of \emph{already
+published} detection epochs, not new pulses: ASKAP J1745$-$5051 in SBID 20398, the RACS-mid
+epoch its discovery search ran on ($I=21.6$~mJy vs the published $22.9\pm2.3$; $15\%$
+circular, $21.6\sigma$); ASKAP J165130.3$-$450520 in the one archival epoch its discovery
+paper reports (3.6~mJy, $67\%$ circular at $11.9\sigma$ vs their $\sim$4~mJy, $\sim$60\%);
+and ASKAP J183950.5$-$075635 in its discovery observation itself ($40\%$ circular vs the
+published 37\%) --- the latter formerly mis-vetoed as confusion by the earlier peak search.
+The census therefore contains zero new detections; the recoveries are an end-to-end
+validation of the locked photometry on real LPT pulses spanning 3.6--164~mJy. All other epochs and sources are limits (median best-epoch $3\sigma$ limit
 \lvRealMedianVLimit\,mJy; per-epoch median 0.73~mJy). All three signals are single-epoch
 burst states. The non-detections are limits on circularly polarized \emph{flux}, not on
 fractional polarization: at every non-detection position Stokes~I is itself consistent with
 zero (median forced $I/\sigma_I = -0.14$ per epoch), so the census places no constraint on
 $|V|/I$ for any undetected source. RACS snapshots catch LPT pulses with their circular
-polarization intact; the uniform V-limit table, two serendipitous burst detections plus the
-recovered known pulse, and the reusable vetted machinery are the deliverable.
+polarization intact; the uniform V-limit table, the three validated recoveries, and the
+reusable vetted machinery are the deliverable.
 \end{abstract}
 
 \keywords{Radio transient sources (2008) --- Neutron stars (1108) --- White dwarf stars (1799) ---
@@ -131,18 +134,25 @@ Across the \lvRealNMeasured\ RACS-covered LPTs (Table~\ref{tab:vtable}), three s
 circularly-polarized detections, each in a \emph{single} epoch, with the remaining epochs of all
 three and every other target yielding limits (median best-epoch $3\sigma$ Stokes-V limit
 \lvRealMedianVLimit\,mJy). ASKAP
-J1745$-$5051, the accreting-white-dwarf LPT, is the \textbf{secure} case: bright ($I\approx22$~mJy),
-on-centre ($0.7\arcsec$), at $|V|/I\approx15\%$ with $21.6\sigma$ in $V$ --- $25\times$ above the
-$0.6\%$ on-axis leakage floor and above even a pessimistic several-per-cent off-axis leakage, and
-leakage would not switch on for a single epoch the way this burst does; the $15\%$ fraction is
-consistent with its magnetic-CV nature. ASKAP J165130.3$-$450520, one of the two 2026 VASTER
+J1745$-$5051, the accreting-white-dwarf LPT, is the cleanest measurement: bright
+($I=21.6$~mJy), at $|V|/I\approx15\%$ with $21.6\sigma$ in $V$ --- $25\times$ above the
+$0.6\%$ on-axis leakage floor, and leakage would not switch on for a single epoch the way
+this burst does; the $15\%$ fraction is consistent with its magnetic-CV nature. It is also
+not serendipitous: the detection epoch is SBID 20398, the RACS-mid observation on which the
+discovery paper's untargeted circular-polarization search ran, and that paper's own table
+reports the source there at $22.9\pm2.3$~mJy \citep{rose2026} --- consistent with our
+independent forced measurement. ASKAP J165130.3$-$450520, one of the two 2026 VASTER
 additions, \textbf{strengthens under forced photometry}: the measurement locked to the catalogue
 pixel recovers $I=3.6$, $V=2.4$~mJy --- 83\% and 95\% of the earlier peak-search values --- at
 $11.9\sigma$ in $V$ and $67\%$ circular in its single bright epoch. That the locked pixel
 recovers nearly all of the peak-search flux places the polarized emission at the catalogue
 position to well within a beam; the 3.2\arcsec\ peak wander that made it a candidate is
 consistent with noise-driven peak displacement at this signal-to-noise. We report it as a
-detection.
+detection --- but, again, not a new one: the discovery paper's archival search covered 61
+ASKAP observations of this field and reports exactly one detection, a RACS epoch on
+2024-11-21 at $\sim$4~mJy with $\sim$60\% circular polarization \citep{vaster2026}. That is
+this epoch (MJD 60635), and our 3.6~mJy at 67\% is consistent with their measurement; their
+timing solution places it at pulse phase $\approx -0.1$.
 
 The third source is the most instructive. Under the earlier peak search, ASKAP
 J183950.5$-$075635's bright epoch ($240$~mJy at a $5.3\arcsec$ offset) was vetoed as ``a
@@ -177,8 +187,10 @@ exclude even fully circular emission for any undetected source. CHIME J1634+44 -
 at $\sim$100\% circular polarization \citep{chime1634}, the class's natural archetype --- is
 among the non-detections at $<$0.41~mJy: a flux non-recovery, not a polarization statement.
 What the census does establish is that RACS snapshots \emph{can} catch LPT pulses with the
-burst-state circular polarization intact --- twice serendipitously, and once by re-finding a
-known pulse in its discovery block. Because RACS integrates $\sim$15 min per field
+burst-state circular polarization intact --- though every one of the three recoveries is of
+an epoch already reported by the corresponding discovery paper
+(\code{results/lptv\_detection\_provenance.json} collects the adjudications), so the census
+demonstrates the method rather than adding detections. Because RACS integrates $\sim$15 min per field
 \citep{mcconnell2020}, a source active for a small fraction of its period is diluted by
 $\sim T/w$ even when strongly polarized in burst, and a limit on the snapshot mean is $T/w$
 times weaker on the pulse flux. Phase coverage varies enormously across this sample: the
@@ -189,15 +201,15 @@ the visits land at independent phases) --- for them a non-detection is the \emph
 outcome of an off-state and constrains little. Two follow-ons are immediate through the same
 pipeline: the deeper, wider RACS-low2 V epochs as they are released \citep{racslow2}, and
 phase-resolved polarimetry of the burst windows which snapshot imaging cannot reach. The v3
-catalogue, the two serendipitous burst detections plus the recovered known pulse, and the
-reusable vetted V machinery are the contribution.
+catalogue, the uniform V-limit table with its three validated recoveries, and the reusable
+vetted V machinery are the contribution.
 
 \textit{Reproducibility.} \code{jansky\_research.lptv} (catalogue + offline validation) $+$
 \code{scripts/lptv\_real.py} (the resumable CASDA V sweep). The catalogue-level numbers are
 pipeline-generated (\code{results/lptv\_metrics.json} $\to$ macros and Table~\ref{tab:vtable});
 the per-detection numbers quoted in the text are transcribed from the committed
-\code{results/lptv\_realtargets.csv}, \code{lptv\_vtable.json}, and
-\code{lptv\_j183950\_adjudication.json}.
+\code{results/lptv\_realtargets.csv}, \code{lptv\_vtable.json},
+\code{lptv\_j183950\_adjudication.json}, and \code{lptv\_detection\_provenance.json}.
 Catalogue: \code{data/lpt\_sample.csv} (per-value provenance).
 
 \section*{AI use disclosure}

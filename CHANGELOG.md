@@ -7,6 +7,18 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Fixed
+- `lptv` detection provenance: all three census detections adjudicated against their
+  discovery papers' e-prints — each is an epoch the discovery paper already reported
+  (J1745's SBID 20398 discovery-search epoch; J1651's single archival detection of
+  2024-11-21; J1839's discovery observation). Paper reframed: zero new detections, three
+  validated re-measurements (`results/lptv_detection_provenance.json`).
+
+### Added
+- `scripts/lptv_vast_real.py`: VAST-collection extension of the lptv forced-V sweep
+  (12-min epochs, ~966 across 10 covered sources; full-precision epoch MJDs and per-row
+  durations, fixing the round-2 timestamp-quantization finding).
+
+### Fixed
 - `lptv` round-2 referee pass (major): rescoped negative recomputed from the forced CSV
   (median I/sigma = -0.14, no |V|/I constraint on non-detections — the 1.9 / 49–114% figures
   traced to the superseded peak-search data); J165130.3 promotion re-based on locked-pixel
