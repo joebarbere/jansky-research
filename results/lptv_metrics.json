@@ -16,20 +16,21 @@
   },
   "n_targets": 16,
   "n_measured": 15,
-  "n_v_detections": 2,
-  "n_v_secure": 1,
-  "n_v_candidate": 1,
-  "n_suspect_confusion": 1,
+  "n_v_detections": 3,
+  "n_v_secure": 3,
+  "n_v_candidate": 0,
+  "n_suspect_confusion": 0,
   "v_detection_names": [
     "ASKAP J165130.3-450520",
-    "ASKAP J174508.9-505149"
-  ],
-  "v_secure_names": [
-    "ASKAP J174508.9-505149"
-  ],
-  "suspect_names": [
+    "ASKAP J174508.9-505149",
     "ASKAP J183950.5-075635"
   ],
+  "v_secure_names": [
+    "ASKAP J165130.3-450520",
+    "ASKAP J174508.9-505149",
+    "ASKAP J183950.5-075635"
+  ],
+  "suspect_names": [],
   "n_handedness_flips": 0,
   "median_v_limit_mjy": 0.474
 }

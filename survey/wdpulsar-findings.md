@@ -106,3 +106,22 @@ frequencies with no band column. The VLASS "counterpart" at 3.75″ is ~10σ fro
 position and should be called unrelated. Two germane references (pelisoli2024vlass — the
 same first author's VLASS WD survey — and rose2026) sit in refs.bib uncited, bearing
 directly on the "never searched as a set" novelty claim.
+
+## Forced re-measurement complete (2026-08-14)
+
+The 594-epoch CASDA re-sweep with `search_arcsec=0.0` finished overnight. The data validate
+the diagnosis exactly: **214/447 usable epochs have I > 0 (47.9%), mean I/σ = +0.002, median
+offset 0.78″** — signed, mean-zero, at-position — against 458/458 positive at 9.66″ under the
+peak search. The census's headline survives and is now real: the only I detection anywhere is
+AR Sco (the control), zero candidate detections, zero V detections (max V significance 3.4σ,
+which is AR Sco itself, below the census's own 5σ bar — the paper now says so instead of
+claiming a circular-polarization classification).
+
+Promoted: results/wdpulsar_realtargets.csv (forced), regenerated metrics/table/macros/figure.
+New in the evidence and the paper: the epoch-loss accounting (594 attempted → 447 used, 33
+hard failures, 114 all-NaN), the radio-loud-fraction bound the paper had promised twice and
+never stated (f < 6.1% at 95% over 49 covered candidates, persistent emission only, control
+efficiency 2/5 stated alongside), the AR Sco control's honest per-band record (2/3 mid epochs
+at ≥5σ; 0/2 low, a factor 2–4 below the catalogued 8.58 mJy), the never-binding leakage veto
+stated as such, and the VLASS "counterpart" downgraded to "nearest source, ~10σ away, most
+likely unrelated".
