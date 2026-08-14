@@ -145,3 +145,45 @@ sources have 27–43% phase coverage, so their non-detections constrain little; 
 existence proof — ten epochs, one pulse). Epoch composition corrected (no RACS-low1 anywhere;
 50/81 low-band epochs are the 2024 pass); "exact permutation" corrected to what it is; the
 novelty claim narrowed to "first targeted, multi-epoch, uniform".
+
+## Phase-fold check of the J183950 recovery (2026-08-14)
+
+Folding all ten epoch MJDs (committed in results/lptv_realtargets.csv) on the catalogued
+23,221.74-s period (data/lpt_sample.csv), relative to the detection epoch:
+
+| MJD | phase rel. detection | I (mJy) |
+|---|---|---|
+| 59243.100 | 0.744 | 0.17 |
+| 59615.100 | 0.930 | −0.07 |
+| 59675.900 | 0.163 | −0.04 |
+| 60312.200 | 0.791 | −0.15 |
+| 60313.200 | 0.512 | 0.11 |
+| **60335.100** | **0.000** | **164.03** |
+| 60336.100 | 0.721 | −0.43 |
+| 60352.100 | 0.256 | 0.37 |
+| 60628.300 | 0.977 | −0.32 |
+
+A ~15-min RACS integration is ±0.019 in phase. **No non-detection epoch samples the on-pulse
+window** — the nearest (phase 0.977) misses it by ~9 minutes; the epoch one night after the
+detection lands at phase 0.72. The single-pulse light curve is therefore fully consistent
+with a periodic emitter sampled off-pulse nine times and on-pulse once, which is exactly what
+a 6.45-h-period source with narrow pulses looks like in survey snapshots. (The epoch at
+phase 0.512 — the interpulse phase if the published interpulse sits at 0.5 — shows nothing,
+consistent with the interpulse being weaker/intermittent.) Caveat: this fold uses the
+catalogued period with no published zero-point; a phase-connected comparison against the
+discovery ephemeris (arXiv:2501.09133) is the decisive follow-up and is listed below.
+
+## Research opportunities opened by the recovery
+
+1. **Phase-connect against the published ephemeris** (discovery paper's T0 + P): if MJD
+   60335.1 lands in a predicted pulse window, the recovery is conclusive beyond argument.
+2. **VAST epochs**: the VAST survey carries many more ASKAP I+V epochs of this field than
+   RACS. Extending the sweep to VAST obscore products could yield more pulses, a pulse-rate
+   estimate, and a duty-cycle measurement — the natural lptv v2, using the existing forced
+   machinery unchanged.
+3. **Dilution arithmetic**: 164 mJy averaged over a ~15-min integration implies an intrinsic
+   pulse flux of ~0.5–1.6 Jy for published minutes-scale pulse widths — directly comparable
+   with the discovery paper's pulse fluxes, and a check that the recovery is energetically
+   consistent.
+4. **Handedness**: our V is +65 mJy (one sign, 40%); compare against the published
+   polarization behaviour of pulse vs interpulse.
