@@ -13,14 +13,17 @@ A Systematic RACS and VLASS Survey of 56 AR\,Sco Analogues}
 The white-dwarf pulsars AR\,Sco and J1912$-$4410 show pulsed, highly variable, and (at GHz
 frequencies) circularly polarized radio emission driven by a spinning magnetic white dwarf.
 \citet{pelisoli2025} selected \wdNCand\ further AR\,Sco-like binary candidates from Gaia and
-WISE (\wdNUnchar\ with no prior characterisation; \wdNClassNew\ newly classified here), but no
+WISE (\wdNUnchar\ with no prior characterisation; \wdNClassNew\ newly classified by them), but no
 systematic radio search of the list existed. We perform one, mining the all-sky archives:
 forced Stokes-I and Stokes-V photometry at every candidate position in every public Rapid ASKAP
 Continuum Survey (RACS) low- and mid-band observation (887 and 1367\,MHz), plus VLASS
 Quick-Look cone searches (3\,GHz) for the northern targets. The pipeline reuses and is validated
 by the tested \code{stokesv} forced-photometry machinery: a synthetic injection is recovered in
 both Stokes parameters, and the template object AR\,Sco (deliberately not among the 56) is
-re-detected at $I=\wdRealControlI$\,mJy and classified circularly polarized --- the recover-a-known.
+re-detected in Stokes~I at $I=\wdRealControlI$\,mJy --- the recover-a-known. Its circular
+polarization is \emph{not} formally recovered at the census's own 5$\sigma$ bar (best V epoch
+3.4$\sigma$, with the expected negative sense in all three RACS-mid epochs), and it is not
+recovered at all in the two RACS-low epochs; both facts are reported rather than glossed.
 Across the \wdRealNCandCovered\ candidates with RACS coverage we find \textbf{zero radio
 detections} --- none in Stokes I above $5\sigma$, and \textbf{no circularly polarized emission}
 (\wdRealNCandVDet\ Stokes-V detections after leakage vetting) --- above a median
@@ -79,9 +82,17 @@ targets north of $\delta=-40\arcdeg$ that VLASS reaches.
 Validation is twofold. Offline, a synthetic RACS-like cutout with an injected point source is
 recovered by the same photometry ($I,V$ within the noise, classified circular) and a blank
 field yields no false detection. On the real sky, AR\,Sco --- the template that defined the
-selection, and deliberately \emph{not} one of the 56 --- is the recover-a-known: it is detected
-at $I=\wdRealControlI$\,mJy with the expected sense of circular polarization, and independently
-matched in VLASS. That the pipeline re-finds the archetype but none of the candidates is the
+selection, and deliberately \emph{not} one of the 56 --- is the recover-a-known, with its
+efficiency measured rather than asserted. In Stokes~I it is detected in 2 of 3 RACS-mid
+epochs at $\ge 5\sigma$ (best $I=\wdRealControlI$\,mJy at 7.4$\sigma$) and in neither
+RACS-low epoch (1.1$\sigma$ and 1.7$\sigma$ against a catalogued 8.58~mJy at 887.5~MHz ---
+a factor $\sim$2--4 below catalogue, consistent with variability and/or the steep implied
+spectrum, and stated here because it is the paper's one absolute flux check). In Stokes~V
+the sense is negative in all three mid epochs as expected, but the best single epoch is
+3.4$\sigma$: \emph{below} the census's 5$\sigma$ bar, so under the census's own criterion the
+polarization is not a detection. The control therefore calibrates the census at a measured
+2/5 per-epoch I efficiency and shows the V threshold is conservative even for the archetype.
+That the pipeline re-finds the archetype in I but none of the candidates in anything is the
 central result's internal control.
 
 \section{Results}
@@ -134,10 +145,20 @@ yields no persistent radio counterparts: none of the \wdRealNCandCovered\ RACS-c
 is detected in total intensity, and none shows circular polarization, to a median $3\sigma$
 depth of \wdRealMedianVLimit\,mJy. Read correctly --- through the J1912$-$4410 calibration --- this
 does not disfavour the candidates: the archetype itself would be invisible to these surveys, so
-the census bounds only the \emph{persistently radio-loud} fraction of the sample, which is
-consistent with zero at $\sim$0.4\,mJy. The scientific value is the reusable limit table and the
-demonstration that archival Stokes-V mining reproduces the known emitter (AR\,Sco) while cleanly
-excluding leakage. The natural next steps are targeted, time-resolved observations (MeerKAT/ASKAP
+the census bounds only the \emph{persistently radio-loud} fraction of the sample. Stated as a
+number for the first time: with 0 detections among \wdRealNCovered\ covered candidates, the
+95\% Poisson upper limit is $f < 6.1\%$ ($2.996/\wdRealNCovered$) above the per-target limits
+--- a bound on \emph{persistent} emission only, since the control's measured per-epoch I
+efficiency is 2/5 and a duty-cycled emitter evades snapshots by construction. Of 594 attempted
+epoch measurements, \wdRealNUsed\ were usable (\wdRealNFailedEp\ hard failures after retries,
+\wdRealNNanEp\ all-NaN cutouts --- position outside the staged image or an undersized RMS
+annulus), and the per-target epoch counts in the table are the surviving ones. The scientific
+value is the reusable limit table and the genuinely forced photometry behind it (the sweep was
+re-measured 2026-08-14 with the position locked, after review showed the original was a 12\arcsec\
+peak search: the forced census has 214/447 epochs with $I>0$ --- signed and mean-zero, as blank
+sky must be --- against 458/458 before). The leakage veto, we note plainly, never binds at these
+flux levels (it would require $I \gtrsim 170$\,mJy against a brightest measurement of 4.3\,mJy)
+and is retained only as a formal guard. The natural next steps are targeted, time-resolved observations (MeerKAT/ASKAP
 beamformed, the route that confirmed J1912$-$4410) of the highest-priority candidates, and a
 re-run against the RACS-low2 circular-polarization catalogue \citep{racslow2} as it matures.
 

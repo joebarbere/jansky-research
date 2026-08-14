@@ -117,3 +117,31 @@ reproduces: exact p = 0.2692). "First systematic multi-epoch" needs narrowing to
 targeted, multi-epoch, uniform V compilation" against vaster2026 (itself a multi-epoch ASKAP
 variability pipeline that discovered one of these sources) and the published racslow2 blind
 V catalogue covering 15/16 positions.
+
+## Forced re-measurement complete (2026-08-14) — and the vetoed source is a pulse
+
+The re-sweep (191 epochs, `search_arcsec=0.0`) inverted the paper's most interesting call.
+Under forced photometry at the catalogue positions (median offset 0.85″; blank-sky epochs now
+48% positive in I, as they must be):
+
+- **ASKAP J1745−5051** confirms: 15% circular, 21.6σ, at-position.
+- **ASKAP J165130.3−450520** *strengthens*: 67% circular at 11.9σ, at-position — the 3.2″
+  positional ambiguity that made it a "candidate" is gone. Now a detection.
+- **ASKAP J183950.5−075635** — vetoed by the old analysis as "a nearby confusing source" —
+  is a **single-night pulse recovery**: I = 164 mJy, V = +65 mJy (40% circular, 199σ) at
+  MJD 60335, with all nine other epochs consistent with zero including the following night.
+  The two adjudication queries the referee prescribed settle it: the survey's own blind
+  leakage-corrected V catalogue has **no source within 60″** (different epoch — the source
+  was off), and the I catalogue has **no source brighter than 4 mJy within 2 arcmin** — there
+  is no neighbour to confuse with. The 5.3″ "offset" that triggered the veto was a fifth of
+  the RACS-low beam. This is the source doing what its published pulses do.
+
+The paper now reports **three** single-epoch burst detections and rescopes its negative
+honestly: the non-detections are limits on circularly polarized *flux* (best-epoch median
+0.47 mJy, per-epoch median 0.73), not on fractional polarization — implied |V|/I limits are
+49–114%, and CHIME J1634+44 (published ~100% circular) is among the flux non-recoveries.
+Duty cycle is now arithmetic in the text (~15-min integrations; the four longest-period
+sources have 27–43% phase coverage, so their non-detections constrain little; J183950 is the
+existence proof — ten epochs, one pulse). Epoch composition corrected (no RACS-low1 anywhere;
+50/81 low-band epochs are the 2024 pass); "exact permutation" corrected to what it is; the
+novelty claim narrowed to "first targeted, multi-epoch, uniform".

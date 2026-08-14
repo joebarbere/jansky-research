@@ -211,31 +211,17 @@
   {
     "name": "J0542-0308",
     "type": "YSO",
-    "n_epochs": 6,
-    "i_det": false,
-    "v_det": false,
-    "i_mjy": null,
-    "v_mjy": null,
-    "i_limit_mjy": 0.534,
-    "v_limit_mjy": 0.429,
-    "class": "nan"
+    "n_epochs": 0
   },
   {
     "name": "J0551+0752",
     "type": "YSO",
-    "n_epochs": 8,
-    "i_det": false,
-    "v_det": false,
-    "i_mjy": null,
-    "v_mjy": null,
-    "i_limit_mjy": 0.526,
-    "v_limit_mjy": 0.444,
-    "class": "nan"
+    "n_epochs": 0
   },
   {
     "name": "J0657-0615",
     "type": "YSO",
-    "n_epochs": 9,
+    "n_epochs": 7,
     "i_det": false,
     "v_det": false,
     "i_mjy": null,
@@ -642,7 +628,7 @@
     "n_epochs": 5,
     "i_det": true,
     "v_det": false,
-    "i_mjy": 4.198,
+    "i_mjy": 3.604,
     "v_mjy": null,
     "i_limit_mjy": 1.466,
     "v_limit_mjy": 0.379,

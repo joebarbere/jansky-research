@@ -14,7 +14,11 @@
     "blank_i_sig": 2.851
   },
   "n_targets": 57,
-  "n_measured": 52,
+  "n_measured": 50,
+  "n_epochs_attempted": 594,
+  "n_epochs_used": 447,
+  "n_epochs_failed": 33,
+  "n_epochs_nan": 114,
   "n_i_detections": 1,
   "n_v_detections": 0,
   "i_detection_names": [
@@ -23,7 +27,7 @@
   "v_detection_names": [],
   "median_v_limit_mjy": 0.413,
   "control_i_det": true,
-  "control_i_mjy": 4.198,
+  "control_i_mjy": 3.604,
   "vlass": [
     {
       "name": "J0350-2048",
@@ -279,12 +283,14 @@
     }
   ],
   "n_vlass_matched": 2,
-  "n_candidates_covered": 51,
+  "n_candidates_covered": 49,
   "n_candidate_i_det": 0,
   "n_candidate_v_det": 0,
+  "n_covered_candidates": 49,
+  "radio_loud_fraction_limit_95": 0.0611,
   "v_limit_min_mjy": 0.334,
   "v_limit_max_mjy": 0.527,
-  "control_snr": 8.6,
+  "control_snr": 7.4,
   "j1912_i_limit_mjy": 0.521,
   "j1912_v_limit_mjy": 0.402,
   "j1912_n_epochs": 9,

@@ -182,7 +182,16 @@ def summarize_sweep(
     import csv
 
     with open(csv_path) as f:
-        rows = [r for r in csv.DictReader(f) if r.get("i_mjy") not in ("", "nan", None)]
+        all_rows = list(csv.DictReader(f))
+    rows = [r for r in all_rows if r.get("i_mjy") not in ("", "nan", None)]
+    # The epoch-loss accounting a referee found silently absent: 27% of attempted epochs were
+    # dropped (hard failures after retries, plus successful downloads whose photometry
+    # returned all-NaN -- the position outside the staged cutout, or a too-small RMS annulus).
+    # For a census whose framing rests on duty cycle, the number of independent epochs IS the
+    # sensitivity, so the losses are now first-class numbers.
+    n_attempted = len(all_rows)
+    n_failed = sum(1 for r in all_rows if (r.get("note") or "").startswith("failed"))
+    n_nan = n_attempted - len(rows) - n_failed
     by: dict[str, list[dict]] = {}
     for r in rows:
         by.setdefault(r["name"], []).append(r)
@@ -226,6 +235,10 @@ def summarize_sweep(
         "per_target": out,
         "n_targets": len(targets),
         "n_measured": len(measured),
+        "n_epochs_attempted": n_attempted,
+        "n_epochs_used": len(rows),
+        "n_epochs_failed": n_failed,
+        "n_epochs_nan": n_nan,
         "n_i_detections": len(i_dets),
         "n_v_detections": len(v_dets),
         "i_detection_names": sorted(e["name"] for e in i_dets),
@@ -298,6 +311,17 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         metrics["n_candidates_covered"] = len(covered)
         metrics["n_candidate_i_det"] = sum(1 for e in cand if e.get("i_det"))
         metrics["n_candidate_v_det"] = sum(1 for e in cand if e.get("v_det"))
+        # The bound the paper promised twice and never stated: with 0 detections among the
+        # covered candidates, the 95% Poisson upper limit on the persistently-radio-loud
+        # fraction above the per-target limits is 2.996/N. This is fraction-of-candidates,
+        # NOT divided by a per-epoch efficiency -- the duty-cycle caveat stays qualitative
+        # and explicit in the text.
+        n_cov = sum(1 for e in cand if e.get("n_epochs", 0) > 0)
+        n_det = sum(1 for e in cand if e.get("v_det") or e.get("i_det"))
+        metrics["n_covered_candidates"] = n_cov
+        metrics["radio_loud_fraction_limit_95"] = (
+            round(2.9957 / n_cov, 4) if n_cov and n_det == 0 else None
+        )
         vlims = [e["v_limit_mjy"] for e in covered if e.get("v_limit_mjy") is not None]
         metrics["v_limit_min_mjy"] = round(min(vlims), 3) if vlims else None
         metrics["v_limit_max_mjy"] = round(max(vlims), 3) if vlims else None
@@ -388,6 +412,14 @@ def _write_macros(m: dict, path: str | Path) -> None:
         ("JLimV", "j1912_v_limit_mjy"),
         ("JEpochs", "j1912_n_epochs"),
         ("NVlass", "n_vlass_matched"),
+        # the bound the paper promised and never stated, plus the epoch-loss accounting a
+        # referee found silently absent (27% of attempted epochs)
+        ("RadioLoudLim", "radio_loud_fraction_limit_95"),
+        ("NCovered", "n_covered_candidates"),
+        ("NAttempted", "n_epochs_attempted"),
+        ("NUsed", "n_epochs_used"),
+        ("NFailedEp", "n_epochs_failed"),
+        ("NNanEp", "n_epochs_nan"),
     )
     for ns in ("wdSyn", "wdReal"):
         live = ns == pref
