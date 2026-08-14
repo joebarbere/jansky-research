@@ -83,3 +83,26 @@ Offline (validation + table): `uv run python -m jansky_research.wdpulsar --offli
 Real (needs the sweep CSV + local VLASS catalogues): `uv run python -m jansky_research.wdpulsar
 --out .`. The sweep itself: `uv run --extra vlass python scripts/wdpulsar_real.py` (resumable,
 CASDA auth via `~/.casda_pw`; ~600 SODA cutouts).
+
+## Referee round (2026-08-13) — the census was a peak search; forced re-run in progress
+
+**BLOCKER confirmed by recomputation: 458/458 candidate epochs have I > 0** (p = 2⁻⁴⁵⁸ for
+the "forced" photometry the abstract claims), median offset 9.66″ — the same defect the repo
+diagnosed in stokesv_discovery, running through the same helper. The V column proves the
+fields are blank (48.7% positive, mean −0.007σ): V was read at a noise maximum ~10″ from
+each candidate. `scripts/wdpulsar_real.py` now passes `search_arcsec=0.0` and the full
+sweep is re-running to a scratch CSV; the paper rewrite follows the new data.
+
+Also found, to fold into the rewrite: the AR Sco "recover-a-known" claims a circular-pol
+classification its own metrics record as a non-detection (best V epoch 3.3σ against the
+census's stated 5σ bar; `v_detection_names: []`), fails outright in both RACS-low epochs
+(11.9″/11.2″ offsets at 2.3σ/2.9σ — the band where the catalogue says AR Sco is brightest),
+and the recovered flux is ~2× below the catalogued 8.58 mJy, unremarked. 27.2% of attempted
+epochs (173/636) were silently dropped, 119 of them successful downloads returning all-NaN.
+The leakage veto can never fire (binds only above 169 mJy; brightest measurement 4.3 mJy).
+The promised radio-loud-fraction bound is absent (should be f < 5.9% at 95% over 51 covered,
+folded with the control's measured 2/5 per-epoch efficiency). The limits table mixes two
+frequencies with no band column. The VLASS "counterpart" at 3.75″ is ~10σ from the Gaia
+position and should be called unrelated. Two germane references (pelisoli2024vlass — the
+same first author's VLASS WD survey — and rose2026) sit in refs.bib uncited, bearing
+directly on the "never searched as a set" novelty claim.

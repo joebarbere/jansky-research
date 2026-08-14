@@ -82,7 +82,13 @@ DEFAULT_BAND_KHZ = (100.0, 1000.0)
 # beaming / spectral-window modulation) is achromatic, so a small spread confirms the peak is a real
 # coherent signal, NOT noise -- it does NOT by itself confirm the peak is the rotation. (On the real
 # data Uranus's WRONG peak is more band-stable than Neptune's correct one.)
-STABILITY_BANDS_KHZ = ((100.0, 1000.0), (200.0, 800.0), (300.0, 900.0), (500.0, 1300.0))
+# Three DISJOINT thirds of the analysis band, each with independent channels. The previous
+# set -- ((100,1000),(200,800),(300,900),(500,1300)) -- was one copy of the analysis band, two
+# nested bands sharing 26/31 channels, and one band extending 288 kHz ABOVE the analysis band;
+# a referee showed the whole Uranus "not recovered" verdict rested on that out-of-band fourth
+# (drop it and the spread falls 1.76 -> 0.19 h, flipping the boolean). Achromaticity must be
+# tested across independent channels INSIDE the band the science uses.
+STABILITY_BANDS_KHZ = ((100.0, 400.0), (400.0, 700.0), (700.0, 1000.0))
 # PDS-PPI open encounter volumes (direct HTTP; GATE-0 verified 2026-07-10).
 _PDS_BASE = "https://pds-ppi.igpp.ucla.edu/data"
 PDS_TAB_URL = {
@@ -361,6 +367,15 @@ def flux_period_posterior(
         }
     grid_f = np.linspace(1.0 / p_hi, 1.0 / p_lo, n_grid)
     p0, pw = _ls_peak(t, y, grid_f)
+    if n_boot == 0:
+        return {
+            "best_period_hr": round(float(p0), 5),
+            "ls_power": round(float(pw), 5),
+            "boot_lo_hr": float("nan"),
+            "boot_hi_hr": float("nan"),
+            "boot_sigma_hr": float("nan"),
+            "n_binned": int(t.size),
+        }
     rng = np.random.default_rng(seed)
     cyc = np.floor(t / p0).astype(int)
     rots = np.unique(cyc)
@@ -425,6 +440,7 @@ def synthetic_flyby(
     burst_amp: float = 8.0,
     gap_frac: float = 0.2,
     seed: int = 0,
+    n_chan: int = 0,
 ) -> dict:
     """A flyby-length synthetic PRA flux series with a KNOWN rotation period, for recovery.
 
@@ -452,12 +468,23 @@ def synthetic_flyby(
         if in_window.any():
             flux[in_window] += burst_amp * (1.0 + rng.normal(0.0, 0.2, int(in_window.sum())))
     keep = rng.random(n) > gap_frac
-    return {
+    out = {
         "times_hr": t_hr[keep],
         "flux": flux[keep],
         "period_hr": period_hr,
         "n_rot": n_rot,
     }
+    if n_chan:
+        # An achromatic spectral axis: every channel carries the same burst modulation plus
+        # independent noise. This exists so `band_stability` -- the statistic that decides the
+        # real-data verdict -- can be validated on a known positive at realistic per-band SNR,
+        # which it never was before (the only prior test tiled one channel N times, a case
+        # that cannot fail).
+        base = flux[keep] - 20.0
+        spec = 20.0 + base[:, None] + rng.normal(0.0, noise, (int(keep.sum()), n_chan))
+        out["spectra"] = spec
+        out["freqs_khz"] = np.linspace(1300.0, 100.0, n_chan)
+    return out
 
 
 def compare_periods(planet: str, this_work: dict) -> list[dict]:
@@ -497,10 +524,107 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "vgpra_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
-    _figure(metrics, op / "papers" / "vgpra" / "figures")
+    if offline:
+        # The validation leg's metrics are committed evidence too: four synthetic numbers
+        # reach both abstracts, and until 2026-08-13 they existed only inside macros.tex --
+        # a referee could not check them without executing code.
+        (op / "results" / "vgpra_synthetic_metrics.json").write_text(
+            json.dumps(metrics, indent=2) + "\n"
+        )
+    else:
+        (op / "results" / "vgpra_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    _figure(metrics, op / "papers" / "vgpra" / "figures", real_cache=None)
     _write_macros(metrics, op / "papers" / "vgpra" / "generated" / "macros.tex")
     return metrics
+
+
+def scramble_fap(
+    times_hr: np.ndarray,
+    flux: np.ndarray,
+    *,
+    p_lo: float,
+    p_hi: float,
+    n_scramble: int = 200,
+    bin_hr: float = 0.1,
+    detrend_deg: int = 2,
+    seed: int = 0,
+) -> dict:
+    """Scramble-based false-alarm probability for the window's peak LS power.
+
+    The analytic LS FAP assumes white noise and independent samples, both false here, which
+    is why the paper declines to quote it -- but declining left the null with NO significance
+    statement at all. Shuffling the binned fluxes over their own timestamps destroys any
+    coherent modulation while preserving the sampling pattern and the marginal flux
+    distribution; the fraction of shuffles whose window-maximum power beats the observed one
+    is a defensible empirical FAP. Also reports the two numbers a periodogram claim needs:
+    the independent-frequency count over the window and the resolution at the peak.
+    """
+    rng = np.random.default_rng(seed)
+    t, y = _prep_flux(times_hr, flux, bin_hr, detrend_deg)
+    grid_f = np.linspace(1.0 / p_hi, 1.0 / p_lo, 8000)
+    p0, pw = _ls_peak(t, y, grid_f)
+    beat = 0
+    for _ in range(n_scramble):
+        _, pw_s = _ls_peak(t, rng.permutation(y), grid_f)
+        if pw_s >= pw:
+            beat += 1
+    span = float(t.max() - t.min())
+    return {
+        "peak_period_hr": round(float(p0), 5),
+        "peak_power": round(float(pw), 5),
+        "scramble_fap": round((beat + 1) / (n_scramble + 1), 4),
+        "n_scramble": n_scramble,
+        "n_indep_freq": round((1.0 / p_lo - 1.0 / p_hi) * span, 1),
+        "resolution_hr": round(p0 * p0 / span, 3),
+    }
+
+
+def injection_recovery_real(
+    times_hr: np.ndarray,
+    flux: np.ndarray,
+    *,
+    period_hr: float,
+    p_lo: float,
+    p_hi: float,
+    depths=(0.02, 0.05, 0.1, 0.2, 0.4),
+    n_phase: int = 8,
+    bin_hr: float = 0.1,
+    detrend_deg: int = 2,
+    seed: int = 0,
+) -> dict:
+    """Inject a fractional sinusoid at the historical period into the REAL flux and re-search.
+
+    This is the selection function the null needs. The synthetic control (8-sigma spike train
+    on white noise) proves only the machinery; injecting into the actual series tests recovery
+    against the real red-noise continuum, the real flyby envelope and the real detrend -- the
+    three things the paper blames for the failure. Recovery = blind window peak within one
+    resolution element of the injected period. Reports the recovered fraction per depth, so
+    the paper can say "any rotational modulation deeper than X% would have been found".
+    """
+    rng = np.random.default_rng(seed)
+    t_raw = np.asarray(times_hr, float)
+    f_raw = np.asarray(flux, float)
+    grid_f = np.linspace(1.0 / p_hi, 1.0 / p_lo, 8000)
+    span = float(t_raw.max() - t_raw.min())
+    res = period_hr * period_hr / span
+    curve = []
+    for d in depths:
+        hits = 0
+        for k in range(n_phase):
+            phase = 2.0 * np.pi * (k / n_phase + rng.uniform(0, 1e-3))
+            mod = 1.0 + d * np.sin(2.0 * np.pi * t_raw / period_hr + phase)
+            t, y = _prep_flux(t_raw, f_raw * mod, bin_hr, detrend_deg)
+            p0, _ = _ls_peak(t, y, grid_f)
+            if abs(p0 - period_hr) <= res:
+                hits += 1
+        curve.append({"depth": d, "recovered_frac": round(hits / n_phase, 3)})
+    min_depth = next((c["depth"] for c in curve if c["recovered_frac"] >= 0.9), None)
+    return {
+        "injected_period_hr": period_hr,
+        "resolution_hr": round(res, 3),
+        "curve": curve,
+        "min_depth_recovered": min_depth,
+    }
 
 
 def _synthetic_metrics() -> dict:
@@ -514,10 +638,29 @@ def _synthetic_metrics() -> dict:
     # that wide window proves the method works when a real rotation IS present, so the real-data
     # failure is a data limitation (no clean rotational total-power signal), not a window artifact.
     lo, hi = 14.0, 20.0
-    s = synthetic_flyby(period_hr=truth, n_rot=17, seed=0)
+    s = synthetic_flyby(period_hr=truth, n_rot=17, seed=0, n_chan=32)
     ls = flux_period_posterior(s["times_hr"], s["flux"], p_lo=lo, p_hi=hi, n_boot=120, seed=1)
     bursts = detect_bursts(s["times_hr"], s["flux"])
     ray = period_posterior(bursts, p_lo=lo, p_hi=hi, n_boot=120, seed=1)
+    # Grade the control by the SAME three-clause criterion the real data face (a referee found
+    # the control had been graded by a looser rule, which the real Uranus leg also passed):
+    # proximity within total uncertainty, band-robustness, and not railed.
+    stab = band_stability(s["times_hr"], s["spectra"], s["freqs_khz"], p_lo=lo, p_hi=hi)
+    total_unc = max(float(ls["boot_sigma_hr"]), float(stab["band_spread_hr"]))
+    railed = abs(ls["best_period_hr"] - lo) < 0.03 or abs(ls["best_period_hr"] - hi) < 0.03
+    recovered_full = bool(
+        abs(ls["best_period_hr"] - truth) <= max(total_unc, 1e-9)
+        and stab["band_spread_hr"] < 0.6
+        and not railed
+    )
+    # Seed-to-seed scatter: the within-realization bootstrap resamples one noise realization
+    # and cannot see realization variance (the rmstructure failure). Thirty seeds measure it.
+    seeds = []
+    for k in range(30):
+        sk = synthetic_flyby(period_hr=truth, n_rot=17, seed=100 + k)
+        lsk = flux_period_posterior(sk["times_hr"], sk["flux"], p_lo=lo, p_hi=hi, n_boot=0)
+        seeds.append(float(lsk["best_period_hr"]))
+    seeds_arr = np.asarray(seeds)
     return {
         "source": "synthetic flyby (injected rotation period + noise + data gaps)",
         "is_real": False,
@@ -532,6 +675,15 @@ def _synthetic_metrics() -> dict:
         "n_bursts": ray["n_bursts"],
         "recovered_injected": bool(_consistent(ls, truth)),
         "recovered_rayleigh": bool(_consistent(ray, truth)),
+        "band_peaks_hr": stab["band_peaks_hr"],
+        "band_spread_hr": stab["band_spread_hr"],
+        "recovered_full_criterion": recovered_full,
+        "seed_scatter": {
+            "n_seeds": int(seeds_arr.size),
+            "mean_hr": round(float(seeds_arr.mean()), 5),
+            "std_hr": round(float(seeds_arr.std()), 5),
+            "worst_offset_hr": round(float(np.abs(seeds_arr - truth).max()), 5),
+        },
     }
 
 
@@ -582,7 +734,20 @@ def analyse_planet(
         and stab["band_spread_hr"] < 0.6
         and not at_edge
     )
-    out["consistent_hist"] = bool(np.isfinite(best) and abs(best - hist_val) <= 2 * total_unc)
+    # None, not a knife-edge boolean, when the peak is railed: a railed best_period is a
+    # bound, so no consistency statement is possible (Neptune's old "not consistent" verdict
+    # had a 33-second margin on a threshold that is twice the window width).
+    out["consistent_hist"] = (
+        None if at_edge else bool(np.isfinite(best) and abs(best - hist_val) <= 2 * total_unc)
+    )
+    # The significance and sensitivity statements the null was missing entirely: an empirical
+    # scramble FAP with the trials and resolution stated, and an injection-recovery curve on
+    # the REAL series -- the selection function ("modulation deeper than X% would have been
+    # found") that turns "no peak" into a bounded null.
+    out["significance"] = scramble_fap(ds["times_hr"], flux, p_lo=lo, p_hi=hi, n_scramble=200)
+    out["injection"] = injection_recovery_real(
+        ds["times_hr"], flux, period_hr=hist_val, p_lo=lo, p_hi=hi
+    )
     if "lamy_2025" in pub:
         lamy = pub["lamy_2025"][0]
         out["consistent_lamy"] = bool(np.isfinite(best) and abs(best - lamy) <= 2 * total_unc)
@@ -614,29 +779,58 @@ def _real_analysis(*, cache_dir: str | Path | None = None) -> dict:  # pragma: n
     }
 
 
-def _figure(m: dict, out_dir: str | Path) -> None:
+def _figure(m: dict, out_dir: str | Path, *, real_cache: str | Path | None = None) -> None:
+    """The figure a reader of a null needs: the FULL 14-20 h search window, with real data.
+
+    The previous figure plotted a 1.4 h window centred on the known answer -- exactly the
+    tuned window the paper says it avoided -- contained no real data, and its caption named a
+    recovered value that was not drawn. Now: left panel, the synthetic control's periodogram
+    over the full window; middle/right, the real Uranus and Neptune periodograms over the same
+    window when the cached encounter volumes are available, with the historical periods and
+    the blind peaks both marked.
+    """
+    from astropy.timeseries import LombScargle
+
     from .report import _agg
 
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    # recover-a-known: synthetic flux (left) + its Lomb-Scargle periodogram (right, primary method)
-    from astropy.timeseries import LombScargle
+    lo, hi = 14.0, 20.0
+    grid_f = np.linspace(1.0 / hi, 1.0 / lo, 6000)
 
-    s = synthetic_flyby(period_hr=m.get("injected_period_hr", 17.24), n_rot=17, seed=0)
-    tb, yb = bin_series(s["times_hr"], np.log10(np.maximum(s["flux"], 1e-30)), 0.1)
-    yb = yb - np.polyval(np.polyfit(tb, yb, 2), tb)
-    grid_f = np.linspace(1.0 / 18.0, 1.0 / 16.6, 3000)
-    power = LombScargle(tb, yb).power(grid_f)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.4, 3.8))
-    ax1.plot(s["times_hr"], s["flux"], ".", ms=1.5, color="C0")
-    ax1.set(xlabel="time (h)", ylabel="flux (arb.)", title="Synthetic flyby")
-    ax2.plot(1.0 / grid_f, power, "-", color="C0", lw=0.8)
-    ax2.axvline(m.get("injected_period_hr", 17.24), color="C3", ls="--", lw=1, label="injected")
-    if np.isfinite(m.get("best_period_hr", float("nan"))):
-        ax2.axvline(m["best_period_hr"], color="C1", ls=":", lw=1, label="recovered (LS)")
-    ax2.set(xlabel="period (h)", ylabel="Lomb--Scargle power", title="Period search")
-    ax2.legend(fontsize=8)
+    def _pgram(t_hr: np.ndarray, flux: np.ndarray):  # noqa: ANN202
+        tb, yb = bin_series(t_hr, np.log10(np.maximum(flux, 1e-30)), 0.1)
+        yb = yb - np.polyval(np.polyfit(tb, yb, 2), tb)
+        return 1.0 / grid_f, LombScargle(tb, yb).power(grid_f)
+
+    panels: list = []
+    syn_truth = 17.24
+    s_ = synthetic_flyby(period_hr=syn_truth, n_rot=17, seed=0)
+    panels.append(("Synthetic control", *_pgram(s_["times_hr"], s_["flux"]), syn_truth, None))
+    real = (m.get("planets") or {}) if m.get("is_real") else {}
+    if real and real_cache is not None:
+        for planet in ("URANUS", "NEPTUNE"):
+            url = PDS_TAB_URL[planet]
+            dest = Path(real_cache) / url.rsplit("/", 1)[1]
+            if not dest.exists():
+                continue
+            ds = read_pra_series(dest)
+            flux = band_flux(ds["spectra"], ds["freqs_khz"])
+            hist = next(iter(PUBLISHED_HR[planet].values()))[0]
+            peak = real[planet].get("best_period_hr")
+            panels.append((planet.title(), *_pgram(ds["times_hr"], flux), hist, peak))
+    fig, axes = plt.subplots(1, len(panels), figsize=(4.7 * len(panels), 3.6))
+    if len(panels) == 1:
+        axes = [axes]
+    for ax, (title, per, power, hist, peak) in zip(axes, panels, strict=True):
+        ax.plot(per, power, "-", lw=0.8, color="C0")
+        ax.axvline(hist, color="C3", ls="--", lw=1, label=f"historical {hist:g} h")
+        if peak is not None and np.isfinite(peak):
+            ax.axvline(peak, color="C1", ls=":", lw=1, label=f"blind peak {peak:g} h")
+        ax.set(xlabel="period (h)", title=title, xlim=(lo, hi))
+        ax.legend(fontsize=7)
+    axes[0].set_ylabel("Lomb--Scargle power")
     fig.tight_layout()
     fig.savefig(out / "vgpra.pdf")
     plt.close(fig)
@@ -645,14 +839,33 @@ def _figure(m: dict, out_dir: str | Path) -> None:
 def _write_macros(m: dict, path: str | Path) -> None:
     """Emit both namespaces: vgSyn* (synthetic recovery, always live) + vgReal{U,N}* (real legs)."""
 
+    def _histok(d: dict) -> str:
+        # None = the peak is railed, so no consistency statement is possible (a bound, not a
+        # measurement); distinct from a clean yes/no.
+        if not d:
+            return "--"
+        v = d.get("consistent_hist")
+        return "railed" if v is None else ("yes" if v else "no")
+
+    def _pct(v) -> str:  # noqa: ANN001
+        return "--" if v is None else f"{100 * float(v):g}"
+
     def g(src: dict, key: str) -> str:
         v = src.get(key)
         if v is None or (isinstance(v, float) and not np.isfinite(v)):
             return "--"
         return str(v)
 
-    # offline, m already IS the synthetic metrics -> reuse it (avoids a second bootstrap pass)
-    syn = _synthetic_metrics() if m.get("is_real") else m
+    # The synthetic leg's metrics are COMMITTED evidence (results/vgpra_synthetic_metrics.json)
+    # as of 2026-08-13; read them rather than recomputing at write time, so the macros a
+    # referee reads always trace to a file a referee can read.
+    if m.get("is_real"):
+        import json as _json
+
+        _syn_path = Path("results/vgpra_synthetic_metrics.json")
+        syn = _json.loads(_syn_path.read_text()) if _syn_path.is_file() else _synthetic_metrics()
+    else:
+        syn = m
     real = m if m.get("is_real") else {}
     lines = [
         "% Auto-generated by jansky_research.vgpra._write_macros -- do not edit.",
@@ -664,6 +877,9 @@ def _write_macros(m: dict, path: str | Path) -> None:
         rf"\newcommand{{\vgSynRayPeriod}}{{{g(syn, 'rayleigh_period_hr')}}}",
         rf"\newcommand{{\vgSynRecoveredOK}}{{{'yes' if syn.get('recovered_injected') else 'no'}}}",
         rf"\newcommand{{\vgSynRayOK}}{{{'yes' if syn.get('recovered_rayleigh') else 'no'}}}",
+        rf"\newcommand{{\vgSynFullOK}}{{{'yes' if syn.get('recovered_full_criterion') else 'no'}}}",
+        rf"\newcommand{{\vgSynSeedSd}}{{{g(syn.get('seed_scatter') or {}, 'std_hr')}}}",
+        rf"\newcommand{{\vgSynSeedN}}{{{g(syn.get('seed_scatter') or {}, 'n_seeds')}}}",
     ]
     for tag, planet in (("U", "URANUS"), ("N", "NEPTUNE")):
         d = (real.get("planets") or {}).get(planet, {})
@@ -680,7 +896,15 @@ def _write_macros(m: dict, path: str | Path) -> None:
             rf"\newcommand{{\vgReal{tag}Spread}}{{{g(d, 'band_spread_hr')}}}",
             rf"\newcommand{{\vgReal{tag}Recovers}}{{{'yes' if d.get('recovers_hist') else ('--' if not d else 'no')}}}",
             rf"\newcommand{{\vgReal{tag}Hist}}{{{hist}}}",
-            rf"\newcommand{{\vgReal{tag}HistOK}}{{{'yes' if d.get('consistent_hist') else ('--' if not d else 'no')}}}",
+            rf"\newcommand{{\vgReal{tag}HistOK}}{{{_histok(d)}}}",
+        ]
+        sig = d.get("significance") or {}
+        inj = d.get("injection") or {}
+        lines += [
+            rf"\newcommand{{\vgReal{tag}Fap}}{{{g(sig, 'scramble_fap')}}}",
+            rf"\newcommand{{\vgReal{tag}Res}}{{{g(sig, 'resolution_hr')}}}",
+            rf"\newcommand{{\vgReal{tag}NIndep}}{{{g(sig, 'n_indep_freq')}}}",
+            rf"\newcommand{{\vgReal{tag}MinDepth}}{{{_pct(inj.get('min_depth_recovered'))}}}",
         ]
     lines.append(rf"\newcommand{{\vgRealULamy}}{{{PUBLISHED_HR['URANUS']['lamy_2025'][0]}}}")
     urn = (real.get("planets") or {}).get("URANUS", {})

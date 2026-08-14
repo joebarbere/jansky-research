@@ -124,7 +124,14 @@ def measure_group(casda, username, pw_path, table, group, ra, dec, retries=3):
             ny = min(img_i.shape[0], img_v.shape[0])
             nx = min(img_i.shape[1], img_v.shape[1])
             img_i, img_v = img_i[:ny, :nx], img_v[:ny, :nx]
-            return measure_circular_pol(img_i, img_v, wcs, ra, dec), casda
+            # search_arcsec=0.0: genuinely FORCED photometry at the propagated position.
+            # The original sweep used the 12" default, which is a peak search -- on blank sky
+            # a noise-maximum statistic. The committed census showed the signature exactly:
+            # 458/458 candidate epochs with I > 0 (p = 2^-458 for a fixed-pixel measurement)
+            # at a median offset of 9.66", with V read wherever that maximum fell. A forced
+            # census is signed and mean-zero on blank sky, and its limits apply AT the
+            # candidate position. See stokesv.measure_circular_pol and its noise test.
+            return measure_circular_pol(img_i, img_v, wcs, ra, dec, search_arcsec=0.0), casda
         except Exception as exc:  # noqa: BLE001
             last = exc
             print(f"    retry {attempt + 1}/{retries} after: {exc!r}", flush=True)

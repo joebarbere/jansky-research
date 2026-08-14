@@ -1,3 +1,7 @@
+# STALE as of the 2026-08-13 BRACKET-REWRITE: the paper's abstract now reports the
+# headline as a bracket [0, 23] of 136 driven by floor-bias + non-identifiability, and
+# this override still carries the old 26-of-136 framing. REGENERATE/REWRITE before any
+# submission -- do not paste this abstract as-is.
 # Hand-authored arXiv metadata for papers/pte2 — TRACKED IN GIT.
 #
 # arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
@@ -20,7 +24,7 @@ abstract: |
   honest null. Of 136 pulsars above the count cut, 26 (~19%) show a significant high-S/N
   excess above their log-normal bulk, and three facts undercut a giant-pulse interpretation.
   (i) The excess does not correlate with spin-down luminosity (rho=-0.027, p=0.756; Mann--
-  Whitney on log E p=0.130), contrary to the giant-pulse-- E expectation. (ii) It is
+  Whitney on log E p=0.130), contrary to the giant-pulse--Edot expectation. (ii) It is
   detection-power limited: heavy-tailed sources have 2.4x more pulses (median 552.5 vs 227.5;
   p=0.020) and the flagged fraction rises from 0.088 in the low-count half to 0.294 in the
   high-count half, so the 19% is a power floor, not a clean incidence. (iii) Of the few

@@ -118,3 +118,36 @@ Offline (test + synthetic recover-a-known + synthetic-schema parser test):
 `uv run python -m jansky_research.pte2 --offline --out .`
 Real (downloads the ~1.5 GB PTE-II SQLite DB): `uv run python scripts/pte2_real.py --cache /tmp/pte2`
 (writes `results/pte2_metrics.json` + `results/pte2_census.json`, `is_real=True`).
+
+## Referee round (2026-08-13) — the headline was floor bias, and the corrected test is degenerate
+
+The referee derived in closed form that the "floor-robust" estimator is not: a detection
+floor removing fraction f of pulses shifts the observed median and compresses the observed
+σ_R, producing a spurious excess of 2.03× at f = 0.3 on a *pure log-normal*. The committed
+census carries the signature exactly — **386 observed giants against 208.7 expected (1.85×),
+never 1 in any count bin**. My re-fit of the full PTE-II DB (1.6 GB, re-downloaded) with the
+floor as known left-truncation:
+
+| estimator | n_heavy (k=3) | note |
+|---|---|---|
+| naive (published) | 26 | BH 23, Bonferroni 11, chance 6.8 — none previously stated |
+| truncated-normal MLE | **0** | median f̂ = 0.70; but **38/136 fits run to f̂ > 0.9** |
+
+The zero is not evidence of absence: the truncated fit explains J1243−6423's 141 giants as
+"the top 0.7% of a hidden Gaussian" (f̂ = 0.993). **The family (log-normal × unknown floor)
+can absorb any observed tail — the per-source excess test is not identifiable without
+independent knowledge of the floor.** The paper's honest headline is now the bracket
+[0, 23] of 136, which these data cannot narrow. Both estimators and the k-sweep are
+committed in results/pte2_stats.json.
+
+Also corrected against the referee's recomputations (every one verified independently):
+the Ė correlation was count-confounded — controlling for log n flips ρ from −0.03 to +0.10
+(still null), and "contrary to the giant-pulse–Ė expectation" inverted the point estimate
+(heavy sources are 0.45 dex *higher*); the two-bin "detection-power floor" hid a
+non-monotonic curve peaking at 400–800 pulses and *falling* to 0.14 in the best-sampled bin,
+whose five top sources are grossly sub-Gaussian (2 giants vs 76 expected, P ≈ 10⁻²⁹); the
+promised Vuong diagnostic is now reported — its only significant value *prefers the
+log-normal* on the strongest source; the title's "363" is now "136 well-sampled";
+zhang2020's dead DOI is fixed (10.3847/1538-4365/ab95a4, verified); yang2025 gained its
+ApJS 280, 58 coordinates; and the arxiv.yaml Ė-mangle is patched with the override flagged
+stale pending the bracket rewrite.

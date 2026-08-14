@@ -1,0 +1,28 @@
+{
+  "source": "synthetic flyby (injected rotation period + noise + data gaps)",
+  "is_real": false,
+  "injected_period_hr": 17.24,
+  "best_period_hr": 17.22252,
+  "boot_lo_hr": 17.2035,
+  "boot_hi_hr": 17.244,
+  "boot_sigma_hr": 0.02049,
+  "ls_power": 0.12693,
+  "rayleigh_period_hr": 17.24308,
+  "rayleigh_z2": 33.441,
+  "n_bursts": 17,
+  "recovered_injected": true,
+  "recovered_rayleigh": true,
+  "band_peaks_hr": [
+    17.2219,
+    17.2219,
+    17.2219
+  ],
+  "band_spread_hr": 0.0,
+  "recovered_full_criterion": true,
+  "seed_scatter": {
+    "n_seeds": 30,
+    "mean_hr": 17.2286,
+    "std_hr": 0.01476,
+    "worst_offset_hr": 0.0278
+  }
+}

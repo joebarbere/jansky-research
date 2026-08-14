@@ -121,12 +121,19 @@ def test_run_offline_recovers_and_writes(tmp_path):
     m = vg.run(str(tmp_path), offline=True)
     assert m["recovered_injected"]  # synthetic period recovered within bootstrap band
     assert abs(m["best_period_hr"] - 17.24) < 0.2
-    saved = json.loads((tmp_path / "results" / "vgpra_metrics.json").read_text())
+    saved = json.loads((tmp_path / "results" / "vgpra_synthetic_metrics.json").read_text())
     assert saved["injected_period_hr"] == m["injected_period_hr"]
     assert (tmp_path / "papers" / "vgpra" / "figures" / "vgpra.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "vgpra" / "generated" / "macros.tex").read_text()
     assert r"\newcommand{\vgSynRecoveredOK}{yes}" in macros
     assert r"\newcommand{\vgRealUPeriod}{--}" in macros  # real namespace placeholder offline
+    # the control is graded by the SAME three-clause criterion as the real data (a referee
+    # found it had been graded by a looser rule the real leg also passed), and the
+    # seed-to-seed scatter -- the variance the within-realization bootstrap cannot see -- is
+    # committed alongside it
+    assert m["recovered_full_criterion"] is True
+    assert m["seed_scatter"]["n_seeds"] >= 30
+    assert m["seed_scatter"]["std_hr"] < 0.5
 
 
 def test_write_macros_real_namespace(tmp_path):

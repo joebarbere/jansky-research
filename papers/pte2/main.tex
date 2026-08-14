@@ -22,7 +22,18 @@ spin-down luminosity $\dot E$ from the ATNF catalogue \citep{manchester2005}. On
 pulse sets the test recovers heavy tails with a completeness that rises from \ptSynCompLow\ at low
 pulse count to \ptSynCompHigh\ at high count, at a false-positive rate of \ptSynFP\
 (\ptSynRecovered). \textbf{The real census is an honest null.} Of \ptRealNFit\ pulsars above the
-count cut, \ptRealNHeavy\ ($\sim$19\%) show a significant high-S/N excess above their log-normal
+count cut, \ptRealNHeavy\ are flagged at nominal $p<0.05$ --- but that count does not survive
+scrutiny, in either direction, and the bracket is the result. Under the naive null the
+multiple-comparisons arithmetic (never previously stated) gives \ptStatChance\ expected chance
+positives, \ptStatBH\ at FDR 0.05 and \ptStatBonf\ family-wise; and the null itself is
+miscalibrated liberal, because the estimator we advertised as floor-robust is not (aggregate
+observed/expected $=\ptStatAggRatio$ across the whole census). Re-fitting every source with the
+floor treated as a known left-truncation flags \textbf{\ptTruncNHeavy\ sources} --- but
+\ptTruncFNine\ of 136 of those fits run to an estimated truncated fraction $>0.9$, i.e.\ the
+log-normal-with-unknown-floor family can absorb \emph{any} observed tail. The per-source excess
+test is therefore \textbf{not identifiable} without independent knowledge of the detection
+floor: the census constrains the giant-pulse incidence to between 0 and $\sim$23 of 136, and
+the data cannot narrow it further. The flagged sources show a significant high-S/N excess above their log-normal
 bulk (we call these \emph{log-normal-excess} sources, and show they are largely \emph{not} genuine
 giant pulses) --- three facts undercut a giant-pulse interpretation. (i) The excess does \emph{not}
 correlate with spin-down luminosity ($\rho=\ptRealSpearman$, $p=\ptRealSpearmanP$; Mann--Whitney on
@@ -30,7 +41,7 @@ $\log\dot E$ $p=\ptRealMannWhitneyP$), contrary to the giant-pulse--$\dot E$ exp
 classification is \emph{detection-power limited}: heavy-tailed sources have $\sim$2.4$\times$ more
 pulses (median \ptRealMedNHeavy\ vs \ptRealMedNNon; $p=\ptRealCountMWP$), and the flagged fraction
 rises from \ptRealHeavyFracLow\ in the low-pulse-count half of the sample to \ptRealHeavyFracHigh\ in
-the high-count half --- so the 19\% is a power floor, not a clean incidence. (iii) Of the few
+the high-count half, but non-monotonically --- the fraction peaks near 500 pulses and falls in the best-sampled sources. (iii) Of the few
 flagged sources with enough giant pulses to fit a tail index, that index is \emph{steep} (median
 $\approx$\ptRealMedGamma), i.e.\ the excess does not extend into a shallow ($\sim$2--3) power law ---
 evidence \emph{against}, not for, a classic giant-pulse tail; and none of the archetypal giant-pulse
@@ -72,10 +83,16 @@ absolute pulse energies.
 
 \textbf{The giant-pulse excess test.} For each pulsar with at least a pre-registered minimum of 50
 single pulses we estimate the log-S/N median $m$ and the right-side width
-$\sigma_R = P_{84.13}(\log \mathrm{S/N}) - m$. Both use only the upper half of the distribution,
-which the single-pulse detection S/N floor does not truncate --- so a left-truncated bulk cannot
-manufacture an apparent tail (the bias that inflates a naive whole-distribution log-normal fit, or a
-bare power-law-vs-log-normal likelihood-ratio, on a short tail). We then count the pulses above
+$\sigma_R = P_{84.13}(\log \mathrm{S/N}) - m$. Both use only the upper half of the distribution.
+We originally argued that the detection floor could not touch these and so could not
+manufacture an apparent tail. \textbf{That argument was wrong}, and quantifying how wrong is
+now a central result of this paper. A floor removing a fraction $f$ of the underlying pulses
+shifts the observed median to the $(1{+}f)/2$ quantile and compresses the observed
+P84$-$median, so the nominal ``3$\sigma$'' threshold sits closer than 3 true $\sigma$ and a
+\emph{pure log-normal} shows a spurious excess ($2.03\times$ at $f=0.3$). The census carries
+the signature exactly: summed over all 136 sources, \ptStatSumGiant\ observed giants against
+\ptStatSumExp\ expected under the naive null --- a ratio of \ptStatAggRatio, and never 1 in
+any pulse-count bin. We then count the pulses above
 $\exp(m + 3\sigma_R)$ and compare that count to the log-normal expectation with a Poisson test; a
 pulsar is classified \emph{heavy-tailed} only on a significant ($p<0.05$), $\ge 3$-pulse excess. The
 giant tail's power-law index (Hill/Clauset MLE) and a normalized Vuong power-law-vs-log-normal
@@ -100,26 +117,49 @@ in a sparsely-sampled pulsar is unrecoverable, and the census reports only above
 \section{Results}
 \label{sec:results}
 Of the 363 pulsars, \ptRealNFit\ have at least 50 single pulses and are fitted; \ptRealNHeavy\
-($\sim$19\%) are flagged with a significant excess of high-S/N pulses above their own log-normal
-bulk. We deliberately call these \emph{log-normal-excess} sources rather than giant-pulse emitters,
+are flagged at nominal $p<0.05$. Three corrections bracket that number. \emph{Multiplicity}: 136
+tests at $p<0.05$ expect \ptStatChance\ chance positives; Benjamini--Hochberg at FDR 0.05
+retains \ptStatBH\ and Bonferroni \ptStatBonf. \emph{Floor bias}: the naive null is liberal
+everywhere (aggregate observed/expected $\ptStatAggRatio$; Section~\ref{sec:method}), which
+inflates all of these. \emph{Non-identifiability}: re-fitting each source with the floor as a
+known left-truncation flags \ptTruncNHeavy, but \ptTruncFNine\ of those 136 fits drive the
+truncated fraction above 0.9 --- the family absorbs any tail, so zero is a property of the
+model's flexibility, not evidence of absence. The honest census statement is a bracket,
+$[\ptTruncNHeavy, \ptStatBH]$ of 136, that these data cannot narrow. We deliberately call these \emph{log-normal-excess} sources rather than giant-pulse emitters,
 because the census does \emph{not} support a giant-pulse population tied to spin-down luminosity, for
 three reasons that the pipeline quantifies.
 
-\textbf{No $\dot E$ trend.} Across the \ptRealNMatched\ ATNF-matched pulsars the giant-pulse excess is
-uncorrelated with $\log\dot E$ (Spearman $\rho=\ptRealSpearman$, $p=\ptRealSpearmanP$), and the median
-$\log\dot E$ of the heavy-tailed sources (\ptRealLogEdotHeavy) is statistically indistinguishable from
-the non-heavy ones (\ptRealLogEdotNon; Mann--Whitney $p=\ptRealMannWhitneyP$). Giant pulses are
-physically tied to high $\dot E$; the archival S/N census shows no such trend.
+\textbf{No significant $\dot E$ trend --- but not ``contrary to expectation''.} The raw Spearman
+across the \ptRealNMatched\ ATNF-matched pulsars is $\rho=\ptRealSpearman$
+($p=\ptRealSpearmanP$), but that statistic is count-confounded: the excess is biased downward
+with pulse count ($\rho=\ptStatRhoExN$ with $\log n$) and $\dot E$ correlates with count, so
+the raw value carries a spurious negative term. Controlling for $\log n$, the partial
+correlation is $\rho=\ptStatRhoPartial$ ($p=\ptStatRhoPartialP$) --- sign flipped into the
+\emph{predicted} direction, still consistent with zero. The heavy-flagged sources' median
+$\log\dot E$ (\ptRealLogEdotHeavy) sits 0.45~dex \emph{above} the rest (\ptRealLogEdotNon;
+Mann--Whitney $p=\ptRealMannWhitneyP$) --- also the predicted direction, also not significant.
+The data constrain $|\rho| < 0.26$ after controlling for count; they neither support nor
+contradict the giant-pulse--$\dot E$ expectation at this sample size.
 
-\textbf{A detection-power floor.} The heavy-tailed classification tracks pulse count, not
+\textbf{A non-monotonic count dependence.} The heavy-tailed classification tracks pulse
+count, not
 astrophysics: heavy-tailed sources have a median \ptRealMedNHeavy\ pulses versus \ptRealMedNNon\ for
 the rest (Mann--Whitney $p=\ptRealCountMWP$; \code{count\_limited}=\ptRealCountLimited), and the
 flagged fraction rises from \ptRealHeavyFracLow\ in the low-count half of the sample to
-\ptRealHeavyFracHigh\ in the high-count half. This is the expected behaviour of a significance test
-with more power on more pulses: a small departure from log-normal reaches $p<0.05$ only where the
-pulse count is large. The 19\% is therefore a detection floor, not a clean incidence.
+\ptRealHeavyFracHigh\ in the high-count half. A finer binning shows this is \emph{not} the
+monotonic rise a pure detection-power effect would produce: the flagged fraction peaks at
+0.478 in the 400--800-pulse bin and falls to 0.138 above 1600 pulses --- and the five
+highest-count pulsars (56,454 pulses between them) are all unflagged, with 2 observed giants
+against 76 naive-expected, $P(\le 2 \,|\, 76) \approx 10^{-29}$: their upper halves are
+grossly \emph{sub}-Gaussian. Something shape-dependent, not power, drives the count trend,
+and the flagged fraction cannot be read as a clean incidence at any count.
 
-\textbf{Steep tails, and absent archetypes.} Only a handful of flagged sources have enough giant
+\textbf{Steep tails, and absent archetypes.} The Vuong power-law-vs-log-normal diagnostic,
+promised above, is worth its table: of the six flagged sources with $\ge 8$ giants, none has
+Vuong significantly favouring the power law, and the single significant value ---
+J1243$-$6423, the strongest source in the census at 141 nominal giants --- \emph{prefers the
+log-normal} at $p = 3.3\times10^{-6}$. That supports the null conclusion and is exactly the
+kind of diagnostic that must not be dropped when it does. Only six flagged sources have enough giant
 pulses ($\ge 8$) to fit a tail index at all; for those the Hill/Clauset index is steep (median
 $\approx$\ptRealMedGamma) --- and a power-law index from fewer than $\sim$30 points above a high
 threshold carries large uncertainty, so this mainly says the excess does \emph{not} continue into a

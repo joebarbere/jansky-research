@@ -88,3 +88,32 @@ detection; J1651 a real 12.5σ signal but overclaimed. Fixes applied:
   leakage; leakage wouldn't switch on for one epoch); a near-boundary confusion unit test (3.2″/
   8.6× → candidate); the period-split p-direction (0.27→0.52, *away* from significance); per-source
   pol citations incl. CHIME J1634 ~100% circular (arXiv:2507.05139).
+
+## Referee round (2026-08-13) — peak search + a polarization claim that is a flux limit
+
+**BLOCKER 1 confirmed: 152/154 epochs have I > 0**, median offset 10.15″ (more edge-weighted
+than uniform-in-disc) — the same peak-search defect as wdpulsar, through the same helper,
+under a title claiming "Forced Photometry". The forced re-run (search_arcsec=0.0) is queued
+behind wdpulsar's on the same CASDA session.
+
+**BLOCKER 2: "persistent circular polarization is not a class property" is a statement about
+polarization drawn from sources undetected in Stokes I in 149/154 epochs.** The implied
+fractional-polarization limits are 49–114% — the census does not exclude 100% circular
+polarization for most targets. Sharpest case: CHIME J1634+44, published at ~100% circular
+polarization (the class's natural recover-a-known), appears as "<0.41 mJy" — a flux
+non-detection reported without noting the recovery failure. The claim must become "no LPT
+shows persistent circularly polarized emission above ~0.5 mJy in RACS snapshots".
+
+Also for the rewrite: duty cycle appears nowhere (the four longest-period sources have
+27–43% phase coverage — their non-detections constrain nothing); there are **no RACS-low1
+data** in the census (the abstract cites mcconnell2020 for data that never enter; 50 of 81
+low-band epochs are RACS-low3, unnamed and uncited); the headline 0.474 mJy is the median
+*best-epoch* limit — the per-epoch median is 0.726 (90th pct 2.09), and for an intermittent
+source the per-epoch number is the relevant one; the confusion veto's denominator is a
+noise-max floor and its offset clause passes 92% of all rows; "an exact permutation test" is
+a 20,000-draw Monte Carlo whose quoted p = 0.5219 differs from the true exact p = 0.5258
+(11,440 partitions, both computed); and the N=13 → 0.27 prose number is unbacked (it
+reproduces: exact p = 0.2692). "First systematic multi-epoch" needs narrowing to "first
+targeted, multi-epoch, uniform V compilation" against vaster2026 (itself a multi-epoch ASKAP
+variability pipeline that discovered one of these sources) and the published racslow2 blind
+V catalogue covering 15/16 positions.
