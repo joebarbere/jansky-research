@@ -352,8 +352,18 @@ def _vast_csv(tmp_path):
 
     p = tmp_path / "vast.csv"
     fields = [
-        "name", "epoch", "obs_id", "band", "epoch_mjd", "duration_s",
-        "i_mjy", "e_i", "v_mjy", "e_v", "offset_arcsec", "note",
+        "name",
+        "epoch",
+        "obs_id",
+        "band",
+        "epoch_mjd",
+        "duration_s",
+        "i_mjy",
+        "e_i",
+        "v_mjy",
+        "e_v",
+        "offset_arcsec",
+        "note",
     ]
     period_d = J1839_PERIOD_S / 86400.0
     # an epoch whose MIDPOINT lands exactly 100 cycles after T0 (main-pulse phase 0)
@@ -361,26 +371,80 @@ def _vast_csv(tmp_path):
     t_min = J1839_T0_MJD + 100 * period_d - dur / 2.0 / 86400.0
     rows = [
         # J1839 detection at main-pulse phase: 60 mJy, 40% circular
-        dict(name="ASKAP J183950.5-075635", epoch="low", obs_id="A-1", band="low",
-             epoch_mjd=f"{t_min:.5f}", duration_s="726.0", i_mjy="60.0", e_i="0.5",
-             v_mjy="24.0", e_v="0.4", offset_arcsec="0.5", note=""),
+        dict(
+            name="ASKAP J183950.5-075635",
+            epoch="low",
+            obs_id="A-1",
+            band="low",
+            epoch_mjd=f"{t_min:.5f}",
+            duration_s="726.0",
+            i_mjy="60.0",
+            e_i="0.5",
+            v_mjy="24.0",
+            e_v="0.4",
+            offset_arcsec="0.5",
+            note="",
+        ),
         # same source, quiet epoch
-        dict(name="ASKAP J183950.5-075635", epoch="low", obs_id="A-2", band="low",
-             epoch_mjd="60500.10000", duration_s="726.0", i_mjy="0.1", e_i="0.4",
-             v_mjy="-0.2", e_v="0.35", offset_arcsec="1.0", note=""),
+        dict(
+            name="ASKAP J183950.5-075635",
+            epoch="low",
+            obs_id="A-2",
+            band="low",
+            epoch_mjd="60500.10000",
+            duration_s="726.0",
+            i_mjy="0.1",
+            e_i="0.4",
+            v_mjy="-0.2",
+            e_v="0.35",
+            offset_arcsec="1.0",
+            note="",
+        ),
         # bright-I, quiet-V epoch (GPM-like)
-        dict(name="GPM J1839-10", epoch="low", obs_id="B-1", band="low",
-             epoch_mjd="60600.20000", duration_s="726.0", i_mjy="6.0", e_i="0.4",
-             v_mjy="0.1", e_v="0.35", offset_arcsec="0.8", note=""),
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-1",
+            band="low",
+            epoch_mjd="60600.20000",
+            duration_s="726.0",
+            i_mjy="6.0",
+            e_i="0.4",
+            v_mjy="0.1",
+            e_v="0.35",
+            offset_arcsec="0.8",
+            note="",
+        ),
         # unreleased row
-        dict(name="GPM J1839-10", epoch="low", obs_id="B-2", band="low",
-             epoch_mjd="60000.00000", duration_s="726.0", i_mjy="nan", e_i="nan",
-             v_mjy="nan", e_v="nan", offset_arcsec="nan",
-             note="unreleased: obscore obs_release_date is NULL"),
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-2",
+            band="low",
+            epoch_mjd="60000.00000",
+            duration_s="726.0",
+            i_mjy="nan",
+            e_i="nan",
+            v_mjy="nan",
+            e_v="nan",
+            offset_arcsec="nan",
+            note="unreleased: obscore obs_release_date is NULL",
+        ),
         # off-mosaic nan row
-        dict(name="GPM J1839-10", epoch="low", obs_id="B-3", band="low",
-             epoch_mjd="60010.00000", duration_s="726.0", i_mjy="nan", e_i="nan",
-             v_mjy="nan", e_v="nan", offset_arcsec="nan", note=""),
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-3",
+            band="low",
+            epoch_mjd="60010.00000",
+            duration_s="726.0",
+            i_mjy="nan",
+            e_i="nan",
+            v_mjy="nan",
+            e_v="nan",
+            offset_arcsec="nan",
+            note="",
+        ),
     ]
     with p.open("w", newline="") as fh:
         w = _csv.DictWriter(fh, fieldnames=fields)

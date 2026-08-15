@@ -51,7 +51,9 @@ CSV_FIELDS = [
 CUTOUT_RADIUS_DEG = 0.025
 
 
-def obscore_products(tap, ra: float, dec: float, collection: str = "The Rapid ASKAP Continuum Survey"):
+def obscore_products(
+    tap, ra: float, dec: float, collection: str = "The Rapid ASKAP Continuum Survey"
+):
     """All restored taylor.0 I+V products in `collection` containing (ra, dec).
 
     The default is the RACS collection used by the wdpulsar and lptv censuses; the lptv VAST
