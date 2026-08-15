@@ -306,3 +306,55 @@ novelty argument: VAST observing continues through 2026-08 (MJD 61222) while eve
 discovery paper's archival search stops in/before Nov 2024 — the post-cutoff epochs are
 unsearched. Sources with the most epochs: J1424 (129), J1651 (110), J170036 (106), J1755
 (104), GCRT J1745−3009 (99), GLEAM-X J1627 (99), J1832−0911 (97), J1839−0756 (92).
+
+
+## VAST sweep results (2026-08-15): two unpublished pulses of ASKAP J1839−0756, one at interpulse phase
+
+The 966-epoch VAST sweep completed (17.3 h; 647 good measurements across 10 sources, 107
+CASDA failures retrying, ~200 nan rows where the cutout fell off a mosaic edge). Sanity
+holds: median forced I/σ = 0.12, 56% positive. Four Stokes-V detections (≥5σ + leakage
+veto) — adjudicated one by one against the discovery papers' observation tables, per the
+lesson of the RACS round:
+
+| epoch | source | I (mJy) | V | published? |
+|---|---|---|---|---|
+| SBID 60804, MJD 60404.92 | ASKAP J1832−0911 | 250.0 | 14.0 (5.6%) | YES — Wang table (1522±4 peak; ours = 12-min dilution) |
+| SBID 47253, MJD 59965.04 | ASKAP J1755−2527 | 24.9 | 6.3 (25%) | YES — its discovery observation (PEPOCH 59965.03792) |
+| **SBID 62032, MJD 60433.90** | **ASKAP J1839−0756** | **12.2** | **2.1 (18%, 6.4σ)** | **NO — not in the Lee table** |
+| **SBID 62646, MJD 60468.70** | **ASKAP J1839−0756** | **68.2** | **24.4 (36%, 18.9σ)** | **NO — not in the Lee table** |
+
+(Also: GPM J1839−10 detected in Stokes I at 5–31σ in 8 epochs spanning 2023–2026-08 with
+V always <1.1σ — consistent with its published low circular fraction; ASKAP J1755−2527's
+second published epoch SBID 63600 recovered at 10.6σ.)
+
+The two J1839−0756 epochs fall in the gap between the discovery campaign's 2024-03-15 and
+2024-06-26 pointings and are plain VAST survey epochs (726 s), not their ToOs. Phase-folding
+with the published P = 23,221.740 ± 0.332 s and the paper's sub-pulse anchor
+(T0 = MJD 60358.24524, centre of a main pulse) — legitimate now because the new CSV records
+full-precision epoch times:
+
+- **SBID 62032: phase 0.489 ± 0.004 (±0.013 anchor) — the interpulse window (~0.496).**
+  12.2 mJy (12-min average), 18% circular vs the main pulse's 37–40%; the discovery paper
+  reports interpulses at 10–20% of main-pulse flux and notes NO interpulse was seen in its
+  own later ASKAP epochs. This appears to be the first interpulse of this source captured
+  in survey imaging.
+- **SBID 62646: phase 0.951 ± 0.006** — main-pulse-strength (68 mJy 12-min average, 36%
+  circular, matching the main pulse), arriving ~0.05 in phase (~19 min) before the nominal
+  ToA. Large against the paper's fitted EQUAD (50–100 s) but the anchor is only "near the
+  centre" of one pulse (±0.013) and their ToA scatter is documented as pulse-shape-driven;
+  report the phase, don't over-interpret the offset.
+
+What the later epochs do and do not say: 15 epochs in 2026 (through MJD 61222.7 =
+2026-08-05) are all consistent with zero, including one at interpulse phase and two at
+main-pulse phase — but at 2,700–3,200 cycles from T0 the period uncertainty alone is
+±0.04–0.05 in phase, comparable to the pulse window, so on/off-pulse assignment is no
+longer meaningful there. Cumulatively the 2026 epochs cover ~0.47 of phase; if the source
+still pulsed at mid-2024 strength the expected number of on-pulse catches is ~0.9, so zero
+catches is unremarkable (p ≈ 0.4). The honest statement is a set of ~1.5 mJy (3σ, 12-min)
+limits at unknown phases, consistent with — but not proof of — the continued decay the
+discovery paper reported.
+
+**GATE-0 caveat before any paper claim:** a novelty pass is required — a post-Jan-2025
+timing or follow-up paper could have reported these VAST epochs. Check
+citations of Lee et al. 2025 (NatAs) and any ASKAP J1839−0756 arXiv listings before
+writing "unpublished" anywhere refereed.
