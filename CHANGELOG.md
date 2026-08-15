@@ -14,6 +14,11 @@ Every PR adds an entry to `## [Unreleased]
   validated re-measurements (`results/lptv_detection_provenance.json`).
 
 ### Added
+- `lptv.summarize_vast` + `fold_phase` (tested): VAST-sweep reduction with per-detection
+  pulse phases on the published J1839-0756 ephemeris; paper gains a VAST-extension section
+  reporting two pulses absent from the discovery paper's observation table (one at
+  interpulse phase 0.489±0.004), with unreleased-SBID bookkeeping (107 epochs never
+  publicly released, verified via obscore) and the honest 2026 phase-scrambling caveat.
 - `scripts/lptv_vast_real.py`: VAST-collection extension of the lptv forced-V sweep
   (12-min epochs, ~966 across 10 covered sources; full-precision epoch MJDs and per-row
   durations, fixing the round-2 timestamp-quantization finding).

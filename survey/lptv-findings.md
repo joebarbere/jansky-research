@@ -358,3 +358,24 @@ discovery paper reported.
 timing or follow-up paper could have reported these VAST epochs. Check
 citations of Lee et al. 2025 (NatAs) and any ASKAP J1839−0756 arXiv listings before
 writing "unpublished" anywhere refereed.
+
+
+## Unreleased-SBID adjudication + VAST section in the paper (2026-08-15)
+
+The 107 "failed" VAST epochs are not failures: every sampled one has a NULL
+`obs_release_date` in obscore (never publicly released — likely failed VAST QC), while
+every successful epoch has a release date. The CSV rows are reclassified
+`unreleased:` (and deduped to one row per epoch) so the resume logic stops retrying them
+and the census denominator is explicit: 966 = 647 measured + 212 off-mosaic + 107
+unreleased.
+
+The reduction is now code, not prose: `lptv.summarize_vast` (+ `fold_phase` with the
+published ephemeris constants and their provenance documented in the module) is tested
+(98% module coverage) and writes `results/lptv_vast_metrics.json`, which reproduces the
+hand analysis exactly. The paper gains a "The VAST extension" section carrying the two
+unreported J1839−0756 pulses (interpulse at phase 0.489±0.004; main-type at 0.951±0.006),
+the published-epoch recoveries (J1832−0911, J1755−2527 — the latter its discovery
+observation and PEPOCH, the fourth instance of the pattern), the 2026 phase-scrambling
+honesty (ephemeris ±0.04–0.05 by then; p≈0.4 for zero catches), and the GPM J1839−10
+Stokes-I cross-check. New refs: mcsweeney2025 (arXiv-verified), murphy2021
+(Crossref-verified). Abstract updated. Builds clean; triage clean.

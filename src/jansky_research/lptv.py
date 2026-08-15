@@ -215,6 +215,113 @@ def summarize_v_sweep(
     }
 
 
+# --- ASKAP J1839-0756 published ephemeris (Lee et al. 2025, arXiv:2501.09133) ------------
+# Period and 1-sigma error from the paper's source-parameter table; the zero-point is the
+# de-dispersed sub-pulse at 2024-02-18 05:53:09 UTC, described as "near the centre of the
+# full pulse", so T0 carries an anchor systematic of order the pulse half-width (~+/-0.013
+# in phase for a ~10-min pulse). MJD computed once via astropy Time (UTC).
+J1839_NAME_FRAG = "J183950"
+J1839_PERIOD_S = 23221.740
+J1839_PERIOD_ERR_S = 0.332
+J1839_T0_MJD = 60358.245243
+J1839_T0_ANCHOR_PHASE_ERR = 0.013
+# On-pulse windows in phase: the main pulse is at 0 by construction of T0; the interpulse is
+# "roughly 3.2 hours after the main pulse" (Lee et al.) = 3.2/6.45 ~ 0.496. Half-widths are
+# generous (pulse width >300 s -> >0.013, plus documented ToA wander of order minutes).
+J1839_INTERPULSE_PHASE = 0.496
+ONPULSE_HALFWIDTH = 0.05
+
+
+def fold_phase(
+    mjd_mid: float,
+    *,
+    t0_mjd: float = J1839_T0_MJD,
+    period_s: float = J1839_PERIOD_S,
+    period_err_s: float = J1839_PERIOD_ERR_S,
+) -> tuple[float, float]:
+    """Pulse phase in [0, 1) of an epoch midpoint, plus the 1-sigma phase error from the
+    period uncertainty alone (grows linearly with cycle count; the T0 anchor systematic
+    J1839_T0_ANCHOR_PHASE_ERR is NOT included and must be quoted separately)."""
+    p_d = period_s / 86400.0
+    n = (mjd_mid - t0_mjd) / p_d
+    return float(n % 1.0), float(abs(n) * period_err_s / period_s)
+
+
+def summarize_vast(
+    csv_path: str | Path,
+    *,
+    det_sigma: float = DET_NSIGMA,
+    limit_sigma: float = LIMIT_NSIGMA,
+) -> dict:
+    """Reduce the VAST-extension sweep CSV (full-precision epoch MJDs + durations).
+
+    Same leakage-vetted V-detection rule as the RACS census. Adds what the RACS CSV could
+    not support: per-detection pulse phases for ASKAP J1839-0756 on the published ephemeris
+    (the epoch times here are recorded to ~1 s), and the epoch bookkeeping that separates
+    measured / off-mosaic (nan) / never-publicly-released rows so the census denominator is
+    explicit.
+    """
+    import csv
+
+    rows = list(csv.DictReader(open(csv_path)))
+    unreleased = [r for r in rows if r["note"].startswith("unreleased")]
+    failed = [r for r in rows if r["note"].startswith("failed")]
+    good = [
+        r
+        for r in rows
+        if not r["note"].startswith(("failed", "unreleased")) and r.get("i_mjy") not in ("", "nan")
+    ]
+    dets, i_bright = [], []
+    for r in good:
+        i, ei = float(r["i_mjy"]), float(r["e_i"])
+        v, ev = float(r["v_mjy"]), float(r["e_v"])
+        mid = float(r["epoch_mjd"]) + float(r.get("duration_s") or 0.0) / 2.0 / 86400.0
+        rec = {
+            "name": r["name"],
+            "obs_id": r["obs_id"],
+            "mjd_mid": round(mid, 5),
+            "i_mjy": round(i, 3),
+            "v_mjy": round(v, 3),
+            "i_sigma": round(i / ei, 1) if ei > 0 else None,
+            "v_sigma": round(abs(v) / ev, 1) if ev > 0 else None,
+        }
+        if ev > 0 and abs(v) >= det_sigma * ev and abs(v) > LEAKAGE_FRAC * max(i, 0.0):
+            rec["v_over_i"] = round(abs(v) / i, 2) if i > 0 else None
+            if J1839_NAME_FRAG in r["name"]:
+                ph, pe = fold_phase(mid)
+                rec["phase"] = round(ph, 4)
+                rec["phase_err_period"] = round(pe, 4)
+            dets.append(rec)
+        elif ei > 0 and i / ei >= det_sigma:
+            i_bright.append(rec)
+    per: dict[str, dict] = {}
+    for r in good:
+        e = per.setdefault(r["name"], {"n_epochs": 0, "e_v": []})
+        e["n_epochs"] += 1
+        e["e_v"].append(float(r["e_v"]))
+    per_target = {
+        n: {
+            "n_epochs": e["n_epochs"],
+            "v_limit_mjy": round(limit_sigma * min(e["e_v"]), 3),
+            "per_epoch_median_3sig_mjy": round(limit_sigma * float(np.median(e["e_v"])), 3),
+        }
+        for n, e in sorted(per.items())
+    }
+    mjds = [float(r["epoch_mjd"]) for r in good]
+    return {
+        "n_rows": len(rows),
+        "n_measured": len(good),
+        "n_offmosaic_nan": len(rows) - len(good) - len(unreleased) - len(failed),
+        "n_unreleased": len(unreleased),
+        "n_failed": len(failed),
+        "n_sources_covered": len(per_target),
+        "mjd_range": [round(min(mjds), 1), round(max(mjds), 1)] if mjds else None,
+        "v_detections": sorted(dets, key=lambda d: d["mjd_mid"]),
+        "i_bright_epochs": sorted(i_bright, key=lambda d: d["mjd_mid"]),
+        "per_target": per_target,
+    }
+
+
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: v3 catalogue stats + injection recover-a-known; real: reduce the V sweep CSV."""
     import json
