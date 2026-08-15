@@ -6,6 +6,15 @@ All notable changes to `jansky-research` are documented here. The format is base
 
 Every PR adds an entry to `## [Unreleased]
 
+### Added
+- `papers/wdpulsar/rnaas.tex`: standalone RNAAS note (refereed; ~630 words) — the null
+  census condensed with the control's true 2/5 efficiency attached to the f<6.1% bound.
+
+### Fixed
+- `wdpulsar` main.tex: two peak-search-era numbers corrected against the forced CSV
+  (max candidate significance is 2.9σ not 3.3–3.9σ; brightest measurement 3.7 mJy not
+  4.3 mJy) — found by the RNAAS note's referee pass.
+
 ### Fixed
 - Triage: a deliberately-committed `*synthetic*` metrics file with `is_real: false` no
   longer flags no-evidence when the real sibling exists (the vgpra two-file design);

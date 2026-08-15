@@ -125,3 +125,36 @@ efficiency 2/5 stated alongside), the AR Sco control's honest per-band record (2
 at ≥5σ; 0/2 low, a factor 2–4 below the catalogued 8.58 mJy), the never-binding leakage veto
 stated as such, and the VLASS "counterpart" downgraded to "nearest source, ~10σ away, most
 likely unrelated".
+
+
+## RNAAS note drafted + refereed (2026-08-15)
+
+`papers/wdpulsar/rnaas.tex` (~630 words): the standalone RNAAS condensation, chosen as the
+repo's first RNAAS-without-arXiv submission (null census = classic RNAAS shape; the
+Stokes-V leg is scoop-exposed to a RACS-low2 V-catalogue cross-match, so the fast venue is
+right; needs no endorsement and establishes the ADS record that eases the Croft ask).
+
+Referee verdict on the note: minor, 12 findings, all applied. The material ones:
+- **The condensation had inflated the control's efficiency** ("2 of 3 RACS-mid" with the
+  low-band non-detections re-described as flux measurements). Restored: 2 of 5 usable
+  epochs, undetected in both RACS-low (1.1σ, 1.7σ), V never at the census's 5σ bar (best
+  3.4σ) — and the 2/5 efficiency clause is now attached to the f < 6.1% bound (the frblens
+  lesson: a null divides by sensitivity).
+- The unsupported "factor ~2–4 below catalogue" dropped; the 7 uncovered candidates + the
+  J0408+6046 VLASS counterpart restored (so the title's population claim is scoped); the
+  leakage veto described as never-binding; "the archived repository" made resolvable
+  (\citealt{janskyresearch} + the table filename); injection numbers added to the caption
+  so "recovers in both Stokes parameters" is checkable; \wdRealNAttempted macro used;
+  CSIRO acknowledgment updated to the current Wajarri Yamaji / Inyarrimanha Ilgari Bundara
+  wording.
+- **F9 — a real defect in main.tex found by the note's referee**: "brightest candidate
+  measurements reach 3.3–3.9σ (≲1.2 mJy)" and "brightest measurement of 4.3 mJy" were
+  survivors of the superseded peak-search run. Verified against the committed forced CSV:
+  max candidate significance 2.92σ (zero epochs above 3σ), max candidate |I| 1.97 mJy, max
+  including the control 3.73 mJy. Both sentences corrected in main.tex. The note (which
+  omitted them) was already right.
+
+Referee's optional improvement, deliberately deferred: replace the figure's synthetic left
+panel with the I/σ distribution over the 442 usable candidate epochs (mean −0.04, σ 1.00,
+214/447 positive) — real data in the one allowed figure. Requires a figure-code change +
+re-run; do it if the moderator asks or before a v2.
