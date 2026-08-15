@@ -7,6 +7,12 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Fixed
+- Triage: a deliberately-committed `*synthetic*` metrics file with `is_real: false` no
+  longer flags no-evidence when the real sibling exists (the vgpra two-file design);
+  16.11 h allowlisted as a Voyager literature constant. vgpra "confirms"/"proves" and
+  wdpulsar hard-typed 7.4/"confirms" fixed; zero HIGH/MED across all 46 papers again.
+
+### Fixed
 - `lptv` round-3 referee (VAST section): 2026-epoch chain recomputed self-consistently in
   code (20 epochs, p=0.53); phase errors include exposure smearing + anchor (±0.016);
   interpulse claim downgraded to candidate on the published V/I tension; novelty pass run

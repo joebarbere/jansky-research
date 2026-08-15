@@ -48,6 +48,7 @@ CACHE = Path("/tmp/triage_crossref_cache.json")
 HARD_TYPED_OK = {
     ("pte2", "0.05"),  # conventional p-threshold; equality with \ptSynFP is coincidence
     ("vgpra", "17.24"),  # Voyager-era literature constant; the injection was chosen to match
+    ("vgpra", "16.11"),  # Neptune's Voyager-2 period (Warwick et al. 1989), cited as history
     ("dr20radio", "2.5"),  # "the apparent 2.5x" is a flux RATIO (3.0/1.2), not the 2.5" beam
 }
 
@@ -190,13 +191,21 @@ def check_paper(paper: Path, *, network: bool, cache: dict) -> list[tuple[str, s
     if not cand:
         out.append(("MED", "no-evidence", f"no results/{slug}*.json"))
     else:
+        parsed = []
         for c in cand:
             try:
-                d = json.loads(c.read_text())
+                parsed.append((c, json.loads(c.read_text())))
             except Exception:  # noqa: BLE001 - a malformed evidence file is itself a finding
                 out.append(("HIGH", "no-evidence", f"{c.name} is not valid JSON"))
-                continue
+        has_real = any(isinstance(d, dict) and d.get("is_real") is True for _, d in parsed)
+        for c, d in parsed:
             if isinstance(d, dict) and d.get("is_real") is False:
+                # A deliberately-committed synthetic companion (e.g. vgpra writes its offline
+                # run to <slice>_synthetic_metrics.json precisely so it can never clobber the
+                # real file) is the DESIGN, not missing evidence -- but only when the real
+                # sibling actually exists; a synthetic file standing alone is still a finding.
+                if "synthetic" in c.name and has_real:
+                    continue
                 out.append(("HIGH", "no-evidence", f"{c.name} has is_real: false"))
 
     # 6. retracted verbs, only where a number is nearby
