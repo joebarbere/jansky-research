@@ -83,8 +83,8 @@ probability is meaningless (absurdly small) and we do not report it. The \emph{s
 uncertainty is a rotation-block bootstrap (resample whole rotation-length blocks); the
 \emph{systematic} one is the peak's spread across four frequency sub-bands. A coherent signal ---
 rotation \emph{or} a viewing-geometry, beaming, or spectral-window modulation --- is achromatic, so a
-small sub-band spread confirms a real coherent peak but does \emph{not} establish that it is the
-rotation. A discrete-epoch Rayleigh $Z^2_1$ fold \citep{buccheri1983} of detected bursts, reused from
+small sub-band spread is evidence of a real coherent peak but does \emph{not} establish that it
+is the rotation. A discrete-epoch Rayleigh $Z^2_1$ fold \citep{buccheri1983} of detected bursts, reused from
 this repository's FRB module, is reported as a weaker cross-check.
 
 \textbf{Recovery criterion.} We call the historical period \emph{recovered} only if the blind peak
@@ -137,7 +137,7 @@ re-running the blind search recovers modulation depths down to \vgRealUMinDepth\
 modulation deeper than that would have been found; none is. This, not the synthetic spike
 train, is the operative validation: the synthetic control (which passes the full three-clause
 criterion, \vgSynFullOK, with seed-to-seed scatter \vgSynSeedSd~h across \vgSynSeedN\ seeds)
-proves the machinery, while the injection bounds the sky.
+exercises the machinery end to end, while the injection bounds the sky.
 
 \textbf{Interpretation.} The blind total-power periodogram does not recover the ice-giant rotation
 periods, while recovering a clean injected signal in the identical analysis. The auroral total-power
