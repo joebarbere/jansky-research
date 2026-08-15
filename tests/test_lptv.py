@@ -340,3 +340,207 @@ def test_write_macros_placeholder(tmp_path):
     )
     txt = p.read_text()
     assert r"\newcommand{\lvRealNVDet}{--}" in txt and r"\newcommand{\lvSynNVDet}{--}" in txt
+
+
+# --- VAST extension -------------------------------------------------------------------
+
+
+def _vast_csv(tmp_path):
+    import csv as _csv
+
+    from jansky_research.lptv import J1839_PERIOD_S, J1839_T0_MJD
+
+    p = tmp_path / "vast.csv"
+    fields = [
+        "name",
+        "epoch",
+        "obs_id",
+        "band",
+        "epoch_mjd",
+        "duration_s",
+        "i_mjy",
+        "e_i",
+        "v_mjy",
+        "e_v",
+        "offset_arcsec",
+        "note",
+    ]
+    period_d = J1839_PERIOD_S / 86400.0
+    # an epoch whose MIDPOINT lands exactly 100 cycles after T0 (main-pulse phase 0)
+    dur = 726.0
+    t_min = J1839_T0_MJD + 100 * period_d - dur / 2.0 / 86400.0
+    rows = [
+        # J1839 detection at main-pulse phase: 60 mJy, 40% circular
+        dict(
+            name="ASKAP J183950.5-075635",
+            epoch="low",
+            obs_id="A-1",
+            band="low",
+            epoch_mjd=f"{t_min:.5f}",
+            duration_s="726.0",
+            i_mjy="60.0",
+            e_i="0.5",
+            v_mjy="24.0",
+            e_v="0.4",
+            offset_arcsec="0.5",
+            note="",
+        ),
+        # same source, quiet epoch
+        dict(
+            name="ASKAP J183950.5-075635",
+            epoch="low",
+            obs_id="A-2",
+            band="low",
+            epoch_mjd="60500.10000",
+            duration_s="726.0",
+            i_mjy="0.1",
+            e_i="0.4",
+            v_mjy="-0.2",
+            e_v="0.35",
+            offset_arcsec="1.0",
+            note="",
+        ),
+        # bright-I, quiet-V epoch (GPM-like)
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-1",
+            band="low",
+            epoch_mjd="60600.20000",
+            duration_s="726.0",
+            i_mjy="6.0",
+            e_i="0.4",
+            v_mjy="0.1",
+            e_v="0.35",
+            offset_arcsec="0.8",
+            note="",
+        ),
+        # unreleased row
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-2",
+            band="low",
+            epoch_mjd="60000.00000",
+            duration_s="726.0",
+            i_mjy="nan",
+            e_i="nan",
+            v_mjy="nan",
+            e_v="nan",
+            offset_arcsec="nan",
+            note="unreleased: obscore obs_release_date is NULL",
+        ),
+        # off-mosaic nan row
+        dict(
+            name="GPM J1839-10",
+            epoch="low",
+            obs_id="B-3",
+            band="low",
+            epoch_mjd="60010.00000",
+            duration_s="726.0",
+            i_mjy="nan",
+            e_i="nan",
+            v_mjy="nan",
+            e_v="nan",
+            offset_arcsec="nan",
+            note="",
+        ),
+    ]
+    with p.open("w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+    return p
+
+
+def test_fold_phase_exact_cycles():
+    from jansky_research.lptv import J1839_PERIOD_S, J1839_T0_MJD, fold_phase
+
+    ph, pe = fold_phase(J1839_T0_MJD + 100 * J1839_PERIOD_S / 86400.0)
+    assert ph == pytest.approx(0.0, abs=1e-6) or ph == pytest.approx(1.0, abs=1e-6)
+    # period-error contribution: 100 cycles * 0.332 s / P
+    assert pe == pytest.approx(100 * 0.332 / J1839_PERIOD_S, rel=1e-6)
+
+
+def test_summarize_vast_reduces_and_folds(tmp_path):
+    from jansky_research.lptv import summarize_vast
+
+    m = summarize_vast(_vast_csv(tmp_path))
+    assert m["n_rows"] == 5
+    assert m["n_measured"] == 3
+    assert m["n_unreleased"] == 1
+    assert m["n_offmosaic_nan"] == 1
+    assert m["n_failed"] == 0
+    assert m["n_sources_covered"] == 2
+    # exactly one leakage-vetted V detection, at main-pulse phase, with its phase attached
+    assert len(m["v_detections"]) == 1
+    det = m["v_detections"][0]
+    assert det["obs_id"] == "A-1"
+    assert det["v_over_i"] == pytest.approx(0.4, abs=0.01)
+    assert min(det["phase"], 1 - det["phase"]) < 0.001
+    # 100 cycles x 0.332 s / P = 0.00143, rounded to 4 dp in the record
+    assert det["phase_err_period"] == pytest.approx(0.0014, abs=2e-4)
+    # total error adds exposure smearing (726/P/sqrt(12)=0.009) and the 0.013 anchor
+    assert det["phase_err_total"] == pytest.approx(0.0159, abs=5e-4)
+    # the bright-I epoch is reported separately, not as a V detection
+    assert [e["obs_id"] for e in m["i_bright_epochs"]] == ["B-1"]
+    # per-target limits exist for the quiet source
+    assert m["per_target"]["ASKAP J183950.5-075635"]["n_epochs"] == 2
+
+
+def test_summarize_vast_decision_boundaries(tmp_path):
+    """Rows that sit AT the thresholds: 4.9-sigma V excluded, 5.1 included; a V just under
+    the leakage floor excluded; negative-I rows still leakage-guarded via |I|."""
+    import csv as _csv
+
+    from jansky_research.lptv import summarize_vast
+
+    fields = [
+        "name",
+        "epoch",
+        "obs_id",
+        "band",
+        "epoch_mjd",
+        "duration_s",
+        "i_mjy",
+        "e_i",
+        "v_mjy",
+        "e_v",
+        "offset_arcsec",
+        "note",
+    ]
+    rows = [
+        # 4.9 sigma: below det threshold
+        dict(name="S1", obs_id="a", i_mjy="1.0", e_i="0.3", v_mjy="0.98", e_v="0.2"),
+        # 5.1 sigma and far above leakage: detected
+        dict(name="S1", obs_id="b", i_mjy="1.0", e_i="0.3", v_mjy="1.02", e_v="0.2"),
+        # high sigma but |V| below 0.6% of I: leakage-vetoed
+        dict(name="S2", obs_id="c", i_mjy="2000.0", e_i="0.3", v_mjy="10.0", e_v="0.2"),
+        # negative I with significant V: leakage guard uses |I|, small |V| still passes
+        dict(name="S3", obs_id="d", i_mjy="-1.0", e_i="0.3", v_mjy="1.5", e_v="0.2"),
+    ]
+    for r in rows:
+        r.setdefault("epoch", "low")
+        r.setdefault("band", "low")
+        r.setdefault("epoch_mjd", "60500.00000")
+        r.setdefault("duration_s", "726.0")
+        r.setdefault("offset_arcsec", "0.5")
+        r.setdefault("note", "")
+    p = tmp_path / "b.csv"
+    with p.open("w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+    m = summarize_vast(p)
+    assert [d["obs_id"] for d in m["v_detections"]] == ["b", "d"]
+    # the 5.1-sigma detection carries v_over_i; the negative-I one records None, not a crash
+    assert m["v_detections"][1]["v_over_i"] is None
+
+
+def test_fold_phase_noninteger_cycles():
+    """A midpoint 100.25 cycles after T0 must fold to 0.25 — catches sign/unit errors in
+    the duration/2 midpoint arithmetic feeding the paper's phases."""
+    from jansky_research.lptv import J1839_PERIOD_S, J1839_T0_MJD, fold_phase
+
+    ph, _ = fold_phase(J1839_T0_MJD + 100.25 * J1839_PERIOD_S / 86400.0)
+    assert ph == pytest.approx(0.25, abs=1e-6)

@@ -51,12 +51,18 @@ CSV_FIELDS = [
 CUTOUT_RADIUS_DEG = 0.025
 
 
-def obscore_products(tap, ra: float, dec: float):
-    """All RACS restored taylor.0 I+V products (low + mid bands) containing (ra, dec)."""
+def obscore_products(
+    tap, ra: float, dec: float, collection: str = "The Rapid ASKAP Continuum Survey"
+):
+    """All restored taylor.0 I+V products in `collection` containing (ra, dec).
+
+    The default is the RACS collection used by the wdpulsar and lptv censuses; the lptv VAST
+    extension passes 'VAST' (same filename conventions, 12-min epochs).
+    """
     q = f"""
-    SELECT obs_id, filename, t_min, em_min, em_max, access_url
+    SELECT obs_id, filename, t_min, t_exptime, em_min, em_max, access_url
     FROM ivoa.obscore
-    WHERE obs_collection = 'The Rapid ASKAP Continuum Survey'
+    WHERE obs_collection = '{collection}'
     AND (filename LIKE 'image.i.%.restored.%' OR filename LIKE 'image.v.%.restored.%')
     AND filename LIKE '%.taylor.0.restored.conv.fits'
     AND 1 = CONTAINS(POINT('ICRS', {ra:.8f}, {dec:.8f}), s_region)
@@ -71,11 +77,16 @@ def complete_iv_groups(table) -> list[dict]:
         filename = str(table["filename"][k])
         stokes = filename.split(".")[1]
         obs = str(table["obs_id"][k])
+        try:
+            exptime = float(table["t_exptime"][k])
+        except (KeyError, ValueError):
+            exptime = float("nan")
         g = groups.setdefault(
             obs,
             {
                 "obs_id": obs,
                 "t_min": float(table["t_min"][k]),
+                "t_exptime": exptime,
                 # band from wavelength: RACS-mid ~0.21-0.23 m, RACS-low ~0.30-0.36 m
                 "band": "mid" if float(table["em_min"][k]) < 0.26 else "low",
             },

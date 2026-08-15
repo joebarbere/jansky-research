@@ -1,13 +1,19 @@
 #!/usr/bin/env python
-"""LPT v3 Stokes-V forced photometry --- real leg driver (plan 44, jansky-research).
+"""LPT Stokes-V forced photometry, VAST extension --- real leg driver (lptv increment).
 
-Forced I+V photometry at every LPT position (v3 catalogue, 16 sources) in every public RACS
-(low + mid) I+V observation covering it: CASDA obscore per-position product query, SODA cutouts,
-one CSV row per (LPT, obs_id). Reuses the plan-41 `wdpulsar_real.py` machinery (obscore query,
-complete I+V grouping, SODA cutout + one-pixel crop, retry-with-relogin, resume-by-CSV) with the
-LPT target list from `lptv.lpt_positions()`.
+Extends the plan-44 RACS census (`lptv_real.py`) to the VAST survey's 12-minute epochs:
+same forced I+V photometry at every v3 LPT position, in every public VAST I+V observation
+covering it (`obs_collection = 'VAST'`; identical filename conventions). VAST monitors its
+fields roughly fortnightly, so covered sources gain tens of epochs over the ~10 RACS ones ---
+enough for a per-source epoch count that supports duty-cycle statements.
 
-Run:  uv run --extra vlass python scripts/lptv_real.py [--limit N]
+Two deliberate differences from the RACS driver, both lessons from the round-2 referee:
+- `epoch_mjd` is written at full precision (`t_min:.5f`, ~1 s), not `:.1f` (+/-72 min), so
+  phase arithmetic against published ephemerides is possible from the committed CSV.
+- `duration_s` (obscore t_exptime) is recorded per row, so phase-coverage arithmetic does not
+  need an assumed integration time.
+
+Run:  uv run --extra vlass python scripts/lptv_vast_real.py [--limit N]
 
 Resumable: (name, obs_id) rows already measured are skipped; failed rows retry on the next run.
 """
@@ -35,13 +41,14 @@ from jansky_research.lptv import lpt_positions  # noqa: E402
 from jansky_research.stokesv import _casda_session  # noqa: E402
 
 CASDA_TAP = "https://casda.csiro.au/casda_vo_tools/tap"
-CSV_PATH = REPO / "results" / "lptv_realtargets.csv"
+CSV_PATH = REPO / "results" / "lptv_vast_epochs.csv"
 CSV_FIELDS = [
     "name",
     "epoch",
     "obs_id",
     "band",
     "epoch_mjd",
+    "duration_s",
     "i_mjy",
     "e_i",
     "v_mjy",
@@ -64,10 +71,26 @@ def load_done(path: Path) -> set[tuple[str, str]]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="LPT v3 Stokes-V forced photometry (plan 44)")
+    ap = argparse.ArgumentParser(description="LPT Stokes-V forced photometry, VAST extension")
     ap.add_argument("--limit", type=int, default=0, help="limit targets (0 = all 16)")
     ap.add_argument("--csv", default=str(CSV_PATH))
+    ap.add_argument(
+        "--summarize",
+        action="store_true",
+        help="reduce the existing CSV to results/lptv_vast_metrics.json and exit (no network)",
+    )
     args = ap.parse_args()
+
+    if args.summarize:
+        import json
+
+        from jansky_research.lptv import summarize_vast
+
+        metrics = summarize_vast(args.csv)
+        out_json = REPO / "results" / "lptv_vast_metrics.json"
+        out_json.write_text(json.dumps(metrics, indent=2) + "\n")
+        print(f"wrote {out_json}", flush=True)
+        return 0
 
     import pyvo
 
@@ -81,7 +104,7 @@ def main() -> int:
     targets = lpt_positions()
     if args.limit:
         targets = targets[: args.limit]
-    print(f"{len(targets)} LPT positions (v3 catalogue)", flush=True)
+    print(f"{len(targets)} LPT positions (v3 catalogue), collection=VAST", flush=True)
 
     tap = pyvo.dal.TAPService(CASDA_TAP)
     casda = None
@@ -104,7 +127,7 @@ def main() -> int:
             flush=True,
         )
         try:
-            table = obscore_products(tap, tgt["ra_deg"], tgt["dec_deg"])
+            table = obscore_products(tap, tgt["ra_deg"], tgt["dec_deg"], collection="VAST")
             groups = complete_iv_groups(table)
         except Exception as exc:  # noqa: BLE001
             print(f"    obscore query failed: {exc!r} (will retry next run)", flush=True)
@@ -117,7 +140,8 @@ def main() -> int:
                 "epoch": g["band"],
                 "obs_id": g["obs_id"],
                 "band": g["band"],
-                "epoch_mjd": f"{g['t_min']:.1f}",
+                "epoch_mjd": f"{g['t_min']:.5f}",
+                "duration_s": f"{g.get('t_exptime', float('nan')):.1f}",
                 "i_mjy": "nan",
                 "e_i": "nan",
                 "v_mjy": "nan",

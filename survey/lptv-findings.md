@@ -268,3 +268,165 @@ Everything applied:
   systematic.
 - wang2025 and chime1634 now cited; wang2025 coordinates verified via Crossref (Nature 642,
   583–586).
+
+
+## All three detections are published epochs (2026-08-14, post-round-2)
+
+Prompted by the J1839 identity result, the same adjudication was run against the other two
+detections' discovery papers (e-print sources fetched from arXiv). The pattern completes —
+**every detection in the census is an epoch its discovery paper already reported**:
+
+- **ASKAP J174508.9−505149**: our detection epoch ASKAP-20398 is the RACS-mid observation the
+  discovery search ran on; the discovery paper's own table reports the source there at
+  22.9 ± 2.3 mJy/beam (arXiv:2606.04232, now cited as rose2026) vs our forced 21.6 mJy.
+- **ASKAP J165130.3−450520**: the VASTER paper's archival search (61 ASKAP observations of the
+  field, Apr 2019 – Nov 2024) reports exactly one detection — a RACS epoch on 2024-11-21 at
+  ~4 mJy, ~60% circular, at pulse phase ≈ −0.1 on their timing solution. That is our
+  detection epoch (MJD 60635.2); ours reads 3.6 mJy at 67%.
+- **ASKAP J183950.5−075635**: the discovery observation itself (previous entry).
+
+The paper is reframed accordingly (zero new detections; three independent forced
+re-measurements of published epochs, consistent in flux and circular fraction in all three
+cases — an end-to-end validation spanning 3.6–164 mJy). Evidence:
+`results/lptv_detection_provenance.json`.
+
+The general lesson, worth carrying to any archival census: **before calling an archival
+detection new, check the discovery paper's own observation tables and archival-search
+sections for that epoch.** Discovery papers of transients routinely sweep the same public
+archive the census uses, so the priors are heavily against novelty for anything bright.
+
+## VAST extension launched (2026-08-14)
+
+`scripts/lptv_vast_real.py`: same forced photometry, `obs_collection='VAST'` (12-min epochs,
+same filename conventions, fortnightly cadence). 966 potential V epochs across 10 covered
+sources (J1745−5051, both CHIME sources, ILT J1101, GLEAM-X J0704, J144834 uncovered).
+Fixes baked in from round 2: full-precision `epoch_mjd` (t_min to ~1 s, so phase arithmetic
+is possible from the committed CSV) and per-row `duration_s` (obscore t_exptime). The
+novelty argument: VAST observing continues through 2026-08 (MJD 61222) while every
+discovery paper's archival search stops in/before Nov 2024 — the post-cutoff epochs are
+unsearched. Sources with the most epochs: J1424 (129), J1651 (110), J170036 (106), J1755
+(104), GCRT J1745−3009 (99), GLEAM-X J1627 (99), J1832−0911 (97), J1839−0756 (92).
+
+
+## VAST sweep results (2026-08-15): two unpublished pulses of ASKAP J1839−0756, one at interpulse phase
+
+The 966-epoch VAST sweep completed (17.3 h; 647 good measurements across 10 sources, 107
+CASDA failures retrying, ~200 nan rows where the cutout fell off a mosaic edge). Sanity
+holds: median forced I/σ = 0.12, 56% positive. Four Stokes-V detections (≥5σ + leakage
+veto) — adjudicated one by one against the discovery papers' observation tables, per the
+lesson of the RACS round:
+
+| epoch | source | I (mJy) | V | published? |
+|---|---|---|---|---|
+| SBID 60804, MJD 60404.92 | ASKAP J1832−0911 | 250.0 | 14.0 (5.6%) | YES — Wang table (1522±4 peak; ours = 12-min dilution) |
+| SBID 47253, MJD 59965.04 | ASKAP J1755−2527 | 24.9 | 6.3 (25%) | YES — its discovery observation (PEPOCH 59965.03792) |
+| **SBID 62032, MJD 60433.90** | **ASKAP J1839−0756** | **12.2** | **2.1 (18%, 6.4σ)** | **NO — not in the Lee table** |
+| **SBID 62646, MJD 60468.70** | **ASKAP J1839−0756** | **68.2** | **24.4 (36%, 18.9σ)** | **NO — not in the Lee table** |
+
+(Also: GPM J1839−10 detected in Stokes I at 5–31σ in 8 epochs spanning 2023–2026-08 with
+V always <1.1σ — consistent with its published low circular fraction; ASKAP J1755−2527's
+second published epoch SBID 63600 recovered at 10.6σ.)
+
+The two J1839−0756 epochs fall in the gap between the discovery campaign's 2024-03-15 and
+2024-06-26 pointings and are plain VAST survey epochs (726 s), not their ToOs. Phase-folding
+with the published P = 23,221.740 ± 0.332 s and the paper's sub-pulse anchor
+(T0 = MJD 60358.24524, centre of a main pulse) — legitimate now because the new CSV records
+full-precision epoch times:
+
+- **SBID 62032: phase 0.489 ± 0.004 (±0.013 anchor) — the interpulse window (~0.496).**
+  12.2 mJy (12-min average), 18% circular vs the main pulse's 37–40%; the discovery paper
+  reports interpulses at 10–20% of main-pulse flux and notes NO interpulse was seen in its
+  own later ASKAP epochs. This appears to be the first interpulse of this source captured
+  in survey imaging.
+- **SBID 62646: phase 0.951 ± 0.006** — main-pulse-strength (68 mJy 12-min average, 36%
+  circular, matching the main pulse), arriving ~0.05 in phase (~19 min) before the nominal
+  ToA. Large against the paper's fitted EQUAD (50–100 s) but the anchor is only "near the
+  centre" of one pulse (±0.013) and their ToA scatter is documented as pulse-shape-driven;
+  report the phase, don't over-interpret the offset.
+
+What the later epochs do and do not say: 15 epochs in 2026 (through MJD 61222.7 =
+2026-08-05) are all consistent with zero, including one at interpulse phase and two at
+main-pulse phase — but at 2,700–3,200 cycles from T0 the period uncertainty alone is
+±0.04–0.05 in phase, comparable to the pulse window, so on/off-pulse assignment is no
+longer meaningful there. Cumulatively the 2026 epochs cover ~0.47 of phase; if the source
+still pulsed at mid-2024 strength the expected number of on-pulse catches is ~0.9, so zero
+catches is unremarkable (p ≈ 0.4). The honest statement is a set of ~1.5 mJy (3σ, 12-min)
+limits at unknown phases, consistent with — but not proof of — the continued decay the
+discovery paper reported.
+
+**GATE-0 caveat before any paper claim:** a novelty pass is required — a post-Jan-2025
+timing or follow-up paper could have reported these VAST epochs. Check
+citations of Lee et al. 2025 (NatAs) and any ASKAP J1839−0756 arXiv listings before
+writing "unpublished" anywhere refereed.
+
+
+## Unreleased-SBID adjudication + VAST section in the paper (2026-08-15)
+
+The 107 "failed" VAST epochs are not failures: every sampled one has a NULL
+`obs_release_date` in obscore (never publicly released — likely failed VAST QC), while
+every successful epoch has a release date. The CSV rows are reclassified
+`unreleased:` (and deduped to one row per epoch) so the resume logic stops retrying them
+and the census denominator is explicit: 966 = 647 measured + 212 off-mosaic + 107
+unreleased.
+
+The reduction is now code, not prose: `lptv.summarize_vast` (+ `fold_phase` with the
+published ephemeris constants and their provenance documented in the module) is tested
+(98% module coverage) and writes `results/lptv_vast_metrics.json`, which reproduces the
+hand analysis exactly. The paper gains a "The VAST extension" section carrying the two
+unreported J1839−0756 pulses (interpulse at phase 0.489±0.004; main-type at 0.951±0.006),
+the published-epoch recoveries (J1832−0911, J1755−2527 — the latter its discovery
+observation and PEPOCH, the fourth instance of the pattern), the 2026 phase-scrambling
+honesty (ephemeris ±0.04–0.05 by then; p≈0.4 for zero catches), and the GPM J1839−10
+Stokes-I cross-check. New refs: mcsweeney2025 (arXiv-verified), murphy2021
+(Crossref-verified). Abstract updated. Builds clean; triage clean.
+
+
+## Round-3 referee on the VAST section (2026-08-15) — major, applied same day
+
+Seventeen findings; the campaign's lesson held a THIRD consecutive time — the finding
+paragraph contained the errors. Everything applied:
+
+- **2026-epoch chain rebuilt self-consistently** (was: "fifteen epochs / coverage 0.47 /
+  expected 0.9 / p≈0.4" — four numbers, no two consistent, N actually 20). Now computed in
+  `summarize_vast` (`j1839_recent` block): 20 epochs, exposure window 0.03129, coverage
+  0.47, expected 0.63, p(0) = 0.53; fifteen of twenty have 3σ_V ≤ 1.5 mJy, the shallowest
+  reaches 3.0.
+- **DATE CORRECTION to the two earlier entries above:** the sweep's last epoch is MJD
+  61222.81 = **2026 July 1**, not "2026-08-05"/"through 2026-08" as written there. The
+  novelty argument survives (July 2026 epochs still postdate every published search) but
+  the date was wrong by a month in both the findings and the paper; both fixed.
+- **Phase errors now include the dominant terms**: period 0.004/0.006 + exposure smearing
+  0.009 + anchor 0.013 → ±0.016/0.017 total (`phase_err_total` in the metrics). The
+  interpulse match *improves*: 0.489 is 0.4σ from 0.496 at the honest error, vs a spurious
+  1.8σ tension at the quoted-precision error.
+- **Interpulse identification downgraded to CANDIDATE on primary-source polarization**: the
+  discovery paper's table gives interpulse V/I ≲ 10% (main 30–60%); our pulse is 18 ± 3% —
+  ~2.8σ above the interpulse band. Phase (0.4σ) and flux ratio (17.8%, inside their 10–20%
+  band) corroborate; the polarization tension is now stated in abstract and section.
+- **Novelty pass RUN and recorded** (closing the GATE-0 left open above): arXiv
+  title/abstract search (discovery paper only) + Semantic Scholar enumeration of all 26
+  works citing Lee et al. + full-text e-print search of the three plausible reporters
+  (VAST short-lived-transients sample 2604.11881, LPT review 2601.10393, LPT timing test
+  2604.11317) — no report of SBIDs 62032/62646 anywhere. Scope and limitations recorded in
+  `results/lptv_vast_adjudication.json`, which now also carries every published number the
+  section leans on (Lee SBID table, ephemeris provenance, Wang 1522 mJy, McSweeney PEPOCH).
+- 0.951-pulse honesty: the 19-min early arrival is 3.8× the anchor systematic and 11–23×
+  the published EQUAD — "exceeds the quoted systematics and is unexplained" (was "within
+  the anchor systematic", which was arithmetically false).
+- Trials correction stated (6.4σ local → 5.4σ global over 647 epochs); GPM J1839−10
+  relabelled a *purity* (leakage) cross-check, `<1.2σ` (max 1.121); "966 public epochs"
+  wording fixed; per-source yield stated (J1839: 44/92); off-mosaic wording softened
+  (cause not recorded per row); conclusion sentence now includes the VAST pulses; "census"
+  disambiguated to "RACS census"; leakage veto now scales with |I| (was max(I,0) — collapsed
+  for negative I); off-mosaic counted explicitly, not by subtraction; boundary tests added
+  (4.9σ vs 5.1σ, leakage edge, negative-I, non-integer-cycle fold);
+  `lptv_vast_real.py --summarize` regenerates the metrics JSON (was orphaned).
+- Bib: lee2025 completed (NatAs 9, 393–405, doi:10.1038/s41550-024-02452-z — DOI taken from
+  a citing paper's bibliography and Crossref-verified, not constructed); mcsweeney2025 →
+  MNRAS 542, 203–214; hurleywalker2023 author order corrected (Rea was missing, Bahramian
+  wrongly present).
+
+Still open (acceptable for merge, flagged for pre-submission): \lvVast* macros — the
+section's numbers are still hand-transcribed from the committed JSON; macro-generation is
+the durable fix and should land before this paper enters the submission queue. An ADS
+full-text search (needs API key) would strengthen the novelty pass further.

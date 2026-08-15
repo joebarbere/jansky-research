@@ -7,6 +7,31 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Fixed
+- `lptv` round-3 referee (VAST section): 2026-epoch chain recomputed self-consistently in
+  code (20 epochs, p=0.53); phase errors include exposure smearing + anchor (±0.016);
+  interpulse claim downgraded to candidate on the published V/I tension; novelty pass run
+  and recorded with all section evidence in `results/lptv_vast_adjudication.json`; sweep
+  end date corrected (2026 July, not August); leakage veto |I| guard; boundary tests;
+  three bib entries completed/corrected (lee2025, mcsweeney2025, hurleywalker2023).
+
+### Fixed
+- `lptv` detection provenance: all three census detections adjudicated against their
+  discovery papers' e-prints — each is an epoch the discovery paper already reported
+  (J1745's SBID 20398 discovery-search epoch; J1651's single archival detection of
+  2024-11-21; J1839's discovery observation). Paper reframed: zero new detections, three
+  validated re-measurements (`results/lptv_detection_provenance.json`).
+
+### Added
+- `lptv.summarize_vast` + `fold_phase` (tested): VAST-sweep reduction with per-detection
+  pulse phases on the published J1839-0756 ephemeris; paper gains a VAST-extension section
+  reporting two pulses absent from the discovery paper's observation table (one at
+  interpulse phase 0.489±0.004), with unreleased-SBID bookkeeping (107 epochs never
+  publicly released, verified via obscore) and the honest 2026 phase-scrambling caveat.
+- `scripts/lptv_vast_real.py`: VAST-collection extension of the lptv forced-V sweep
+  (12-min epochs, ~966 across 10 covered sources; full-precision epoch MJDs and per-row
+  durations, fixing the round-2 timestamp-quantization finding).
+
+### Fixed
 - `lptv` round-2 referee pass (major): rescoped negative recomputed from the forced CSV
   (median I/sigma = -0.14, no |V|/I constraint on non-detections — the 1.9 / 49–114% figures
   traced to the superseded peak-search data); J165130.3 promotion re-based on locked-pixel

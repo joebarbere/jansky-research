@@ -1,0 +1,55 @@
+{
+  "_comment": "Committed evidence for the two VAST-sweep detections of ASKAP J183950.5-075635 (SBIDs 62032, 62646) and the published-epoch recoveries in the same sweep. Same shape as lptv_detection_provenance.json. All quoted numbers transcribed 2026-08-15 from the papers' arXiv e-print sources.",
+  "lee_observation_table": {
+    "source": "arXiv:2501.09133 (lee2025), observation table",
+    "askap_sbids": [57929, 58387, 58609, 58753, 59605, 60091, 63296, 64280, 64328, 64345],
+    "askap_dates_utc": ["2024-01-26", "2024-02-01", "2024-02-03", "2024-02-06", "2024-02-29", "2024-03-15", "2024-06-26", "2024-07-30", "2024-08-02", "2024-08-03"],
+    "other": "MeerKAT 2024-02-18 (two bands); ATCA 2024-04-29, 2024-06-02, 2024-06-15 (no SBIDs)",
+    "gap_note": "No ASKAP observation between 2024-03-15 (SBID 60091) and 2024-06-26 (SBID 63296). SBIDs 62032 (2024-05-03) and 62646 (2024-06-07) fall in that gap and appear nowhere in the table."
+  },
+  "lee_ephemeris_and_pulse_properties": {
+    "period_s": 23221.740,
+    "period_err_s": 0.332,
+    "t0_mjd": 60358.245243,
+    "t0_provenance": "de-dispersed sub-pulse at 2024-02-18 05:53:09 UTC, described as 'near the centre of the full pulse'; anchor systematic ~ +/-0.013 in phase for a ~10-min pulse",
+    "interpulse_phase": 0.496,
+    "interpulse_phase_provenance": "'roughly 3.2 hours after the main pulse' / 3.2 h / 6.45 h; arrival times of the weaker pulses 'fluctuate'",
+    "interpulse_flux_fraction": "10-20% of main-pulse flux (paper prose)",
+    "interpulse_circular_fraction": "<~10% (source-parameter table); prose: '90% linearly polarised with negligible circular polarisation'",
+    "main_pulse_circular_fraction": "30-60% (source-parameter table); prose average 40%",
+    "timing_jitter": "EQUAD_MP = 50 s, EQUAD_IP = 100 s (Methods); main-pulse durations 320-710 s"
+  },
+  "detection_sbid_62032": {
+    "census_row": {"obs_id": "ASKAP-62032", "mjd_mid": 60433.90121, "i_mjy": 12.161, "v_mjy": 2.134, "v_sigma": 6.4, "v_over_i": 0.18},
+    "phase": 0.4895,
+    "phase_err_total": 0.0163,
+    "phase_err_terms": {"period": 0.004, "anchor": 0.013, "exposure_smearing": 0.009},
+    "trials_note": "6.43 sigma local; two-sided p = 1.28e-10 x 647 measured epochs = 8.3e-8 = 5.4 sigma global",
+    "interpulse_consistency": {
+      "phase": "0.4895 +/- 0.0163 vs 0.496: 0.4 sigma -- consistent",
+      "flux_ratio": "12.161/68.223 = 17.8% of the SBID-62646 pulse, inside the published 10-20% interpulse band (both are 12-min averages of different epochs, not a clean per-pulse ratio)",
+      "polarization_tension": "18 +/- 3% circular vs the published interpulse <~10% (and below the main-pulse 30-60%): ~2.8 sigma above the interpulse band. The identification is therefore reported as a CANDIDATE interpulse."
+    },
+    "artifact_exclusion": "V/I = 18% is 29x the 0.6% leakage floor; the same position gives |V| < 1 sigma in 43 other measured VAST epochs (not a standing instrumental term); no I-catalogue source > 4 mJy within 2 arcmin and no blind-V source within 60 arcsec (lptv_j183950_adjudication.json)"
+  },
+  "detection_sbid_62646": {
+    "census_row": {"obs_id": "ASKAP-62646", "mjd_mid": 60468.69664, "i_mjy": 68.223, "v_mjy": 24.35, "v_sigma": 18.9, "v_over_i": 0.36},
+    "phase": 0.9512,
+    "phase_err_total": 0.0169,
+    "toa_offset": "0.0488 in phase = 18.9 min before the nominal ToA: 3.8x the anchor systematic and 11-23x the published EQUAD -- exceeds the quoted systematics; unexplained",
+    "polarization": "36% circular, inside the published main-pulse 30-60% band"
+  },
+  "published_epoch_recoveries": {
+    "askap_j1832_0911_sbid_60804": "in the Wang et al. campaign table: 2024-04-04 22:03:15, ASKAP, 12 min, peak 1522 +/- 4 mJy; our 250 mJy is the 12-min average (arXiv:2411.16606, wang2025)",
+    "askap_j1755_2527_sbid_47253": "labelled 'original discovery' in the McSweeney et al. observation table; timing PEPOCH = MJD 59965.03792 +/- 0.00003 (arXiv:2507.14448, mcsweeney2025, MNRAS 542, 203)"
+  },
+  "novelty_pass_2026_08_15": {
+    "method": [
+      "arXiv API title/abstract/comment search for 'J1839-0756' and 'J183950.5-075635': only the discovery paper (2501.09133)",
+      "Semantic Scholar citations of 2501.09133: 26 citing works enumerated",
+      "full-text e-print search of the three plausible reporters -- 2604.11881 (ASKAP VAST short-lived transients sample), 2601.10393 (LPT comprehensive review), 2604.11317 (LPT timing test): no mention of SBIDs 62032/62646 or any new J1839-0756 epoch; the review's J1839-0756 content cites only the discovery paper; the other two mention only GPM J1839-10"
+    ],
+    "limitations": "arXiv 'all:' search does not cover full text of non-citing papers; ADS full-text search not run (no API key in this environment). Scope is stated in the paper text.",
+    "verdict": "No report of these epochs found as of 2026-08-15."
+  }
+}
