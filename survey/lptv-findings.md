@@ -379,3 +379,54 @@ observation and PEPOCH, the fourth instance of the pattern), the 2026 phase-scra
 honesty (ephemeris ±0.04–0.05 by then; p≈0.4 for zero catches), and the GPM J1839−10
 Stokes-I cross-check. New refs: mcsweeney2025 (arXiv-verified), murphy2021
 (Crossref-verified). Abstract updated. Builds clean; triage clean.
+
+
+## Round-3 referee on the VAST section (2026-08-15) — major, applied same day
+
+Seventeen findings; the campaign's lesson held a THIRD consecutive time — the finding
+paragraph contained the errors. Everything applied:
+
+- **2026-epoch chain rebuilt self-consistently** (was: "fifteen epochs / coverage 0.47 /
+  expected 0.9 / p≈0.4" — four numbers, no two consistent, N actually 20). Now computed in
+  `summarize_vast` (`j1839_recent` block): 20 epochs, exposure window 0.03129, coverage
+  0.47, expected 0.63, p(0) = 0.53; fifteen of twenty have 3σ_V ≤ 1.5 mJy, the shallowest
+  reaches 3.0.
+- **DATE CORRECTION to the two earlier entries above:** the sweep's last epoch is MJD
+  61222.81 = **2026 July 1**, not "2026-08-05"/"through 2026-08" as written there. The
+  novelty argument survives (July 2026 epochs still postdate every published search) but
+  the date was wrong by a month in both the findings and the paper; both fixed.
+- **Phase errors now include the dominant terms**: period 0.004/0.006 + exposure smearing
+  0.009 + anchor 0.013 → ±0.016/0.017 total (`phase_err_total` in the metrics). The
+  interpulse match *improves*: 0.489 is 0.4σ from 0.496 at the honest error, vs a spurious
+  1.8σ tension at the quoted-precision error.
+- **Interpulse identification downgraded to CANDIDATE on primary-source polarization**: the
+  discovery paper's table gives interpulse V/I ≲ 10% (main 30–60%); our pulse is 18 ± 3% —
+  ~2.8σ above the interpulse band. Phase (0.4σ) and flux ratio (17.8%, inside their 10–20%
+  band) corroborate; the polarization tension is now stated in abstract and section.
+- **Novelty pass RUN and recorded** (closing the GATE-0 left open above): arXiv
+  title/abstract search (discovery paper only) + Semantic Scholar enumeration of all 26
+  works citing Lee et al. + full-text e-print search of the three plausible reporters
+  (VAST short-lived-transients sample 2604.11881, LPT review 2601.10393, LPT timing test
+  2604.11317) — no report of SBIDs 62032/62646 anywhere. Scope and limitations recorded in
+  `results/lptv_vast_adjudication.json`, which now also carries every published number the
+  section leans on (Lee SBID table, ephemeris provenance, Wang 1522 mJy, McSweeney PEPOCH).
+- 0.951-pulse honesty: the 19-min early arrival is 3.8× the anchor systematic and 11–23×
+  the published EQUAD — "exceeds the quoted systematics and is unexplained" (was "within
+  the anchor systematic", which was arithmetically false).
+- Trials correction stated (6.4σ local → 5.4σ global over 647 epochs); GPM J1839−10
+  relabelled a *purity* (leakage) cross-check, `<1.2σ` (max 1.121); "966 public epochs"
+  wording fixed; per-source yield stated (J1839: 44/92); off-mosaic wording softened
+  (cause not recorded per row); conclusion sentence now includes the VAST pulses; "census"
+  disambiguated to "RACS census"; leakage veto now scales with |I| (was max(I,0) — collapsed
+  for negative I); off-mosaic counted explicitly, not by subtraction; boundary tests added
+  (4.9σ vs 5.1σ, leakage edge, negative-I, non-integer-cycle fold);
+  `lptv_vast_real.py --summarize` regenerates the metrics JSON (was orphaned).
+- Bib: lee2025 completed (NatAs 9, 393–405, doi:10.1038/s41550-024-02452-z — DOI taken from
+  a citing paper's bibliography and Crossref-verified, not constructed); mcsweeney2025 →
+  MNRAS 542, 203–214; hurleywalker2023 author order corrected (Rea was missing, Bahramian
+  wrongly present).
+
+Still open (acceptable for merge, flagged for pre-submission): \lvVast* macros — the
+section's numbers are still hand-transcribed from the committed JSON; macro-generation is
+the durable fix and should land before this paper enters the submission queue. An ADS
+full-text search (needs API key) would strengthen the novelty pass further.

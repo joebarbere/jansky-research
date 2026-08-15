@@ -33,7 +33,7 @@ circular, $21.6\sigma$); ASKAP J165130.3$-$450520 in the one archival epoch its 
 paper reports (3.6~mJy, $67\%$ circular at $11.9\sigma$ vs their $\sim$4~mJy, $\sim$60\%);
 and ASKAP J183950.5$-$075635 in its discovery observation itself ($40\%$ circular vs the
 published 37\%) --- the latter formerly mis-vetoed as confusion by the earlier peak search.
-The census therefore contains zero new detections; the recoveries are an end-to-end
+The RACS census therefore contains zero new detections; the recoveries are an end-to-end
 validation of the locked photometry on real LPT pulses spanning 3.6--164~mJy. All other epochs and sources are limits (median best-epoch $3\sigma$ limit
 \lvRealMedianVLimit\,mJy; per-epoch median 0.73~mJy). All three signals are single-epoch
 burst states. The non-detections are limits on circularly polarized \emph{flux}, not on
@@ -45,10 +45,13 @@ detections: two are again published epochs (ASKAP J1832$-$0911 in its observing 
 ASKAP J1755$-$2527 in its discovery observation) --- and two are pulses of ASKAP
 J183950.5$-$075635 absent from its discovery paper's observation table, in the gap between
 that campaign's 2024 March and June pointings. On the published ephemeris one falls at
-pulse phase $0.489 \pm 0.004$ --- the \emph{interpulse} window --- at 18\% circular
-polarization; the other, main-pulse-like (36\% circular), at $0.951 \pm 0.006$. To our
-knowledge these are unreported, and the former is the first interpulse of this source
-captured in survey imaging. RACS and VAST snapshots catch LPT pulses with their circular
+pulse phase $0.489 \pm 0.016$ --- the \emph{interpulse} window --- with a flux ratio to
+the other pulse (18\%) inside the published interpulse band, though its circular fraction
+($18 \pm 3\%$) sits above the published interpulse range ($\lesssim$10\%): a
+\emph{candidate} interpulse, the first at interpulse phase in ASKAP imaging to our
+knowledge. The other, main-pulse-like (36\% circular, inside the published 30--60\%
+band), falls at $0.951 \pm 0.017$. A search of the works citing the discovery paper finds
+no report of either epoch. RACS and VAST snapshots catch LPT pulses with their circular
 polarization intact; the uniform V-limit table, the validated recoveries, the two new
 J1839$-$0756 pulses, and the reusable vetted machinery are the deliverable.
 \end{abstract}
@@ -198,7 +201,7 @@ among the non-detections at $<$0.41~mJy: a flux non-recovery, not a polarization
 What the census does establish is that RACS snapshots \emph{can} catch LPT pulses with the
 burst-state circular polarization intact --- though every one of the three recoveries is of
 an epoch already reported by the corresponding discovery paper
-(\code{results/lptv\_detection\_provenance.json} collects the adjudications), so the census
+(\code{results/lptv\_detection\_provenance.json} collects the adjudications), so the RACS census
 demonstrates the method rather than adding detections. Because RACS integrates $\sim$15 min per field
 \citep{mcconnell2020}, a source active for a small fraction of its period is diluted by
 $\sim T/w$ even when strongly polarized in burst, and a limit on the snapshot mean is $T/w$
@@ -210,19 +213,23 @@ the visits land at independent phases) --- for them a non-detection is the \emph
 outcome of an off-state and constrains little. Two follow-ons are immediate through the same
 pipeline: the fortnightly VAST epochs (Section~\ref{sec:vast}), and phase-resolved
 polarimetry of the burst windows which snapshot imaging cannot reach. The v3
-catalogue, the uniform V-limit table with its three validated recoveries, and the reusable
+catalogue, the uniform V-limit table with its three validated recoveries, the two new
+J1839$-$0756 pulses of the VAST extension (Section~\ref{sec:vast}), and the reusable
 vetted V machinery are the contribution.
 
 \section{The VAST extension}
 \label{sec:vast}
 RACS gives each position only $\sim$10 epochs; the VAST survey \citep{murphy2021} monitors
 its fields roughly fortnightly with 12-min integrations and publishes Stokes V under the
-same product conventions, so the identical forced photometry extends directly. We swept all
-966 public VAST I$+$V epochs covering the sample (10 of 16 LPTs are in the VAST footprint;
-MJD 59897--61223, i.e. through 2026 August): 647 measured, 212 where the position falls off
-the mosaic edge, and 107 scheduling blocks that CASDA has never publicly released (obscore
-release date null, verified per SBID) --- the denominator is stated because a limit quoted
-over unreleased epochs would be a limit on nothing. Unlike the RACS sweep, epoch times are
+same product conventions, so the identical forced photometry extends directly. We swept the
+966 VAST I$+$V observations of the sample positions matched in the CASDA obscore (10 of 16
+LPTs are in the VAST footprint; MJD 59897--61223, i.e. through 2026 July): 647 measured,
+212 returning no valid photometry (the position falls outside the mosaic or in a blanked
+region --- the cause is not recorded per row), and 107 scheduling blocks that CASDA has
+never publicly released (obscore release date null, verified per SBID) --- the denominator
+is stated because a limit quoted over unreleased epochs would be a limit on nothing. The
+yield is source-dependent; for the source that matters most below, ASKAP
+J183950.5$-$075635, 44 of its 92 VAST pointings yielded a measurement. Unlike the RACS sweep, epoch times are
 recorded at full precision ($\sim$1\,s), so phase arithmetic against published ephemerides
 is possible from the committed CSV; sweep reduction is \code{lptv.summarize\_vast}
 (tested), output \code{results/lptv\_vast\_metrics.json}.
@@ -234,35 +241,57 @@ J1755$-$2527 at 25~mJy, 25\% circular, in SBID 47253 --- its discovery observati
 timing reference epoch \citep{mcsweeney2025}. The other two are pulses of ASKAP
 J183950.5$-$075635 that do \emph{not} appear in its discovery paper's observation table
 \citep{lee2025}: plain VAST survey epochs (SBIDs 62032 and 62646, 2024 May 3 and June 7)
-falling in the gap between that campaign's March 15 and June 26 pointings. Folding on the
+falling in the gap between that campaign's March 15 and June 26 pointings. The table's
+SBID list, the ephemeris provenance, and every published number this section leans on are
+recorded in \code{results/lptv\_vast\_adjudication.json}, alongside a novelty search
+(2026-08-15) --- an arXiv title/abstract search for the source and a full-text e-print
+check of the works citing \citet{lee2025} whose scope could include these epochs (a VAST
+transient sample, an LPT review, an LPT timing analysis) --- which finds no report of
+either epoch. Folding on the
 published ephemeris ($P = 23{,}221.740 \pm 0.332$~s; zero point the de-dispersed sub-pulse
 at MJD 60358.2452, an anchor good to $\pm$0.013 in phase since it is only ``near'' a
 main-pulse centre):
 
 \begin{itemize}
-\item SBID 62032: $I = 12.2$~mJy, $V = 2.1$~mJy (18\% circular, $6.4\sigma$) at phase
-$0.489 \pm 0.004$ --- the \emph{interpulse} window ($\approx$0.496). The discovery paper
-reports interpulses at 10--20\% of main-pulse flux and notes that none was detected in its
-own later ASKAP epochs; to our knowledge this is the first interpulse of this source
-captured in survey imaging.
-\item SBID 62646: $I = 68.2$~mJy, $V = 24.4$~mJy (36\% circular, $18.9\sigma$ ---
-main-pulse-like polarization) at phase $0.951 \pm 0.006$, i.e. arriving $\sim$19~min before
-the nominal ToA. That offset is large against the published timing jitter but within the
-anchor systematic plus the pulse-shape-driven ToA wander the discovery paper documents; we
-report the phase and do not interpret the offset further.
+\item SBID 62032: $I = 12.2$~mJy at $21\sigma$, $V = 2.1$~mJy (18\% circular; $6.4\sigma$
+locally, $5.4\sigma$ after the 647-epoch trials correction) at phase $0.489 \pm 0.016$
+(period term 0.004, exposure smearing 0.009, ephemeris-anchor systematic 0.013, in
+quadrature) --- $0.4\sigma$ from the interpulse window ($\approx$0.496, from the published
+``roughly 3.2 hours after the main pulse''). Two published properties corroborate and one
+is in tension: its flux ratio to the SBID-62646 pulse (17.8\%) sits inside the published
+10--20\% interpulse-to-main-pulse band (both being 12-min averages of different epochs,
+not a clean per-pulse ratio); the discovery paper notes no interpulse in its own later
+ASKAP epochs; but its circular fraction ($18 \pm 3\%$) is $\sim$2.8$\sigma$ above the
+published interpulse range ($\lesssim$10\%; main pulses 30--60\%). We therefore report a
+\emph{candidate} interpulse. Instrumental and confusion origins are excluded: 18\%
+circular is 29$\times$ the leakage floor, the same position gives $|V| < 1\sigma$ in the
+43 other measured VAST epochs, and the catalogue queries recorded in
+\code{results/lptv\_j183950\_adjudication.json} show no neighbour to confuse with.
+\item SBID 62646: $I = 68.2$~mJy, $V = 24.4$~mJy at $18.9\sigma$, with a circular fraction
+(36\%) inside the published main-pulse band (30--60\%), at phase $0.951 \pm 0.017$ ---
+i.e. 19~min before the nominal ToA. That offset is 3.8$\times$ the anchor systematic and
+11--23$\times$ the published timing jitter: it exceeds the quoted systematics and is
+unexplained. (The interpulse identification above does not lean on phase precision this
+model cannot support: 0.489 is $\sim$0.5 --- thirty times any plausible systematic ---
+from the nearest main pulse.)
 \end{itemize}
 
 The later epochs constrain less than they appear to: by 2026 the period uncertainty alone
 scrambles phase to $\pm$0.04--0.05, comparable to the on-pulse windows, so on/off-pulse
-assignment is no longer meaningful. The fifteen 2026 epochs are all consistent with zero
-($3\sigma \lesssim 1.5$~mJy per 12-min epoch), but their cumulative phase coverage is
-$\sim$0.47, so even at mid-2024 pulse strength the expected number of on-pulse catches is
-$\sim$0.9 and zero catches is unremarkable ($p \approx 0.4$): these are flux limits at
-unknown phase, consistent with --- not evidence of --- the published decay. Finally, GPM
+assignment is no longer meaningful. The twenty 2026 epochs are all consistent with zero in
+V (fifteen with $3\sigma_V \le 1.5$~mJy; the five shallowest reach 3.0~mJy), but each
+12.1-min epoch covers only 0.031 of the 6.45-h period, so their cumulative phase coverage
+is $1-(1-0.031)^{20} = 0.47$: even at mid-2024 pulse strength the expected number of
+on-pulse catches is $20 \times 0.031 = 0.63$ and zero catches has $p = 0.53$ (all three
+numbers from \code{lptv\_vast\_metrics.json}; the window is the exposure alone --- adding
+the pulse's own width would only make the null less surprising). These are flux limits at
+effectively random phase, consistent with --- not evidence of --- the published decay. Finally, GPM
 J1839$-$10 \citep{hurleywalker2023} is detected in Stokes~I at 5--31$\sigma$ in eight
-epochs spanning 2023--2026 August with $|V|$ always $<1.1\sigma$, consistent with its
-published low circular fraction --- a cross-check that the V non-detections elsewhere are
-not a sensitivity artefact.
+epochs spanning 2023 April to 2026 July with $|V|$ always $<1.2\sigma$, consistent with
+its published low circular fraction --- a \emph{purity} cross-check: a 31$\sigma$
+Stokes-I source producing no significant V confirms that I$\to$V leakage is not
+manufacturing detections at these positions (V \emph{sensitivity} is demonstrated by the
+four detections themselves).
 
 \textit{Reproducibility.} \code{jansky\_research.lptv} (catalogue + offline validation) $+$
 \code{scripts/lptv\_real.py} (the resumable CASDA V sweep). The catalogue-level numbers are

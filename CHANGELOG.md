@@ -7,6 +7,14 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Fixed
+- `lptv` round-3 referee (VAST section): 2026-epoch chain recomputed self-consistently in
+  code (20 epochs, p=0.53); phase errors include exposure smearing + anchor (±0.016);
+  interpulse claim downgraded to candidate on the published V/I tension; novelty pass run
+  and recorded with all section evidence in `results/lptv_vast_adjudication.json`; sweep
+  end date corrected (2026 July, not August); leakage veto |I| guard; boundary tests;
+  three bib entries completed/corrected (lee2025, mcsweeney2025, hurleywalker2023).
+
+### Fixed
 - `lptv` detection provenance: all three census detections adjudicated against their
   discovery papers' e-prints — each is an epoch the discovery paper already reported
   (J1745's SBID 20398 discovery-search epoch; J1651's single archival detection of

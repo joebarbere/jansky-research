@@ -285,12 +285,18 @@ def summarize_vast(
             "i_sigma": round(i / ei, 1) if ei > 0 else None,
             "v_sigma": round(abs(v) / ev, 1) if ev > 0 else None,
         }
-        if ev > 0 and abs(v) >= det_sigma * ev and abs(v) > LEAKAGE_FRAC * max(i, 0.0):
+        if ev > 0 and abs(v) >= det_sigma * ev and abs(v) > LEAKAGE_FRAC * abs(i):
             rec["v_over_i"] = round(abs(v) / i, 2) if i > 0 else None
             if J1839_NAME_FRAG in r["name"]:
                 ph, pe = fold_phase(mid)
+                dur = float(r.get("duration_s") or 0.0)
+                # exposure smearing: the pulse can sit anywhere in the integration
+                pe_exp = dur / J1839_PERIOD_S / np.sqrt(12.0)
                 rec["phase"] = round(ph, 4)
                 rec["phase_err_period"] = round(pe, 4)
+                rec["phase_err_total"] = round(
+                    float(np.sqrt(pe**2 + pe_exp**2 + J1839_T0_ANCHOR_PHASE_ERR**2)), 4
+                )
             dets.append(rec)
         elif ei > 0 and i / ei >= det_sigma:
             i_bright.append(rec)
@@ -308,14 +314,39 @@ def summarize_vast(
         for n, e in sorted(per.items())
     }
     mjds = [float(r["epoch_mjd"]) for r in good]
+    offmosaic = [
+        r
+        for r in rows
+        if not r["note"].startswith(("failed", "unreleased")) and r.get("i_mjy") in ("", "nan")
+    ]
+    # ASKAP J1839-0756 recent-epoch accounting (MJD >= 61041 = 2026-01-01): by then the
+    # published-period error alone scrambles phase to ~the on-pulse window, so these are
+    # flux limits at effectively random phase; quantify how unremarkable zero catches is.
+    recent = [r for r in good if J1839_NAME_FRAG in r["name"] and float(r["epoch_mjd"]) >= 61041.0]
+    j1839_recent = None
+    if recent:
+        durs = [float(r.get("duration_s") or 0.0) for r in recent]
+        w = float(np.median(durs)) / J1839_PERIOD_S
+        n = len(recent)
+        sig3_v = [3.0 * float(r["e_v"]) for r in recent]
+        j1839_recent = {
+            "n_epochs": n,
+            "n_deep_3sig_v_le_1p5": sum(1 for x in sig3_v if x <= 1.5),
+            "max_3sig_v_mjy": round(max(sig3_v), 2),
+            "epoch_window_phase": round(w, 5),
+            "cumulative_coverage": round(1.0 - (1.0 - w) ** n, 3),
+            "expected_onpulse_catches": round(n * w, 3),
+            "p_zero_catches": round((1.0 - w) ** n, 3),
+        }
     return {
         "n_rows": len(rows),
         "n_measured": len(good),
-        "n_offmosaic_nan": len(rows) - len(good) - len(unreleased) - len(failed),
+        "n_offmosaic_nan": len(offmosaic),
         "n_unreleased": len(unreleased),
         "n_failed": len(failed),
         "n_sources_covered": len(per_target),
         "mjd_range": [round(min(mjds), 1), round(max(mjds), 1)] if mjds else None,
+        "j1839_recent": j1839_recent,
         "v_detections": sorted(dets, key=lambda d: d["mjd_mid"]),
         "i_bright_epochs": sorted(i_bright, key=lambda d: d["mjd_mid"]),
         "per_target": per_target,

@@ -9,6 +9,15 @@
     59897.3,
     61222.8
   ],
+  "j1839_recent": {
+    "n_epochs": 20,
+    "n_deep_3sig_v_le_1p5": 15,
+    "max_3sig_v_mjy": 3.0,
+    "epoch_window_phase": 0.03129,
+    "cumulative_coverage": 0.47,
+    "expected_onpulse_catches": 0.626,
+    "p_zero_catches": 0.53
+  },
   "v_detections": [
     {
       "name": "ASKAP J175534.9-252749.1",
@@ -40,7 +49,8 @@
       "v_sigma": 6.4,
       "v_over_i": 0.18,
       "phase": 0.4895,
-      "phase_err_period": 0.004
+      "phase_err_period": 0.004,
+      "phase_err_total": 0.0163
     },
     {
       "name": "ASKAP J183950.5-075635",
@@ -52,7 +62,8 @@
       "v_sigma": 18.9,
       "v_over_i": 0.36,
       "phase": 0.9512,
-      "phase_err_period": 0.0059
+      "phase_err_period": 0.0059,
+      "phase_err_total": 0.0169
     }
   ],
   "i_bright_epochs": [

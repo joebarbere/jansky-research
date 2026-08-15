@@ -31,13 +31,14 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 
-from jansky_research.lptv import lpt_positions  # noqa: E402
-from jansky_research.stokesv import _casda_session  # noqa: E402
 from wdpulsar_real import (  # noqa: E402 - reuse the plan-41 CASDA sweep helpers
     complete_iv_groups,
     measure_group,
     obscore_products,
 )
+
+from jansky_research.lptv import lpt_positions  # noqa: E402
+from jansky_research.stokesv import _casda_session  # noqa: E402
 
 CASDA_TAP = "https://casda.csiro.au/casda_vo_tools/tap"
 CSV_PATH = REPO / "results" / "lptv_vast_epochs.csv"
@@ -73,7 +74,23 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="LPT Stokes-V forced photometry, VAST extension")
     ap.add_argument("--limit", type=int, default=0, help="limit targets (0 = all 16)")
     ap.add_argument("--csv", default=str(CSV_PATH))
+    ap.add_argument(
+        "--summarize",
+        action="store_true",
+        help="reduce the existing CSV to results/lptv_vast_metrics.json and exit (no network)",
+    )
     args = ap.parse_args()
+
+    if args.summarize:
+        import json
+
+        from jansky_research.lptv import summarize_vast
+
+        metrics = summarize_vast(args.csv)
+        out_json = REPO / "results" / "lptv_vast_metrics.json"
+        out_json.write_text(json.dumps(metrics, indent=2) + "\n")
+        print(f"wrote {out_json}", flush=True)
+        return 0
 
     import pyvo
 
