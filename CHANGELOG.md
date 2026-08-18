@@ -7,6 +7,13 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Added
+- `stylecorpus` (plan 89, Stage 1): scoping of the pre-LLM radio-astronomy literature
+  (1933–2021) for the `traditional-style` skill — `src/jansky_research/stylecorpus.py`
+  (era strata, ADS/arXiv query builders, stratified size sampler, bootstrap total-PDF-size
+  estimator; network runners no-cover), `scripts/style_corpus_scoping.py` (resumable CLI),
+  committed evidence in `results/stylecorpus_scoping.json` + `survey/stylecorpus-findings.md`.
+
+### Added
 - `papers/wdpulsar/rnaas.tex`: standalone RNAAS note (refereed; ~630 words) — the null
   census condensed with the control's true 2/5 efficiency attached to the f<6.1% bound.
 
