@@ -165,3 +165,15 @@ asserts a statistical property the note does not evidence). Both restored. Blind
 converted note chosen as the pre-2022 one; residuals judged period-plausible or
 load-bearing. Residual LOW: mean sentence length 32.6 vs genre p90 32.2, the restored
 caveat clause — accepted, science over style.
+
+**Correction (2026-08-18, same day):** the RNAAS section above initially claimed the
+published note carries no abstract. **Wrong for any current submission** — the journal
+made abstracts *required* on 2020-05-01 (current cap 1,500 words), verified against the
+RNAAS instructions when the wdpulsar submission decision actually depended on it. The
+error's mechanism is recorded for the skill: the qualitative sample was entirely
+2017–2018 (download order), and the quantitative `abstract_words` p50 = 0 aggregates
+across the policy break — measured split: 7% of pre-2020-05 notes have abstracts vs 88%
+after (median ~103 words when present). A genre baseline that spans a known policy
+change must be split at the change, and a submission-affecting convention should be
+checked against the venue's current instructions, not inferred from a historical corpus.
+Style-guide §8 and SKILL.md corrected; the wdpulsar note's 69-word abstract stays.

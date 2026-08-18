@@ -337,10 +337,14 @@ Lint with `prose_lint.py <paper> --file rnaas.tex --genre rnaas`.
 
 The genre is not a compressed paper; it is a different shape:
 
-- **Median 830 words (p90 1,480); no abstract** (p50 = 0 words; two corpus authors
-  comment theirs out). A short abstract survives in some arXiv postings (p90 = 132),
-  so keeping one under ~130 words is within genre norms for the preprint; the
-  published note will drop it.
+- **Median 830 words (p90 1,480). The abstract convention BROKE mid-corpus:** the
+  journal made abstracts *required* on 2020-05-01 (verified against the RNAAS
+  instructions, 2026-08-18; current word limit 1,500). Measured in our sample: 7% of
+  pre-2020-05 notes carry an abstract vs 88% after, median ~103 words when present
+  (p90 147). For any new or converted note: **abstract required, keep it ≲100–130
+  words**. Do not trust the aggregate `abstract_words` p50 = 0 in
+  `results/stylecorpus_rnaas.json` for this metric — it averages across the policy
+  break; all other metrics are unaffected by it.
 - **The title carries the verdict** ("TRAPPIST-1e HAS A LARGE IRON CORE"); the opener
   states one plain fact and the result arrives within the first paragraph. No
   pre-summary opening, no closing recap — notes stop on content.
