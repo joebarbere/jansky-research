@@ -17,6 +17,7 @@ from __future__ import annotations
 import os
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -447,3 +448,297 @@ def fetch_ads_pdf(bibcode: str, dest_dir: Path | None = None) -> Path | None:  #
         return None
     tmp.replace(target)
     return target
+
+
+# --------------------------------------------------------------------------------------
+# Stage 2: metadata harvest + stratified full-text sample (plan 89)
+# --------------------------------------------------------------------------------------
+
+#: ADS fields harvested for every corpus record (metadata leg is maximal).
+HARVEST_FIELDS = "bibcode,title,abstract,year,bibstem,keyword,doctype,author,identifier"
+
+_ARXIV_ID_PAT = re.compile(r"^arXiv:(.+)$|^(astro-ph/\d{7})$")
+
+
+def era_of(year: int) -> str | None:
+    """Era-stratum label for a publication year, or None outside the corpus."""
+    for era in ERAS:
+        if era.lo <= year <= era.hi:
+            return era.label
+    return None
+
+
+def arxiv_id_from_identifiers(identifiers: list[str]) -> str | None:
+    """Pull the arXiv id (e.g. ``2101.01234`` / ``astro-ph/9601001``) from an ADS record."""
+    for ident in identifiers:
+        m = _ARXIV_ID_PAT.match(ident)
+        if m:
+            return m.group(1) or m.group(2)
+    return None
+
+
+def write_jsonl_gz(records: list[dict], path: Path) -> int:
+    """Write records as gzipped JSON-lines (atomic); returns the byte size written."""
+    import gzip
+    import json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".part")
+    with gzip.open(tmp, "wt") as fh:
+        for rec in records:
+            fh.write(json.dumps(rec, sort_keys=True) + "\n")
+    tmp.replace(path)
+    return path.stat().st_size
+
+
+def read_jsonl_gz(path: Path) -> list[dict]:
+    """Read gzipped JSON-lines back into a list of records."""
+    import gzip
+    import json
+
+    with gzip.open(path, "rt") as fh:
+        return [json.loads(line) for line in fh if line.strip()]
+
+
+def stratified_pick(records: list[dict], n: int, *, seed: int = 0) -> list[dict]:
+    """Pick ``n`` records spread across journal (bibstem) x doctype cells.
+
+    Groups are visited round-robin in seeded-shuffled order, drawing one record
+    per visit, so no single journal or article type dominates a stratum. With
+    fewer than ``n`` records, everything is returned.
+    """
+    if len(records) <= n:
+        return list(records)
+    rng = np.random.default_rng(seed)
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for rec in records:
+        stems = rec.get("bibstem") or ["?"]
+        key = (str(stems[0]), str(rec.get("doctype", "?")))
+        groups.setdefault(key, []).append(rec)
+    ordered = [groups[k] for k in sorted(groups)]
+    for g in ordered:
+        rng.shuffle(g)
+    rng.shuffle(ordered)
+    picked: list[dict] = []
+    while len(picked) < n:
+        for g in ordered:
+            if g and len(picked) < n:
+                picked.append(g.pop())
+    return picked
+
+
+def ads_harvest(query: str, *, page: int = 2000) -> Iterator[dict]:  # pragma: no cover
+    """Yield every ADS record matching ``query`` (paginated; ~1 API call per 2000 rows)."""
+    import requests
+
+    headers = {"Authorization": f"Bearer {_ads_token()}"}
+    start = 0
+    while True:
+        params: dict[str, str | int] = {
+            "q": query,
+            "rows": page,
+            "start": start,
+            "fl": HARVEST_FIELDS,
+            "sort": "bibcode asc",
+        }
+        resp = requests.get(ADS_API, params=params, headers=headers, timeout=120)
+        resp.raise_for_status()
+        docs = resp.json()["response"]["docs"]
+        if not docs:
+            return
+        yield from docs
+        start += len(docs)
+
+
+def fetch_arxiv_source(
+    arxiv_id: str, dest_dir: Path | None = None
+) -> Path | None:  # pragma: no cover - network
+    """Download the arXiv e-print source bundle (LaTeX tar/gz; atomic, cached)."""
+    import time
+
+    import requests
+
+    dest_dir = dest_dir or (corpus_dir() / "arxiv_src")
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    safe = arxiv_id.replace("/", "_")
+    target = dest_dir / f"{safe}.eprint"
+    if target.exists():
+        return target
+    time.sleep(ARXIV_DELAY_S)
+    tmp = target.with_suffix(".part")
+    try:
+        url = f"https://export.arxiv.org/e-print/{arxiv_id}"
+        with requests.get(url, stream=True, allow_redirects=True, timeout=120) as resp:
+            if not resp.ok:
+                return None
+            with open(tmp, "wb") as fh:
+                for chunk in resp.iter_content(chunk_size=1 << 16):
+                    fh.write(chunk)
+    except requests.RequestException:
+        return None
+    tmp.replace(target)
+    return target
+
+
+# --------------------------------------------------------------------------------------
+# Stage 3a: quantitative style fingerprints (plan 89)
+# --------------------------------------------------------------------------------------
+
+#: Hedging / intensifier vocabulary characteristic of modern LLM-flavoured prose.
+HEDGE_WORDS: tuple[str, ...] = (
+    "crucially",
+    "notably",
+    "importantly",
+    "interestingly",
+    "remarkably",
+    "strikingly",
+    "delve",
+    "moreover",
+    "furthermore",
+    "additionally",
+    "in essence",
+    "it is worth noting",
+)
+
+#: Self-referential epistemics ("the paper talking about itself").
+SELF_REF_PHRASES: tuple[str, ...] = (
+    "this paper",
+    "this work",
+    "we note that",
+    "it should be noted",
+    "worth emphasising",
+    "worth emphasizing",
+)
+
+#: Direct reader address, rare in traditional journal prose.
+READER_PHRASES: tuple[str, ...] = ("the reader", "readers wanting", "readers should")
+
+_MATH_ENVS = ("equation", "align", "eqnarray", "displaymath", "gather")
+_DROP_ENVS = ("figure", "figure*", "table", "table*", "deluxetable", "deluxetable*",
+              "tabular", "thebibliography")
+
+
+def latex_section_titles(tex: str) -> list[str]:
+    """All ``\\section``/``\\subsection``/``\\subsubsection`` titles, in order."""
+    return [m.group(2) for m in re.finditer(r"\\(sub){0,2}section\*?\{([^{}]*)\}", tex)]
+
+
+def latex_abstract(tex: str) -> str | None:
+    """The abstract body, or None."""
+    m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, flags=re.DOTALL)
+    return m.group(1) if m else None
+
+
+def strip_latex(tex: str) -> str:
+    """Reduce LaTeX source to approximate running prose (heuristic, deterministic).
+
+    Comments, math, floats, bibliography, and non-text commands are removed;
+    emphasis/citation commands are unwrapped or replaced with placeholder tokens so
+    sentence structure survives. Good enough for rate statistics, not for reading.
+    """
+    s = re.sub(r"(?<!\\)%.*", "", tex)
+    for env in _DROP_ENVS + _MATH_ENVS:
+        s = re.sub(
+            rf"\\begin\{{{re.escape(env)}\}}.*?\\end\{{{re.escape(env)}\}}",
+            " ",
+            s,
+            flags=re.DOTALL,
+        )
+    s = re.sub(r"\$\$.*?\$\$", " MATH ", s, flags=re.DOTALL)
+    s = re.sub(r"\$[^$]*\$", " MATH ", s)
+    s = re.sub(r"\\cite[tp]?\*?(\[[^\]]*\])*\{[^{}]*\}", "REF", s)
+    s = re.sub(r"\\(label|ref|eqref|autoref|url|input|include|bibliography)\{[^{}]*\}", " ", s)
+    for _ in range(3):  # unwrap nested text commands
+        s = re.sub(r"\\(emph|textit|textbf|textsc|texttt|mbox|text)\{([^{}]*)\}", r"\2", s)
+    s = re.sub(r"\\(sub){0,2}section\*?\{[^{}]*\}", " ", s)
+    s = re.sub(r"\\begin\{[^{}]*\}|\\end\{[^{}]*\}", " ", s)
+    s = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])*(\{[^{}]*\})?", " CMD ", s)
+    s = re.sub(r"[{}~]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def split_sentences(prose: str) -> list[str]:
+    """Split prose into sentences (period/question/exclamation, abbreviation-tolerant)."""
+    guarded = re.sub(r"\b(e\.g|i\.e|cf|vs|et al|Fig|Sect|Eq|No|ca)\.", r"\1<DOT>", prose)
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z\\])", guarded)
+    return [p.replace("<DOT>", ".").strip() for p in parts if len(p.split()) >= 3]
+
+
+_PASSIVE_RE = re.compile(
+    r"\b(is|are|was|were|be|been|being)\s+(\w+ed|shown|given|taken|made|found|seen|known|"
+    r"chosen|drawn|held|kept|left|meant|put|set|built|done)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _per_kw(count: int, n_words: int) -> float:
+    return 1000.0 * count / max(n_words, 1)
+
+
+def fingerprint_prose(prose: str) -> dict[str, float]:
+    """Style metrics for plain running prose (rates per 1000 words unless noted)."""
+    low = prose.lower()
+    sentences = split_sentences(prose)
+    n_words = len(prose.split())
+    lengths = [len(s.split()) for s in sentences] or [0]
+    n_i = len(re.findall(r"\bI\b", prose))
+    return {
+        "n_words": float(n_words),
+        "n_sentences": float(len(sentences)),
+        "mean_sentence_words": float(np.mean(lengths)),
+        "median_sentence_words": float(np.median(lengths)),
+        "em_dash_per_kw": _per_kw(low.count("---") + low.count("\u2014"), n_words),
+        "first_singular_per_kw": _per_kw(n_i, n_words),
+        "we_per_kw": _per_kw(len(re.findall(r"\bwe\b", low)), n_words),
+        "passive_per_sentence": len(_PASSIVE_RE.findall(prose)) / max(len(sentences), 1),
+        "hedge_per_kw": _per_kw(sum(low.count(w) for w in HEDGE_WORDS), n_words),
+        "self_ref_per_kw": _per_kw(sum(low.count(p) for p in SELF_REF_PHRASES), n_words),
+        "reader_addr_per_kw": _per_kw(sum(low.count(p) for p in READER_PHRASES), n_words),
+        "rule_of_three": float(
+            bool(re.search(r"\bFirst\b.{1,600}\bSecond\b.{1,600}\b(Third|Finally)\b",
+                           prose, flags=re.DOTALL))
+        ),
+    }
+
+
+def fingerprint_latex(tex: str) -> dict[str, float]:
+    """Style metrics for a LaTeX paper: prose metrics + structural/formatting metrics."""
+    prose = strip_latex(tex)
+    out = fingerprint_prose(prose)
+    titles = latex_section_titles(tex)
+    abstract = latex_abstract(tex)
+    n_words = max(int(out["n_words"]), 1)
+    out.update({
+        "emph_per_kw": _per_kw(len(re.findall(r"\\emph\{", tex)), n_words),
+        "emph_sentence_start_per_kw": _per_kw(
+            len(re.findall(r"[.!?]\s+\\emph\{|\n\s*\\emph\{", tex)), n_words
+        ),
+        "itemize_envs": float(len(re.findall(r"\\begin\{(itemize|enumerate)\}", tex))),
+        "n_section_titles": float(len(titles)),
+        "section_title_mean_words": float(
+            np.mean([len(t.split()) for t in titles]) if titles else 0.0
+        ),
+        "abstract_words": float(
+            len(strip_latex(abstract).split()) if abstract is not None else 0.0
+        ),
+    })
+    return out
+
+
+def aggregate_fingerprints(
+    per_doc: list[dict[str, float]],
+    *,
+    percentiles: tuple[int, ...] = (10, 25, 50, 75, 90),
+) -> dict[str, dict[str, float]]:
+    """Per-metric percentiles across a set of document fingerprints."""
+    if not per_doc:
+        return {}
+    keys = sorted(set().union(*per_doc))
+    out: dict[str, dict[str, float]] = {}
+    for key in keys:
+        vals = np.asarray([d[key] for d in per_doc if key in d], dtype=float)
+        stats = {f"p{p}": float(np.percentile(vals, p)) for p in percentiles}
+        stats["mean"] = float(vals.mean())
+        stats["n"] = float(vals.size)
+        out[key] = stats
+    return out
