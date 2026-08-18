@@ -276,3 +276,51 @@ def test_aggregate_fingerprints_percentiles() -> None:
     assert agg["m"]["n"] == 100.0
     assert agg["m"]["mean"] == pytest.approx(50.5)
     assert sc.aggregate_fingerprints([]) == {}
+
+
+def test_lint_paper_flags_only_exceedances() -> None:
+    corpus = {
+        "em_dash_per_kw": {"p50": 0.0, "p90": 0.5},
+        "abstract_words": {"p50": 126.0, "p90": 260.0},
+        "rule_of_three": {"p50": 0.0, "p90": 0.0},
+    }
+    fp = {"em_dash_per_kw": 10.7, "abstract_words": 200.0, "rule_of_three": 1.0}
+    found = sc.lint_paper(fp, corpus)
+    kinds = {(sev, metric) for sev, metric, _ in found}
+    assert ("HIGH", "em_dash_per_kw") in kinds
+    assert ("MED", "rule_of_three") in kinds
+    assert not any(m == "abstract_words" for _, m, _ in found)  # under p90
+    assert sc.lint_paper({"em_dash_per_kw": 0.0}, corpus) == []
+
+
+def test_macro_names_from_tex() -> None:
+    tex = "\\newcommand{\\drFoo}{1.2}\n\\newcommand{\\drBar}{--}\n% \\newcommand{\\x}{y}\n"
+    assert sc.macro_names_from_tex(tex) == {"drFoo", "drBar", "x"}
+
+
+GUARD_TEX = r"""
+The fraction is \drFoo\% \citep{smith2020, jones1999} at 5 arcsec. % comment 7.7
+We measure \drFoo\ again and 3.14 twice: 3.14. \software{astropy \citep{astropy}}
+"""
+
+
+def test_guard_signature_counts() -> None:
+    sig = sc.guard_signature(GUARD_TEX, {"drFoo", "drBar"})
+    assert sig["macros"] == {"drFoo": 2}
+    assert sig["cites"]["smith2020"] == 1 and sig["cites"]["jones1999"] == 1
+    assert sig["numbers"]["3.14"] == 2 and sig["numbers"]["5"] == 1
+    assert "7.7" not in sig["numbers"]  # comments stripped
+    assert len(sig["software"]) == 1
+
+
+def test_compare_signatures_prose_only_edit_passes() -> None:
+    macros = {"drFoo", "drBar"}
+    before = sc.guard_signature(GUARD_TEX, macros)
+    reworded = GUARD_TEX.replace("We measure", "The survey yields")
+    assert sc.compare_signatures(before, sc.guard_signature(reworded, macros)) == []
+    broken = GUARD_TEX.replace("3.14 twice", "3.15 twice")
+    problems = sc.compare_signatures(before, sc.guard_signature(broken, macros))
+    assert any("3.14" in p for p in problems) and any("3.15" in p for p in problems)
+    dropped = GUARD_TEX.replace("\\drFoo\\ again", "it again")
+    problems = sc.compare_signatures(before, sc.guard_signature(dropped, macros))
+    assert any("drFoo" in p for p in problems)

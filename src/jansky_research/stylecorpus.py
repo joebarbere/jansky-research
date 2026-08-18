@@ -742,3 +742,87 @@ def aggregate_fingerprints(
         stats["n"] = float(vals.size)
         out[key] = stats
     return out
+
+
+# --------------------------------------------------------------------------------------
+# Stage 4: prose lint — score a paper against the corpus, and the prose-only diff guard
+# --------------------------------------------------------------------------------------
+
+#: (metric, severity, description) — flagged when the paper exceeds the corpus p90.
+#: Directions where our papers UNDERSHOOT the corpus (passive, "we") are not lintable
+#: defects; the style guide handles those.
+LINT_RULES: tuple[tuple[str, str, str], ...] = (
+    ("em_dash_per_kw", "HIGH", "em-dash rate"),
+    ("emph_per_kw", "HIGH", "\\emph rate"),
+    ("emph_sentence_start_per_kw", "HIGH", "\\emph-led sentence openers"),
+    ("rule_of_three", "MED", "First/Second/Third construction"),
+    ("reader_addr_per_kw", "MED", "direct reader address"),
+    ("self_ref_per_kw", "MED", "self-referential epistemics"),
+    ("abstract_words", "MED", "abstract length"),
+    ("hedge_per_kw", "LOW", "hedging/intensifier vocabulary"),
+    ("mean_sentence_words", "LOW", "mean sentence length"),
+    ("section_title_mean_words", "LOW", "section-title length"),
+)
+
+
+def lint_paper(
+    fp: dict[str, float], corpus_all: dict[str, dict[str, float]]
+) -> list[tuple[str, str, str]]:
+    """Findings (severity, metric, message) where ``fp`` exceeds the corpus p90."""
+    out = []
+    for metric, sev, label in LINT_RULES:
+        if metric not in fp or metric not in corpus_all:
+            continue
+        val, p90 = fp[metric], corpus_all[metric]["p90"]
+        if val > p90:
+            p50 = corpus_all[metric]["p50"]
+            out.append((sev, metric,
+                        f"{label}: {val:.2f} vs corpus p50={p50:.2f} p90={p90:.2f}"))
+    return out
+
+
+def macro_names_from_tex(macros_tex: str) -> set[str]:
+    """Names defined by ``\\newcommand{\\name}...`` in a generated macros file."""
+    return set(re.findall(r"\\newcommand\{\\([a-zA-Z]+)\}", macros_tex))
+
+
+def guard_signature(tex: str, macro_names: set[str]) -> dict[str, dict[str, int]]:
+    """The multisets a prose-only edit must not change.
+
+    Macro invocations (every generated-macro use), citation keys, numeric literals
+    in the comment-stripped source, and the ``\\software{}`` block content.
+    """
+    s = re.sub(r"(?<!\\)%.*", "", tex)
+
+    def count(items: list[str]) -> dict[str, int]:
+        out: dict[str, int] = {}
+        for it in items:
+            out[it] = out.get(it, 0) + 1
+        return out
+
+    macros = [m for m in re.findall(r"\\([a-zA-Z]+)\b", s) if m in macro_names]
+    cite_keys: list[str] = []
+    for args in re.findall(r"\\cite[tp]?\*?(?:\[[^\]]*\])*\{([^{}]*)\}", s):
+        cite_keys.extend(k.strip() for k in args.split(",") if k.strip())
+    numbers = re.findall(r"\d+\.?\d*", s)
+    software = re.findall(r"\\software\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}", s)
+    return {
+        "macros": count(macros),
+        "cites": count(cite_keys),
+        "numbers": count(numbers),
+        "software": count(software),
+    }
+
+
+def compare_signatures(
+    before: dict[str, dict[str, int]], after: dict[str, dict[str, int]]
+) -> list[str]:
+    """Human-readable differences; empty means the edit was prose-only."""
+    problems = []
+    for kind in sorted(set(before) | set(after)):
+        b, a = before.get(kind, {}), after.get(kind, {})
+        for key in sorted(set(b) | set(a)):
+            nb, na = b.get(key, 0), a.get(key, 0)
+            if nb != na:
+                problems.append(f"{kind}: {key!r} count {nb} -> {na}")
+    return problems
