@@ -96,11 +96,15 @@ def _has_fulltext(item: dict) -> bool:
 
 
 def phase_topup(selection: list[dict], seed: int) -> list[dict]:
-    """Replace selected papers whose full text is unavailable (mostly pre-1992 404s:
-    ADS never scanned e.g. Proc. Roy. Soc. or Science). Draws seeded replacements per
-    era until the target is met or the pool is dry; replacements are flagged
-    ``topup`` so the manifest records the induced drift toward scanned journals."""
+    """Replace selected papers whose full text is unavailable.
+
+    The primary selection round-robins over (journal x doctype) cells, which gives
+    the many tiny never-scanned venues equal weight with ApJ/MNRAS — measured
+    ~90% 404s in the pre-1992 strata. Replacements are therefore drawn from the
+    core-journal subset (where ADS scanned coverage is dense), flagged ``topup``,
+    and counted per era in the manifest so the induced drift is visible."""
     meta_dir = sc.corpus_dir() / "metadata" / "ads"
+    core = set(sc.BIBSTEMS)
     chosen = {s["bibcode"] for s in selection}
     for era in sc.ERAS:
         have = sum(1 for s in selection if s["era"] == era.label and _has_fulltext(s))
@@ -108,7 +112,7 @@ def phase_topup(selection: list[dict], seed: int) -> list[dict]:
             continue
         pool = [
             r for r in sc.read_jsonl_gz(meta_dir / f"{era.label}.jsonl.gz")
-            if r["bibcode"] not in chosen
+            if r["bibcode"] not in chosen and bool(core & set(r.get("bibstem") or []))
         ]
         round_no = 0
         while have < era.fulltext_target and pool:
