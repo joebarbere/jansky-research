@@ -10,6 +10,8 @@ Data-analysis agents added for this repo:
 - `dataset-analyst` — drives `jansky_research.pipeline` over a fetched public dataset.
 - `pipeline-runner` — operates the local Airflow-on-Podman stack.
 - `results-interpreter` — writes the honest results interpretation, flags overclaiming.
+- `style-editor` — converts one paper's prose to traditional pre-LLM journal style via the
+  `traditional-style` skill; Edit-capable, gate-running (diff-guard + lint + triage).
 
 Plus copies of the `jansky` course's reusable agents (kept here so they work without `../jansky`):
 `archive-scout` (data discovery), `radio-research-assistant` (literature synthesis),
@@ -26,6 +28,10 @@ Plus copies of the `jansky` course's reusable agents (kept here so they work wit
   whole publishing flow; complements `arxiv-submit`).
 - `find-radio-papers` — literature search (ADS/arXiv), ported from the course and adapted to cite
   this repo's `survey/`/`refs.bib` first.
+- `traditional-style` — convert/draft paper prose in pre-LLM journal style, derived from a
+  2,000-paper 1933–2021 corpus (plan 89); carries a `references/` subdir (style guide +
+  before/after) and `prose_lint.py` (corpus-percentile lint + prose-only `--diff-guard`).
+  Pairs with the `style-editor` agent.
 - `radio-source-lookup` — source/position profile (SIMBAD/NED + VizieR), ported and adapted to reuse
   this repo's `spectra`/`stokesv` fetchers and `spectra.spectral_index`.
 
