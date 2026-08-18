@@ -59,3 +59,46 @@ fetch one entry and read `opensearch:totalResults`; it also rate-limits aggressi
 (minutes-long bans), so all calls back off and the CLI checkpoints per era for `--resume`.
 The ADS scanned-article service intermittently 504s on individual old articles; a failed
 article is a lost sample point, not an abort.
+
+## Stage 2 — acquisition (2026-08-18)
+
+Metadata: all 113,829 records (title/abstract/keywords/doctype/identifiers) harvested to
+`data/style_corpus/metadata/ads/` (~58 MB gzipped). Full text: **all nine strata at their
+targets — 2,000 papers, 3.0 GB** (1,224 arXiv LaTeX source bundles + 1,018 ADS scanned
+PDFs). `results/stylecorpus_manifest.json` is the committed record.
+
+**Selection lesson.** The primary pick round-robins over (journal x doctype) cells, which
+gives the many tiny venues equal weight with ApJ/MNRAS — and those venues are exactly the
+ones with no ADS scans and no arXiv deposits, so the primary pass landed only 564/2,000
+full texts (measured ~90% 404s in pre-1992 strata; 24–40% arXiv-id coverage even in the
+modern strata). The top-up phase redraws from the core-journal subset until each target is
+met; every draw (3,887 total, 1,887 without retrievable full text) stays in the committed
+selection with a `topup` flag, so the induced drift toward mainstream journals is visible
+rather than silent. For a *style* corpus that drift is acceptable — mainstream journal
+prose is the population of interest.
+
+## Stage 3a — fingerprints: the corpus-vs-us delta (2026-08-18)
+
+`results/stylecorpus_fingerprints.json` (1,137 corpus LaTeX documents; scanned-era PDFs
+are covered qualitatively, not quantitatively) vs `results/stylecorpus_selfscan.json`
+(our 45 papers). Medians:
+
+| metric | corpus | ours |
+|---|---|---|
+| em-dashes / 1000 words | **0.00** | **10.66** |
+| `\emph{}` / 1000 words | 0.00 | 7.43 |
+| abstract length (words) | 126 | 247 |
+| self-reference / 1000 words | 0.43 | 2.24 |
+| mean sentence length (words) | 26.6 | 31.3 |
+| "we" / 1000 words | 6.88 | 5.30 |
+| passive constructions / sentence | 0.35 | 0.20 |
+
+The excesses (em-dash pivots, italics, double-length methodology-narrating abstracts,
+self-reference) are the AI tells; the *reversals* matter equally — traditional prose uses
+more passive voice, more "we", and a nonzero rate of plain connectives, all of which our
+prose eliminated and compensated for with typography. The median pre-LLM paper contains
+essentially zero em-dashes; ours average one every ~95 words.
+
+Qualitative era notes (Stage 3b): nine parallel full-read passes (~8 papers each,
+1933–2021) live in `data/style_corpus/stylenotes/`; their synthesis becomes the
+`traditional-style` skill's style guide.
