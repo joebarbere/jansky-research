@@ -39,6 +39,14 @@ For a whole-paper conversion, prefer delegating to the **style-editor** agent, w
 runs this procedure end-to-end; check `git status` afterwards regardless (a reviewer
 here once gutted a results JSON without editing a file).
 
+## RNAAS notes
+
+Notes are a different genre, with their own baseline (`results/stylecorpus_rnaas.json`,
+391 pre-LLM notes) and guide section (`references/style-guide.md` §8). Lint and guard with
+`prose_lint.py papers/<slice> --file rnaas.tex --genre rnaas` (and `--diff-guard`). Key
+deltas from papers: ~830-word median, no abstract in the published note (short one
+tolerable on arXiv), title carries the verdict, no closing recap, voice runs hotter.
+
 ## Drafting new prose
 
 Apply the guide from the start: open with the object/instrument ("We present <data>

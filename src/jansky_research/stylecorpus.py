@@ -840,3 +840,17 @@ def compare_signatures(
             if nb != na:
                 problems.append(f"{kind}: {key!r} count {nb} -> {na}")
     return problems
+
+
+# --------------------------------------------------------------------------------------
+# RNAAS extension: genre baseline for Research Notes of the AAS (plan 89 follow-on)
+# --------------------------------------------------------------------------------------
+
+#: RNAAS launched late 2017; moderated, not refereed — so the main corpus query's
+#: ``property:refereed`` excluded every note, and the genre needs its own baseline.
+RNAAS_FIRST_YEAR = 2017
+
+
+def rnaas_query(lo: int = RNAAS_FIRST_YEAR, hi: int = CUTOFF_YEAR - 1) -> str:
+    """ADS query for all pre-LLM RNAAS notes (deliberately NOT refereed-filtered)."""
+    return f"bibstem:RNAAS AND year:{lo}-{hi}"

@@ -108,17 +108,48 @@ def run_corpus(out: Path) -> None:
     _write(out, payload)
 
 
+def run_rnaas(out: Path) -> None:
+    """Genre baseline from the arXiv-deposited pre-LLM RNAAS notes (LaTeX sources).
+
+    Notes are ~600-1000 words, so the corpus run's 500-word floor would gut the
+    sample; the floor here is 150 stripped-prose words (enough for rate metrics).
+    """
+    root = sc.corpus_dir()
+    docs: list[dict[str, float]] = []
+    n_skipped = 0
+    for path in sorted((root / "rnaas_src").glob("*.eprint")):
+        tex = _eprint_tex(path)
+        if tex is None or len(sc.strip_latex(tex).split()) < 150:
+            n_skipped += 1
+            continue
+        docs.append(sc.fingerprint_latex(tex))
+    payload = {
+        "slice": "stylecorpus",
+        "stage": "rnaas-fingerprints",
+        "is_real": True,
+        "n_documents": len(docs),
+        "n_unreadable_or_short": n_skipped,
+        "source": "arXiv LaTeX sources of RNAAS notes, 2017-2021 (406 of 1,035 notes "
+        "carry an arXiv deposit; baseline is conditional on deposit)",
+        "all": sc.aggregate_fingerprints(docs),
+    }
+    _write(out, payload)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--selfscan", action="store_true")
     ap.add_argument("--corpus", action="store_true")
+    ap.add_argument("--rnaas", action="store_true")
     args = ap.parse_args(argv)
     if args.selfscan:
         run_selfscan(Path("results/stylecorpus_selfscan.json"))
     if args.corpus:
         run_corpus(Path("results/stylecorpus_fingerprints.json"))
-    if not (args.selfscan or args.corpus):
-        ap.error("pass --selfscan and/or --corpus")
+    if args.rnaas:
+        run_rnaas(Path("results/stylecorpus_rnaas.json"))
+    if not (args.selfscan or args.corpus or args.rnaas):
+        ap.error("pass --selfscan, --corpus, and/or --rnaas")
     return 0
 
 

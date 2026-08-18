@@ -140,3 +140,28 @@ fuller work list: 5 lint findings incl. a 392-word abstract). Gate sequence and 
 Deliberate deviations, recorded: "for the first time" now appears once (Introduction, in
 substance) rather than three times — a weakening, chosen not reverted. Abstract 392 → 276
 words (corpus p50 163, p90 273.4).
+
+## RNAAS extension (2026-08-18)
+
+The main corpus's `property:refereed` filter had excluded every RNAAS note (the journal
+is moderated, not refereed) — zero notes in the 2,000-paper corpus. Extension:
+all 1,035 pre-LLM notes' metadata harvested; the 406 with arXiv deposits downloaded as
+LaTeX source (405 landed); genre baseline committed as `results/stylecorpus_rnaas.json`
+(391 usable; **conditional on arXiv deposit** — possible drift toward more substantial
+notes, recorded here). Genre medians: 830 words, abstract length 0 (p90 132 — the
+published note has no abstract; a short one is arXiv-tolerable), section count 2,
+"we" 8.77/kw (hotter than papers' 7.53), em-dash p90 1.52/kw. Qualitative pass
+(13 notes, 2017–2018 only — sample-era caveat) in `data/style_corpus/stylenotes/rnaas.md`;
+distilled as style-guide §8. `prose_lint.py` gains `--file` and `--genre rnaas`.
+
+**wdpulsar RNAAS note converted** (submission-ready target): 2 HIGH lint findings → 0;
+diff-guard clean throughout, independently corroborated by the referee via word-frequency
+diff (zero digit/macro/cite token changes). Referee verdict *minor revision*, same shape
+as the fashienv pilot: two qualifier losses invisible to the multiset guard — the
+abstract's sensitivity caveat ("the duty-cycle caveat made concrete" carried bound-scope
+information its replacement lost) and "honest limit" → "valid limit" (the original word
+names the forced-photometry procedure and matches the cited driessen2024 framing; "valid"
+asserts a statistical property the note does not evidence). Both restored. Blind A/B:
+converted note chosen as the pre-2022 one; residuals judged period-plausible or
+load-bearing. Residual LOW: mean sentence length 32.6 vs genre p90 32.2, the restored
+caveat clause — accepted, science over style.

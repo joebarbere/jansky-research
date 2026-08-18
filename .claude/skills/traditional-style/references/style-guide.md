@@ -325,3 +325,32 @@ metrics — check for them by reading, after the linter is clean:
 The strip rules S1–S11 remove what the metrics see; this list is what a referee still smells.
 A conversion is done when a blind reader picks it as pre-2022 with at most a couple of these
 remaining.
+
+---
+
+## 8. RNAAS notes (genre addendum, 2026-08-18)
+
+Empirical basis: `results/stylecorpus_rnaas.json` (391 pre-LLM notes, 2017–2021, the
+arXiv-deposited subset of all 1,035 — baseline conditional on deposit) and
+`data/style_corpus/stylenotes/rnaas.md` (13 notes read in full; sample is 2017–2018).
+Lint with `prose_lint.py <paper> --file rnaas.tex --genre rnaas`.
+
+The genre is not a compressed paper; it is a different shape:
+
+- **Median 830 words (p90 1,480); no abstract** (p50 = 0 words; two corpus authors
+  comment theirs out). A short abstract survives in some arXiv postings (p90 = 132),
+  so keeping one under ~130 words is within genre norms for the preprint; the
+  published note will drop it.
+- **The title carries the verdict** ("TRAPPIST-1e HAS A LARGE IRON CORE"); the opener
+  states one plain fact and the result arrives within the first paragraph. No
+  pre-summary opening, no closing recap — notes stop on content.
+- **Structure**: often a single blank `\section{}` or 2 short sections (p50 = 2,
+  p90 = 5), 3–5 paragraphs, exactly one exhibit that carries the note, then
+  acknowledgments.
+- **Voice runs hotter than papers**: "we" p50 8.77/kw (papers 7.53), first-person
+  singular p90 2.73/kw — signed opinion and even exclamation marks ship. Hedges stay
+  local and graded; criticism is named with the arithmetic shown.
+- **Same hard zeros as papers**: em-dash p90 1.52/kw, `\emph` p90 2.46/kw, hedge
+  vocabulary p90 1.55/kw. No roadmaps, no signposting, no intensifiers.
+- Recurring note species, useful when drafting: correction, self-update, utility
+  list, proof-of-concept, small measurement.

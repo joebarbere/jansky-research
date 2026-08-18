@@ -29,18 +29,23 @@ sys.path.insert(0, str(REPO / "src"))
 
 from jansky_research import stylecorpus as sc  # noqa: E402
 
+BASELINES = {
+    "paper": "stylecorpus_fingerprints.json",
+    "rnaas": "stylecorpus_rnaas.json",
+}
+
 
 def _macro_names(paper: Path) -> set[str]:
     macros = paper / "generated" / "macros.tex"
     return sc.macro_names_from_tex(macros.read_text()) if macros.exists() else set()
 
 
-def run_lint(paper: Path) -> int:
-    corpus = json.loads((REPO / "results" / "stylecorpus_fingerprints.json").read_text())
-    fp = sc.fingerprint_latex((paper / "main.tex").read_text())
+def run_lint(paper: Path, tex_name: str, genre: str) -> int:
+    corpus = json.loads((REPO / "results" / BASELINES[genre]).read_text())
+    fp = sc.fingerprint_latex((paper / tex_name).read_text())
     findings = sc.lint_paper(fp, corpus["all"])
     if not findings:
-        print(f"{paper.name}: no style findings (corpus p90 clean)")
+        print(f"{paper.name}: no style findings ({genre}-baseline p90 clean)")
         return 0
     order = {"HIGH": 0, "MED": 1, "LOW": 2}
     for sev, metric, msg in sorted(findings, key=lambda f: order[f[0]]):
@@ -50,8 +55,8 @@ def run_lint(paper: Path) -> int:
     return 1 if n_high else 0
 
 
-def run_diff_guard(paper: Path) -> int:
-    rel = (paper / "main.tex").resolve().relative_to(REPO)
+def run_diff_guard(paper: Path, tex_name: str) -> int:
+    rel = (paper / tex_name).resolve().relative_to(REPO)
     head = subprocess.run(
         ["git", "-C", str(REPO), "show", f"HEAD:{rel.as_posix()}"],
         capture_output=True, text=True, check=True,
@@ -59,7 +64,7 @@ def run_diff_guard(paper: Path) -> int:
     names = _macro_names(paper)
     problems = sc.compare_signatures(
         sc.guard_signature(head, names),
-        sc.guard_signature((paper / "main.tex").read_text(), names),
+        sc.guard_signature((paper / tex_name).read_text(), names),
     )
     if not problems:
         print(f"{paper.name}: diff-guard clean (prose-only edit)")
@@ -74,10 +79,16 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("paper", type=Path, help="papers/<slice> directory")
     ap.add_argument("--diff-guard", action="store_true")
+    ap.add_argument("--file", default="main.tex",
+                    help="tex file within the paper dir (e.g. rnaas.tex)")
+    ap.add_argument("--genre", choices=sorted(BASELINES), default="paper",
+                    help="baseline to lint against (rnaas = the notes-genre percentiles)")
     args = ap.parse_args(argv)
-    if not (args.paper / "main.tex").exists():
-        ap.error(f"{args.paper}/main.tex not found")
-    return run_diff_guard(args.paper) if args.diff_guard else run_lint(args.paper)
+    if not (args.paper / args.file).exists():
+        ap.error(f"{args.paper}/{args.file} not found")
+    if args.diff_guard:
+        return run_diff_guard(args.paper, args.file)
+    return run_lint(args.paper, args.file, args.genre)
 
 
 if __name__ == "__main__":
