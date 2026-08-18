@@ -614,8 +614,16 @@ SELF_REF_PHRASES: tuple[str, ...] = (
 READER_PHRASES: tuple[str, ...] = ("the reader", "readers wanting", "readers should")
 
 _MATH_ENVS = ("equation", "align", "eqnarray", "displaymath", "gather")
-_DROP_ENVS = ("figure", "figure*", "table", "table*", "deluxetable", "deluxetable*",
-              "tabular", "thebibliography")
+_DROP_ENVS = (
+    "figure",
+    "figure*",
+    "table",
+    "table*",
+    "deluxetable",
+    "deluxetable*",
+    "tabular",
+    "thebibliography",
+)
 
 
 def latex_section_titles(tex: str) -> list[str]:
@@ -695,8 +703,13 @@ def fingerprint_prose(prose: str) -> dict[str, float]:
         "self_ref_per_kw": _per_kw(sum(low.count(p) for p in SELF_REF_PHRASES), n_words),
         "reader_addr_per_kw": _per_kw(sum(low.count(p) for p in READER_PHRASES), n_words),
         "rule_of_three": float(
-            bool(re.search(r"\bFirst\b.{1,600}\bSecond\b.{1,600}\b(Third|Finally)\b",
-                           prose, flags=re.DOTALL))
+            bool(
+                re.search(
+                    r"\bFirst\b.{1,600}\bSecond\b.{1,600}\b(Third|Finally)\b",
+                    prose,
+                    flags=re.DOTALL,
+                )
+            )
         ),
     }
 
@@ -708,20 +721,22 @@ def fingerprint_latex(tex: str) -> dict[str, float]:
     titles = latex_section_titles(tex)
     abstract = latex_abstract(tex)
     n_words = max(int(out["n_words"]), 1)
-    out.update({
-        "emph_per_kw": _per_kw(len(re.findall(r"\\emph\{", tex)), n_words),
-        "emph_sentence_start_per_kw": _per_kw(
-            len(re.findall(r"[.!?]\s+\\emph\{|\n\s*\\emph\{", tex)), n_words
-        ),
-        "itemize_envs": float(len(re.findall(r"\\begin\{(itemize|enumerate)\}", tex))),
-        "n_section_titles": float(len(titles)),
-        "section_title_mean_words": float(
-            np.mean([len(t.split()) for t in titles]) if titles else 0.0
-        ),
-        "abstract_words": float(
-            len(strip_latex(abstract).split()) if abstract is not None else 0.0
-        ),
-    })
+    out.update(
+        {
+            "emph_per_kw": _per_kw(len(re.findall(r"\\emph\{", tex)), n_words),
+            "emph_sentence_start_per_kw": _per_kw(
+                len(re.findall(r"[.!?]\s+\\emph\{|\n\s*\\emph\{", tex)), n_words
+            ),
+            "itemize_envs": float(len(re.findall(r"\\begin\{(itemize|enumerate)\}", tex))),
+            "n_section_titles": float(len(titles)),
+            "section_title_mean_words": float(
+                np.mean([len(t.split()) for t in titles]) if titles else 0.0
+            ),
+            "abstract_words": float(
+                len(strip_latex(abstract).split()) if abstract is not None else 0.0
+            ),
+        }
+    )
     return out
 
 
@@ -776,8 +791,7 @@ def lint_paper(
         val, p90 = fp[metric], corpus_all[metric]["p90"]
         if val > p90:
             p50 = corpus_all[metric]["p50"]
-            out.append((sev, metric,
-                        f"{label}: {val:.2f} vs corpus p50={p50:.2f} p90={p90:.2f}"))
+            out.append((sev, metric, f"{label}: {val:.2f} vs corpus p50={p50:.2f} p90={p90:.2f}"))
     return out
 
 
