@@ -433,15 +433,16 @@ def fetch_ads_pdf(bibcode: str, dest_dir: Path | None = None) -> Path | None:  #
         return target
     url = f"https://ui.adsabs.harvard.edu/link_gateway/{bibcode}/ADS_PDF"
     tmp = target.with_suffix(".part")
-    with requests.get(url, stream=True, allow_redirects=True, timeout=120) as resp:
-        if resp.status_code == 404:
-            return None
-        resp.raise_for_status()
-        ctype = resp.headers.get("content-type", "")
-        if "pdf" not in ctype:
-            return None
-        with open(tmp, "wb") as fh:
-            for chunk in resp.iter_content(chunk_size=1 << 16):
-                fh.write(chunk)
+    try:
+        with requests.get(url, stream=True, allow_redirects=True, timeout=120) as resp:
+            # Any failure (404 no fulltext, 5xx on the scanned-article service)
+            # means "this sample point is unavailable", not "abort the sweep".
+            if not resp.ok or "pdf" not in resp.headers.get("content-type", ""):
+                return None
+            with open(tmp, "wb") as fh:
+                for chunk in resp.iter_content(chunk_size=1 << 16):
+                    fh.write(chunk)
+    except requests.RequestException:
+        return None
     tmp.replace(target)
     return target
