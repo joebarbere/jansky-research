@@ -296,3 +296,32 @@ Fingerprint comparison (corpus "all", N=1137, vs selfscan aggregate, N=45):
   magnitude at point of use).
 - After any conversion: rebuild and run `uv run python scripts/triage_papers.py`; diff the
   PDF-extracted numbers against the pre-conversion build if in doubt.
+
+---
+
+## 7. Second-tier tells (found by the pilot's blind A/B, 2026-08-18)
+
+The fashienv pilot passed the mechanical lint (all fingerprint metrics under corpus p90) and
+still carried tells a blind judge caught. These are register-level, invisible to rate
+metrics — check for them by reading, after the linter is clean:
+
+- **Aphoristic X-not-Y antitheses.** "the limit is bias, not variance, and resampling cannot
+  see bias". Corpus form: state which, cite why, no epigram.
+- **"Headline result" and other blog/PR register.** Corpus papers rank results with "our main
+  result" or simply order them; "headline", "takeaway", "the punchline" never appear.
+- **Colon-pivot mini-sentences.** "The follow-on step is mechanical:", "We also flag a real
+  sensitivity:". Corpus form: "We note that ...", or just say the thing.
+- **Anthropomorphized methods as sentence subjects.** "The estimator has a known weakness
+  that this measurement runs into"; "what this measurement needs and does not yet have".
+  Corpus form: "The estimator is biased when ...", "a footprint mask is not available".
+- **Triads with a "not merely" flourish.** "from a different telescope, sky, and pipeline,
+  not merely a consistency check". Two items or an unadorned list.
+- **Frame-setting opener sentences.** "Two facts set the scope of this analysis." Open with
+  the first fact instead.
+- **Dev-speak in prose.** "a one-line change", "the leak", "pipeline" as agent. Say what the
+  operation is in astronomy terms.
+- **Litotes as understatement.** "so the leak is not small" — give the magnitude.
+
+The strip rules S1–S11 remove what the metrics see; this list is what a referee still smells.
+A conversion is done when a blind reader picks it as pre-2022 with at most a couple of these
+remaining.

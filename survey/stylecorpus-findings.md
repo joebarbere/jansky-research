@@ -106,3 +106,37 @@ essentially zero em-dashes; ours average one every ~95 words.
 Qualitative era notes (Stage 3b): nine parallel full-read passes (~8 papers each,
 1933–2021) live in `data/style_corpus/stylenotes/`; their synthesis becomes the
 `traditional-style` skill's style guide.
+
+## Stage 5 — pilot conversion: fashienv (2026-08-18)
+
+The style-editor agent converted `papers/fashienv/main.tex` (chosen over atlas3i for the
+fuller work list: 5 lint findings incl. a 392-word abstract). Gate sequence and outcomes:
+
+1. **diff-guard** — clean on every pass (macro/cite/number/`\software` multisets identical
+   to HEAD throughout; independently recomputed by the referee).
+2. **prose lint** — 5 findings (3 HIGH) → 1 MED. The residual MED is the abstract at 276
+   words vs the corpus p90 of 273.4: the three words are referee-mandated qualifiers
+   (below). **Science gates outrank style gates**; the excess is accepted and recorded.
+3. **triage** — 0/0/1 before and after (the LOW is pre-existing).
+4. **paper-referee round** — verdict *minor revision*: the agent's conversion was
+   multiset-clean yet NOT claim-neutral. Three MAJOR findings, all abstract qualifiers the
+   conversion deleted ("sample variance *across voids*"; the restrictive clause scoping
+   "robust"; the *group-specific* subject of the survivor-bias mechanism, plus "the more
+   massive" weakened to "only the most massive"), one added hedge ("fully independent"),
+   and relocation-induced ambiguities ("sky" contradiction, mock-vs-real α confusion).
+   All restored/fixed by hand. **Lesson: a prose-only guard over token multisets cannot
+   see a deleted qualifier — the referee round is a load-bearing gate for conversions,
+   not a formality.**
+5. **blind A/B, twice, fresh judges** — the converted version was chosen as the pre-2022
+   paper both times. Round 1 surfaced ten second-tier tells (aphoristic X-not-Y, "headline
+   result", colon-pivot mini-sentences, anthropomorphized estimators, dev-speak), now
+   §7 of the skill's style guide; all fixed. Round 2's residual list dropped to
+   content-bearing distinctions the referee requires (emphasis scoping, the upper-envelope
+   claim) plus three cheap fixes ("robust product" coinage, a superlative, "awaits"
+   personification), also applied. The plan's "≤2 residuals" bar was miscalibrated against
+   a judge instructed to enumerate up to 10 — the operative criterion is "chosen blind,
+   with no high-severity residuals", which round 2 meets.
+
+Deliberate deviations, recorded: "for the first time" now appears once (Introduction, in
+substance) rather than three times — a weakening, chosen not reverted. Abstract 392 → 276
+words (corpus p50 163, p90 273.4).
