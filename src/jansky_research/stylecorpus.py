@@ -135,10 +135,7 @@ def arxiv_radio_query(lo: int, hi: int) -> str:
     subcategories. The submittedDate window is [Jan 1 ``lo``, Jan 1 ``hi``+1).
     """
     abs_part = " OR ".join(f"abs:{t}" for t in RADIO_ABS_TERMS)
-    return (
-        f"cat:astro-ph* AND ({abs_part}) "
-        f"AND submittedDate:[{lo}01010000 TO {hi + 1}01010000]"
-    )
+    return f"cat:astro-ph* AND ({abs_part}) AND submittedDate:[{lo}01010000 TO {hi + 1}01010000]"
 
 
 _ATOM = "{http://www.w3.org/2005/Atom}"
@@ -328,9 +325,11 @@ def ads_sample_bibcodes(query: str, n: int, *, seed: int = 0) -> list[str]:  # p
         return []
     page = 200
     n_pages = max(1, -(-n * 2 // page))  # oversample 2x, then thin
-    starts = sorted(
-        int(s) for s in rng.choice(max(total - page, 1), size=n_pages, replace=False)
-    ) if total > page else [0]
+    starts = (
+        sorted(int(s) for s in rng.choice(max(total - page, 1), size=n_pages, replace=False))
+        if total > page
+        else [0]
+    )
     pool: list[str] = []
     for start in starts:
         params: dict[str, str | int] = {
@@ -383,9 +382,11 @@ def arxiv_sample_ids(query: str, n: int, *, seed: int = 0) -> list[str]:  # prag
         return []
     page = 100
     n_pages = max(1, -(-n * 2 // page))
-    starts = sorted(
-        int(s) for s in rng.choice(max(total - page, 1), size=n_pages, replace=False)
-    ) if total > page else [0]
+    starts = (
+        sorted(int(s) for s in rng.choice(max(total - page, 1), size=n_pages, replace=False))
+        if total > page
+        else [0]
+    )
     pool: list[str] = []
     for start in starts:
         pool.extend(parse_arxiv_ids(arxiv_get(query, start=start, max_results=page)))
