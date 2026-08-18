@@ -86,6 +86,67 @@ def phase_download(selection: list[dict]) -> None:
     print(f"download: complete — ok={done} failed={failed}")
 
 
+def _has_fulltext(item: dict) -> bool:
+    root = sc.corpus_dir()
+    if item["arxiv_id"]:
+        if (root / "arxiv_src" / f"{item['arxiv_id'].replace('/', '_')}.eprint").exists():
+            return True
+    safe = item["bibcode"].replace("/", "_").replace("&", "+")
+    return (root / "ads_pdf" / f"{safe}.pdf").exists()
+
+
+def phase_topup(selection: list[dict], seed: int) -> list[dict]:
+    """Replace selected papers whose full text is unavailable (mostly pre-1992 404s:
+    ADS never scanned e.g. Proc. Roy. Soc. or Science). Draws seeded replacements per
+    era until the target is met or the pool is dry; replacements are flagged
+    ``topup`` so the manifest records the induced drift toward scanned journals."""
+    meta_dir = sc.corpus_dir() / "metadata" / "ads"
+    chosen = {s["bibcode"] for s in selection}
+    for era in sc.ERAS:
+        have = sum(1 for s in selection if s["era"] == era.label and _has_fulltext(s))
+        if have >= era.fulltext_target:
+            continue
+        pool = [
+            r for r in sc.read_jsonl_gz(meta_dir / f"{era.label}.jsonl.gz")
+            if r["bibcode"] not in chosen
+        ]
+        round_no = 0
+        while have < era.fulltext_target and pool:
+            round_no += 1
+            want = era.fulltext_target - have
+            batch = sc.stratified_pick(pool, min(2 * want, len(pool)),
+                                       seed=seed + era.lo + 1000 * round_no)
+            batch_codes = {r["bibcode"] for r in batch}
+            pool = [r for r in pool if r["bibcode"] not in batch_codes]
+            for rec in batch:
+                if have >= era.fulltext_target:
+                    break
+                item = {
+                    "bibcode": rec["bibcode"],
+                    "era": era.label,
+                    "year": rec.get("year"),
+                    "bibstem": (rec.get("bibstem") or ["?"])[0],
+                    "doctype": rec.get("doctype"),
+                    "arxiv_id": sc.arxiv_id_from_identifiers(rec.get("identifier", [])),
+                    "topup": True,
+                }
+                ok = (
+                    sc.fetch_arxiv_source(item["arxiv_id"]) if item["arxiv_id"]
+                    else sc.fetch_ads_pdf(item["bibcode"])
+                )
+                selection.append(item)
+                chosen.add(item["bibcode"])
+                if ok is not None:
+                    have += 1
+        print(f"topup {era.label:>9}: fulltext {have}/{era.fulltext_target} "
+              f"(pool left {len(pool)})", flush=True)
+    sel_path = sc.corpus_dir() / "selection.json"
+    tmp = sel_path.with_suffix(".json.part")
+    tmp.write_text(json.dumps(selection, indent=1) + "\n")
+    tmp.replace(sel_path)
+    return selection
+
+
 def _dir_stats(d: Path, suffix: str) -> dict[str, int]:
     files = list(d.glob(f"*{suffix}")) if d.is_dir() else []
     return {"n": len(files), "bytes": sum(f.stat().st_size for f in files)}
@@ -105,6 +166,12 @@ def phase_manifest(selection: list[dict], seed: int) -> None:
             "selected": sum(1 for s in selection if s["era"] == era.label),
             "selected_with_arxiv_id": sum(
                 1 for s in selection if s["era"] == era.label and s["arxiv_id"]
+            ),
+            "topup_draws": sum(
+                1 for s in selection if s["era"] == era.label and s.get("topup")
+            ),
+            "with_fulltext": sum(
+                1 for s in selection if s["era"] == era.label and _has_fulltext(s)
             ),
         }
     have_src = {p.stem for p in (root / "arxiv_src").glob("*.eprint")}
@@ -140,7 +207,8 @@ def phase_manifest(selection: list[dict], seed: int) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--phase", choices=["harvest", "select", "download", "manifest", "all"],
+    ap.add_argument("--phase",
+                    choices=["harvest", "select", "download", "topup", "manifest", "all"],
                     default="all")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args(argv)
@@ -148,10 +216,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.phase in ("harvest", "all"):
         phase_harvest()
     selection: list[dict] = []
-    if args.phase in ("select", "download", "manifest", "all"):
+    if args.phase in ("select", "download", "topup", "manifest", "all"):
         selection = phase_select(args.seed)
     if args.phase in ("download", "all"):
         phase_download(selection)
+    if args.phase in ("topup", "all"):
+        selection = phase_topup(selection, args.seed)
     if args.phase in ("manifest", "all"):
         phase_manifest(selection, args.seed)
     return 0
