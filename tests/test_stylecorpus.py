@@ -177,8 +177,9 @@ def _fake_records(n_per_cell: int) -> list[dict]:
     for stem in ("ApJ", "MNRAS", "AJ"):
         for doctype in ("article", "letter"):
             for i in range(n_per_cell):
-                recs.append({"bibcode": f"{stem}-{doctype}-{i}", "bibstem": [stem],
-                             "doctype": doctype})
+                recs.append(
+                    {"bibcode": f"{stem}-{doctype}-{i}", "bibstem": [stem], "doctype": doctype}
+                )
     return recs
 
 
