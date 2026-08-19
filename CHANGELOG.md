@@ -11,6 +11,12 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- `frbstats`: annotate the repeater/one-off property dicts as `dict[str, np.ndarray]`.
+  A comprehension over literal keys infers `dict[Literal[...], ...]`, which dict
+  invariance rejects against `compare_populations`' parameter — an error mypy >=2.3
+  reports and 1.11 did not, and the only thing blocking the dev-tooling bump (#139).
+
+### Fixed
 - CI: the tectonic package bundle is now cached (`actions/cache` on `~/.cache/Tectonic`,
   rolling key) in both `paper.yml` and `release.yml`. Every run previously re-downloaded
   the whole bundle from `relay.fullyjustified.net`, which 429s under load — it failed the

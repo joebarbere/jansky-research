@@ -233,10 +233,13 @@ def summarise(catalog: dict[str, np.ndarray]) -> BurstStats:
         weibull = fit_weibull_waits(rep_mjd)
         n_sources = 1
     energy = fit_power_law(np.asarray(catalog["fluence"]), auto_xmin=True)
-    rep = {
+    # Annotated (rather than inferred) because a comprehension over literal keys infers
+    # dict[Literal[...], ...], which dict invariance then rejects against the
+    # dict[str, ndarray] parameter — an error mypy >=2.3 reports and 1.11 did not.
+    rep: dict[str, np.ndarray] = {
         k: np.asarray(catalog[k])[repeater_mask] for k in ("dm", "fluence", "width") if k in catalog
     }
-    one = {
+    one: dict[str, np.ndarray] = {
         k: np.asarray(catalog[k])[~repeater_mask]
         for k in ("dm", "fluence", "width")
         if k in catalog
