@@ -349,13 +349,35 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     if per_target is not None:
         metrics["per_target"] = per_target
         (op / "results" / "wdpulsar_table.json").write_text(json.dumps(per_target, indent=2) + "\n")
-    _figure(metrics, op / "papers" / "wdpulsar" / "figures")
+    _figure(
+        metrics,
+        op / "papers" / "wdpulsar" / "figures",
+        epochs_csv=op / "results" / "wdpulsar_realtargets.csv",
+    )
     _write_macros(metrics, op / "papers" / "wdpulsar" / "generated" / "macros.tex")
     _write_limits_table(metrics, op / "papers" / "wdpulsar" / "generated" / "limits_table.tex")
     return metrics
 
 
-def _figure(m: dict, out_dir: str | Path) -> None:
+def candidate_epoch_snr(epochs_csv: str | Path) -> np.ndarray:
+    """Forced Stokes-I significances I/sigma_I over the usable candidate epochs.
+
+    Reads the committed real-run CSV; control (AR Sco) rows are excluded so the
+    distribution is the blank-sky census the noise-symmetry check refers to.
+    """
+    import csv
+
+    with open(epochs_csv) as fh:
+        rows = list(csv.DictReader(fh))
+    vals = [
+        float(r["i_mjy"]) / float(r["e_i"])
+        for r in rows
+        if r.get("type") != "control" and r.get("i_mjy") and r.get("e_i") and float(r["e_i"]) > 0
+    ]
+    return np.asarray(vals)
+
+
+def _figure(m: dict, out_dir: str | Path, *, epochs_csv: str | Path | None = None) -> None:
     try:
         from .report import _agg
     except ImportError:  # pragma: no cover - minimal venvs
@@ -364,9 +386,23 @@ def _figure(m: dict, out_dir: str | Path) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.2, 3.8))
-    img_i, _img_v, _w = synthetic_cutout()
-    ax1.imshow(img_i, origin="lower", cmap="viridis")
-    ax1.set(title="injection fixture (Stokes I)", xlabel="pix", ylabel="pix")
+    if epochs_csv is not None and Path(epochs_csv).exists():
+        # Real data in the one allowed figure (referee suggestion, 2026-08-15):
+        # the forced-photometry noise-symmetry evidence, in place of the synthetic fixture.
+        snr = candidate_epoch_snr(epochs_csv)
+        ax1.hist(snr, bins=30, color="C0", density=True)
+        xs = np.linspace(-4, 4, 200)
+        ax1.plot(xs, np.exp(-(xs**2) / 2) / np.sqrt(2 * np.pi), "k--", lw=1)
+        ax1.axvline(0.0, color="0.5", lw=0.8)
+        ax1.set(
+            xlabel="forced $I/\\sigma_I$ per epoch",
+            ylabel="density",
+            title=f"candidate epochs (n={snr.size})",
+        )
+    else:
+        img_i, _img_v, _w = synthetic_cutout()
+        ax1.imshow(img_i, origin="lower", cmap="viridis")
+        ax1.set(title="injection fixture (Stokes I)", xlabel="pix", ylabel="pix")
     per = m.get("per_target") or []
     lims = [e["v_limit_mjy"] for e in per if e.get("v_limit_mjy") is not None]
     if lims:

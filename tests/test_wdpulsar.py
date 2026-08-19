@@ -176,3 +176,32 @@ def test_limits_table_empty_emits_placeholder(tmp_path):
     assert all(r.count("&") == 5 for r in rows)
     assert r"\multicolumn" not in txt
     assert "real-data build" in txt
+
+
+def test_candidate_epoch_snr_excludes_control_and_bad_rows(tmp_path):
+    csv_path = tmp_path / "epochs.csv"
+    csv_path.write_text(
+        "name,type,obs_id,band,epoch_mjd,i_mjy,e_i,v_mjy,e_v,offset_arcsec,note\n"
+        "J1,polar,A,mid,59000.0,0.5,0.25,0.0,0.1,1.0,\n"
+        "J2,polar,B,low,59001.0,-0.3,0.15,0.0,0.1,1.0,\n"
+        "AR Sco,control,C,mid,59002.0,4.0,0.4,0.0,0.1,1.0,\n"
+        "J3,polar,D,mid,59003.0,,,,,,all-NaN cutout\n"
+        "J4,polar,E,mid,59004.0,0.1,0.0,0.0,0.1,1.0,zero error\n"
+    )
+    snr = wd.candidate_epoch_snr(csv_path)
+    assert snr.tolist() == [2.0, -2.0]  # control, empty, and zero-error rows excluded
+
+
+def test_figure_real_left_panel_from_epochs_csv(tmp_path):
+    csv_path = tmp_path / "epochs.csv"
+    header = "name,type,obs_id,band,epoch_mjd,i_mjy,e_i,v_mjy,e_v,offset_arcsec,note\n"
+    rows = "".join(
+        f"J{i},polar,A{i},mid,59000.0,{0.1 * (i - 10):.2f},0.2,0.0,0.1,1.0,\n" for i in range(20)
+    )
+    csv_path.write_text(header + rows)
+    m = {"per_target": [{"v_limit_mjy": 0.4}, {"v_limit_mjy": 0.5}]}
+    wd._figure(m, tmp_path / "figs", epochs_csv=csv_path)
+    assert (tmp_path / "figs" / "wdpulsar.pdf").exists()
+    # absent CSV falls back to the synthetic fixture panel
+    wd._figure(m, tmp_path / "figs2", epochs_csv=tmp_path / "missing.csv")
+    assert (tmp_path / "figs2" / "wdpulsar.pdf").exists()
