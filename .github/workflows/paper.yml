@@ -24,7 +24,7 @@ jobs:
           uv sync --extra workflow --extra fdmt
           uv run --extra workflow snakemake -s workflow/Snakefile -j4
       - name: Install tectonic
-        uses: WtfJoke/setup-tectonic@v3
+        uses: WtfJoke/setup-tectonic@v4
       # tectonic fetches every LaTeX package and font from relay.fullyjustified.net on each
       # run. That relay 429s under load — it took out this workflow and `release` on
       # 2026-08-19, and flaked twice the day before — so the bundle is cached. After one
