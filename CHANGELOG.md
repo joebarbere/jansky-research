@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-19
+
 ### Changed
 - Papers restyled to traditional pre-LLM journal register via the `traditional-style` skill
   (batch 1: atlas3i main + RNAAS note, dr20radio, lptv, innerrc — the submission queue).
