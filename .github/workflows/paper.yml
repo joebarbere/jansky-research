@@ -15,7 +15,7 @@ jobs:
         with:
           path: jansky-research
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Generate every slice's figures + macros via the static-slice DAG (Snakemake, offline)
         working-directory: jansky-research
         env:
