@@ -19,6 +19,10 @@ recommend the next version number.
   compile step needs no network. Restore and save are split so the save runs on
   failure too — a 429-interrupted run still downloads part of the bundle, and keeping
   that partial cache lets successive runs converge instead of each starting cold.
+  The cached path is `~/.cache/tectonic` (lowercase; `~/.cache/Tectonic` is also listed
+  for older builds) — the first attempt named only the capitalised form, which cached
+  nothing while the step still reported success, because `actions/cache` logs a missing
+  path as a warning rather than an error.
 
 ## [1.7.0] - 2026-08-19
 
