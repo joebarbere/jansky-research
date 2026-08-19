@@ -36,6 +36,19 @@ jobs:
           uv run --extra workflow snakemake -s workflow/Snakefile -j4
       - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3
+      # See paper.yml: the upstream package relay 429s under load and has failed this
+      # workflow outright (v1.7.0's tag push). Cached bundle -> no network on the compile.
+      - name: Cache the tectonic package bundle
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Tectonic
+          # Rolling key: every run saves (picking up any newly-used package), and
+          # restore-keys pulls the most recent previous cache. Keying on the .tex files
+          # would be wrong — the bundle depends on which packages are used, not the prose,
+          # which changes constantly here.
+          key: tectonic-bundle-v33-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            tectonic-bundle-v33-${{ runner.os }}-
       - name: Compile every paper (main + any extra, e.g. an RNAAS note)
         working-directory: jansky-research
         run: |
