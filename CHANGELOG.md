@@ -10,6 +10,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- CI: the tectonic package bundle is now cached (`actions/cache` on `~/.cache/Tectonic`,
+  rolling key) in both `paper.yml` and `release.yml`. Every run previously re-downloaded
+  the whole bundle from `relay.fullyjustified.net`, which 429s under load — it failed the
+  `paper` and `release` workflows on 2026-08-19 (the v1.7.0 tag push, so the release had
+  to be created by hand) and flaked twice the day before. After one successful run the
+  compile step needs no network. Restore and save are split so the save runs on
+  failure too — a 429-interrupted run still downloads part of the bundle, and keeping
+  that partial cache lets successive runs converge instead of each starting cold.
+
 ## [1.7.0] - 2026-08-19
 
 ### Changed

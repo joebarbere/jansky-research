@@ -25,6 +25,24 @@ jobs:
           uv run --extra workflow snakemake -s workflow/Snakefile -j4
       - name: Install tectonic
         uses: WtfJoke/setup-tectonic@v3
+      # tectonic fetches every LaTeX package and font from relay.fullyjustified.net on each
+      # run. That relay 429s under load — it took out this workflow and `release` on
+      # 2026-08-19, and flaked twice the day before — so the bundle is cached. After one
+      # successful run the compile step needs no network at all. `restore-keys` lets a
+      # partial cache from an earlier run seed the next one rather than starting cold.
+      # Restore/save are split (rather than one `actions/cache`) so the save runs with
+      # `if: always()`. A combined step skips its post-save when the job fails, which is
+      # exactly the case that matters here: a 429-interrupted run still downloads part of
+      # the bundle, and keeping that partial cache lets successive runs converge instead
+      # of each starting cold. Rolling key — the bundle depends on which packages are
+      # used, not on the prose, so hashing the .tex files would be wrong.
+      - name: Restore the tectonic package bundle
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-bundle-v33-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            tectonic-bundle-v33-${{ runner.os }}-
       - name: Compile every paper (main + any extra, e.g. the RNAAS note)
         working-directory: jansky-research
         run: |
@@ -33,6 +51,12 @@ jobs:
             echo "==> building $tex"
             (cd "$(dirname "$tex")" && tectonic "$(basename "$tex")")
           done
+      - name: Save the tectonic package bundle (even on failure — partial is useful)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-bundle-v33-${{ runner.os }}-${{ github.run_id }}
       - name: Upload the PDFs
         uses: actions/upload-artifact@v4
         with:
