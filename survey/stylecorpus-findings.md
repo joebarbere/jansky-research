@@ -177,3 +177,55 @@ after (median ~103 words when present). A genre baseline that spans a known poli
 change must be split at the change, and a submission-affecting convention should be
 checked against the venue's current instructions, not inferred from a historical corpus.
 Style-guide §8 and SKILL.md corrected; the wdpulsar note's 69-word abstract stays.
+
+## Batch 1 — the four submission-queue papers + atlas3i note (2026-08-19)
+
+Converted on `style-batch-1`: atlas3i (main + rnaas), dr20radio, lptv, innerrc, by four
+parallel style-editor agents briefed on each paper's referee history. Mechanical gates
+clean on every file (diff-guard; lint 0 HIGH; triage unchanged). Referee rounds on all
+four: **every verdict "minor revision", and every paper needed one** — the pilot's
+failure class reproduced at scale. Highlights (all restored/fixed):
+
+- **atlas3i (MAJOR)**: the design-rediscovery claim diverged in strength between abstract
+  and body, and the body lost "forced", its evidential content ("arrives at the same
+  design, consistent with" is a sentence no observation could contradict).
+- **dr20radio (2 MAJOR)**: the abstract's carton-control scoping clause vanished, leaving
+  four recovery percentages readable as the spectral-fading measurement round 2 exists to
+  prevent; and the conversion stripped every internal-ranking marker at once, undoing the
+  round-4 trade (46% length cut in exchange for explicit demotion of the contrast).
+- **lptv (2 MAJOR)**: an appositive collapse re-pointed "each a single-epoch burst state"
+  at the *limits* (false, and it deleted the answer to framing question 2); and
+  "validated" migrated onto the synthetic smoke-test leg that round 2 negotiated down.
+- **innerrc**: the section retitle orphaned "anchor", still load-bearing in the Discussion.
+- Also fixed while present: a pre-existing rnaas defect the atlas3i referee re-flagged
+  (the symmetric-threshold statement now restricted to the L-band leg, matching main.tex
+  and the recorded round-2 correction).
+
+Pattern across three rounds of this campaign (fashienv, wdpulsar note, batch 1): the
+style agents never damage numbers, macros, or citations (the guard holds every time);
+what they damage is *scope* — qualifiers, subjects of appositives, negotiated verb
+strengths, ranking markers. The referee round is the load-bearing gate and stays
+mandatory for every future conversion.
+
+**A style gate can disagree with a science gate, and the science gate wins.** The atlas3i
+blind judge flagged "is itself a validation of the original search's architecture" as a
+residual LLM marker — that exact clause is what the referee *required* restoring (its
+replacement, "arrives at the same design, consistent with", was a sentence no observation
+could contradict). Kept the referee's wording and recorded the disagreement rather than
+splitting the difference: a style pass may not buy register by weakening evidential content.
+
+**Fixed while here:** `CHANGELOG.md` had entries from seven PRs accumulated inside the
+intro sentence instead of under `## [Unreleased]`, so `scripts/next_version.py` exited
+"nothing to release" — the release recipe had been quietly broken since before this
+campaign. Another instance of the CLAUDE.md lesson that a stated rule is not a followed
+rule until something checks it.
+
+**Blind A/B, batch 1 (four fresh judges, unlabeled pairs): the converted version won all
+four** (atlas3i, dr20radio, lptv, innerrc). The residual lists have converged on a stable
+core that is mostly *referee-mandated*: lptv's "honest limit" is the wdpulsar referee's own
+required word; innerrc's "The statement the evidence supports is sharper than degeneracy
+alone" is the innerrc referee's own suggested replacement; atlas3i's "is itself a validation"
+is its referee's required restoration. Stopping here is the right call — further style
+edits would trade approved science wording for register, which is the wrong direction.
+One judge finding was a genuine bonus: the innerrc original had a broken sentence boundary
+("... vs their 406/333), A sensitivity scan ...") that the conversion silently repaired.

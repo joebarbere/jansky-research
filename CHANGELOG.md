@@ -4,7 +4,29 @@ All notable changes to `jansky-research` are documented here. The format is base
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows
 [Semantic Versioning](https://semver.org/) as codified in [`VERSIONING.md`](VERSIONING.md).
 
-Every PR adds an entry to `## [Unreleased]
+Every PR adds an entry to `## [Unreleased]`. `scripts/next_version.py` reads that section to
+recommend the next version number.
+
+
+## [Unreleased]
+
+### Changed
+- Papers restyled to traditional pre-LLM journal register via the `traditional-style` skill
+  (batch 1: atlas3i main + RNAAS note, dr20radio, lptv, innerrc — the submission queue).
+  Prose only: every macro, citation, and numeric literal is multiset-identical to its
+  pre-conversion state (`prose_lint.py --diff-guard`). Each conversion then went through a
+  `paper-referee` round, all four returning *minor revision* for scope drift the guard
+  cannot see (deleted qualifiers, an appositive that re-pointed a claim at the wrong
+  subject, negotiated verb strengths, ranking markers) — all restored; see
+  `survey/stylecorpus-findings.md`.
+- `wdpulsar` figure: the left panel is now real data (forced I/sigma over the 442 usable
+  candidate epochs against the unit normal), replacing the synthetic injection fixture —
+  the referee's deferred suggestion. The synthetic panel remains as the offline fallback.
+
+### Fixed
+- `CHANGELOG.md` structure: entries from seven PRs had accumulated *inside* the intro
+  sentence rather than under `## [Unreleased]`, so `scripts/next_version.py` reported
+  "nothing to release". Entries relocated and regrouped; the release recipe works again.
 
 ### Added
 - `traditional-style` RNAAS extension (plan 89 follow-on): genre baseline from 391
@@ -12,52 +34,18 @@ Every PR adds an entry to `## [Unreleased]
   refereed filter had excluded all 1,035), style-guide §8, `prose_lint.py --file/--genre`,
   and the wdpulsar RNAAS note converted through the full gate sequence (referee round
   restored two qualifiers the multiset guard cannot see; blind A/B passed).
-
-### Added
 - `traditional-style` skill + `style-editor` agent (plan 89, Stages 2–4): 2,000-paper
   pre-LLM corpus acquired (manifest committed), fingerprint engine + corpus-vs-us delta
   (`results/stylecorpus_{fingerprints,selfscan,manifest}.json`), corpus-derived style
   guide with before/after conversions, and `prose_lint.py` (corpus-percentile lint +
   prose-only `--diff-guard`).
-
-### Added
 - `stylecorpus` (plan 89, Stage 1): scoping of the pre-LLM radio-astronomy literature
   (1933–2021) for the `traditional-style` skill — `src/jansky_research/stylecorpus.py`
   (era strata, ADS/arXiv query builders, stratified size sampler, bootstrap total-PDF-size
   estimator; network runners no-cover), `scripts/style_corpus_scoping.py` (resumable CLI),
   committed evidence in `results/stylecorpus_scoping.json` + `survey/stylecorpus-findings.md`.
-
-### Added
 - `papers/wdpulsar/rnaas.tex`: standalone RNAAS note (refereed; ~630 words) — the null
   census condensed with the control's true 2/5 efficiency attached to the f<6.1% bound.
-
-### Fixed
-- `wdpulsar` main.tex: two peak-search-era numbers corrected against the forced CSV
-  (max candidate significance is 2.9σ not 3.3–3.9σ; brightest measurement 3.7 mJy not
-  4.3 mJy) — found by the RNAAS note's referee pass.
-
-### Fixed
-- Triage: a deliberately-committed `*synthetic*` metrics file with `is_real: false` no
-  longer flags no-evidence when the real sibling exists (the vgpra two-file design);
-  16.11 h allowlisted as a Voyager literature constant. vgpra "confirms"/"proves" and
-  wdpulsar hard-typed 7.4/"confirms" fixed; zero HIGH/MED across all 46 papers again.
-
-### Fixed
-- `lptv` round-3 referee (VAST section): 2026-epoch chain recomputed self-consistently in
-  code (20 epochs, p=0.53); phase errors include exposure smearing + anchor (±0.016);
-  interpulse claim downgraded to candidate on the published V/I tension; novelty pass run
-  and recorded with all section evidence in `results/lptv_vast_adjudication.json`; sweep
-  end date corrected (2026 July, not August); leakage veto |I| guard; boundary tests;
-  three bib entries completed/corrected (lee2025, mcsweeney2025, hurleywalker2023).
-
-### Fixed
-- `lptv` detection provenance: all three census detections adjudicated against their
-  discovery papers' e-prints — each is an epoch the discovery paper already reported
-  (J1745's SBID 20398 discovery-search epoch; J1651's single archival detection of
-  2024-11-21; J1839's discovery observation). Paper reframed: zero new detections, three
-  validated re-measurements (`results/lptv_detection_provenance.json`).
-
-### Added
 - `lptv.summarize_vast` + `fold_phase` (tested): VAST-sweep reduction with per-detection
   pulse phases on the published J1839-0756 ephemeris; paper gains a VAST-extension section
   reporting two pulses absent from the discovery paper's observation table (one at
@@ -68,6 +56,24 @@ Every PR adds an entry to `## [Unreleased]
   durations, fixing the round-2 timestamp-quantization finding).
 
 ### Fixed
+- `wdpulsar` main.tex: two peak-search-era numbers corrected against the forced CSV
+  (max candidate significance is 2.9σ not 3.3–3.9σ; brightest measurement 3.7 mJy not
+  4.3 mJy) — found by the RNAAS note's referee pass.
+- Triage: a deliberately-committed `*synthetic*` metrics file with `is_real: false` no
+  longer flags no-evidence when the real sibling exists (the vgpra two-file design);
+  16.11 h allowlisted as a Voyager literature constant. vgpra "confirms"/"proves" and
+  wdpulsar hard-typed 7.4/"confirms" fixed; zero HIGH/MED across all 46 papers again.
+- `lptv` round-3 referee (VAST section): 2026-epoch chain recomputed self-consistently in
+  code (20 epochs, p=0.53); phase errors include exposure smearing + anchor (±0.016);
+  interpulse claim downgraded to candidate on the published V/I tension; novelty pass run
+  and recorded with all section evidence in `results/lptv_vast_adjudication.json`; sweep
+  end date corrected (2026 July, not August); leakage veto |I| guard; boundary tests;
+  three bib entries completed/corrected (lee2025, mcsweeney2025, hurleywalker2023).
+- `lptv` detection provenance: all three census detections adjudicated against their
+  discovery papers' e-prints — each is an epoch the discovery paper already reported
+  (J1745's SBID 20398 discovery-search epoch; J1651's single archival detection of
+  2024-11-21; J1839's discovery observation). Paper reframed: zero new detections, three
+  validated re-measurements (`results/lptv_detection_provenance.json`).
 - `lptv` round-2 referee pass (major): rescoped negative recomputed from the forced CSV
   (median I/sigma = -0.14, no |V|/I constraint on non-detections — the 1.9 / 49–114% figures
   traced to the superseded peak-search data); J165130.3 promotion re-based on locked-pixel
@@ -77,10 +83,6 @@ Every PR adds an entry to `## [Unreleased]
   J1832-0911 catalogue row's erroneous name corrected (coordinate always matched the VLBA
   position); stale two-detection text, figure caption, epoch-composition, limit-count, and
   phase-coverage errors fixed.
-`. `scripts/next_version.py` reads that section to
-recommend the next version number.
-
-## [Unreleased]
 
 ## [1.6.0] - 2026-08-13
 

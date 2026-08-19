@@ -15,76 +15,78 @@ Local Dark-Matter Density}
 \begin{abstract}
 \citet{sofue2025} derived the definitive modern inner rotation curve (RC) of the Milky Way
 by the terminal-velocity method (TVM) applied to HI4PI and CO longitude--velocity data,
-published it as machine-readable tables, and decomposed it into bulge, disc, and NFW halo,
-quoting a halo-only local dark-matter density $\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$ ---
-a factor $\sim$3 below the $\sim$0.3~GeV\,cm$^{-3}$ consensus value, which they frame as a lower limit. I
-replicate the analysis independently at both ends. (1) From their \emph{published tables}:
-their $\rho_\mathrm{DM}$ arithmetic reproduces to the precision they quote (through the
-$4\pi$ convention their halo equations absorb), but a bounded refit of the same curve, same
-model family, fits better (\irRmsOurs\ vs \irRmsTheirs~km\,s$^{-1}$ rms;
-$\chi^2/N = \irChiOurs$ vs \irChiTheirs) at
-$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$ (1$\sigma$ \irRhoLo--\irRhoHi\ from the fitted
-halo parameters), and the improvement is concentrated beyond 8~kpc, where their published
-halo sits systematically below their own curve. Their \irRhoTheirs\ is therefore not the value their
-curve demands: the same data and model family admit a solution a factor $\sim$2.3 higher at
-better $\chi^2$, and the consensus density lies inside the refit's 1$\sigma$ interval. (2) From \emph{raw HI4PI data} (\irNsight\ tangent-point
-sightlines in both quadrants): their Table~2 curve reproduces at the
-$\sim$\irTabTwoAbs~km\,s$^{-1}$ level, their east--west asymmetry replicates qualitatively (same sign and
-comparable phase, but a period \irEwPeriodOffPct\% longer), and a head-to-head of terminal-velocity estimators measures the fixed-threshold
-rule to read $+\irBiasMed$~km\,s$^{-1}$ high of Gaussian decomposition --- with the
-calibrated dispersion corrections of the two estimators (\irSigGauss\ vs
-\irSigThresh~km\,s$^{-1}$) bracketing the paper's adopted 15~km\,s$^{-1}$.
+published it as machine-readable tables, and decomposed it into bulge, disc, and NFW halo.
+The halo-only local dark-matter density they quote, $\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$,
+is a factor $\sim$3 below the $\sim$0.3~GeV\,cm$^{-3}$ consensus value, which they frame as a
+lower limit. We replicate the analysis independently at both ends. (1) Their published-table
+$\rho_\mathrm{DM}$ arithmetic reproduces to the precision they quote, through the $4\pi$
+convention their halo equations absorb. A bounded refit of the same curve and model family
+fits better (\irRmsOurs\ vs \irRmsTheirs~km\,s$^{-1}$ rms; $\chi^2/N = \irChiOurs$ vs
+\irChiTheirs) at $\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$ (1$\sigma$
+\irRhoLo--\irRhoHi\ from the fitted halo parameters); the improvement is concentrated beyond
+8~kpc, where their published halo sits systematically below their own curve. Their
+\irRhoTheirs\ is therefore not the value their curve demands: the same data and model family
+admit a solution a factor $\sim$2.3 higher at better $\chi^2$, and the consensus density lies
+inside the refit's 1$\sigma$ interval. (2) From raw HI4PI data (\irNsight\ tangent-point
+sightlines in both quadrants), their Table~2 curve reproduces at the
+$\sim$\irTabTwoAbs~km\,s$^{-1}$ level, and their east--west asymmetry replicates
+qualitatively (same sign and comparable phase, but a period \irEwPeriodOffPct\% longer). A
+head-to-head of terminal-velocity estimators finds the fixed-threshold rule reads
+$+\irBiasMed$~km\,s$^{-1}$ high of Gaussian decomposition; the two estimators' calibrated
+dispersion corrections (\irSigGauss\ vs \irSigThresh~km\,s$^{-1}$) bracket the paper's
+adopted 15~km\,s$^{-1}$.
 \end{abstract}
 
 \keywords{Milky Way rotation (1059) --- Milky Way dark matter halo (1049) --- Radio
 astronomy (1338) --- Interstellar medium (847)}
 
 \section{Introduction}
-The inner-Galaxy rotation curve underpins the Milky Way's mass model, and the
-terminal-velocity method --- reading the extreme line-of-sight velocity of HI/CO emission at
-the tangent point --- remains its workhorse inside the solar circle
-\citep{mcclure2016,chemin2015}. \citet{sofue2025} provide the current reference analysis:
-TVM applied to HI4PI \citep{hi4pi} and four CO surveys, Gaussian decomposition for the
-terminal velocities, a dispersion correction calibrated at the solar circle, publication of
-the RC as ASCII tables, and a mass decomposition whose halo component implies a local
-dark-matter density well below consensus determinations \citep{readdm}. Replication of such
-reference analyses is rare; this paper attempts one at two levels --- their published tables
-(testing the decomposition and its headline density) and the raw public survey (testing the
-measurement chain) --- with an independent open-source pipeline
-\citep{janskyresearch}.
+The inner-Galaxy rotation curve underpins the Milky Way's mass model. The terminal-velocity
+method, which reads the extreme line-of-sight velocity of HI/CO emission at the tangent
+point, remains its workhorse inside the solar circle \citep{mcclure2016,chemin2015}.
+\citet{sofue2025} provide the current reference analysis, applying TVM to HI4PI
+\citep{hi4pi} and four CO surveys, Gaussian decomposition for the terminal velocities, a
+dispersion correction calibrated at the solar circle, publication of the RC as ASCII tables,
+and a mass decomposition whose halo component implies a local dark-matter density well below
+consensus determinations \citep{readdm}. Replication of such reference analyses is rare.
+This paper attempts one at two levels, their published tables (testing the decomposition and
+its headline density) and the raw public survey (testing the measurement chain), with an
+independent open-source pipeline \citep{janskyresearch}.
 
-\section{Anchor: decomposing their published curve}
+\section{Decomposition of the Published Rotation Curve}
 The arXiv source of \citet{sofue2025} includes the RC tables (inner curve at
 $\delta R = 50$~pc, \irInnerRows\ rows; unified TVM+VERA+VLBA+Gaia curve to
 \irRmax~kpc, \irUniRows\ rows). Fitting the unified curve with their model family (their
 eqs.~19--27: $4\times10^{6}\,M_\odot$ point mass, Plummer bulge and disc, NFW halo) gives
 Figure~\ref{fig:decomp}. Their Table~1 parameters describe their curve at
-\irRmsTheirs~km\,s$^{-1}$ rms and --- converted through their
-$\rho_0 = V_h^2/(G h^2)$ convention, in which their $V_h$ absorbs $\sqrt{4\pi}$ relative to
-the standard normalisation --- reproduce their published
-$\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$ to the three significant figures they quote.
+\irRmsTheirs~km\,s$^{-1}$ rms. Converted through their $\rho_0 = V_h^2/(G h^2)$ convention,
+in which their $V_h$ absorbs $\sqrt{4\pi}$ relative to the standard normalisation, these
+parameters reproduce their published $\rho_\mathrm{DM} = \irRhoTheirs$~GeV\,cm$^{-3}$ to the
+three significant figures they quote.
+
 A bounded least-squares refit ($50 \le v_\mathrm{bulge} \le 800$~km\,s$^{-1}$,
 $3 \le h_\mathrm{halo} \le 100$~kpc, and similarly wide bounds on the remaining parameters)
-prefers a more
-concentrated halo at \irRmsOurs~km\,s$^{-1}$ rms with
-$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$, whose own $1\sigma$ halo-parameter
-uncertainties give \irRhoLo--\irRhoHi~GeV\,cm$^{-3}$ --- an interval that contains the
-consensus density. That interval, not the variant scan below, is what supports compatibility
-with $\sim$0.3; the bulge is nearly identical between the two solutions
-(\irVBulgeOurs~km\,s$^{-1}$/\irABulgeOurs~pc vs their 406/333), A sensitivity scan over halo profile (NFW/Burkert), fit
-range (all $R$ vs $R>2$~kpc), and error weighting fits \irScanNFitted\ variants, but only
-\irScanN\ of them are usable: in the other \irScanNRailed\ at least one parameter finishes on
-a fit bound, which means the data did not determine it. (Excising $R<2$~kpc removes every
-point that constrains the bulge, so $v_\mathrm{bulge}$ and $a_\mathrm{bulge}$ slide along the
-Plummer degeneracy ridge until they hit walls; three variants also drive the halo scale
-radius onto its lower bound.) Across the \irScanN\ variants with all parameters interior,
-$\rho_\mathrm{DM} = \irRhoMin$--\irRhoMax. None reproduces their corner. Three readings are
-consistent with that: an additional constraint in their fit beyond what the paper states, a
-different local optimum of this degenerate six-parameter problem, or a mismatch between our
-reimplemented bulge/disc functional forms and theirs --- only their \emph{halo} equation is
-independently validated here, by the \irRhoTheirs\ reproduction. The conclusion is the
-quantified form of their own caveat: their published curve does not pin the disc--halo split,
-and the refit that fits it best puts $\rho_\mathrm{DM}$ a factor $\sim$2.3 above their value.
+prefers a more concentrated halo, at \irRmsOurs~km\,s$^{-1}$ rms, with
+$\rho_\mathrm{DM} = \irRhoOurs$~GeV\,cm$^{-3}$. Its own $1\sigma$ halo-parameter
+uncertainties give \irRhoLo--\irRhoHi~GeV\,cm$^{-3}$, an interval that contains the
+consensus density; this interval, not the variant scan described below, is what supports
+compatibility with $\sim$0.3. The bulge is nearly identical between the two solutions
+(\irVBulgeOurs~km\,s$^{-1}$/\irABulgeOurs~pc vs their 406/333).
+
+A sensitivity scan over halo profile (NFW/Burkert), fit range (all $R$ vs $R>2$~kpc), and
+error weighting fits \irScanNFitted\ variants, but only \irScanN\ of them are usable. In the
+other \irScanNRailed, at least one parameter finishes on a fit bound, meaning the data did
+not determine it. (Excising $R<2$~kpc removes every point that constrains the bulge, so
+$v_\mathrm{bulge}$ and $a_\mathrm{bulge}$ slide along the Plummer degeneracy ridge until they
+hit walls; three variants also drive the halo scale radius onto its lower bound.) Across the
+\irScanN\ variants with all parameters interior, $\rho_\mathrm{DM} = \irRhoMin$--\irRhoMax,
+and none reproduces their corner. Three readings are consistent with that result: an
+additional constraint in their fit beyond what the paper states, a different local optimum
+of this degenerate six-parameter problem, or a mismatch between our reimplemented bulge/disc
+functional forms and theirs. Only their halo equation is independently validated here, by
+the \irRhoTheirs\ reproduction. The conclusion is the quantified form of their own caveat.
+Their published curve does not pin the disc--halo split, and the refit that fits it best
+puts $\rho_\mathrm{DM}$ a factor $\sim$2.3 above their value.
 
 \begin{figure}[t]
 \centering
@@ -97,14 +99,14 @@ concentrated beyond 8~kpc.}
 \end{figure}
 
 \section{Replication from raw HI4PI data}
-From the ten HI4PI galactic-plane tiles (CDS; 2.6~GB), $|b|<3^{\circ}$ longitude--velocity
-diagrams (Figure~\ref{fig:lv}) yield \irNsight\ tangent-point sightlines at
-$\ell = 5$--$89.5^{\circ}$ and $270.5$--$355^{\circ}$. Terminal velocities are measured two
-ways on identical spectra: Gaussian decomposition of the envelope window (greedy seeding +
-joint refinement; their method, Figure~\ref{fig:lvb}), and the fixed 2~K threshold crossing
-used by simple treatments. Each estimator receives the paper's \S3.3 dispersion correction,
-calibrated (per estimator) so the binned curve meets $\Theta_0$ at $R_0$; since $V$ is
-linear in $\sigma_v$ the calibration is closed-form.
+From the ten HI4PI galactic-plane tiles (CDS; 2.6~GB), we construct $|b|<3^{\circ}$
+longitude--velocity diagrams (Figure~\ref{fig:lv}). These yield \irNsight\ tangent-point
+sightlines at $\ell = 5$--$89.5^{\circ}$ and $270.5$--$355^{\circ}$. Terminal velocities are
+measured two ways on identical spectra: Gaussian decomposition of the envelope window
+(greedy seeding and joint refinement; their method, Figure~\ref{fig:lvb}), and the fixed
+2~K threshold crossing used by simple treatments. Each estimator receives the paper's
+\S3.3 dispersion correction, calibrated per estimator so the binned curve meets $\Theta_0$
+at $R_0$; since $V$ is linear in $\sigma_v$, the calibration is closed-form.
 
 \begin{figure}[t]
 \centering
@@ -122,49 +124,48 @@ components; the outermost component centre is the terminal velocity.}
 \label{fig:lvb}
 \end{figure}
 
-Three results (Figures~\ref{fig:rc}--\ref{fig:ew}):
+Three results follow (Figures~\ref{fig:rc}--\ref{fig:ew}).
 
-\emph{(i) The estimator bias, measured.} The threshold rule reads
+(i) The estimator bias is measured directly. The threshold rule reads
 $+\irBiasMed$~km\,s$^{-1}$ (median; 16th--84th percentiles $\irBiasPlo$ to
-$+\irBiasPhi$) high of Gaussian decomposition on the same \irNsight\ real spectra --- same
+$+\irBiasPhi$) high of Gaussian decomposition on the same \irNsight\ real spectra, the same
 sign as, and larger than, the $\sim$7~km\,s$^{-1}$ literature figure for threshold-vs-fitting
-offsets \citep{mcclure2016}. The calibration route recovers the same offset, though it is not an
-independent check: because $V$ is linear in $\sigma_v$ and both estimators are calibrated on
-the same sightlines with the same weights, the difference between the two required
-dispersions ($\sigma_v = \irSigGauss$ and \irSigThresh~km\,s$^{-1}$) is algebraically the
-same statistic restricted to the solar-circle window. It is consistent with the direct bias
-rather than equal to it. The paper's adopted $\sigma_\mathrm{HI} = 15$~km\,s$^{-1}$ falls
-between the two, which is consistent with their decomposition landing between
-component-centre and envelope-crossing --- though it is equally consistent with this
-pipeline's Gaussian $|v_\mathrm{term}|$ reading low at the solar circle, the same sign and
-scale as the Table~2 offset above.
+offsets \citep{mcclure2016}. The calibration route recovers the same offset, though it is
+not an independent check. Because $V$ is linear in $\sigma_v$ and both estimators are
+calibrated on the same sightlines with the same weights, the difference between the two
+required dispersions ($\sigma_v = \irSigGauss$ and \irSigThresh~km\,s$^{-1}$) is
+algebraically the same statistic restricted to the solar-circle window; it is consistent
+with the direct bias rather than equal to it. The paper's adopted
+$\sigma_\mathrm{HI} = 15$~km\,s$^{-1}$ falls between the two, consistent with their
+decomposition landing between component-centre and envelope-crossing. It is equally
+consistent, however, with this pipeline's Gaussian $|v_\mathrm{term}|$ reading low at the
+solar circle, the same sign and scale as the Table~2 offset above.
 
-\emph{(ii) Their Table~2 reproduces at the $\sim$4\% level.} After calibration, the binned
-HI-only curve matches their published inner RC to mean
-$|\Delta V| = \irTabTwoAbs$~km\,s$^{-1}$ (median $\irTabTwoMed$; \irTabTwoN\ bins,
-$R>2$~kpc). The residual is a shape difference plausibly from their HI+CO merge and finer
-latitude windows, and it is almost pure offset: the calibration pins the zero point on the
-7.0--8.15~kpc solar window, so this figure measures a slope difference, not an overall
-agreement (without the calibration the median offset is
-$\irTabTwoFixedSigma$~km\,s$^{-1}$). The flat, non-Keplerian form reproduces. The bar-region
-inner peak does \emph{not}: inside 2~kpc, where their curve is CO-dominated and ours is
+(ii) Their Table~2 reproduces at the $\sim$4\% level. After calibration, the binned HI-only
+curve matches their published inner RC to mean $|\Delta V| = \irTabTwoAbs$~km\,s$^{-1}$
+(median $\irTabTwoMed$; \irTabTwoN\ bins, $R>2$~kpc). The residual is a shape difference,
+plausibly from their HI+CO merge and finer latitude windows, and it is almost pure offset.
+The calibration pins the zero point on the 7.0--8.15~kpc solar window, so this figure
+measures a slope difference, not an overall agreement (without the calibration the median
+offset is $\irTabTwoFixedSigma$~km\,s$^{-1}$). The flat, non-Keplerian form reproduces. The
+bar-region inner peak does not. Inside 2~kpc, where their curve is CO-dominated and ours is
 HI-only, this curve runs $\irInnerDv$~km\,s$^{-1}$ low on average over \irInnerN\ bins, and
 their $\irPeakTheirs$~km\,s$^{-1}$ peak at $R = \irPeakTheirsR$~pc appears here as
 $\irPeakOurs$~km\,s$^{-1}$ at $R = \irPeakOursR$~pc. TVM is not a clean mass tracer inside
 the bar, and HI is not the right tracer there; this is a limitation of the replication, not
 a disagreement with their result.
 
-\emph{(iii) The east--west asymmetry replicates qualitatively.} Fitting their damped
-sinusoid (their eq.~29) in the mid-disc window (2--8~kpc; inside 2~kpc the bar rails any
-smooth fit) gives amplitude \irEwAmp~km\,s$^{-1}$, period \irEwPeriod~kpc, phase
-\irEwPhase~kpc against their directly stated $\simeq$15~km\,s$^{-1}$ mid-disc amplitude and eq.-29
+(iii) The east--west asymmetry replicates qualitatively. Fitting their damped sinusoid
+(their eq.~29) in the mid-disc window (2--8~kpc; inside 2~kpc the bar rails any smooth fit)
+gives amplitude \irEwAmp~km\,s$^{-1}$, period \irEwPeriod~kpc, and phase \irEwPhase~kpc,
+against their directly stated $\simeq$15~km\,s$^{-1}$ mid-disc amplitude and eq.-29
 period/phase of 4.4/4.0~kpc. The phase agrees, but the period is \irEwPeriodOffPct\% longer,
-which is not a replication of the period: over a 2--8~kpc window spanning barely one cycle it
-is weakly constrained, the damping length rails against its fit bound, and the fit is seeded
-at their published values, so the phase agreement is partly anchored by construction. The
-sinusoid accounts for under half the variance (fit residual \irEwFitRms\ against mid-disc
-$\delta V$ rms \irEwRms~km\,s$^{-1}$). The honest statement is that the same phenomenon is
-present, at the same sign and comparable phase and a softer amplitude, from HI alone.
+which is not a replication of the period. Over a 2--8~kpc window spanning barely one cycle
+it is weakly constrained, the damping length rails against its fit bound, and the fit is
+seeded at their published values, so the phase agreement is partly anchored by construction.
+The sinusoid accounts for under half the variance (fit residual \irEwFitRms\ against
+mid-disc $\delta V$ rms \irEwRms~km\,s$^{-1}$). The honest statement is that the same phenomenon is present, at the same
+sign and comparable phase and a softer amplitude, from HI alone.
 
 \begin{figure}[t]
 \centering
@@ -184,32 +185,32 @@ fit over the mid-disc window.}
 
 \section{Discussion}
 
-The anchor result is not a null. Their Table~1 solution and the refit are usually compared by
-rms (\irRmsTheirs\ vs \irRmsOurs~km\,s$^{-1}$), which makes them look like alternative corners
-of one degeneracy; in $\chi^2$ they are not ($\irChiTheirs$ vs $\irChiOurs$), and the
-difference is not spread over the curve. Beyond 8~kpc --- exactly where
-$\rho_\mathrm{DM}(R_0)$ is set --- their published halo sits $\irOuterBiasSig\sigma$ per point
-below their own unified curve across \irOuterN\ independent points, a one-sided offset rather
-than scatter. Correcting that bias is what raises the implied local density by a factor
-$\sim$2.3. So the useful statement is sharper than "the split is degenerate": their published
-curve prefers more local dark matter than their published decomposition reports.
+The published-table refit is not a null. Their Table~1 solution and the refit are usually compared
+by rms (\irRmsTheirs\ vs \irRmsOurs~km\,s$^{-1}$), which makes them look like alternative
+corners of one degeneracy. In $\chi^2$ they are not ($\irChiTheirs$ vs $\irChiOurs$), and
+the difference is not spread over the curve. Beyond 8~kpc, exactly where
+$\rho_\mathrm{DM}(R_0)$ is set, their published halo sits $\irOuterBiasSig\sigma$ per point
+below their own unified curve across \irOuterN\ independent points, a one-sided offset
+rather than scatter. Correcting that bias is what raises the implied local density by a
+factor $\sim$2.3. The statement the evidence supports is sharper than degeneracy alone: their published curve prefers more
+local dark matter than their published decomposition reports.
 
-Caveats bound both legs. The anchor refit does not replicate their exact fitting procedure
-(weighting and algorithm are not fully specified). The sensitivity scan was intended to
-bracket defensible choices, but \irScanNRailed\ of its \irScanNFitted\ variants finish with a
-parameter on a fit bound and cannot be read as fits at all; the \irScanN\ interior variants
-span only \irRhoMin--\irRhoMax, so the scan is a weaker instrument than the refit's own
-$1\sigma$ interval (\irRhoLo--\irRhoHi) and is not what carries the compatibility claim
-here. The raw-data leg is HI-only against their HI+CO merge; TVM itself is not a
-clean mass tracer inside the bar \citep{chemin2015}, which both analyses exclude from
-interpretation; and surrogate-model studies show terminal-velocity curves degrade substantially once a bar
-forms \citep{tvmcaution} --- the estimator-level systematics quantified here are one layer of
-that error budget. Within those
-bounds: the reference inner RC replicates from raw public data at the few-percent level;
-its published dark-matter density arithmetic is correct to the precision quoted, \emph{and}
-its curve is equally consistent with the consensus local density --- but not because the
-split is unconstrained. The published halo underfits the outer curve it was fitted to, and a
-refit that removes that bias lands at \irRhoOurs~GeV\,cm$^{-3}$.
+Caveats bound both legs. The published-table refit does not replicate their exact fitting procedure,
+since weighting and algorithm are not fully specified. The sensitivity scan was intended to
+bracket defensible choices, but \irScanNRailed\ of its \irScanNFitted\ variants finish with
+a parameter on a fit bound and cannot be read as fits at all. The \irScanN\ interior
+variants span only \irRhoMin--\irRhoMax, so the scan is a weaker instrument than the
+refit's own $1\sigma$ interval (\irRhoLo--\irRhoHi) and is not what carries the
+compatibility claim here. The raw-data leg is HI-only against their HI+CO merge, and TVM
+itself is not a clean mass tracer inside the bar \citep{chemin2015}, which both analyses
+exclude from interpretation. Surrogate-model studies show terminal-velocity curves degrade
+substantially once a bar forms \citep{tvmcaution}; the estimator-level systematics
+quantified here are one layer of that error budget. Within those bounds, the reference inner
+RC replicates from raw public data at the few-percent level, and its published
+dark-matter density arithmetic is correct to the precision quoted. Its curve is equally
+consistent with the consensus local density, but not because the split is unconstrained.
+The published halo underfits the outer curve it was fitted to, and a refit that removes that
+bias lands at \irRhoOurs~GeV\,cm$^{-3}$.
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
 NumPy, SciPy, astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
