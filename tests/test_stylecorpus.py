@@ -325,3 +325,10 @@ def test_compare_signatures_prose_only_edit_passes() -> None:
     dropped = GUARD_TEX.replace("\\drFoo\\ again", "it again")
     problems = sc.compare_signatures(before, sc.guard_signature(dropped, macros))
     assert any("drFoo" in p for p in problems)
+
+
+def test_rnaas_query_is_not_refereed_filtered() -> None:
+    q = sc.rnaas_query()
+    assert "bibstem:RNAAS" in q
+    assert f"year:2017-{sc.CUTOFF_YEAR - 1}" in q
+    assert "refereed" not in q

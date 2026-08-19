@@ -7,6 +7,13 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Added
+- `traditional-style` RNAAS extension (plan 89 follow-on): genre baseline from 391
+  pre-LLM arXiv-deposited notes (`results/stylecorpus_rnaas.json`; the main corpus's
+  refereed filter had excluded all 1,035), style-guide §8, `prose_lint.py --file/--genre`,
+  and the wdpulsar RNAAS note converted through the full gate sequence (referee round
+  restored two qualifiers the multiset guard cannot see; blind A/B passed).
+
+### Added
 - `traditional-style` skill + `style-editor` agent (plan 89, Stages 2–4): 2,000-paper
   pre-LLM corpus acquired (manifest committed), fingerprint engine + corpus-vs-us delta
   (`results/stylecorpus_{fingerprints,selfscan,manifest}.json`), corpus-derived style
