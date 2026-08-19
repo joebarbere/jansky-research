@@ -120,7 +120,7 @@ jobs:
           ls -la "dist/$STAGE.zip"
           cat "$MANIFEST"
       - name: Upload the smoke zip as a workflow artifact (never to a Release)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: papers-synthetic-smoke-${{ env.TAG }}
           path: jansky-research/dist/*.zip
