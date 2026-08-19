@@ -39,7 +39,13 @@ jobs:
       - name: Restore the tectonic package bundle
         uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/Tectonic
+          # tectonic's XDG cache is LOWERCASE `tectonic`; older builds used `Tectonic`.
+          # Both are listed because a wrong path here fails SILENTLY: actions/cache logs
+          # "Path Validation Error ... no cache is being saved" as a *warning*, the step
+          # still goes green, and nothing is ever cached (measured on run 32216228939).
+          path: |
+            ~/.cache/tectonic
+            ~/.cache/Tectonic
           key: tectonic-bundle-v33-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             tectonic-bundle-v33-${{ runner.os }}-
@@ -55,7 +61,13 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: ~/.cache/Tectonic
+          # tectonic's XDG cache is LOWERCASE `tectonic`; older builds used `Tectonic`.
+          # Both are listed because a wrong path here fails SILENTLY: actions/cache logs
+          # "Path Validation Error ... no cache is being saved" as a *warning*, the step
+          # still goes green, and nothing is ever cached (measured on run 32216228939).
+          path: |
+            ~/.cache/tectonic
+            ~/.cache/Tectonic
           key: tectonic-bundle-v33-${{ runner.os }}-${{ github.run_id }}
       - name: Upload the PDFs
         uses: actions/upload-artifact@v4
