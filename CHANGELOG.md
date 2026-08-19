@@ -7,6 +7,13 @@ All notable changes to `jansky-research` are documented here. The format is base
 Every PR adds an entry to `## [Unreleased]
 
 ### Added
+- `traditional-style` skill + `style-editor` agent (plan 89, Stages 2–4): 2,000-paper
+  pre-LLM corpus acquired (manifest committed), fingerprint engine + corpus-vs-us delta
+  (`results/stylecorpus_{fingerprints,selfscan,manifest}.json`), corpus-derived style
+  guide with before/after conversions, and `prose_lint.py` (corpus-percentile lint +
+  prose-only `--diff-guard`).
+
+### Added
 - `stylecorpus` (plan 89, Stage 1): scoping of the pre-LLM radio-astronomy literature
   (1933–2021) for the `traditional-style` skill — `src/jansky_research/stylecorpus.py`
   (era strata, ADS/arXiv query builders, stratified size sampler, bootstrap total-PDF-size

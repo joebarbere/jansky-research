@@ -87,11 +87,15 @@ are covered qualitatively, not quantitatively) vs `results/stylecorpus_selfscan.
 |---|---|---|
 | em-dashes / 1000 words | **0.00** | **10.66** |
 | `\emph{}` / 1000 words | 0.00 | 7.43 |
-| abstract length (words) | 126 | 247 |
-| self-reference / 1000 words | 0.43 | 2.24 |
-| mean sentence length (words) | 26.6 | 31.3 |
-| "we" / 1000 words | 6.88 | 5.30 |
-| passive constructions / sentence | 0.35 | 0.20 |
+| abstract length (words) | 163 | 247 |
+| self-reference / 1000 words | 0.55 | 2.24 |
+| mean sentence length (words) | 26.2 | 31.3 |
+| "we" / 1000 words | 7.53 | 5.30 |
+| passive constructions / sentence | 0.33 | 0.20 |
+
+(An earlier draft of this table quoted a 378-document preliminary fingerprint run —
+abstract median 126 — before the corpus completed; the numbers above are from the
+committed 1,137-document `results/stylecorpus_fingerprints.json`.)
 
 The excesses (em-dash pivots, italics, double-length methodology-narrating abstracts,
 self-reference) are the AI tells; the *reversals* matter equally — traditional prose uses
