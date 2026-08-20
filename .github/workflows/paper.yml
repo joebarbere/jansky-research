@@ -37,7 +37,7 @@ jobs:
       # of each starting cold. Rolling key — the bundle depends on which packages are
       # used, not on the prose, so hashing the .tex files would be wrong.
       - name: Restore the tectonic package bundle
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           # tectonic's XDG cache is LOWERCASE `tectonic`; older builds used `Tectonic`.
           # Both are listed because a wrong path here fails SILENTLY: actions/cache logs
@@ -59,7 +59,7 @@ jobs:
           done
       - name: Save the tectonic package bundle (even on failure — partial is useful)
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           # tectonic's XDG cache is LOWERCASE `tectonic`; older builds used `Tectonic`.
           # Both are listed because a wrong path here fails SILENTLY: actions/cache logs
