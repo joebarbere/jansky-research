@@ -1,0 +1,592 @@
+{
+  "caveats": [
+    "Only the product p is identifiable; f_active and the in-period duty cycle separate only with an ephemeris good enough to phase each snapshot.",
+    "The denominator is efficiency-weighted exposure (sum of per-epoch detection probability at the assumed flux), not the epoch count -- the frblens lesson.",
+    "Efficiencies below MIN_EFFICIENCY are floored to zero so that many shallow epochs cannot sum into sensitivity that does not exist.",
+    "VAST pointings are not randomly phased against any LPT period; aliasing between the survey cadence and a period is NOT yet tested (plan 90 GATE 0)."
+  ],
+  "flux_grid_mjy": [
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    20.0,
+    50.0
+  ],
+  "is_real": true,
+  "min_efficiency": 0.001,
+  "n_epochs_measured_total": 647,
+  "n_sources": 10,
+  "per_source": {
+    "ASKAP J142431.2-612611": {
+      "brightest_abs_v_mjy": 0.8818,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.2632,
+      "n_detections": 0,
+      "n_epochs_measured": 104,
+      "period_s": 2147.27,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 75584.7,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.31255456868976167,
+          "p_point": null,
+          "p_upper_95": 9.585526177266658,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 18.189344150312323,
+          "p_point": null,
+          "p_upper_95": 0.16471182112129956,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 104.0,
+          "p_point": null,
+          "p_upper_95": 0.02880769230769231,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 75.82903508729453,
+          "p_point": null,
+          "p_upper_95": 0.039509931737242855,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 104.0,
+          "p_point": null,
+          "p_upper_95": 0.02880769230769231,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 103.99992894855897,
+          "p_point": null,
+          "p_upper_95": 0.028807711988744707,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 104.0,
+          "p_point": null,
+          "p_upper_95": 0.02880769230769231,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J165130.3-450520": {
+      "brightest_abs_v_mjy": 0.8524,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.2811,
+      "n_detections": 0,
+      "n_epochs_measured": 60,
+      "period_s": 23317.9,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 43472.0,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.07378042481872144,
+          "p_point": null,
+          "p_upper_95": 40.60697681480114,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 7.42509142570934,
+          "p_point": null,
+          "p_upper_95": 0.4034967151550977,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 60.0,
+          "p_point": null,
+          "p_upper_95": 0.049933333333333337,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 48.19479440691189,
+          "p_point": null,
+          "p_upper_95": 0.06216439009376346,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 60.0,
+          "p_point": null,
+          "p_upper_95": 0.049933333333333337,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 59.99697183980191,
+          "p_point": null,
+          "p_upper_95": 0.04993585356273694,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 60.0,
+          "p_point": null,
+          "p_upper_95": 0.049933333333333337,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J170036.6-445758": {
+      "brightest_abs_v_mjy": 0.8305,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.3169,
+      "n_detections": 0,
+      "n_epochs_measured": 93,
+      "period_s": 16895.9,
+      "snapshot_median_s": 726.0,
+      "total_exposure_s": 67345.8,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.0534066224662616,
+          "p_point": null,
+          "p_upper_95": 56.097911862759226,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 7.311241808011312,
+          "p_point": null,
+          "p_upper_95": 0.4097799086219697,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 93.0,
+          "p_point": null,
+          "p_upper_95": 0.03221505376344086,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 81.65664830741503,
+          "p_point": null,
+          "p_upper_95": 0.036690215213351356,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 93.0,
+          "p_point": null,
+          "p_upper_95": 0.03221505376344086,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 93.0,
+          "p_point": null,
+          "p_upper_95": 0.03221505376344086,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 93.0,
+          "p_point": null,
+          "p_upper_95": 0.03221505376344086,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J175534.9-252749.1": {
+      "brightest_abs_v_mjy": 6.3203,
+      "headline": {
+        "assumed_pulse_mjy": 6.3203,
+        "effective_epochs": 90.98111410179196,
+        "p_point": 0.010991292092567419,
+        "p_upper_95": 0.043921203201899406
+      },
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.3428,
+      "n_detections": 1,
+      "n_epochs_measured": 91,
+      "period_s": 4186.3285,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 66173.7,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.030702081889481037,
+          "p_point": 32.57108112732296,
+          "p_upper_95": 130.15404018478256,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 4.975252563167475,
+          "p_point": 0.20099482132890034,
+          "p_upper_95": 0.8031753060302858,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 90.99999999999406,
+          "p_point": 0.010989010989011706,
+          "p_upper_95": 0.04391208791209078,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 48.65755307964261,
+          "p_point": 0.020551793847158766,
+          "p_upper_95": 0.08212496821324643,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 91.0,
+          "p_point": 0.01098901098901099,
+          "p_upper_95": 0.043912087912087915,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 89.85193211785133,
+          "p_point": 0.011129421220329273,
+          "p_upper_95": 0.04447316719643578,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 91.0,
+          "p_point": 0.01098901098901099,
+          "p_upper_95": 0.043912087912087915,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J1832-0911": {
+      "brightest_abs_v_mjy": 14.0424,
+      "headline": {
+        "assumed_pulse_mjy": 14.0424,
+        "effective_epochs": 71.0,
+        "p_point": 0.014084507042253521,
+        "p_upper_95": 0.05628169014084507
+      },
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.4226,
+      "n_detections": 1,
+      "n_epochs_measured": 71,
+      "period_s": 2656.2554,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 51522.1,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.0069165083021319185,
+          "p_point": 144.58162360504414,
+          "p_upper_95": 577.7481679257564,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 1.6533699238119344,
+          "p_point": 0.6048253240838236,
+          "p_upper_95": 2.4168819950389593,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 70.99999999999997,
+          "p_point": 0.014084507042253527,
+          "p_upper_95": 0.056281690140845095,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 32.03229540457968,
+          "p_point": 0.03121849331649924,
+          "p_upper_95": 0.12474909929273097,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 71.0,
+          "p_point": 0.014084507042253521,
+          "p_upper_95": 0.05628169014084507,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 70.80509629840631,
+          "p_point": 0.014123277168998189,
+          "p_upper_95": 0.05643661556731676,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 71.0,
+          "p_point": 0.014084507042253521,
+          "p_upper_95": 0.05628169014084507,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J183950.5-075635": {
+      "brightest_abs_v_mjy": 24.3499,
+      "headline": {
+        "assumed_pulse_mjy": 24.3499,
+        "effective_epochs": 44.0,
+        "p_point": 0.045454545454545456,
+        "p_upper_95": 0.11354545454545456
+      },
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.3077,
+      "n_detections": 2,
+      "n_epochs_measured": 44,
+      "period_s": 23221.74,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 32108.9,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.016894670389095756,
+          "p_point": 118.38052793802063,
+          "p_upper_95": 295.71455878917556,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 2.8743144554200755,
+          "p_point": 0.6958180919379274,
+          "p_upper_95": 1.738153593660943,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 43.995997494316626,
+          "p_point": 0.0454586806506287,
+          "p_upper_95": 0.1135557842652705,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 26.067524857218373,
+          "p_point": 0.0767238167395927,
+          "p_upper_95": 0.1916560942155026,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 44.0,
+          "p_point": 0.045454545454545456,
+          "p_upper_95": 0.11354545454545456,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 35.227283415861656,
+          "p_point": 0.056774176322079595,
+          "p_upper_95": 0.14182189245255483,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 44.0,
+          "p_point": 0.045454545454545456,
+          "p_upper_95": 0.11354545454545456,
+          "unconstrained": false
+        }
+      }
+    },
+    "ASKAP J1935+2148": {
+      "brightest_abs_v_mjy": 0.5465,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.2143,
+      "n_detections": 0,
+      "n_epochs_measured": 28,
+      "period_s": 3225.313,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 20304.5,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.2014980734205143,
+          "p_point": null,
+          "p_upper_95": 14.868628514117498,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 12.089342675800273,
+          "p_point": null,
+          "p_upper_95": 0.2478215797453748,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 28.0,
+          "p_point": null,
+          "p_upper_95": 0.107,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 27.991949354605907,
+          "p_point": null,
+          "p_upper_95": 0.10703077381450843,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 28.0,
+          "p_point": null,
+          "p_upper_95": 0.107,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 28.0,
+          "p_point": null,
+          "p_upper_95": 0.107,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 28.0,
+          "p_point": null,
+          "p_upper_95": 0.107,
+          "unconstrained": false
+        }
+      }
+    },
+    "GCRT J1745-3009": {
+      "brightest_abs_v_mjy": 0.8338,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.4068,
+      "n_detections": 0,
+      "n_epochs_measured": 51,
+      "period_s": 4620.72,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 37181.8,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.0,
+          "p_point": null,
+          "p_upper_95": null,
+          "unconstrained": true
+        },
+        "1": {
+          "effective_epochs": 0.3912076864329987,
+          "p_point": null,
+          "p_upper_95": 7.658336233925502,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 22.878294309722268,
+          "p_point": null,
+          "p_upper_95": 0.1309538184726836,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 50.99644281395975,
+          "p_point": null,
+          "p_upper_95": 0.05874919572193917,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        }
+      }
+    },
+    "GLEAM-X J162759.5-523504.3": {
+      "brightest_abs_v_mjy": 0.5616,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.2533,
+      "n_detections": 0,
+      "n_epochs_measured": 51,
+      "period_s": 1091.169,
+      "snapshot_median_s": 726.6,
+      "total_exposure_s": 37103.0,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.11829658179005398,
+          "p_point": null,
+          "p_upper_95": 25.326175572149072,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 10.232109189378388,
+          "p_point": null,
+          "p_upper_95": 0.2928037557603517,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 50.61786919753537,
+          "p_point": null,
+          "p_upper_95": 0.05918858394272112,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 51.0,
+          "p_point": null,
+          "p_upper_95": 0.05874509803921569,
+          "unconstrained": false
+        }
+      }
+    },
+    "GPM J1839-10": {
+      "brightest_abs_v_mjy": 1.1683,
+      "headline": null,
+      "identifiable_factors": false,
+      "median_sigma_v_mjy": 0.235,
+      "n_detections": 0,
+      "n_epochs_measured": 54,
+      "period_s": 1318.1957,
+      "snapshot_median_s": 726.0,
+      "total_exposure_s": 39140.3,
+      "vs_assumed_flux_mjy": {
+        "0.5": {
+          "effective_epochs": 0.34511976997347676,
+          "p_point": null,
+          "p_upper_95": 8.6810442653872,
+          "unconstrained": false
+        },
+        "1": {
+          "effective_epochs": 15.550496608149972,
+          "p_point": null,
+          "p_upper_95": 0.19266265737325744,
+          "unconstrained": false
+        },
+        "10": {
+          "effective_epochs": 54.0,
+          "p_point": null,
+          "p_upper_95": 0.05548148148148148,
+          "unconstrained": false
+        },
+        "2": {
+          "effective_epochs": 52.82319854584415,
+          "p_point": null,
+          "p_upper_95": 0.05671750447674679,
+          "unconstrained": false
+        },
+        "20": {
+          "effective_epochs": 54.0,
+          "p_point": null,
+          "p_upper_95": 0.05548148148148148,
+          "unconstrained": false
+        },
+        "5": {
+          "effective_epochs": 53.999999999999815,
+          "p_point": null,
+          "p_upper_95": 0.05548148148148167,
+          "unconstrained": false
+        },
+        "50": {
+          "effective_epochs": 54.0,
+          "p_point": null,
+          "p_upper_95": 0.05548148148148148,
+          "unconstrained": false
+        }
+      }
+    }
+  },
+  "quantity": "p = f_active * (w + T) / P, the per-snapshot probability of catching a pulse",
+  "slice": "lptduty",
+  "source": "committed lptv VAST sweep (results/lptv_vast_epochs.csv); no new data fetched",
+  "threshold_sigma": 5.0
+}
