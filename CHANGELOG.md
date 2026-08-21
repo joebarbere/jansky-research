@@ -10,6 +10,15 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- `lptduty` GATE 0: novelty pass (clear -- no class-wide LPT activity-fraction constraint
+  exists; the field review says the selection function is unmodelled) and an aliasing test
+  (`scripts/lptduty_gate0.py`, `results/lptduty_gate0.json`). The aliasing test invalidates
+  two of ten constraints: GPM J1839-10's snapshots are not uniform in pulse phase
+  (Kuiper V 0.275, Bonferroni p 0.012), and ASKAP J142431.2-612611's period is quoted too
+  imprecisely for the test to run. Both verdicts are stamped per source into
+  `results/lptduty_metrics.json` (`constraint_valid`, `phase_sampling.verdict`).
+
 ### Changed
 - **Airflow 3.** The container base moves 2.9.3 -> 3.3.1, the `airflow` extra to
   `>=3.3,<4.0`, DAG imports to the Task SDK (`airflow.sdk`), and compose from `webserver`

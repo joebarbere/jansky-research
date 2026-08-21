@@ -57,14 +57,58 @@ sum into sensitivity that does not exist (10^6 would look like a third of an epo
 `MIN_EFFICIENCY = 1e-3` floors them to zero. Without it the code returned a limit of
 509,214 where the honest answer is "unconstrained".
 
-## Open — do not quote these numbers in a paper yet
+## GATE 0, part 1 — novelty: CLEAR (2026-08-20)
 
-1. **GATE 0 novelty** has not been run. A VAST or MWA transient paper may already report
-   class-wide activity fractions.
-2. **Aliasing is untested.** VAST pointings are not randomly phased against any LPT period.
-   If the cadence beats against a period, the binomial model's independence assumption
-   fails. This is the single most likely way the numbers above are wrong.
-3. **Ephemeris audit** for the phase-resolved leg (`lptv` round 3 was bitten by multi-year
-   phase drift; the same systematic applies here).
-4. The 107 never-released epochs carry no measurement and are excluded; that is recorded in
+No class-wide, uniformly-measured LPT activity-fraction or duty-cycle constraint exists.
+Per-source numbers do exist and are expected — the field review (Rea, Hurley-Walker & Caleb
+2026, arXiv:2601.10393) compiles one per known LPT in its Table 2 — but each comes from a
+different instrument, cadence and threshold, with no common denominator. That review states
+the gap directly: survey selection functions "require explicit modeling before population
+analysis is possible", and the known population is "still drawn from highly heterogeneous
+surveys and observing strategies".
+
+Checked and empty: VAST survey papers (Murphy+2021, arXiv:2108.06039) describe cadence but
+publish no LPT detection-rate statistic; the MWA GPM search (Horvath+2025, arXiv:2509.06315)
+builds injection-recovery machinery but never applies it to the known sample; the ASKAP EMU
+10 s search (Lee+2025, arXiv:2511.09770) reports a surface-density limit for *new* sources.
+Nearest per-source anchors: GPM J1839-10 at ~12% in-period duty cycle with a 50-70% nulling
+fraction (Hurley-Walker+2023, Nature 619, 487) and GLEAM-X J1627 at ~6% over a <3-month
+active window (Hurley-Walker+2022, Nature 601, 526).
+
+## GATE 0, part 2 — aliasing: ONE SOURCE FAILS (2026-08-20)
+
+`results/lptduty_gate0.json`. The binomial constraint assumes each snapshot is an independent
+draw on pulse phase; VAST's roughly fortnightly cadence is not random against any LPT period,
+so this is tested rather than asserted. Rayleigh Z and Kuiper V on phases referenced to each
+source's first epoch — the zero point is arbitrary, and clustering is invariant under a phase
+shift, so **no ephemeris is needed to test uniformity** (only to assign physical phase).
+Bonferroni-corrected across the ten sources tested.
+
+- **GPM J1839-10 fails**: Kuiper V = 0.275, Rayleigh p = 1.2e-3 (0.012 corrected). Its
+  snapshots are *not* uniform in pulse phase, so the binomial model does not apply and its
+  quoted limit is not a limit.
+- **ASKAP J142431.2-612611 is inconclusive**: its catalogued period (2147.27 s, quoted to
+  1e-2 s) is less precise than the 4.0e-3 s needed to keep phase coherent over the 1400-day
+  baseline, so the phase smears and the test cannot detect clustering that may still be
+  there. Inconclusive is not the same as passing.
+- The other eight are consistent with uniform sampling.
+
+Both are now stamped into `results/lptduty_metrics.json` per source
+(`constraint_valid`, `phase_sampling.verdict`), so a reader cannot lift a number without the
+caveat that governs it. **Eight of ten constraints stand; two do not.**
+
+A numerical detail worth keeping: phase must be referenced to the first epoch, not MJD 0. At
+MJD ~59000 a 1 h period is ~1.2e6 cycles, where float64 retains only ~1e-10 of a cycle — a
+test caught this as a zero-point invariance failure at the 1e-9 level.
+
+## Still open
+
+1. **Ephemeris audit** for the phase-resolved leg (increment 3), which is what would split
+   f_active from the in-period duty cycle. `lptv` round 3 was bitten by multi-year phase
+   drift; the same systematic applies here, and `quoted_period_precision_s` in the GATE-0
+   file is inferred from decimal places — a proxy for the published uncertainty, not the
+   uncertainty itself.
+2. **Period derivatives are not folded in.** A pdot large enough to matter over the baseline
+   breaks phase coherence even when the period is quoted precisely.
+3. The 107 never-released epochs carry no measurement and are excluded; that is recorded in
    the loader, not silently dropped.

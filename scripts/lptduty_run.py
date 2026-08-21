@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from jansky_research import lptduty as ld  # noqa: E402
 
+GATE0 = Path("results/lptduty_gate0.json")
 EPOCHS = Path("results/lptv_vast_epochs.csv")
 CATALOG = Path("data/lpt_sample.csv")
 OUT = Path("results/lptduty_metrics.json")
@@ -44,6 +45,12 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = ld.load_epochs(args.epochs)
     periods = ld.read_periods(args.catalog)
+    # The binomial constraint assumes snapshots are independent draws on pulse phase.
+    # GATE 0 tests that per source; stamp each result with its verdict so a reader of this
+    # file cannot pick up a number without the caveat that governs it.
+    gate0 = {}
+    if GATE0.exists():
+        gate0 = json.loads(GATE0.read_text()).get("per_source", {})
     by_source: dict[str, list[ld.EpochRow]] = defaultdict(list)
     for r in rows:
         by_source[r.name].append(r)
@@ -82,6 +89,25 @@ def main(argv: list[str] | None = None) -> int:
             "snapshot_median_s": float(sorted(r.duration_s for r in srows)[len(srows) // 2]),
             "headline": headline,
             "vs_assumed_flux_mjy": grid,
+            "phase_sampling": {
+                "verdict": gate0.get(name, {}).get("verdict", "not tested"),
+                "independence_assumption_holds": (
+                    None
+                    if name not in gate0 or not gate0[name].get("testable")
+                    else not gate0[name].get("clustered", False)
+                    and gate0[name].get("period_precision_adequate", False)
+                ),
+            },
+            # False where GATE 0 showed the snapshots are not uniform in pulse phase, or
+            # could not tell: the binomial model does not apply, so p above is not a limit.
+            "constraint_valid": (
+                bool(
+                    gate0.get(name, {}).get("period_precision_adequate")
+                    and not gate0.get(name, {}).get("clustered")
+                )
+                if name in gate0 and gate0[name].get("testable")
+                else False
+            ),
             # f_active and (w+T)/P are not separately identifiable from counts alone.
             "identifiable_factors": False,
         }

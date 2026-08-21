@@ -21,12 +21,17 @@
   "per_source": {
     "ASKAP J142431.2-612611": {
       "brightest_abs_v_mjy": 0.8818,
+      "constraint_valid": false,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.2632,
       "n_detections": 0,
       "n_epochs_measured": 104,
       "period_s": 2147.27,
+      "phase_sampling": {
+        "independence_assumption_holds": false,
+        "verdict": "inconclusive: catalogued period too imprecise for coherent phase"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 75584.7,
       "vs_assumed_flux_mjy": {
@@ -76,12 +81,17 @@
     },
     "ASKAP J165130.3-450520": {
       "brightest_abs_v_mjy": 0.8524,
+      "constraint_valid": true,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.2811,
       "n_detections": 0,
       "n_epochs_measured": 60,
       "period_s": 23317.9,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 43472.0,
       "vs_assumed_flux_mjy": {
@@ -131,12 +141,17 @@
     },
     "ASKAP J170036.6-445758": {
       "brightest_abs_v_mjy": 0.8305,
+      "constraint_valid": true,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.3169,
       "n_detections": 0,
       "n_epochs_measured": 93,
       "period_s": 16895.9,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.0,
       "total_exposure_s": 67345.8,
       "vs_assumed_flux_mjy": {
@@ -186,6 +201,7 @@
     },
     "ASKAP J175534.9-252749.1": {
       "brightest_abs_v_mjy": 6.3203,
+      "constraint_valid": true,
       "headline": {
         "assumed_pulse_mjy": 6.3203,
         "effective_epochs": 90.98111410179196,
@@ -197,6 +213,10 @@
       "n_detections": 1,
       "n_epochs_measured": 91,
       "period_s": 4186.3285,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 66173.7,
       "vs_assumed_flux_mjy": {
@@ -246,6 +266,7 @@
     },
     "ASKAP J1832-0911": {
       "brightest_abs_v_mjy": 14.0424,
+      "constraint_valid": true,
       "headline": {
         "assumed_pulse_mjy": 14.0424,
         "effective_epochs": 71.0,
@@ -257,6 +278,10 @@
       "n_detections": 1,
       "n_epochs_measured": 71,
       "period_s": 2656.2554,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 51522.1,
       "vs_assumed_flux_mjy": {
@@ -306,6 +331,7 @@
     },
     "ASKAP J183950.5-075635": {
       "brightest_abs_v_mjy": 24.3499,
+      "constraint_valid": true,
       "headline": {
         "assumed_pulse_mjy": 24.3499,
         "effective_epochs": 44.0,
@@ -317,6 +343,10 @@
       "n_detections": 2,
       "n_epochs_measured": 44,
       "period_s": 23221.74,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 32108.9,
       "vs_assumed_flux_mjy": {
@@ -366,12 +396,17 @@
     },
     "ASKAP J1935+2148": {
       "brightest_abs_v_mjy": 0.5465,
+      "constraint_valid": true,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.2143,
       "n_detections": 0,
       "n_epochs_measured": 28,
       "period_s": 3225.313,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 20304.5,
       "vs_assumed_flux_mjy": {
@@ -421,12 +456,17 @@
     },
     "GCRT J1745-3009": {
       "brightest_abs_v_mjy": 0.8338,
+      "constraint_valid": true,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.4068,
       "n_detections": 0,
       "n_epochs_measured": 51,
       "period_s": 4620.72,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 37181.8,
       "vs_assumed_flux_mjy": {
@@ -476,12 +516,17 @@
     },
     "GLEAM-X J162759.5-523504.3": {
       "brightest_abs_v_mjy": 0.5616,
+      "constraint_valid": true,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.2533,
       "n_detections": 0,
       "n_epochs_measured": 51,
       "period_s": 1091.169,
+      "phase_sampling": {
+        "independence_assumption_holds": true,
+        "verdict": "phase sampling consistent with uniform"
+      },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 37103.0,
       "vs_assumed_flux_mjy": {
@@ -531,12 +576,17 @@
     },
     "GPM J1839-10": {
       "brightest_abs_v_mjy": 1.1683,
+      "constraint_valid": false,
       "headline": null,
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.235,
       "n_detections": 0,
       "n_epochs_measured": 54,
       "period_s": 1318.1957,
+      "phase_sampling": {
+        "independence_assumption_holds": false,
+        "verdict": "phase sampling NOT uniform - independence assumption fails"
+      },
       "snapshot_median_s": 726.0,
       "total_exposure_s": 39140.3,
       "vs_assumed_flux_mjy": {

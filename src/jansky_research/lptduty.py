@@ -42,7 +42,10 @@ __all__ = [
     "MIN_EFFICIENCY",
     "duty_constraint",
     "epoch_efficiency",
+    "PhaseSampling",
     "load_epochs",
+    "phase_sampling",
+    "read_period_precision",
     "read_periods",
 ]
 
@@ -114,6 +117,29 @@ def load_epochs(path: str | Path) -> list[EpochRow]:
                     e_v=e,
                 )
             )
+    return out
+
+
+def read_period_precision(path: str | Path) -> dict[str, float]:
+    """``{source: quoted precision in seconds}`` from the catalogue's decimal places.
+
+    A proxy for, NOT the same as, the published uncertainty: a period written 1318.1957 is
+    quoted to 1e-4 s, but its paper may still quote +/-5e-4. Use this to decide whether a
+    phase test is even worth attempting; the GATE-0 ephemeris audit must replace it with the
+    real uncertainties before any phase-resolved claim.
+    """
+    out: dict[str, float] = {}
+    with open(path) as fh:
+        for row in csv.DictReader(fh):
+            txt = (row.get("period_s") or "").strip()
+            if not txt:
+                continue
+            try:
+                float(txt)
+            except ValueError:
+                continue
+            decimals = len(txt.split(".")[1]) if "." in txt else 0
+            out[row["name"]] = 10.0**-decimals
     return out
 
 
@@ -202,4 +228,82 @@ def duty_constraint(
         p_point=p_point,
         p_upper_95=p_upper,
         identifiable_factors=identifiable_factors,
+    )
+
+
+@dataclass(frozen=True)
+class PhaseSampling:
+    """Whether a source's snapshots sample its pulse phase uniformly."""
+
+    name: str
+    n_epochs: int
+    period_s: float
+    baseline_days: float
+    rayleigh_z: float
+    rayleigh_p: float
+    kuiper_v: float
+    required_period_precision_s: float
+    coherent_assumption_needed: bool
+
+
+def phase_sampling(rows: list[EpochRow], period_s: float) -> PhaseSampling:
+    """Test whether snapshots sample pulse phase uniformly, for one source.
+
+    The binomial constraint in :func:`duty_constraint` assumes each snapshot is an
+    independent draw on pulse phase. VAST observes on a roughly fortnightly cadence, which
+    is not random with respect to any LPT period, so that assumption has to be checked
+    rather than asserted.
+
+    Phases are ``(mjd * 86400 / period) mod 1``. **The zero point is arbitrary and does not
+    matter**: clustering is invariant under a phase shift, so no ephemeris is needed to test
+    *uniformity* (an ephemeris is needed only to assign physically meaningful phase).
+
+    Two statistics, because they fail differently: Rayleigh Z catches a single concentration,
+    Kuiper V is sensitive to any departure from uniformity including multimodal ones.
+
+    ``required_period_precision_s`` is the period accuracy needed for phase to stay coherent
+    to 0.1 cycles across the observing baseline: ``0.1 * P^2 / T_baseline``. If the catalogued
+    period is less precise than this, phases smear and **this test cannot detect clustering
+    that may still be present** -- a null result here is then uninformative, not reassuring.
+    """
+    if period_s <= 0 or not math.isfinite(period_s):
+        raise ValueError(f"period must be positive and finite, got {period_s}")
+    if len(rows) < 2:
+        raise ValueError("need at least two epochs to test phase sampling")
+
+    mjd = np.array([r.epoch_mjd for r in rows], dtype=float)
+    baseline_days = float(mjd.max() - mjd.min())
+    # Phase relative to the first epoch, not to MJD 0. At MJD ~59000 a 1 h period is ~1.2e6
+    # cycles, where a float64 keeps only ~1e-10 of a cycle; referencing to the first epoch
+    # drops the magnitude by orders of magnitude and makes the zero-point invariance exact
+    # rather than approximate. The zero point is arbitrary either way.
+    phase = np.mod((mjd - mjd.min()) * 86400.0 / period_s, 1.0)
+    n = len(phase)
+
+    ang = 2.0 * math.pi * phase
+    c, s = float(np.cos(ang).sum()), float(np.sin(ang).sum())
+    r_bar = math.hypot(c, s) / n
+    z = n * r_bar**2
+    # Standard small-sample correction (Mardia & Jupp); p ~ exp(-Z) to leading order.
+    p_rayleigh = math.exp(-z) * (1.0 + (2.0 * z - z**2) / (4.0 * n))
+    p_rayleigh = min(max(p_rayleigh, 0.0), 1.0)
+
+    srt = np.sort(phase)
+    i = np.arange(1, n + 1, dtype=float)
+    d_plus = float((i / n - srt).max())
+    d_minus = float((srt - (i - 1.0) / n).max())
+    kuiper_v = d_plus + d_minus
+
+    required = 0.1 * period_s**2 / (baseline_days * 86400.0) if baseline_days > 0 else math.inf
+
+    return PhaseSampling(
+        name=rows[0].name,
+        n_epochs=n,
+        period_s=period_s,
+        baseline_days=baseline_days,
+        rayleigh_z=z,
+        rayleigh_p=p_rayleigh,
+        kuiper_v=kuiper_v,
+        required_period_precision_s=required,
+        coherent_assumption_needed=True,
     )
