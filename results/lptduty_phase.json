@@ -36,7 +36,7 @@
         "sigma_period_s": 0.0002
       },
       "f_active_point": 0.06250704381317189,
-      "f_active_upper_95": 0.24977814707743487,
+      "f_active_upper_95": 0.29652494729479134,
       "max_phase_uncertainty_cycles": 0.0012400896969954809,
       "n_detections_in_window": 1,
       "n_detections_outside_window": 0,
@@ -64,7 +64,7 @@
         "sigma_period_s": 0.001
       },
       "f_active_point": null,
-      "f_active_upper_95": 0.1302608695652174,
+      "f_active_upper_95": 0.13024922928495605,
       "max_phase_uncertainty_cycles": 0.01076031713584114,
       "n_detections_in_window": 0,
       "n_detections_outside_window": 1,
@@ -97,7 +97,7 @@
         "sigma_period_s": 0.332
       },
       "f_active_point": null,
-      "f_active_upper_95": 0.9986666666666667,
+      "f_active_upper_95": 0.9985774245179965,
       "max_phase_uncertainty_cycles": 0.045984590147977844,
       "n_detections_in_window": 0,
       "n_detections_outside_window": 2,

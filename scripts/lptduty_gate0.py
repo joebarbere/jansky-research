@@ -23,7 +23,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from jansky_research import lptduty as ld  # noqa: E402
 
-ALPHA = 0.01  # per-source significance before the trials correction
+# Family-wise significance: a Bonferroni-corrected p below this counts as clustered.
+# (Previously written as 0.01 with an unexplained "* 5" at each use, which recorded a
+# significance level in the JSON that was not the one governing the verdict.)
+ALPHA_FAMILYWISE = 0.05
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -66,13 +69,13 @@ def main(argv: list[str] | None = None) -> int:
             "rayleigh_p": ps.rayleigh_p,
             "rayleigh_p_bonferroni": p_corrected,
             "kuiper_v": ps.kuiper_v,
-            "clustered": bool(adequate and p_corrected < ALPHA * 5),
+            "clustered": bool(adequate and p_corrected < ALPHA_FAMILYWISE),
             "verdict": (
                 "inconclusive: catalogued period too imprecise for coherent phase"
                 if not adequate
                 else (
                     "phase sampling NOT uniform - independence assumption fails"
-                    if p_corrected < ALPHA * 5
+                    if p_corrected < ALPHA_FAMILYWISE
                     else "phase sampling consistent with uniform"
                 )
             ),
@@ -106,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             "departure from it.",
         ],
         "n_sources_tested": n_tested,
-        "alpha_per_source": ALPHA,
+        "alpha_familywise": ALPHA_FAMILYWISE,
         "flagged_clustered": flagged,
         "inconclusive_period_precision": inconclusive,
         "per_source": per_source,

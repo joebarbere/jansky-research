@@ -11,6 +11,16 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- `lptduty` GATE-2: the Poisson upper limit used `2.996 + k`, correct only at k=0. The exact
+  one-sided 95% limit is `0.5*chi2.ppf(0.95, 2k+2)` (2.996, 4.744, 6.296 for k=0,1,2), so the
+  three sources *with* a detection had limits 19-26% too tight -- and the write-up quoted only
+  the unaffected zero-detection limits, so it was invisible. Corrected to 0.0521, 0.0668,
+  0.1431 (and 0.2965 in the phase leg); `poisson_upper_95` now pins the exact values.
+  Also: the detection criterion now applies `lptv`'s leakage veto (|V| > 0.006|I|) as its
+  docstring already claimed (no committed number changes), and GATE 0 records the family-wise
+  alpha it actually tests against.
+
+### Fixed
 - `data/lpt_sample.csv`: five errors found by the plan-90 ephemeris audit and verified
   against the arXiv record before changing anything -- three wrong discovery arXiv ids
   (GCRT J1745-3009, GLEAM-X J162759.5, GPM J1839-10 all cited unrelated papers), ASKAP

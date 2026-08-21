@@ -170,3 +170,54 @@ Of the three attempted, the single-window model survives for one:
 So the honest state: the separation is implemented, tested and validated, and the published
 ephemerides support it for **one source out of ten**. That ratio is itself the finding, and
 it is the thing to report — not a class-wide f_active the data cannot carry.
+
+
+## GATE-2 science review (2026-08-21) — one real statistics bug, caught before the write-up
+
+Read-only review of the module, the three runners, the committed JSONs and this file.
+Verdict: do not advance to the note until finding 1 is fixed. All four findings are now
+addressed.
+
+**1. The Poisson upper limit was wrong for k > 0 — the code used `2.996 + k`.** That is
+correct only at k = 0. The exact one-sided 95% limit solves
+`sum_{i<=k} exp(-lam) lam^i/i! = 0.05`, i.e. `0.5 * chi2.ppf(0.95, 2k+2)`: 2.996, 4.744,
+6.296, 7.754 for k = 0..3. The limit does not grow by one count's worth per count near zero.
+Verified independently here by bisection on the Poisson CDF before changing anything.
+
+The bug hit **exactly the three sources with a detection** — the most quotable numbers in
+the slice — and was invisible in the write-up because the prose quoted only the seven
+zero-detection limits, which are unaffected. Corrected values:
+
+| source | k | was | is |
+|---|---|---|---|
+| ASKAP J175534.9-252749.1 | 1 | 0.0439 | **0.0521** |
+| ASKAP J1832-0911 | 1 | 0.0563 | **0.0668** |
+| ASKAP J183950.5-075635 | 2 | 0.1135 | **0.1431** |
+| J175534.9 f_active (phase leg) | 1 | 0.2498 | **0.2965** |
+
+No test caught it: the existing one asserted only `p_upper_95 > p_point`, which the wrong
+formula also satisfies. `poisson_upper_95` now pins the exact values against the CDF
+solution, and asserts `poisson_upper_95(1) > POISSON_ZERO_95 + 1` to block a regression.
+
+**2. The detection criterion did not match its own docstring.** It claimed "the same
+criterion the `lptv` sweep applied", but applied only `|V|/sigma >= 5` — `lptv` also
+requires `|V| > 0.006|I|`, the ASKAP on-axis leakage floor. All four detections in the
+committed sweep clear that floor comfortably, so **no number changed**, but the code did not
+do what it said and a brighter-I epoch could later have been counted as a pulse. `EpochRow`
+now carries Stokes I and `_is_detection` applies both conditions.
+
+**3. The GATE-0 significance level was recorded misleadingly** — `ALPHA = 0.01` with an
+unexplained `* 5` at each use, so the JSON advertised a threshold that was not the one
+governing the verdict. Now a single `ALPHA_FAMILYWISE = 0.05`.
+
+**4. GPM J1839-10's period was queried and is CORRECT.** The reviewer flagged a possible
+mismatch (1317.2 s vs the catalogue's 1318.1957 s) and hedged it as needing confirmation.
+Confirmed against the paper's own text: "we derive a period P of 1318.1957 +/- 0.0002 s"
+(arXiv:2503.08036, 34-year timing baseline). The catalogue value stands, so the GATE-0
+phase-clustering verdict for this source is not an artefact of a wrong period.
+
+Everything else was checked and passed: the identifiability argument, the efficiency model
+(`Phi(S/sigma - threshold)` is the right detection probability for a forced measurement),
+the MIN_EFFICIENCY floor, the Rayleigh/Kuiper statistics and the zero-point-invariance
+argument, the `(w+T)/P` window (an exact interval-overlap identity, not an approximation),
+and every citation.
