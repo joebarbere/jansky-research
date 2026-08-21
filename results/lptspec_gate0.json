@@ -1,0 +1,351 @@
+{
+  "caveats": [
+    "This is the idealised case: Gaussian noise, no deconvolution error, no primary-beam or bandpass systematic, and the true source spectrum assumed to be a power law across the band. Real Taylor-term alpha will be no better than this and probably worse, so a source failing here cannot be rescued by real data.",
+    "Bias is negligible above S/N ~20 with the T0 > 5 sigma guard, but grows below it, and near S/N ~6 the guard itself selects upward fluctuations of T0 and shrinks |alpha| -- a selection effect, not noise.",
+    "sigma_alpha here is the statistical term only. Pulse dilution (the pulse occupies a fraction of the integration) is a separate systematic and is not folded in."
+  ],
+  "injection_recovery": {
+    "alpha=-0.7,snr=10": {
+      "alpha_mean": -0.7021205817568476,
+      "alpha_std": 1.088927153155484,
+      "alpha_true": -0.7,
+      "bias": -0.002120581756847595,
+      "frac_within_0p3": 0.221125,
+      "snr": 10.0
+    },
+    "alpha=-0.7,snr=100": {
+      "alpha_mean": -0.6995820508456776,
+      "alpha_std": 0.10728322610501531,
+      "alpha_true": -0.7,
+      "bias": 0.00041794915432236124,
+      "frac_within_0p3": 0.995175,
+      "snr": 100.0
+    },
+    "alpha=-0.7,snr=15": {
+      "alpha_mean": -0.6998127618251919,
+      "alpha_std": 0.7197250827613092,
+      "alpha_true": -0.7,
+      "bias": 0.0001872381748080354,
+      "frac_within_0p3": 0.32415,
+      "snr": 15.0
+    },
+    "alpha=-0.7,snr=150": {
+      "alpha_mean": -0.6997063128684933,
+      "alpha_std": 0.07151771753197039,
+      "alpha_true": -0.7,
+      "bias": 0.00029368713150668135,
+      "frac_within_0p3": 1.0,
+      "snr": 150.0
+    },
+    "alpha=-0.7,snr=25": {
+      "alpha_mean": -0.6991461557824515,
+      "alpha_std": 0.4300243456435581,
+      "alpha_true": -0.7,
+      "bias": 0.0008538442175484162,
+      "frac_within_0p3": 0.51775,
+      "snr": 25.0
+    },
+    "alpha=-0.7,snr=300": {
+      "alpha_mean": -0.6998456335547231,
+      "alpha_std": 0.03575783784260283,
+      "alpha_true": -0.7,
+      "bias": 0.0001543664452768878,
+      "frac_within_0p3": 1.0,
+      "snr": 300.0
+    },
+    "alpha=-0.7,snr=36": {
+      "alpha_mean": -0.6991746432557214,
+      "alpha_std": 0.29827664355415845,
+      "alpha_true": -0.7,
+      "bias": 0.000825356744278527,
+      "frac_within_0p3": 0.6866,
+      "snr": 36.0
+    },
+    "alpha=-0.7,snr=50": {
+      "alpha_mean": -0.6992998269898617,
+      "alpha_std": 0.21464952562617418,
+      "alpha_true": -0.7,
+      "bias": 0.0007001730101382497,
+      "frac_within_0p3": 0.838425,
+      "snr": 50.0
+    },
+    "alpha=-2,snr=10": {
+      "alpha_mean": -2.0164928846607184,
+      "alpha_std": 1.1060036756766378,
+      "alpha_true": -2.0,
+      "bias": -0.01649288466071841,
+      "frac_within_0p3": 0.2185,
+      "snr": 10.0
+    },
+    "alpha=-2,snr=100": {
+      "alpha_mean": -1.999813714988067,
+      "alpha_std": 0.10887548702937772,
+      "alpha_true": -2.0,
+      "bias": 0.00018628501193296287,
+      "frac_within_0p3": 0.99425,
+      "snr": 100.0
+    },
+    "alpha=-2,snr=15": {
+      "alpha_mean": -2.0063181077514574,
+      "alpha_std": 0.7306840616905804,
+      "alpha_true": -2.0,
+      "bias": -0.006318107751457358,
+      "frac_within_0p3": 0.31955,
+      "snr": 15.0
+    },
+    "alpha=-2,snr=150": {
+      "alpha_mean": -1.9998320769222038,
+      "alpha_std": 0.07257852255931313,
+      "alpha_true": -2.0,
+      "bias": 0.00016792307779622817,
+      "frac_within_0p3": 1.0,
+      "snr": 150.0
+    },
+    "alpha=-2,snr=25": {
+      "alpha_mean": -2.001632185429618,
+      "alpha_std": 0.4364700005370849,
+      "alpha_true": -2.0,
+      "bias": -0.0016321854296181826,
+      "frac_within_0p3": 0.510725,
+      "snr": 25.0
+    },
+    "alpha=-2,snr=300": {
+      "alpha_mean": -1.9998941854574943,
+      "alpha_std": 0.03628795968641574,
+      "alpha_true": -2.0,
+      "bias": 0.00010581454250568889,
+      "frac_within_0p3": 1.0,
+      "snr": 300.0
+    },
+    "alpha=-2,snr=36": {
+      "alpha_mean": -2.000457749015653,
+      "alpha_std": 0.30272520335065783,
+      "alpha_true": -2.0,
+      "bias": -0.0004577490156529862,
+      "frac_within_0p3": 0.67945,
+      "snr": 36.0
+    },
+    "alpha=-2,snr=50": {
+      "alpha_mean": -2.0000217681045016,
+      "alpha_std": 0.21784291781707704,
+      "alpha_true": -2.0,
+      "bias": -2.1768104501607155e-05,
+      "frac_within_0p3": 0.831125,
+      "snr": 50.0
+    },
+    "alpha=0,snr=10": {
+      "alpha_mean": 0.005618350576005847,
+      "alpha_std": 1.0866301815932842,
+      "alpha_true": 0.0,
+      "bias": 0.005618350576005847,
+      "frac_within_0p3": 0.221225,
+      "snr": 10.0
+    },
+    "alpha=0,snr=100": {
+      "alpha_mean": 0.0005426913848395318,
+      "alpha_std": 0.10706706659440716,
+      "alpha_true": 0.0,
+      "bias": 0.0005426913848395318,
+      "frac_within_0p3": 0.995275,
+      "snr": 100.0
+    },
+    "alpha=0,snr=15": {
+      "alpha_mean": 0.0036901167504897687,
+      "alpha_std": 0.7182386418487585,
+      "alpha_true": 0.0,
+      "bias": 0.0036901167504897687,
+      "frac_within_0p3": 0.326125,
+      "snr": 15.0
+    },
+    "alpha=0,snr=150": {
+      "alpha_mean": 0.00036140623735087614,
+      "alpha_std": 0.07137374722603546,
+      "alpha_true": 0.0,
+      "bias": 0.00036140623735087614,
+      "frac_within_0p3": 1.0,
+      "snr": 150.0
+    },
+    "alpha=0,snr=25": {
+      "alpha_mean": 0.002192475566022903,
+      "alpha_std": 0.42914839792015635,
+      "alpha_true": 0.0,
+      "bias": 0.002192475566022903,
+      "frac_within_0p3": 0.5187,
+      "snr": 25.0
+    },
+    "alpha=0,snr=300": {
+      "alpha_mean": 0.0001805097775382291,
+      "alpha_std": 0.03568591328938853,
+      "alpha_true": 0.0,
+      "bias": 0.0001805097775382291,
+      "frac_within_0p3": 1.0,
+      "snr": 300.0
+    },
+    "alpha=0,snr=36": {
+      "alpha_mean": 0.001516259845780246,
+      "alpha_std": 0.29767214090527566,
+      "alpha_true": 0.0,
+      "bias": 0.001516259845780246,
+      "frac_within_0p3": 0.686625,
+      "snr": 36.0
+    },
+    "alpha=0,snr=50": {
+      "alpha_mean": 0.001088910533406073,
+      "alpha_std": 0.21421571658383898,
+      "alpha_true": 0.0,
+      "bias": 0.001088910533406073,
+      "frac_within_0p3": 0.8393,
+      "snr": 50.0
+    },
+    "alpha=1,snr=10": {
+      "alpha_mean": 1.016673968194368,
+      "alpha_std": 1.0918175694239691,
+      "alpha_true": 1.0,
+      "bias": 0.01667396819436795,
+      "frac_within_0p3": 0.2206,
+      "snr": 10.0
+    },
+    "alpha=1,snr=100": {
+      "alpha_mean": 1.0007208945712927,
+      "alpha_std": 0.10754508106632382,
+      "alpha_true": 1.0,
+      "bias": 0.0007208945712926518,
+      "frac_within_0p3": 0.9948,
+      "snr": 100.0
+    },
+    "alpha=1,snr=15": {
+      "alpha_mean": 1.0086942290014635,
+      "alpha_std": 0.7215335497253776,
+      "alpha_true": 1.0,
+      "bias": 0.00869422900146355,
+      "frac_within_0p3": 0.324625,
+      "snr": 15.0
+    },
+    "alpha=1,snr=150": {
+      "alpha_mean": 1.0004581478171284,
+      "alpha_std": 0.07169231635062266,
+      "alpha_true": 1.0,
+      "bias": 0.0004581478171283848,
+      "frac_within_0p3": 1.0,
+      "snr": 150.0
+    },
+    "alpha=1,snr=25": {
+      "alpha_mean": 1.0041048060638436,
+      "alpha_std": 0.4310813960658996,
+      "alpha_true": 1.0,
+      "bias": 0.004104806063843558,
+      "frac_within_0p3": 0.517075,
+      "snr": 25.0
+    },
+    "alpha=1,snr=300": {
+      "alpha_mean": 1.0002178573950544,
+      "alpha_std": 0.035845171322382574,
+      "alpha_true": 1.0,
+      "bias": 0.0002178573950544216,
+      "frac_within_0p3": 1.0,
+      "snr": 300.0
+    },
+    "alpha=1,snr=36": {
+      "alpha_mean": 1.0025032642764968,
+      "alpha_std": 0.29900622993159287,
+      "alpha_true": 1.0,
+      "bias": 0.0025032642764968305,
+      "frac_within_0p3": 0.6831,
+      "snr": 36.0
+    },
+    "alpha=1,snr=50": {
+      "alpha_mean": 1.0016442498523601,
+      "alpha_std": 0.2151736970973379,
+      "alpha_true": 1.0,
+      "bias": 0.0016442498523601135,
+      "frac_within_0p3": 0.8373,
+      "snr": 50.0
+    }
+  },
+  "is_real": true,
+  "method": "alpha = T1/T0 from ASKAP MFS Taylor terms. The Taylor-1 image carries sigma_1 = sigma_0 * sqrt(12) * nu0 / B (~10.7x for RACS-low), because the in-band lever arm is only +/-16% in frequency, so sigma_alpha ~ 10.7/(S/N). Injection-recovery measures bias as well as scatter, since a ratio with a noisy denominator is biased and an error bar cannot show that.",
+  "mt_mfs_penalty": 2.0,
+  "mt_mfs_penalty_source": "Rashid et al. 2024 (arXiv:2405.18978): MT-MFS in-band indices for SNR <~100 have errors >~0.2; the idealised formula here gives 0.107 there, so real MT-MFS is ~2x noisier. A uGMRT simulation, not an ASKAP calibration -- the real-cutout injection study must replace it with a measured ASKAP value.",
+  "n_pulses": 7,
+  "n_pulses_usable": 3,
+  "pulses": [
+    {
+      "i_mjy": 249.9685,
+      "leg": "VAST",
+      "name": "ASKAP J1832-0911",
+      "obs_id": "ASKAP-60804",
+      "sigma_alpha_idealised": 0.04071090960055903,
+      "sigma_alpha_realistic": 0.08142181920111806,
+      "snr_stokes_i": 262.2138885975034,
+      "usable": true
+    },
+    {
+      "i_mjy": 164.0265,
+      "leg": "RACS",
+      "name": "ASKAP J183950.5-075635",
+      "obs_id": "ASKAP-57929",
+      "sigma_alpha_idealised": 0.04989740296112867,
+      "sigma_alpha_realistic": 0.09979480592225734,
+      "snr_stokes_i": 213.9383070301291,
+      "usable": true
+    },
+    {
+      "i_mjy": 21.5897,
+      "leg": "RACS",
+      "name": "ASKAP J174508.9-505149",
+      "obs_id": "ASKAP-20398",
+      "sigma_alpha_idealised": 0.09814776185258468,
+      "sigma_alpha_realistic": 0.19629552370516937,
+      "snr_stokes_i": 108.76423173803526,
+      "usable": true
+    },
+    {
+      "i_mjy": 24.9303,
+      "leg": "VAST",
+      "name": "ASKAP J175534.9-252749.1",
+      "obs_id": "ASKAP-47253",
+      "sigma_alpha_idealised": 0.18630652938342973,
+      "sigma_alpha_realistic": 0.37261305876685946,
+      "snr_stokes_i": 57.297862560330955,
+      "usable": false
+    },
+    {
+      "i_mjy": 68.2234,
+      "leg": "VAST",
+      "name": "ASKAP J183950.5-075635",
+      "obs_id": "ASKAP-62646",
+      "sigma_alpha_idealised": 0.2955732287290855,
+      "sigma_alpha_realistic": 0.591146457458171,
+      "snr_stokes_i": 36.11614610905241,
+      "usable": false
+    },
+    {
+      "i_mjy": 12.1606,
+      "leg": "VAST",
+      "name": "ASKAP J183950.5-075635",
+      "obs_id": "ASKAP-62032",
+      "sigma_alpha_idealised": 0.5072114291659935,
+      "sigma_alpha_realistic": 1.014422858331987,
+      "snr_stokes_i": 21.04638283142956,
+      "usable": false
+    },
+    {
+      "i_mjy": 3.615,
+      "leg": "RACS",
+      "name": "ASKAP J165130.3-450520",
+      "obs_id": "ASKAP-68311",
+      "sigma_alpha_idealised": 0.7122549871719526,
+      "sigma_alpha_realistic": 1.4245099743439051,
+      "snr_stokes_i": 14.987562189054728,
+      "usable": false
+    }
+  ],
+  "question": "Before fetching any image: at the Stokes-I S/N our LPT pulses actually have, is a Taylor-term alpha recoverable at all?",
+  "slice": "lptspec",
+  "snr_for_sigma_alpha_0p1_realistic": 213.49931829408035,
+  "snr_for_sigma_alpha_0p3_idealised": 35.58321971568006,
+  "snr_for_sigma_alpha_0p3_realistic": 71.16643943136012,
+  "stage": "gate0-recoverability",
+  "target_sigma_alpha": 0.3,
+  "taylor1_noise_ratio": 10.674965914704018
+}

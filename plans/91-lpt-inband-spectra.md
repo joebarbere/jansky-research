@@ -1,6 +1,8 @@
 # 91 — `lptspec`: in-band spectra of LPT pulses from the Taylor-term images
 
-Status: 📋 planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166).
+Status: 🚧 GATE 0 cleared 2026-08-21 — novelty clear, and the injection study says 3 of 7
+pulses can carry an index (5 on the idealised calculation; the published MT-MFS penalty
+removes two). Next: fetch Taylor-term cutouts for those three. Planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166).
 
 ## Context
 

@@ -11,6 +11,16 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `lptspec` GATE 0 (plan 91): `src/jansky_research/lptspec.py` + `scripts/lptspec_gate0.py`
+  decide, without fetching an image, whether an ASKAP Taylor-term in-band spectral index is
+  recoverable for any LPT pulse. The short in-band lever arm makes the Taylor-1 image ~10.7x
+  noisier than Taylor-0, so `sigma_alpha ~ 10.7/(S/N)`; folding in the published MT-MFS
+  penalty (Rashid et al. 2024, arXiv:2405.18978) gives **3 of 7 pulses usable** at
+  `sigma_alpha <= 0.3` — including ASKAP J174508.9-505149, the source whose reported
+  frequency drift motivated the plan. Novelty pass clear: no LPT paper reports in-band alpha
+  from Taylor terms. Evidence: `results/lptspec_gate0.json`, `survey/lptspec-findings.md`.
+
+### Added
 - `papers/lptduty/rnaas.tex`: the plan-90 note (RNAAS register, macros generated from the
   committed JSONs by `lptduty.write_paper_assets`, prose-lint and triage clean). Leads with
   the ephemeris finding: the measurement is limited by what discovery papers publish, not by
