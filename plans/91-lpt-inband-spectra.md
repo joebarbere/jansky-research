@@ -1,6 +1,14 @@
 # 91 — `lptspec`: in-band spectra of LPT pulses from the Taylor-term images
 
-Status: 🚧 GATE 0 cleared 2026-08-21 — novelty clear, and the injection study says 3 of 7
+Status: ❌ CLOSED 2026-08-21 — the method is invalid for transients. Real taylor.1 cutouts
+give alpha = -1.24, -2.99 and -17.30; the last is the image's global minimum at the source
+pixel, and every steady source in the same image sits at |T1/T0| ~ 1-2 against our 17. MFS
+fits one constant-flux source across the synthesis, so a pulse present for part of it cannot
+be represented and the deconvolution absorbs the mismatch into taylor.1. No brighter pulse
+rescues this; sub-band imaging over the pulse's own time range would, and is a different
+slice. Full reasoning in survey/lptspec-findings.md.
+
+Was: GATE 0 cleared 2026-08-21 — novelty clear, and the injection study says 3 of 7
 pulses can carry an index (5 on the idealised calculation; the published MT-MFS penalty
 removes two). Next: fetch Taylor-term cutouts for those three. Planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166).
 

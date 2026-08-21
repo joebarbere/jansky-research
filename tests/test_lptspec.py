@@ -108,3 +108,36 @@ def test_the_penalty_changes_which_pulses_qualify():
     real_ok = sum(ls.realistic_sigma_alpha(s, 1.0, 0.0) <= 0.3 for s in snrs)
     assert ideal_ok == 5
     assert real_ok == 3
+
+
+class _FakeCol(list):
+    pass
+
+
+class _FakeTable:
+    """Minimal stand-in for a CASDA ObsCore table (only ``filename`` is read)."""
+
+    def __init__(self, names):
+        self._d = {"filename": _FakeCol(names)}
+
+    def __getitem__(self, k):
+        return self._d[k]
+
+
+def test_taylor_mask_selects_the_right_sbid_and_term():
+    """The SBID filter is the whole point: the same position has many epochs."""
+    t = _FakeTable(
+        [
+            "image.i.VAST_1824-06.SB60804.cont.taylor.0.restored.conv.fits",  # want
+            "image.i.VAST_1824-06.SB60804.cont.taylor.1.restored.conv.fits",  # other term
+            "image.i.VAST_1824-06.SB99999.cont.taylor.0.restored.conv.fits",  # other epoch
+            "image.v.VAST_1824-06.SB60804.cont.taylor.0.restored.conv.fits",  # other stokes
+            "noiseMap.image.i.VAST_1824-06.SB60804.cont.taylor.0.restored.conv.fits",  # noise
+            "image.i.VAST_1824-06.SB60804.cont.taylor.0.fits",  # not restored/conv
+        ]
+    )
+    m = ls.taylor_science_mask(t, term=0, sbid="60804")
+    assert m.tolist() == [True, False, False, False, False, False]
+    m1 = ls.taylor_science_mask(t, term=1, sbid="60804")
+    assert m1.tolist() == [False, True, False, False, False, False]
+    assert not ls.taylor_science_mask(t, term=0, sbid="12345").any()

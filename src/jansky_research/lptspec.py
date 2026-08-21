@@ -46,7 +46,9 @@ __all__ = [
     "realistic_sigma_alpha",
     "injection_recovery",
     "taylor1_noise_ratio",
+    "fetch_taylor_cutout",
     "taylor_alpha",
+    "taylor_science_mask",
     "usable_snr_threshold",
 ]
 
@@ -245,3 +247,92 @@ def measure(
         snr_taylor0=t0 / sigma0,
         usable=sig <= target_sigma_alpha,
     )
+
+
+def taylor_science_mask(table, term: int, sbid: str, stokes: str = "i"):
+    """Select the restored, convolved Taylor-``term`` science image for one SBID.
+
+    Two filters the general RACS cutout helper does not apply, both essential here:
+
+    * **the SBID**, because a pulse exists in one observation and the same position has
+      images from many epochs -- fetching "an image here" would measure a random epoch in
+      which the source is almost certainly off;
+    * **the Taylor term**, since ``taylor.0`` and ``taylor.1`` sit side by side and differ
+      only in that field.
+
+    ``noiseMap``/``meanMap`` products carry the same substrings, so ``restored`` and ``conv``
+    are required as in :func:`stokesv._racs_science_mask`.
+    """
+    import numpy as _np
+
+    fn = _np.array([str(x) for x in table["filename"]])
+    want = f"taylor.{term}"
+    return _np.array(
+        [
+            f.startswith(f"image.{stokes}.")
+            and f"SB{sbid}" in f
+            and want in f
+            and "restored" in f
+            and "conv" in f
+            for f in fn
+        ]
+    )
+
+
+def fetch_taylor_cutout(
+    ra: float,
+    dec: float,
+    sbid: str,
+    term: int,
+    *,
+    stokes: str = "i",
+    radius_deg: float = 0.03,
+    casda=None,
+    username: str | None = None,
+    pw_path: str = "~/.casda_pw",
+    retries: int = 3,
+):  # pragma: no cover - network
+    """Stage and read one Taylor-term cutout from CASDA -> ``(image_mJy, wcs, casda)``.
+
+    Mirrors ``stokesv.fetch_racs_cutout`` (same OPAL login, SODA staging and retry-on-401)
+    but selects by SBID and Taylor term via :func:`taylor_science_mask`.
+    """
+    import os
+    import tempfile
+
+    import astropy.units as _u
+    import numpy as _np
+    import requests
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.wcs import WCS
+    from astroquery.casda import Casda
+
+    from .stokesv import _casda_session
+
+    username = username or os.environ.get("CASDA_USERNAME")
+    if not username:
+        raise RuntimeError("set CASDA_USERNAME (OPAL email) for the Taylor-term fetch")
+    coord = SkyCoord(ra * _u.deg, dec * _u.deg)
+    for _ in range(retries):
+        try:
+            if casda is None:
+                casda = _casda_session(username, pw_path)
+            table = Casda.query_region(coord, radius=0.1 * _u.deg)
+            mask = taylor_science_mask(table, term, sbid, stokes)
+            if not mask.any():
+                return None
+            urls = casda.cutout(table[mask][:1], coordinates=coord, radius=radius_deg * _u.deg)
+            furl = next(u for u in urls if u.endswith(".fits"))
+            raw = requests.get(furl, timeout=300).content
+            with tempfile.NamedTemporaryFile(suffix=".fits", delete=False) as fh:
+                fh.write(raw)
+                path = fh.name
+            with fits.open(path) as hd:
+                data = _np.squeeze(_np.asarray(hd[0].data, float))
+                wcs = WCS(hd[0].header).celestial
+            os.unlink(path)
+            return data * 1000.0, wcs, casda  # Jy/beam -> mJy/beam
+        except Exception:
+            casda = None
+    return None

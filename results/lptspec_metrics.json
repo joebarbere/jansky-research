@@ -1,0 +1,75 @@
+{
+  "caveats": [
+    "DO NOT QUOTE THE ALPHA VALUES. All three are artifacts; -17.3 is the image minimum at the source pixel (-49 sigma). Retained as evidence of the failure, not as measurements.",
+    "sigma_alpha uses the local rms of the taylor.0 cutout scaled by the analytic Taylor-1 penalty and the published MT-MFS factor; it is NOT yet an ASKAP-measured injection result. Replacing it is the next increment.",
+    "Pulse dilution is not corrected: taylor.1 is fitted over the whole synthesis while the pulse occupies part of it, so alpha here is a synthesis-averaged quantity, not the intrinsic in-pulse index.",
+    "A single cutout per term; no independent re-imaging or self-calibration check."
+  ],
+  "is_real": true,
+  "method": "Forced value at the catalogue pixel in each Taylor term, local rms from an annulus; alpha = T1/T0. Forced rather than peak-searched, per the stokesv lesson that a peak search over blank sky is biased high.",
+  "n_attempted": 3,
+  "n_measured": 3,
+  "pulses": [
+    {
+      "alpha": -1.244240928519055,
+      "i_mjy": 249.9685,
+      "leg": "VAST",
+      "local_rms_mjy": 0.9665197046980687,
+      "measured": true,
+      "measured_snr_taylor0": 258.6273905517545,
+      "name": "ASKAP J1832-0911",
+      "obs_id": "ASKAP-60804",
+      "sbid": "60804",
+      "sigma_alpha_idealised": 0.04155489371562163,
+      "sigma_alpha_realistic": 0.08310978743124325,
+      "snr_stokes_i": 262.2138885975034,
+      "taylor0_mjy": 249.96846914291382,
+      "taylor1_mjy": -311.02100014686584,
+      "usable": true
+    },
+    {
+      "alpha": -2.993535393177278,
+      "i_mjy": 164.0265,
+      "leg": "RACS",
+      "local_rms_mjy": 0.7893295989892422,
+      "measured": true,
+      "measured_snr_taylor0": 207.8047867484934,
+      "name": "ASKAP J183950.5-075635",
+      "obs_id": "ASKAP-57929",
+      "sbid": "57929",
+      "sigma_alpha_idealised": 0.05335178197754166,
+      "sigma_alpha_realistic": 0.10670356395508332,
+      "snr_stokes_i": 213.9383070301291,
+      "taylor0_mjy": 164.02646899223328,
+      "taylor1_mjy": -491.01904034614563,
+      "usable": true
+    },
+    {
+      "alpha": -17.29739940905386,
+      "i_mjy": 21.5897,
+      "leg": "RACS",
+      "local_rms_mjy": 0.19331063029557205,
+      "measured": true,
+      "measured_snr_taylor0": 111.68418973023353,
+      "name": "ASKAP J174508.9-505149",
+      "obs_id": "ASKAP-20398",
+      "sbid": "20398",
+      "sigma_alpha_idealised": 0.1819972260220276,
+      "sigma_alpha_realistic": 0.3639944520440552,
+      "snr_stokes_i": 108.76423173803526,
+      "taylor0_mjy": 21.589741110801697,
+      "taylor1_mjy": -373.44637513160706,
+      "usable": true
+    }
+  ],
+  "recover_a_known": {
+    "conclusion": "the anomaly is local to the transient, not a units or scaling error",
+    "field_sources_abs_t1_over_t0": "1.19 to 2.14",
+    "target_abs_t1_over_t0": 17.3,
+    "test": "eight brightest peaks in a 0.25 deg cutout of SB20398, same image as the target"
+  },
+  "slice": "lptspec",
+  "source": "RACS/VAST taylor.0 and taylor.1 cutouts staged from CASDA (SODA)",
+  "stage": "real-taylor-alpha",
+  "verdict": "METHOD INVALID for transients: MFS fits one constant-flux power-law source across the synthesis; an LPT pulse present for part of it cannot be represented, and the deconvolution absorbs the mismatch into taylor.1. See survey/lptspec-findings.md."
+}
