@@ -11,6 +11,17 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `lptspec` real run and **negative result** (plan 91, now closed): Taylor-term cutouts were
+  staged for the three pulses GATE 0 cleared, and the method fails. alpha comes out -1.24,
+  -2.99 and -17.30; the last is the taylor.1 image's *global minimum* at the source pixel
+  (-49 sigma), and a recover-a-known over the same image puts every steady source at
+  |T1/T0| ~ 1-2 against our 17. MFS fits one constant-flux power-law source across the whole
+  synthesis, so an LPT pulse present for only part of it cannot be represented and the
+  deconvolution absorbs the mismatch into taylor.1 -- invalid rather than merely biased, and
+  not fixable by choosing brighter pulses. `results/lptspec_metrics.json` is retained as
+  evidence of the failure and stamped "do not quote the alpha values".
+
+### Added
 - `lptspec` GATE 0 (plan 91): `src/jansky_research/lptspec.py` + `scripts/lptspec_gate0.py`
   decide, without fetching an image, whether an ASKAP Taylor-term in-band spectral index is
   recoverable for any LPT pulse. The short in-band lever arm makes the Taylor-1 image ~10.7x

@@ -113,3 +113,72 @@ Anyone reading `git log` should take the JSON as authoritative.
 2. Fetch `taylor.0` and `taylor.1` cutouts for the three usable pulses (the CASDA
    machinery already exists in `stokesv.fetch_racs_cutout`; its filename mask is parameterised
    and `taylor.1` products are `restored.conv`), measure alpha, and quantify pulse dilution.
+
+
+## The real data kills the method (2026-08-21)
+
+GATE 0 said three pulses could carry an index. The cutouts were staged and measured
+(`results/lptspec_metrics.json`, 3 of 3 fetched). **The result is that ASKAP Taylor-term
+alpha does not work for LPT pulses**, and the reason is intrinsic rather than a matter of
+picking brighter pulses.
+
+| pulse | taylor.0 | taylor.1 | \|T1/T0\| | alpha |
+|---|---|---|---|---|
+| ASKAP J1832−0911 (SB60804) | 249.97 mJy | −311.02 | 1.24 | −1.24 |
+| ASKAP J183950.5−075635 (SB57929) | 164.03 mJy | −491.02 | 2.99 | −2.99 |
+| ASKAP J174508.9−505149 (SB20398) | 21.59 mJy | −373.45 | **17.30** | **−17.30** |
+
+An index of −17 is not a spectrum. Two diagnostics, neither of which required new data:
+
+**1. The pathological value is the image minimum.** In the SB20398 cutout, `taylor.0` peaks
+at +21.6 mJy at the source and `taylor.1` reaches **−373.4 mJy — its global minimum — at the
+same pixel**, a −49 sigma excursion against a local rms of 7.6. A negative spike coincident
+with a positive source is a deconvolution failure, not a steep spectrum.
+
+**2. Recover-a-known: every other source in the same image behaves, and ours does not.**
+Taking the eight brightest peaks in a 0.25 deg cutout of the same observation:
+
+| rank | T0 (mJy) | T1 (mJy) | alpha |
+|---|---|---|---|
+| 1 | 49.19 | −58.42 | −1.19 |
+| 2 | 21.77 | −34.68 | −1.59 |
+| **3 (our target)** | **21.59** | **−373.45** | **−17.30** |
+| 4 | 11.23 | −23.79 | −2.12 |
+| 5–8 | 4.6–7.5 | −7 to −11 | −1.4 to −2.1 |
+
+Field sources sit at |T1/T0| ~ 1–2. Ours sits at 17. The anomaly is local to the transient,
+not a global units or scaling error — and the two checks agree.
+
+### Why: MFS cannot tell time variability from frequency structure
+
+Multi-frequency synthesis fits one constant-flux, power-law source across the whole
+integration. An LPT pulse is present for part of the synthesis and absent for the rest, so
+no (flux, alpha) pair fits the visibilities, and the deconvolution absorbs the mismatch into
+a wild Taylor-1 term. This is the plan's "pulse dilution" caveat, but far more serious than a
+dilution factor: the model is not merely biased, it is **invalid** for a source that varies
+within the observation. The effect is worst where the pulse occupies the smallest fraction of
+the integration, which is exactly why the faintest synthesis-averaged source (21.6 mJy) is
+the most catastrophic, while J1832−0911 — bright and long-lived within its snapshot — looks
+almost plausible at −1.24.
+
+Note the corollary: **−1.24 and −2.99 are not "the good measurements".** The field population
+in the same image runs −1.2 to −2.1, so those two values sit inside the range that this
+image's Taylor-1 solution produces for *steady* sources whose true indices are typically
+~−0.8. There is no S/N at which this becomes trustworthy for a transient.
+
+### Verdict
+
+Plan 91's original goal is **dead as specified**, and no brighter pulse rescues it. GATE 0
+was necessary but not sufficient: it modelled Gaussian noise and correctly predicted which
+pulses had the signal-to-noise for an index, but signal-to-noise was never the binding
+constraint — the validity of the imaging model was.
+
+What survives, and is worth keeping:
+
+- The negative itself is publishable in one paragraph and saves the next person the same
+  three cutouts.
+- The *right* way to get in-band structure for a transient is to image sub-bands **over the
+  pulse's own time range**, not to read a synthesis-averaged Taylor term. That needs
+  visibilities, which CASDA serves for RACS/VAST, and is a different (heavier) slice.
+- `taylor_science_mask` and `fetch_taylor_cutout` (SBID- and term-specific staging) are
+  reusable regardless.
