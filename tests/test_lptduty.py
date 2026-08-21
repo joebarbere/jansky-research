@@ -246,3 +246,29 @@ def test_window_fraction_includes_the_snapshot_length():
     ]
     pr = ld.phase_resolved_activity(rows, e, pulse_mjy=5.0)
     assert pr.window_fraction == pytest.approx((100.0 + 400.0) / 1000.0)
+
+
+def test_poisson_upper_limits_match_the_exact_cdf_solution():
+    """2.996 + k is wrong for k>0 and this pins the right values (see poisson_upper_95)."""
+    expected = {0: 2.9957, 1: 4.7439, 2: 6.2958, 3: 7.7537}
+    for k, want in expected.items():
+        assert ld.poisson_upper_95(k) == pytest.approx(want, abs=1e-3)
+    # the naive formula is low by ~19% at k=1 -- guard against a regression to it
+    assert ld.poisson_upper_95(1) > ld.POISSON_ZERO_95 + 1
+    with pytest.raises(ValueError, match="non-negative"):
+        ld.poisson_upper_95(-1)
+
+
+def test_leakage_veto_rejects_a_significant_but_leakage_scale_v(tmp_path):
+    """lptv's criterion is significance AND |V| > 0.006|I|; this module claimed both."""
+    p = tmp_path / "e.csv"
+    header = "name,epoch,obs_id,band,epoch_mjd,duration_s,i_mjy,e_i,v_mjy,e_v,offset_arcsec,note\n"
+    p.write_text(
+        header
+        + "S,low,leak,low,59000.0,730.0,5000.0,1.0,20.0,0.2,1.0,\n"  # 100 sigma but |V| < 0.6% of I
+        + "S,low,real,low,59001.0,730.0,50.0,1.0,20.0,0.2,1.0,\n"  # same V, modest I -> genuine
+    )
+    rows = ld.load_epochs(p)
+    assert [r.i_mjy for r in rows] == [5000.0, 50.0]
+    c = ld.duty_constraint(rows, pulse_mjy=20.0)
+    assert c.n_detections == 1  # the leakage-scale one is vetoed

@@ -1,5 +1,5 @@
 {
-  "alpha_per_source": 0.01,
+  "alpha_familywise": 0.05,
   "caveats": [
     "quoted_period_precision_s is inferred from the catalogue's decimal places -- a proxy for the published uncertainty, not the uncertainty itself. The ephemeris audit must replace it with real values from the discovery papers.",
     "A period derivative large enough to matter over the baseline would break phase coherence even when the period is quoted precisely; pdot is not folded in here.",

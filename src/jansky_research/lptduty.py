@@ -46,6 +46,7 @@ __all__ = [
     "epoch_efficiency",
     "PhaseSampling",
     "load_epochs",
+    "poisson_upper_95",
     "phase_resolved_activity",
     "phase_sampling",
     "read_period_precision",
@@ -56,8 +57,34 @@ __all__ = [
 #: efficiency (and therefore every limit) depends on it.
 DETECT_THRESHOLD_SIGMA = 5.0
 
+#: ASKAP on-axis Stokes I -> V leakage floor, matching ``lptv.LEAKAGE_FRAC``. A |V| below
+#: this fraction of |I| can be instrumental leakage rather than circular polarization. The
+#: four detections in the committed sweep all clear it comfortably, so applying it changes
+#: no current number -- but without it this module did not do what its docstring claimed,
+#: and a brighter-I epoch could later be counted as a pulse.
+LEAKAGE_FRAC = 0.006
+
 #: 95% upper limit on the mean of a Poisson process with zero events (Gehrels 1986).
 POISSON_ZERO_95 = 2.996
+
+
+def poisson_upper_95(k: int) -> float:
+    """Exact one-sided 95% Poisson upper limit for ``k`` observed events.
+
+    Solves ``sum_{i<=k} exp(-lam) lam^i / i! = 0.05``, whose closed form is
+    ``0.5 * chi2.ppf(0.95, 2k+2)``: 2.996, 4.744, 6.296, 7.754 for k = 0..3.
+
+    Written out because the obvious-looking shortcut is wrong: this slice previously used
+    ``2.996 + k``, which is right at k=0 and understates the limit by 19% at k=1 and 26% at
+    k=2 -- exactly the sources that have a detection, i.e. the most quotable numbers. The
+    limit does not grow by one count's worth per count near zero.
+    """
+    if k < 0:
+        raise ValueError(f"k must be non-negative, got {k}")
+    from scipy.stats import chi2
+
+    return float(0.5 * chi2.ppf(0.95, 2 * k + 2))
+
 
 #: Efficiencies below this are treated as zero. A Gaussian tail is never exactly 0, so a
 #: 0.5 mJy pulse in a 100 mJy epoch still scores ~3e-7 -- and summing enough such epochs
@@ -76,6 +103,7 @@ class EpochRow:
     duration_s: float
     v_mjy: float
     e_v: float
+    i_mjy: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -106,6 +134,7 @@ def load_epochs(path: str | Path) -> list[EpochRow]:
                 v, e = float(row["v_mjy"]), float(row["e_v"])
                 dur = float(row["duration_s"])
                 mjd = float(row["epoch_mjd"])
+                i_flux = float(row["i_mjy"]) if row.get("i_mjy") else 0.0
             except (TypeError, ValueError):
                 continue
             if not math.isfinite(v) or not math.isfinite(e) or e <= 0:
@@ -118,6 +147,7 @@ def load_epochs(path: str | Path) -> list[EpochRow]:
                     duration_s=dur,
                     v_mjy=v,
                     e_v=e,
+                    i_mjy=i_flux,
                 )
             )
     return out
@@ -156,6 +186,13 @@ def read_periods(path: str | Path) -> dict[str, float]:
             except (TypeError, ValueError, KeyError):
                 continue
     return periods
+
+
+def _is_detection(row: EpochRow, threshold_sigma: float = DETECT_THRESHOLD_SIGMA) -> bool:
+    """The ``lptv`` sweep's criterion: significance AND the instrumental-leakage veto."""
+    if abs(row.v_mjy) / row.e_v < threshold_sigma:
+        return False
+    return abs(row.v_mjy) > LEAKAGE_FRAC * abs(row.i_mjy)
 
 
 def _phi(x: float) -> float:
@@ -212,14 +249,14 @@ def duty_constraint(
         [epoch_efficiency(r.e_v, pulse_mjy, threshold_sigma=threshold_sigma) for r in rows]
     )
     effective = float(eff.sum())
-    k = sum(1 for r in rows if abs(r.v_mjy) / r.e_v >= threshold_sigma)
+    k = sum(1 for r in rows if _is_detection(r, threshold_sigma))
 
     if effective <= 0:
         p_point: float | None = None
         p_upper = math.inf
     else:
         p_point = k / effective if k else None
-        p_upper = (POISSON_ZERO_95 if k == 0 else POISSON_ZERO_95 + k) / effective
+        p_upper = poisson_upper_95(k) / effective
 
     return SourceConstraint(
         name=rows[0].name,
@@ -400,7 +437,7 @@ def phase_resolved_activity(
             mid += 1.0
         dist = min(mid, 1.0 - mid)  # circular distance to the pulse phase
         hit = dist <= 0.5 * span
-        detected = abs(r.v_mjy) / r.e_v >= threshold_sigma
+        detected = _is_detection(r, threshold_sigma)
         if hit:
             in_window.append(r)
             det_in += int(detected)
@@ -418,7 +455,7 @@ def phase_resolved_activity(
         f_upper = math.inf
     else:
         f_point = det_in / eff if det_in else None
-        f_upper = (POISSON_ZERO_95 if det_in == 0 else POISSON_ZERO_95 + det_in) / eff
+        f_upper = poisson_upper_95(det_in) / eff
 
     return PhaseResolved(
         name=rows[0].name,

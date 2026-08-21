@@ -38,43 +38,43 @@
         "0.5": {
           "effective_epochs": 0.31255456868976167,
           "p_point": null,
-          "p_upper_95": 9.585526177266658,
+          "p_upper_95": 9.584669602214394,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 18.189344150312323,
           "p_point": null,
-          "p_upper_95": 0.16471182112129956,
+          "p_upper_95": 0.16469710225932202,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 104.0,
           "p_point": null,
-          "p_upper_95": 0.02880769230769231,
+          "p_upper_95": 0.02880511801494221,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 75.82903508729453,
           "p_point": null,
-          "p_upper_95": 0.039509931737242855,
+          "p_upper_95": 0.03950640107849582,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 104.0,
           "p_point": null,
-          "p_upper_95": 0.02880769230769231,
+          "p_upper_95": 0.02880511801494221,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 103.99992894855897,
           "p_point": null,
-          "p_upper_95": 0.028807711988744707,
+          "p_upper_95": 0.028805137694235882,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 104.0,
           "p_point": null,
-          "p_upper_95": 0.02880769230769231,
+          "p_upper_95": 0.02880511801494221,
           "unconstrained": false
         }
       }
@@ -98,43 +98,43 @@
         "0.5": {
           "effective_epochs": 0.07378042481872144,
           "p_point": null,
-          "p_upper_95": 40.60697681480114,
+          "p_upper_95": 40.60334812268303,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 7.42509142570934,
           "p_point": null,
-          "p_upper_95": 0.4034967151550977,
+          "p_upper_95": 0.4034606581652695,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 60.0,
           "p_point": null,
-          "p_upper_95": 0.049933333333333337,
+          "p_upper_95": 0.049928871225899826,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 48.19479440691189,
           "p_point": null,
-          "p_upper_95": 0.06216439009376346,
+          "p_upper_95": 0.06215883500323335,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 60.0,
           "p_point": null,
-          "p_upper_95": 0.049933333333333337,
+          "p_upper_95": 0.049928871225899826,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 59.99697183980191,
           "p_point": null,
-          "p_upper_95": 0.04993585356273694,
+          "p_upper_95": 0.049931391230092464,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 60.0,
           "p_point": null,
-          "p_upper_95": 0.049933333333333337,
+          "p_upper_95": 0.049928871225899826,
           "unconstrained": false
         }
       }
@@ -158,43 +158,43 @@
         "0.5": {
           "effective_epochs": 0.0534066224662616,
           "p_point": null,
-          "p_upper_95": 56.097911862759226,
+          "p_upper_95": 56.092898880592465,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 7.311241808011312,
           "p_point": null,
-          "p_upper_95": 0.4097799086219697,
+          "p_upper_95": 0.40974329015782357,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 93.0,
           "p_point": null,
-          "p_upper_95": 0.03221505376344086,
+          "p_upper_95": 0.0322121749844515,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 81.65664830741503,
           "p_point": null,
-          "p_upper_95": 0.036690215213351356,
+          "p_upper_95": 0.03668693652813025,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 93.0,
           "p_point": null,
-          "p_upper_95": 0.03221505376344086,
+          "p_upper_95": 0.0322121749844515,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 93.0,
           "p_point": null,
-          "p_upper_95": 0.03221505376344086,
+          "p_upper_95": 0.0322121749844515,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 93.0,
           "p_point": null,
-          "p_upper_95": 0.03221505376344086,
+          "p_upper_95": 0.0322121749844515,
           "unconstrained": false
         }
       }
@@ -206,7 +206,7 @@
         "assumed_pulse_mjy": 6.3203,
         "effective_epochs": 90.98111410179196,
         "p_point": 0.010991292092567419,
-        "p_upper_95": 0.043921203201899406
+        "p_upper_95": 0.05214120056919749
       },
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.3428,
@@ -223,43 +223,43 @@
         "0.5": {
           "effective_epochs": 0.030702081889481037,
           "p_point": 32.57108112732296,
-          "p_upper_95": 130.15404018478256,
+          "p_upper_95": 154.51279608552838,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 4.975252563167475,
           "p_point": 0.20099482132890034,
-          "p_upper_95": 0.8031753060302858,
+          "p_upper_95": 0.9534922012824238,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 90.99999999999406,
           "p_point": 0.010989010989011706,
-          "p_upper_95": 0.04391208791209078,
+          "p_upper_95": 0.052130379322976775,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 48.65755307964261,
           "p_point": 0.020551793847158766,
-          "p_upper_95": 0.08212496821324643,
+          "p_upper_95": 0.09749492562081423,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 91.0,
           "p_point": 0.01098901098901099,
-          "p_upper_95": 0.043912087912087915,
+          "p_upper_95": 0.052130379322973375,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 89.85193211785133,
           "p_point": 0.011129421220329273,
-          "p_upper_95": 0.04447316719643578,
+          "p_upper_95": 0.0527964664373432,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 91.0,
           "p_point": 0.01098901098901099,
-          "p_upper_95": 0.043912087912087915,
+          "p_upper_95": 0.052130379322973375,
           "unconstrained": false
         }
       }
@@ -271,7 +271,7 @@
         "assumed_pulse_mjy": 14.0424,
         "effective_epochs": 71.0,
         "p_point": 0.014084507042253521,
-        "p_upper_95": 0.05628169014084507
+        "p_upper_95": 0.06681499321676869
       },
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.4226,
@@ -288,43 +288,43 @@
         "0.5": {
           "effective_epochs": 0.0069165083021319185,
           "p_point": 144.58162360504414,
-          "p_upper_95": 577.7481679257564,
+          "p_upper_95": 685.8756342312704,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 1.6533699238119344,
           "p_point": 0.6048253240838236,
-          "p_upper_95": 2.4168819950389593,
+          "p_upper_95": 2.8692093947453325,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 70.99999999999997,
           "p_point": 0.014084507042253527,
-          "p_upper_95": 0.056281690140845095,
+          "p_upper_95": 0.06681499321676872,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 32.03229540457968,
           "p_point": 0.03121849331649924,
-          "p_upper_95": 0.12474909929273097,
+          "p_upper_95": 0.14809630276175412,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 71.0,
           "p_point": 0.014084507042253521,
-          "p_upper_95": 0.05628169014084507,
+          "p_upper_95": 0.06681499321676869,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 70.80509629840631,
           "p_point": 0.014123277168998189,
-          "p_upper_95": 0.05643661556731676,
+          "p_upper_95": 0.06699891344540622,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 71.0,
           "p_point": 0.014084507042253521,
-          "p_upper_95": 0.05628169014084507,
+          "p_upper_95": 0.06681499321676869,
           "unconstrained": false
         }
       }
@@ -336,7 +336,7 @@
         "assumed_pulse_mjy": 24.3499,
         "effective_epochs": 44.0,
         "p_point": 0.045454545454545456,
-        "p_upper_95": 0.11354545454545456
+        "p_upper_95": 0.14308621867890883
       },
       "identifiable_factors": false,
       "median_sigma_v_mjy": 0.3077,
@@ -353,43 +353,43 @@
         "0.5": {
           "effective_epochs": 0.016894670389095756,
           "p_point": 118.38052793802063,
-          "p_upper_95": 295.71455878917556,
+          "p_upper_95": 372.6496863730145,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 2.8743144554200755,
           "p_point": 0.6958180919379274,
-          "p_upper_95": 1.738153593660943,
+          "p_upper_95": 2.19036355260297,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 43.995997494316626,
           "p_point": 0.0454586806506287,
-          "p_upper_95": 0.1135557842652705,
+          "p_upper_95": 0.14309923584947187,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 26.067524857218373,
           "p_point": 0.0767238167395927,
-          "p_upper_95": 0.1916560942155026,
+          "p_upper_95": 0.24151865803740152,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 44.0,
           "p_point": 0.045454545454545456,
-          "p_upper_95": 0.11354545454545456,
+          "p_upper_95": 0.14308621867890883,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 35.227283415861656,
           "p_point": 0.056774176322079595,
-          "p_upper_95": 0.14182189245255483,
+          "p_upper_95": 0.17871924858779217,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 44.0,
           "p_point": 0.045454545454545456,
-          "p_upper_95": 0.11354545454545456,
+          "p_upper_95": 0.14308621867890883,
           "unconstrained": false
         }
       }
@@ -413,43 +413,43 @@
         "0.5": {
           "effective_epochs": 0.2014980734205143,
           "p_point": null,
-          "p_upper_95": 14.868628514117498,
+          "p_upper_95": 14.86729983418788,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 12.089342675800273,
           "p_point": null,
-          "p_upper_95": 0.2478215797453748,
+          "p_upper_95": 0.24779943408756774,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 28.0,
           "p_point": null,
-          "p_upper_95": 0.107,
+          "p_upper_95": 0.10699043834121391,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 27.991949354605907,
           "p_point": null,
-          "p_upper_95": 0.10703077381450843,
+          "p_upper_95": 0.10702120940573435,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 28.0,
           "p_point": null,
-          "p_upper_95": 0.107,
+          "p_upper_95": 0.10699043834121391,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 28.0,
           "p_point": null,
-          "p_upper_95": 0.107,
+          "p_upper_95": 0.10699043834121391,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 28.0,
           "p_point": null,
-          "p_upper_95": 0.107,
+          "p_upper_95": 0.10699043834121391,
           "unconstrained": false
         }
       }
@@ -479,37 +479,37 @@
         "1": {
           "effective_epochs": 0.3912076864329987,
           "p_point": null,
-          "p_upper_95": 7.658336233925502,
+          "p_upper_95": 7.65765187506627,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 22.878294309722268,
           "p_point": null,
-          "p_upper_95": 0.1309538184726836,
+          "p_upper_95": 0.1309421162696091,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 50.99644281395975,
           "p_point": null,
-          "p_upper_95": 0.05874919572193917,
+          "p_upper_95": 0.05874394581760786,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         }
       }
@@ -533,43 +533,43 @@
         "0.5": {
           "effective_epochs": 0.11829658179005398,
           "p_point": null,
-          "p_upper_95": 25.326175572149072,
+          "p_upper_95": 25.323912392250218,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 10.232109189378388,
           "p_point": null,
-          "p_upper_95": 0.2928037557603517,
+          "p_upper_95": 0.2927775904369511,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 50.61786919753537,
           "p_point": null,
-          "p_upper_95": 0.05918858394272112,
+          "p_upper_95": 0.059183294774088485,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 51.0,
           "p_point": null,
-          "p_upper_95": 0.05874509803921569,
+          "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         }
       }
@@ -593,43 +593,43 @@
         "0.5": {
           "effective_epochs": 0.34511976997347676,
           "p_point": null,
-          "p_upper_95": 8.6810442653872,
+          "p_upper_95": 8.680268516011756,
           "unconstrained": false
         },
         "1": {
           "effective_epochs": 15.550496608149972,
           "p_point": null,
-          "p_upper_95": 0.19266265737325744,
+          "p_upper_95": 0.19264544078829834,
           "unconstrained": false
         },
         "10": {
           "effective_epochs": 54.0,
           "p_point": null,
-          "p_upper_95": 0.05548148148148148,
+          "p_upper_95": 0.05547652358433314,
           "unconstrained": false
         },
         "2": {
           "effective_epochs": 52.82319854584415,
           "p_point": null,
-          "p_upper_95": 0.05671750447674679,
+          "p_upper_95": 0.05671243612698038,
           "unconstrained": false
         },
         "20": {
           "effective_epochs": 54.0,
           "p_point": null,
-          "p_upper_95": 0.05548148148148148,
+          "p_upper_95": 0.05547652358433314,
           "unconstrained": false
         },
         "5": {
           "effective_epochs": 53.999999999999815,
           "p_point": null,
-          "p_upper_95": 0.05548148148148167,
+          "p_upper_95": 0.05547652358433333,
           "unconstrained": false
         },
         "50": {
           "effective_epochs": 54.0,
           "p_point": null,
-          "p_upper_95": 0.05548148148148148,
+          "p_upper_95": 0.05547652358433314,
           "unconstrained": false
         }
       }
