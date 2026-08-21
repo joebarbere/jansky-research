@@ -1,12 +1,13 @@
 # Local Airflow stack for the research pipeline, trimmed for Podman on a single machine.
 #
 # Executor: LocalExecutor + Postgres only — NO Redis/Celery (drops the flakiest containers).
+# Airflow 3.x: the UI/API service is `api-server` (`webserver` was removed in 3.0).
 # Run with: `podman compose -f airflow/compose.yaml up -d`  (or `make airflow-up`).
 #
 # Podman / Fedora notes (see airflow/.env.example):
 #   * every bind mount carries the SELinux ":z" relabel suffix — the #1 docker->podman trap.
 #   * set AIRFLOW_UID=0 for rootless podman (container-root maps to your host user).
-#   * airflow-init is idempotent; scheduler/webserver retry the DB rather than relying on
+#   * airflow-init is idempotent; scheduler/api-server retry the DB rather than relying on
 #     health-gated ordering (podman-compose's depends_on lags docker-compose).
 
 x-airflow-common: &airflow-common
@@ -20,6 +21,13 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__FERNET_KEY: ""
+    # Airflow 3: workers reach the scheduler through the Task Execution API rather than
+    # touching the metadata DB directly, so the address must be explicit across containers
+    # (the default assumes localhost, which is wrong once they are separate services).
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    # Local dev stack: skip login. Airflow 3 defaults to SimpleAuthManager, and `airflow
+    # users create` belongs to the FAB auth manager, so it is no longer the way in.
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
     JR_OUTPUT: /opt/airflow/project
     JR_OFFLINE: "${JR_OFFLINE:-0}"
   user: "${AIRFLOW_UID:-0}:0"
@@ -54,8 +62,6 @@ services:
       - -c
       - |
         airflow db migrate
-        airflow users create --username admin --password admin \
-          --firstname admin --lastname admin --role Admin --email admin@example.com || true
     restart: on-failure
 
   airflow-scheduler:
@@ -63,9 +69,9 @@ services:
     command: scheduler
     restart: always
 
-  airflow-webserver:
+  airflow-apiserver:
     <<: *airflow-common
-    command: webserver
+    command: api-server
     ports:
       - "8080:8080"
     restart: always

@@ -17,12 +17,12 @@ calls is unit-tested offline.
 
 from __future__ import annotations
 
+import math
 import os
 from pathlib import Path
 
 import pendulum
-from airflow.decorators import dag, task
-from airflow.sensors.base import PokeReturnValue
+from airflow.sdk import PokeReturnValue, dag, task
 
 OUT = Path(os.environ.get("JR_OUTPUT", "/opt/airflow/project"))
 # cap the per-day fan-out so a backfill demo stays bounded; remove for a full ingest
@@ -69,7 +69,11 @@ def ecallisto_ingest():
         if row.get("t_peak_s") is not None:
             start = int(hhmmss[:2]) * 3600 + int(hhmmss[2:4]) * 60 + int(hhmmss[4:6])
             row["t_peak_s"] = round(start + row["t_peak_s"], 1)
-        return row
+        # Airflow 3 serialises XCom as STRICT JSON: a NaN anywhere in the returned dict raises
+        # "Out of range float values are not JSON compliant" and fails the task. Airflow 2's
+        # encoder allowed NaN, so this only appears at runtime, on stations whose scan yields
+        # one -- never at parse time. Send None instead; the CSV writer already renders empty.
+        return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
 
     @task()
     def reduce_day(rows: list[dict], date: str) -> str:

@@ -10,6 +10,21 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **Airflow 3.** The container base moves 2.9.3 -> 3.3.1, the `airflow` extra to
+  `>=3.3,<4.0`, DAG imports to the Task SDK (`airflow.sdk`), and compose from `webserver`
+  to `api-server` (removed in 3.0) with an explicit `EXECUTION_API_SERVER_URL` and
+  SimpleAuthManager (`airflow users create` belonged to the removed FAB auth manager).
+  Verified by running the DAG: `airflow dags test ecallisto_ingest 2011-09-14` completes
+  with all 7 tasks successful under 3.3.1.
+
+### Fixed
+- DAG `ecallisto_ingest`: `scan_station` now returns JSON-safe values. Airflow 3 serialises
+  XCom as **strict** JSON, so a NaN in the returned row raises "Out of range float values
+  are not JSON compliant" and fails the task; Airflow 2's encoder allowed it. The DAG parses
+  cleanly either way, so this only appears at runtime on stations whose scan yields a NaN --
+  found by running the upgrade rather than by CI, which never exercises this stack.
+
 ### Added
 - Plans 91--93, the follow-ups Rose et al. 2026 suggests, each gated on a feasibility check
   run before the plan was written rather than after: `lptspec` (in-band spectra of LPT
