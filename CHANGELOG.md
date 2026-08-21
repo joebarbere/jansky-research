@@ -10,6 +10,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- Plans 91--93, the follow-ups Rose et al. 2026 suggests, each gated on a feasibility check
+  run before the plan was written rather than after: `lptspec` (in-band spectra of LPT
+  pulses from the ASKAP Taylor-term images -- 98 `taylor.1` products confirmed present at an
+  LPT position, so no sub-band re-imaging is needed); `lptlin` (linear polarization --
+  **scope reduced**: a CASDA query showed RACS carries no q/u at these positions, only EMU
+  does, so the intended all-sky census does not exist to be done); `lptxray` (does accretion
+  predict radio loudness -- cross-match the LPT catalogue and the Pelisoli candidates against
+  public X-ray catalogues, with a measured chance rate).
+
 ### Fixed
 - `lptv` refs: `rose2026` upgraded from an arXiv e-print to the published record
   (Nature Astronomy 10, 1166--1178, `10.1038/s41550-026-02882-x`), verified against
