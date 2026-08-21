@@ -42,6 +42,7 @@ __all__ = [
     "LEAKAGE_FRAC_QU",
     "LinearPol",
     "debias_linear",
+    "faraday_depolarization",
     "linear_fraction",
     "polarization_angle",
     "total_polarization",
@@ -84,6 +85,29 @@ def debias_linear(l_raw: float, sigma_qu: float) -> float:
     if l_raw <= sigma_qu:
         return 0.0
     return math.sqrt(l_raw**2 - sigma_qu**2)
+
+
+def faraday_depolarization(rm_rad_m2: float, nu_lo_hz: float, nu_hi_hz: float) -> float:
+    """Fraction of linear polarization surviving a band-averaged Q/U measurement.
+
+    The polarization vector rotates as ``chi = chi0 + RM * lambda^2``, so averaging
+    ``p exp(2i chi)`` with uniform weighting across a band spanning ``Delta(lambda^2)`` leaves
+
+        p_observed / p_intrinsic = |sin(RM * Delta(lambda^2)) / (RM * Delta(lambda^2))|
+
+    This is why a single MFS ``taylor.0`` Q/U image cannot measure an intrinsic linear
+    fraction at appreciable RM, and why every published LPT linear fraction comes from RM
+    synthesis or a narrow sub-band instead. For the ASKAP 744-1032 MHz band, 50% is lost by
+    |RM| ~ 24 rad/m^2 and only ~9% survives at |RM| ~ 90.
+    """
+    c = 299792458.0
+    if nu_lo_hz <= 0 or nu_hi_hz <= 0:
+        raise ValueError("frequencies must be positive")
+    d_lambda2 = abs((c / nu_lo_hz) ** 2 - (c / nu_hi_hz) ** 2)
+    x = rm_rad_m2 * d_lambda2
+    if x == 0:
+        return 1.0
+    return abs(math.sin(x) / x)
 
 
 def total_polarization(l_mjy: float, v_mjy: float, i_mjy: float) -> float:

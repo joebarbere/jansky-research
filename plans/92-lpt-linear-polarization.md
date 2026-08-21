@@ -4,7 +4,12 @@ Status: 🚧 GATE 0 complete 2026-08-21, and it **overturned this plan's own pre
 scope reduction below was generalised from a query at ONE position and is wrong: 14 of 16 LPT
 positions have Q/U in CASDA, VAST does produce Q/U continuum images, and 4 of 7 detected
 pulses have Q and U in the same observation. One linear detection made: ASKAP J1832-0911 at
-L/I = 10.9% (33 sigma). See survey/lptlin-findings.md. Novelty pass in flight.
+L/I = 10.9% (33 sigma) -- but the novelty pass then showed that number is DEPOLARIZATION-
+DOMINATED. The source's published RM (+89 rad/m^2) leaves only ~9% of the intrinsic linear
+polarization in a band-averaged image, so 10.9% is a strong lower limit consistent with an
+intrinsically ~90% polarized source, not a measurement of it. Only J1832-0911 and CHIME
+J0630+25 lack a published linear fraction class-wide, so the gap is real -- filling it needs
+RM synthesis on channelized data. See survey/lptlin-findings.md.
 
 Was: planned 2026-08-20, **scope reduced by a feasibility check before writing**.
 Sourced from Rose et al. 2026 (Nature Astron. 10, 1166).

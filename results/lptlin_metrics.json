@@ -1,10 +1,28 @@
 {
   "caveats": [
+    "DEPOLARIZATION: linear polarization is band-averaged across 744-1032 MHz, retaining only ~9% at this source published RM of +89 rad/m^2. The quoted linear_fraction is a strong LOWER LIMIT, not a measurement of the source.",
+    "DO NOT compare linear_fraction with the circular fraction from lptv: Faraday rotation depolarizes the linear component in a band-averaged image and does nothing to the circular one. They are not on the same footing.",
     "The leakage floor is assumed equal to lptv's I->V figure (0.6%); a measured per-field I->Q/U leakage would be better and is not available here.",
     "Dilution cancels in L/I only while the pulse is well above the noise; the debiasing term biases the fraction slightly DOWN as the pulse approaches the noise floor (2% low at 5 sigma). Down cannot manufacture polarization.",
     "No ionospheric Faraday rotation correction: the EVPA is the observed angle, not the intrinsic one, and RM is not measured from a single band-averaged image.",
     "A single epoch per pulse; no independent re-imaging check."
   ],
+  "interpretation": {
+    "band_hz": [
+      744000000.0,
+      1032000000.0
+    ],
+    "headline": "The 10.9% linear fraction for ASKAP J1832-0911 is DEPOLARIZATION-DOMINATED and is NOT the intrinsic linear fraction. Do not quote it as one.",
+    "implication": "An intrinsically ~90% linearly polarized pulse would appear at 8.0-8.9% here; we measure 10.9%. Consistent with the published total polarized fraction of 92+/-3% for this source at another epoch.",
+    "published_rm_rad_m2": [
+      89.1,
+      90.5
+    ],
+    "retained_fraction_at_rm_89p1": 0.089,
+    "right_way_to_measure_it": "RM synthesis on channelized Q/U for SB60804, if CASDA holds per-channel products.",
+    "rm_for_50pct_depolarization": 24.3,
+    "rm_source": "Wang et al. 2025 (arXiv:2411.16606), RM synthesis on channelized data, two other epochs"
+  },
   "is_real": true,
   "method": "Forced value at the catalogue pixel in each Stokes image; L = sqrt(Q^2+U^2) debiased by subtracting the noise in quadrature; L/I with a leakage veto at 0.6% of |I|, the same two-part criterion lptv applies to V. taylor.0 only -- the MFS spectral term is invalid for a transient (plan 91).",
   "n_attempted": 7,

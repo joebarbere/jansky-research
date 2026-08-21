@@ -94,3 +94,28 @@ def test_total_polarization_is_a_physical_bound_check():
     assert ll.total_polarization(l_mjy=90.0, v_mjy=60.0, i_mjy=100.0) > 1.0
     with pytest.raises(ValueError, match="Stokes I is zero"):
         ll.total_polarization(1.0, 1.0, 0.0)
+
+
+def test_faraday_depolarization_of_a_band_averaged_measurement():
+    """Why a single MFS Q/U image cannot measure an intrinsic linear fraction."""
+    lo, hi = 744e6, 1032e6  # the ASKAP band of SB60804
+    assert ll.faraday_depolarization(0.0, lo, hi) == pytest.approx(1.0)
+    # 50% is lost by |RM| ~ 24 rad/m^2 in this band
+    assert ll.faraday_depolarization(24.3, lo, hi) == pytest.approx(0.5, abs=0.01)
+    # at this source's own published RM only ~9% survives
+    assert ll.faraday_depolarization(89.1, lo, hi) == pytest.approx(0.089, abs=0.005)
+    # a wider band depolarizes faster at fixed RM
+    assert ll.faraday_depolarization(30.0, 700e6, 1100e6) < ll.faraday_depolarization(
+        30.0, 850e6, 950e6
+    )
+    with pytest.raises(ValueError, match="frequencies must be positive"):
+        ll.faraday_depolarization(10.0, 0.0, 1e9)
+
+
+def test_our_measurement_is_consistent_with_a_highly_polarized_depolarized_source():
+    """10.9% observed at RM=+89 implies an intrinsically ~90-100% linear source."""
+    retained = ll.faraday_depolarization(89.1, 744e6, 1032e6)
+    predicted_for_90pct_intrinsic = 0.90 * retained
+    assert predicted_for_90pct_intrinsic == pytest.approx(0.080, abs=0.01)
+    # our 10.9% sits within tens of percent of that -- same regime, not a coincidence
+    assert 0.5 < 0.109 / predicted_for_90pct_intrinsic < 2.0

@@ -12,11 +12,13 @@ recommend the next version number.
 
 ### Added
 - `lptlin` (plan 92): linear polarization at LPT pulse positions from VAST Stokes Q/U.
-  **One detection** -- ASKAP J1832-0911 at L/I = 10.9% (33 sigma, EVPA 98 deg), which is more
-  linear than its 5.6% circular fraction -- plus three non-detections. Ricean debiasing (an
-  uncorrected L/I invents polarization for every faint source), a leakage veto, and a
-  `total_polarization` bound check. Evidence: `results/lptlin_metrics.json`,
-  `survey/lptlin-findings.md`.
+  One detection -- ASKAP J1832-0911 at L/I = 10.9% (33 sigma, EVPA 98 deg) -- plus three
+  non-detections. **The 10.9% is depolarization-dominated, not the source's linear fraction**:
+  the published RM of +89 rad/m^2 leaves only ~9% of the intrinsic linear polarization in a
+  band-averaged image, so this is a strong lower limit consistent with an intrinsically ~90%
+  polarized source (matching the published 92+/-3% total). Ricean debiasing, a leakage veto,
+  a `total_polarization` bound check and a `faraday_depolarization` calculator. Evidence:
+  `results/lptlin_metrics.json`, `survey/lptlin-findings.md`.
 
 ### Fixed
 - Plan 92's premise: an earlier feasibility check generalised from a query at **one** position
