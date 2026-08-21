@@ -221,3 +221,26 @@ Everything else was checked and passed: the identifiability argument, the effici
 the MIN_EFFICIENCY floor, the Rayleigh/Kuiper statistics and the zero-point-invariance
 argument, the `(w+T)/P` window (an exact interval-overlap identity, not an approximation),
 and every citation.
+
+
+## The note, and a gate that could not see it (2026-08-21)
+
+`papers/lptduty/rnaas.tex` drafted in the RNAAS register, every number `\input` from
+`generated/macros.tex` which `lptduty.write_paper_assets` writes from the committed JSONs.
+It passes `prose_lint --genre rnaas` clean against the 391-note pre-LLM baseline.
+
+Writing it exposed a gap in the repo's own science gate. `scripts/triage_papers.py` read
+`paper/main.tex` and skipped any directory without one, so **no RNAAS note in the repo had
+ever been triaged** -- not atlas3i's, frbstats', spectra's, vgpra's, nor wdpulsar's, which is
+the head of the submission queue. The rule says run triage before any submission; the tool
+could not see the document being submitted.
+
+Triage now checks every file in a paper directory carrying a `\documentclass`. Re-run over
+everything: all five previously-invisible notes come back clean, so the gap hid no defect --
+but it was real, and it is the CLAUDE.md lesson again, that a stated invariant is not a
+followed one until something checks it.
+
+The headline the note leads with is the ephemeris finding rather than the duty cycles: the
+measurement is limited by what the discovery papers publish, not by sensitivity or epochs,
+and a reference epoch costing one table row would convert most of these products into
+activity fractions.
