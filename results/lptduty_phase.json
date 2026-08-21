@@ -1,0 +1,113 @@
+{
+  "caveats": [
+    "Only sources with a PUBLISHED reference epoch are included. Assuming an epoch 'near the campaign' would manufacture phase; most of the sample is excluded for that reason, not for period imprecision.",
+    "Detections outside the predicted window are reported, not discarded: they are evidence the ephemeris is wrong.",
+    "Period derivatives are not folded in. For ASKAP J1832-0911 the published 95% Pdot bound, if saturated, adds ~0.22 cycles and would void its window assignment.",
+    "J183950's epoch is the repo's own anchor with a +/-0.013 cycle systematic, not a published PEPOCH."
+  ],
+  "excluded_no_published_epoch": {
+    "ASKAP J142431.2-612611": "epoch published (MJD 60684.856) but the period is quoted to 1e-2 s where 4e-3 s is needed, and Pdot is unconstrained; most VAST epochs predate it.",
+    "ASKAP J165130.3-450520": "no PEPOCH; reference epoch ~mid-2025 postdates most VAST epochs.",
+    "ASKAP J170036.6-445758": "no PEPOCH; same as above.",
+    "ASKAP J1935+2148": "no PEPOCH tabulated (campaign 2022-10 to 2023-08).",
+    "GCRT J1745-3009": "no ephemeris exists; period inferred from 3 burst intervals in a single 2002 observation, never re-detected.",
+    "GLEAM-X J162759.5-523504.3": "no PEPOCH; and its own best-fit Pdot (6e-10) would move phase by tens of cycles across the baseline.",
+    "GPM J1839-10": "period known to 2e-4 s over a 34-yr baseline, but the paper tabulates no PEPOCH; phase cannot be assigned without inventing one. Also 50-70% nulling."
+  },
+  "is_real": true,
+  "n_with_published_ephemeris": 3,
+  "per_source": {
+    "ASKAP J175534.9-252749.1": {
+      "assumed_pulse_mjy": 6.3203,
+      "brightest_abs_v_mjy": 6.3203,
+      "detection_phases": [
+        {
+          "obs_id": "ASKAP-47253",
+          "phase": 0.044814447723334205,
+          "v_sigma": 27.62368881118881
+        }
+      ],
+      "effective_in_window": 15.998196987029381,
+      "ephemeris": {
+        "pepoch_mjd": 59965.03792,
+        "period_s": 4186.3285,
+        "pulse_width_s": 30.0,
+        "reference": "mcsweeney2025 (arXiv:2507.14448), tabulated P and PEPOCH 59965.03792(3)",
+        "sigma_period_s": 0.0002
+      },
+      "f_active_point": 0.06250704381317189,
+      "f_active_upper_95": 0.24977814707743487,
+      "max_phase_uncertainty_cycles": 0.0012400896969954809,
+      "n_detections_in_window": 1,
+      "n_detections_outside_window": 0,
+      "n_epochs": 91,
+      "n_in_pulse_window": 16,
+      "usable": true,
+      "window_fraction_of_period": 0.18087054479444617
+    },
+    "ASKAP J1832-0911": {
+      "assumed_pulse_mjy": 14.0424,
+      "brightest_abs_v_mjy": 14.0424,
+      "detection_phases": [
+        {
+          "obs_id": "ASKAP-60804",
+          "phase": 0.6990550953369166,
+          "v_sigma": 34.801486988847586
+        }
+      ],
+      "effective_in_window": 23.0,
+      "ephemeris": {
+        "pepoch_mjd": 60344.0,
+        "period_s": 2656.247,
+        "pulse_width_s": 240.0,
+        "reference": "wang2025 (arXiv:2411.16606): P=2656.247(1) s, period epoch MJD 60344, width 2-4 min",
+        "sigma_period_s": 0.001
+      },
+      "f_active_point": null,
+      "f_active_upper_95": 0.1302608695652174,
+      "max_phase_uncertainty_cycles": 0.01076031713584114,
+      "n_detections_in_window": 0,
+      "n_detections_outside_window": 1,
+      "n_epochs": 71,
+      "n_in_pulse_window": 23,
+      "usable": true,
+      "window_fraction_of_period": 0.36354427140310763
+    },
+    "ASKAP J183950.5-075635": {
+      "assumed_pulse_mjy": 24.3499,
+      "brightest_abs_v_mjy": 24.3499,
+      "detection_phases": [
+        {
+          "obs_id": "ASKAP-62032",
+          "phase": 0.4894994432054318,
+          "v_sigma": 6.429948779752938
+        },
+        {
+          "obs_id": "ASKAP-62646",
+          "phase": 0.9511656232527912,
+          "v_sigma": 18.883210546723536
+        }
+      ],
+      "effective_in_window": 3.0,
+      "ephemeris": {
+        "pepoch_mjd": 60358.245243,
+        "period_s": 23221.74,
+        "pulse_width_s": 710.0,
+        "reference": "lee2025 (arXiv:2501.09133) P=23221.740(332); epoch is the repo's own documented anchor (lptv.J1839_T0_MJD, +/-0.013 cycle systematic), not a published PEPOCH",
+        "sigma_period_s": 0.332
+      },
+      "f_active_point": null,
+      "f_active_upper_95": 0.9986666666666667,
+      "max_phase_uncertainty_cycles": 0.045984590147977844,
+      "n_detections_in_window": 0,
+      "n_detections_outside_window": 2,
+      "n_epochs": 44,
+      "n_in_pulse_window": 3,
+      "usable": true,
+      "window_fraction_of_period": 0.0619999934230909
+    }
+  },
+  "question": "Where a published ephemeris allows physical phase, how much of the low per-snapshot detection rate is inactivity (f_active) rather than the snapshot missing a narrow pulse?",
+  "slice": "lptduty",
+  "stage": "phase-resolved"
+}

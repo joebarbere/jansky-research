@@ -112,3 +112,61 @@ test caught this as a zero-point invariance failure at the 1e-9 level.
    breaks phase coherence even when the period is quoted precisely.
 3. The 107 never-released epochs carry no measurement and are excluded; that is recorded in
    the loader, not silently dropped.
+
+
+## Ephemeris audit (2026-08-21) — and five errors it found in the committed catalogue
+
+The audit for increment 3 read all ten discovery/timing papers. Before any phase work, it
+turned up defects in `data/lpt_sample.csv`, a vendored provenance-carrying table that feeds
+`lptv` (in the submission queue). **Each was verified independently against the arXiv record
+before changing anything**, per the repo's rule to adjudicate rather than search:
+
+| row | field | was | is | check |
+|---|---|---|---|---|
+| GCRT J1745-3009 | discovery_arxiv | astro-ph/0502231 | astro-ph/0503052 | 0502231 is "How Concentrated Are The Haloes Of Low Surface Brightness Galaxies" |
+| GLEAM-X J162759.5 | discovery + pdot ref | 2201.02926 | 2503.08033 | 2201.02926 is "Variational design for a structural family of CAD models" |
+| GPM J1839-10 | discovery + pdot ref | 2307.14829 | 2503.08036 | 2307.14829 is a theory paper *about* the source, not the discovery |
+| ASKAP J1832-0911 | pdot_s_s | 9.0e-12 | 9.8e-10 | paper text: "spin period derivative limit Pdot = < 9.8e-10" — **two orders of magnitude** |
+| ASKAP J1832-0911 | period_s | 2656.2554 | 2656.247 | the paper gives P = 2656.247 +/- 0.001 s twice; 2656.2554 appears nowhere in it |
+
+The three wrong arXiv ids had propagated into `papers/lptv/refs.bib` `note` fields. The
+entries' titles, journals, volumes, pages and DOIs were all correct, which is precisely why
+triage's Crossref DOI check never caught them — **a DOI check cannot see a wrong arXiv id in
+a free-text note.**
+
+**No committed `lptv` number moves**: `period_split_p` stays 0.5219, median period 73.4 min,
+N = 16, 7 white-dwarf binaries. The period correction is 0.008 s in 2656 s, far too small to
+shift a median or a permutation rank. Verified by recomputing, not assumed.
+
+## Increment 3 — the split works, and yields exactly one number
+
+`results/lptduty_phase.json`. Machinery: restrict to snapshots whose phase coverage overlaps
+the emitting window, and the detection rate *within that subset* estimates f_active, while
+(w+T)/P comes from published quantities instead of being fitted.
+
+**Validated against an independent result.** For ASKAP J183950.5-075635 the code puts the two
+VAST detections at phases **0.489 and 0.951** — reproducing exactly the values `lptv` derived
+and published separately (0.489 +/- 0.016 and 0.951 +/- 0.017, `papers/lptv/main.tex`).
+
+**Only 3 of 10 sources could be attempted, and the reason is not period precision.** Seven
+are excluded because their papers publish **no reference epoch at all** — GPM J1839-10 knows
+its period to 2e-4 s over a 34-year baseline and still tabulates no PEPOCH. Assuming an epoch
+"near the campaign" would manufacture the phase, so the runner refuses and records why.
+
+Of the three attempted, the single-window model survives for one:
+
+- **ASKAP J175534.9-252749.1**: 16 of 91 snapshots on-window, its one detection at phase
+  0.045 (window half-width 0.091), giving **f_active ~ 0.06**. The detection landing near
+  phase 0 corroborates the assumption that the published PEPOCH is a pulse epoch.
+- **ASKAP J1832-0911**: its only detection sits at phase **0.699**, far outside a window
+  centred on PEPOCH. That *falsifies* the pulse-at-phase-0 assumption for this source — a
+  "period epoch" in a timing solution is a frequency reference and need not be a pulse
+  arrival. f_active is not measurable here without the true pulse phase, and fitting the
+  phase to the one detection and then using it to derive f_active would be circular.
+- **ASKAP J183950.5-075635**: needs a two-component model. Its detections are the interpulse
+  (0.489) and a main-pulse-like burst (0.951); a single window cannot represent a source with
+  a published interpulse at 177.8 deg separation.
+
+So the honest state: the separation is implemented, tested and validated, and the published
+ephemerides support it for **one source out of ten**. That ratio is itself the finding, and
+it is the thing to report — not a class-wide f_active the data cannot carry.

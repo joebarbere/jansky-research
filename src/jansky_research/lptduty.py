@@ -36,7 +36,9 @@ from pathlib import Path
 import numpy as np
 
 __all__ = [
+    "Ephemeris",
     "EpochRow",
+    "PhaseResolved",
     "SourceConstraint",
     "DETECT_THRESHOLD_SIGMA",
     "MIN_EFFICIENCY",
@@ -44,6 +46,7 @@ __all__ = [
     "epoch_efficiency",
     "PhaseSampling",
     "load_epochs",
+    "phase_resolved_activity",
     "phase_sampling",
     "read_period_precision",
     "read_periods",
@@ -306,4 +309,126 @@ def phase_sampling(rows: list[EpochRow], period_s: float) -> PhaseSampling:
         kuiper_v=kuiper_v,
         required_period_precision_s=required,
         coherent_assumption_needed=True,
+    )
+
+
+@dataclass(frozen=True)
+class Ephemeris:
+    """A published timing solution, with the uncertainties that decide if it is usable."""
+
+    name: str
+    period_s: float
+    sigma_period_s: float | None
+    pepoch_mjd: float
+    pulse_width_s: float
+    reference: str
+
+    def phase_uncertainty_at(self, mjd: float) -> float:
+        """Accumulated phase error (cycles) at ``mjd``, from the period uncertainty alone.
+
+        ``(t - PEPOCH) * sigma_P / P^2``. Returns inf when the paper reports no uncertainty:
+        an unreported error is not a zero error, and treating it as one is how a phase-folded
+        claim goes quietly wrong years after the reference epoch.
+        """
+        if self.sigma_period_s is None:
+            return math.inf
+        dt_s = abs(mjd - self.pepoch_mjd) * 86400.0
+        return dt_s * self.sigma_period_s / self.period_s**2
+
+
+@dataclass(frozen=True)
+class PhaseResolved:
+    """f_active separated from the in-period duty cycle, for one source."""
+
+    name: str
+    n_on_window: int
+    effective_on_window: float
+    n_detections_in_window: int
+    n_detections_outside: int
+    window_fraction: float
+    f_active_point: float | None
+    f_active_upper_95: float
+    max_phase_uncertainty: float
+    usable: bool
+
+
+def phase_resolved_activity(
+    rows: list[EpochRow],
+    eph: Ephemeris,
+    *,
+    pulse_phase: float = 0.0,
+    pulse_mjy: float,
+    threshold_sigma: float = DETECT_THRESHOLD_SIGMA,
+    min_efficiency: float = MIN_EFFICIENCY,
+    max_phase_uncertainty: float = 0.1,
+) -> PhaseResolved:
+    """Split ``p`` into f_active and the in-period duty cycle, where an ephemeris allows it.
+
+    :func:`duty_constraint` can only constrain the product, because a non-detection is
+    ambiguous between "the source was off" and "the snapshot missed the pulse". With physical
+    phase that ambiguity resolves: restrict to snapshots whose phase coverage overlaps the
+    emitting window, and the detection rate *within that subset* estimates f_active directly,
+    while ``(w + T)/P`` is computed from published quantities rather than fitted.
+
+    A snapshot of length T covers a phase range T/P wide, so the window it must overlap is
+    ``(w + T)/P`` wide -- the same combination that appears in the product.
+
+    ``usable`` is False when accumulated phase error exceeds ``max_phase_uncertainty`` at any
+    epoch: past that, snapshots cannot be assigned to the window at all, and the split is not
+    available regardless of how many epochs exist. Detections *outside* the window are
+    reported rather than discarded -- they are evidence the ephemeris is wrong, not noise.
+    """
+    if not rows:
+        raise ValueError("no epochs supplied")
+    names = {r.name for r in rows}
+    if len(names) != 1:
+        raise ValueError(f"rows span more than one source: {sorted(names)}")
+
+    worst = max(eph.phase_uncertainty_at(r.epoch_mjd) for r in rows)
+    usable = worst <= max_phase_uncertainty
+
+    in_window: list[EpochRow] = []
+    det_in = det_out = 0
+    widths = []
+    for r in rows:
+        span = (eph.pulse_width_s + r.duration_s) / eph.period_s
+        widths.append(span)
+        start = (r.epoch_mjd - eph.pepoch_mjd) * 86400.0 / eph.period_s
+        # phase of the snapshot's midpoint relative to the pulse
+        mid = math.fmod(start + 0.5 * r.duration_s / eph.period_s - pulse_phase, 1.0)
+        if mid < 0:
+            mid += 1.0
+        dist = min(mid, 1.0 - mid)  # circular distance to the pulse phase
+        hit = dist <= 0.5 * span
+        detected = abs(r.v_mjy) / r.e_v >= threshold_sigma
+        if hit:
+            in_window.append(r)
+            det_in += int(detected)
+        elif detected:
+            det_out += 1
+
+    eff = sum(
+        epoch_efficiency(
+            r.e_v, pulse_mjy, threshold_sigma=threshold_sigma, min_efficiency=min_efficiency
+        )
+        for r in in_window
+    )
+    if eff <= 0:
+        f_point: float | None = None
+        f_upper = math.inf
+    else:
+        f_point = det_in / eff if det_in else None
+        f_upper = (POISSON_ZERO_95 if det_in == 0 else POISSON_ZERO_95 + det_in) / eff
+
+    return PhaseResolved(
+        name=rows[0].name,
+        n_on_window=len(in_window),
+        effective_on_window=float(eff),
+        n_detections_in_window=det_in,
+        n_detections_outside=det_out,
+        window_fraction=float(np.mean(widths)) if widths else 0.0,
+        f_active_point=f_point,
+        f_active_upper_95=f_upper,
+        max_phase_uncertainty=worst,
+        usable=usable,
     )
