@@ -10,6 +10,17 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- `papers/lptduty/rnaas.tex`: the plan-90 note (RNAAS register, macros generated from the
+  committed JSONs by `lptduty.write_paper_assets`, prose-lint and triage clean). Leads with
+  the ephemeris finding: the measurement is limited by what discovery papers publish, not by
+  sensitivity.
+
+### Fixed
+- `scripts/triage_papers.py` checked only `paper/main.tex`, so **no RNAAS note had ever been
+  triaged** -- including wdpulsar's, at the head of the submission queue. It now checks every
+  file carrying a `\documentclass`. All five previously-unchecked notes come back clean.
+
 ### Fixed
 - `lptduty` GATE-2: the Poisson upper limit used `2.996 + k`, correct only at k=0. The exact
   one-sided 95% limit is `0.5*chi2.ppf(0.95, 2k+2)` (2.996, 4.744, 6.296 for k=0,1,2), so the

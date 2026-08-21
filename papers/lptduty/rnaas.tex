@@ -1,0 +1,108 @@
+\documentclass[RNAAS]{aastex631}
+
+% Every number is \input from the pipeline-generated macros; the committed evidence is
+% results/lptduty_{metrics,gate0,phase}.json.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{Long-Period Transients Are Caught in a Few Per Cent of ASKAP Snapshots, and Only One
+in Ten Has an Ephemeris Good Enough to Say Why}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Forced Stokes-V photometry at \ldNSources\ long-period transient (LPT) positions across
+\ldNEpochs\ archival ASKAP/VAST snapshots constrains the per-snapshot probability of catching
+a pulse, with a sensitivity-weighted denominator. Three sources with detections give
+\ldPMin--\ldPMax; the remaining valid limits span \ldLimMin--\ldLimMax\ at an assumed 5 mJy
+pulse. The quantity is the product of the active fraction and the in-period duty cycle, which
+separates only with a published ephemeris: \ldNNoEpoch\ of \ldNSources\ papers publish none,
+and the split is available for one source, which gives an active fraction of \ldFActive.
+\end{abstract}
+
+\section{}
+
+Long-period transients pulse on minute-to-hour periods and are frequently silent: GPM
+J1839$-$10 nulls for 50--70\% of its cycles \citep{hurleywalker2023}, and the accreting
+white-dwarf binary ASKAP J174508.9$-$505149 ``turns off for several hours at a time''
+\citep{rose2026}. These statements are per-source, from heterogeneous campaigns. No uniform
+measurement across the class exists; the field review notes that survey selection functions
+``require explicit modeling before population analysis is possible'' \citep{rea2026}.
+
+We measure one from archival data alone. A snapshot of length $T$ on a source of period $P$
+whose emitting phase has width $w$ catches a pulse with probability
+$p = f_{\rm active}\,(w+T)/P$ when the source is active. Detection counts constrain the
+product, not its factors. Using forced Stokes-V photometry at the catalogued positions in
+\ldNEpochs\ VAST snapshots covering \ldNSources\ LPTs, we count a detection where
+$|V|/\sigma_V \ge 5$ and $|V|$ exceeds the on-axis leakage floor, matching
+\citet{barbere2026lptv}.
+
+The denominator is not the number of epochs. A pulse of flux $S$ is undetectable in an epoch
+whose noise is comparable to it, so each epoch contributes its own detection probability
+$\Phi(S/\sigma_V - 5)$ and the exposure is their sum. At the observed pulse brightnesses this
+removes roughly half the nominal exposure; using an epoch count instead would halve every
+$p$. Efficiencies below $10^{-3}$ are set to zero, because summing Gaussian tails over many
+hopeless epochs otherwise manufactures sensitivity that does not exist. Upper limits are the
+exact one-sided 95\% Poisson values.
+
+Three sources yield detections, giving $p = \ldPMin$--$\ldPMax$. For scale, a $\sim$730~s
+snapshot on a 2656~s period covers $\sim$27\% of a cycle, so a permanently active source with
+a broad pulse would sit near 0.3; the measurements are an order of magnitude below that.
+Sources without detections give 95\% limits of $\ldLimMin$--$\ldLimMax$ at an assumed 5~mJy
+pulse. Every limit is a function of that assumed brightness and is tabulated against it in
+the committed evidence.
+
+The binomial treatment assumes snapshots sample pulse phase independently, and VAST's
+fortnightly cadence is not random with respect to any LPT period. Testing this requires no
+ephemeris, since clustering is invariant under a phase shift. Of \ldNSources\ sources,
+\ldNClustered\ shows non-uniform phase sampling (Kuiper $V = 0.275$, Bonferroni-corrected
+$p = 0.012$) and its constraint is therefore void, and \ldNInconclusive\ has a period quoted
+too coarsely for the test to run. \ldNValid\ constraints stand.
+
+Separating $f_{\rm active}$ from the in-period duty cycle requires physical phase, and here
+the published record, not the data, is the limit. \ldNNoEpoch\ of \ldNSources\ discovery
+papers tabulate no reference epoch at all --- GPM J1839$-$10 knows its period to
+$2\times10^{-4}$~s over a 34-year baseline and still publishes no PEPOCH. Assuming an epoch
+would manufacture the phase. Of the \ldNPhaseUsable\ sources with one, ASKAP
+J175534.9$-$252749.1 admits the split: \ldFActiveOn\ of \ldFActiveN\ snapshots overlap its
+pulse window and one contains a detection, giving $f_{\rm active} = \ldFActive$. ASKAP
+J1832$-$0911's only detection falls at phase 0.699, which shows that its published period
+epoch is not a pulse arrival, so its split is not available; fitting the phase to that
+detection and then deriving $f_{\rm active}$ from it would be circular. ASKAP
+J183950.5$-$075635 requires a two-component model for its published interpulse, and the
+machinery reproduces the phases 0.489 and 0.951 reported independently by
+\citet{barbere2026lptv}.
+
+The measurement is limited by ephemerides rather than by sensitivity or epochs. A published
+reference epoch, at the cost of one table row, would convert most of these products into
+activity fractions.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/lptduty.pdf}
+\caption{Per-snapshot probability of catching a pulse for each of the \ldNSources\ LPTs, from
+\ldNEpochs\ VAST snapshots. Circles are sources with detections; open triangles are 95\%
+upper limits at an assumed 5~mJy pulse; crosses mark the two sources whose constraints do not
+stand (one with non-uniform phase sampling, one whose period is too coarsely quoted to test).
+Every value is regenerated by the tested pipeline (\code{jansky\_research.lptduty}).}
+\label{fig:lptduty}
+\end{figure}
+
+\begin{acknowledgments}
+Developed collaboratively with Anthropic's Claude \citep{anthropicclaude} (a large language
+model); the author directed and verified the work, and an AI assistant is not an eligible
+author. This work uses data obtained from Inyarrimanha Ilgari Bundara / the Murchison
+Radio-astronomy Observatory. We acknowledge the Wajarri Yamaji People as the Traditional
+Owners and native title holders of the Observatory site.
+\end{acknowledgments}
+
+\software{jansky-research \citep{janskyresearch}, jansky \citep{jansky}, Astropy, NumPy, SciPy}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}

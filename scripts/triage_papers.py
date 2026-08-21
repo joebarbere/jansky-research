@@ -106,10 +106,25 @@ def _used(tex: str) -> set[str]:
     return set(re.findall(r"\\([A-Za-z]+)(?![A-Za-z])", tex))
 
 
-def check_paper(paper: Path, *, network: bool, cache: dict) -> list[tuple[str, str, str]]:
-    """Return [(severity, kind, detail)] for one paper."""
+def paper_tex_files(paper: Path) -> list[Path]:
+    """Every compilable document in a paper directory, not just ``main.tex``.
+
+    RNAAS notes live beside the paper as ``rnaas.tex``. Until 2026-08-21 this script read
+    only ``main.tex`` and skipped any directory without one, so **no note in the repo had
+    ever been triaged** -- including the one at the head of the submission queue. A gate that
+    cannot see a document cannot vouch for it.
+    """
+    return sorted(
+        t for t in paper.glob("*.tex") if "\\documentclass" in t.read_text(errors="replace")
+    )
+
+
+def check_paper(
+    paper: Path, *, network: bool, cache: dict, tex_path: Path | None = None
+) -> list[tuple[str, str, str]]:
+    """Return [(severity, kind, detail)] for one document of one paper."""
     out: list[tuple[str, str, str]] = []
-    tex_path = paper / "main.tex"
+    tex_path = tex_path or (paper / "main.tex")
     if not tex_path.is_file():
         return out
     tex = tex_path.read_text()
@@ -278,10 +293,10 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = []
     for p in papers:
-        if not (p / "main.tex").is_file():
-            continue
-        found = check_paper(p, network=not a.no_network, cache=cache)
-        rows.append((p.name, found))
+        for tex in paper_tex_files(p):
+            found = check_paper(p, network=not a.no_network, cache=cache, tex_path=tex)
+            label = p.name if tex.name == "main.tex" else f"{p.name}/{tex.stem}"
+            rows.append((label, found))
     CACHE.write_text(json.dumps(cache))
 
     order = {"HIGH": 0, "MED": 1, "LOW": 2}
