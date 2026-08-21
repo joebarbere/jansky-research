@@ -1,6 +1,8 @@
 # 90 — `lptduty`: how often are long-period transients actually on?
 
-Status: 📋 planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166;
+Status: 🚧 increments 1-3 complete 2026-08-21 (GATE 0 cleared: novelty clear, aliasing
+tested and two constraints invalidated; phase-resolved leg validated against lptv's published
+phases). Increment 4 (GATE-2 review, then the note) in progress. Planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166;
 `10.1038/s41550-026-02882-x`), not from `fable-ideas.md`.
 
 ## Context
@@ -66,9 +68,10 @@ Report the efficiency-weighted exposure alongside the raw epoch count.
 
 ## Increments
 
-1. Efficiency + constraint logic with tests (offline fixture).
-2. Run over the committed CSV; write metrics + findings.
-3. Phase-resolved leg for sources with usable ephemerides.
+1. ✅ Efficiency + constraint logic with tests (offline fixture).
+2. ✅ Run over the committed CSV; write metrics + findings.
+3. ✅ Phase-resolved leg for sources with usable ephemerides -- which turned out to be one
+   of ten, seven being excluded for having no published reference epoch at all.
 4. GATE-2 science review, then the note.
 
 ## Related
