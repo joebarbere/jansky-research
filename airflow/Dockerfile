@@ -4,7 +4,7 @@
 #
 # Fully-qualified image name: Fedora podman enforces short-name resolution and cannot prompt
 # for a registry in a non-interactive (CI / background) build.
-FROM docker.io/apache/airflow:2.9.3-python3.12
+FROM docker.io/apache/airflow:3.3.1-python3.12
 
 # The slim Airflow image has no usable git, which pip needs for the git+https jansky install.
 USER root

@@ -25,7 +25,7 @@ dependencies = [
 # Apache Airflow is kept OUT of the core install — its constraint resolution is
 # heavy and conflict-prone. It is installed only inside the Airflow container
 # (airflow/Dockerfile) or via `uv sync --extra airflow` when iterating on DAGs.
-airflow = ["apache-airflow>=2.9,<3.0"]
+airflow = ["apache-airflow>=3.3,<4.0"]
 # Reading the bitshuffle-compressed Breakthrough Listen Voyager HDF5 (validate_voyager).
 voyager = ["h5py>=3.0", "hdf5plugin>=4.0"]
 # Querying the VLASS catalogues for the multi-epoch variability slice (Epoch 1 via VizieR TAP).
