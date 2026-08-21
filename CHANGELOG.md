@@ -10,6 +10,22 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- `data/lpt_sample.csv`: five errors found by the plan-90 ephemeris audit and verified
+  against the arXiv record before changing anything -- three wrong discovery arXiv ids
+  (GCRT J1745-3009, GLEAM-X J162759.5, GPM J1839-10 all cited unrelated papers), ASKAP
+  J1832-0911's period derivative (9.0e-12 -> 9.8e-10, two orders of magnitude) and its
+  period (2656.2554 -> 2656.247, the value its own cited paper gives). The three arXiv ids
+  had propagated into `papers/lptv/refs.bib` notes; triage's Crossref DOI check could not
+  see them because the titles and DOIs were correct. No committed `lptv` number changes.
+
+### Added
+- `lptduty` increment 3 (`scripts/lptduty_phase.py`, `results/lptduty_phase.json`):
+  phase-resolved separation of f_active from the in-period duty cycle. Validated by
+  reproducing exactly the pulse phases (0.489, 0.951) that `lptv` published independently.
+  Seven of ten sources are excluded for having no published reference epoch at all; of the
+  three attempted, one supports the single-window model (f_active ~ 0.06).
+
 ### Added
 - `lptduty` GATE 0: novelty pass (clear -- no class-wide LPT activity-fraction constraint
   exists; the field review says the selection function is unmodelled) and an aliasing test

@@ -277,7 +277,7 @@
       "median_sigma_v_mjy": 0.4226,
       "n_detections": 1,
       "n_epochs_measured": 71,
-      "period_s": 2656.2554,
+      "period_s": 2656.247,
       "phase_sampling": {
         "independence_assumption_holds": true,
         "verdict": "phase sampling consistent with uniform"

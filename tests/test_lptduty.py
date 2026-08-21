@@ -164,3 +164,85 @@ def test_phase_sampling_rejects_bad_input():
         ld.phase_sampling(rows, 0.0)
     with pytest.raises(ValueError, match="at least two epochs"):
         ld.phase_sampling(rows[:1], 3600.0)
+
+
+def _eph(P=1000.0, sigma=1e-6, pepoch=59000.0, width=100.0):
+    return ld.Ephemeris(
+        name="SRC",
+        period_s=P,
+        sigma_period_s=sigma,
+        pepoch_mjd=pepoch,
+        pulse_width_s=width,
+        reference="test",
+    )
+
+
+def test_phase_uncertainty_grows_with_time_and_is_inf_when_unreported():
+    e = _eph(P=1000.0, sigma=1e-5, pepoch=59000.0)
+    near = e.phase_uncertainty_at(59001.0)
+    far = e.phase_uncertainty_at(59100.0)
+    assert far == pytest.approx(100 * near)
+    assert far == pytest.approx(99.0 * 86400.0 * 1e-5 / 1000.0**2 + near, rel=1e-6)
+    unknown = ld.Ephemeris("SRC", 1000.0, None, 59000.0, 100.0, "no sigma published")
+    assert math.isinf(unknown.phase_uncertainty_at(59001.0))
+
+
+def test_phase_resolved_recovers_f_active_when_the_source_is_always_on():
+    """Snapshots placed on the pulse, all detected -> f_active ~ 1."""
+    e = _eph(P=1000.0, sigma=1e-9, width=200.0)
+    # place each snapshot at whole periods after PEPOCH -> phase 0 == the pulse
+    rows = [
+        ld.EpochRow("SRC", f"o{i}", 59000.0 + i * 1000.0 / 86400.0, 100.0, 5.0, 0.2)
+        for i in range(20)
+    ]
+    pr = ld.phase_resolved_activity(rows, e, pulse_mjy=5.0)
+    assert pr.usable
+    assert pr.n_on_window == 20
+    assert pr.n_detections_in_window == 20
+    assert pr.f_active_point == pytest.approx(1.0, rel=0.05)
+
+
+def test_phase_resolved_gives_an_upper_limit_when_on_window_snapshots_see_nothing():
+    e = _eph(P=1000.0, sigma=1e-9, width=200.0)
+    rows = [
+        ld.EpochRow("SRC", f"o{i}", 59000.0 + i * 1000.0 / 86400.0, 100.0, 0.0, 0.2)
+        for i in range(30)
+    ]
+    pr = ld.phase_resolved_activity(rows, e, pulse_mjy=5.0)
+    assert pr.n_on_window == 30
+    assert pr.n_detections_in_window == 0
+    assert pr.f_active_point is None
+    assert pr.f_active_upper_95 == pytest.approx(ld.POISSON_ZERO_95 / 30, rel=1e-3)
+
+
+def test_detections_outside_the_window_are_reported_not_swallowed():
+    """A pulse at the wrong phase means the ephemeris is wrong; that must be visible."""
+    e = _eph(P=1000.0, sigma=1e-9, width=50.0)
+    # snapshots half a period out of phase, yet bright
+    rows = [
+        ld.EpochRow("SRC", f"o{i}", 59000.0 + (i + 0.5) * 1000.0 / 86400.0, 60.0, 9.0, 0.2)
+        for i in range(10)
+    ]
+    pr = ld.phase_resolved_activity(rows, e, pulse_mjy=9.0)
+    assert pr.n_on_window == 0
+    assert pr.n_detections_outside == 10
+
+
+def test_unusable_when_phase_has_drifted_beyond_tolerance():
+    # 1e-3 s period error accumulates fast on a 1000 s period over ~5 years
+    e = _eph(P=1000.0, sigma=1e-3, pepoch=59000.0)
+    rows = [ld.EpochRow("SRC", "o", 61000.0, 730.0, 0.0, 0.2)] * 2
+    pr = ld.phase_resolved_activity(list(rows), e, pulse_mjy=5.0)
+    assert not pr.usable
+    assert pr.max_phase_uncertainty > 0.1
+
+
+def test_window_fraction_includes_the_snapshot_length():
+    """The window is (w + T)/P, not w/P: a snapshot covers phase while it integrates."""
+    e = _eph(P=1000.0, sigma=1e-9, width=100.0)
+    rows = [
+        ld.EpochRow("SRC", "o", 59000.0, 400.0, 0.0, 0.2),
+        ld.EpochRow("SRC", "p", 59001.0, 400.0, 0.0, 0.2),
+    ]
+    pr = ld.phase_resolved_activity(rows, e, pulse_mjy=5.0)
+    assert pr.window_fraction == pytest.approx((100.0 + 400.0) / 1000.0)
