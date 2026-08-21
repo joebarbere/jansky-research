@@ -108,3 +108,59 @@ def test_read_periods_from_the_vendored_catalogue():
     periods = ld.read_periods("data/lpt_sample.csv")
     assert periods["ASKAP J183950.5-075635"] == pytest.approx(23221.74)
     assert all(v > 0 for v in periods.values())
+
+
+def _rows_at(mjds, name="SRC", ev=0.2):
+    return [
+        ld.EpochRow(name=name, obs_id=f"o{i}", epoch_mjd=m, duration_s=730.0, v_mjy=0.0, e_v=ev)
+        for i, m in enumerate(mjds)
+    ]
+
+
+def test_phase_sampling_flags_a_cadence_locked_to_the_period():
+    """The failure mode this exists to catch: cadence an exact multiple of the period."""
+    period = 3600.0  # 1 h
+    step_days = 10 * period / 86400.0  # every 10 whole periods -> identical phase every time
+    rows = _rows_at([59000.0 + i * step_days for i in range(60)], ev=0.2)
+    ps = ld.phase_sampling(rows, period)
+    assert ps.rayleigh_z > 50  # massively concentrated
+    assert ps.rayleigh_p < 1e-6
+    assert ps.kuiper_v > 0.5
+
+
+def test_phase_sampling_passes_for_incommensurate_sampling():
+    period = 2656.2554  # ASKAP J1832-0911
+    # irrational-ish spacing in units of the period -> phases spread
+    rows = _rows_at([59000.0 + i * 13.719 for i in range(120)])
+    ps = ld.phase_sampling(rows, period)
+    assert ps.rayleigh_p > 0.01
+    assert ps.kuiper_v < 0.4
+
+
+def test_phase_sampling_is_invariant_to_the_arbitrary_zero_point():
+    """No ephemeris is needed to test uniformity: a phase shift cannot change clustering."""
+    period = 4186.3285
+    base = [59000.0 + i * 7.3 for i in range(80)]
+    a = ld.phase_sampling(_rows_at(base), period)
+    shifted = [m + 0.25 * period / 86400.0 for m in base]
+    b = ld.phase_sampling(_rows_at(shifted), period)
+    assert a.rayleigh_z == pytest.approx(b.rayleigh_z, rel=1e-9)
+    assert a.kuiper_v == pytest.approx(b.kuiper_v, rel=1e-9)
+
+
+def test_required_period_precision_scales_as_p_squared_over_baseline():
+    rows = _rows_at([59000.0, 60460.0])  # 1460 d baseline
+    ps = ld.phase_sampling(rows, 3600.0)
+    assert ps.baseline_days == pytest.approx(1460.0)
+    assert ps.required_period_precision_s == pytest.approx(0.1 * 3600.0**2 / (1460.0 * 86400.0))
+    # a longer period needs a *less* stringent absolute precision for the same baseline
+    ps2 = ld.phase_sampling(rows, 7200.0)
+    assert ps2.required_period_precision_s > ps.required_period_precision_s
+
+
+def test_phase_sampling_rejects_bad_input():
+    rows = _rows_at([59000.0, 59001.0])
+    with pytest.raises(ValueError, match="period must be positive"):
+        ld.phase_sampling(rows, 0.0)
+    with pytest.raises(ValueError, match="at least two epochs"):
+        ld.phase_sampling(rows[:1], 3600.0)
