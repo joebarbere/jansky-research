@@ -11,6 +11,19 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- `lptv` refs: `rose2026` upgraded from an arXiv e-print to the published record
+  (Nature Astronomy 10, 1166--1178, `10.1038/s41550-026-02882-x`), verified against
+  Crossref. It is the discovery/classification paper for ASKAP J174508.9-505149, one of
+  the census's three RACS detections, and `lptv` is in the submission queue.
+
+### Added
+- `plans/90-lpt-duty-cycle.md`: quantify how often LPTs are on, from the 966 committed VAST
+  snapshots — Rose et al. state the switch-off behaviour qualitatively for one source and
+  nobody has measured it across the class. Plan records up front that only the product
+  (active fraction x in-period duty cycle) is identifiable without phase information, and
+  that the denominator is efficiency-weighted exposure rather than epoch count.
+
+### Fixed
 - `frbstats`: annotate the repeater/one-off property dicts as `dict[str, np.ndarray]`.
   A comprehension over literal keys infers `dict[Literal[...], ...]`, which dict
   invariance rejects against `compare_populations`' parameter — an error mypy >=2.3
