@@ -11,6 +11,16 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `lptduty` (plan 90, increments 1--2): constrains how often each LPT is on, from the 647
+  measured VAST snapshots `lptv` already committed -- no new data. Reports
+  `p = f_active x (w + T) / P` (whose factors are not separately identifiable without an
+  ephemeris) with an efficiency-weighted denominator rather than an epoch count, and an
+  efficiency floor so shallow epochs cannot sum into sensitivity that does not exist.
+  Three sources give p = 0.011--0.046; seven give 95% limits of 0.029--0.107 at 5 mJy.
+  Evidence: `results/lptduty_metrics.json`, `survey/lptduty-findings.md`. GATE 0 and the
+  aliasing check are open -- not paper-ready.
+
+### Added
 - Plans 91--93, the follow-ups Rose et al. 2026 suggests, each gated on a feasibility check
   run before the plan was written rather than after: `lptspec` (in-band spectra of LPT
   pulses from the ASKAP Taylor-term images -- 98 `taylor.1` products confirmed present at an
