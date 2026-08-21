@@ -146,3 +146,26 @@ at this epoch than two months earlier — itself worth reporting.
 3. Open item the novelty pass could not close: a Galactic-foreground RM for this line of sight
    (l ≈ 21°, b ≈ −1°) from SPICE-RACS DR2 or the Hutschenreuter Faraday sky, which needs a
    catalogue cone-search rather than a text search.
+
+## Is the RM-synthesis route actually open? Checked, 2026-08-21
+
+Queried CASDA for what SB60804 holds at this position (38 products):
+
+- **No channelized or cube Q/U products.** Only `cont.taylor.0` and `cont.taylor.1` in each
+  of i/q/u/v, plus residual/weights/noise maps. So RM synthesis **from images is impossible**
+  for this epoch — the depolarized band-average is all the image products can give.
+- **The visibilities are there, and they are small.** Two beams covering this position,
+  `scienceData.VAST_1824-06.SB60804.…beam26/27_averaged_cal.leakage.ms.tar`, at
+  **~636 MB each** (`access_estsize` 636,380 kB) — already calibrated, channel-averaged and
+  leakage-corrected.
+
+So the route is open in principle and the data volume is not the obstacle. What it needs is
+per-channel Q/U at one sky position, which for a *single* position does not require full
+imaging: phase-rotate the visibilities to the source and average per channel, then run RM
+synthesis on the resulting spectrum. That is a new capability for this repo (reading a
+measurement set at all), not an increment of this slice, and it should be planned rather than
+bolted on.
+
+**Current honest state of plan 92:** a real detection, correctly interpreted as
+depolarization-limited, with the path to the intrinsic value identified, costed (~1.3 GB for
+two beams) and deliberately not started.

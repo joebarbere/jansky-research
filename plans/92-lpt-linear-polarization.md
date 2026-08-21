@@ -9,7 +9,10 @@ DOMINATED. The source's published RM (+89 rad/m^2) leaves only ~9% of the intrin
 polarization in a band-averaged image, so 10.9% is a strong lower limit consistent with an
 intrinsically ~90% polarized source, not a measurement of it. Only J1832-0911 and CHIME
 J0630+25 lack a published linear fraction class-wide, so the gap is real -- filling it needs
-RM synthesis on channelized data. See survey/lptlin-findings.md.
+RM synthesis on channelized data. CASDA has NO channelized Q/U for
+SB60804 (checked), but does hold the calibrated visibilities at ~636 MB/beam -- so the route
+is open and needs a new capability (measurement-set reading + per-channel phase-rotation +
+RM synthesis), which belongs in its own plan. See survey/lptlin-findings.md.
 
 Was: planned 2026-08-20, **scope reduced by a feasibility check before writing**.
 Sourced from Rose et al. 2026 (Nature Astron. 10, 1166).
