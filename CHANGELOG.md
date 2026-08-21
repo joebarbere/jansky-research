@@ -11,6 +11,22 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `lptlin` (plan 92): linear polarization at LPT pulse positions from VAST Stokes Q/U.
+  One detection -- ASKAP J1832-0911 at L/I = 10.9% (33 sigma, EVPA 98 deg) -- plus three
+  non-detections. **The 10.9% is depolarization-dominated, not the source's linear fraction**:
+  the published RM of +89 rad/m^2 leaves only ~9% of the intrinsic linear polarization in a
+  band-averaged image, so this is a strong lower limit consistent with an intrinsically ~90%
+  polarized source (matching the published 92+/-3% total). Ricean debiasing, a leakage veto,
+  a `total_polarization` bound check and a `faraday_depolarization` calculator. Evidence:
+  `results/lptlin_metrics.json`, `survey/lptlin-findings.md`.
+
+### Fixed
+- Plan 92's premise: an earlier feasibility check generalised from a query at **one** position
+  to conclude that only EMU carries Q/U at LPT positions. Querying all sixteen shows 14 have
+  Q/U imaging and VAST produces it too. The plan's scope reduction was wrong and is corrected
+  in place.
+
+### Added
 - `lptspec` real run and **negative result** (plan 91, now closed): Taylor-term cutouts were
   staged for the three pulses GATE 0 cleared, and the method fails. alpha comes out -1.24,
   -2.99 and -17.30; the last is the taylor.1 image's *global minimum* at the source pixel
