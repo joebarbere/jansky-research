@@ -82,6 +82,16 @@ published MT-MFS behaviour (+/-0.10 on the idealised floor) — enough to separa
 plasma from flat coherent emission, though not to measure a subtle curvature. The measurement the paper's
 qualitative claim invites is available in archival imaging.
 
+## A stale number in the git record (2026-08-21)
+
+The merge commit for this work (992b799) is titled "5 of 7 LPT pulses can carry an in-band
+index", and its body repeats that figure. **That subject is wrong and predates the
+correction**: it was written before the novelty pass surfaced Rashid et al. (2024) and the
+MT-MFS penalty cut the count from five to three. The committed evidence
+(`results/lptspec_gate0.json`, `n_pulses_usable = 3`), this file, and the CHANGELOG all say
+three; only the commit message is stale, and history is not being rewritten to hide it.
+Anyone reading `git log` should take the JSON as authoritative.
+
 ## What this gate does NOT say
 
 - **It is the idealised case**: Gaussian noise, no deconvolution error, no primary-beam or
