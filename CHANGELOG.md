@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-22
+
 ### Added
 - `lptxray` (plan 93): uniform X-ray cross-match of the 16 LPTs and the 56 white-dwarf-pulsar
   candidates against 5XMM-DR15, 2RXS, eROSITA-DE eRASS1 and CSC 2.1.1, with the
