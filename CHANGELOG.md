@@ -11,6 +11,34 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `lptxray` (plan 93): uniform X-ray cross-match of the 16 LPTs and the 56 white-dwarf-pulsar
+  candidates against 5XMM-DR15, 2RXS, eROSITA-DE eRASS1 and CSC 2.1.1, with the
+  chance-coincidence rate **measured** two independent ways (field density, and rigid
+  position-shift trials computed offline from one cached cone per position; both ~1%).
+  Among the candidates, **accretion strongly predicts X-ray brightness -- 20/21 accreting
+  (95.2%) against 3/35 others (8.6%), ratio 11.1** -- and survives a common-footprint cut
+  (14/14 vs 3/24) and an all-sky 2RXS-only cut (18/21 vs 0/35). Set against `wdpulsar`'s
+  radio photometry at matched depth (0.818 vs 0.825 mJy), **accretion does not predict radio
+  loudness: 0/19 accreting and 0/30 others**, though this constrains persistent emission only
+  and cannot exclude LPT-like pulses. Three X-ray associations absent from Pelisoli's
+  compilation, including the confirmed WD pulsar J1912-4410. Evidence:
+  `results/lptxray_metrics.json`, `survey/lptxray-findings.md`.
+- `lptxray.classify_coverage`: splits archival pointings into targeted and serendipitous by
+  aimpoint offset rather than target name -- all 24 pointings near ASKAP J1935+2148 are
+  observations of SGR 1935+2154, whose designation shares the same RA digits. Census: 12 of
+  16 LPTs have archival X-ray coverage, 8 have a dedicated pointing.
+
+### Fixed
+- Plan 93's LPT leg, **cut at GATE 0 on measured evidence**: all three LPTs with a published
+  X-ray detection are absent from every serendipitous source catalogue while each has pointed
+  coverage taken *after* those catalogues were built (XMM 0953011101, XMM 0973390301, Chandra
+  26681/26682/29265/29266). Catalogue recall on the LPT sample is **1/3**, against 16/16 on
+  the candidates, so a catalogue-derived LPT detection fraction would measure catalogue
+  latency rather than the sources. `lptxray.catalogue_recall` enforces this as a guard, and
+  the two legs are never differenced. The plan's headline was also overstated: only one of
+  the 16 LPTs is a confirmed accretor.
+
+### Added
 - `lptlin` (plan 92): linear polarization at LPT pulse positions from VAST Stokes Q/U.
   One detection -- ASKAP J1832-0911 at L/I = 10.9% (33 sigma, EVPA 98 deg) -- plus three
   non-detections. **The 10.9% is depolarization-dominated, not the source's linear fraction**:
