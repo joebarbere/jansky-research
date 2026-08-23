@@ -97,9 +97,7 @@ def test_speedup_macros_are_derived_not_typed(tmp_path):
 def test_speedup_macro_is_a_placeholder_without_a_gpu_leg(tmp_path):
     """A CPU-only run must not emit a ratio; preserve_live_macros then keeps any real one."""
     mac = tmp_path / "m.tex"
-    sp._write_macros(
-        {"source": "x", "bench_brute_cpu_s": 44.12, "bench_brute_gpu_s": None}, mac
-    )
+    sp._write_macros({"source": "x", "bench_brute_cpu_s": 44.12, "bench_brute_gpu_s": None}, mac)
     assert r"\newcommand{\spBruteSpeedup}{--}" in mac.read_text()
 
 
