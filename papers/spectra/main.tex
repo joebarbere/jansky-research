@@ -21,16 +21,15 @@ Ultra-steep-spectrum (USS) radio sources are an efficient way to find high-redsh
 150~MHz \citep{intema2017} and NVSS 1.4~GHz \citep{condon1998} surveys, computes two-point spectral
 indices $\alpha_{150}^{1400}$, and selects USS candidates ($\alpha<\usThreshold$). In a
 high-Galactic-latitude field it matches \usNmatched\ sources with a median index
-$\alpha=\usAlphaMedian$ --- right in the textbook range for flux-limited extragalactic samples, which
-validates the method --- and flags \usNuss\ raw USS candidates (steepest $\alpha=\usAlphaMin$). But
-the honest result is negative: cross-checking the candidates against the authoritative, flux-scale-
-\emph{corrected} TGSS$\times$NVSS spectral-index catalogue of \citet{degasperin2018} shows our
-indices are systematically steeper by $\Delta\alpha\approx-0.15$ --- exactly the known TGSS~ADR1
-flux-scale inflation \citep{hurleywalker2017} --- so that only 1 of the \usNuss\ survives as genuinely
-USS, and all \usNuss\ are already catalogued. There is no novel discovery. What is real and worth
-keeping is the open tool, the textbook median as a validation, and a clean, reproducible demonstration
-that \emph{uncorrected} TGSS fluxes manufacture spurious USS candidates --- a cautionary result,
-reported as such.
+$\alpha=\usAlphaMedian$ (the textbook range for flux-limited extragalactic samples, and a
+validation of the method), and flags \usNuss\ raw USS candidates (steepest $\alpha=\usAlphaMin$). The
+result is negative, however: cross-checking the candidates against the authoritative, flux-scale-
+corrected TGSS$\times$NVSS spectral-index catalogue of \citet{degasperin2018} shows our indices are
+systematically steeper by $\Delta\alpha\approx-0.15$, exactly the known TGSS~ADR1 flux-scale
+inflation \citep{hurleywalker2017}, so that only 1 of the \usNuss\ survives as genuinely USS, and
+all \usNuss\ are already catalogued. There is no new discovery. What is real and worth keeping is
+the open tool, the textbook median as a validation, and a clean, reproducible demonstration that
+uncorrected TGSS fluxes manufacture spurious USS candidates, a cautionary result reported as such.
 \end{abstract}
 
 \keywords{Radio continuum emission (1340) --- High-redshift galaxies (734) --- Active galactic nuclei (16) --- Radio active galactic nuclei (2134) --- Open source software (1866)}
@@ -41,7 +40,7 @@ the steepest-spectrum sources ($\alpha<\usThreshold$) are preferentially high-re
 \citep{debreuck2000, saxena2018}. Pairing a low-frequency survey (TGSS~ADR1 at 150~MHz;
 \citealt{intema2017}) with a 1.4~GHz survey (NVSS; \citealt{condon1998}) makes USS selection
 straightforward in principle. We built a reproducible tool to do it and asked whether a blind run
-turns up new USS candidates --- and, crucially, whether they survive scrutiny.
+turns up new USS candidates and, more importantly, whether they survive scrutiny.
 
 \section{Method and data}
 \code{spectra} is a pure-NumPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}). It
@@ -61,7 +60,7 @@ flux-limited extragalactic radio samples and with the weighted mean of the large
 \citet{degasperin2018} catalogue. The distribution peaks near $-0.8$ as expected.
 \paragraph{Raw USS candidates.} \usNuss\ sources fall below the $\alpha<\usThreshold$ cut (steepest
 $\alpha=\usAlphaMin$; Figure~\ref{fig:scatter}). None has a measured redshift or high-$z$
-classification in NED or SIMBAD --- i.e. candidates, not confirmations.
+classification in NED or SIMBAD, i.e. candidates, not confirmations.
 
 \begin{figure}
 \plotone{figures/alpha_hist.pdf}
@@ -71,17 +70,17 @@ $\alpha=\usThreshold$.}
 \label{fig:hist}
 \end{figure}
 
-\section{The cross-check: the candidates do not survive}
+\section{Cross-check against the corrected catalogue: the candidates do not survive}
 The mandatory follow-up is a comparison against a published, flux-scale-corrected catalogue. The
 authoritative one is \citet{degasperin2018}, the 1.4-million-source TGSS$\times$NVSS spectral-index
-catalogue. All \usNuss\ of our candidates already appear in it, and two facts emerge, both deflating.
+catalogue. All \usNuss\ of our candidates already appear in it, and two facts follow, both negative.
 First, our indices are systematically steeper than the corrected catalogue by a mean
-$\Delta\alpha\approx-0.15$ --- precisely the TGSS~ADR1 flux-scale inflation documented by
+$\Delta\alpha\approx-0.15$, precisely the TGSS~ADR1 flux-scale inflation documented by
 \citet{hurleywalker2017}, magnified where this field straddles the declination edge of the rescaled
 coverage. Using the corrected fluxes, only 1 of the \usNuss\ is genuinely USS; the others are ordinary
 steep sources. Second, all \usNuss\ are already in a published catalogue, so none is new. The single
-surviving USS source is itself a long-standing entry with no measured redshift --- at best a known
-HzRG candidate, not something this search revealed.
+surviving USS source is itself a long-standing entry with no measured redshift, at best a known
+HzRG candidate and not something this search revealed.
 
 \begin{figure}
 \plotone{figures/alpha_vs_flux.pdf}
@@ -91,13 +90,13 @@ the \citet{degasperin2018} flux-scale correction, almost all move above the cut.
 \end{figure}
 
 \section{Limitations}
-The candidate list is exactly that --- a candidate list that did not survive the cross-check.
+The candidate list is exactly that: a candidate list that did not survive the cross-check.
 (i)~The dominant systematic is the TGSS~ADR1 flux scale \citep{hurleywalker2017}: $\sim$15\% typical,
 larger near the rescaled-coverage edge, biasing $\alpha$ by $\sim$0.1--0.2 and manufacturing spurious
 USS sources. (ii)~At $15\arcsec$ a small number of chance coincidences is expected across the full
 sample; the tightest USS matches are robust, looser ones less so. (iii)~A two-point index cannot
 distinguish a genuine spectral turnover from a calibration or resolution artifact; the
-$\usNinverted$ apparently inverted-spectrum sources are \emph{not} peaked-spectrum claims and would
+$\usNinverted$ apparently inverted-spectrum sources are not peaked-spectrum claims and would
 need a third frequency to confirm.
 
 \section{Discussion and reproducibility}
@@ -107,8 +106,8 @@ dominated by the TGSS flux-scale systematic, and a cross-check against the corre
 genuinely useful: an open, tested, CPU-only USS-selection tool; the textbook population median as a
 validation; and a fully reproducible demonstration that uncorrected fluxes inflate $\alpha$ by
 $\sim$0.15 and produce false USS candidates. The analysis regenerates from a clean checkout, and
-every number traces to the pipeline-written macros this paper \code{\textbackslash input}s. This is
-reported as a negative result, not dressed up as a discovery.
+every number traces to the pipeline-written macros \code{\textbackslash input}ted into the
+manuscript. We report this as a negative result, not a discovery.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

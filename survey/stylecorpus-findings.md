@@ -403,3 +403,71 @@ branch gets; `stokesv` reports "significant circular polarization" with no signi
 the real leg (a bare 6% ratio gate whose threshold appears only in a figure legend) and commits
 no per-target rows; `rmstructure`'s findings file still carries the retracted 4.64 ± 0.35;
 `lpt`'s results JSON says "13 LPTs" where `n_lpt` is 16.
+
+## Batch 4 — six papers, nine files, and the first conversion defect a guard could never see (2026-08-23)
+
+Converted on `style-batch-4`: `typeii`, `vgpra` (main + note), `spectra` (main + note),
+`frbstats` (main; its note was already clean), `peaked`, `torchfdmt`. Mechanical gates clean on
+all nine files before any referee saw them. **All five referee rounds returned revisions** —
+four for four across the campaign now. Twenty-eight conversion defects, all fixed here.
+
+### The sharpest case yet: a number that changed meaning without changing value
+
+`typeii`'s completeness passage read, at HEAD:
+
+> This curve **--- not a headline "100%" ---** is the honest characterization of what the
+> detector will and will not catch.
+
+and after conversion:
+
+> Strong bursts are recovered **at 100% completeness**; ... This completeness curve summarizes
+> what the detector will and will not catch.
+
+**The literal `100` occurs exactly once in both versions, so the numeric-literal guard passed.**
+In one it sits inside a disavowal; in the other it is an assertion. The disavowal was not
+stylistic: GATE-2 finding R2 forced it, because the 1.0/1.0 was an easy-synthetic ceiling. The
+conversion reopened a defect a science gate had closed, and no mechanical check in this repo
+could have seen it. Restored.
+
+### Other majors
+
+- **`typeii`** — `\section{The real census: a false-positive-dominated null}` lost its subtitle,
+  twelve lines above a conclusion that disclaims any census; and the flare-gated paragraph lost
+  its verdict sentence while its concession was promoted to topic sentence and an identification
+  ("it **is** the flare-size–CME-speed relation") softened to "reflects". All restored.
+- **`vgpra`** — "The result is a controlled null." was deleted and the word *controlled* fell to
+  **zero occurrences in the paper** while its own RNAAS note still used it. Two abstract scope
+  words also went: "blind, total-power" (leaving "The analysis places no useful bound", which
+  contradicts the paper's own 20%/10% injection limits) and "total-power" before "flux" (leaving
+  a claim that ice-giant radio flux is not rotationally modulated, the opposite of the paper's
+  conclusion). The note's novelty sentence was recomposed until "revisited **only** once" ran
+  into a second revisitation, and "neither" lost its antecedent.
+- **`peaked`** — the abstract's *comparative* robustness sentence was deleted as redundant with
+  Methods, but Methods states the claim **absolutely** ("is robust to the TGSS flux-scale
+  offset"). Since classification uses the sign of alpha_low, a constant offset does move it; the
+  defensible claim is the comparative one. The conversion deleted the hedged instance and left
+  two unhedged ones. Restored, and `arxiv.yaml`'s override re-derived to match.
+- **`spectra`** and **`frbstats`** — a section title and a colon, respectively, each the only
+  skim-level carrier of a negative result.
+
+### A style rule that was wrong, and lost
+
+The `peaked` converter stripped `\emph{}` from the mission name *Fermi* purely to stay under an
+`\emph`-per-kw threshold. The style guide's own reference says italics are *for* mission names.
+Fixed with `\textit{Fermi}`, which keeps the convention and leaves the `\emph` count at zero.
+**When the lint and the guide disagree, the guide wins; when the guide and a science gate
+disagree, the science gate wins.**
+
+### Pre-existing, NOT fixed here
+
+- **`torchfdmt` quotes "~24x" for a ratio its own adjacent macros make 29.4x** (44.12 / 1.5).
+  The 24 traces to a 36.1 s CPU timing that appears nowhere in `results/`. The file's header
+  claims every number is `\input` from the pipeline; this one is hand-typed and stale.
+- `torchfdmt`'s benchmark row is a splice of two invocations (the GPU keys were patched into a
+  CPU run's JSON), and no single invocation can produce the committed combination.
+- `torchfdmt` quotes a real-data DM recovery as "0.3%" with no tolerance, while `\spRealSnr`
+  (6.0) is generated and never used; the real DM step is 0.063, so the offset is ~3 trials, not
+  quantisation-limited as the abstract's synthetic-leg frame implies.
+- `results/singlepulse_metrics.json` labels its synthetic block with the real file's `source`.
+- `peaked`'s abstract renders "none of the 0/81 sources"; `typeii` quotes a ~1-hr match window
+  and a +/-2 h chance-rate window without distinguishing them.
