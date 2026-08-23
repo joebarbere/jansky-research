@@ -73,10 +73,29 @@ def test_run_offline_writes_artifacts(tmp_path):
     assert saved == m
     assert (tmp_path / "papers" / "junodam" / "figures" / "junodam.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "junodam" / "generated" / "macros.tex").read_text()
-    assert r"\newcommand{\jdContrast}" in macros
+    # An offline run fills the SYNTHETIC namespace only. These macros were once shared
+    # between modes, so an offline rebuild wrote the synthetic recovery (~7) into the macro
+    # the paper uses for the real measured contrast (1.12).
+    assert r"\newcommand{\jdSynContrast}" in macros
+    assert r"\newcommand{\jdRealContrast}{--}" in macros
 
 
 def test_write_macros_placeholder(tmp_path):
     p = tmp_path / "m.tex"
     jdm._write_macros({"source": "x", "io_contrast": None}, p)
-    assert r"\newcommand{\jdContrast}{--}" in p.read_text()
+    assert r"\newcommand{\jdRealContrast}{--}" in p.read_text()
+
+
+def test_offline_rebuild_cannot_clobber_the_real_contrast(tmp_path):
+    """The mode-dependent macros are namespaced, so `make figures` cannot overwrite the
+    measured Io-region contrast with the synthetic recovery of an injected one."""
+    p = tmp_path / "m.tex"
+    jdm._write_macros({"source": "Juno/Waves v02 (real)", "io_contrast": 1.12}, p)
+    assert r"\newcommand{\jdRealContrast}{1.12}" in p.read_text()
+    jdm._write_macros(
+        {"source": "synthetic orbit", "io_contrast": 6.95, "expected_contrast": 8.75}, p
+    )
+    text = p.read_text()
+    assert r"\newcommand{\jdRealContrast}{1.12}" in text, "offline run clobbered the real value"
+    assert r"\newcommand{\jdSynContrast}{6.95}" in text
+    assert r"\newcommand{\jdSynExpContrast}{8.75}" in text

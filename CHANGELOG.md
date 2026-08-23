@@ -10,6 +10,34 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`pte2`'s abstract asserted the opposite of its own body.** It listed "three facts undercut a
+  giant-pulse interpretation" and gave as (i) that the excess does not correlate with spin-down
+  luminosity, "contrary to the giant-pulse--Edot expectation" --- quoting the *raw* Spearman
+  (-0.027), which the body establishes is count-confounded. Controlling for pulse count gives
+  rho = **+0.098**, in the **predicted** direction, and the flagged sources' median log Edot sits
+  **0.45 dex above** the rest, also predicted; neither is significant. The abstract now states
+  the confounding, the partial correlation and the median offset, and concludes that the data
+  neither support nor contradict the expectation --- which is what the body always said. No
+  number changed.
+- **`junodam` denied "an ~180x intrinsic rise" four lines after rendering `\jdNearFarRaw` =
+  196.2.** The 180 was hand-typed and stale; now macro-backed.
+- **`junodam`'s recover-a-known was not in committed evidence and its recovered value was
+  wrong.** The paper hand-typed "injected 8.75, recovered 7.2" while `expected_contrast` was
+  `null` and `\jdExpContrast` rendered `--`. Re-running the offline leg into a tmpdir gives
+  8.75 -> **6.95**. Both are macros now, and the paper states that the injected contrast is
+  several times the contrast measured on the real orbits, so the round trip cannot test recovery
+  near unity.
+- **`junodam` had a live macro clobber.** `io_contrast`/`expected_contrast` mean different things
+  in the two run modes and shared one macro name, so an offline rebuild would have written the
+  synthetic recovery into the macro the paper uses for the real measurement --- the `\tiiNEvents`
+  shape, which `preserve_live_macros` cannot arbitrate because both runs write real values. Now
+  `\jdRealContrast`/`\jdSynContrast`/`\jdSynExpContrast`, with a test that reproduces the clobber.
+  Two existing tests asserted the un-namespaced names, i.e. they were pinning the defect.
+- `junodam` now cites `louis2021jgr`, which sat in `refs.bib` uncited while measuring the
+  latitudinal beaming this paper invokes as its preferred interpretation.
+
+
 ### Changed
 - Papers restyled to traditional pre-LLM register (batch 5: `pte2`, `junodam`, `rmdipole`, `hi`,
   `glitchpop`, `vlass`). Gates clean on every file before review; **all five referee rounds still
