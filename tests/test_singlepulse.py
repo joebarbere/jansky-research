@@ -74,3 +74,57 @@ def test_write_macros_placeholders(tmp_path):
     sp._write_macros({"source": "x"}, p)
     t = p.read_text()
     assert r"\newcommand{\spTrueDm}{--}" in t and r"\newcommand{\spRealDmErr}{--}" in t
+
+
+def test_speedup_macros_are_derived_not_typed(tmp_path):
+    """The paper once carried a hand-typed "~24x" beside the two macros making it 29x."""
+    mac = tmp_path / "m.tex"
+    sp._write_macros(
+        {
+            "source": "x",
+            "bench_brute_cpu_s": 44.12,
+            "bench_brute_gpu_s": 1.5,
+            "bench_fdmt_cpu_s": 0.45,
+            "bench_fdmt_gpu_s": 0.44,
+        },
+        mac,
+    )
+    text = mac.read_text()
+    assert r"\newcommand{\spBruteSpeedup}{29}" in text
+    assert r"\newcommand{\spFdmtSpeedup}{1}" in text
+
+
+def test_speedup_macro_is_a_placeholder_without_a_gpu_leg(tmp_path):
+    """A CPU-only run must not emit a ratio; preserve_live_macros then keeps any real one."""
+    mac = tmp_path / "m.tex"
+    sp._write_macros(
+        {"source": "x", "bench_brute_cpu_s": 44.12, "bench_brute_gpu_s": None}, mac
+    )
+    assert r"\newcommand{\spBruteSpeedup}{--}" in mac.read_text()
+
+
+def test_committed_speedup_matches_the_committed_timings():
+    """The macro on disk must equal the ratio of the two numbers in the evidence file."""
+    import json
+    import re
+    from pathlib import Path
+
+    metrics = Path("results/singlepulse_metrics.json")
+    macros = Path("papers/torchfdmt/generated/macros.tex")
+    if not (metrics.exists() and macros.exists()):  # pragma: no cover
+        pytest.skip("real results not present")
+    m = json.loads(metrics.read_text())
+    got = re.search(r"\\newcommand\{\\spBruteSpeedup\}\{([^}]*)\}", macros.read_text())
+    assert got is not None
+    assert got.group(1) == f"{m['bench_brute_cpu_s'] / m['bench_brute_gpu_s']:.0f}"
+
+
+def test_dm_step_is_one_delay_sample():
+    """The FDMT quantises DM at one sample of band-crossing delay; 0.3% must be readable
+    against that grid rather than as a bare percentage."""
+    freqs = np.linspace(702.0, 4030.0, 1024)
+    step = sp._dm_step(freqs, 5.12e-4)
+    # 4.148808e3 * (702^-2 - 4030^-2) s per unit DM = 8.16 ms; one 0.512 ms sample is ~0.063.
+    assert step == pytest.approx(0.0627, abs=5e-4)
+    # and the committed real offset is a few trials, not a fitted precision
+    assert abs(56.59 - 56.77) / step == pytest.approx(2.9, abs=0.3)
