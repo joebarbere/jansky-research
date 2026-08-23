@@ -518,7 +518,6 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
     published curve licenses the variant analysis; the sensitivity scan then maps how far
     rho_DM moves under defensible alternative choices. Writes results/innerrc_anchor.json.
     """
-    import json
     from pathlib import Path
 
     tables = parse_paper_tables(table_dir)
@@ -574,7 +573,9 @@ def run_anchor(out: str = ".", *, table_dir: str = "tests/data/sofue2025") -> di
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "innerrc_anchor.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "innerrc_anchor.json")
     return metrics
 
 
@@ -703,7 +704,6 @@ def run_hi4pi(  # pragma: no cover - network + real data (core functions tested 
     Writes ``results/innerrc_hi4pi.json`` (committed evidence). ``lon_step`` subsamples the
     0.0833-degree longitude grid (2 -> ~10 arcmin sampling, ~1200 sightlines).
     """
-    import json
     import os
     from pathlib import Path
 
@@ -807,7 +807,9 @@ def run_hi4pi(  # pragma: no cover - network + real data (core functions tested 
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "innerrc_hi4pi.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "innerrc_hi4pi.json")
     _figures_hi4pi(
         op / "papers" / "innerrc" / "figures",
         fig_lv=fig_lv,

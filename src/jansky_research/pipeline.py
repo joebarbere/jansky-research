@@ -136,7 +136,9 @@ def run(out_dir: str | Path = ".", *, offline: bool = False) -> dict:
 
     paper = out / "papers" / "frbstats"
     (out / "results").mkdir(parents=True, exist_ok=True)
-    (out / "results" / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, out / "results" / "metrics.json")
     report.make_figures(catalog, stats, paper / "figures")
     report.write_macros(metrics, paper / "generated" / "macros.tex")
     return metrics

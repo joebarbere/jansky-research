@@ -361,7 +361,6 @@ def run(
     common flux scale (:func:`apply_flux_scale`), cross-matched, and run through the variability
     selection. Needs the ``vlass`` extra (``uv sync --extra vlass``) for ``pyvo``.
     """
-    import json
     from pathlib import Path
 
     if offline:
@@ -438,7 +437,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "vlass_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "vlass_metrics.json")
     _write_macros(metrics, op / "papers" / "vlass" / "generated" / "macros.tex")
     figs = op / "papers" / "vlass" / "figures"
     _figure(eta, v, mask, eta_thr, v_thr, figs)

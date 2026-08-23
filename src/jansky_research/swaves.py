@@ -109,7 +109,6 @@ def run(
     pad_s: float = 2400.0,
 ) -> dict:
     """Full slice: fit a STEREO/WAVES type III drift and report the beam speed and interplanetary reach."""
-    import json
     from pathlib import Path
 
     if offline or date is None:
@@ -151,7 +150,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "swaves_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "swaves_metrics.json")
     _figure(burst, rf, rt, harmonic, op / "papers" / "swaves" / "figures")
     _write_macros(metrics, op / "papers" / "swaves" / "generated" / "macros.tex")
     return metrics

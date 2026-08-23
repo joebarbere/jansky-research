@@ -515,7 +515,6 @@ def _consistent(this_work: dict, val: float) -> bool:
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic recover-a-known (inject a period, recover it within the bootstrap band)."""
-    import json
 
     if offline:
         metrics: dict = _synthetic_metrics()
@@ -528,11 +527,13 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         # The validation leg's metrics are committed evidence too: four synthetic numbers
         # reach both abstracts, and until 2026-08-13 they existed only inside macros.tex --
         # a referee could not check them without executing code.
-        (op / "results" / "vgpra_synthetic_metrics.json").write_text(
-            json.dumps(metrics, indent=2) + "\n"
-        )
+        from .report import write_results
+
+        write_results(metrics, op / "results" / "vgpra_synthetic_metrics.json")
     else:
-        (op / "results" / "vgpra_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+        from .report import write_results
+
+        write_results(metrics, op / "results" / "vgpra_metrics.json")
     _figure(metrics, op / "papers" / "vgpra" / "figures", real_cache=None)
     _write_macros(metrics, op / "papers" / "vgpra" / "generated" / "macros.tex")
     return metrics

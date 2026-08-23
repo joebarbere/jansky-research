@@ -608,7 +608,6 @@ def run(
     rather than $V$ noise; the noise on faint targets is handled separately by the ``v_snr_min`` cut.
     Candidates clear the leakage floor *and* the $V$-SNR cut, and are confirmed by proper motion.
     """
-    import json
     from pathlib import Path
 
     op = Path(out)
@@ -624,7 +623,9 @@ def run(
         metrics = {**metrics, **_run_real(op)}
 
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "stokesv_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "stokesv_metrics.json")
     _write_macros(metrics, op / "papers" / "stokesv" / "generated" / "macros.tex")
     return metrics
 

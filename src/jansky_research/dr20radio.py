@@ -673,7 +673,6 @@ def run_north(
 
     Writes the committed evidence file ``results/dr20radio_north.json``.
     """
-    import json
     from pathlib import Path
 
     spall = fetch_spall()
@@ -812,7 +811,9 @@ def run_north(
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "dr20radio_north.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "dr20radio_north.json")
     return metrics
 
 
@@ -1267,7 +1268,6 @@ def run_south(
     motivates the wider default match radius (5"), with the false-match rate measured as
     always. Writes ``results/dr20radio_south.json``.
     """
-    import json
     from pathlib import Path
 
     spall = fetch_spall()
@@ -1423,7 +1423,9 @@ def run_south(
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "dr20radio_south.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "dr20radio_south.json")
     return metrics
 
 

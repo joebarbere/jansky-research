@@ -350,7 +350,6 @@ def run(
     (Callingham 2017 MHz-peaked purity) and ``validate_hfp`` (Dallacasa 2000 GHz-peaked recovery) ---
     and folds their headline numbers into the metrics and macros the paper inputs.
     """
-    import json
     from pathlib import Path
 
     if offline or center is None:
@@ -403,7 +402,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "peaked_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "peaked_metrics.json")
     _figure(res, op / "papers" / "peaked" / "figures")
     _write_macros(metrics, op / "papers" / "peaked" / "generated" / "macros.tex")
     return metrics

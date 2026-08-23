@@ -115,9 +115,8 @@ def run_real_census(
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    import json
 
-    (op / "results" / "pte2_census.json").write_text(
-        json.dumps({**metrics, "all": rows}, indent=2) + "\n"
-    )
+    from .report import write_results
+
+    write_results({**metrics, "all": rows}, op / "results" / "pte2_census.json")
     return metrics

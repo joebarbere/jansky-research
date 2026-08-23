@@ -131,7 +131,6 @@ def fetch_atnf() -> dict[str, np.ndarray]:  # pragma: no cover - network
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Full slice: load (or fetch) the ATNF catalogue, compute pulsar spectral indices, write artifacts."""
-    import json
     from pathlib import Path
 
     if offline:
@@ -159,7 +158,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "pulsarspec_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "pulsarspec_metrics.json")
     _figure(res, op / "papers" / "pulsarspec" / "figures")
     _write_macros(metrics, op / "papers" / "pulsarspec" / "generated" / "macros.tex")
     return metrics

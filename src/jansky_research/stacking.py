@@ -227,7 +227,6 @@ def run(
     max_sources: int = 300,
 ) -> dict:
     """Full slice: stack a (synthetic or fetched) population, calibrate with injection-recovery, write."""
-    import json
     from pathlib import Path
 
     mags: np.ndarray
@@ -308,7 +307,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "stacking_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "stacking_metrics.json")
     _figure(stack, binned, binned_z, op / "papers" / "stacking" / "figures")
     _write_macros(metrics, op / "papers" / "stacking" / "generated" / "macros.tex")
     return metrics

@@ -222,7 +222,6 @@ def synthetic_orbit(
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic-orbit recover-a-known. Real: one month of Juno/Waves CDFs + Horizons."""
-    import json
 
     if offline:
         s = synthetic_orbit()
@@ -326,7 +325,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         metrics.update(extra)
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "junodam_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "junodam_metrics.json")
     _figure(m, cml, pha, active, op / "papers" / "junodam" / "figures")
     _write_macros(metrics, op / "papers" / "junodam" / "generated" / "macros.tex")
     return metrics

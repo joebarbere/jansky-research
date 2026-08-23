@@ -314,7 +314,6 @@ def run(
     median $V$ sets the empirical variability floor (:func:`variability_floor`) above which non-control
     sources are the amplitude-selected variables.
     """
-    import json
     from pathlib import Path
 
     names: list[str] | None
@@ -388,7 +387,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "vlbi_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "vlbi_metrics.json")
     if names is not None:  # pragma: no cover - network
         _write_candidates(
             op / "results" / "vlbi_candidates.csv",

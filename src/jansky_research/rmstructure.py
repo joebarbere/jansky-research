@@ -313,7 +313,6 @@ def _sf_break(sep_deg: np.ndarray, sf: np.ndarray) -> float:
 
 def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     """Offline: SF + latitude recover-a-known on the synthetic screen; real: SPICE-RACS DR1."""
-    import json
     from pathlib import Path
 
     # the synthetic recover-a-known ALWAYS runs (its macros must never be overwritten by
@@ -390,7 +389,9 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         )
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rmstructure_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "rmstructure_metrics.json")
     _figure(s, sf_lo, sf_hi, op / "papers" / "rmstructure" / "figures")
     _write_macros(metrics, op / "papers" / "rmstructure" / "generated" / "macros.tex")
     return metrics

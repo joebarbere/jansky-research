@@ -292,7 +292,6 @@ def run(
     isolates a single type III, while a wide one over a burst storm smears the drift (flagged by a low
     fit ``r2``).
     """
-    import json
     from pathlib import Path
 
     if offline or station is None:
@@ -333,7 +332,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "solarbursts_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "solarbursts_metrics.json")
     _figure(burst, rf, rt, harmonic, fold, op / "papers" / "solarbursts" / "figures")
     _write_macros(metrics, op / "papers" / "solarbursts" / "generated" / "macros.tex")
     return metrics

@@ -332,7 +332,6 @@ def _dipole_leg(
 
 def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
     """Offline: injected-dipole recover-a-known on a DR2-like footprint; real: DR2 both stats."""
-    import json
 
     if offline:
         syn = synthetic_dipole_catalogue(seed=0)
@@ -409,7 +408,9 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rmdipole_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "rmdipole_metrics.json")
     _figure(legs, op / "papers" / "rmdipole" / "figures")
     _write_macros(metrics, op / "papers" / "rmdipole" / "generated" / "macros.tex")
     _write_legs_table(metrics, op / "papers" / "rmdipole" / "generated" / "legs_table.tex")

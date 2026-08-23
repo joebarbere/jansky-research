@@ -321,7 +321,6 @@ def fetch_icrf3_gaia(*, max_arcsec: float = 0.5) -> tuple[dict, dict]:  # pragma
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Full slice: synthesise (or fetch) ICRF3×Gaia, compute offsets, reproduce the excess tail."""
-    import json
     from pathlib import Path
 
     if offline:
@@ -376,7 +375,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "offsets_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "offsets_metrics.json")
     _figure(x, align["_axis_deg"], op / "papers" / "offsets" / "figures")
     _write_macros(metrics, op / "papers" / "offsets" / "generated" / "macros.tex")
     return metrics

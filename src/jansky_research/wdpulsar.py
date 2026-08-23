@@ -345,7 +345,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     per_target = metrics.pop("per_target", None)
-    (op / "results" / "wdpulsar_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "wdpulsar_metrics.json")
     if per_target is not None:
         metrics["per_target"] = per_target
         (op / "results" / "wdpulsar_table.json").write_text(json.dumps(per_target, indent=2) + "\n")

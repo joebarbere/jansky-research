@@ -8,6 +8,7 @@ paper regenerates from the pipeline.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -15,7 +16,13 @@ import numpy as np
 
 from . import frbstats
 
-__all__ = ["make_figures", "preserve_live_macros", "write_macros"]
+__all__ = [
+    "make_figures",
+    "preserve_live_macros",
+    "preserve_live_results",
+    "write_results",
+    "write_macros",
+]
 
 
 def _fmt_p(p: float) -> str:
@@ -187,3 +194,109 @@ def preserve_live_macros(new_text: str, path: str | Path) -> str:
         else:
             out.append(line)
     return "\n".join(out) + ("\n" if new_text.endswith("\n") else "")
+
+
+# --------------------------------------------------------------------------------------
+# The results-JSON counterpart of preserve_live_macros.
+# --------------------------------------------------------------------------------------
+
+RESULTS_MERGE_KEY = "_merge"
+
+
+def _results_are_real(d: dict) -> bool:
+    """Whether a metrics dict describes real data.
+
+    Deliberately the same test ``scripts/guard_real_results.py`` applies at packaging time: a
+    ``source`` that does not name itself synthetic. Keying only on ``is_real`` was not enough --
+    most slices never set it, so a first cut of this guard silently protected 3 files out of 25.
+    """
+    if d.get("is_real") is True:
+        return True
+    if d.get("is_real") is False:
+        return False
+    src = d.get("source")
+    if not isinstance(src, str) or not src:
+        return False  # no provenance marker at all: nothing to protect, and nothing claimed
+    low = src.lower()
+    # A MIXED source names both legs -- stokesv_discovery's is "synthetic recover-a-known +
+    # real RACS-mid epoch pair", and it is allowlisted in guard_real_results precisely because
+    # the real census is in there. Treating any mention of "synthetic" as synthetic would have
+    # left that file overwritable by its own offline rebuild.
+    return "synthetic" not in low or "real" in low
+
+
+def preserve_live_results(new: dict, path: str | Path) -> dict:
+    """Return the metrics dict to write, so that a results file only ever gains information.
+
+    ``preserve_live_macros`` fixed this for ``generated/macros.tex`` and the results JSON was
+    left with the same hole, which has now bitten three separate slices:
+
+    - ``typeii``: ``run(".", offline=True)`` replaced the real census with synthetic output,
+      deleting 3429 lines and flipping ``is_real`` True -> False. ``make guard-real`` caught it
+      only at packaging time, which is late.
+    - ``southern``: an offline rebuild would have written the synthetic field's counts over
+      1545 real matches.
+    - ``torchfdmt``: a CPU-only re-run drops the GPU benchmark columns, so the committed row
+      was assembled by hand-patching them back in -- producing a row no single invocation
+      could have produced, with no record that it was a splice.
+
+    The rule is the macros rule, applied to structured data: **a run may only add information,
+    and a real result is never replaced by a synthetic one.** Concretely:
+
+    1. Nothing on disk: write the new payload.
+    2. On disk but not real: the new payload wins. A real run must be able to replace a
+       synthetic placeholder, and synthetic-over-synthetic is a plain rebuild.
+    3. On disk real, new payload real: merge. The new run's values win for every key it
+       carries, and keys only the previous run produced are retained -- this is what stops a
+       CPU-only benchmark re-run from silently dropping a real GPU column. Retained keys are
+       listed under ``_merge`` so the file cannot look like a single invocation when it is not.
+    4. On disk real, new payload **not** real: keep the file as it stands. This is the clobber,
+       and refusing it is the whole point; the synthetic numbers still reach the paper through
+       the ``Syn``-namespaced macros, which ``preserve_live_macros`` merges separately.
+
+    Case 4 is why ``make figures`` is safe to run in the repo root even though every offline
+    slice is invoked there with ``--out .``.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return new
+    try:
+        old = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):  # unreadable: allow a write
+        return new
+    if not isinstance(old, dict) or not _results_are_real(old):
+        return new
+    if not _results_are_real(new):
+        # A synthetic run must not overwrite real evidence, in place, in the repo root.
+        return old
+
+    merged = {**old, **new}
+    retained = sorted(k for k in old if k not in new and not k.startswith("_"))
+    if retained:
+        merged[RESULTS_MERGE_KEY] = {
+            "retained_from_previous_run": retained,
+            "note": (
+                "These keys are not from the run that wrote the rest of this file. They were "
+                "carried over so a partial re-run could not delete them; treat any comparison "
+                "spanning them as cross-run."
+            ),
+        }
+    else:
+        merged.pop(RESULTS_MERGE_KEY, None)
+    return merged
+
+
+def write_results(new: dict, path: str | Path) -> dict:
+    """Merge via :func:`preserve_live_results` and write the result. Returns what was written."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = preserve_live_results(new, path)
+    text = json.dumps(payload, indent=2) + "\n"
+    if path.is_file():
+        try:
+            if json.loads(path.read_text()) == payload:
+                return payload  # unchanged: leave the committed bytes alone
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+            pass
+    path.write_text(text)
+    return payload

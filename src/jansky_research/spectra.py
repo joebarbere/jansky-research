@@ -379,7 +379,6 @@ def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool =
     Returns the metrics dict.
     """
     import csv
-    import json
     from pathlib import Path
 
     if offline or center is None:
@@ -398,7 +397,9 @@ def run(center=None, radius_deg: float = 2.0, out: str = ".", *, offline: bool =
 
     outp = Path(out)
     (outp / "results").mkdir(parents=True, exist_ok=True)
-    (outp / "results" / "uss_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, outp / "results" / "uss_metrics.json")
     make_figures(res, outp / "papers" / "spectra" / "figures")
     _write_macros(metrics, outp / "papers" / "spectra" / "generated" / "macros.tex")
     # the candidate table (USS first), for the write-up + follow-up

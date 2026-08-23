@@ -280,7 +280,6 @@ def synthetic_month_stack(
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic recover-a-known (differential recovers the UEM trend, burst/gain-immune)."""
-    import json
 
     if offline:
         metrics: dict = _synthetic_metrics()
@@ -289,7 +288,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rfitrend_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "rfitrend_metrics.json")
     _figure(metrics, op / "papers" / "rfitrend" / "figures")
     _write_macros(metrics, op / "papers" / "rfitrend" / "generated" / "macros.tex")
     return metrics

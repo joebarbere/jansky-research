@@ -37,7 +37,6 @@ def scrape_glitch_table(url: str = JBO_URL) -> str:  # pragma: no cover - networ
 
 def run_real_census(out: str, *, min_glitches: int = MIN_GLITCHES) -> dict:  # pragma: no cover
     """Full real census: scrape -> classify every pulsar (>=5 glitches) -> known-QP check -> delta."""
-    import json
 
     glitches = parse_glitch_table(scrape_glitch_table())
     by = group_by_pulsar(glitches)
@@ -79,6 +78,8 @@ def run_real_census(out: str, *, min_glitches: int = MIN_GLITCHES) -> dict:  # p
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "glitchpop_census.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "glitchpop_census.json")
     # drop the bulky per-pulsar table from the returned summary
     return {k: v for k, v in metrics.items() if k != "census"}

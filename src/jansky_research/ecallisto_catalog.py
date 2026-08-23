@@ -265,7 +265,6 @@ def _metrics(rows: list[dict], events: list[dict], source: str) -> dict:
 def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) -> dict:
     """Full worker: scan a day (synthetic offline, or the real archive) → catalogue + metrics + figure."""
     import csv
-    import json
     from pathlib import Path
 
     example: dict | None = (
@@ -290,7 +289,9 @@ def run(out: str = ".", *, offline: bool = True, date: str | None = None, **kw) 
     metrics = _metrics(rows, events, source)
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "ecallisto_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "ecallisto_metrics.json")
     if rows:
         cols = ["station", "is_burst", "n_channels", "f_lo_mhz", "f_hi_mhz", "drift_mhz_s", "r2"]
         with (op / "results" / "ecallisto_catalog.csv").open("w", newline="") as fh:

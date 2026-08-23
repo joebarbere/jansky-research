@@ -293,7 +293,6 @@ def synthetic_repeater_set(
 
 def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
     """Offline: k/period/duty recover-a-known on transit-sampled synthetics; real: the census."""
-    import json
 
     anchor_name = "FRB20180916B"
     # the duty-cycle gate cannot be finer than the scramble p-value resolution (k+1)/(n+1)
@@ -341,9 +340,9 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "frbwait_metrics.json").write_text(
-        json.dumps(_json_safe(metrics), indent=2) + "\n"
-    )
+    from .report import write_results
+
+    write_results(_json_safe(metrics), op / "results" / "frbwait_metrics.json")
     _figure(rows, op / "papers" / "frbwait" / "figures")
     _write_macros(metrics, op / "papers" / "frbwait" / "generated" / "macros.tex")
     _write_census_table(rows, op / "papers" / "frbwait" / "generated" / "census_table.tex")

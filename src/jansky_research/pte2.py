@@ -532,7 +532,6 @@ def load_pulse_sn(
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic recover-a-known (classify injected heavy vs log-normal, accuracy vs count)."""
-    import json
 
     if offline:
         metrics: dict = _synthetic_metrics()
@@ -541,7 +540,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "pte2_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "pte2_metrics.json")
     _figure(metrics, op / "papers" / "pte2" / "figures")
     _write_macros(metrics, op / "papers" / "pte2" / "generated" / "macros.tex")
     return metrics

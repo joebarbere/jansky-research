@@ -394,7 +394,6 @@ def fetch_rpws_key60s(
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic recover-a-known. Real: parse local KEY60S days + Horizons geometry."""
-    import json
 
     if offline:
         s = synthetic_skr()
@@ -466,7 +465,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "skr_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "skr_metrics.json")
     _figure(ls, prox, op / "papers" / "skr" / "figures")
     _write_macros(metrics, op / "papers" / "skr" / "generated" / "macros.tex")
     return metrics

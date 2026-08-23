@@ -296,6 +296,21 @@ uncertainties by pairing `(v+dv, h-dh)` gave a 1-sigma maximum of 0.24; the true
 rather than reasoning about which one is extremal — a wrong corner understates an interval
 without ever looking wrong.
 
+**The results JSON needed the same merge rule the macros got, and a guard is only as good
+as its marker.** `preserve_live_macros` fixed the cross-run clobber for `generated/macros.tex`
+in 2026-08; the results JSON kept the hole for another two weeks and bit three more slices
+(`typeii`'s gutted census, `southern`'s near-miss, `torchfdmt`'s hand-patched benchmark row).
+`report.preserve_live_results` now applies the same invariant to structured data: a run may only
+add information, and a synthetic run never overwrites real evidence. Two things it taught:
+**a forced `make figures` is the only honest test** (a plain `make figures` says "nothing to be
+done" and proves nothing), and **the first version of the guard protected 3 files out of 25**
+because it keyed on `is_real`, which most slices never set, instead of the `source` field that
+`guard_real_results.py` already used. Match the marker the rest of the repo uses, then re-run the
+destructive test and count. A mixed source (`"synthetic recover-a-known + real RACS-mid epoch
+pair"`) must count as real, or the file is unprotected by the very string that documents it.
+Note the guard still cannot see 76 results files that carry no marker at all; `make guard-real`
+now prints that number rather than skipping them silently.
+
 **A `make` variable that is not the one the target reads fails silently and slowly.**
 `make paper SLICE=dr20radio` looked like a single-paper build and rebuilt all 44 (the variable
 is `SLICES`). Make does not warn about unused command-line variables. `SLICE` now narrows
