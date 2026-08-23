@@ -20,8 +20,8 @@ Every production GPU dedisperser --- Heimdall/\code{dedisp} \citep{barsdell2012}
 astro-accelerate, FREDDA --- ships CUDA kernels, which excludes the growing population of
 non-NVIDIA hardware. We present a Fast Dispersion Measure Transform \citep[FDMT;][]{zackayofek2017}
 implemented entirely in PyTorch tensor operations \citep{pytorch}: no custom kernels, so one
-\code{device=} argument runs the same code on CPU, CUDA, or ROCm (validated here on a consumer AMD
-RX~7600~XT). Correctness is anchored against an independently tested brute-force oracle: the
+\code{device=} argument runs the same code on CPU, CUDA, or ROCm (benchmarked here on a
+consumer AMD RX~7600~XT; the science legs below ran on CPU). Correctness is anchored against an independently tested brute-force oracle: the
 zero-delay row equals the plain channel sum exactly, and on synthetic dispersed pulses the
 transform recovers the injected dispersion measure within delay quantisation
 (DM $\spRecDm$ for $\spTrueDm$ injected; folded period $\spRecP$\,ms for $\spTrueP$ injected). On a
