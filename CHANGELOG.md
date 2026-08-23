@@ -10,6 +10,35 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- Papers restyled to traditional pre-LLM register (batch 5: `pte2`, `junodam`, `rmdipole`, `hi`,
+  `glitchpop`, `vlass`). Gates clean on every file before review; **all five referee rounds still
+  returned revisions** (five batches for five), and all twenty-two conversion defects are fixed
+  here.
+  **The first defect in this campaign where a style edit changed a FACT rather than a claim's
+  strength**: folding a run-in label into a topic sentence, the `glitchpop` conversion wrote
+  "the full **post-2018** catalogue" where the code (`glitchpop.py:283`) reclassifies on "the
+  full catalogue". That describes a disjoint-epoch comparison never run, and it makes both
+  derived quantities incoherent -- `newly classifiable` is a union operation and the single flip
+  is recorded as `n_pre: 8 -> n_now: 9`, i.e. cumulative. No number, macro or citation moved, so
+  no mechanical gate could see it.
+  Also: `pte2`'s "Honest bottom line." became `\subsection{Summary}`, promoting to the paper's
+  designated summary a paragraph quoting only the naive 19% incidence -- the endpoint its own
+  referee round established is not the answer; `hi`'s closing paragraph lost the word
+  *validation*, so its contribution class appeared nowhere after Results; `junodam` lost the only
+  heading naming a limitation, in a paper whose one positive claim is explicitly an upper bound;
+  and `vlass` swapped "pipeline" for "selection" in a sentence whose predicate is false of the
+  selection alone.
+
+### Fixed
+- `glitchpop`'s abstract had lost "among these" (the denominator: the 1.55 expected false
+  positives are 31 x 0.05) together with the two words distinguishing the *quasi-periodic
+  fraction* from *individual members*, in a single edit.
+- `rmdipole`'s abstract had split its significance claim from the caveat that kills it, so the
+  formally significant p = 0.001 dipole could be excerpted without the clause establishing that
+  the rejection is carried entirely by the top 1% of |residual|.
+
+
 ### Added
 - **`report.preserve_live_results` / `report.write_results`** --- the results-JSON counterpart of
   `preserve_live_macros`, wired into **all 49** `results/*.json` write sites across 46 modules.

@@ -11,29 +11,30 @@ Coherently Organise the Orbital Vantage}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-Ground-based Jovian decametric (DAM) emission is famously organised in the plane of observer
+Ground-based Jovian decametric (DAM) emission is organised in the plane of observer
 central meridian longitude (CML) and Io orbital phase into the Io-A/B/C/D source regions
 \citep{bigg1964,carr1983,marques2017}. The public Juno/Waves calibrated flux-density dataset
-\citep{louis2021} enables the same census \emph{from orbit}: we build an occurrence map over seven
+\citep{louis2021} enables the same census from orbit. We build an occurrence map over seven
 months spanning six orbital configurations (2016--2019; \jdNbins\ 15-s bins, \jdNact\
 active), using the dataset's per-channel background statistics for detection, Horizons for the
 sub-Juno CML, and the Lieske ephemeris for Io phase \citep{lieske1987}. A synthetic round-trip
 with the Io boxes injected recovers them (a machinery check only; a review-caught Io-phase
-convention error is corrected to the Bigg 1964 / Carr et al.\ 1983 standard). On the
-7-month aggregate, two results. (i) \emph{The raw proximity trend is almost entirely detection
-sensitivity}: the DAM-band duty cycle falls from \jdAqA\% in the nearest Juno--Jupiter range
+convention error is corrected to the Bigg 1964 / Carr et al.\ 1983 standard). The 7-month
+aggregate gives two results. (i) The raw proximity trend is almost entirely detection
+sensitivity. The DAM-band duty cycle falls from \jdAqA\% in the nearest Juno--Jupiter range
 quartile ($\sim$\jdRangeNear~$R_J$) to \jdAqD\% in the farthest ($\sim$\jdRangeFar~$R_J$), a raw
-factor $\sim$\jdNearFarRaw, but a $1/r^2$ sensitivity null (distance-correct each bin's DAM SNR and
-re-threshold) collapses it to \jdNearFarCorr --- the apparent proximity ``law'' is a
-threshold-amplified inverse-square visibility effect, not an $\sim$180$\times$ intrinsic rise, and
-the residual is an upper bound entangled with viewing geometry. (ii) \emph{The Earth-canonical
-(CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage occurrence}: the aggregate
-contrast is \jdContrast, and across \jdNmonths\ months the contrast scatters on both sides of unity
-(median \jdCmMed, range \jdCmMin--\jdCmMax; a one-sample test against unity does not reject, and the
-earliest month reached \jdCmMax\ --- one orbit can mislead). Both are consistent with the
-canonical regions encoding beaming toward a distant near-equatorial observer and/or genuine
-month-to-month variability (Io volcanism, plasma-torus state); neither is separated here, and a
-beaming-model fit over the full v02 archive is the scoped follow-on.
+factor $\sim$\jdNearFarRaw, but a $1/r^2$ sensitivity null (distance-correcting each bin's DAM
+SNR and re-thresholding) collapses it to \jdNearFarCorr. The apparent proximity ``law'' is
+therefore a threshold-amplified inverse-square visibility effect, not an $\sim$180$\times$
+intrinsic rise, and the residual is an upper bound entangled with viewing geometry. (ii) The
+Earth-canonical (CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage
+occurrence. The aggregate contrast is \jdContrast, and across \jdNmonths\ months the contrast
+scatters on both sides of unity (median \jdCmMed, range \jdCmMin--\jdCmMax); a one-sample test
+against unity does not reject. The earliest month reached \jdCmMax, so one orbit alone can
+mislead. Both are consistent with the canonical regions encoding beaming toward a distant
+near-equatorial observer and/or genuine month-to-month variability (Io volcanism, plasma-torus
+state); neither is separated here, and a beaming-model fit over the full v02 archive is the
+planned follow-up.
 \end{abstract}
 
 \keywords{Jupiter (873) --- Radio bursts (1339) --- Planetary magnetospheres (997)}
@@ -41,7 +42,7 @@ beaming-model fit over the full v02 archive is the scoped follow-on.
 \section{Introduction}
 Io's control of Jovian DAM \citep{bigg1964} is the textbook example of a satellite--magnetosphere
 interaction, and the (CML, Io-phase) occurrence map with its A/B/C/D regions \citep{carr1983,
-marques2017} is its canonical representation --- built from decades of \emph{terrestrial}
+marques2017} is its canonical representation, built from decades of terrestrial
 observations, i.e.\ from a fixed, distant, near-equatorial vantage. Juno's polar, eccentric orbit
 breaks every one of those assumptions. The 2025 public release of the calibrated Juno/Waves
 flux densities \citep{louis2021} (daily CDFs to 40.5~MHz with per-channel background and sigma)
@@ -50,18 +51,18 @@ makes the from-orbit census reproducible with public data alone.
 \section{Method}
 Each daily CDF is binned to 15~s; a bin is DAM-active when $\ge$10\% of the 3--40.5~MHz channels
 exceed the shipped $\mathrm{Background}+5\Sigma$. The absolute scale (V$^2$m$^{-2}$Hz$^{-1}$)
-never enters --- an occurrence census needs only detection against the dataset's own statistics.
+never enters; an occurrence census needs only detection against the dataset's own statistics.
 The sub-Juno CML comes from Horizons (\code{PDObsLon}, observer \code{500@-61}) at 15-min
 sampling, unwrap-interpolated; Io phase is the Lieske mean longitude minus CML
 \citep{lieske1987}. Occurrence maps carry per-cell exposure, and cells visited $<$3 times are
-masked --- a single orbit does not sample the plane uniformly, and hiding that would manufacture
+masked, since a single orbit does not sample the plane uniformly and hiding that would manufacture
 structure. The synthetic recover-a-known drives the same code with real CML/Io rates and
 Bernoulli activity concentrated in the canonical boxes: injected contrast 8.75, recovered 7.2.
 
 \section{Results and honest limits}
 Figure~\ref{fig:jd} shows the aggregate map. The range-quartile duty cycles
 (\jdAqA\%$\rightarrow$\jdAqD\%, near-to-far) fall by a raw factor $\sim$\jdNearFarRaw\ with
-Juno--Jupiter distance --- but this is almost all detection sensitivity, not intrinsic occurrence.
+Juno--Jupiter distance, but this is almost all detection sensitivity, not intrinsic occurrence.
 DAM power scales as $1/r^2$, so at smaller range the same emission clears the background$+5\sigma$
 floor more often; because the DAM SNR distribution is steeply falling across the threshold, a
 modest ($\sim$8$\times$ over the $\sim$\jdRangeNear$\rightarrow$\jdRangeFar~$R_J$ quartile spread)
@@ -69,36 +70,40 @@ flux change is amplified into the $\sim$\jdNearFarRaw$\times$ occurrence swing. 
 bin's DAM SNR to a common range ($S\to S(r/r_\mathrm{ref})^2$) and re-thresholding collapses the
 near/far ratio to \jdNearFarCorr\ (on the same detector the raw ratio is \jdNearFarRawPninety, so
 the collapse is the distance correction, not a detector change). The corrected duty cycles are
-\jdAqAcorr\%, \jdAqBcorr\%, \jdAqCcorr\%, \jdAqDcorr\% near-to-far --- non-monotonic (the second
-quartile exceeds the first), so there is no clean intrinsic trend, and the residual
+\jdAqAcorr\%, \jdAqBcorr\%, \jdAqCcorr\%, \jdAqDcorr\% near-to-far. These are non-monotonic (the
+second quartile exceeds the first), so there is no clean intrinsic trend, and the residual
 $\sim$\jdNearFarCorr$\times$ is best read as an upper bound rather than a detection. It is not
-cleanly intrinsic either: Juno's polar orbit couples range to magnetic latitude and hence to CMI
-beaming geometry. The ``proximity law'' is thus a threshold-amplified inverse-square visibility
-effect, with at most a $\sim$\jdNearFarCorr$\times$ residual we cannot separate from geometry. The
-canonical Io boxes do not survive aggregation: contrast \jdContrast\ overall (\jdCells\ cells),
-per-month median \jdCmMed\ with range \jdCmMin--\jdCmMax\ across \jdNmonths\ months, and no
-strengthening with distance in the resolved quartiles (\jdCqA, \jdCqB, \jdCqC, \jdCqD\ from
-near to far). Honest limits: (0) the per-month contrasts carry no individual error bars; a one-sample test
-against unity does not reject (consistency, not proof), and genuine month-to-month Io-DAM
-variability --- Io volcanism and plasma-torus state are published drivers --- is an
-unmodelled alternative to geometric scatter; (i) seven months is still sparse and the far
-quartiles are activity-starved
-(the \jdCqB--\jdCqD\ values carry few active bins); v01 (2017-02) and v02 months are mixed,
-benign for occurrence since detection uses each file's own background statistics;
-(ii) the fixed 10\%-of-band activity criterion is one choice among several (it suppresses
-narrowband interference but dilutes narrowband DAM); (iii) the $1/r^2$ sensitivity null is a
-first-order correction --- it divides out the leading inverse-square detection advantage but not
-the CMI beaming geometry that co-varies with Juno's range, so the residual \jdNearFarCorr$\times$
-is an upper bound, not an intrinsic measurement; (iv) the census does not separate Io-DAM from non-Io-DAM or
-kilometric leakage below 3~MHz; (v) the reduced-contrast reading is a consistency statement, not a proof --- a beaming-model fit over the full v02 archive is the definitive test; and the review-caught
-convention error is disclosed above because a synthetic round-trip cannot validate frame
-conventions, only machinery.
+cleanly intrinsic either, because Juno's polar orbit couples range to magnetic latitude and hence
+to CMI beaming geometry. The ``proximity law'' is thus a threshold-amplified inverse-square
+visibility effect, with at most a $\sim$\jdNearFarCorr$\times$ residual we cannot separate from
+geometry.
+
+The canonical Io boxes do not survive aggregation. The aggregate contrast is \jdContrast\
+overall (\jdCells\ cells), the per-month median is \jdCmMed\ with range \jdCmMin--\jdCmMax\
+across \jdNmonths\ months, and there is no strengthening with distance in the resolved
+quartiles (\jdCqA, \jdCqB, \jdCqC, \jdCqD\ from near to far).
+
+Several limits qualify these results. (0) The per-month contrasts carry no individual error
+bars; a one-sample test against unity does not reject (consistency, not proof), and genuine
+month-to-month Io-DAM variability (Io volcanism and plasma-torus state are published drivers)
+is an unmodelled alternative to geometric scatter. (i) Seven months is still sparse and the far
+quartiles are activity-starved (the \jdCqB--\jdCqD\ values carry few active bins); v01 (2017-02)
+and v02 months are mixed, which is benign for occurrence since detection uses each file's own
+background statistics. (ii) The fixed 10\%-of-band activity criterion is one choice among
+several: it suppresses narrowband interference but dilutes narrowband DAM. (iii) The $1/r^2$
+sensitivity null is a first-order correction; it divides out the leading inverse-square
+detection advantage but not the CMI beaming geometry that co-varies with Juno's range, so the
+residual \jdNearFarCorr$\times$ is an upper bound, not an intrinsic measurement. (iv) The census
+does not separate Io-DAM from non-Io-DAM or kilometric leakage below 3~MHz. (v) The
+reduced-contrast reading is a consistency statement, not a proof; a beaming-model fit over the
+full v02 archive is the definitive test. The review-caught convention error is disclosed above
+because a synthetic round-trip cannot validate frame conventions, only machinery.
 
 \begin{figure}
 \plotone{figures/junodam.pdf}
-\caption{\emph{Left:} DAM occurrence probability over the (CML, $\Phi_{Io}$) plane aggregated
+\caption{Left: DAM occurrence probability over the (CML, $\Phi_{Io}$) plane aggregated
 over seven months (2016--2019), with the Earth-canonical Io-A/B/C/D boxes overlaid (dashed) and low-exposure cells
-masked. \emph{Right:} active bins (red) over the month's plane coverage. The CI build shows the
+masked. Right: active bins (red) over the month's plane coverage. The CI build shows the
 synthetic-orbit fixture; \code{make reproduce} regenerates the real panels from the local CDFs.}
 \label{fig:jd}
 \end{figure}
