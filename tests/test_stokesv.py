@@ -248,3 +248,24 @@ def test_forced_mode_is_signed_on_blank_sky_while_the_peak_search_is_not():
     # peak search: essentially always positive, and biased high
     assert (peaks > 0).all(), "a 12-arcsec peak search over noise should never return negative I"
     assert peaks.mean() > 2.0 * abs(signs.mean()) + 1.0
+
+
+def test_offline_run_writes_the_synthetic_figure(tmp_path):
+    stokesv.run(out=str(tmp_path), offline=True)
+    assert (tmp_path / "papers" / "stokesv" / "figures" / "circular_pol.pdf").exists()
+
+
+def test_real_path_does_not_write_the_synthetic_figure_before_the_real_leg(tmp_path):
+    """A real run that raises must not leave synthetic output where the real figure was.
+
+    `_run_real` needs CASDA credentials and writes the committed two-panel figure last, so
+    drawing the synthetic one first meant any failure in between clobbered committed evidence.
+    """
+    import pytest as _pytest
+
+    fig = tmp_path / "papers" / "stokesv" / "figures" / "circular_pol.pdf"
+    # _run_real raises RuntimeError when CASDA_USERNAME is unset, which is the common way a
+    # real run dies partway.
+    with _pytest.raises(RuntimeError):
+        stokesv.run(out=str(tmp_path), offline=False)
+    assert not fig.exists()

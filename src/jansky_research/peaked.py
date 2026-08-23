@@ -468,7 +468,11 @@ def _write_macros(m: dict, path) -> None:
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text("\n".join(lines) + "\n")
+    # Merge rather than overwrite: a run may only ADD information, so an
+    # offline rebuild can never blank a real value (report.preserve_live_macros).
+    from .report import preserve_live_macros
+
+    p.write_text(preserve_live_macros("\n".join(lines) + "\n", p))
 
 
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI

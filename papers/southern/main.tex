@@ -26,17 +26,17 @@ turnover frequency \nupk. We remove that limitation in the southern sky. GLEAM-X
 measures each source in 20 in-band sub-bands across 76--227~MHz, so the low-frequency shape is measured
 directly; combined with the three RACS bands (887.5, 1367.5, 1655.5~MHz;
 \citealt{racs2020,racshale2021,racsmid2024,racshigh2025}) a source has up to $\sim$23 flux points over
-a factor of $\sim$23 in frequency. We fit a weighted log-parabola to each SED and measure \nupk. Over a $3\arcdeg$ cone (\soNmatched\ GLEAM-X$\cap$RACS sources) a naive parabola-peak cut is
+a factor of $\sim$23 in frequency. We fit a weighted log-parabola to each SED and measure \nupk. Over a $3\arcdeg$ cone (\soRealNmatched\ GLEAM-X$\cap$RACS sources) a naive parabola-peak cut is
 dominated by two selection effects, each with a fix: the GLEAM ($2\arcmin$)$\to$RACS
 ($\sim$15--25\arcsec) resolution mismatch, which makes extended sources lose flux at RACS resolution
 and fake a turnover (rejected by a compactness cut), and ordinary steep sources whose mild
 low-frequency flattening fits a shallow edge-peak (rejected by requiring the optically-thick rising
-side, $\alo>-0.1$). After both cuts, the field yields \soNpeaked\ peaked candidates with a measured
-median $\nupk\approx\soMedianNupk$~MHz, plus \soNuss\ ultra-steep-spectrum (candidate high-$z$ radio
-galaxy) sources and \soNextended\ rejected resolution artefacts. As a check against a known sample, we
-re-derive the turnover of the Callingham et al.\ (2017) peaked sources: of \soCallTried\ tested,
-\soCallRecovered\ are recovered as peaked and our measured \nupk\ agrees with the published value to a
-median $\soCallDlog$~dex, with \soCallWithin\% within a factor of two. This is a reproducible,
+side, $\alo>-0.1$). After both cuts, the field yields \soRealNpeaked\ peaked candidates with a measured
+median $\nupk\approx\soRealMedianNupk$~MHz, plus \soRealNuss\ ultra-steep-spectrum (candidate high-$z$ radio
+galaxy) sources and \soRealNextended\ rejected resolution artefacts. As a check against a known sample, we
+re-derive the turnover of the Callingham et al.\ (2017) peaked sources: of \soRealCallTried\ tested,
+\soRealCallRecovered\ are recovered as peaked and our measured \nupk\ agrees with the published value to a
+median $\soRealCallDlog$~dex, with \soRealCallWithin\% within a factor of two. This is a reproducible,
 measured-turnover scout catalogue and methodology, not a discovery catalogue, and it over-selects
 relative to careful Bayesian work \citep{kerrison2025}.
 \end{abstract}
@@ -90,12 +90,12 @@ racshigh2025}, cross-matched within 25\arcsec\ on a $3\arcdeg$ cone at high Gala
 DR2 exposes no per-band uncertainties via VizieR, so a nominal 10\% per-band error sets the fit weights.
 
 \section{Results}
-Over the field (\soNmatched\ GLEAM-X$\cap$RACS sources) the two cuts above reduce a naive
-$\sim$16\% ``peaked'' fraction (piled spuriously at the GLEAM band edge) to \soNpeaked\
-peaked-spectrum candidates with a measured median $\nupk\approx\soMedianNupk$~MHz (turnovers in
+Over the field (\soRealNmatched\ GLEAM-X$\cap$RACS sources) the two cuts above reduce a naive
+$\sim$16\% ``peaked'' fraction (piled spuriously at the GLEAM band edge) to \soRealNpeaked\
+peaked-spectrum candidates with a measured median $\nupk\approx\soRealMedianNupk$~MHz (turnovers in
 the few-hundred-MHz range, the intermediate population this method targets). The selection also returns
-\soNuss\ ultra-steep-spectrum sources ($\alpha<-1.2$ throughout; candidate high-$z$ radio galaxies) and
-flags \soNextended\ extended resolution artefacts (Figure~\ref{fig:seds}).
+\soRealNuss\ ultra-steep-spectrum sources ($\alpha<-1.2$ throughout; candidate high-$z$ radio galaxies) and
+flags \soRealNextended\ extended resolution artefacts (Figure~\ref{fig:seds}).
 
 RadioSED II \citep{kerrison2025}, a careful Bayesian SSA/FFA fit over Stripe~82 ($\sim$1.2 peaked
 sources~deg$^{-2}$), provides the relevant comparison: our least-squares parabola is more permissive,
@@ -106,9 +106,9 @@ reproducible method, not a clean discovery sample.
 \paragraph{Recovery of known sources.} As a validation, we re-derive the turnover of the Callingham
 et al.\ (2017) peaked sources \citep{callingham2017}. This is the catalogue against which the northern
 slice could previously demonstrate only purity, because it bounded \nupk\ but never measured it. Of
-\soCallTried\ Callingham sources with GLEAM-X$+$RACS coverage, \soCallRecovered\ are recovered as
-peaked, and our measured \nupk\ agrees with the published value to a median $\soCallDlog$~dex
-(\soCallWithin\% within a factor of two). The recovery climbs with published \nupk, as
+\soRealCallTried\ Callingham sources with GLEAM-X$+$RACS coverage, \soRealCallRecovered\ are recovered as
+peaked, and our measured \nupk\ agrees with the published value to a median $\soRealCallDlog$~dex
+(\soRealCallWithin\% within a factor of two). The recovery climbs with published \nupk, as
 expected for a rising-side-gated method: sources peaking well below the GLEAM band fall outside the
 window, while those peaking in or above it are both recovered and have their turnover measured. This is
 the literature turnover, measured rather than bounded, using the southern data.

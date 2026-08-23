@@ -109,8 +109,10 @@ synthetic data and ready for a real wide-field run. None of these undermine what
 reproducible pipeline that recovers $I$ and the variability-limited $V$ from public RACS Stokes-V images),
 but they bound what one epoch can claim. Every number above is written by the pipeline into the
 \code{generated/macros} file, which is \code{\textbackslash input} at the top of this document;
-\code{python -m jansky\_research.stokesv} regenerates the
-synthetic validation, and \code{CASDA\_USERNAME=... python -m jansky\_research.stokesv} the real leg.
+\code{python -m jansky\_research.stokesv --offline --out <tmpdir>} regenerates the synthetic
+validation, and \code{CASDA\_USERNAME=... python -m jansky\_research.stokesv --out <tmpdir>}
+the real leg. Both must be given an output directory outside the repository: writing to the
+repository root overwrites the committed figure and results.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

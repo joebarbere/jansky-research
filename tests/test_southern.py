@@ -68,4 +68,70 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "results" / "southern_metrics.json").exists()
     assert (tmp_path / "papers" / "southern" / "figures" / "seds.pdf").exists()
     macros = (tmp_path / "papers" / "southern" / "generated" / "macros.tex").read_text()
-    assert r"\soNpeaked" in macros and r"\soMedianNupk" in macros
+    # An offline run fills the SYNTHETIC namespace only. This test previously asserted the
+    # un-namespaced names, i.e. it required the behaviour that let an offline rebuild write
+    # synthetic counts into the macros the paper uses for the real cone.
+    assert r"\soSynNpeaked" in macros and r"\soSynMedianNupk" in macros
+    assert r"\newcommand{\soRealNpeaked}{--}" in macros
+
+
+def test_macros_are_namespaced_and_merged(tmp_path):
+    """An offline rebuild must not touch the real namespace.
+
+    `make figures` runs every slice offline in the repo root. Before this, southern's macros
+    were shared between modes and unmerged, so one such run replaced 1545 real matches with
+    the synthetic field's count and wrote `\\soCallTried{0}` over a real 50 -- the documented
+    `\\tiiNEvents` clobber, which ships a wrong number rather than a hole.
+    """
+    mac = tmp_path / "macros.tex"
+    real = {
+        "source": "GLEAM-X DR2 x RACS @ (30.0,-30.0) r=3.0deg",
+        "n_matched": 1545,
+        "n_peaked": 90,
+        "n_uss": 59,
+        "n_extended": 28,
+        "median_nu_pk_mhz": 210.9,
+        "call_tried": 50,
+        "call_recovered": 38,
+        "call_dlog": 0.112,
+        "call_within_pct": 92,
+    }
+    southern._write_macros(real, mac)
+    assert r"\newcommand{\soRealNmatched}{1545}" in mac.read_text()
+
+    southern._write_macros(
+        {
+            "source": "synthetic",
+            "n_matched": 40,
+            "n_peaked": 6,
+            "n_uss": 4,
+            "n_extended": 2,
+            "median_nu_pk_mhz": 150.0,
+        },
+        mac,
+    )
+    text = mac.read_text()
+    assert r"\newcommand{\soRealNmatched}{1545}" in text, "offline run clobbered the real count"
+    assert r"\newcommand{\soRealCallTried}{50}" in text, "offline run blanked the validation"
+    assert r"\newcommand{\soSynNmatched}{40}" in text, "synthetic count lost its own namespace"
+
+
+def test_callingham_macros_placeholder_rather_than_zero():
+    """The validation runs on the real path only; a 0 there is a wrong number, not a hole."""
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as d:
+        mac = Path(d) / "m.tex"
+        southern._write_macros(
+            {
+                "source": "synthetic",
+                "n_matched": 1,
+                "n_peaked": 1,
+                "n_uss": 1,
+                "n_extended": 1,
+                "median_nu_pk_mhz": 1.0,
+            },
+            mac,
+        )
+        assert r"\newcommand{\soRealCallTried}{--}" in mac.read_text()
