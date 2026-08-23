@@ -10,6 +10,29 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- Papers restyled to traditional pre-LLM journal register (batch 3: `rmstructure`, `torchdsp`,
+  `stokesv`, `southern`, `lpt`, `skr`). Lint 3/2/3/3/3/2 HIGH -> 0 on all six; diff-guard clean;
+  triage unchanged. **All six referee rounds still returned revisions**, and all twenty-nine
+  conversion defects are fixed here. The severe ones were single deleted qualifiers that invert
+  a headline: `skr`'s abstract lost **"raw"** from "a raw near/far ratio of 3.33" (the paper
+  exists to show that ratio is a 1/r^2 artefact collapsing to 1.39); `lpt`'s abstract lost
+  "own", "already" and **"per-value provenance"** -- the contribution named in its own title --
+  from its precedence concession to Rea et al.; `rmstructure` had its quality-flag result
+  demoted from "a lesson promoted to the main result" to a methods aside across four edits;
+  `southern` *gained* an unsupported "directly" on a fitted extremum and had "The recovery"
+  become "The recovery **fraction**", a quantity the pipeline cannot produce; `torchdsp` lost
+  "as of this writing" from a novelty claim its own Introduction contradicts, and fused a
+  provenance sentence so synthetic numbers inherited real-archive attribution.
+
+### Added
+- `traditional-style` skill rule: **run-in labels often carry ranking.** Dissolving a
+  `\textbf{Label.}` opener into a topic sentence, or promoting it to a `\subsection{}`, changes
+  how the reader weights what follows -- batch 3 turned "An honest null:" into a heading naming
+  an attempted measurement as though it were a claimed one, and lost a "(a near-null)" marker so
+  a paragraph read as a detection for three sentences.
+
+
 ### Fixed
 - **`frblens` quoted its own retracted limit as its first conclusion.** Discussion item (i)
   read "not lensing-contaminated at the $\gtrsim$9\% level" as a hard-coded literal --- that
