@@ -10,6 +10,33 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`torchfdmt` quoted "~24x" for a ratio its own adjacent macros make 29x.** The abstract and
+  benchmark section rendered "~24x (44.12 -> 1.5 s)"; 44.12/1.5 = 29.4. The 24 traces to a
+  superseded 36.1 s CPU timing that appears nowhere in `results/`, in a file whose header claims
+  every number is `\input` from the pipeline. Fixed at the source: `_write_macros` now
+  **derives** `\spBruteSpeedup` and `\spFdmtSpeedup` from the committed timings, so no ratio in
+  this paper can be hand-typed or drift again; a CPU-only run emits `--`, which
+  `preserve_live_macros` will not write over a real value. Three regression tests, one checking
+  the macro on disk against the JSON on disk.
+- **`torchfdmt`'s real-data DM recovery was quoted as a bare "0.3%".** The FDMT butterfly indexes
+  rows by whole samples of dispersive delay, so the DM is quantised rather than fitted: at this
+  file's band and sampling one row is 0.0627 pc/cm^3, making the 0.18 offset **2.9 trials**. The
+  abstract's "within delay quantisation" frame belonged to the synthetic leg and was inheriting
+  to the real one. The real leg now records `real_dm_step_pc`, the paper says the DM is
+  grid-quantised, and it quotes `\spRealSnr` (6.0) -- generated and used nowhere, despite being
+  the number that says how well the peak can be localised.
+- **`torchfdmt`'s benchmark row is a splice of two invocations.** `git log -p` shows a CPU-only
+  run with GPU values patched in later while `device` stayed `"cpu"`; the code's own device
+  logic means a `--device cuda` run writes both columns *and* sets `device: "cuda"`, so no single
+  run can produce the committed row. The conclusion survives on same-run numbers (3.3x), so this
+  is provenance: the paper now says the columns come from separate invocations, and
+  `bench_devices` is recorded going forward.
+- **`results/singlepulse_metrics.json` labelled its synthetic block with the real file's name.**
+  `source` sat directly above `recovered_dm: 56.63`, a synthetic value (the real one is
+  `real_recovered_dm: 56.59`). `source` now names both legs and states the key convention.
+
+
 ### Changed
 - Papers restyled to traditional pre-LLM register (batch 4: `typeii`, `vgpra` main+note,
   `spectra` main+note, `frbstats`, `peaked`, `torchfdmt` --- nine files). Gates clean on every

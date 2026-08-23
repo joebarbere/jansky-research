@@ -154,6 +154,17 @@ def search(
     }
 
 
+def _dm_step(freqs_mhz: np.ndarray, dt: float) -> float:
+    """DM change corresponding to one sample of dispersive delay across the band.
+
+    The FDMT butterfly indexes rows by integer delay samples, so the recovered DM is
+    quantised at this step and an offset should be read in trials, not in percent.
+    """
+    f = np.asarray(freqs_mhz, dtype=float)
+    lo, hi = float(f.min()), float(f.max())
+    return dt / (4.148808e3 * (lo**-2 - hi**-2))
+
+
 def _fold_period(series: np.ndarray, dt: float, p0: float) -> float:
     """Refine the pulse period by epoch folding around a first guess."""
     times = np.arange(series.size) * dt
@@ -196,6 +207,11 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
                 if "fdmt_cuda_s" in b
                 else None,
                 "bench_n_dm": int(b["n_dm_trials"]),
+                # Which invocation produced this row. A CPU-only run leaves the GPU
+                # columns null; patching GPU numbers into that JSON later yields a row no
+                # single run could produce, which is how the committed row came to pair
+                # device="cpu" with both columns filled.
+                "bench_devices": list(devs),
             }
         )
 
@@ -210,11 +226,22 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
         rs = search(rdyn, rfreqs, float(hdr["tsamp"]), max_dm=120.0, device=device)
         metrics.update(
             {
-                "source": f"Parkes/UWL {hdr.get('source_name', '?')} (real, GATE-0 file)",
+                # Name BOTH legs. The unprefixed keys (recovered_dm, butterfly_snr,
+                # recovered_period_ms) are the SYNTHETIC injection; the real ones all carry
+                # a real_ prefix. A `source` naming only the Parkes file sat directly above
+                # the synthetic recovered_dm, so an auditor reading the evidence file top-
+                # down would take 56.63 for the Crab recovery when the Crab value is 56.59.
+                "source": (
+                    "synthetic injection (unprefixed keys) + Parkes/UWL "
+                    f"{hdr.get('source_name', '?')} (real, GATE-0 file; real_* keys)"
+                ),
                 "real_recovered_dm": round(rs["best_dm"], 2),
                 "real_butterfly_snr": round(rs["best_snr"], 1),
                 "real_sp_snr": round(rs["sp_snr"], 1),
                 "real_dm_error_pc": round(100 * abs(rs["best_dm"] - CRAB_DM) / CRAB_DM, 1),
+                # One FDMT row is one delay sample, so this is the DM quantisation of the
+                # recovery: without it a "0.3%" offset cannot be read as few-trial agreement.
+                "real_dm_step_pc": round(_dm_step(rfreqs, float(hdr["tsamp"])), 4),
             }
         )
         s = rs  # figure shows the real butterfly when available
@@ -269,6 +296,17 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\spFdmtGpu}}{{{_fmt('bench_fdmt_gpu_s')}}}",
         rf"\newcommand{{\spBenchNdm}}{{{_fmt('bench_n_dm')}}}",
     ]
+    # Ratios are DERIVED, never typed. A hand-written "~24x" survived in the paper next to
+    # the two macros it is computed from, long after a re-benchmark made it 29x.
+    for name, num, den in (
+        ("spBruteSpeedup", "bench_brute_cpu_s", "bench_brute_gpu_s"),
+        ("spFdmtSpeedup", "bench_fdmt_cpu_s", "bench_fdmt_gpu_s"),
+    ):
+        a_, b_ = m.get(num), m.get(den)
+        ratio = "--"
+        if isinstance(a_, int | float) and isinstance(b_, int | float) and b_:
+            ratio = f"{a_ / b_:.0f}"
+        lines.append(rf"\newcommand{{\{name}}}{{{ratio}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: a CPU run has no GPU benchmark keys and would blank
