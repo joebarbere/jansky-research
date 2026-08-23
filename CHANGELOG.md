@@ -10,6 +10,32 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- Papers restyled to traditional pre-LLM register (batch 4: `typeii`, `vgpra` main+note,
+  `spectra` main+note, `frbstats`, `peaked`, `torchfdmt` --- nine files). Gates clean on every
+  file before review; **all five referee rounds still returned revisions**, and all twenty-eight
+  conversion defects are fixed here.
+  **The sharpest case in the campaign so far: `typeii`'s "100%" changed meaning without changing
+  value.** At HEAD the literal sat inside a disavowal ("This curve --- not a headline `100%' ---
+  is the honest characterization"); after conversion it was an assertion ("recovered at 100%
+  completeness"). The numeric multiset is identical, so the guard passed --- and the disavowal
+  was not stylistic, it was forced by GATE-2 finding R2 because the 1.0/1.0 is an easy-synthetic
+  ceiling. Also: `vgpra` lost "The result is a controlled null" and the word *controlled* fell to
+  zero occurrences while its own note still used it; `peaked` lost the only *comparative* form of
+  a robustness claim that survives twice in unscoped form; `spectra` and `frbstats` each lost the
+  single skim-level carrier of a negative result.
+
+### Fixed
+- **A style rule that was wrong.** The `peaked` conversion stripped `\emph{}` from the mission
+  name *Fermi* to stay under an `\emph`-per-kw threshold, but the style guide's own reference
+  says italics are *for* mission names. Fixed with `\textit{Fermi}`. When the lint and the guide
+  disagree the guide wins; when the guide and a science gate disagree the science gate wins.
+- `papers/peaked/arxiv.yaml` re-derived after the conversion. Its overridden arXiv metadata
+  abstract still asserted "far more robust ... and alpha high is TGSS-independent" where the
+  paper now says "more robust ... because alpha high is TGSS-independent"; a metadata override
+  that no longer matches its paper is worse than none.
+
+
 ### Fixed
 - **`torchdsp` claimed its science ran on the GPU; the committed evidence says CPU.** Settled
   from git history: the commit that created `benchmark_device` (602e0ca, 2026-08-10) states

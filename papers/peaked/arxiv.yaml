@@ -5,6 +5,11 @@
 # metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
 # Trimming removed connective tissue and closing summary sentences; every numeric result is
 # preserved, checked mechanically against the source abstract.
+#
+# Re-derived 2026-08-23 after the traditional-style conversion: the paper's abstract changed
+# wording, and a metadata override that no longer matches the paper is worse than none. The
+# robustness claim is the comparative, bounded form the paper now uses ("more robust ...
+# because alpha high is TGSS-independent"), not the unscoped "far more robust ... and".
 
 abstract: |
   Gigahertz-Peaked-Spectrum (GPS) and Compact-Steep-Spectrum (CSS) sources are compact, young
@@ -12,10 +17,10 @@ abstract: |
   needs three frequencies. We build a small, tested, CPU-only tool that selects peaked-
   spectrum candidates from three public continuum surveys --- TGSS 150 MHz, NVSS 1.4 GHz, and
   VLASS 3 GHz --- by their spectral curvature, the difference of a low (alpha low, 1501400
-  MHz) and a high (alpha high, 14003000 MHz) two-point index. Curvature is far more robust to
-  a constant TGSS flux-scale offset than a single steep cut, and alpha high is TGSS-
+  MHz) and a high (alpha high, 14003000 MHz) two-point index. Curvature is more robust to
+  a constant TGSS flux-scale offset than a single steep cut, because alpha high is TGSS-
   independent. A naive 'detected in all three, rising then falling' selection returns zero
-  candidates: two selection effects with clean fixes. (i) Peaked sources are faint at 150 MHz
+  candidates; we show this is two selection effects with clean fixes. (i) Peaked sources are faint at 150 MHz
   by definition, so a TGSS detection excludes them --- we instead treat a TGSS non-detection
   as an upper limit S150<25 mJy, giving a lower bound on alpha low. (ii) The NVSS resolution
   mismatch (45arcsec versus 2.5arcsec) fakes steep turnovers for extended sources --- a floor
