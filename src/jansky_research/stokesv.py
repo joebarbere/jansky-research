@@ -615,7 +615,11 @@ def run(
     # always run the synthetic validation of the selection machinery (fast, no network); the real run
     # additionally does the CASDA forced photometry and merges its macros, so a single `reproduce`
     # build carries both the synthetic-validation and the real forced-photometry numbers.
-    metrics = _run_offline(op, v_snr_min=v_snr_min, i_snr_ref=i_snr_ref)
+    # The synthetic figure is only written on the offline path. On a real run the committed
+    # figure is the two-panel real one, and _run_real writes it last -- so drawing the
+    # synthetic one first meant a real leg that raised (a missing CASDA credential is enough)
+    # left synthetic output standing where the real figure had been.
+    metrics = _run_offline(op, v_snr_min=v_snr_min, i_snr_ref=i_snr_ref, write_figure=offline)
     if not offline:
         metrics = {**metrics, **_run_real(op)}
 
@@ -625,7 +629,7 @@ def run(
     return metrics
 
 
-def _run_offline(op, *, v_snr_min: float, i_snr_ref: float) -> dict:
+def _run_offline(op, *, v_snr_min: float, i_snr_ref: float, write_figure: bool = True) -> dict:
     """Synthetic selection path: validate the leakage-floor + V-SNR + PM machinery and its purity."""
     stars, dt_yr = synthetic_field()
     frac, _ = fractional_circular_pol(stars["v_flux"], stars["i_flux"], stars["e_v"], stars["e_i"])
@@ -651,7 +655,8 @@ def _run_offline(op, *, v_snr_min: float, i_snr_ref: float) -> dict:
     candidates = mask & pm_ok
     truth = stars["is_emitter"]
     n_cand = int(candidates.sum())
-    _figure(stars, frac, threshold, candidates, op / "papers" / "stokesv" / "figures")
+    if write_figure:
+        _figure(stars, frac, threshold, candidates, op / "papers" / "stokesv" / "figures")
     return {
         "source": "synthetic",
         "n_targets": int(truth.size),
@@ -809,7 +814,11 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import json
 
     p = argparse.ArgumentParser(description="Select Stokes-V coherent radio emitters (RACS).")
-    p.add_argument("--out", default=".")
+    # No default: writing to the repo root overwrites committed evidence (the real figure
+    # and results JSON). The paper once printed a command that did exactly that.
+    p.add_argument(
+        "--out", required=True, help="output directory (use a tmpdir, not the repo root)"
+    )
     p.add_argument("--offline", action="store_true", help="synthetic run (no network/CASDA)")
     p.add_argument("--v-snr-min", type=float, default=5.0)
     args = p.parse_args(argv)

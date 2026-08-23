@@ -10,6 +10,37 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`torchdsp` claimed its science ran on the GPU; the committed evidence says CPU.** Settled
+  from git history: the commit that created `benchmark_device` (602e0ca, 2026-08-10) states
+  that one field labelling both legs meant "a real GPU benchmark could only be stored by
+  mislabelling the CPU-run CHIME science as GPU". `results/torchdsp_metrics.json` agrees
+  (`device: cpu`, `benchmark_device: cuda`). Exactly four numbers are GPU-backed, all wall-clock
+  timings. The paper's "run entirely on the ROCm GPU", "validated end-to-end" and "runs
+  identically everywhere" are corrected to what the evidence covers, and the same wrong
+  attribution is fixed in `README.md` (2 rows) and `survey/torchdsp-findings.md` (3 places).
+  Cross-device numerical agreement is not measured and the paper now says so.
+- **`stokesv` printed a reproduction command that destroyed committed evidence.** `--offline`
+  defaulted to False and `--out` to `"."`, so the command in the paper ran the *real* path from
+  the repo root. `--out` is now required, and the synthetic figure is no longer drawn on the
+  real path at all -- previously a real leg that raised partway (a missing CASDA credential is
+  enough) left synthetic output standing where the committed two-panel real figure had been.
+  Two regression tests.
+- **`southern`'s macros were unmerged AND un-namespaced**, the combination that ships a wrong
+  number rather than a hole. One `make figures` would have replaced 1545 real matches with the
+  synthetic field's count and written `\soCallTried{0}` over a real 50. Counts are now
+  `soSyn*`/`soReal*`, the real-only Callingham validation defaults to a `--` placeholder rather
+  than 0, and the writer merges via `preserve_live_macros`. Verified empirically: an offline
+  rebuild now fills `\soSynNmatched{40}` and leaves `\soRealNmatched{1545}` untouched.
+  The existing `test_run_offline` had asserted the *un-namespaced* names, i.e. it was pinning
+  the defect -- another instance of a test locking a bug in.
+- **Audited the `preserve_live_macros` invariant across every slice, not just the ones in
+  hand.** Four more were missing it: `atlas3i` (three macro writers, and it heads the
+  submission queue), `driftsearch`, `peaked`, `stacking`. All fixed. **42 of 42 slices now call
+  it**, against 5 of 42 at the 2026-08-12 audit. The CLAUDE.md lesson stands: a rule stated in
+  that file is not a rule the repo follows until something greps for it.
+
+
 ### Changed
 - Papers restyled to traditional pre-LLM journal register (batch 3: `rmstructure`, `torchdsp`,
   `stokesv`, `southern`, `lpt`, `skr`). Lint 3/2/3/3/3/2 HIGH -> 0 on all six; diff-guard clean;

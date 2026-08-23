@@ -3,7 +3,8 @@
 `jansky_research.torchdsp` extends the merged `torch-fdmt` arc with three kernels no
 pure-PyTorch (or JAX) implementation of which existed: coherent dedispersion, SumThreshold +
 spectral-kurtosis RFI excision, and a radix-2 FFA. One `device=` argument covers CPU, CUDA, and
-ROCm — the canonical real run below executed end-to-end on the RX 7600 XT (gfx1102).
+ROCm — the BENCHMARKS below were measured on the RX 7600 XT (gfx1102). The science legs ran
+on CPU (`results/torchdsp_metrics.json`: `device: cpu`, `benchmark_device: cuda`).
 
 ## GATE 0 (2026-07-06, per-kernel repo/full-text sweep)
 
@@ -34,7 +35,7 @@ ROCm — the canonical real run below executed end-to-end on the RX 7600 XT (gfx
   significant. The algorithm's validation is carried by the synthetics (injected 233.7-sample
   period found exactly, S/N 60.5 vs fold-oracle 93.4) — stated plainly in the paper.
 
-## Recover-a-knowns (all also pass on the GPU — the canonical run's device is `cuda`)
+## Recover-a-knowns (run on CPU; `benchmark_device` is `cuda`, the science `device` is `cpu`)
 
 - **Chirp round trip**: synthetic impulse dispersed with the exact inverse filter at DM 100
   re-collapses to peak offset 0 with 99.5% of energy re-concentrated (from 2.1% dispersed);
@@ -47,7 +48,7 @@ ROCm — the canonical real run below executed end-to-end on the RX 7600 XT (gfx
   numpy (torch's even-length median takes the lower element — bit us once).
 - **FFA**: injected 233.7-sample period found at 233.70 (err 0.0); flat-noise control quiet.
 
-## Real legs (run on the ROCm GPU)
+## Real legs (run on CPU)
 
 - **CHIME baseband re-dedispersion**: FRB 20181231C, coherent dedispersion of both pols across
   97 good channels; boxcar S/N vs trial DM peaks exactly at the Cat-2 catalogue DM 556.11
