@@ -471,3 +471,79 @@ disagree, the science gate wins.**
 - `results/singlepulse_metrics.json` labels its synthetic block with the real file's `source`.
 - `peaked`'s abstract renders "none of the 0/81 sources"; `typeii` quotes a ~1-hr match window
   and a +/-2 h chance-rate window without distinguishing them.
+
+## Batch 5 — six papers, and the first conversion defect that changed a fact (2026-08-23)
+
+Converted on `style-batch-5`: `pte2`, `junodam`, `rmdipole`, `hi`, `glitchpop`, `vlass`.
+Mechanical gates clean on all six before any referee saw them. **All five referee rounds
+returned revisions** — five batches for five. Twenty-two conversion defects, all fixed here.
+
+### A BLOCKER: register became fact
+
+Folding `\textbf{The post-2018 delta.}` into a topic sentence, the `glitchpop` converter wrote:
+
+> We reclassify each pulsar on the pre-2019 (Basu) subset and on the full **post-2018** catalogue
+
+`glitchpop.py:283` says arm (b) is "the full catalogue". The inserted words describe a
+**disjoint-epoch** comparison that was never run, and they make both derived quantities
+incoherent: `newly classifiable` is a union operation, and the single flip is recorded as
+`n_pre: 8 -> n_now: 9`, i.e. cumulative. **This is the first defect in the campaign where a
+style edit changed what the method was, not how strongly it was stated** — and no mechanical
+gate could see it, because no number, macro or citation moved.
+
+### The run-in label problem, at scale
+
+`glitchpop` lost **nine** `\textbf{...}` labels in one pass and `pte2` lost eleven. Six of
+glitchpop's nine dissolved safely because the paragraph's first clause already carried the
+content. The failures were the ones carrying *weighting*:
+
+- **`glitchpop`: "Honest limits." dropped bare**, leaving a limitations inventory as the fourth
+  of four undifferentiated Results paragraphs, opening on a sentence that could plausibly be a
+  result. Restored with a scoping clause.
+- **`pte2`: "Honest bottom line." became `\subsection{Summary}`** — promoting to *the paper's
+  designated summary* a paragraph that quotes only the naive 19% incidence, the very endpoint
+  the paper's referee round established is not the answer. The bracket now appears in it.
+- **`pte2`: `\textbf{No significant Ė trend --- but not "contrary to expectation".}` became
+  `\subsection{Spin-down luminosity}`**, deleting the only prominent flag that the abstract's
+  own phrase had been withdrawn. Restored to the heading.
+
+### Other majors
+
+- **`glitchpop`** — the abstract's significance sentence lost "among these" (the denominator:
+  1.55 is 31 × 0.05) *and* the two words distinguishing the *quasi-periodic fraction* from
+  *individual members*, in one edit. It also lost "are the contribution", and "we do not
+  overlap" became "does not overlap with this analysis", asserting a property of another paper.
+- **`hi`** — the closing paragraph lost the word **validation**, so the paper's contribution
+  class appeared nowhere after Results, in a paper whose entire value is that it reproduces a
+  known result.
+- **`junodam`** — `\section{Results and honest limits}` → `\section{Results}` left a paper whose
+  one positive claim is explicitly an upper bound with no heading anywhere naming a limitation.
+- **`vlass`** — "the **pipeline** surfaces genuine variables" became "the **selection**", which
+  is false of the predicate that follows: the selection produced 40 candidates of which 38 were
+  artefacts; rejection is done by later stages.
+- **`rmdipole`** — the abstract's significance claim and its killing caveat became two
+  sentences, so the *p* = 0.001 dipole can now be excerpted without the clause establishing it
+  is a systematics floor.
+
+**What `junodam` got right is as informative as what `skr` got wrong.** Briefed explicitly on
+the `skr` failure, its converter promoted both `\emph`-led run-in headings to standalone
+sentences that keep the near-null claim in first position, and every occurrence number is still
+typed raw-or-corrected. The same construction, briefed, survived.
+
+### Pre-existing, NOT fixed here
+
+- `junodam`'s abstract denies "an ~180x intrinsic rise" four lines after rendering
+  `\jdNearFarRaw` = **196.2**; the 180 is hand-typed and stale.
+- `junodam`'s recover-a-known pair (injected 8.75, recovered 7.2) is in the findings file and
+  **not** in committed evidence — `\jdExpContrast` is `{--}` — and 8.75 is ~8x the decision
+  boundary of the measurement it validates.
+- `pte2`'s abstract still says the excess is "contrary to the giant-pulse–Ė expectation" while
+  the body concludes the data "neither support nor contradict" it and the partial correlation
+  has the *predicted* sign. Needs an author decision, not a style fix.
+- `pte2`: 12 of 136 truncated fits sit exactly at `f_hat = 1.0`, several with `n_exp` of order
+  1e291 — parameters glued to a bound, which by this repo's own standard is a modelling choice
+  being reported as a fit. Naming them would strengthen the paper's own conclusion.
+- `vlass` counts the adjudicated artefact as a variable in its figure caption and its "floor"
+  sentence, and quotes "a few × 10⁻⁴" where the committed macros give 1.04 × 10⁻⁴.
+- `hi`'s ±6 is the longitude-to-longitude scatter of six sightlines, not an error on the flat
+  level, and is smaller than the ~7 km/s estimator systematic the paper itself discloses.
