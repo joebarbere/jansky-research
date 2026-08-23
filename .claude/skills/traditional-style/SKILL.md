@@ -29,6 +29,12 @@ the evidence base is too large for one file):
    self-referential epistemics and reader address → deleted or restated as fact;
    limitations stay but move in-line with magnitudes. Do NOT touch `generated/`,
    `refs.bib`, macros, numbers, `\software{}`, or any claim's strength.
+   **Run-in labels often carry ranking.** A `\textbf{Label.}` or `\emph{Label.}` opener
+   frequently encodes how to weight what follows ("(validation)", "(a near-null)", "An
+   honest null:"). Dissolving it into a topic sentence, or promoting it to a
+   `\subsection{}`, changes that weighting: a heading that names an attempted measurement
+   reads as a claimed one, and a one-sentence aside given heading rank acquires the
+   visual weight of a result. Carry the label's scope into the prose, or keep the label.
    **Never relocate a numeric literal across sections to satisfy the diff-guard.** The
    guard compares multisets, so a moved number passes by construction — and in batch 2 a
    relocated `$\pm$230\,s` landed beside a ratio it contradicted, while its own abstract

@@ -320,3 +320,86 @@ destroy the prose-only guarantee this branch rests on:
    the table has 15 rows; it is complete, not truncated.
 
 Items 1 and 3 are wrong numbers in quotable sentences and should go first.
+
+## Batch 3 — six papers, and the referee round pays for itself again (2026-08-22)
+
+Converted on `style-batch-3`: `rmstructure`, `torchdsp`, `stokesv`, `southern`, `lpt`, `skr`.
+Mechanical gates clean on all six before any referee saw them (diff-guard clean; lint 3/2/3/3/3/2
+HIGH → 0; triage unchanged). **All six referee rounds returned revisions.** Twenty-nine
+conversion defects, all fixed on the branch.
+
+The pattern is now three-for-three across batches and needs no further confirmation: the guard
+never fails to protect numbers, macros and citations, and the damage is always *scope*. What
+batch 3 adds is that **a single deleted qualifier can invert a paper's headline**:
+
+- **`skr` (MAJOR)** — the abstract lost the word **"raw"** from "a raw near/far ratio of 3.33".
+  The paper exists to show that ratio is an artefact: correcting for 1/r² sensitivity collapses
+  it to 1.39. Every other instance in the paper still says "raw", so the abstract was the one
+  place a reader could lift a bare 3.33 as a measurement. Also lost: the adversative "But"
+  introducing the deflation, and "so" binding a soundness claim to the 0.05% agreement that
+  warranted it.
+- **`lpt` (MAJOR)** — the abstract's precedence sentence lost "own", "already", its closing
+  cleft, *and* "per-value provenance" in one edit. The review of Rea et al. published the
+  P–Ṗ diagram first; the concession that it did so is the paper's honesty, and per-value
+  provenance is the contribution named in the paper's own title. Restored verbatim.
+- **`rmstructure` (MAJOR)** — four separate edits removed the ranking of the quality-flag
+  result: the clause calling it "a lesson promoted to the main result" was deleted, the
+  abstract's "Applying the survey's own quality flags proved material" became a counterfactual,
+  "proved material" became "affect the result" (against evidence of a factor-7 move, 0.5° vs
+  3.7°), and a section title's "then" became "and". The conversion turned the paper's second
+  result into a methods aside without touching a number.
+- **`southern` (MAJOR ×2)** — the conversion *added* "directly" to "measure ν_pk directly",
+  which the paper's own Discussion contradicts (ν_pk is a fitted extremum, interpolated across
+  an unsampled 0.23–0.89 GHz gap); and "The recovery climbs" became "The recovery **fraction**
+  climbs", a quantity `validate_callingham` cannot produce (it returns per-bin counts with no
+  denominator, and the dict is not in the committed JSON at all).
+- **`torchdsp` (MAJOR ×2)** — "publicly usable **as of this writing**" became "publicly
+  available", contradicting the Introduction's own disclosure that a CUDA FFA scaffold appeared
+  three weeks earlier; and a reproducibility label was dissolved into a topic sentence that
+  fused two statements, handing real-archive provenance ("from CANFAR DOI …") to numbers
+  computed on synthetic in-process arrays — in a repo whose standing rule is that synthetic and
+  real must never masquerade as one another.
+
+**A style gate and a science gate disagreed again, and the science gate won.** The `skr`
+converter dissolved five `\textbf{Label.}` run-in headings, two of which carried scope in the
+label itself — "(validation)" and "(a near-null)". The near-null weighting did not survive into
+the prose, so a paragraph reporting a 3.33 rise read as a detection for three sentences. The
+`torchdsp` converter promoted six such labels to `\subsection{}`, which gave a one-sentence
+aside the same visual rank as the section's actual result and turned "An honest null:" into a
+heading naming an attempted measurement as though it were a claimed one. **Run-in labels often
+carry ranking; a heading that names a measurement reads as a claimed one.**
+
+### Pre-existing defects surfaced, three of them urgent — NOT fixed here
+
+Same policy as batch 2: each changes a number, a claim or code, and would destroy this branch's
+prose-only guarantee. Three are live hazards, all verified directly:
+
+1. **`torchdsp`: the paper's headline device claim contradicts its own committed evidence.**
+   `results/torchdsp_metrics.json` has `device: "cpu"` (the science leg) with
+   `benchmark_device: "cuda"`. The paper says coherent dedispersion of the CHIME/FRB baseband
+   event was "run entirely on the ROCm GPU" and that the package is "validated end-to-end" on
+   the card. The field separation exists *precisely* to stop this (the code comment says so in
+   words), but the PR that fixed the data model never touched `main.tex`. Either commit a ROCm
+   science run or say the timings are the GPU evidence and the science legs ran on CPU.
+   `README.md` and `survey/torchdsp-findings.md` carry the same attribution.
+2. **`stokesv` prints a reproduction command that destroys committed evidence.** The paper
+   gives `python -m jansky_research.stokesv` for the synthetic validation, but `--offline`
+   defaults to False and `--out` defaults to `"."` (verified), so it runs the *real* path from
+   the repo root: `_run_offline` overwrites the committed two-panel real figure with the
+   one-panel synthetic one, then `_run_real` raises on the missing credential before anything is
+   restored. This is the documented repo hazard, printed in a paper as an instruction.
+3. **`southern` is the one slice of seven audited whose `_write_macros` does NOT call
+   `preserve_live_macros`** (verified by grep across `southern`, `stokesv`, `torchdsp`, `skr`,
+   `lpt`, `rmstructure`, `frblens`). Worse, its macros are mode-dependent but *not* namespaced
+   `Syn`/`Real`, so one `make figures` would write `\soCallTried{0}` and replace 1545 real
+   matches with a synthetic count — the `\tiiNEvents` clobber, which ships a wrong number rather
+   than a hole. The CLAUDE.md audit lesson says to grep for stated invariants periodically; this
+   is what that grep finds.
+
+Also recorded, not urgent: `southern`'s recover-a-known quotes 38/50 against an *attempted*
+denominator that is a hard `max_sources` cap rather than a coverage count (the `frblens`
+efficiency error's shape); `southern`'s USS branch never receives the compactness cut the peaked
+branch gets; `stokesv` reports "significant circular polarization" with no significance test in
+the real leg (a bare 6% ratio gate whose threshold appears only in a figure legend) and commits
+no per-target rows; `rmstructure`'s findings file still carries the retracted 4.64 ± 0.35;
+`lpt`'s results JSON says "13 LPTs" where `n_lpt` is 16.
