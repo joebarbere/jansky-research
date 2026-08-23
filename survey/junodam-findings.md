@@ -73,3 +73,37 @@ the distance correction. Re-running the 7-month real leg:
   `uv run python -m jansky_research.junodam --out .` (Horizons access needed for CML).
 
 > Cross-slice note: the 1/r² sensitivity null added here was audited repo-wide (2026-07-09) — see [sensitivity-null-audit.md](sensitivity-null-audit.md). No other merged slice needs the fix.
+
+## Correctness pass (2026-08-23) — a stale ratio, an unevidenced validation, and a live clobber
+
+Three defects found by the batch-5 referee round, all predating the style campaign, plus a
+fourth found while fixing them.
+
+**A hand-typed ratio, stale against the macro four lines above it.** The abstract denied "an
+~180x intrinsic rise" while rendering `\jdNearFarRaw` = **196.2** in the same passage. Now
+macro-backed. Same shape as `torchfdmt`'s "~24x" against a macro-derived 29x.
+
+**The recover-a-known was not in committed evidence, and its recovered value was wrong.** The
+paper hand-typed "injected contrast 8.75, recovered 7.2"; `expected_contrast` is `null` in
+`results/junodam_metrics.json` and `\jdExpContrast` rendered as `--`. Re-running the offline leg
+(into a tmpdir) gives injected **8.75**, recovered **6.95**, not 7.2. Both are now macros.
+
+**The injection cannot fail near the boundary it validates.** The injected contrast 8.75 is
+several times the aggregate contrast measured on the real orbits (`\jdRealContrast` = 1.12,
+per-month range 0.35--2.22), so the round trip says nothing about whether a weak contrast near
+unity would be recovered. The paper now says so.
+
+**A live clobber, found while fixing the above.** `io_contrast` and `expected_contrast` mean
+different things in the two run modes -- the measured Io-region enhancement on the real leg, the
+recovery of an injected one offline -- and they shared **one macro name**. An offline rebuild
+would have written the synthetic 6.95 into `\jdContrast`, the macro the paper uses for the real
+1.12. This is the documented `\tiiNEvents` clobber, and `preserve_live_macros` cannot arbitrate
+it because both runs write real values. Now namespaced `\jdRealContrast` / `\jdSynContrast` /
+`\jdSynExpContrast`, with a test that reproduces the clobber and asserts it no longer happens.
+
+Two existing tests asserted the un-namespaced names, i.e. they were pinning the defect --- the
+same pattern `southern` showed. Updated.
+
+**Also fixed:** `louis2021jgr` sat in `refs.bib` uncited. It measures latitudinal beaming from
+Juno/Waves flux densities, i.e. exactly this paper's preferred interpretation of the canonical
+regions and the basis of its proposed follow-up. Now cited in both places.

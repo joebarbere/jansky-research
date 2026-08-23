@@ -25,14 +25,15 @@ sensitivity. The DAM-band duty cycle falls from \jdAqA\% in the nearest Juno--Ju
 quartile ($\sim$\jdRangeNear~$R_J$) to \jdAqD\% in the farthest ($\sim$\jdRangeFar~$R_J$), a raw
 factor $\sim$\jdNearFarRaw, but a $1/r^2$ sensitivity null (distance-correcting each bin's DAM
 SNR and re-thresholding) collapses it to \jdNearFarCorr. The apparent proximity ``law'' is
-therefore a threshold-amplified inverse-square visibility effect, not an $\sim$180$\times$
+therefore a threshold-amplified inverse-square visibility effect, not an $\sim$\jdNearFarRaw$\times$
 intrinsic rise, and the residual is an upper bound entangled with viewing geometry. (ii) The
 Earth-canonical (CML, $\Phi_{Io}$) boxes do not coherently organise the orbital-vantage
-occurrence. The aggregate contrast is \jdContrast, and across \jdNmonths\ months the contrast
+occurrence. The aggregate contrast is \jdRealContrast, and across \jdNmonths\ months the contrast
 scatters on both sides of unity (median \jdCmMed, range \jdCmMin--\jdCmMax); a one-sample test
 against unity does not reject. The earliest month reached \jdCmMax, so one orbit alone can
 mislead. Both are consistent with the canonical regions encoding beaming toward a distant
-near-equatorial observer and/or genuine month-to-month variability (Io volcanism, plasma-torus
+near-equatorial observer, the effect \citet{louis2021jgr} measure directly from Juno/Waves
+flux densities and/or genuine month-to-month variability (Io volcanism, plasma-torus
 state); neither is separated here, and a beaming-model fit over the full v02 archive is the
 planned follow-up.
 \end{abstract}
@@ -57,7 +58,10 @@ sampling, unwrap-interpolated; Io phase is the Lieske mean longitude minus CML
 \citep{lieske1987}. Occurrence maps carry per-cell exposure, and cells visited $<$3 times are
 masked, since a single orbit does not sample the plane uniformly and hiding that would manufacture
 structure. The synthetic recover-a-known drives the same code with real CML/Io rates and
-Bernoulli activity concentrated in the canonical boxes: injected contrast 8.75, recovered 7.2.
+Bernoulli activity concentrated in the canonical boxes: injected contrast \jdSynExpContrast,
+recovered \jdSynContrast. This is a machinery check only: the injected contrast is several
+times the aggregate contrast measured on the real orbits, so the round trip does not test
+whether a weak contrast near unity would be recovered.
 
 \section{Results and honest limits}
 Figure~\ref{fig:jd} shows the aggregate map. The range-quartile duty cycles
@@ -78,7 +82,7 @@ to CMI beaming geometry. The ``proximity law'' is thus a threshold-amplified inv
 visibility effect, with at most a $\sim$\jdNearFarCorr$\times$ residual we cannot separate from
 geometry.
 
-The canonical Io boxes do not survive aggregation. The aggregate contrast is \jdContrast\
+The canonical Io boxes do not survive aggregation. The aggregate contrast is \jdRealContrast\
 overall (\jdCells\ cells), the per-month median is \jdCmMed\ with range \jdCmMin--\jdCmMax\
 across \jdNmonths\ months, and there is no strengthening with distance in the resolved
 quartiles (\jdCqA, \jdCqB, \jdCqC, \jdCqD\ from near to far).
@@ -96,7 +100,8 @@ detection advantage but not the CMI beaming geometry that co-varies with Juno's 
 residual \jdNearFarCorr$\times$ is an upper bound, not an intrinsic measurement. (iv) The census
 does not separate Io-DAM from non-Io-DAM or kilometric leakage below 3~MHz. (v) The
 reduced-contrast reading is a consistency statement, not a proof; a beaming-model fit over the
-full v02 archive is the definitive test. The review-caught convention error is disclosed above
+full v02 archive, building on the latitudinal beaming of \citet{louis2021jgr}, is the
+definitive test. The review-caught convention error is disclosed above
 because a synthetic round-trip cannot validate frame conventions, only machinery.
 
 \begin{figure}

@@ -151,3 +151,33 @@ log-normal* on the strongest source; the title's "363" is now "136 well-sampled"
 zhang2020's dead DOI is fixed (10.3847/1538-4365/ab95a4, verified); yang2025 gained its
 ApJS 280, 58 coordinates; and the arxiv.yaml Ė-mangle is patched with the override flagged
 stale pending the bracket rewrite.
+
+## Abstract correction (2026-08-23) — the abstract asserted the opposite of the body
+
+The batch-5 referee round surfaced an internal contradiction that predates the style campaign.
+The abstract listed "three facts undercut a giant-pulse interpretation" and gave as (i):
+
+> The excess does not correlate with spin-down luminosity (rho = -0.027, p = 0.756;
+> Mann-Whitney on log Edot p = 0.130), **contrary to the giant-pulse--Edot expectation**.
+
+That quotes the **raw** Spearman, which this paper's own body establishes is count-confounded:
+the excess is biased downward with pulse count and Edot correlates with count, so the raw value
+carries a spurious negative term. Controlling for log n (`results/pte2_stats.json`,
+`naive.edot_partial`):
+
+| statistic | value | direction |
+|---|---|---|
+| raw Spearman | -0.027 (p = 0.756) | negative, but confounded |
+| **partial rho, controlling for count** | **+0.098** (p = 0.258) | **the predicted direction** |
+| median log Edot, flagged vs rest | 33.285 vs 32.84, i.e. **+0.45 dex** | **the predicted direction** |
+
+Both corrected indicators point the way the giant-pulse expectation predicts; neither is
+significant. The body says so plainly: "sign flipped into the predicted direction, still
+consistent with zero ... they neither support nor contradict the giant-pulse--Edot expectation
+at this sample size."
+
+So "contrary to" was unsupported, and (i) does not undercut anything. The abstract now states
+the raw value, its confounding, the partial correlation, the median offset, and the conclusion
+that the data neither support nor contradict the expectation; the lead-in reads "the Edot test
+is uninformative at this sample size, and two further facts undercut a giant-pulse
+interpretation". No number changed; (ii) and (iii) are untouched and still do the undercutting.
