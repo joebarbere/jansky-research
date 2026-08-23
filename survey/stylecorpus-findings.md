@@ -229,3 +229,94 @@ is its referee's required restoration. Stopping here is the right call — furth
 edits would trade approved science wording for register, which is the wrong direction.
 One judge finding was a genuine bonus: the innerrc original had a broken sentence boundary
 ("... vs their 406/333), A sensitivity scan ...") that the conversion silently repaired.
+
+## Batch 2 — five papers, three of them previously refereed (2026-08-22)
+
+Converted on `style-batch-2`: `svsbi`, `stokesv_discovery`, `frblens` (all three previously
+through a full presenter/referee round, so their science was frozen and any regression is
+attributable to the conversion), plus `wdpulsar`'s `main.tex` (its RNAAS note was converted in
+batch 1 and was left untouched, verified byte-identical) and `frbwait`.
+
+Mechanical gates were clean on all five before any referee saw them: diff-guard clean, lint 0
+HIGH (from 3, 3, 2, 2, 2), triage unchanged. **All five referee rounds still returned
+revisions.** The batch-1 pattern held exactly: the guard protects numbers, macros and
+citations without fail, and what the style pass damages is *scope*.
+
+Sixteen conversion defects were found and all sixteen are fixed on the branch. The
+representative ones:
+
+- **`frbwait` (MAJOR)** — "The census's honest summary:" was deleted as a self-referential
+  epistemic, leaving the Conclusions to open with a bare "Clustering is ubiquitous". The head
+  clause was the only thing scoping that word to the 15 sources above the completeness cut,
+  of which **3** are individually clustered at 95%. Restored as "Within this census".
+- **`wdpulsar` (MAJOR)** — the abstract's control record collapsed to an unqualified
+  re-detection. The measured record is **two detections in five usable epochs**, both
+  RACS-mid, undetected in both RACS-low (1.10σ, 1.68σ) — verified here directly from
+  `results/wdpulsar_realtargets.csv` (seven epochs, two NaN). That efficiency is the census's
+  selection function and is what the *f* < 6.1% bound leans on. This is the *second* time a
+  condensation of this paper has inflated its control; the RNAAS round caught the first.
+- **`wdpulsar` (MAJOR)** — "checks the archive path end to end" became "a further check that
+  the archive-photometry pipeline recovers a genuine radio source". No photometry is performed
+  on VLASS anywhere in the slice: `peak_mjy` is a catalogue peak flux, the exact measurement
+  mode this slice's earlier round separated from forced photometry. Reverted.
+- **`svsbi`** — a `though` was promoted to a full stop, so the SBC power caveat stopped
+  bounding the calibration pass. That pass has a margin of 0.004 (max KS 0.107 against a
+  critical 0.111), so an unqualified "consistent with nominal coverage" is the strongest
+  reading the evidence allows and the original deliberately declined it.
+- **`svsbi`** — an appositive naming a phenomenon ("the beaming--luminosity degeneracy,
+  visible directly") became `because of`, asserting it as the *cause* of the shift. One
+  prior-widening experiment over three seeds does not isolate a mechanism.
+- **`frblens`** — a novelty claim lost the adjective "observational", widening it against two
+  cited theory papers that are themselves catalogue-level proposals.
+
+### New lesson: the diff-guard can be satisfied by relocation
+
+To shorten `frblens`'s abstract while keeping the numeric multiset matched, the style agent
+**moved `$\pm$230\,s` out of the abstract into the Discussion**. Multiset equality was
+preserved by construction, so the guard passed — and the number landed in a clause reading
+"the annual Roemer term is ~30× our tolerance at month-scale delays, reaching ±230 s there",
+where it is simply wrong: 230/5 = **46**, and the Method attributes ±230 s to Δ = 26 d, not to
+month-scale delays. The abstract meanwhile lost "far beyond tolerance", the entire reason
+barycentring is mandatory, from a paper that lists barycentring as one of its two methods
+lessons. Both are restored to their original placement.
+
+**Multiset equality is not content equality.** The guard proves no number was invented or
+altered; it cannot see one that moved to a place where it says something false. Worth stating
+in the skill: a conversion may not relocate a numeric literal across sections.
+
+### The guard also blocked a correct-looking fix, and was right to
+
+Restoring `wdpulsar`'s control record as "2 of its 5 usable epochs" tripped the guard
+(`numbers: '2' count 10 -> 11`, `'5' 8 -> 9`). The content was verified and referee-required,
+but introducing digit literals in a prose-only pass is precisely what the guard exists to
+stop. Spelling them as words — "two of its five usable epochs" — is guard-clean, equally
+accurate, and better journal register than the digits were. **When the guard fires on a
+restoration, the phrasing is usually what needs to change, not the guard.**
+
+### Pre-existing defects surfaced by these referees — NOT conversion damage, not fixed here
+
+Deliberately left for a separate pass, because each changes a number or a claim and would
+destroy the prose-only guarantee this branch rests on:
+
+1. **`frblens`, blocker** — the first conclusion states the lensed-repeater limit as
+   "$\gtrsim$9\%", hard-coded as a literal. That is `\flRealLimitNaive` = 0.091, the
+   count-based limit this paper's own referee round **retracted**; the corrected value is
+   `\flRealLimit` = 0.3683. The paper argues for a full paragraph that the naive limit is four
+   times too tight and then quotes it as its headline. Present identically at HEAD.
+2. **`frblens`** — `\flRealEpsSum` (8.3) and `\flRealEpsMean` (0.24) are computed over **34**
+   sources while the search ran on **33**; the extra is FRB20210601A (ε = 0.133), which passes
+   the efficiency routine's `n_bursts >= 5` filter but fails the search's span cut. The limit
+   itself is computed correctly on the searched subset (divisor 8.1333), so only the macros
+   are wrong — but the printed equation is not reproducible from the numbers beside it.
+3. **`stokesv_discovery`** — `\svdRealDet` = 2 renders the sentence "This is one independent
+   measurement, not two, and 2 counts systems rather than rows"; the macro counts distinct
+   CNS5 names (424 and 425, one binary), so it counts neither systems (1) nor rows (4).
+4. **`stokesv_discovery`** — the census is still measured by a 12″ peak search while the
+   Method says "at the propagated position", and two occurrences of "forced" survive. The
+   forced re-measurement remains open in `survey/stokesv-discovery-findings.md`.
+5. **`wdpulsar`** — the abstract and conclusion quote `\wdRealMedianVLimit` (0.413, a
+   Stokes-**V** limit) as the depth of the Stokes-**I** null; §3 labels it correctly.
+6. **`frbwait`** — Table 1's caption says "top 20 of \fwRealNStats" where the macro is 15 and
+   the table has 15 rows; it is complete, not truncated.
+
+Items 1 and 3 are wrong numbers in quotable sentences and should go first.
