@@ -158,7 +158,6 @@ def run(
     n_bins: int = 12,
 ) -> dict:
     """Full slice: build the NVSS Euclidean-normalised source counts and compare to Hopkins 2003."""
-    import json
     from pathlib import Path
 
     if offline:
@@ -189,7 +188,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "sourcecounts_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "sourcecounts_metrics.json")
     _figure(res, op / "papers" / "sourcecounts" / "figures")
     _write_macros(metrics, op / "papers" / "sourcecounts" / "generated" / "macros.tex")
     return metrics

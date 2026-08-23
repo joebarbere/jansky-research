@@ -378,7 +378,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "lptv_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "lptv_metrics.json")
     if per_target is not None:  # pragma: no cover - real leg
         (op / "results" / "lptv_vtable.json").write_text(json.dumps(per_target, indent=2) + "\n")
         metrics["per_target"] = per_target

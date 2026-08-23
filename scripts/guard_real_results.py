@@ -45,9 +45,14 @@ def main() -> int:
     allow = _allowlist()
     offenders = []
     checked = 0
+    unmarked = []
     for path in sorted(RESULTS.glob("*.json")):
         src = _source_of(path)
         if src is None:
+            # No provenance marker at all. This guard cannot judge such a file, and neither can
+            # report.preserve_live_results, which means an offline rebuild could overwrite it
+            # without anything noticing. Counted here so the blind spot is visible.
+            unmarked.append(path.name)
             continue
         checked += 1
         if "synthetic" in src.lower() and path.name not in allow:
@@ -62,6 +67,11 @@ def main() -> int:
     print(
         f"guard-real: OK — {checked} sourced results checked, none synthetic (allowlist: {len(allow)})"
     )
+    if unmarked:
+        print(
+            f"  note: {len(unmarked)} results file(s) carry no `source`/`is_real` marker, so "
+            "neither this guard nor report.preserve_live_results can protect them."
+        )
     return 0
 
 

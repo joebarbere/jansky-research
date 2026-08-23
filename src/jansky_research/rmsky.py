@@ -195,7 +195,6 @@ def fetch_taylor2009(max_sources: int = 0) -> dict:  # pragma: no cover - networ
 
 def run(out: str = ".", *, offline: bool = True, max_sources: int = 0) -> dict:
     """Full slice: measure the Galactic RM-sky signatures (synthetic or Taylor+2009) and write outputs."""
-    import json
     from pathlib import Path
 
     if offline:
@@ -243,7 +242,9 @@ def run(out: str = ".", *, offline: bool = True, max_sources: int = 0) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rmsky_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "rmsky_metrics.json")
     _figure(rm, gl, gb, prof, op / "papers" / "rmsky" / "figures")
     _write_macros(metrics, op / "papers" / "rmsky" / "generated" / "macros.tex")
     return metrics

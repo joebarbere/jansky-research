@@ -349,7 +349,6 @@ def _ks_uniform(ranks_1d: np.ndarray, n_post: int) -> float:
 
 def run(out: str = ".", *, offline: bool = True, device: str = "cpu", n_sims: int = 3000) -> dict:
     """Offline: physics recover-a-known + prior-predictive checks; real: NPE + SBC on the census."""
-    import json
 
     # a synthetic parent sample (offline) or the real stokesv_discovery census (real leg)
     if offline:
@@ -387,7 +386,9 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", n_sims: in
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "svsbi_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "svsbi_metrics.json")
     _figure(parent, metrics, op / "papers" / "svsbi" / "figures")
     _write_macros(metrics, op / "papers" / "svsbi" / "generated" / "macros.tex")
     return metrics

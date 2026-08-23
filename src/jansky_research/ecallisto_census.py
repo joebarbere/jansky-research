@@ -177,7 +177,6 @@ def sample_real_days(
 
 def run(out: str = ".", *, offline: bool = True, dates: list[str] | None = None) -> dict:
     """Full slice: build the type III occurrence census and correlate the rate with the sunspot number."""
-    import json
     from pathlib import Path
 
     if offline or dates is None:
@@ -212,9 +211,9 @@ def run(out: str = ".", *, offline: bool = True, dates: list[str] | None = None)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "ecallisto_census_metrics.json").write_text(
-        json.dumps(metrics, indent=2) + "\n"
-    )
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "ecallisto_census_metrics.json")
     _figure(xlabel, rate, sunspot, op / "papers" / "ecallisto_census" / "figures")
     _write_macros(metrics, op / "papers" / "ecallisto_census" / "generated" / "macros.tex")
     return metrics

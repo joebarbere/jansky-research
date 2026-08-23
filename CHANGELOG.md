@@ -10,6 +10,34 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`report.preserve_live_results` / `report.write_results`** --- the results-JSON counterpart of
+  `preserve_live_macros`, wired into **all 49** `results/*.json` write sites across 46 modules.
+  A results file may now only gain information: a real result is never replaced by a synthetic
+  one, a partial real re-run retains the other leg's keys rather than dropping them (the
+  `torchfdmt` GPU-column case), and any key carried across runs is listed under `_merge` so a
+  spliced row cannot look like one invocation. Sixteen tests.
+  **Verified against the documented incident**: `typeii.run(".", offline=True)` --- the command
+  CLAUDE.md records as deleting 3429 lines and flipping `is_real` True->False --- now leaves
+  `results/typeii_metrics.json` byte-identical, while the offline run still writes its `tiiSyn*`
+  macros. A *forced* full `make figures` in the repo root changed **25** committed results files
+  before and **1** after; that one carries no provenance marker at all.
+- `make guard-real` now reports how many results files carry no `source`/`is_real` marker (76
+  today), so the gap neither it nor `preserve_live_results` can cover is visible rather than
+  silent.
+
+### Fixed
+- The first cut of the results guard protected **3 files out of 25** because it keyed on
+  `is_real`, which most slices never set. It now uses the `source` field that
+  `guard_real_results.py` already treats as authoritative, and counts a *mixed* source
+  ("synthetic recover-a-known + real RACS-mid epoch pair") as real --- otherwise
+  `stokesv_discovery` was left unprotected by the very string that documents its real leg.
+- Seven `results/*.json` writers outside the `*_metrics.json` naming convention were missed by
+  the first pass, including `hi.py`'s `rotation_curve.json`. A forced offline rebuild overwrote
+  it with synthetic output and **`make guard-real` failed** --- caught only because the forced
+  rebuild was run as a test rather than assumed to be unnecessary.
+
+
 ### Fixed
 - **`torchfdmt` quoted "~24x" for a ratio its own adjacent macros make 29x.** The abstract and
   benchmark section rendered "~24x (44.12 -> 1.5 s)"; 44.12/1.5 = 29.4. The 24 traces to a

@@ -553,7 +553,6 @@ def _dedisp_recovery_metrics(device: str) -> dict:
 
 def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
     """Offline: per-kernel recover-a-knowns + oracle matches; real: CHIME + Crab legs."""
-    import json
 
     from jansky import rfi as rfi_cpu
 
@@ -624,7 +623,9 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     json_metrics = {k: v for k, v in metrics.items() if k != "ffa_curve"}
-    (op / "results" / "torchdsp_metrics.json").write_text(json.dumps(json_metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(json_metrics, op / "results" / "torchdsp_metrics.json")
     _figure(metrics, op / "papers" / "torchdsp" / "figures")
     _write_macros(metrics, op / "papers" / "torchdsp" / "generated" / "macros.tex")
     return metrics

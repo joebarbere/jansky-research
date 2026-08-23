@@ -170,7 +170,6 @@ def injection_recovery(
 
 def run(out: str = ".", *, n_trials: int = 100, threshold: float = 10.0, seed: int = 0) -> dict:
     """Compute the injection-recovery benchmark; write metrics + a recovery heatmap. Returns metrics."""
-    import json
     from pathlib import Path
 
     inj_snrs = np.array([0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0])
@@ -188,7 +187,9 @@ def run(out: str = ".", *, n_trials: int = 100, threshold: float = 10.0, seed: i
     op = Path(out)
     paper = op / "papers" / "driftsearch"
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "drift_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "drift_metrics.json")
     _heatmap(res, paper / "figures")
     _write_macros(metrics, paper / "generated" / "macros.tex")
     return metrics

@@ -159,7 +159,6 @@ def fetch_atnf_ppdot() -> dict:  # pragma: no cover - network
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Full slice: derive B/age, classify the P--Pdot population, and write outputs."""
-    import json
     from pathlib import Path
 
     if offline:
@@ -190,7 +189,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "ppdot_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "ppdot_metrics.json")
     _figure(pop["period_s"], pop["pdot"], op / "papers" / "ppdot" / "figures")
     _write_macros(metrics, op / "papers" / "ppdot" / "generated" / "macros.tex")
     return metrics

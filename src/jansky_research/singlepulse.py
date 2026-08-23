@@ -176,7 +176,6 @@ def _fold_period(series: np.ndarray, dt: float, p0: float) -> float:
 
 def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
     """Full slice: synthetic recover-a-known, plus the real Crab leg when online."""
-    import json
 
     dyn, freqs, dt = synthetic_observation()
     s = search(dyn, freqs, dt, max_dm=120.0, device=device)
@@ -248,7 +247,9 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "singlepulse_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "singlepulse_metrics.json")
     _figure(s, op / "papers" / "torchfdmt" / "figures")
     _write_macros(metrics, op / "papers" / "torchfdmt" / "generated" / "macros.tex")
     return metrics

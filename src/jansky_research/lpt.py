@@ -191,7 +191,6 @@ def crossmatch_counterparts(
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Build the population table, the split statistic, and the class P--Pdot diagram."""
-    import json
 
     s = load_sample()
     pop = population_table(s)
@@ -209,7 +208,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "lpt_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "lpt_metrics.json")
     _figure(s, op / "papers" / "lpt" / "figures")
     _write_macros(metrics, op / "papers" / "lpt" / "generated" / "macros.tex")
     return metrics

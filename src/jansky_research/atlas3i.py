@@ -390,7 +390,6 @@ def run(out: str = ".", *, threshold: float = 10.0, seed: int = 0) -> dict:
     writes metrics, a two-panel figure, and the paper macros. This is the tested, reproducible
     core; the real-data leg (``--node``, network) drives exactly the same functions.
     """
-    import json
     from pathlib import Path
 
     tsamp, foff = 18.6, -2.79
@@ -419,7 +418,9 @@ def run(out: str = ".", *, threshold: float = 10.0, seed: int = 0) -> dict:
     }
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "atlas3i_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "atlas3i_metrics.json")
     paper = op / "papers" / "atlas3i"
     _figure(wfs[0], tsamp, foff, drifts, paper / "figures")
     _write_macros(metrics, paper / "generated" / "macros_offline.tex")

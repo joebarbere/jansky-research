@@ -174,7 +174,6 @@ def run(out: str = ".", *, offline: bool = False, min_bursts: int = 8) -> dict:
     so a synthetic run never clobbers the tracked real results. Returns the metrics dict.
     """
     import csv
-    import json
     from pathlib import Path
 
     if offline:
@@ -211,7 +210,9 @@ def run(out: str = ".", *, offline: bool = False, min_bursts: int = 8) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "period_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "period_metrics.json")
     # real run -> the committed showcase CSV under survey/; offline -> results/ (git-ignored) so the
     # synthetic run cannot overwrite the tracked real-data table
     csv_dir = op / ("results" if offline else "survey")

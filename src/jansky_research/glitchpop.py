@@ -399,7 +399,6 @@ def inject_recover(*, counts=(6, 10, 20, 40), n_each: int = 40, seed: int = 0) -
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic recover-a-known (classify injected exponential/quasi-periodic series)."""
-    import json
 
     if offline:
         metrics: dict = _synthetic_metrics()
@@ -408,7 +407,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "glitchpop_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "glitchpop_metrics.json")
     _figure(metrics, op / "papers" / "glitchpop" / "figures")
     _write_macros(metrics, op / "papers" / "glitchpop" / "generated" / "macros.tex")
     return metrics

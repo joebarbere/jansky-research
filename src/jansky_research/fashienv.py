@@ -433,7 +433,6 @@ def _himf_and_fit(cat_logm, cat_dist, cat_flux, area_sr, mask=None):
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: environment-split HIMF recover-a-known on the mock; real: FASHI DR1 x groups/voids."""
-    import json
 
     if offline:
         cat = synthetic_environment_catalogue()
@@ -465,7 +464,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "fashienv_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "fashienv_metrics.json")
     _figure(figdata, op / "papers" / "fashienv" / "figures")
     _write_macros(metrics, op / "papers" / "fashienv" / "generated" / "macros.tex")
     return metrics

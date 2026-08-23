@@ -135,7 +135,6 @@ def fetch_lab_longitude(l_deg: float):  # pragma: no cover - network
 
 def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> dict:
     """Build the inner-Galaxy rotation curve (real LAB longitudes, or synthetic offline). Writes a figure."""
-    import json
     from pathlib import Path
 
     longitudes = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0])
@@ -161,7 +160,9 @@ def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> d
     op = Path(out)
     paper = op / "papers" / "hi"
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rotation_curve.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "rotation_curve.json")
     _figure(R, V, metrics["V_flat_mean_kms"], paper / "figures")
     _write_macros(metrics, paper / "generated" / "macros.tex")
     return metrics

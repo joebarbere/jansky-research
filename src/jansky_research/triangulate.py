@@ -390,7 +390,6 @@ def run(
     max_miss_rsun: float = 60.0,
 ) -> dict:
     """Full slice: triangulate a type III in 3D from two spacecraft and cross-check the distance."""
-    import json
     from pathlib import Path
 
     if offline or date is None:
@@ -418,7 +417,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "triangulate_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "triangulate_metrics.json")
     _figure(track, op / "papers" / "triangulate" / "figures")
     _write_macros(metrics, op / "papers" / "triangulate" / "generated" / "macros.tex")
     return metrics

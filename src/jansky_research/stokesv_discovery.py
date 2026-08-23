@@ -214,7 +214,6 @@ def summarize_real(csv_path: str) -> dict:
 
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline slice: epoch-pair selection + variability recover-a-known (real leg is next PR)."""
-    import json
     from pathlib import Path
 
     s = synthetic_epoch_pair()
@@ -252,9 +251,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "stokesv_discovery_metrics.json").write_text(
-        json.dumps(metrics, indent=2) + "\n"
-    )
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "stokesv_discovery_metrics.json")
     _figure(s, sel1, sel2, var, (floor1, floor2), op / "papers" / "stokesv_discovery" / "figures")
     _write_macros(metrics, op / "papers" / "stokesv_discovery" / "generated" / "macros.tex")
     return metrics

@@ -421,7 +421,6 @@ def run(
     With ``validate`` (real data only), also runs the Callingham (2017) recover-a-known
     (:func:`validate_callingham`) and folds its headline numbers into the metrics and macros.
     """
-    import json
     from pathlib import Path
 
     truth_pk: np.ndarray | None
@@ -476,7 +475,9 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "southern_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "southern_metrics.json")
     _figure(gleamx, racs, res, op / "papers" / "southern" / "figures")
     _write_macros(metrics, op / "papers" / "southern" / "generated" / "macros.tex")
     return metrics

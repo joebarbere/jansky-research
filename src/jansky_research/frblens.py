@@ -441,7 +441,6 @@ def lensed_fraction_limit(
 
 def run(out: str = ".", *, offline: bool = True, n_scramble: int = 100) -> dict:
     """Offline: injected lensed train recovered + clean null control; real: all-repeater search."""
-    import json
 
     detection_p = 2.0 / (n_scramble + 1)
     if offline:
@@ -587,10 +586,9 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 100) -> dict:
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .frbwait import _json_safe
+    from .report import write_results
 
-    (op / "results" / "frblens_metrics.json").write_text(
-        json.dumps(_json_safe(metrics), indent=2) + "\n"
-    )
+    write_results(_json_safe(metrics), op / "results" / "frblens_metrics.json")
     _figure(rows, sens, op / "papers" / "frblens" / "figures")
     _write_macros(metrics, op / "papers" / "frblens" / "generated" / "macros.tex")
     return metrics

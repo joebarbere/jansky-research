@@ -78,7 +78,6 @@ def _model_curves(harmonic: int = 2) -> dict:
 
 def run(out: str = ".", *, offline: bool = True, harmonic: int = 2) -> dict:
     """Full synthesis: orchestrate the four slices, build the ladder + cross-check, emit macros."""
-    import json
     from pathlib import Path
 
     m = collect_metrics(out, offline=offline)
@@ -121,9 +120,9 @@ def run(out: str = ".", *, offline: bool = True, harmonic: int = 2) -> dict:
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "type3synthesis_metrics.json").write_text(
-        json.dumps(metrics, indent=2) + "\n"
-    )
+    from .report import write_results
+
+    write_results(metrics, op / "results" / "type3synthesis_metrics.json")
     _figure(m, track, harmonic, op / "papers" / "type3synthesis" / "figures")
     _write_macros(metrics, op / "papers" / "type3synthesis" / "generated" / "macros.tex")
     return metrics
