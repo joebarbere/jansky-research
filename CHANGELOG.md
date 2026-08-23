@@ -10,6 +10,28 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- Papers restyled to traditional pre-LLM journal register via the `traditional-style` skill
+  (batch 2: `svsbi`, `stokesv_discovery`, `frblens`, `wdpulsar` main.tex, `frbwait` --- the
+  first three previously refereed, so their science was frozen). Lint 3/3/2/2/2 HIGH -> 0 on
+  all five; diff-guard clean; triage unchanged. **All five referee rounds still returned
+  revisions**, and all sixteen conversion defects are fixed here: `frbwait`'s Conclusions had
+  lost the clause scoping "clustering is ubiquitous" to its own census (3 of 15 sources),
+  `wdpulsar`'s abstract had collapsed a two-of-five control record into an unqualified
+  re-detection and had recast a VLASS catalogue cross-match as a photometry validation,
+  `svsbi` had promoted a `though` to a full stop so a power caveat stopped bounding a
+  calibration pass with a 0.004 margin, and `frblens` had widened a novelty claim by dropping
+  "observational".
+
+### Fixed
+- **The diff-guard can be satisfied by relocation.** Shortening `frblens`'s abstract, the
+  style pass moved `$\pm$230\,s` into the Discussion, preserving the numeric multiset by
+  construction so the guard passed --- and the number landed in a clause stating the Roemer
+  term is "~30x our tolerance ... reaching +/-230 s there", where the ratio is 46, and which
+  the Method attributes to a different delay. The abstract meanwhile lost the reason
+  barycentring is mandatory. Both restored; the skill now forbids relocating a numeric literal
+  across sections. Multiset equality is not content equality.
+
 ## [1.8.0] - 2026-08-22
 
 ### Added

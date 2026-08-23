@@ -12,34 +12,34 @@ Simulation-Based Inference from a RACS Stokes-V Census}
 \begin{abstract}
 Neural simulation-based inference (SBI) has been applied to the populations of radio pulsars
 \citep{graber2024,pardoaraujo2024} and magnetars \citep{sautron2025}, but not to the coherent,
-circularly-polarized radio emission of M dwarfs, where the population parameters --- the radio
-luminosity function and the \emph{beaming fraction} (what fraction of coherent emitters point a
-detectable beam at us) --- are known only qualitatively \citep{callingham2021,pritchard2021}. We
-build the first such inference. A forward model draws a coherent-emitter population (a power-law
+circularly-polarized radio emission of M dwarfs, whose population parameters (the radio
+luminosity function and the beaming fraction, the fraction of coherent emitters that point a
+detectable beam at us) are known only qualitatively \citep{callingham2021,pritchard2021}. We
+present the first such inference, built on a RACS Stokes-V census of \svbRealNTargets\ nearby M
+dwarfs with two-epoch photometry (of 60 targeted; the rest were lost to archive-access failures
+rather than to non-detection, a selection the inference treats as independent of source
+brightness without being able to test it), of which \svbRealNDet\ is a confident detection, the
+single unresolved GJ 65 system. A forward model draws a coherent-emitter population (a power-law
 luminosity function with an exponential break, plus a beaming fraction), folds it through the
-real per-target distances, Stokes-V noise, and instrumental-leakage floor of a RACS Stokes-V
-census (\svbRealNTargets\ nearby M dwarfs with two-epoch photometry --- of 60 targeted, the
-rest lost to archive-access failures rather than to non-detection, a selection the inference
-treats as independent of source brightness without being able to test it --- of which
-\svbRealNDet\ is a confident detection --- the single unresolved GJ 65 system), and a neural
-posterior estimator \citep{papamakarios2016,sbi_toolkit} infers the three population parameters.
-The forward model and its summary statistics are validated by monotonicity recover-a-knowns, and
+real per-target distances, Stokes-V noise, and instrumental-leakage floor of the census, and a
+neural posterior estimator \citep{papamakarios2016,sbi_toolkit} infers the three population
+parameters. The forward model and its summary statistics pass monotonicity recover-a-knowns, and
 the trained posterior passes simulation-based calibration \citep[SBC;][]{talts2018} at the formal
 Kolmogorov threshold (max KS $= \svbRealKsMax$ vs the 95\% critical value $\svbRealKsCrit$ at 150
-trials), i.e.\ is consistent with nominal coverage --- though at that
-sample size the test cannot exclude appreciable miscalibration, and SBC is by construction
-blind to the failure mode at issue here: a posterior that returns the prior passes it exactly. The result is deliberately modest and
-honestly bounded: with a single detection the \textbf{beaming fraction is barely updated from the
-prior} (posterior $f_{\rm beam} = \svbRealFbeam$, 90\% CI $\svbRealFbeamLo$--$\svbRealFbeamHi$,
-whose width is \svbRealFbeamWidthRatio\ of the prior's), and the luminosity-function break is
-\emph{not} constrained at all: re-inferring under a widened prior box moves its median by
-\svbPriorLogLShift\ dex (\svbPriorLogLPub\ $\to$ \svbPriorLogLWide) against a seed-to-seed
-scatter of \svbPriorLogLSeedSd, so the published value was reporting where the box was closed.
-The data support a one-sided statement only, $\log_{10} L^* \gtrsim \svbLogLLimit$, set by the
-single detection's own luminosity. We claim not a measurement of the beaming fraction but the
-first \emph{calibrated} framework for it: the deliverable is the SBC-validated pipeline --- which
-conditions on any RACS Stokes-V target list and sharpens directly as the censuses grow --- not a
-tight number.
+trials), consistent with nominal coverage, though at that sample size the test cannot
+exclude appreciable miscalibration, and SBC is by construction blind to the failure mode at issue here:
+a posterior that returns the prior passes it exactly. The result is deliberately modest and
+honestly bounded: with a single detection the beaming
+fraction is barely updated from the prior (posterior $f_{\rm beam} = \svbRealFbeam$, 90\% CI
+$\svbRealFbeamLo$--$\svbRealFbeamHi$, a width \svbRealFbeamWidthRatio\ of the prior's), and the
+luminosity-function break is not constrained at all: re-inferring under a widened prior box moves
+its median by \svbPriorLogLShift\ dex (\svbPriorLogLPub\ $\to$ \svbPriorLogLWide) against a
+seed-to-seed scatter of \svbPriorLogLSeedSd, so the published value was reporting where the box
+was closed. The data support a one-sided statement only, $\log_{10} L^* \gtrsim \svbLogLLimit$,
+set by the single detection's own luminosity. We claim not a measurement of the beaming fraction
+but the first calibrated framework for it: the deliverable is the SBC-validated pipeline, not a
+tight number. The pipeline conditions on any RACS Stokes-V target list and sharpens directly
+as the censuses grow.
 \end{abstract}
 
 \keywords{Stellar radio emission (1610) --- M dwarf stars (982) --- Stokes parameters (1583) ---
@@ -47,22 +47,23 @@ Bayesian statistics (1900) --- Astrostatistics (1882)}
 
 \section{Introduction}
 A minority of M dwarfs produce bright, highly circularly-polarized, coherent radio emission
-(electron-cyclotron maser or plasma emission), and wide-field Stokes-V surveys --- LOFAR
+(electron-cyclotron maser or plasma emission), and wide-field Stokes-V surveys (LOFAR
 \citep{callingham2021}, RACS \citep{pritchard2021}, and the Sydney Radio Star Catalogue
-\citep{driessen2024} --- have turned it into a population science. But the two numbers that
-govern how many such emitters a survey should find --- the radio luminosity function and the
-fraction of emitters whose beam sweeps across us --- have never been inferred with a calibrated
+\citep{driessen2024}) have turned it into a population science. But the two numbers that
+govern how many such emitters a survey should find, the radio luminosity function and the
+fraction of emitters whose beam sweeps across us, have never been inferred with a calibrated
 posterior; they enter the literature as assumed or order-of-magnitude values. Simulation-based
 inference is the natural tool: the forward problem (draw a population, observe it through a
 survey's real selection) is easy to simulate but has no tractable likelihood, exactly the
 setting where neural posterior estimation \citep{papamakarios2016,sbi_toolkit} excels. SBI has
 been applied to pulsar and magnetar populations \citep{graber2024,pardoaraujo2024,sautron2025}
-but not to coherent stellar emitters. We build that inference on a RACS Stokes-V census, and
-report it with its honest --- wide --- uncertainties.
+but not to coherent stellar emitters. We build that inference on a RACS Stokes-V census and
+report its honest, wide uncertainties.
 
 \section{Method}
 \label{sec:method}
-\textbf{Forward model.} A population is parameterized by
+\subsection{Forward model}
+A population is parameterized by
 $\theta = (\mathrm{slope}, \log_{10} L^*, f_{\rm beam})$: each star in the real parent sample is
 assigned a coherent luminosity drawn from $dN/dL \propto L^{-\mathrm{slope}}$ with an exponential
 break at $L^*$ (a Schechter-like taper), and beams toward us with probability $f_{\rm beam}$ (a
@@ -77,14 +78,15 @@ the $\sim$2\arcsec\ GJ 65 pair) are deduplicated to one physical source, so the 
 that drives the beaming inference is not inflated. Each simulation is reduced to a four-number
 summary (detection count, brightest and summed detected $|V|$, detected fraction).
 
-\textbf{Inference.} We train a neural posterior estimator (masked autoregressive flow,
+\subsection{Inference}
+We train a neural posterior estimator (masked autoregressive flow,
 \code{sbi} 0.26; \citealt{sbi_toolkit}) on \svbRealNSims\ prior draws, conditioning on the summary
-of the real census. Training runs unchanged on a consumer AMD GPU under ROCm --- \code{sbi} is
-pure PyTorch. Two validations gate the result: (i) forward-model recover-a-knowns confirm the
+of the real census. Training runs unchanged on a consumer AMD GPU under ROCm, since \code{sbi} is
+pure PyTorch. Two validations gate the result. Forward-model recover-a-knowns confirm the
 detection count rises monotonically with both $f_{\rm beam}$ and $L^*$ (the pipeline is
-sensitive to what it claims to infer); (ii) simulation-based calibration
-\citep[SBC;][]{talts2018} --- ranking each of 150 injected true $\theta$ within its own
-posterior --- confirms the ranks are uniform (max KS distance from uniform $= \svbRealKsMax$
+sensitive to what it claims to infer). Simulation-based calibration
+\citep[SBC;][]{talts2018}, which ranks each of 150 injected true $\theta$ within its own
+posterior, confirms the ranks are uniform (max KS distance from uniform $= \svbRealKsMax$
 across the three parameters, below the formal 95\% Kolmogorov critical value $\svbRealKsCrit$ at
 150 trials), so the posterior's credible intervals cover at their nominal rate. Only a calibrated
 posterior is worth reporting; SBC is the gate.
@@ -92,59 +94,59 @@ posterior is worth reporting; SBC is the gate.
 \section{Results}
 \label{sec:results}
 The census contributes \svbRealNDet\ confident Stokes-V detection among \svbRealNTargets\ M dwarfs
-(the single unresolved GJ 65 system). Conditioned on that, the posterior is \textbf{calibrated}
-(SBC passes the formal threshold) and, as expected for one detection, mostly \textbf{prior-wide}:
+(the single unresolved GJ 65 system). Conditioned on that, the posterior is calibrated
+(SBC passes the formal threshold) and, as expected for one detection, mostly prior-wide.
 \begin{itemize}
-\item \textbf{Beaming fraction} $f_{\rm beam} = \svbRealFbeam$, 90\% credible interval
+\item Beaming fraction: $f_{\rm beam} = \svbRealFbeam$, 90\% credible interval
 $\svbRealFbeamLo$--$\svbRealFbeamHi$, against a prior of
-$\mathcal{U}(\svbPriorFbeamLo, \svbPriorFbeamHi)$ --- the interval is
+$\mathcal{U}(\svbPriorFbeamLo, \svbPriorFbeamHi)$. The interval is
 \svbRealFbeamWidthRatio\ of the prior's width, and the median sits near the prior midpoint: a
-single detection barely updates the beaming prior. Note also what this parameter is: the
-forward model draws a luminosity for \emph{every} star in the parent sample and then applies
-one Bernoulli trial, so the inferred quantity is the product of the coherent-emitter fraction,
-the beaming fraction and the duty cycle over the two epochs --- not the beaming fraction alone.
-The census cannot separate the three. We therefore claim the first \emph{calibrated} constraint on this quantity ---
-the interval's coverage is validated --- while stating plainly that it is near-vacuous, not a
-measurement. It is consistent with the tens-of-percent values the literature assumes
-\citep{callingham2021,pritchard2021}.
-\item \textbf{Luminosity function.} The break \emph{appears} better constrained,
+single detection barely updates the beaming prior. Note that this parameter is not the beaming
+fraction alone: the forward model draws a luminosity for every star in the parent sample and
+then applies one Bernoulli trial, so the inferred quantity is the product of the
+coherent-emitter fraction, the beaming fraction, and the duty cycle over the two epochs.
+The census cannot separate the three. We therefore claim the first calibrated constraint on
+this quantity (the interval's coverage is validated) while stating plainly that it is
+near-vacuous, not a measurement. It is consistent with the tens-of-percent values the
+literature assumes \citep{callingham2021,pritchard2021}.
+\item Luminosity function: the break appears better constrained,
 $\log_{10}L^* = \svbRealLogLbreak$ (90\% CI $\svbRealLogLbreakLo$--$\svbRealLogLbreakHi$), but
 it is not. Its posterior piles against the top of the prior box, and the test for that is to
 move the box: re-inferring with the break prior extended to $\svbPriorBoxHi$ and the slope
 floor dropped below its theoretical value, over \svbPriorNSeeds\ training seeds each, moves the
-median from \svbPriorLogLPub\ to \svbPriorLogLWide --- a shift of \svbPriorLogLShift\ dex
+median from \svbPriorLogLPub\ to \svbPriorLogLWide, a shift of \svbPriorLogLShift\ dex
 against a seed-to-seed scatter of \svbPriorLogLSeedSd. The median tracks the wall. What the
 census actually supports is the one-sided statement $\log_{10}L^* \gtrsim \svbLogLLimit$, which
 is set by the single detection's own luminosity and is stable under both tests.
 
-The same experiment moves $f_{\rm beam}$ from \svbPriorFbeamPub\ to \svbPriorFbeamWide, so the
-beaming posterior is not merely prior-\emph{wide} but prior-\emph{located}, and it responds to
-priors on parameters other than its own --- the beaming--luminosity degeneracy, visible
-directly. Only the slope median survives the widening (\svbPriorSlopePub\ $\to$
+The same experiment moves $f_{\rm beam}$ from \svbPriorFbeamPub\ to \svbPriorFbeamWide. The
+beaming posterior is therefore not merely prior-wide but prior-located: it responds to priors
+on parameters other than its own, the beaming--luminosity degeneracy, visible directly in this
+shift. Only the slope median survives the widening (\svbPriorSlopePub\ $\to$
 \svbPriorSlopeWide, against a seed scatter of \svbPriorSlopeSeedSd), though its lower credible
 bound was itself truncated by the floor at $\svbPriorSlopeLo$ and is not meaningful either.
 
 With a single detection the population cannot separate ``a few luminous beamers'' from ``many
-faint ones''. The honest reading is that \emph{no} parameter of this model is measured by one
+faint ones''. The honest reading is that no parameter of this model is measured by one
 detection; what the census delivers is a lower limit on $L^*$ and a calibrated framework.
 \end{itemize}
 The scientific content is deliberately modest and honestly bounded: a one-detection census
 yields a posterior that is calibrated but, for the beaming fraction, near-prior-width. The value
-is the calibration itself --- the credible intervals mean what they say --- and the pipeline,
+is the calibration itself, in that the credible intervals mean what they say, and the pipeline,
 which conditions on any RACS Stokes-V target list and tightens as the censuses grow.
 
 \section{Discussion and Conclusions}
 We have built and calibrated the first SBI population inference for M-dwarf coherent radio
 emitters, delivering the first SBC-validated framework for their beaming fraction
-($f_{\rm beam} = \svbRealFbeam$, 90\% CI $\svbRealFbeamLo$--$\svbRealFbeamHi$ --- near-prior-width
+($f_{\rm beam} = \svbRealFbeam$, 90\% CI $\svbRealFbeamLo$--$\svbRealFbeamHi$, near-prior-width
 at one detection, a calibrated constraint rather than a measurement). The population is
-beaming-degenerate at the one-detection level and awaits a larger census. Two extensions are immediate and require only more data
-through the same pipeline: the RACS-low2 Stokes-V catalogue and the Sydney Radio Star Catalogue
-\citep{driessen2024} supply hundreds of targets, which would break the degeneracy and turn the
-beaming interval into a percent-level measurement; and the forward model extends unchanged to
-other coherent-emitter classes (ultracool dwarfs, chromospherically active binaries) given their
-parent samples and survey selection. The method, its calibration, and its honest widths are the
-contribution.
+beaming-degenerate at the one-detection level and awaits a larger census. Two extensions are
+immediate and require only more data through the same pipeline. The RACS-low2 Stokes-V
+catalogue and the Sydney Radio Star Catalogue \citep{driessen2024} supply hundreds of targets,
+which would break the degeneracy and turn the beaming interval into a percent-level measurement.
+The forward model also extends unchanged to other coherent-emitter classes (ultracool dwarfs,
+chromospherically active binaries), given their parent samples and survey selection. The
+contribution is the calibrated method and its honest uncertainty widths, not a tight number.
 
 \textit{Reproducibility.} \code{jansky\_research.svsbi} (pure-NumPy forward model + tests) $+$
 the \code{sbi} extra for NPE training (verified on an AMD RX 7600 XT under ROCm); every number

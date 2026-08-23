@@ -29,6 +29,11 @@ the evidence base is too large for one file):
    self-referential epistemics and reader address → deleted or restated as fact;
    limitations stay but move in-line with magnitudes. Do NOT touch `generated/`,
    `refs.bib`, macros, numbers, `\software{}`, or any claim's strength.
+   **Never relocate a numeric literal across sections to satisfy the diff-guard.** The
+   guard compares multisets, so a moved number passes by construction — and in batch 2 a
+   relocated `$\pm$230\,s` landed beside a ratio it contradicted, while its own abstract
+   lost the clause that made the step mandatory. If shortening requires dropping a number,
+   drop the sentence, not the number's home.
 4. Gates, in order — all must pass:
    - `... prose_lint.py papers/<slice> --diff-guard` (prose-only edit, mechanical)
    - `... prose_lint.py papers/<slice>` (zero HIGH findings)
