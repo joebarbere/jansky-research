@@ -124,3 +124,31 @@ our tolerance" is 46×.
 
 Open: committing the per-cell sensitivity grid rather than one scalar; including the figure
 (the paper has none); a lens-mass range; the top-32 truncation in the candidate-delay scan.
+
+## Correctness pass (2026-08-22) — the retracted limit was still the first conclusion
+
+Two defects found by the post-conversion referee round, both predating the style campaign.
+
+**The conclusion quoted the retracted limit.** Discussion item (i) read "repeater samples are
+not lensing-contaminated at the $\gtrsim$9\% level", hard-coded as a literal. That 9% is
+`\flRealLimitNaive` = 0.091 — the count-based limit this slice's own referee round retracted
+in favour of 0.368, and which the Results paragraph three paragraphs earlier calls "wrong by a
+factor of four, in the optimistic direction". The paper argued against its own headline. Now
+macro-backed (`\flRealLimit`), so it cannot drift again.
+
+**The printed equation was not reproducible.** `\flRealEpsSum` was 8.3 and `\flRealEpsMean`
+0.24, both computed over **34** sources, while the search ran on **33** and the limit divides
+by the restricted sum (8.1333). So the page showed `f < 2.996/8.3 = 0.3683` where 2.996/8.3 is
+0.3624. The extra source is **FRB20210601A** (eps = 0.1333): `injection_efficiency` accepts any
+train with `n_bursts >= 5`, while the search additionally requires a span > 2 d.
+
+The limit itself was always correct — `run()` already restricted to the searched names — so
+**only the reported macros were wrong**, and the fix needed no re-run: `_write_macros` now
+restricts `per_source` to `m["rows"]` before summing, and the macros were regenerated from the
+committed real metrics JSON. `\flRealEpsSum` 8.3 → 8.1, `\flRealEpsMean` 0.24 → 0.25;
+`\flRealEpsZero` (4) and `\flRealEpsMax` (0.69) are unchanged. 2.996/8.1333 = 0.3684 against
+the quoted 0.3683.
+
+Pinned by `test_macros_restrict_efficiency_to_the_searched_sources` and
+`test_committed_frblens_equation_is_reproducible`, the latter checking the committed evidence
+directly so the page and the JSON cannot drift apart again.

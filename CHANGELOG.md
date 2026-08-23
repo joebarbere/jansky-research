@@ -10,6 +10,38 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`frblens` quoted its own retracted limit as its first conclusion.** Discussion item (i)
+  read "not lensing-contaminated at the $\gtrsim$9\% level" as a hard-coded literal --- that
+  is `\flRealLimitNaive` = 0.091, the count-based value this slice's referee round retracted
+  in favour of 0.368, and which the Results paragraph calls "wrong by a factor of four, in the
+  optimistic direction". Now macro-backed so it cannot drift again.
+- **`frblens`'s printed equation was not reproducible.** `\flRealEpsSum` (8.3) and
+  `\flRealEpsMean` (0.24) were computed over 34 sources while the search ran on 33 and the
+  limit divides by the restricted sum, so the page showed `2.996/8.3 = 0.3683` where that
+  quotient is 0.3624. The extra source is FRB20210601A: `injection_efficiency` accepts any
+  train with >= 5 bursts, the search also requires a span > 2 d. Only the macros were wrong ---
+  the limit was always computed on the searched subset --- so `_write_macros` now restricts to
+  `m["rows"]` and the macros were regenerated from the committed metrics with no re-run.
+  8.3 -> 8.1, 0.24 -> 0.25; 2.996/8.1333 = 0.3684. Two regression tests, one of which checks
+  the committed evidence so page and JSON cannot drift apart again.
+- **`stokesv_discovery`'s `\svdRealDet` counted neither systems nor rows.** The paper said it
+  "counts systems rather than rows" while the macro is 2: the four >= 5-sigma rows are the two
+  CNS5 entries of one binary in a single beam, so the chain is 4 rows -> 2 entries -> 1 system.
+  The sentence now states that chain and the estimator records what it counts.
+- **`stokesv_discovery`'s census is a 12-arcsec peak search and the Method claimed otherwise.**
+  `search_arcsec` defaults to 12 ("brightest Stokes-I pixel within that radius"); only
+  `<= 0` is forced. Re-verified in the committed evidence: **all 54 quiescent rows have I > 0**
+  at median I/sigma_I 2.19, where a fixed-pixel measurement would go negative about half the
+  time (p = 2^-54). The Method now describes the search, the two remaining "forced" method
+  claims are gone, and Honest limits states that the quiescent limits bound a beam-scale
+  maximum rather than the star. The forced re-measurement remains outstanding.
+- **`wdpulsar` quoted a Stokes-V limit as the depth of the Stokes-I null** in the abstract and
+  conclusion (\wdRealMedianVLimit is `median_v_limit_mjy`); section 3 always labelled it
+  correctly. Both now say Stokes-V.
+- **`frbwait`'s table caption said "top 20 of 15"**; the table has all 15 rows above the
+  completeness cut and is not truncated.
+
 ### Changed
 - Papers restyled to traditional pre-LLM journal register via the `traditional-style` skill
   (batch 2: `svsbi`, `stokesv_discovery`, `frblens`, `wdpulsar` main.tex, `frbwait` --- the

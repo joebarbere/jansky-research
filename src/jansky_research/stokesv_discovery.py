@@ -200,6 +200,11 @@ def summarize_real(csv_path: str) -> dict:
         "n_targets_measured": len(names),
         "n_epoch_rows": len(rows),
         "n_pairs_complete": len(dvs),
+        # Distinct catalogue ENTRIES above 5 sigma, which is not the same as systems: GJ 65
+        # is two CNS5 entries (BL and UV Ceti) 2 arcsec apart in one beam with bit-identical
+        # photometry, so four rows collapse to two entries and one system. The paper must say
+        # "entries" wherever it quotes this; it once said this number "counts systems rather
+        # than rows", which was true of neither.
         "n_v_detections_5sig": len(sorted(set(det))),
         "n_var_pairs_4sig": len(var_pairs),
         "median_5sig_vlim_mjy": round(float(5.0 * np.median(e_vs)), 2),

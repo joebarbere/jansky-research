@@ -222,3 +222,49 @@ def test_committed_limit_uses_the_measured_efficiency():
     assert eff["detection_p"] == pytest.approx(2.0 / 201.0, abs=1e-4)
     # every searched source needs an entry, or the sum is over the wrong set
     assert names <= set(eff["per_source"])
+
+
+def test_macros_restrict_efficiency_to_the_searched_sources(tmp_path):
+    """`injection_efficiency` measures every train with >=5 bursts; the search also demands a
+    span > 2 d, so the efficiency dict can carry a source the search never ran on. Reporting
+    the unrestricted sum made the paper's printed equation irreproducible."""
+    p = tmp_path / "macros.tex"
+    m = {
+        "source": "x",
+        "is_real": True,
+        "n_searched": 2,
+        "n_detections": 0,
+        "lensed_fraction_limit_95": 0.5,
+        "sensitive_fraction": 0.5,
+        "rows": [{"name": "A"}, {"name": "B"}],
+        "efficiency": {
+            # C is measured but was never searched, and must not enter the reported sum.
+            "per_source": {"A": 0.5, "B": 0.0, "C": 0.9},
+            "eps_sum": 1.4,
+            "eps_mean": 0.4667,
+            "detection_p": 0.0099,
+        },
+    }
+    fl._write_macros(m, p)
+    text = p.read_text()
+    assert r"\newcommand{\flRealEpsSum}{0.5}" in text
+    assert r"\newcommand{\flRealEpsMean}{0.25}" in text
+    # the zero-efficiency count and the best train also come from the searched subset
+    assert r"\newcommand{\flRealEpsZero}{1}" in text
+    assert r"\newcommand{\flRealEpsMax}{0.50}" in text
+
+
+def test_committed_frblens_equation_is_reproducible():
+    """2.996 / EpsSum must reproduce the quoted limit from the committed evidence."""
+    import json
+    from pathlib import Path
+
+    metrics = Path("results/frblens_metrics.json")
+    if not metrics.exists():  # pragma: no cover - only on a checkout without real results
+        pytest.skip("real results not present")
+    m = json.loads(metrics.read_text())
+    if not m.get("is_real"):  # pragma: no cover - guard against a synthetic overwrite
+        pytest.skip("metrics are not from the real run")
+    searched = {r["name"] for r in m["rows"]}
+    eps_sum = sum(v for k, v in m["efficiency"]["per_source"].items() if k in searched)
+    assert 2.996 / eps_sum == pytest.approx(m["lensed_fraction_limit_95"], abs=5e-4)

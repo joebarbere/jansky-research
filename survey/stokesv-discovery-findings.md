@@ -83,3 +83,30 @@ a seventh of it, so it establishes the selection arithmetic, not sensitivity nea
 
 Open: the forced re-measurement; per-target limits as a machine-readable table; recording
 tile/beam position so the flux-scale term can be bounded; and a real-data figure.
+
+## Correctness pass (2026-08-22) — the peak search is now stated, and a macro stopped lying
+
+**`\svdRealDet` counted neither systems nor rows.** The paper read "This is one independent
+measurement, not two, and \svdRealDet\ counts systems rather than rows", and the macro is 2.
+`n_v_detections_5sig` is `len(set(det))` over catalogue *names*: the four >=5-sigma rows are
+(CNS5 425, mid1/mid2) and (CNS5 424, mid1/mid2), the two entries of one binary 2 arcsec apart
+in the same beam with bit-identical photometry. So the chain is **4 rows -> 2 CNS5 entries ->
+1 system**, and the macro sits in the middle of it. The sentence now says exactly that, and
+the estimator carries a comment recording what the number counts.
+
+**The census is a 12-arcsec peak search and the Method said otherwise.** `stokesv.py` defaults
+`search_arcsec = 12.0`, which "finds the brightest Stokes-I pixel within that radius"; only
+`search_arcsec <= 0` is genuinely forced. The Method claimed measurement "at the propagated
+position", and two occurrences of "forced" survived the 2026-08-12 round that removed it from
+the title and abstract.
+
+The signature is in the committed evidence and was re-verified here: **all 54 quiescent rows
+have I > 0**, at a median I/sigma_I of 2.19, where a genuine fixed-pixel measurement on noise
+would go negative about half the time (p = 2^-54 = 5.6e-17).
+
+Fixed by stating it rather than by re-measuring: the Method now describes the 12-arcsec search,
+"forced" is gone from the two places it was a method claim, and Honest limits (v) says plainly
+that the quiescent limits are **upper limits on a beam-scale maximum, not on the star**, quotes
+the 54/54 result, and records that the V value is read wherever that maximum fell. The forced
+re-measurement (~2 h, CASDA credentials, a re-fetch of all 120 cutouts) remains the outstanding
+work on this census.

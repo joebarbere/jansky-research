@@ -650,14 +650,26 @@ def _write_macros(m: dict, path: str | Path) -> None:
     ]
     eff = m.get("efficiency")
     if eff:
+        # Restrict to the sources the SEARCH actually ran on. `injection_efficiency` accepts
+        # every train with >= 5 bursts, while the search additionally requires a span > 2 d,
+        # so the unrestricted dict carries one extra source (FRB20210601A, eps = 0.133 on the
+        # real leg). The limit already divides by the restricted sum; reporting the
+        # unrestricted one made the printed equation irreproducible -- 2.996/8.2667 = 0.3624
+        # against a quoted 0.3683 -- and described eps_mean as being "against N searched
+        # sources" when it was an average over N+1.
+        per_all = eff["per_source"]
+        searched = {r["name"] for r in m.get("rows", [])}
+        per = {k: v for k, v in per_all.items() if k in searched} or per_all
+        eps_sum = sum(per.values())
         lines += [
             "% The injection efficiency of EVERY searched source, at the census's own",
             "% detection threshold. The limit divides by this sum, not by the source count:",
             "% dividing by N asserts eps = 1 everywhere, which overstates the limit 4x here.",
-            rf"\newcommand{{\flRealEpsSum}}{{{eff['eps_sum']:.1f}}}",
-            rf"\newcommand{{\flRealEpsMean}}{{{eff['eps_mean']:.2f}}}",
-            rf"\newcommand{{\flRealEpsZero}}{{{sum(1 for v in eff['per_source'].values() if v == 0)}}}",
-            rf"\newcommand{{\flRealEpsMax}}{{{max(eff['per_source'].values()):.2f}}}",
+            "% Restricted to the searched sources, so 2.996/EpsSum reproduces Limit.",
+            rf"\newcommand{{\flRealEpsSum}}{{{eps_sum:.1f}}}",
+            rf"\newcommand{{\flRealEpsMean}}{{{eps_sum / len(per):.2f}}}",
+            rf"\newcommand{{\flRealEpsZero}}{{{sum(1 for v in per.values() if v == 0)}}}",
+            rf"\newcommand{{\flRealEpsMax}}{{{max(per.values()):.2f}}}",
             rf"\newcommand{{\flRealDetP}}{{{eff['detection_p']:.4f}}}",
             rf"\newcommand{{\flRealLimitNaive}}{{{-__import__('math').log(0.05) / m['n_searched']:.3f}}}",
         ]
