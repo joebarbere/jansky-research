@@ -101,3 +101,54 @@ published volume/page (ApJS 283, 34); cat1 invoked but never cited; the macros h
 opposite of the guard it calls, and a test asserts the placeholder behaviour.
 
 **Status: fixes pending** (data local: data/chimefrbcat2.csv + exposure h5).
+
+### Resolved 2026-08-24 (revision): the population claim is retracted -- the injection curve killed it
+
+The blocker's experiment was run, and it decided against the paper. `rate_bias_curve` generates
+pure Poisson (k=1) processes in continuous time, censors them to CHIME's 15-minute daily transit
+window exactly as the instrument observes (`transit_censored_poisson` -- the old fixture SNAPPED
+bursts to the comb instead of censoring, which is why the old validation could not fail), and
+fits them exactly as the census fits real sources:
+
+| rate (/exposure-hr) | recovered k (true k=1) |
+|---|---|
+| 0.1 | 0.79 +/- 0.12 |
+| 0.3 | 0.91 +/- 0.15 |
+| 0.6 | 0.80 +/- 0.06 |
+| 1.0 | 0.78 +/- 0.05 |
+| 3.2 | **0.47 +/- 0.01** |
+
+**The census median (0.831, CI 0.73--0.98, sign p 0.118) is what Poisson arrivals look like
+through the transit comb.** "Sub-Poissonian clustering is the population norm" is retracted; the
+paper now presents the curve as its selection function and reads every k against it. What
+survives per source: the three flagged k values (0.30/0.34/0.42) still lie below the
+censoring-only expectation at their own rates, so some clustering beyond selection remains
+indicated for those three, at reduced significance the paper no longer quantifies; and
+FRB20191106C is significantly SUPER-Poissonian (k=1.44, CI excluding 1) where censoring pushes
+down -- previously hidden by the one-sided flag (n_dispersed now committed; the second candidate
+20201130A fell inside its CI at n_boot=2000).
+
+**The grouped null settles the detections.** `sidereal_scramble_grouped` moves whole transit
+groups rigidly, preserving within-transit multiplicity. The anchor survives at the floor
+(p=0.001); the two other "significant" peaks collapse to p=0.046 and 0.021 -- their significance
+WAS within-transit multiplicity, exactly the referee's mechanism, and the paper's conclusion
+about them is now enforced by the null rather than asserted by the N_cyc rule. FRB20220912A's
+peak is additionally flagged railed at the grid edge (span/3 exactly; dagger in the table, cycle
+count printed to 1 d.p. so 5.0 is distinguishable from 5.01).
+
+**The anchor duty is now convention-matched, and the old claim was wrong as written**: the
+full-containment arc at the published period is 0.384 (6.3 d), WIDER than the published 5-d
+all-burst window (as expected with 3x the bursts over 3.5x the span); it is the 90% arc (3.5 d)
+that sits inside it. Variants at 50/90/100% containment at both the fitted and published periods
+are committed.
+
+Also: median-k bootstrap CI + sign test committed; run config (n_scramble=999, fap_threshold,
+n_boot=2000, seed) committed; dec added to census rows and the low-declination claim restated in
+terms of committed exposure; cat2 bib completed (ApJS 283, 34); cat1 now actually cited; the
+macros header no longer claims the opposite of the guard it calls, and the placeholder-asserting
+test is replaced by a two-step guard test (seed real macros, rebuild offline into the same tree,
+assert the real values survive). One new defect was caught in the act during this revision: the
+first version of the new derived-macro block was not live-gated, writing real values into fwSyn*
+-- the namespace audit caught it and the block now gates per namespace.
+
+No previously published value moved.

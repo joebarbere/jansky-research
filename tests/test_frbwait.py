@@ -124,7 +124,19 @@ def test_run_offline_writes_artifacts(tmp_path):
     assert saved["n_periodic_p01"] == m["n_periodic_p01"]
     assert (tmp_path / "papers" / "frbwait" / "figures" / "frbwait.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "frbwait" / "generated" / "macros.tex").read_text()
-    assert r"\newcommand{\fwSynMedianK}" in macros and r"\newcommand{\fwRealMedianK}{--}" in macros
+    assert r"\newcommand{\fwSynMedianK}" in macros
+    # The guard test the repo's "a test can lock a defect in" lesson calls for: seed the tree
+    # with committed-real macros, run offline into the SAME tree, and assert the real values
+    # SURVIVE. The old assertion here required \fwRealMedianK to be a placeholder, which is
+    # true only on a virgin tree -- through the path that matters, the guard must keep it.
+    gen = tmp_path / "papers" / "frbwait" / "generated" / "macros.tex"
+    seeded = macros.replace(
+        r"\newcommand{\fwRealMedianK}{--}", r"\newcommand{\fwRealMedianK}{0.831}"
+    )
+    gen.write_text(seeded)
+    fw.run(out=str(tmp_path), offline=True, n_scramble=20)
+    after = gen.read_text()
+    assert r"\newcommand{\fwRealMedianK}{0.831}" in after  # the real value survives the rebuild
     table = (tmp_path / "papers" / "frbwait" / "generated" / "census_table.tex").read_text()
     assert "SYN-INJECTED" in table
 
@@ -142,3 +154,42 @@ def test_default_period_grid_bounds():
     assert g.min() == pytest.approx(1.5, rel=1e-6)
     assert g.max() == pytest.approx(600.0, rel=1e-6)
     assert np.all(np.diff(g) > 0)
+
+
+def test_transit_censored_poisson_rate_is_calibrated():
+    toas = fw.transit_censored_poisson(1.0, span=1200.0, seed=0)
+    exp_hr = (1200 / fw.SIDEREAL_DAY) * 15.0 / 60.0  # one 15-min window per sidereal day
+    rate = toas.size / exp_hr
+    assert 0.7 < rate < 1.3  # the census's rate_per_hr axis is the intrinsic hourly rate
+
+
+def test_rate_bias_curve_shows_the_censoring_bias():
+    """The experiment the population claim depended on: known k=1 through the transit comb."""
+    curve = fw.rate_bias_curve(rates_per_hr=(0.6, 3.2), n_seeds=3)
+    by = {c["rate_per_hr"]: c for c in curve}
+    # at moderate rates the bias is already below 1; at the top of the observed range it is
+    # severe -- these bounds encode the finding that the census median (0.83) needs no
+    # astrophysics and that k ~ 0.5 at 3.2/hr is what a POISSON source looks like there
+    assert by[0.6]["k_recovered_mean"] < 0.95
+    assert by[3.2]["k_recovered_mean"] < 0.6
+
+
+def test_grouped_scramble_keeps_transit_multiplicity():
+    rng = np.random.default_rng(0)
+    # two bursts in one transit, one a day later
+    t = np.array([59000.10, 59000.101, 59000.10 + fw.SIDEREAL_DAY])
+    s = fw.sidereal_scramble_grouped(t, rng)
+    waits = np.sort(np.diff(np.sort(s)))
+    assert waits[0] < 0.01  # the within-transit pair is still a pair
+    per_burst = fw.sidereal_scramble(t, rng)
+    assert per_burst.size == 3
+
+
+def test_census_flags_grid_edge_and_dispersed(tmp_path):
+    m = fw.run(out=str(tmp_path), offline=True, n_scramble=50)
+    rows = [r for r in m["rows"] if "weibull_k" in r]
+    assert all("peak_at_grid_edge" in r and "dispersed" in r for r in rows)
+    assert m["n_scramble"] == 50 and m["n_boot_weibull"] == 2000
+    macros = (tmp_path / "papers" / "frbwait" / "generated" / "macros.tex").read_text()
+    for name in (r"\fwRealNDispersed", r"\fwSynMedianKlo", r"\fwSynSignP"):
+        assert name in macros, name
