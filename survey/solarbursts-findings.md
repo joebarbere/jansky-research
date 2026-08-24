@@ -99,3 +99,29 @@ evidence, because `exciter_speed` needs the raw ridge (frequencies and times) an
 is in the metrics. The conclusion is unaffected --- the bracket is still ~0.09--0.27 c, inside the
 canonical band --- but the grid is not auditable. The fix is to emit the full harmonic x fold grid
 into `results/solarbursts_metrics.json` on the next real run and macro-ise all three points.
+
+### Resolved 2026-08-24 (real re-run): the grid is emitted, and the discrepancy is explained
+
+`speed_grid` now computes all three systematics points from the same fitted ridge as the headline
+number, so the middle point IS `\sbSpeedC` by construction; the raw ridge is committed as
+`results/solarbursts_ridge.csv` (66 channels), so both the headline and the grid are recomputable
+from evidence. The paper's grid sentence, abstract bracket and Discussion radius now cite macros.
+
+**The stale-grid mystery is solved, and it was a parameterization, not code drift.** The committed
+metrics (r2 0.811, drift -2.55, 0.1347) are reproduced byte-for-byte by `pad_s=10.0` (the `run()`
+default); the findings file's "superseded run" (r2 0.90, drift -3.3, 0.137) is exactly what
+`pad_s=5.0` gives, and `--recover` had 5.0 pinned in it --- so the one command this file said
+"regenerates the 2011-09-14 result" in fact produced different numbers. `--recover` now pins 10.0,
+matching the committed evidence, and a re-run against the live archive confirms the pipeline is
+deterministic and the archive unchanged.
+
+The committed grid (pad 10): **0.0813 / 0.1347 / 0.2448 c**, a factor of 3.01. Two prose
+corrections fell out: "All three lie within the canonical 0.1--0.5 c band" was false (the
+fundamental point is below 0.1, and was at 0.086 in the old prose too --- pre-existing); and the
+Discussion's "3.6 R_sun" outer radius was the pad-5 value, where the committed grid reaches
+**4.01 R_sun**, which extrapolates *beyond* the Newkirk model's well-constrained range, not "near
+its edge". Both now stated honestly.
+
+Pad sensitivity, for the record: 5 -> 10 moves r2 0.897 -> 0.811, drift -3.259 -> -2.55, speed
+0.1368 -> 0.1347. Both are defensible windows; the committed choice is the wider one the paper's
+numbers have always cited.

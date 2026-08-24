@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from jansky_research import triangulate
 
@@ -80,3 +81,34 @@ def test_triangulate_track_drops_backward_and_far_misses():
     # with zero noise every triangulated channel intersects almost exactly
     assert track["freq_mhz"].size > 0
     assert np.all(track["miss"] < 1.0)
+
+
+def test_miss_sweep_is_pure_filtering_and_matches_the_analysis_cut():
+    """The 60-row of the sweep must equal the headline analysis on the same open track."""
+    ev = triangulate.synthetic_event()
+    open_track = triangulate.triangulate_track(
+        ev["spec_a"], ev["spec_b"], max_miss_rsun=float("inf")
+    )
+    sweep = triangulate.miss_sweep(open_track)
+    assert [s["max_miss_rsun"] for s in sweep] == [15.0, 30.0, 60.0, 100.0]
+    # n is monotone in the threshold: loosening a cut can only admit channels
+    ns = [s["n"] for s in sweep]
+    assert ns == sorted(ns)
+    cut60 = triangulate.triangulate_track(ev["spec_a"], ev["spec_b"], max_miss_rsun=60.0)
+    row60 = next(s for s in sweep if s["max_miss_rsun"] == 60.0)
+    assert row60["n"] == int(cut60["freq_mhz"].size)
+    if row60["n"] >= 3:
+        rg, rp = cut60["r_geom"], cut60["r_plasma"]
+        assert row60["corr_geom_plasma"] == pytest.approx(
+            float(np.corrcoef(rg, rp)[0, 1]), abs=1e-3
+        )
+
+
+def test_run_offline_commits_channels_and_sweep(tmp_path):
+    triangulate.run(out=str(tmp_path), offline=True)
+    rows = (tmp_path / "results" / "triangulate_channels.csv").read_text().splitlines()
+    assert rows[0] == "freq_mhz,r_geom_rsun,r_plasma_rsun,miss_rsun,lon_deg,lat_deg"
+    assert len(rows) > 3
+    macros = (tmp_path / "papers" / "triangulate" / "generated" / "macros.tex").read_text()
+    for name in (r"\triSweepFifteenCorr", r"\triSweepSixtyRatio", r"\triSweepHundredN"):
+        assert name in macros, name

@@ -119,3 +119,25 @@ requires re-running the real leg. It cannot be done from committed evidence, bec
 omitting the numbers its own headline is computed from). No STEREO/WAVES cache exists locally, so
 the sweep means re-fetching the 2013-05-15 L3 DF data. **Commit the per-channel arrays on that run**
 so the cut becomes auditable and any future sweep is offline.
+
+### Resolved 2026-08-24 (real re-run): the sweep is measured, and the cut is not load-bearing
+
+`miss_sweep` re-applies the threshold to a track built with the cut open (pure filtering --- the
+per-channel misses were already computed), and the real 2013-05-15 leg was re-fetched from SPDF to
+run it. Purely additive: every previously committed value is unchanged.
+
+| cut (R_sun) | n | corr | ratio |
+|---|---|---|---|
+| 15 | 12 | 0.977 | 2.20 |
+| 30 | 36 | 0.975 | 2.21 |
+| 60 (analysis) | 38 | 0.989 | 2.18 |
+| 100 | 38 | 0.989 | 2.18 |
+
+**Neither headline depends on the cut.** Tightening 60 -> 15 keeps only 12 of 38 channels and moves
+the correlation by 0.012 and the ratio by 0.02; no kept channel misses by more than 60, so the
+100 row is identical. The cut is permissive, but it is not what makes the numbers --- now stated in
+the paper with the sweep macro-backed (`\triSweep*`).
+
+The per-channel arrays (freq, r_geom, r_plasma, miss, lon, lat, cut open) are committed as
+`results/triangulate_channels.csv` (38 channels), so the 60 R_sun choice is auditable and any
+future sweep is offline.

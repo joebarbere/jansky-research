@@ -123,9 +123,13 @@ Both metrics recover the injected trend: the secondary differential at \rfSynSlo
 ($p=\rfSynTrendP$, $r=\rfSynCorr$ with the injected Starlink shape), and the primary
 line-vs-adjacent excess at \rfSynLineExcessSlope\ per year ($r=\rfSynLineCorr$). The primary
 metric used in the real analysis is therefore validated against common-mode gain drift and burst
-contamination, not only the cross-check. It is not validated against the systematic this paper
-identifies as decisive, differential local contamination of a line's flanking channels, which the
-synthetic fixture does not inject and which the line-vs-adjacent difference cannot cancel. A null
+contamination, not only the cross-check. A third arm injects the systematic this paper identifies
+as decisive and the line-vs-adjacent difference cannot cancel: local RFI accruing in a line's
+flanking channels only, as a linear ramp uncorrelated with the Starlink curve. Under it the same
+injected rising line is recovered at \rfSynFlankSlope\ per year, a bias of \rfSynFlankBias\ per
+year that flips the recovered sign. A station's falling line excess therefore cannot, by itself, be
+read as a falling UEM signal, which is the quantified form of the caveat the coherence test carries
+below. A null
 control built from two bands both outside the UEM window does not trend (slope \rfSynCtrlSlope\ per
 year), confirming the metric does not manufacture a trend from gain drift. Burst immunity is
 explicit: the recovered slope is unchanged whether 0\% or 90\% of months carry a broadband burst.

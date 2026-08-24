@@ -13,5 +13,39 @@
   "lon_med_deg": 168.9,
   "lat_med_deg": 4.7,
   "corr_geom_plasma": 0.989,
-  "ratio_geom_plasma": 2.18
+  "ratio_geom_plasma": 2.18,
+  "miss_sweep": [
+    {
+      "max_miss_rsun": 15.0,
+      "n": 12,
+      "corr_geom_plasma": 0.977,
+      "ratio_geom_plasma": 2.2,
+      "f_lo_mhz": 0.425,
+      "f_hi_mhz": 1.925
+    },
+    {
+      "max_miss_rsun": 30.0,
+      "n": 36,
+      "corr_geom_plasma": 0.975,
+      "ratio_geom_plasma": 2.21,
+      "f_lo_mhz": 0.175,
+      "f_hi_mhz": 1.975
+    },
+    {
+      "max_miss_rsun": 60.0,
+      "n": 38,
+      "corr_geom_plasma": 0.989,
+      "ratio_geom_plasma": 2.18,
+      "f_lo_mhz": 0.125,
+      "f_hi_mhz": 1.975
+    },
+    {
+      "max_miss_rsun": 100.0,
+      "n": 38,
+      "corr_geom_plasma": 0.989,
+      "ratio_geom_plasma": 2.18,
+      "f_lo_mhz": 0.125,
+      "f_hi_mhz": 1.975
+    }
+  ]
 }

@@ -964,5 +964,8 @@
         NaN
       ]
     }
-  }
+  },
+  "flank_line_slope_per_yr": -0.1907,
+  "flank_slope_bias_per_yr": -0.4311,
+  "flank_sign_flipped": true
 }

@@ -27,8 +27,9 @@ peak time, maps frequency to heliocentric radius, and fits radius versus time wi
 (sigma-clipped) line whose $R^2$ flags a coherent single burst against a multi-burst storm. Applied to an
 isolated, catalogue-clean type III (\sbSource; \sbNused\ of \sbNridge\ ridge channels, $R^2=\sbRsq$,
 drift \sbDrift~MHz/s over \sbFlo--\sbFhi~MHz), the height--time fit gives an exciter speed of
-\sbSpeedC~$c$ (harmonic emission, quiet Newkirk corona), bracketed between $0.09\,c$ (fundamental) and
-$0.27\,c$ ($4\times$ Newkirk) by the two model knobs, squarely within the established type III range; as
+\sbSpeedC~$c$ (harmonic emission, quiet Newkirk corona), bracketed between \sbGridFundOne$\,c$
+(fundamental) and \sbGridHarmFour$\,c$ ($4\times$ Newkirk) by the two model knobs, at and within the
+lower half of the established type III range; as
 a peak-time speed it is consistent with peak-time {LOFAR} measurements \citep{reidkontar2018}. A
 synthetic fixture confirms the inversion is algebraically self-consistent (a code check, not an
 independent validation of the density model). This is a reproducibility/method contribution and a
@@ -80,9 +81,11 @@ The clean burst yields \sbNused\ ridge channels (after sigma-clipping \sbNridge\
 heliocentric radii \sbRlo--\sbRhi~$R_\odot$ (harmonic, $1\times$ Newkirk; Figure~\ref{fig:burst}). The
 implied exciter speed is \sbSpeedC~$c$ ($\sbSpeedKms$~km\,s$^{-1}$). The two model knobs bracket it:
 emission mode (fundamental $f_p=f$ vs harmonic $f_p=f/2$) and the Newkirk fold ($1\times$ quiet to
-$4\times$ active region) move the speed from $0.086\,c$ (fundamental, $1\times$) through \sbSpeedC~$c$
-(harmonic, $1\times$) to $0.272\,c$ (harmonic, $4\times$), a factor of $\sim$3; we therefore report the
-grid, not a single number. All three lie within the canonical $0.1$--$0.5\,c$ band \citep{reidratcliffe2014},
+$4\times$ active region) move the speed from \sbGridFundOne$\,c$ (fundamental, $1\times$) through
+\sbGridHarmOne$\,c$ (harmonic, $1\times$) to \sbGridHarmFour$\,c$ (harmonic, $4\times$), a factor of
+$\sim$3; we therefore report the
+grid, not a single number. The harmonic points lie within the canonical $0.1$--$0.5\,c$ band
+\citep{reidratcliffe2014}; the fundamental-emission point falls just below it,
 and the headline peak-time value is directly consistent with the $0.17\,c$ peak-time mean from {LOFAR}
 type III imaging \citep{reidkontar2018}. Two caveats temper the result: the measured drift (\sbDrift~MHz/s)
 is slower than typical (the \citet{alvarez1973} and \citet{zhang2018} relations give $\sim-6$ to
@@ -102,7 +105,8 @@ speed) has $R^2=\sbRsq$.}
 The contribution is method and reproducibility: a tested tool that turns a public e-Callisto spectrum
 into a calibrated-by-assumption beam speed, with the systematics surfaced rather than hidden. The honest limitations are substantial. (i) The
 emission mode and density-model fold span a factor of $\sim$3 in speed; the Newkirk model is best
-constrained within $\sim$1--3~$R_\odot$, so the $4\times$/$3.6\,R_\odot$ case extrapolates near its edge.
+constrained within $\sim$1--3~$R_\odot$, so the $4\times$ case, which reaches
+\sbGridHarmFourRhi~$R_\odot$, extrapolates beyond its edge.
 (ii) The ridge is built from peak times, biasing the speed below the front-of-beam value, and
 radio-wave scattering and projection further suppress apparent speeds at $<$50~MHz \citep{kontar2017}, and
 both biases act downward, so the true front speed is somewhat higher than our peak-time number. (iii)

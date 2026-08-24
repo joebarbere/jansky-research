@@ -86,3 +86,12 @@ leg (168 sampled days, 5 events, 2 days with events, `pearson_r` 0.28) that the 
 mentions. It is consistent with the paper's stated position --- the real census is a data-volume
 task --- and 5 events cannot support a correlation, but committed real evidence that the paper is
 silent on should either be cited or explained.
+
+### Resolved 2026-08-24: the committed real leg is cited
+
+`_write_macros` now emits a `\ecsReal*` namespace alongside the synthetic one (both namespaces on
+every run, placeholders for the other mode --- the merge accumulates values, not names). Filled from
+the committed `ecallisto_census_real_metrics.json`: 168 sampled days, 5 events on 2 days,
+r = 0.28. The limitations section now cites it as the data-volume point made concrete: five events
+cannot support a correlation measurement, which is consistent with (and evidence for) the paper's
+claim that the real census is an ingest problem, not a method gap.
