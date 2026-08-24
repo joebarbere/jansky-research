@@ -37,7 +37,8 @@ frame, plus the spacecraft's HEEQ position. For each frequency we:
 
 **The headline is the correlation, not the absolute scale.** The geometric distance — built purely
 from two pointing directions — and the plasma-frequency distance — built purely from a density model —
-track each other in shape at r = **0.99** across two decades. Part of any such correlation is trivially
+track each other in shape at r = **0.99** across the triangulated band (0.125-1.975 MHz, a factor
+of 16, i.e. 1.2 decades -- an earlier "two decades" here and in the paper was wrong). Part of any such correlation is trivially
 expected: both estimators decrease monotonically with frequency by construction, so even a *linear*
 ramp in frequency already correlates with the Leblanc curve at r ≈ 0.75. What the 0.989 value adds is
 that the geometric distances follow the **correct log–log curvature** of the density model across two

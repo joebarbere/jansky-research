@@ -19,7 +19,7 @@ with an Independent Geometric Check on the Density-Model Distance}
 A type III radio burst radiates near the local plasma frequency, so its high-to-low frequency drift,
 inverted through a coronal/heliospheric density model, traces an electron beam outward through the
 solar atmosphere. We unify four small, separately-validated tools into one reproducible
-drift-to-distance framework that tracks the beam across more than three decades in frequency:
+drift-to-distance framework that tracks the beam across nearly three decades in frequency:
 ground-based e-Callisto \citep{benz2009} in the corona (Newkirk model; \citealt{newkirk1961}),
 Wind/WAVES \citep{bougeret1995} to the Alfv\'en-surface region, and STEREO/WAVES \citep{bougeret2008}
 to $\synRealIpRhiAU$~AU (both via the Leblanc heliospheric model; \citealt{leblanc1998}). The whole ladder
@@ -28,7 +28,7 @@ STEREO-A$+$B direction-finding triangulation \citep{cecconi2008,krupar2012} anal
 same 2013-05-15 event, so the plasma-frequency distance can be compared to a purely
 geometric one. The two track each other in shape (Pearson $r=\synRealGeomCorr$ over the triangulated
 channels, with a factor $\synRealGeomRatio$ offset in absolute scale), validating by geometry the
-shape of the density-model distances the framework depends on. The unified ladder reaches
+shape of the Leblanc heliospheric distances the interplanetary leg depends on. The unified ladder reaches
 $\synRealOverallRhiAU$~AU. This is a synthesis and reproducibility contribution: each leg is a
 recover-a-known, and the same-event, open-pipeline cross-check is the new element, not a discovery.
 \end{abstract}
@@ -78,7 +78,7 @@ STEREO/WAVES plasma-frequency distance $r_{\rm plasma}(f)$ and the STEREO-A$+$B 
 $r_{\rm geom}$ are two independent measurements (Figure~\ref{fig:synth}, right). Across the triangulated
 channels they correlate at $r=\synRealGeomCorr$. Both estimators decrease with frequency by construction,
 so a nonzero correlation is expected; what the measured value adds is agreement in the log--log
-curvature of the density-model track across two decades of distance, not merely a shared monotone
+curvature of the density-model track across the triangulated range, not merely a shared monotone
 trend. The absolute geometric scale runs a factor $\synRealGeomRatio$ high, which we do not over-interpret.
 Direction-finding on a degrees-wide source biases the closest-point of two noisy rays outward, an
 active-region density enhancement pushes the same way, and radio-wave scattering shifts the apparent
@@ -102,18 +102,19 @@ The contribution is a synthesis: one reproducible drift-to-distance framework th
 beam from the corona to $\synRealOverallRhiAU$~AU across four public instruments, and (the new part)
 an independent geometric validation of the density-model distance the framework rests on. The
 honest limitations are as follows. (i) The corona, inner-heliosphere, and interplanetary legs are
-different events, so this is one method validated across four regimes, not one beam tracked end to
+different events, so this is one method validated across three regimes, not one beam tracked end to
 end: a single event caught simultaneously by all three receivers would be the stronger demonstration
 and is the natural next step. (ii) The geometric cross-check is therefore event-specific (2013-05-15),
 and its absolute scale is direction-finding--biased, so it validates the distance shape, not the
-calibration. (iii) The per-leg systematics (harmonic vs fundamental emission, peak-time vs onset speed
+calibration. It also tests the Leblanc heliospheric model only: the triangulated band is entirely
+interplanetary, so the Newkirk coronal leg is unchecked by it. (iii) The per-leg systematics (harmonic vs fundamental emission, peak-time vs onset speed
 bias, and the coarse-cadence fit statistics) are inherited from the component slices and bound each leg
 there. (iv) The Newkirk and Leblanc models are not designed to join continuously: at the
 $\sim$15--20~MHz handoff they differ in heliocentric radius by $\sim$50\%, reflecting their different
 observational bases (white-light active corona vs Wind type III drifts), so the ladder is two
 stitched regimes, not one calibrated model. None of these undermine the synthesis: a type III beam is
 tracked corona-to-interplanetary and its model distance is geometrically checked, but they bound what
-four single events can claim. Every number above is written by the pipeline into the macros this document
+three single events can claim. Every number above is written by the pipeline into the macros this document
 \code{\textbackslash input}s, and \code{python -m jansky\_research.type3synthesis} regenerates them;
 \code{make reproduce} runs the four recover-a-known events on the public archives.
 
