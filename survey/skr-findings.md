@@ -135,3 +135,41 @@ in the paper; pooled 59-day background; \software lists SciPy (unused), omits Ma
 fetch hardcodes DOY 200-299.
 
 **Status: fixes pending** (data committed: data/skr/, fully offline).
+
+### Resolved 2026-08-24 (revision): the 1.39 is retracted, and the retraction is the result
+
+All 21 findings addressed. The central discovery of the revision is that the referee's suspicion
+about the null model understated the problem. Three defensible constructions of the 1/r^2 null
+give three different answers on the same data:
+
+| null model | corrected near/far | bias, measured on controls |
+|---|---|---|
+| rescale total flux (the paper's old null) | **1.39** | biased toward a collapse (moves the range-independent noise floor with the signal; on a control with a fixed floor it empties a bin entirely) |
+| rescale excess upward | 1.68 | biased toward a reversal (amplifies far-range noise; flat-rate control comes out at 0.26) |
+| common-sensitivity census (adopted) | **3.58** | unbiased on controls (flat rate -> 1.0, zero noise promotions; injected trend recovered) |
+
+The adopted estimator only ever scales excesses DOWN (the dr20radio common-limit move) at k=6,
+where the control's noise crossings vanish (detect_skr's MAD-below-percentile sigma
+underestimates the noise width ~30%, so its k=3 is really ~1.4 sigma). Its own numbers then say
+the decomposition is not measurable: jackknife +/-2.75 over 10 orbits, rule sweep 1.14-34.95,
+per-day background 0.59, far-field-only 3.17. **The paper now quotes the raw trend
+(3.33 +/- 0.93, leave-one-orbit-out) and no residual**, and states that the earlier "the null
+removes essentially the whole effect" was an artifact of the floor-rescaling null.
+
+Everything else: the stale junodam-priority sentence is deleted; provan2019's authors/pages fixed
+per Crossref (Provan, Lamy, Cowley, Bunce; 1157-1172); the gurnett2016/ye2016 duplicate collapsed
+to the one real paper (the "Local Time and Latitude Dependence" subtitle and its page range exist
+nowhere -- fabricated entry removed) and the latitude-visibility support now rests on lamy2008;
+gurnett2009's title corrected; the anchor restated as a location match (0.05%/0.06%, within a
+0.08 h resolution, peak power NOT significant under a 199-fold day-block permutation, p=0.325 --
+ls_fap dropped from the evidence); the ~10.34 h broad-band peak committed
+(power 0.0089 vs the anchor's 0.0052); the detection rule (k=3, 25th percentile), band, ref
+range, bin edges (1.02-21.17 R_S -- periapsis ~1 R_S, not the "~8" the paper claimed), corrected
+per-quartile duty cycles, date range and NaN count all committed; the latitude confound's sign
+stated (near = high |lat| = favoured visibility); the figure is now in the paper; \software
+fixed; the DOY-bucket hardcode in the fetcher fixed; the weighted-latitude docstring no longer
+claims the inference GATE-2 killed.
+
+Two new tested controls that can fail: a flat intrinsic rate through a range-independent floor
+must come out flat with zero noise promotions (both rejected nulls measurably fail it), and an
+injected intrinsic trend must survive the census.

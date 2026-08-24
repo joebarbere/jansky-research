@@ -99,7 +99,10 @@ def read_key_params(path: str | Path, *, band_hz: tuple[float, float] = SKR_BAND
         dqf.append(int(q) if q.isdigit() else 9)
     jd_a, flux_a, dqf_a = np.array(jd), np.array(flux), np.array(dqf)
     good = dqf_a == 0
-    return {"jd": jd_a[good], "flux": flux_a[good], "freqs": freqs}
+    # DQF==0 rows whose band flux is still NaN (too few valid channels) are counted: they sit in
+    # the duty-cycle denominator as inactive bins, so their number must be visible evidence.
+    n_nan = int(np.sum(~np.isfinite(flux_a[good])))
+    return {"jd": jd_a[good], "flux": flux_a[good], "freqs": freqs, "n_flux_nan": n_nan}
 
 
 def _read_items(line: str, start_byte: int, n: int, *, item_bytes: int = 10) -> np.ndarray:
@@ -241,6 +244,234 @@ def distance_correct_flux(
     return np.asarray(flux, float) * (r / ref) ** 2
 
 
+def distance_correct_excess(
+    flux: np.ndarray,
+    range_rs: np.ndarray,
+    *,
+    ref_rs: float | None = None,
+    baseline_pct: float = 25.0,
+) -> np.ndarray:
+    r"""The 1/r^2 sensitivity null, applied to the emission EXCESS over a range-independent floor.
+
+    ``distance_correct_flux`` rescales the *total* band flux, but the quiescent floor in this band
+    is instrumental + galactic background that does not scale with the Cassini--Saturn distance ---
+    rescaling it imposes an ~0.86 dex range-dependent offset on the floor itself, which biases the
+    corrected far-bin duty cycle up and the near-bin down, i.e. in the direction that manufactures
+    a collapse (referee finding, 2026-08-24; the sibling ``junodam`` census corrects the SNR, the
+    equivalent choice). This version holds the floor fixed: the floor is the ``baseline_pct``
+    percentile of the finite flux, the excess above it is scaled by :math:`(r/r_\mathrm{ref})^2`,
+    and the floor is added back, so re-detection sees a range-independent background.
+    """
+    f = np.asarray(flux, float)
+    r = np.asarray(range_rs, float)
+    ref = float(np.nanmedian(r)) if ref_rs is None else ref_rs
+    good = np.isfinite(f) & (f > 0)
+    floor = float(np.percentile(f[good], baseline_pct)) if good.any() else 0.0
+    # Bins at or below the floor keep their ORIGINAL values: clipping them onto the floor would
+    # pile ~baseline_pct% of bins at one exact value, degenerate the MAD the re-detection
+    # threshold is built from, and inflate the threshold through detect_skr's std fallback. The
+    # quiescent noise distribution is range-independent, so leaving it untouched is the point.
+    return np.where(f > floor, floor + (f - floor) * (r / ref) ** 2, f)
+
+
+def orbit_segments(jd: np.ndarray, range_rs: np.ndarray, *, min_sep_days: float = 3.0) -> list:
+    """Split the series into periapsis passes at the apoapsis maxima of the range series.
+
+    The natural resampling unit of this census is the orbit (~9 proximal passes in 59 days), not
+    the 83,382 autocorrelated one-minute bins. Returns a list of ``(start, stop)`` index pairs,
+    one per segment between consecutive apoapses (ends included as partial segments).
+    """
+    t = np.asarray(jd, float)
+    r = np.asarray(range_rs, float)
+    n = t.size
+    if n < 10:
+        return [(0, n)]
+    # Apoapsis candidates are the top decile of the range series; picked greedily by range with
+    # a minimum separation so each pass contributes exactly one boundary. Restricting to the top
+    # decile is what stops the greedy pass from eventually accepting periapsis bins once every
+    # true apoapsis is taken.
+    finite = np.isfinite(r)
+    if not finite.any():
+        return [(0, n)]
+    hi_thresh = np.nanpercentile(r, 90.0)
+    cand = np.where(finite & (r >= hi_thresh))[0]
+    cand = cand[np.argsort(-r[cand])]
+    apo: list[int] = []
+    for i in cand:
+        if all(abs(t[i] - t[j]) > min_sep_days for j in apo):
+            apo.append(int(i))
+    apo = sorted(a for a in apo if 0 < a < n - 1)
+    bounds = [0] + apo + [n]
+    return [(lo, hi) for lo, hi in zip(bounds[:-1], bounds[1:], strict=True) if hi - lo > 60]
+
+
+def jackknife_near_far(
+    jd: np.ndarray,
+    flux: np.ndarray,
+    range_rs: np.ndarray,
+    *,
+    mode: str = "common",
+    k: float | None = None,
+    baseline_pct: float = 25.0,
+) -> dict:
+    """Leave-one-orbit-out jackknife of the near/far duty-cycle ratio.
+
+    Every sentence in the census is a claim about the *size* of a ratio, and the orbit-to-orbit
+    scatter is the variance a within-realization estimate cannot see (the ``rmstructure``
+    lesson). Drops one periapsis pass at a time, recomputes the ratio (quartile edges re-derived
+    per sample, consistent with the estimator), and returns the full-sample value, the jackknife
+    mean, and the jackknife standard error.
+    """
+
+    def _active(fx: np.ndarray, rr: np.ndarray) -> np.ndarray:
+        if mode == "common":
+            return common_sensitivity_active(
+                fx, rr, k=6.0 if k is None else k, baseline_pct=baseline_pct
+            )
+        if mode == "excess":
+            return detect_skr(
+                distance_correct_excess(fx, rr, baseline_pct=baseline_pct),
+                k=3.0 if k is None else k,
+                baseline_pct=baseline_pct,
+            )
+        return detect_skr(fx, k=3.0 if k is None else k, baseline_pct=baseline_pct)
+
+    segs = orbit_segments(jd, range_rs)
+    full = proximity_duty_cycle(_active(flux, range_rs), range_rs)
+    vals = []
+    for lo, hi in segs:
+        m = np.ones(np.asarray(jd).size, bool)
+        m[lo:hi] = False
+        p = proximity_duty_cycle(_active(flux[m], range_rs[m]), range_rs[m])
+        v = p["near_far_ratio"]
+        if v is not None and np.isfinite(v):
+            vals.append(float(v))
+    n = len(vals)
+    if n < 2:
+        return {"full": full["near_far_ratio"], "jk_mean": None, "jk_se": None, "n_orbits": n}
+    arr = np.asarray(vals)
+    jk_mean = float(arr.mean())
+    jk_se = float(np.sqrt((n - 1) / n * np.sum((arr - jk_mean) ** 2)))
+    return {
+        "full": full["near_far_ratio"],
+        "jk_mean": round(jk_mean, 2),
+        "jk_se": round(jk_se, 2),
+        "n_orbits": n,
+    }
+
+
+def threshold_sweep(
+    flux: np.ndarray,
+    range_rs: np.ndarray,
+    *,
+    ks=(4.0, 6.0, 8.0, 10.0),
+    baselines=(10.0, 25.0, 50.0),
+) -> list[dict]:
+    """The common-sensitivity near/far ratio over the detection-rule grid.
+
+    The headline is a ratio of threshold-crossing rates on a steeply falling flux distribution,
+    which is where threshold choice bites hardest; a number quoted from one (k, baseline) pair
+    carries an unmeasured rule dependence. One row per grid point.
+    """
+    out = []
+    for bp in baselines:
+        for k in ks:
+            p = proximity_duty_cycle(
+                common_sensitivity_active(flux, range_rs, k=k, baseline_pct=bp), range_rs
+            )
+            out.append(
+                {
+                    "k": k,
+                    "baseline_pct": bp,
+                    "corrected_near_far": p["near_far_ratio"],
+                }
+            )
+    return out
+
+
+def block_permutation_p(
+    jd: np.ndarray,
+    flux: np.ndarray,
+    *,
+    n_perm: int = 199,
+    block_days: float = 1.0,
+    period_band_hr: tuple[float, float] = SKR_ROT_HR,
+    seed: int = 0,
+) -> dict:
+    """A day-block permutation null for the rotation-band LS peak.
+
+    Astropy's analytic false-alarm probability assumes independent samples; 83,382 one-minute
+    bins of an emission that persists for hours are massively autocorrelated, so it underflows
+    regardless of the truth. Permuting whole day blocks (flux blocks shuffled onto the fixed time
+    grid) preserves the within-day autocorrelation and destroys only the multi-day phase
+    coherence a rotation period requires. p = (k+1)/(n+1), floored at 1/(n+1).
+    """
+    rng = np.random.default_rng(seed)
+    t = np.asarray(jd, float)
+    f = np.asarray(flux, float)
+    obs = dual_period_ls(t, f, period_band_hr=period_band_hr)["best_power"]
+    day = np.floor(t / block_days).astype(int)
+    blocks = [f[day == d] for d in np.unique(day)]
+    exceed = 0
+    for _ in range(n_perm):
+        rng.shuffle(blocks)
+        fp = np.concatenate(blocks)
+        if fp.size != f.size:  # ragged edge days -- pad/trim defensively
+            fp = fp[: f.size] if fp.size > f.size else np.pad(fp, (0, f.size - fp.size))
+        if dual_period_ls(t, fp, period_band_hr=period_band_hr)["best_power"] >= obs:
+            exceed += 1
+    return {"p_perm": round((exceed + 1) / (n_perm + 1), 3), "n_perm": n_perm, "obs_power": obs}
+
+
+def common_sensitivity_active(
+    flux: np.ndarray,
+    range_rs: np.ndarray,
+    *,
+    k: float = 6.0,
+    baseline_pct: float = 25.0,
+    far_pct: float = 95.0,
+) -> np.ndarray:
+    r"""SKR-active bins at a COMMON sensitivity: the census trimmed to the far-range threshold.
+
+    The 1/r^2 null has two failure modes this estimator avoids. Rescaling the *total* flux moves
+    the range-independent noise floor with the signal; rescaling the *excess* upward at far range
+    amplifies far-range noise deviations and manufactures false positives there (both measured on
+    controls in ``tests/test_skr.py``). The clean question is dr20radio's common-limit move:
+    *which bins would still be detected if every bin were observed from the far reference range?*
+    Each bin's excess over the range-independent floor is scaled by :math:`(r/r_\mathrm{far})^2
+    \le 1` --- only ever *down*, so noise is never promoted --- and compared against the one
+    threshold the RAW series defines. Near bins keep only emission bright enough to be seen from
+    ``far_pct``-percentile range; the resulting duty-cycle ratio compares intrinsic occurrence
+    above a common effective luminosity limit.
+
+    ``k`` defaults to 6, stiffer than the raw census's 3, because ``detect_skr``'s MAD-below-
+    percentile sigma underestimates the true noise width by ~30%: at k=3 a few percent of pure
+    noise crosses, uniformly in range for the raw census but range-ASYMMETRICALLY once the real
+    signal is censored to its bright tail. k=6 is where the control test's noise crossings reach
+    zero while a flat intrinsic rate comes out flat (``tests/test_skr.py``).
+    """
+    f = np.asarray(flux, float)
+    r = np.asarray(range_rs, float)
+    good = np.isfinite(f) & (f > 0) & np.isfinite(r)
+    if good.sum() < 3:
+        return np.zeros(f.shape, bool)
+    floor = float(np.percentile(f[good], baseline_pct))
+    lg = np.log10(f[good])
+    bg = np.percentile(lg, baseline_pct)
+    mad = np.median(np.abs(lg[lg <= bg] - bg)) if np.any(lg <= bg) else np.std(lg)
+    sigma = 1.4826 * mad if mad > 0 else np.std(lg)
+    thresh_excess = 10.0 ** (bg + k * sigma) - floor  # the raw series' excess threshold
+    r_far = float(np.nanpercentile(r[good], far_pct))
+    excess = np.clip(f - floor, 0.0, None)
+    # The census is a CONJUNCTION: the bin must be raw-active (which controls the noise-crossing
+    # rate in the log domain, identically at every range) AND its excess must survive the scale
+    # to the far reference. Censoring alone would let the raw detector's small noise-crossing
+    # rate dominate the far bins once the real signal is trimmed to its bright tail.
+    out = detect_skr(f, k=k, baseline_pct=baseline_pct)
+    out[good] &= excess[good] * np.clip(r[good] / r_far, None, 1.0) ** 2 > thresh_excess
+    return out
+
+
 def latitude_by_range_bin(
     range_rs: np.ndarray, sub_lat_deg: np.ndarray, *, n_bins: int = 4
 ) -> dict:
@@ -279,8 +510,10 @@ def magnetic_latitude_weight(
     coverage of each range bin. This applies a simple, STATED-model visibility weight
     ``w(lat) = |sin(lat)|`` (a dipole-auroral-beaming proxy: emission favours higher magnetic
     latitude viewing) and reports the weighted duty cycle per range bin. The model dependence is
-    the point: if the near/far ratio survives latitude weighting, proximity is not purely a
-    latitude-coverage artefact. This is a proxy, not a radiative-transfer model --- caveated.
+    the point: if the near/far ratio survives latitude weighting, WITHIN-BIN latitude
+    coverage is not the whole story --- but the confound is BETWEEN bins (see
+    `latitude_by_range_bin`), which no within-bin reweighting removes, so this metric cannot
+    clear proximity of the latitude confound and the paper does not cite it. This is a proxy, not a radiative-transfer model --- caveated.
     """
     a = np.asarray(active, bool)
     r = np.asarray(range_rs, float)
@@ -382,7 +615,7 @@ def fetch_rpws_key60s(
     """Download one daily KEY60S ``.TAB`` from PDS-PPI into ``out_dir``; returns the local path."""
     import urllib.request
 
-    month_dir = f"T{year}2XX"  # PDS-PPI monthly directory convention for KEY60S
+    month_dir = f"T{year}{doy // 100}XX"  # PDS-PPI monthly directory convention for KEY60S
     name = f"RPWS_KEY__{year}{doy:03d}_{seq}.TAB"
     url = f"{PDS_BASE}/{month_dir}/{name}"
     dest = Path(out_dir) / name
@@ -399,6 +632,7 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         s = synthetic_skr()
         jd, flux, range_rs, sub_lat = s["jd"], s["flux"], s["range_rs"], s["sub_lat_deg"]
         source = "synthetic SKR series (injected dual period + proximity trend)"
+        n_flux_nan = 0
         expected_ratio = s["near_far_contrast"]
         expected_period = s["period_hr"]
     else:  # pragma: no cover - data files + network
@@ -416,6 +650,7 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             range_rs[a:b] = np.interp(jd[a:b], eph["jd"], eph["range_rs"])
             sub_lat[a:b] = np.interp(jd[a:b], eph["jd"], eph["sub_lat_deg"])
         source = f"Cassini/RPWS KEY60S, {len(files)} days"
+        n_flux_nan = int(sum(p.get("n_flux_nan", 0) for p in parts))
         expected_ratio = float("nan")
         expected_period = float("nan")
 
@@ -424,16 +659,49 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     prox = proximity_duty_cycle(active, range_rs)
     latw = magnetic_latitude_weight(active, range_rs, sub_lat)
     latbin = latitude_by_range_bin(range_rs, sub_lat)
-    # the 1/r^2 sensitivity null: correct flux to a common range, re-detect, re-bin. If the
-    # near/far trend is pure visibility, this ratio -> ~1; any residual is intrinsic+beaming.
-    active_corr = detect_skr(distance_correct_flux(flux, range_rs))
+    # The 1/r^2 sensitivity null, applied to the EXCESS over a range-independent floor (the
+    # 2026-08-24 referee fix: rescaling total flux moved the noise floor with the signal, in the
+    # direction that manufactures a collapse). The old total-flux variant is kept as a recorded
+    # comparison so the change is auditable.
+    # PRIMARY: the common-sensitivity census (only ever scales excesses DOWN; noise is never
+    # promoted; k=6 where the control's noise crossings vanish). The two superseded null models
+    # are kept as recorded comparisons: the total-flux rescale moves the noise floor with the
+    # signal (biased toward a collapse), the excess-up-rescale amplifies far-range noise
+    # (biased toward a reversal). Their spread is the method-dependence evidence.
+    active_corr = common_sensitivity_active(flux, range_rs)
     prox_corr = proximity_duty_cycle(active_corr, range_rs)
+    prox_corr_excess = proximity_duty_cycle(
+        detect_skr(distance_correct_excess(flux, range_rs)), range_rs
+    )
+    prox_corr_flux = proximity_duty_cycle(
+        detect_skr(distance_correct_flux(flux, range_rs)), range_rs
+    )
+    # Orbit-level uncertainty, the detection-rule sweep, the day-block permutation null for the
+    # rotation peak, and the broad-band periodogram the excluded ~10.34 h claim needs evidence for.
+    jk_raw = jackknife_near_far(jd, flux, range_rs, mode="raw")
+    jk_corr = jackknife_near_far(jd, flux, range_rs, mode="common")
+    sweep = threshold_sweep(flux, range_rs)
+    perm = block_permutation_p(jd, flux)
+    ls_broad = dual_period_ls(jd, flux, period_band_hr=(10.0, 11.5))
+    # Robustness variants: exclude the near-Saturn bins where far-field 1/r^2 fails (and where
+    # ring-plane dust contamination lives), and a per-day background in place of the pooled one.
+    far_field = ~(np.isfinite(range_rs) & (range_rs < 5.0))
+    prox_ff = proximity_duty_cycle(
+        common_sensitivity_active(flux[far_field], range_rs[far_field]), range_rs[far_field]
+    )
+    day_idx = np.floor(np.asarray(jd, float)).astype(int)
+    active_perday = np.zeros(flux.size, bool)
+    for d in np.unique(day_idx):
+        m = day_idx == d
+        active_perday[m] = common_sensitivity_active(flux[m], range_rs[m])
+    prox_perday = proximity_duty_cycle(active_perday, range_rs)
 
     metrics: dict = {
         "source": source,
         "is_real": not offline,
         "n_bins": int(active.size),
         "n_active": int(active.sum()),
+        "n_flux_nan": n_flux_nan,
         "duty_cycle_pct": round(100.0 * float(active.mean()), 3),
         "anchor_period_hr": ls["best_period_hr"],
         # deviation of the recovered dominant period from the published late-mission SKR periods
@@ -446,7 +714,6 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         else None,
         "peak_periods_hr": ls["peak_periods_hr"],
         "period_two_hr": ls["peak_periods_hr"][1] if len(ls["peak_periods_hr"]) > 1 else None,
-        "ls_fap": round(ls["fap"], 4) if np.isfinite(ls["fap"]) else None,
         "duty_by_range_bin": prox["duty_by_bin"],
         "range_centers_rs": prox["range_centers_rs"],
         "range_near_rs": prox["range_centers_rs"][0] if prox["range_centers_rs"] else None,
@@ -454,7 +721,38 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "duty_near_pct": round(100 * prox["duty_by_bin"][0], 1) if prox["duty_by_bin"] else None,
         "duty_far_pct": round(100 * prox["duty_by_bin"][-1], 1) if prox["duty_by_bin"] else None,
         "near_far_ratio": prox["near_far_ratio"],
+        "range_edges_rs": prox["range_edges_rs"],
+        # The primary null: the common-sensitivity census (see common_sensitivity_active).
         "sensitivity_corrected_near_far": prox_corr["near_far_ratio"],
+        "duty_by_range_bin_corrected": prox_corr["duty_by_bin"],
+        "n_active_corrected": int(active_corr.sum()),
+        "common_census_k": 6.0,
+        # Superseded null models, kept as method-dependence evidence: the total-flux rescale is
+        # biased toward a collapse (it moves the noise floor with the signal), the excess-up
+        # rescale toward a reversal (it amplifies far-range noise).
+        "sensitivity_corrected_near_far_fluxscaled": prox_corr_flux["near_far_ratio"],
+        "sensitivity_corrected_near_far_excess_up": prox_corr_excess["near_far_ratio"],
+        # Orbit-level uncertainty (leave-one-periapsis-out), the number every size claim needs.
+        "near_far_jackknife": jk_raw,
+        "corrected_near_far_jackknife": jk_corr,
+        # Detection-rule dependence of the corrected ratio.
+        "threshold_sweep": sweep,
+        # Day-block permutation significance for the rotation-band peak (replaces the analytic
+        # ls_fap, which assumes independent samples and underflows on autocorrelated minutes).
+        "rotation_peak_perm": perm,
+        # Broad-band periodogram peaks, so the excluded ~10.34 h feature is committed evidence.
+        "broad_peak_periods_hr": ls_broad["peak_periods_hr"],
+        "broad_peak_powers": ls_broad["peak_powers"],
+        # Robustness variants of the corrected ratio.
+        "corrected_near_far_farfield_only": prox_ff["near_far_ratio"],
+        "corrected_near_far_perday_background": prox_perday["near_far_ratio"],
+        # The detection rule and null-model parameters, so the census is reproducible from the
+        # committed evidence alone.
+        "detect_k": 3.0,
+        "detect_baseline_pct": 25.0,
+        "band_hz": list(SKR_BAND_HZ),
+        "ref_rs": round(float(np.nanmedian(range_rs)), 2),
+        "jd_range": [round(float(np.nanmin(jd)), 2), round(float(np.nanmax(jd)), 2)],
         "weighted_near_far_ratio": latw["weighted_near_far_ratio"],
         "abs_lat_median_by_bin": latbin["abs_lat_median_by_bin"],
         "abs_lat_span_deg": latbin["abs_lat_span_deg"],
@@ -531,10 +829,37 @@ def _write_macros(m: dict, path: str | Path) -> None:
             ("RangeFar", "range_far_rs"),
             ("DutyNear", "duty_near_pct"),
             ("DutyFar", "duty_far_pct"),
-            ("Fap", "ls_fap"),
             ("DutyPct", "duty_cycle_pct"),
+            ("NFluxNan", "n_flux_nan"),
         ):
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
+        # The revision's evidence: jackknife errors, the rule sweep's spread, the permutation
+        # significance, the broad-band peaks, and the robustness variants.
+        jr = m.get("near_far_jackknife") or {}
+        jc = m.get("corrected_near_far_jackknife") or {}
+        sw = m.get("threshold_sweep") or []
+        pm = m.get("rotation_peak_perm") or {}
+        vals = [s["corrected_near_far"] for s in sw if s.get("corrected_near_far") is not None]
+        derived = (
+            ("NearFarJkSe", jr.get("jk_se") if live else None),
+            ("CorrNearFarJkMean", jc.get("jk_mean") if live else None),
+            ("CorrNearFarJkSe", jc.get("jk_se") if live else None),
+            ("NOrbits", jc.get("n_orbits") if live else None),
+            ("SweepMin", round(min(vals), 2) if (live and vals) else None),
+            ("SweepMax", round(max(vals), 2) if (live and vals) else None),
+            ("PermP", pm.get("p_perm") if live else None),
+            (
+                "CorrNearFarFluxScaled",
+                m.get("sensitivity_corrected_near_far_fluxscaled") if live else None,
+            ),
+            ("CorrNearFarFarField", m.get("corrected_near_far_farfield_only") if live else None),
+            ("CorrNearFarPerDay", m.get("corrected_near_far_perday_background") if live else None),
+            ("RangeMin", m.get("range_edges_rs", [None])[0] if live else None),
+            ("RangeMax", m.get("range_edges_rs", [None])[-1] if live else None),
+            ("BroadPeak", (m.get("broad_peak_periods_hr") or [None])[0] if live else None),
+        )
+        for macro, v in derived:
+            lines.append(rf"\newcommand{{\{ns}{macro}}}{{{'--' if v is None else v}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
