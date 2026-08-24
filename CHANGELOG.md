@@ -10,6 +10,32 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`scripts/audit_macro_namespaces.py`** --- the repo-wide grep for mode-dependent macros that
+  are not namespaced. It runs every slice's offline leg into a throwaway directory and diffs the
+  macros against the committed ones, so it measures the hazard rather than pattern-matching for
+  it. **34 of 42 slices carry at least one**; about twenty change a *numeric* value under a
+  shared name (`\hiVflat` 257 -> 231, `\rmRatio` 5.4 -> 8.4, `\vlassNconfirmed` 2 -> 0). Exit
+  code 1 when any is found.
+
+### Fixed
+- **`preserve_live_macros` was defeated by `make figures`, silently, since it was written.**
+  Snakemake **deletes a rule's declared output before running the job**, so the DAG removed each
+  `generated/macros.tex` and the merge found no file to merge with. A forced run in the repo root
+  **overwrote 511 real macro values across 39 papers** and blanked real values to `--`
+  (`\ptRealNFit` 136 -> `--`), which the guard's own docstring says cannot happen. Direct
+  invocation was protected throughout, which is why every previous test of the guard passed.
+  The DAG now builds into `build/figures` and writes nothing into `papers/` or `results/` --- what
+  a smoke build should always have done. Verified: a forced full `make figures` now leaves every
+  committed macro file, results JSON, figure and CSV untouched, while still producing all 43
+  artifacts under `build/`.
+- **`preserve_live_macros` now also refuses a synthetic-over-real overwrite**, not just
+  synthetic-over-real-with-a-placeholder. It reads the provenance every macro file already
+  carries (the `*Source` macro) and, when a synthetic run meets a real file, keeps the existing
+  values while still adding any macro the file lacks. This neutralises all 34 audited slices at
+  once; per-slice namespacing remains the clean fix and is still worth doing.
+
+
 ### Fixed
 - **`pte2`'s abstract asserted the opposite of its own body.** It listed "three facts undercut a
   giant-pulse interpretation" and gave as (i) that the excess does not correlate with spin-down

@@ -186,14 +186,41 @@ def preserve_live_macros(new_text: str, path: str | Path) -> str:
         if m and m.group(2).strip() != MACRO_PLACEHOLDER:
             existing[m.group(1)] = m.group(2)
 
+    # A synthetic run must not overwrite a real value even when both are "real values" to the
+    # placeholder rule above. That case is NOT hypothetical and is not rare: an audit of every
+    # slice (scripts/audit_macro_namespaces.py) found 34 of 42 carrying at least one macro whose
+    # name means different things in the two run modes, about twenty of them numeric --
+    # \hiVflat 257 -> 231, \rmRatio 5.4 -> 8.4, \vlassNconfirmed 2 -> 0. Namespacing each one
+    # is the clean fix and remains worth doing for clarity; this stops the bleeding for all of
+    # them at once, using the provenance the macro files already carry.
+    downgrade = _macros_are_synthetic(new_text, pattern) and not _macros_are_synthetic(
+        path.read_text(errors="ignore"), pattern
+    )
+
     out = []
     for line in new_text.splitlines():
         m = pattern.match(line.strip())
-        if m and m.group(2).strip() == MACRO_PLACEHOLDER and m.group(1) in existing:
-            out.append(rf"\newcommand{{\{m.group(1)}}}{{{existing[m.group(1)]}}}")
-        else:
+        if not m:
             out.append(line)
+            continue
+        name, value = m.group(1), m.group(2)
+        keep = name in existing and (value.strip() == MACRO_PLACEHOLDER or downgrade)
+        out.append(rf"\newcommand{{\{name}}}{{{existing[name]}}}" if keep else line)
     return "\n".join(out) + ("\n" if new_text.endswith("\n") else "")
+
+
+def _macros_are_synthetic(text: str, pattern: re.Pattern[str]) -> bool:
+    r"""Whether a macro block was written by a synthetic run, per its own ``*Source`` macro.
+
+    Every slice emits one (``\hiSource``, ``\ptSource``, ``\catalogSource`` ...), and the
+    offline leg writes a value naming itself synthetic. That is the only provenance a macro
+    file carries, and it is enough to tell a rebuild from a downgrade.
+    """
+    for line in text.splitlines():
+        m = pattern.match(line.strip())
+        if m and m.group(1).lower().endswith("source"):
+            return "synthetic" in m.group(2).lower()
+    return False
 
 
 # --------------------------------------------------------------------------------------

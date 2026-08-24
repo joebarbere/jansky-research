@@ -8,6 +8,15 @@
 # and `results/` JSON. The streaming e-Callisto *ingest* stays Airflow's job (it is a frequently-updated
 # archive); here we only build the static, offline-synthetic paper inputs -- the same artifacts CI builds.
 #
+# EVERYTHING IS BUILT INTO `BUILD`, NEVER INTO `papers/` OR `results/`. This is a smoke build: it proves
+# every slice still runs offline and still emits its artifacts. Writing those artifacts over the
+# committed ones would replace real numbers with synthetic ones, which is the incident this repo has
+# now had three times. `report.preserve_live_macros` cannot defend against it here, because Snakemake
+# DELETES a rule's declared output before running the job -- so the merge finds no file, has nothing to
+# preserve, and writes the synthetic values wholesale. Measured: a forced run in the repo root
+# overwrote 511 real macro values across 39 papers, including \hiVflat 257 -> 231 and
+# \vlassNconfirmed 2 -> 0, and blanked macros like \ptRealNFit to `--`.
+#
 # Run:  uv run --extra workflow snakemake -j        # build every slice's paper inputs
 #       uv run --extra workflow snakemake -n        # dry-run: show the DAG without running
 # Make drives this for you:  make figures  /  make pipeline
@@ -61,9 +70,17 @@ SLICES = {
 }
 
 
+# Scratch build root. Nothing under it is committed (.gitignore) and nothing outside it is written.
+BUILD = "build/figures"
+
+# atlas3i's --paper leg reads the per-band real results rather than generating them, so it needs
+# them present under its own --out. Seeding a copy keeps it inside BUILD like every other slice.
+SEED = {"atlas3i": f"mkdir -p {BUILD}/results && cp results/atlas3i_*.json {BUILD}/results/ && "}
+
+
 rule all:
     input:
-        expand("papers/{slice}/generated/macros.tex", slice=SLICES),
+        expand(BUILD + "/papers/{slice}/generated/macros.tex", slice=SLICES),
 
 
 for _slice, (_module, _args) in SLICES.items():
@@ -72,9 +89,11 @@ for _slice, (_module, _args) in SLICES.items():
         name:
             f"inputs_{_slice}"
         output:
-            f"papers/{_slice}/generated/macros.tex",
+            BUILD + f"/papers/{_slice}/generated/macros.tex",
         params:
             module=_module,
             args=_args,
+            seed=SEED.get(_slice, ""),
+            out=BUILD,
         shell:
-            "python -m jansky_research.{params.module} --out . {params.args}"
+            "{params.seed}python -m jansky_research.{params.module} --out {params.out} {params.args}"

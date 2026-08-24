@@ -173,3 +173,63 @@ def test_results_an_unmarked_file_is_not_protected(tmp_path):
 
     p = _results(tmp_path / "m.json", {"n": 1})
     assert preserve_live_results({"n": 2}, p)["n"] == 2
+
+
+# --------------------------------------------------------------------------------------
+# The downgrade rule: a synthetic run may not overwrite a real value, even a non-placeholder
+# --------------------------------------------------------------------------------------
+
+
+def test_a_synthetic_run_cannot_overwrite_real_values(tmp_path):
+    """The `\\tiiNEvents` shape: both modes write a REAL value under one name, so the
+    placeholder rule has nothing to arbitrate and whichever ran last wins. An audit found
+    34 of 42 slices carrying at least one such macro."""
+    from jansky_research.report import preserve_live_macros
+
+    existing = _macros(tmp_path / "m.tex", hiSource="LAB (Kalberla et al. 2005)", hiVflat="257")
+    new = "\n".join([r"\newcommand{\hiSource}{synthetic}", r"\newcommand{\hiVflat}{231}"])
+    out = preserve_live_macros(new + "\n", existing)
+    assert r"\newcommand{\hiVflat}{257}" in out, "a synthetic rebuild clobbered a real value"
+    assert r"\newcommand{\hiSource}{LAB (Kalberla et al. 2005)}" in out
+
+
+def test_a_real_run_still_overwrites_a_real_value(tmp_path):
+    """A genuine recomputation must still win; only downgrades are blocked."""
+    from jansky_research.report import preserve_live_macros
+
+    existing = _macros(tmp_path / "m.tex", hiSource="LAB (Kalberla et al. 2005)", hiVflat="257")
+    new = "\n".join(
+        [r"\newcommand{\hiSource}{LAB (Kalberla et al. 2005)}", r"\newcommand{\hiVflat}{259}"]
+    )
+    assert r"\newcommand{\hiVflat}{259}" in preserve_live_macros(new + "\n", existing)
+
+
+def test_a_synthetic_run_still_adds_new_macros(tmp_path):
+    """A run may only ADD information -- blocking downgrades must not block additions."""
+    from jansky_research.report import preserve_live_macros
+
+    existing = _macros(tmp_path / "m.tex", ptSource="PTE-II SQLite", ptRealHeavy="26")
+    new = "\n".join([r"\newcommand{\ptSource}{synthetic sets}", r"\newcommand{\ptSynComp}{0.83}"])
+    out = preserve_live_macros(new + "\n", existing)
+    assert r"\newcommand{\ptSynComp}{0.83}" in out
+    assert r"\newcommand{\ptSource}{PTE-II SQLite}" in out
+
+
+def test_a_synthetic_run_overwrites_a_synthetic_file(tmp_path):
+    """ecallisto_census is synthetic by design; its own rebuild must still refresh it."""
+    from jansky_research.report import preserve_live_macros
+
+    existing = _macros(tmp_path / "m.tex", ecSource="synthetic-day", ecNbursts="7")
+    new = "\n".join([r"\newcommand{\ecSource}{synthetic-day}", r"\newcommand{\ecNbursts}{9}"])
+    assert r"\newcommand{\ecNbursts}{9}" in preserve_live_macros(new + "\n", existing)
+
+
+def test_a_file_with_no_source_macro_keeps_the_old_behaviour(tmp_path):
+    """No provenance marker means no downgrade can be detected; the placeholder rule still holds."""
+    from jansky_research.report import preserve_live_macros
+
+    existing = _macros(tmp_path / "m.tex", xVal="5", xOther="7")
+    new = "\n".join([r"\newcommand{\xVal}{6}", r"\newcommand{\xOther}{--}"])
+    out = preserve_live_macros(new + "\n", existing)
+    assert r"\newcommand{\xVal}{6}" in out
+    assert r"\newcommand{\xOther}{7}" in out

@@ -296,6 +296,27 @@ uncertainties by pairing `(v+dv, h-dh)` gave a 1-sigma maximum of 0.24; the true
 rather than reasoning about which one is extremal — a wrong corner understates an interval
 without ever looking wrong.
 
+**`preserve_live_macros` was defeated by the tool it was written to defend against, for two
+weeks, silently.** Snakemake **deletes a rule's declared output before running the job**, so
+`make figures` removed each `generated/macros.tex` and the merge then found no file, had nothing
+to preserve, and wrote the synthetic values wholesale. Measured on a forced run in the repo
+root: **511 real macro values overwritten across 39 papers** --- `\hiVflat` 257 -> 231,
+`\vlassNconfirmed` 2 -> 0, `\rmRatio` 5.4 -> 8.4 --- and real values *blanked* to `--`
+(`\ptRealNFit` 136 -> `--`), which is precisely what the guard's own docstring says cannot
+happen. A direct `python -m jansky_research.hi --out . --offline` was protected the whole time,
+which is why every earlier test of the guard passed. **Test a guard through the path that
+actually runs it, not through the API.** The DAG now builds into `build/figures` and writes
+nothing into `papers/` or `results/`, which is what a smoke build should always have done; the
+merge helpers remain as defence-in-depth for direct invocations.
+
+**Mode-dependent macros are the rule, not the exception: 34 of 42 slices carry at least one.**
+`scripts/audit_macro_namespaces.py` runs every slice's offline leg into a throwaway directory
+and diffs its macros against the committed ones; about twenty slices change a *numeric* value
+under a shared name. Namespacing each is still the clean fix and is worth doing per slice, but
+it is a large campaign, so `preserve_live_macros` now also refuses to let a **synthetic** run
+overwrite a real value at all (detected from the `*Source` macro every slice already emits),
+not merely to overwrite it with a placeholder.
+
 **The results JSON needed the same merge rule the macros got, and a guard is only as good
 as its marker.** `preserve_live_macros` fixed the cross-run clobber for `generated/macros.tex`
 in 2026-08; the results JSON kept the hole for another two weeks and bit three more slices
