@@ -1,0 +1,11 @@
+station,is_burst,n_channels,f_lo_mhz,f_hi_mhz,drift_mhz_s,r2
+STATION00,True,186,20.0,85.43,-6.901,0.901
+STATION01,True,185,20.0,84.72,-6.922,0.901
+STATION02,True,185,20.0,85.08,-6.911,0.902
+STATION03,True,186,20.0,85.08,-6.926,0.9
+STATION04,True,186,20.0,85.43,-6.795,0.901
+STATION05,True,186,20.0,85.08,-6.92,0.901
+STATION06,True,186,20.0,85.08,-6.884,0.9
+STATION07,False,0,,,nan,nan
+STATION08,False,0,,,nan,nan
+STATION09,False,0,,,nan,nan

@@ -59,7 +59,9 @@ EVIDENCE_ALIAS = {
     "driftsearch": ["drift_metrics.json"],
     "frbperiod": ["period_metrics.json"],
     "torchfdmt": ["singlepulse_metrics.json"],
-    "ecallisto_pipeline": ["ecallisto_metrics.json"],
+    # Two legs, two evidence files: the paper's numbers are the synthetic day's, and the real
+    # archive day is cited once for the coincidence step's real-data behaviour.
+    "ecallisto_pipeline": ["ecallisto_metrics.json", "ecallisto_synthetic_metrics.json"],
 }
 
 # Verbs this repo has retracted. "recovers" where the honest word was "responds to"; "pins"

@@ -63,3 +63,26 @@ The census statistic and its implementation are validated; what remains is data.
 
 GATE-2 (science-reviewer): no blockers; all six primary citations verified; the synthetic-vs-real
 boundary is explicit in the abstract, results, figure caption, and discussion.
+
+## Referee round on the style conversion (2026-08-23): scope words are load-bearing
+
+Verdict *minor revision*, two MAJORs, both created by the restyle and both fixed:
+
+1. `all event counts in **this paper** are synthetic` had become `in this validation` --- a
+   document-scoped guarantee narrowed to a section-scoped one, leaving the abstract's
+   `\ecsNevents` outside the stated scope.
+2. `This paper validates the method; it does not report a measured solar-cycle correlation` had
+   become agentless passive (`a measured solar-cycle correlation is not reported`), which read as
+   a claim about the literature --- false on the paper's own account, since it cites
+   \citep{sainthilaire2013} for exactly that. Restored an explicit subject.
+
+Also fixed: a pronoun left pointing at "a method gap" after a sentence split; "the recovery works
+**through** the coverage variation" (the italic carried *in spite of*, and unemphasised it reads as
+*by means of*, reversing the claim) reworded to "survives"; the cross-station veto's premise
+restored as a premise rather than an assertion.
+
+**Outstanding, pre-existing:** `results/ecallisto_census_real_metrics.json` holds a committed real
+leg (168 sampled days, 5 events, 2 days with events, `pearson_r` 0.28) that the paper never
+mentions. It is consistent with the paper's stated position --- the real census is a data-volume
+task --- and 5 events cannot support a correlation, but committed real evidence that the paper is
+silent on should either be cited or explained.

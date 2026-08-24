@@ -69,8 +69,20 @@ def test_run_offline_writes_catalogue(tmp_path):
     assert m["n_scanned"] == 10 and m["n_bursts"] == 7
     # the coincidence QC confirms one real burst and rejects the single-station RFI
     assert m["n_events"] == 1 and m["max_event_stations"] == 4 and m["n_rfi_rejected"] == 3
-    assert (tmp_path / "results" / "ecallisto_catalog.csv").exists()
-    assert (tmp_path / "results" / "ecallisto_metrics.json").exists()
+    # Each leg keeps its own evidence file, so the synthetic run cannot displace the real one.
+    assert (tmp_path / "results" / "ecallisto_synthetic_catalog.csv").exists()
+    assert (tmp_path / "results" / "ecallisto_synthetic_metrics.json").exists()
+    assert not (tmp_path / "results" / "ecallisto_metrics.json").exists()
     assert (tmp_path / "papers" / "ecallisto_pipeline" / "figures" / "ecallisto.pdf").exists()
     macros = (tmp_path / "papers" / "ecallisto_pipeline" / "generated" / "macros.tex").read_text()
-    assert r"\ecNbursts" in macros and r"\ecNevents" in macros
+    # Namespaced, and the synthetic leg fills only its own half. The un-namespaced names this
+    # test used to assert are the defect: both legs wrote them, so the committed file held the
+    # real archive day while all twelve macro uses in the paper describe the synthetic one, and
+    # the abstract typeset as "a real burst at 0 stations ... confirms exactly 0 event".
+    assert r"\newcommand{\ecSynNbursts}{7}" in macros
+    assert r"\newcommand{\ecSynNevents}{1}" in macros
+    assert r"\newcommand{\ecSynMaxEventStations}{4}" in macros
+    assert r"\ecNbursts" not in macros and r"\ecNevents" not in macros
+    # The real half is emitted as placeholders for preserve_live_macros to fill from disk;
+    # emitting only the synthetic namespace would delete the real values outright.
+    assert r"\newcommand{\ecRealNevents}{--}" in macros

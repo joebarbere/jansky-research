@@ -1,0 +1,10 @@
+{
+  "source": "synthetic-day",
+  "n_scanned": 10,
+  "n_bursts": 7,
+  "burst_fraction": 0.7,
+  "median_drift_mhz_s": -6.911,
+  "n_events": 1,
+  "max_event_stations": 4,
+  "n_rfi_rejected": 3
+}

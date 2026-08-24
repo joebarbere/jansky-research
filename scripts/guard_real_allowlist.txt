@@ -15,3 +15,10 @@ stokesv_discovery_metrics.json
 # abstracts quote are checkable evidence rather than macro-file survivals (referee finding).
 # Synthetic by design -- it is the recover-a-known, not a real-data result.
 vgpra_synthetic_metrics.json
+# The ecallisto_pipeline SYNTHETIC-DAY leg, split out 2026-08-23. The paper's twelve macro uses
+# all describe the synthetic day and say so ("On a synthetic day (a real burst at N stations
+# plus single-station interference)"), so these are the numbers its abstract quotes and they
+# have to be checkable. The real archive day keeps ecallisto_metrics.json; before the split both
+# legs wrote one file and one macro set, and the real day's values reached the synthetic
+# sentences -- the abstract typeset as "a real burst at 0 stations ... confirms exactly 0 event".
+ecallisto_synthetic_metrics.json

@@ -74,3 +74,26 @@ so it is not a tunable-cut artefact. Three independent datasets (ICRF3 / Gaia / 
   qualitative "strengthens with significance" check (nested subsets), not independent confirmations.
 - A magnitude-resolved error-inflation model would tighten the significant-offset fraction (a future
   refinement on the magnitude side).
+
+## Referee round on the style conversion (2026-08-23)
+
+Verdict *minor revision*; all 15 macros re-verified against `results/offsets_metrics.json`. Every
+substantive caveat (MOJAVE flux limit, 15 GHz vs S/X, "nested subsets, not independent
+confirmations") came through byte-identical. Three fixes:
+
+1. **The retitled section asserted its result nowhere.** `\section{The offset direction aligns with
+   the jet}` became a noun phrase, which is the right register --- but nothing in the body carried
+   the assertion the old title made, so "The alignment is **also** directional" back-referenced a
+   header and "This reproduces \citet{kovalev2017}" had no antecedent. Added one declarative
+   sentence after the KS result, at the strength the numbers support.
+2. **A collapsed appositive attached the 24.0x excess to the wrong noun.** With an em-dash the
+   appositive was set off from the whole comparison; with a comma it attaches to "the Rayleigh
+   expectation of 1.11%", which is not what 24.0 is (it is the ratio 26.7/1.11). Reworded to name
+   the referent.
+3. **A concessive link was cut, so a scoped robustness claim became a general one.** "... is an
+   upper bound (structure-only estimates are nearer ~9%) **--- but** the excess over Rayleigh is
+   robust" became two sentences, letting the robustness carry onto the 26.7%. It is the *existence*
+   of the excess that is robust, not its size; now stated that way.
+
+Same appositive collapse in the abstract ("a well-established result" attaching to the noise model
+rather than to the heavy tail) and a lost comma before "since" were also fixed.

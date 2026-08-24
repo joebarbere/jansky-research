@@ -67,8 +67,10 @@ def main(argv: list[str] | None = None) -> int:
         if not args.skip_ads and era.label not in ads_counts:
             ads_counts[era.label] = sc.ads_count(sc.ads_radio_query(era.lo, era.hi, bibstems=None))
             ads_restricted[era.label] = sc.ads_count(sc.ads_radio_query(era.lo, era.hi))
-            print(f"ADS  {era.label:>9}: {ads_counts[era.label]:>7} "
-                  f"({ads_restricted[era.label]} in core journals)")
+            print(
+                f"ADS  {era.label:>9}: {ads_counts[era.label]:>7} "
+                f"({ads_restricted[era.label]} in core journals)"
+            )
         if era.hi >= sc.ARXIV_FIRST_YEAR and era.label not in arxiv_counts:
             q = sc.arxiv_radio_query(max(era.lo, sc.ARXIV_FIRST_YEAR), era.hi)
             arxiv_counts[era.label] = sc.parse_arxiv_total(sc.arxiv_get(q))
@@ -97,14 +99,16 @@ def main(argv: list[str] | None = None) -> int:
                     p = sc.fetch_ads_pdf(bib)
                     if p is not None:
                         era_sizes.append(p.stat().st_size)
-            print(f"sizes {era.label:>8}: n={len(era_sizes)} "
-                  f"mean={sum(era_sizes) / max(len(era_sizes), 1) / 1e6:.2f} MB")
+            print(
+                f"sizes {era.label:>8}: n={len(era_sizes)} "
+                f"mean={sum(era_sizes) / max(len(era_sizes), 1) / 1e6:.2f} MB"
+            )
             _checkpoint(args.out, ads_counts, ads_restricted, arxiv_counts, sizes, queries)
 
     # ---- estimate + final payload ------------------------------------------
-    counts_for_estimate = ads_counts if ads_counts else {
-        e.label: arxiv_counts.get(e.label, 0) for e in sc.ERAS
-    }
+    counts_for_estimate = (
+        ads_counts if ads_counts else {e.label: arxiv_counts.get(e.label, 0) for e in sc.ERAS}
+    )
     est = sc.size_estimate(counts_for_estimate, sizes, seed=args.seed)
     payload = sc.scoping_payload(
         ads_counts=ads_counts,
@@ -121,8 +125,10 @@ def main(argv: list[str] | None = None) -> int:
     ci = est["ci95_bytes"]
     assert isinstance(ci, list)
     ci_lo, ci_hi = float(ci[0]), float(ci[1])
-    print(f"\ncorpus: {total} papers; estimated total PDF size "
-          f"{total_gb:.0f} GB (95% CI {ci_lo / 1e9:.0f}-{ci_hi / 1e9:.0f} GB)")
+    print(
+        f"\ncorpus: {total} papers; estimated total PDF size "
+        f"{total_gb:.0f} GB (95% CI {ci_lo / 1e9:.0f}-{ci_hi / 1e9:.0f} GB)"
+    )
     print(f"wrote {args.out}")
     return 0
 
@@ -136,16 +142,19 @@ def _checkpoint(
     queries: dict[str, str],
 ) -> None:
     """Persist partial progress so --resume can pick up after a network failure."""
-    _save(out, {
-        "slice": "stylecorpus",
-        "stage": "scoping-partial",
-        "is_real": True,
-        "ads_counts_unrestricted": ads_counts,
-        "ads_counts_journal_restricted": ads_restricted,
-        "arxiv_counts": arxiv_counts,
-        "sampled_sizes_bytes": sizes,
-        "queries": queries,
-    })
+    _save(
+        out,
+        {
+            "slice": "stylecorpus",
+            "stage": "scoping-partial",
+            "is_real": True,
+            "ads_counts_unrestricted": ads_counts,
+            "ads_counts_journal_restricted": ads_restricted,
+            "arxiv_counts": arxiv_counts,
+            "sampled_sizes_bytes": sizes,
+            "queries": queries,
+        },
+    )
 
 
 if __name__ == "__main__":

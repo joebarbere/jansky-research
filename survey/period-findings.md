@@ -52,3 +52,28 @@ A clean, honest **validation** result: the open, tested, CPU-only tool recovers 
 the rest — no over-claimed new periodicity. The contribution is the reproducible periodicity-search
 tool plus this validation and the per-repeater limits; finding *new* repeater periods would need the
 denser, exposure-modelled data the professional teams use, not Catalog 1.
+
+## Referee round on the style conversion (2026-08-23)
+
+Verdict *minor revision*. No number, macro or citation changed. One MAJOR, fixed:
+
+**A declarative heading turned an anticipated null into a reported measurement.** `\paragraph{A
+null, as expected.}` had become `\paragraph{No significant period in the second source.}` --- and
+a `\paragraph` head is the most scannable text in the section. The paper quotes **no sensitivity
+at all** for that source: FRB20180814A's 11 bursts, best period 2.792 d, `z2` 9.4 and `fap` 0.757
+appear only in `survey/period_results.csv`, never in `main.tex` or `results/period_metrics.json`,
+and the body's mitigating clause ("too few catalog bursts to constrain anything") is explicitly
+scoped to the *other* sources. Restored the expectation to the heading.
+
+Also fixed: the abstract's prospective scoping ("a deliberately modest question") had gone,
+leaving an opening that reads like a paper expecting its answer to be news; `The contribution is X`
+(delimiting --- X exhausts the claim) had become `This work is X` (open-ended) in the final
+paragraph; "on `\fpNbursts` bursts" could attach to the agreement claim rather than to the
+periodogram, so it was moved adjacent to "peak"; the four-item Limitations enumeration was restored,
+since the closed set of four labelled axes is what evidences "structural rather than incidental".
+
+**Pre-existing, out of scope:** `results/period_results.csv` holds only synthetic rows
+(`SYN-PER`, `SYN-RND`) while the real per-source table lives at `survey/period_results.csv` ---
+documented behaviour of `run()` (`csv_dir = op / ("results" if offline else "survey")`), but it
+puts offline output in `results/` under a name a reader will take for real evidence, and
+`results/period_metrics.json` carries no `is_real` field.
