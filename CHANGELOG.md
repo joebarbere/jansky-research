@@ -26,6 +26,19 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`hi` revision (round-5 referee, 13 findings): the citation became a measurement.** The paper
+  attributed its 9% normalization excess to a ~7 km/s threshold-vs-fit offset cited from
+  McClure-Griffiths & Dickey 2016 -- whose number is actually a Clemens-1985-CO-vs-HI
+  cross-tracer comparison. `terminal_velocity_edge` (error-function edge fit) now runs on the
+  same spectra: the measured threshold-vs-edge offset is 13.8 km/s and the edge-fit flat mean is
+  242.9 +/- 8.0 km/s, within 2.9% of the Reid 2019 V0 -- the excess is demonstrated in-house to
+  be the estimator. Flatness is quantified (slope 2.8 +/- 1.8 km/s/kpc; Keplerian contrast 176
+  vs 263 at the outermost point); the synthetic fixture's edge widened to a realistic 5 km/s so
+  the wing overshoot is reproduced offline (13.6 km/s) instead of hidden; threshold sweep and
+  drop-a-point sensitivities committed; the +/-6 relabelled as scatter with the SEM quoted; a
+  pipeline-written per-longitude table added; macros namespaced (hiSyn*/hiReal*); figure shows
+  both estimators, the Keplerian curve, and the excluded bar points; arXiv package rebuilt.
+
 - **`rmstructure` revision (referee round of 2026-08-24, two blockers): the sample now matches
   the release and the headline error was understated eleven-fold.** The "S/N >= 8" sample
   (333,173 rows) was the goodRM sample with tile-overlap duplicates; `load_spice_racs_dr2` now
