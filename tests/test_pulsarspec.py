@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
+import pytest
 
 from jansky_research import pulsarspec
 
@@ -48,3 +51,59 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "papers" / "pulsarspec" / "figures" / "spectra.pdf").exists()
     macros = (tmp_path / "papers" / "pulsarspec" / "generated" / "macros.tex").read_text()
     assert r"\psrMeanAlpha" in macros and r"\psrMeanAlphaMsp" in macros
+
+
+def test_compare_subsamples_reports_sensitivity():
+    """A null needs a resolution, not two means that happen to agree."""
+    rng = np.random.default_rng(0)
+    a = rng.normal(-1.6, 0.75, 43)
+    b = rng.normal(-1.6, 0.75, 430)
+    c = pulsarspec.compare_subsamples(a, b)
+    assert c["n_a"] == 43 and c["n_b"] == 430
+    # SE on the difference is dominated by the small arm: 0.75/sqrt(43) = 0.114
+    assert 0.09 < c["se_diff"] < 0.15
+    assert c["resolvable"] == pytest.approx(2.0 * c["se_diff"])
+    assert c["n_sigma_observed"] == pytest.approx(abs(c["diff"]) / c["se_diff"])
+    # The point of the number: a real offset below `resolvable` cannot be claimed either way.
+    assert c["resolvable"] > 0.15
+
+
+def test_compare_subsamples_degenerate_arms_do_not_fabricate_a_limit():
+    c = pulsarspec.compare_subsamples([-1.7], [-1.6, -1.8, -1.9])
+    assert c["n_a"] == 1
+    assert not np.isfinite(c["se_diff"]) and not np.isfinite(c["resolvable"])
+
+
+def test_offline_recovers_the_injected_msp_offset():
+    """The fixture injects MSPs 0.2 flatter; nothing asserted it was ever recovered.
+
+    This is the leg the Methods section claims is validated ("injected steep spectra AND a
+    flatter-millisecond sub-population"). Without this test the split was exercised but never
+    checked, and the real sample's own 2-sigma resolution is coarser than the injected offset --
+    so the test that matters is whether the *fixture*, which has ~1500 sources, recovers it.
+    """
+    psr = pulsarspec.synthetic_field(n_sources=4000, seed=3)
+    res = pulsarspec.find_spectra(psr)
+    c = pulsarspec.compare_subsamples(res["alpha"][res["is_msp"]], res["alpha"][~res["is_msp"]])
+    # Injected: alpha_msp = mean_alpha + 0.2, i.e. MSPs flatter (less negative).
+    assert c["diff"] == pytest.approx(0.2, abs=0.12)
+    # ...and at this size the fixture can actually see it, unlike the real catalogue.
+    assert c["n_sigma_observed"] > 2.0
+    assert c["resolvable"] < 0.2
+
+
+def test_run_offline_emits_the_sensitivity_macros(tmp_path):
+    pulsarspec.run(out=str(tmp_path), offline=True)
+    macros = (tmp_path / "papers" / "pulsarspec" / "generated" / "macros.tex").read_text()
+    for name in (
+        r"\psrAlphaDiff",
+        r"\psrAlphaDiffSE",
+        r"\psrAlphaDiffSigma",
+        r"\psrAlphaResolvable",
+        r"\psrNnormal",
+        r"\psrNcatalogue",
+    ):
+        assert name in macros, name
+    m = json.loads((tmp_path / "results" / "pulsarspec_metrics.json").read_text())
+    assert m["n_normal"] + m["n_msp"] == m["n"]
+    assert m["alpha_resolvable_2sigma"] == pytest.approx(2 * m["alpha_diff_se"], abs=0.011)

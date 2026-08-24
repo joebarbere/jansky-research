@@ -62,6 +62,57 @@ def spectral_distribution(alpha: np.ndarray) -> dict:
     }
 
 
+def compare_subsamples(alpha_a: np.ndarray, alpha_b: np.ndarray, *, n_sigma: float = 2.0) -> dict:
+    """Difference of two mean spectral indices, with the sensitivity that makes a null meaningful.
+
+    "The two are indistinguishable" is a statement about *resolution*, not about two rounded means
+    agreeing. Reporting it without a sensitivity is the error CLAUDE.md records for ``frblens``:
+    a null divides by what the measurement could have seen, not by how many objects went into it.
+
+    Returns the two means and dispersions, their difference ``diff = mean_a - mean_b``, the standard
+    error on that difference (Welch, i.e. no equal-variance assumption), the difference in units of
+    that error (``n_sigma_observed``), and ``resolvable`` -- the smallest offset this pair of
+    subsamples could have distinguished from zero at ``n_sigma``. ``resolvable`` is the number a
+    non-detection should quote: an offset larger than it is excluded, one smaller than it is not
+    constrained, whatever the means happen to do.
+    """
+    a = np.asarray(alpha_a, float)
+    b = np.asarray(alpha_b, float)
+    a, b = a[np.isfinite(a)], b[np.isfinite(b)]
+    na, nb = int(a.size), int(b.size)
+    nan = float("nan")
+    if na < 2 or nb < 2:  # a standard error needs at least two points in each arm
+        return {
+            "n_a": na,
+            "n_b": nb,
+            "mean_a": float(np.mean(a)) if na else nan,
+            "mean_b": float(np.mean(b)) if nb else nan,
+            "std_a": nan,
+            "std_b": nan,
+            "diff": nan,
+            "se_diff": nan,
+            "n_sigma_observed": nan,
+            "resolvable": nan,
+        }
+    # ddof=1: these are samples, and with n_a = 43 the difference between the two conventions is
+    # not negligible in the standard error the null is quoted against.
+    sa, sb = float(np.std(a, ddof=1)), float(np.std(b, ddof=1))
+    se = float(np.hypot(sa / np.sqrt(na), sb / np.sqrt(nb)))
+    diff = float(np.mean(a) - np.mean(b))
+    return {
+        "n_a": na,
+        "n_b": nb,
+        "mean_a": float(np.mean(a)),
+        "mean_b": float(np.mean(b)),
+        "std_a": sa,
+        "std_b": sb,
+        "diff": diff,
+        "se_diff": se,
+        "n_sigma_observed": abs(diff) / se if se > 0 else nan,
+        "resolvable": n_sigma * se if se > 0 else nan,
+    }
+
+
 def find_spectra(psr: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
     """Per-pulsar $\\alpha$ and MSP/normal class for pulsars with both S400 and S1400.
 
@@ -111,6 +162,7 @@ def synthetic_field(
         "s1400": s1400,
         "alpha_true": alpha,
         "is_msp": is_msp,
+        "n_catalogue": np.asarray([n_sources], float),
     }
 
 
@@ -126,6 +178,10 @@ def fetch_atnf() -> dict[str, np.ndarray]:  # pragma: no cover - network
         "p0": _np.asarray(t["P0"], float),
         "s400": _np.asarray(t["S400"], float),
         "s1400": _np.asarray(t["S1400"], float),
+        # The parent count, so the selection has a denominator. Without it the paper said
+        # "over the whole catalogue" for what is really 473 of 2536, and this slice and `ppdot`
+        # disagreed about the size of the same table (2536 vs a remembered "~3500").
+        "n_catalogue": _np.asarray([len(t)], float),
     }
 
 
@@ -145,15 +201,27 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     dist = spectral_distribution(alpha)
     msp = spectral_distribution(alpha[is_msp])
     normal = spectral_distribution(alpha[~is_msp])
+    # The comparison's sensitivity, not just its two means. Storing only the means made the
+    # paper's "indistinguishable" unquantifiable from the committed evidence.
+    cmp = compare_subsamples(alpha[is_msp], alpha[~is_msp])
+    n_cat = psr.get("n_catalogue")
     metrics = {
         "source": source,
         "n": dist["n"],
+        "n_catalogue": int(n_cat[0]) if n_cat is not None and len(n_cat) else None,
         "mean_alpha": round(dist["mean"], 2),
         "median_alpha": round(dist["median"], 2),
         "std_alpha": round(dist["std"], 2),
         "n_msp": msp["n"],
+        "n_normal": normal["n"],
         "mean_alpha_msp": round(msp["mean"], 2) if msp["n"] else 0.0,
         "mean_alpha_normal": round(normal["mean"], 2) if normal["n"] else 0.0,
+        "std_alpha_msp": round(cmp["std_a"], 2),
+        "std_alpha_normal": round(cmp["std_b"], 2),
+        "alpha_diff": round(cmp["diff"], 3),
+        "alpha_diff_se": round(cmp["se_diff"], 3),
+        "alpha_diff_sigma": round(cmp["n_sigma_observed"], 2),
+        "alpha_resolvable_2sigma": round(cmp["resolvable"], 2),
     }
 
     op = Path(out)
@@ -195,6 +263,12 @@ def _figure(res: dict, out_dir) -> None:
 def _write_macros(m: dict, path) -> None:
     from pathlib import Path
 
+    def _fmt(key: str) -> str:
+        v = m.get(key)
+        if v is None or (isinstance(v, float) and not np.isfinite(v)):
+            return "--"
+        return str(v)
+
     lines = [
         "% Auto-generated by jansky_research.pulsarspec._write_macros — do not edit by hand.",
         rf"\newcommand{{\psrSource}}{{{m['source']}}}",
@@ -205,6 +279,15 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\psrNmsp}}{{{m['n_msp']}}}",
         rf"\newcommand{{\psrMeanAlphaMsp}}{{{m['mean_alpha_msp']}}}",
         rf"\newcommand{{\psrMeanAlphaNormal}}{{{m['mean_alpha_normal']}}}",
+        rf"\newcommand{{\psrNnormal}}{{{_fmt('n_normal')}}}",
+        rf"\newcommand{{\psrNcatalogue}}{{{_fmt('n_catalogue')}}}",
+        rf"\newcommand{{\psrStdAlphaMsp}}{{{_fmt('std_alpha_msp')}}}",
+        rf"\newcommand{{\psrStdAlphaNormal}}{{{_fmt('std_alpha_normal')}}}",
+        # The four numbers that turn "indistinguishable" from an impression into a limit.
+        rf"\newcommand{{\psrAlphaDiff}}{{{_fmt('alpha_diff')}}}",
+        rf"\newcommand{{\psrAlphaDiffSE}}{{{_fmt('alpha_diff_se')}}}",
+        rf"\newcommand{{\psrAlphaDiffSigma}}{{{_fmt('alpha_diff_sigma')}}}",
+        rf"\newcommand{{\psrAlphaResolvable}}{{{_fmt('alpha_resolvable_2sigma')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

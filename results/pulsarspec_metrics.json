@@ -6,5 +6,13 @@
   "std_alpha": 0.75,
   "n_msp": 43,
   "mean_alpha_msp": -1.75,
-  "mean_alpha_normal": -1.77
+  "mean_alpha_normal": -1.77,
+  "n_catalogue": 2536,
+  "n_normal": 430,
+  "std_alpha_msp": 0.76,
+  "std_alpha_normal": 0.75,
+  "alpha_diff": 0.018,
+  "alpha_diff_se": 0.122,
+  "alpha_diff_sigma": 0.15,
+  "alpha_resolvable_2sigma": 0.24
 }

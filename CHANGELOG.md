@@ -10,6 +10,44 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`pulsarspec`'s null now has a sensitivity, which turns it from an impression into a limit.**
+  "Millisecond pulsars are not significantly flatter" rested on two rounded means; `run()` computed
+  both subsample dispersions and discarded them, so nothing in the committed evidence quantified
+  "indistinguishable". New tested helper `compare_subsamples` returns the difference, its Welch
+  standard error, the observed significance and **`resolvable`** --- the smallest offset the two
+  subsamples could have distinguished from zero at 2 sigma. Measured on the real catalogue: the
+  means differ by **0.018 +/- 0.122 (0.15 sigma)**, and the sample resolves an offset only above
+  **0.24 in alpha**. The abstract and Results now state that bound: offsets above 0.24 are excluded,
+  smaller ones are not constrained. This is the `frblens` lesson applied to a different shape of
+  null --- a non-detection divides by what the measurement could have seen.
+- The same slice's offline fixture injects a millisecond--normal offset of **+0.2**, which is
+  *below* the real sample's 0.24 resolution, and **no test ever asserted it was recovered** while
+  the Methods section told readers the flatter-millisecond sub-population was validated.
+  `test_offline_recovers_the_injected_msp_offset` now asserts it, at the fixture's size where it
+  is detectable. The pre-existing `test_run_offline` window was ~28 sigma wide on an exact
+  algebraic transform and could not fail.
+- `pulsarspec` also gains a denominator (473 of **2536**, i.e. 18.7%, not "the whole catalogue") and
+  states the *direction* of its selection bias: requiring detection in both bands biases a
+  two-frequency index **flat**, since a steep source near the S400 limit has already dropped below
+  the S1400 limit. Same mechanism recorded for `dr20radio`.
+- **`ppdot`'s Crab validation now touches the real data path.** `fetch_atnf_ppdot` requested the
+  `PSRJ` column and then discarded it, so the run could not identify any named pulsar and the
+  abstract's two Crab numbers were typed from a textbook, present in no committed artifact. The
+  column is kept, and the new tested `named_pulsar_derived` reads the Crab out of the analysed
+  sample: **B = 3.8x10^12 G, tau = 1257 yr, P = 0.0333924 s**. Reading the row exercises the `P1`
+  column units, the row parsing and the positive-Pdot cut; evaluating closed forms at hand-entered
+  literature values, as the old unit test did, could fail only on a typo in two-term algebra.
+- `ppdot`'s "Of the ~3500 entries" was a recollection and wrong: the table has **2536** rows, the
+  same figure `pulsarspec` obtains from the identical call, so the two slices no longer disagree
+  about the size of one table. Its hand-typed arithmetic ("a factor of ~80,000", "~1.8% below our
+  line") is now derived in `run()` and macro-backed, so it cannot go stale after a re-run, and the
+  false universal "Every number above is written by the pipeline" is scoped to catalogue-derived
+  numbers, naming the two literature figures that are not.
+
+Both real re-runs were purely additive: every previously published value is unchanged and no macro
+changed value.
+
 ### Changed
 - **Traditional-style conversion complete: all 45 papers.** Batch 8 converts `ppdot`, `pulsarspec`,
   `rfitrend`, `stacking` and `vlbi`. Every batch's referee round returned revisions (eight for

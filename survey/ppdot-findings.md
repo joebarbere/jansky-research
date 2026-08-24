@@ -99,3 +99,32 @@ reproducibility is the one sentence that has to be right. Note ~80,000 and ~1.8%
 `\ppLogBmagnetar - \ppLogBmsp` and `1 - \ppFracAlive`: correct today, silently stale after a re-run.
 
 **Fix:** emit the fetched row count as a macro, and scope the universal to catalogue-derived numbers.
+
+### Resolved 2026-08-24 (real re-run)
+
+`fetch_atnf_ppdot` now keeps the `PSRJ` column it was already requesting, and
+`named_pulsar_derived` looks a pulsar up **in the analysed sample**. The Crab is therefore read from
+the fetched catalogue rather than from literature constants, which exercises the `P1` column units,
+the row parsing and the positive-Pdot cut --- none of which the old unit test on hand-entered values
+could reach.
+
+| quantity | before | after (from the fetched row) |
+|---|---|---|
+| Crab B | 3.8e12 (typed) | `\ppCrabB` = **3.8e12** |
+| Crab tau | ~1260 yr (typed) | `\ppCrabAge` = **1257** yr |
+| Crab P | not stated | `\ppCrabPeriod` = 0.0333924 s |
+| catalogue size | "~3500 entries" | `\ppNcatalogue` = **2536** |
+| field span | "a factor of ~80,000" (typed) | `\ppBSpanFactor` = **78000** (4.89 dex) |
+| below the death line | "~1.8%" (typed) | `\ppFracDead` = **1.8** |
+
+The "~3500" was a recollection and wrong; 2536 is the same number `pulsarspec` gets from the
+identical call, so the two slices no longer disagree about the size of one table. The hand-typed
+arithmetic (~80,000, ~1.8%) is now derived in `run()`, so it cannot go stale after a re-run.
+
+The false reproducibility universal is scoped rather than deleted: "Every **catalogue-derived**
+number above is written by the pipeline ... (the ~30 true magnetars and the Crab's ~970-yr
+historical age are literature figures, not outputs of this analysis)". The file's own header comment
+said the same false thing and was corrected too.
+
+Both re-runs were **purely additive**: every previously published value (n_pulsars 2052,
+frac_above_death 0.982, the three median fields) is unchanged, and no macro changed value.

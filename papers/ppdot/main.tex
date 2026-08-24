@@ -1,6 +1,7 @@
 \documentclass[twocolumn]{aastex631}
 
-% Every number is \input from the pipeline --- none typed by hand.
+% Every catalogue-derived number is \input from the pipeline; the only hand-typed figures are
+% literature ones (the ~30 true magnetars, the Crab's ~970-yr historical age).
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -25,8 +26,8 @@ measured $\dot P$ and enter the diagram. Their median surface field separates th
 $\sim$5 orders of magnitude: millisecond pulsars at $\log(B/\mathrm{G})=\ppLogBmsp$ (recycled), the
 ordinary population at \ppLogBnormal, and high-field/magnetar objects ($B>10^{13}$ G) at
 \ppLogBmagnetar. \ppFracAlive\ of the sample lies above a standard polar-cap death line, as
-expected for a radio-selected catalogue. The Crab pulsar validates the derivations ($B=3.8\times10^{12}$
-G, $\tau\approx1260$ yr). This is a reproducibility/method contribution and a recover-a-known, not a
+expected for a radio-selected catalogue. The Crab pulsar, located in the analysed sample by name,
+validates the derivations ($B=\ppCrabB$ G, $\tau=\ppCrabAge$ yr). This is a reproducibility/method contribution and a recover-a-known, not a
 discovery, and we are explicit about the catalogue selection, the death-line model dependence, and what
 $B$ and $\tau$ do and do not mean.
 \end{abstract}
@@ -57,7 +58,7 @@ not a validation of the real results.
 
 \section{Data}
 We query the ATNF Pulsar Catalogue \citep{manchester2005} from VizieR (\code{B/psr}): periods and
-period derivatives for the known pulsars. Of the $\sim$3500 entries, \ppN\ have a positive measured
+period derivatives for the known pulsars. Of the \ppNcatalogue\ entries, \ppN\ have a positive measured
 $\dot P$ and enter the diagram; the rest lack a measured $\dot P$ or (for many globular-cluster pulsars)
 show a negative apparent $\dot P$ from cluster acceleration rather than true spin-down, and are dropped.
 
@@ -65,13 +66,16 @@ show a negative apparent $\dot P$ from cluster acceleration rather than true spi
 The median surface field cleanly separates the three populations (Figure~\ref{fig:ppdot}):
 $\log(B/\mathrm{G}) = \ppLogBmsp$ for the \ppNmsp\ millisecond pulsars, \ppLogBnormal\ for the \ppNnormal\
 normal pulsars, and \ppLogBmagnetar\ for the \ppNmagnetar\ high-$B$/magnetar objects, a span of
-$\sim$5 orders of magnitude (a factor of $\sim$80\,000), the textbook P--$\dot P$ structure
+\ppBSpanDex\ dex (a factor of \ppBSpanFactor), the textbook P--$\dot P$ structure
 \citep{lorimerkramer2004}. The millisecond population sits at the bottom-left (short $P$, tiny $\dot P$,
 recycled by accretion); the high-$B$ objects at the top-right. Against the standard polar-cap death
 line, \ppFracAlive\ of the sample is radio-loud, as expected for a radio-selected catalogue. The Crab
-pulsar validates the derivations: $B=3.8\times10^{12}$ G and $\tau=P/2\dot P\approx1260$ yr, both
-textbook (and $\tau$ is appropriately longer than the true $\sim$970-yr age, since $\tau$ assumes
-braking index 3 and $P_0\ll P$).
+pulsar validates the derivations. Looked up by name in the analysed sample ($P=\ppCrabPeriod$~s), it
+gives $B=\ppCrabB$ G and $\tau=P/2\dot P=\ppCrabAge$ yr, both textbook; $\tau$ is appropriately
+longer than the true $\sim$970-yr age, since $\tau$ assumes braking index 3 and $P_0\ll P$. Because
+the row is read from the fetched catalogue rather than from literature constants, this exercises the
+column units, the row parsing and the positive-$\dot P$ cut, which evaluating the closed forms at
+hand-entered values cannot.
 
 \begin{figure}
 \plotone{figures/ppdot.pdf}
@@ -87,14 +91,15 @@ structure from a public catalogue, with the caveats that bound it. (i) ``Magneta
 position-in-diagram label ($B>10^{13}$ G; \ppNmagnetar\ sources) that includes high-field
 rotation-powered pulsars as well as the $\sim$30 true magnetars, which are X-ray/$\gamma$-ray, not
 radio, selected. (ii) The death line is one representative model; the literature spans a ``death
-valley'' \citep{chenruderman1993}, and the $\sim$1.8\% below our line are not noise but real
+valley'' \citep{chenruderman1993}, and the \ppFracDead\% below our line are not noise but real
 long-period pulsars that motivated that literature, so \ppFracAlive\ should be read as ``almost all, for
 a standard line.'' (iii) The ATNF catalogue is the union of many flux- and period-limited surveys, so
 the relative population sizes are survey-shaped, not intrinsic, though the per-class median
 fields are robust to this. None of these undermine the recover-a-known (the field separation and the
 diagram structure are unambiguous), but they are why this is a reproduction, not a population
-measurement. Every number above is written by the pipeline into the macros this manuscript
-\code{\textbackslash input}s, and \code{python -m jansky\_research.ppdot} regenerates them from the
+measurement. Every catalogue-derived number above is written by the pipeline into the macros
+this manuscript \code{\textbackslash input}s (the $\sim$30 true magnetars and the Crab's $\sim$970-yr
+historical age are literature figures, not outputs of this analysis), and \code{python -m jansky\_research.ppdot} regenerates them from the
 public catalogue.
 
 \section*{AI use disclosure}

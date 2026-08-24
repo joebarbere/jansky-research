@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from jansky_research import ppdot
 
@@ -56,3 +57,39 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "papers" / "ppdot" / "figures" / "ppdot.pdf").exists()
     macros = (tmp_path / "papers" / "ppdot" / "generated" / "macros.tex").read_text()
     assert r"\ppLogBmsp" in macros and r"\ppFracAlive" in macros
+
+
+def test_named_pulsar_derived_reads_the_row_not_a_constant():
+    """The Crab check must run on the fetched table, or it tests only the algebra.
+
+    Before this, `fetch_atnf_ppdot` requested PSRJ and discarded it, so no named pulsar could be
+    located and the paper's Crab numbers were typed from the literature. A check that cannot see
+    the catalogue cannot catch a units, parsing or cut error on the real path.
+    """
+    pop = {
+        "name": np.array(["J0534+2200", "J0537-6910", "J1939+2134"], dtype=object),
+        "period_s": np.array([0.0333924, 0.016, 0.00156]),
+        "pdot": np.array([4.21e-13, 5.2e-14, 1.05e-19]),
+    }
+    crab = ppdot.named_pulsar_derived(pop, ppdot.CRAB_PSRJ)
+    assert crab["found"]
+    assert crab["b_gauss"] == pytest.approx(3.8e12, rel=0.02)
+    assert crab["age_yr"] == pytest.approx(1257, rel=0.02)
+    # the leading J is optional on either side of the match
+    assert ppdot.named_pulsar_derived(pop, "0534+2200")["found"]
+
+
+def test_named_pulsar_derived_absent_or_unusable_rows():
+    pop = {
+        "name": np.array(["J0534+2200", "J1234+5678"], dtype=object),
+        "period_s": np.array([0.0333924, 0.5]),
+        "pdot": np.array(
+            [4.21e-13, -1.0e-15]
+        ),  # negative Pdot: cluster acceleration, not spin-down
+    }
+    assert not ppdot.named_pulsar_derived(pop, "J9999+9999")["found"]
+    assert not ppdot.named_pulsar_derived(pop, "J1234+5678")["found"]
+    # a fetch that drops the name column must not silently claim a match
+    assert not ppdot.named_pulsar_derived({"period_s": [1.0], "pdot": [1e-15]}, "J0534+2200")[
+        "found"
+    ]
