@@ -7,5 +7,13 @@
   "n_magnetar": 83,
   "median_log_b_normal": 12.05,
   "median_log_b_msp": 8.42,
-  "median_log_b_magnetar": 13.31
+  "median_log_b_magnetar": 13.31,
+  "n_catalogue": 2536,
+  "b_span_dex": 4.89,
+  "b_span_factor": 78000,
+  "frac_below_death_pct": 1.8,
+  "crab_b_gauss": 3790000000000.0,
+  "crab_age_yr": 1257,
+  "crab_period_s": 0.0333924,
+  "crab_pdot": 4.21e-13
 }

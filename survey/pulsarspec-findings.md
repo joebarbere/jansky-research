@@ -96,3 +96,30 @@ mean.
 **Citation note, do not "repair":** Crossref returns a single author for
 `10.1016/0370-1573(91)90064-S` (Bhattacharya alone). That is an incomplete legacy Elsevier record;
 the paper is Bhattacharya & van den Heuvel and the `.bib` entry is correct as it stands.
+
+### Resolved 2026-08-24 (real re-run)
+
+`compare_subsamples` now computes the difference, its Welch standard error, the observed
+significance and the smallest offset the pair of subsamples could resolve at 2 sigma; all four are
+committed and macro-backed. The real leg reproduces the referee's reconstruction almost exactly:
+
+| quantity | value |
+|---|---|
+| mean alpha, MSP / normal | -1.75 (scatter 0.76) / -1.77 (scatter 0.75) |
+| N, MSP / normal | 43 / 430 |
+| difference | **0.018 +/- 0.122** |
+| observed | **0.15 sigma** |
+| resolvable at 2 sigma | **0.24 in alpha** |
+| parent catalogue | **2536** (sample is 473, i.e. 18.7%) |
+
+The abstract and Results now state the bound rather than the agreement: an offset larger than 0.24
+is excluded, one smaller is not constrained. The Data section gives the selection a denominator, and
+the Discussion states the *direction* of the joint-detection bias (a steep source near the S400
+limit has already dropped below the S1400 limit, so requiring both bands biases the index flat).
+"over the whole catalogue" is now "over the both-band-detected subset".
+
+Three tests added, and the one that matters is `test_offline_recovers_the_injected_msp_offset`:
+the fixture's +0.2 offset was previously injected and never checked. At the fixture's size it is
+recovered at >2 sigma with `resolvable` < 0.2, which is precisely the contrast with the real
+catalogue, where 0.2 sits *below* the 0.24 resolution. The old `test_run_offline` window was ~28
+sigma wide on an exact algebraic transform and could not fail.

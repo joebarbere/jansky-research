@@ -556,7 +556,15 @@ def forced_photometry_recover(
     transient, so a single RACS-low DR1 epoch recovers V only for the subset caught in a polarised state
     --- the honest, variability-limited result.
     """
+    import os
+
     import numpy as _np
+
+    # Fail before the VizieR round trip, not after it. Every target needs a CASDA cutout, so a
+    # missing credential dooms the run either way -- and checking late made the offline test for
+    # this path depend on VizieR being reachable, which is how it started failing in CI.
+    if not (username or os.environ.get("CASDA_USERNAME")):
+        raise RuntimeError("set CASDA_USERNAME (OPAL email) for the real Stokes-V cutout fetch")
 
     m = fetch_radio_star_measurements()
     survey = _np.array([str(s) for s in m["survey"]])

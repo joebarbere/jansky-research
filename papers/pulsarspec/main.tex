@@ -24,9 +24,12 @@ forming the 400$\to$1400~MHz spectral index from the catalogue's tabulated S400 
 densities. For the \psrN\ pulsars detected at both frequencies, the mean index is
 $\langle\alpha\rangle=\psrMeanAlpha$ (median \psrMedianAlpha, scatter \psrStdAlpha); the mean sits squarely
 in the literature range. Splitting at the standard $P<30$~ms boundary, the \psrNmsp\ millisecond pulsars
-have mean $\alpha=\psrMeanAlphaMsp$ versus \psrMeanAlphaNormal\ for normal pulsars: the two are
-indistinguishable, i.e.\ millisecond pulsars are not significantly flatter, consistent with
-\citet{kramer1998} and \citet{jankowski2018}. This is a reproducibility and tooling contribution, not
+have mean $\alpha=\psrMeanAlphaMsp$ versus $\psrMeanAlphaNormal$ for the \psrNnormal\ normal
+pulsars, a difference of $\psrAlphaDiff\pm\psrAlphaDiffSE$ ($\psrAlphaDiffSigma\sigma$). The useful
+statement is the sensitivity rather than the agreement: this sample resolves a millisecond--normal
+offset only if it exceeds $\psrAlphaResolvable$ in $\alpha$ at $2\sigma$, so offsets larger than that
+are excluded and smaller ones are not constrained, consistent with \citet{kramer1998} and
+\citet{jankowski2018}. This is a reproducibility and tooling contribution, not
 a new result.
 \end{abstract}
 
@@ -51,16 +54,20 @@ injected steep spectra and a flatter-millisecond sub-population, so the suite ru
 
 \section{Data}
 The ATNF Pulsar Catalogue \citep{atnf} (VizieR \code{B/psr}) tabulates heterogeneous literature flux
-densities S400 (400~MHz) and S1400 (1400~MHz) in mJy and the spin period $P$. Of the catalogued
+densities S400 (400~MHz) and S1400 (1400~MHz) in mJy and the spin period $P$. Of the \psrNcatalogue\ catalogued
 pulsars, \psrN\ have both fluxes and enter the spectral-index sample.
 
 \section{Results}
 The \psrN\ pulsars have a mean spectral index $\langle\alpha\rangle=\psrMeanAlpha$, median
 \psrMedianAlpha, with a broad scatter (\psrStdAlpha; Figure~\ref{fig:spectra}, left), reproducing the
 steep-spectrum result of \citet{bates2013} and \citet{jankowski2018}. Splitting the sample, the
-\psrNmsp\ millisecond pulsars have mean $\alpha=\psrMeanAlphaMsp$ against \psrMeanAlphaNormal\ for the
-normal pulsars; the two means are essentially identical, so the millisecond population is not
-measurably flatter. The
+\psrNmsp\ millisecond pulsars have mean $\alpha=\psrMeanAlphaMsp$ (scatter \psrStdAlphaMsp) against
+$\psrMeanAlphaNormal$ (scatter \psrStdAlphaNormal) for the \psrNnormal\ normal pulsars. The
+difference is $\psrAlphaDiff\pm\psrAlphaDiffSE$, or $\psrAlphaDiffSigma\sigma$, where the error is
+dominated by the millisecond arm. What the comparison establishes is therefore a bound rather than
+an agreement: an offset larger than $\psrAlphaResolvable$ in $\alpha$ would have been seen at
+$2\sigma$ and is excluded, while any offset below that is beyond this sample's reach. A genuinely
+flatter millisecond population with a small offset would be indistinguishable from none here. The
 $\alpha$--period plane (Figure~\ref{fig:spectra}, right) shows no strong trend across three decades in
 period.
 
@@ -75,10 +82,12 @@ period; no strong trend is seen, and the millisecond population (red) overlaps t
 \section{Discussion and reproducibility}
 The steep mean pulsar spectrum and the absence of a millisecond--normal difference are both recovered
 cleanly from public data with a small tested tool. The contribution is reproducibility and tooling (a
-validated pulsar spectral-index statistic over the whole catalogue), not a new result. The
+validated pulsar spectral-index statistic over the both-band-detected subset), not a new result. The
 limitations are intrinsic to a two-frequency index from a heterogeneous catalogue: it misses the
 spectral curvature and low-frequency turnovers that multi-frequency fits resolve \citep{jankowski2018},
-the sample is flux-limited (only the brighter, both-band-detected pulsars), and the broad scatter
+the sample is flux-limited, being the \psrN\ of \psrNcatalogue\ pulsars detected in both bands,
+and that requirement biases a two-frequency index flat, since a steep source near the S400 limit
+has already fallen below the S1400 limit, and the broad scatter
 reflects the $\sim$tens-of-percent catalogue flux-scale and scintillation uncertainties as much as
 intrinsic spread. Every number above is written by the pipeline into macros that are
 \code{\textbackslash input} directly, and the analysis regenerates from a clean checkout on public data.
