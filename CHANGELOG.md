@@ -11,6 +11,25 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`glitchpop` revision (all 19 referee findings): the title flip was Monte-Carlo noise, and
+  the census is pinned.** At 2x10^5 bootstrap draws with per-pulsar seeds and valid
+  (k+1)/(B+1) p-values, the headline flip (J2229+6114) dissolves along with a second marginal
+  quasi-periodic call --- n_flipped = 0, QP count 10 -> 8, while the aggregate excess stands
+  (Poisson-binomial p = 7.9e-5 under empirically measured count-dependent false rates). The
+  title becomes "the Post-2018 Increment" and the paper's finding is that no classification
+  change is secure at current sample sizes. The catalogue snapshot is committed (728 rows;
+  a fourth distinct count in four retrievals) with a from_csv analysis path and stated
+  retrieval date. "~184 post-2018 glitches" was vintage arithmetic: the measured increment is
+  **89**, with 21 retroactive pre-2019 additions counted via the previously discarded is_new
+  flag. The validation can now fail (injection surface: completeness 0.16-0.44 in the
+  borderline cv/n regime the old cv-0.12-only test never visited); the pooled false-positive
+  rate is disaggregated by outcome; the clustered "lower bound" is withdrawn to
+  chance-consistent (expected 1.55 false, p = 0.80); the hidden second cut is stated; the
+  gap-factor sweep is committed; the out-of-sample Howitt anchor (B1338-62) is promoted into
+  the paper; and a real calibration anomaly is surfaced and stated (census p-values non-uniform,
+  KS p = 1e-4 --- mild population-wide regularity or a missing monitoring dead-time in the null).
+
+### Fixed
 - **`typeii` revision (all 15 referee findings): the contaminant that can fail was injected,
   and it failed.** A 30-seed ensemble measures the detector per contaminant class: clean against
   fast type III (0/480) and narrowband RFI (0/240), but **false-positive at ~38%** (91/240)

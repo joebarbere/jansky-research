@@ -34,7 +34,7 @@ post-2018 change table. Differentiated from Basu+2022 (glitch-SIZE mixture) and 
   unobserved intervals for a regular glitcher; a genuine exponential loses only ~1.5% far tail). This
   recovered J0537 (cv 0.53 → quasi-periodic) AND Vela (cv 0.57 → quasi-periodic). **Cost**: a
   genuinely *clustered* pulsar (bursts + real long gaps) has its long gaps excised too, so long-gap
-  clustering is under-detected — stated plainly (and the real data has 0 clustered anyway).
+  clustering is under-detected — stated plainly (and the committed census has 1 nominal clustered call (chance-consistent; see the revision note below)).
 - **Classification — parametric-bootstrap CV test** (replaced a gamma-vs-exponential BIC that
   underweighted Vela's mild-but-real regularity): CV = std/mean of excised waits, calibrated against
   the exponential null by bootstrapping the CV of n exponential waits. Quasi-periodic if CV
@@ -147,3 +147,45 @@ Three verbs stronger than the evidence (title's "Change"; "still shifting"; "war
 The synthetic leg has no committed results file.
 
 **Status: fixes pending** (needs one live scrape to commit the snapshot; everything else offline).
+
+### Resolved 2026-08-24 (revision): the flip was Monte-Carlo noise, and the census is pinned
+
+All 19 findings addressed. The two blockers resolved the strong way:
+
+**The title flip dissolved exactly as predicted.** At n_boot = 2e5 with per-pulsar (crc32) null
+seeds and (k+1)/(B+1) p-values carrying their MC standard errors, J2229+6114 does not flip --
+nor does B1758-23, the other MC-marginal call, survive as quasi-periodic. n_flipped = 0, n_qp
+10 -> 8. The aggregate excess is untouched: nominal binomial p = 1.1e-4 and Poisson-binomial
+p = 7.9e-5 under the empirically measured count-dependent false rates. The title became "the
+Post-2018 Increment" and the paper states the finding plainly: no classification change is
+secure at current per-pulsar sample sizes.
+
+**The census is pinned to a committed snapshot** (`results/glitchpop_glitches.csv`, 728 rows /
+224 pulsars, retrieved 2026-08-24 -- a fourth distinct count in four retrievals, proving the
+point) with a `from_csv` analysis path; the paper states the retrieval date and cites jbocat.
+The abstract's mismatched sample counts are fixed with matched pairs (728/224 raw, 714/221
+analysed).
+
+**"~184 post-2018 glitches" was catalogue-vintage arithmetic**: measured against the Basu epoch
+in this snapshot, the post-2018 increment is **89**, and 21 pre-2019 glitches are retroactive
+additions (the is_new flag, previously parsed and discarded, now counts them).
+
+**The validation can now fail, and does**: the injection surface (cv 0.1-0.7 x n 6-40) shows
+completeness 1.0 only for cv <= 0.3 at n >= 10, falling to 0.44 at (cv 0.5, n 6) and 0.16 at
+(0.7, 6) -- the regime where the borderline calls live; the census's QP count is a floor. The
+pooled "false-positive rate" 0.0938 is disaggregated (false-qp 0.04-0.12 by count,
+false-clustered 0.04-0.10, dropped-by-excision <= 0.02), and the count-dependent false-qp rates
+feed an exact Poisson-binomial population significance.
+
+**The clustered claim is withdrawn to chance**: B2224+65 (4 retained waits, p = 0.039) against
+an expected 1.55 false clustered (binomial p = 0.80); no clustering claim in either direction,
+deferring to Zhu & Zheng. The hidden second cut is stated (32 pulsars pass >=5 glitches, 1 is
+dropped when excision leaves too few intervals). The gap-factor sweep is committed (QP 8-10
+across 3-10x; the clustered call vanishes below 6x). The out-of-sample Howitt anchor
+(B1338-62, cv 0.555) is promoted into the paper as the validation the reselected statistic
+needed. And the p-uniformity diagnostic is committed and REAL: the census's p_regular values
+are non-uniform (mean 0.28, KS p = 1e-4) -- either the population is mildly regular wholesale
+or the null lacks a monitoring dead-time; stated as the principal open methodological question.
+
+Doc mismatches fixed (README row, this file's "0 clustered"); the synthetic paths run at 4000
+boots so the census-grade default does not slow CI (test file 2:03 -> 3.5 s).

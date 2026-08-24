@@ -35,10 +35,38 @@ def scrape_glitch_table(url: str = JBO_URL) -> str:  # pragma: no cover - networ
         return r.read().decode("utf-8", errors="replace")
 
 
-def run_real_census(out: str, *, min_glitches: int = MIN_GLITCHES) -> dict:  # pragma: no cover
-    """Full real census: scrape -> classify every pulsar (>=5 glitches) -> known-QP check -> delta."""
+def run_real_census(
+    out: str,
+    *,
+    min_glitches: int = MIN_GLITCHES,
+    from_csv: str | None = None,
+    retrieved: str = "unrecorded",
+) -> dict:  # pragma: no cover
+    """Full real census: snapshot (or scrape) -> classify -> known-QP check -> delta.
 
-    glitches = parse_glitch_table(scrape_glitch_table())
+    ``from_csv`` analyses a committed snapshot instead of the live table -- the live catalogue
+    demonstrably mutates (three recorded scrapes returned 222, 223 and 220 pulsars; a fourth,
+    2026-08-24, returned 224), so without a pinned snapshot no number in the paper is
+    regenerable, by anyone, ever. ``retrieved`` is the snapshot's retrieval date, committed with
+    the results and stated in the paper.
+    """
+    import csv as _csv
+
+    if from_csv:
+        with open(from_csv, newline="") as fh:
+            glitches = [
+                {
+                    "jname": r["jname"],
+                    "mjd": float(r["mjd"]),
+                    "size": float(r["size"]) if r["size"] else float("nan"),
+                    "dnudot": float(r["dnudot"]) if r["dnudot"] else float("nan"),
+                    "refs": r["refs"],
+                    "is_new": r["is_new"] == "True",
+                }
+                for r in _csv.DictReader(fh)
+            ]
+    else:
+        glitches = parse_glitch_table(scrape_glitch_table())
     by = group_by_pulsar(glitches)
     # drop magnetars/AXPs (their catalogued glitches are X-ray-outburst-driven, not rotation-powered)
     n_magnetars = sum(1 for j in by if any(m in j for m in MAGNETARS))
@@ -56,11 +84,52 @@ def run_real_census(out: str, *, min_glitches: int = MIN_GLITCHES) -> dict:  # p
     )
     delta = classification_delta(by, min_glitches=min_glitches)
     sigstats = population_significance(rows)
+    from .glitchpop import (
+        BASU_END_MJD,
+        census_accounting,
+        gap_factor_sweep,
+        injection_surface,
+        p_uniformity_check,
+    )
+    from .glitchpop import (
+        population_significance as _popsig,
+    )
+
+    acct = census_accounting(by, min_glitches=min_glitches)
+    sweep = gap_factor_sweep(by)
+    ks = p_uniformity_check(rows)
+    surf = injection_surface()
+    sig_emp = _popsig(rows, fp_rate_by_n=surf["fp_rate_by_n"])
+    # the pre-split glitch count MEASURED from the analysed table, so "the post-2018 increment"
+    # is an epoch statement about this snapshot, not a difference of catalogue vintages
+    n_pre_split = sum(1 for g in glitches if float(g["mjd"]) < BASU_END_MJD)
     metrics = {
-        "source": "JBO glitch catalogue (jb.man.ac.uk); per-pulsar waiting-time classification + post-2018 delta",
+        "source": (
+            "JBO glitch catalogue (jb.man.ac.uk), snapshot retrieved "
+            f"{retrieved}; per-pulsar waiting-time classification + post-2018 delta"
+        ),
         "is_real": True,
-        "n_glitches": len(glitches),
-        "n_pulsars": len(by),
+        "retrieved": retrieved,
+        # matched pairs: the abstract previously counted glitches on the raw catalogue and
+        # pulsars on the magnetar-filtered sample in one sentence
+        "n_glitches_raw": len(glitches),
+        "n_pulsars_raw": len({g["jname"] for g in glitches}),
+        "n_glitches_analysed": int(sum(len(d["mjd"]) for d in by.values())),
+        "n_pulsars_analysed": len(by),
+        "n_glitches_pre_split": int(n_pre_split),
+        "n_glitches_post_split": int(len(glitches) - n_pre_split),
+        "n_retroactive_pre_split": int(
+            sum(1 for g in glitches if float(g["mjd"]) < BASU_END_MJD and g.get("is_new"))
+        ),
+        **acct,
+        "gap_factor_sweep": sweep,
+        "p_uniformity": ks,
+        "injection_surface": surf["surface"],
+        "exponential_outcome_rates": surf["exponential_rows"],
+        "qp_poisson_binomial_p": sig_emp.get("qp_poisson_binomial_p"),
+        "expected_false_qp_empirical": sig_emp.get("expected_false_qp_empirical"),
+        "expected_false_clustered": sig_emp.get("expected_false_clustered"),
+        "clustered_binomial_p": sig_emp.get("clustered_binomial_p"),
         "n_magnetars_dropped": int(n_magnetars),
         "n_qualified_full": len(rows),
         "n_exponential": int(n_exp),
