@@ -1,0 +1,729 @@
+jname,mjd,size,dnudot,refs,is_new
+J0007+7303,54953.0,554.0,1.0,"Abdo+2012 [awd+12], also in Ray+2011 [rkp+11]",False
+J0007+7303,55466.0,1260.0,nan,Belfore+2011 [3rd Fermi symp.],False
+J0040-7335,59919.7,1.31,0.056,New. Also in Carli+24 [cab+24],True
+J0040-7337,60013.13,1810.0,7.0,Carli+24 [cab+24],False
+J0048-7317,59707.46,1950.0,7.0,Carli+24 [cab+24],False
+4U_0142+61,51141.0,650.0,14.0,Morii+2005 [mks05],False
+4U_0142+61,53809.0,1627.0,11.6,Gavriil et al. (2011) [gdk11],False
+B0144+59,53682.0,0.056,-0.21,Yuan+2010 [ywml10],False
+B0154+61,48512.0,4.0,-11.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+B0154+61,57116.0,0.74,nan,New - our measurement,True
+B0154+61,58283.0,2.6,nan,Basu+2021 [bsa+21],False
+J0205+6449,52555.0,340.0,5.0,Livingstone+2009 [lrc+09],False
+J0205+6449,52920.0,3800.0,12.0,Livingstone+2009 [lrc+09],False
+J0205+6449,54907.0,1761.0,12.0,Basu+2021 [bsa+21],False
+J0205+6449,55719.0,126.0,3.0,Basu+2021 [bsa+21],False
+J0205+6449,55836.0,2933.0,13.0,Basu+2021 [bsa+21],False
+J0205+6449,56854.0,84.0,3.0,Basu+2021 [bsa+21],False
+J0205+6449,57345.0,527.0,5.0,Basu+2021 [bsa+21],False
+J0205+6449,57696.75,43.0,nan,Basu+2021 [bsa+21],False
+J0205+6449,58320.0,3140.0,20.0,Basu+2021 [bsa+21],False
+J0215+6218,55965.0,0.06,nan,Basu+2021 [bsa+21],False
+B0355+54,46082.0,6.0,6.0,"Espinoza+2011 [elsk11], also in Lyne (1987) [lyn87]",False
+B0355+54,46470.0,4366.0,430.0,"Espinoza+2011 [elsk11], also in Lyne (1987) [lyn87]",False
+B0402+61,53041.0,0.62,0.5,Yuan+2010 [ywml10],False
+B0410+69,57120.0,0.011,nan,Basu+2021 [bsa+21],False
+J0417+35,57053.63,24.54,3.4,Basu+2021 [bsa+21],False
+B0458+46,52616.0,0.33,0.7,Espinoza+2011 [elsk11],False
+B0523+11,56010.4,0.312,0.6,Basu+2021 [bsa+21],False
+B0525+21,42051.5,1.9,13.0,"Espinoza+2011 [elsk11], also in Downs (1982) [dow82]",False
+B0525+21,52296.0,2.3,7.0,"Janssen+2006 [js06], also in Yuan+2010 [ywml10]",False
+B0525+21,53379.0,0.2,nan,Janssen+2006 [js06],False
+B0525+21,53980.0,0.5,0.1,Yuan+2010 [ywml10],False
+B0531+21,40491.8,7.2,0.44,"Espinoza+2011 [elsk11], also in Lohsen (1981) [loh81]",False
+B0531+21,41161.98,1.9,0.17,"Espinoza+2011 [elsk11], also in Lohsen (1981) [loh81]",False
+B0531+21,41250.32,2.1,0.11,"Espinoza+2011 [elsk11], also in Lohsen (1981) [loh81]",False
+B0531+21,42447.26,35.7,1.6,"Espinoza+2011 [elsk11], also in Lohsen (1981) [loh81]",False
+B0531+21,46663.69,6.0,0.5,"Espinoza+2011 [elsk11], also in Lyne+1987 [lp87]",False
+B0531+21,47767.504,81.0,3.4,"Espinoza+2011 [elsk11], also in Lyne+1992 [lsp92]",False
+B0531+21,48945.6,4.2,0.32,"Espinoza+2011 [elsk11], also in Lyne+1993 [lps93] Wong+2001 [wbl01]",False
+B0531+21,50020.04,2.1,0.2,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,50260.031,31.9,1.73,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,50458.94,6.1,1.1,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,50489.7,0.8,-0.2,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,50812.59,6.2,0.62,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,51452.02,6.8,0.7,"Espinoza+2011 [elsk11], also in Wong+2001 [wbl01]",False
+B0531+21,51740.656,25.1,2.9,Espinoza+2011 [elsk11],False
+B0531+21,51804.75,3.5,0.53,Espinoza+2011 [elsk11],False
+B0531+21,52084.072,22.6,2.07,Espinoza+2011 [elsk11],False
+B0531+21,52146.758,8.9,0.57,Espinoza+2011 [elsk11],False
+B0531+21,52498.257,3.4,0.7,Espinoza+2011 [elsk11],False
+B0531+21,52587.2,1.7,0.5,Espinoza+2011 [elsk11],False
+B0531+21,53067.078,214.0,6.2,Espinoza+2011 [elsk11],False
+B0531+21,53254.109,4.9,0.2,Espinoza+2011 [elsk11],False
+B0531+21,53331.17,2.8,0.7,Espinoza+2011 [elsk11],False
+B0531+21,53970.19,21.8,3.1,Espinoza+2011 [elsk11],False
+B0531+21,54580.38,4.7,0.2,Espinoza+2011 [elsk11],False
+B0531+21,55875.49,39.0,0.23,Basu+2021 [bsa+21],False
+B0531+21,57839.8,2.2,nan,Basu+2021 [bsa+21],False
+B0531+21,58064.555,516.37,6.969,Shaw+2018; also Basu+2019 [bkj+19],False
+B0531+21,58237.357,4.08,0.46,Shaw+2018 (ATel #11625); also Basu+2019 [bkj+19],False
+B0531+21,58470.7,2.3,nan,Basu+2021 [bsa+21],False
+B0531+21,58687.565,31.7,0.341,Shaw+2021 [skl+21] Also in Shaw+2019 [smk+19] and Grover+2024 [gjs+24],False
+B0531+21,60872.9,2.33,0.43,Shaw+2025 [bak+25],False
+B0531+21,60893.9,4.53,0.44,Shaw+2025b [bak+25b],False
+J0537-6910,51278.0,687.0,1.0,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,51562.0,450.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,51711.0,315.0,0.6,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,51826.0,140.0,0.5,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,51881.0,140.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,51960.0,454.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52152.0,2.3,nan,Antonopoulou+2018 [aeka18] Also in Middleditch+2006 [mmw+06],False
+J0537-6910,52170.0,184.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52241.0,426.0,0.2,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52378.0,168.0,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52453.0,218.0,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52545.0,420.0,0.5,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52731.0,146.0,0.6,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52807.0,255.0,0.6,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,52886.0,234.6,0.44,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53014.0,338.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53125.5,17.0,0.4,Antonopoulou+2018 [aeka18],False
+J0537-6910,53145.0,391.1,0.19,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53288.0,395.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53445.0,260.0,0.9,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53550.0,321.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53696.0,409.0,0.7,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53861.0,235.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53951.3,18.0,0.3,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18] and Middleditch+2006 [mmw+06],False
+J0537-6910,53999.0,352.0,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54094.0,371.0,0.1,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54243.0,1.0,nan,Antonopoulou+2018 [aeka18],False
+J0537-6910,54271.0,488.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54448.0,239.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54538.0,114.0,0.5,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54578.0,147.0,0.0,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54639.0,128.7,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54712.0,105.0,0.5,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54767.0,362.0,0.6,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,54895.0,341.0,0.5,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55043.0,217.0,0.8,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55184.0,209.0,1.1,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55280.0,549.0,0.3,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55451.0,169.0,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55519.0,122.0,0.4,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55552.0,8.0,-2.0,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55587.0,87.0,1.0,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55615.0,453.0,0.2,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,55786.1,14.0,-0.2,Antonopoulou+2018 [aeka18],False
+J0537-6910,55819.0,346.0,0.9,Antonopoulou+2018 [aeka18] Also in Ferdman+2018 [fagk18],False
+J0537-6910,58083.0,260.51,0.75,Ho+2020 [hea+20],False
+J0537-6910,58152.0,581.94,0.8,Ho+2020 [hea+20],False
+J0537-6910,58363.0,126.5,1.2,Ho+2020 [hea+20],False
+J0537-6910,58424.0,409.0,1.0,Ho+2020 [hea+20],False
+J0537-6910,58566.0,148.7,0.45,Ho+2020 [hea+20],False
+J0537-6910,58637.0,435.92,0.43,Ho+2020 [hea+20],False
+J0537-6910,58807.0,122.3,1.1,Ho+2020 [hea+20],False
+J0537-6910,58868.0,387.84,1.14,Abbott+2021 [aaa+21],False
+J0537-6910,58993.0,6.639,0.13,Abbott+2021 [aaa+21],False
+J0537-6910,59049.0,136.59,0.671,Abbott+2021 [aaa+21],False
+J0537-6910,59103.0,546.81,0.681,Ho+2022 [hke+22],False
+J0537-6910,59285.0,127.17,0.47,Ho+2022 [hke+22],False
+J0537-6910,59351.0,198.25,0.395,Ho+2022 [hke+22],False
+J0537-6910,59454.0,268.24,0.856,Ho+2022 [hke+22],False
+J0537-6910,59522.0,356.67,0.305,New - also in Ho+2022 [hke+22],True
+J0537-6910,59692.0,94.272,0.43,New,True
+J0537-6910,59741.0,249.46,0.641,New,True
+J0537-6910,59886.0,393.84,0.886,New,True
+J0537-6910,60028.0,549.77,0.5,New,True
+J0537-6910,60223.0,341.38,0.525,New,True
+B0540-69,51335.0,1.4,0.133,Livingstone+2005 [lkg05],False
+B0559-05,51665.2,0.2,-0.7,Espinoza+2011 [elsk11],False
+B0559-05,54347.0,0.05,0.2,Basu+2021 [bsa+21],False
+J0611+1436,55818.0,5575.4,nan,Basu+2021 [bsa+21],False
+J0625+10,55203.0,0.33,nan,Basu+2021 [bsa+21],False
+J0625+10,57676.0,1.17,0.9,Basu+2021 [bsa+21],False
+J0625+10,58488.0,767.35,3.15,New - Our measurement,True
+J0613-0200,50888.0,0.0025,0.16,McKee+2016 [mjs+16],False
+J0631+1036,50183.5,4.7,-0.7,Espinoza+2011 [elsk11],False
+J0631+1036,50480.1,4.2,0.1,Espinoza+2011 [elsk11],False
+J0631+1036,50608.277,57.3,1.2,Espinoza+2011 [elsk11],False
+J0631+1036,50729.0,1662.7,3.5,Espinoza+2011 [elsk11],False
+J0631+1036,51909.7,1.4,0.26,Espinoza+2011 [elsk11],False
+J0631+1036,52852.5,17.6,2.48,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+J0631+1036,53230.1,1.6,0.4,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+J0631+1036,53366.0,1.9,0.3,Espinoza+2011 [elsk11],False
+J0631+1036,53622.6,1.1,0.2,Espinoza+2011 [elsk11],False
+J0631+1036,54099.0,0.4,-0.2,Espinoza+2011 [elsk11],False
+J0631+1036,54170.4,1.6,-0.1,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+J0631+1036,54632.53,43.2,3.3,Espinoza+2011 [elsk11],False
+J0631+1036,55119.35,9.4,0.2,Basu+2021 [bsa+21],False
+J0631+1036,55276.7,7.5,nan,Basu+2021 [bsa+21],False
+J0631+1036,55702.0,3277.9,2.7,Basu+2021 [bsa+21],False
+J0631+1036,58341.7,27.8,nan,Basu+2021 [bsa+21],False
+J0631+1036,58352.13,96.4,1.3,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J0633+1746,50382.0,0.6,nan,Jackson+2002 [jhgm02],False
+B0656+14,50197.0,0.6,0.3,Espinoza+2011 [elsk11],False
+B0656+14,51017.0,1.3,2.0,Espinoza+2011 [elsk11],False
+J0726-2612,56913.0,2.8,-0.6,New - Our measurement,True
+J0726-2612,58791.0,510.0,1.7,New - Our measurement,True
+B0727-18,51422.0,1.0,-2.0,Espinoza+2011 [elsk11],False
+B0727-18,52150.0,4.0,6.0,Espinoza+2011 [elsk11],False
+J0729-1448,52010.0,24.8,1.6,Espinoza+2011 [elsk11],False
+J0729-1448,54317.7,23.0,4.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+J0729-1448,54483.6,13.0,1.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+J0729-1448,54592.0,12.0,-2.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+J0729-1448,54687.0,6676.0,54.0,"Espinoza+2011 [elsk11], also in Weltevrede+2010 [wjm+10], Yu+2012 [ymh+12]",False
+J0729-1448,58266.6,3.8,nan,Basu+2019 [bkj+19],False
+J0738-4042,57359.0,0.36,3.0,Zhou+22 [zgy+22],False
+B0740-28,47625.0,1.2,-0.8,"Espinoza+2011 [elsk11], also in D’Alessandro+1993 [dmk+93]",False
+B0740-28,48331.7,1.2,-1.0,"Espinoza+2011 [elsk11], also in D’Alessandro+1993 [dmk+93]",False
+B0740-28,51770.0,1.0,0.9,Janssen+2006 [js06],False
+B0740-28,52028.0,3.7,4.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B0740-28,53083.0,1.7,-1.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B0740-28,53467.7,1.8,4.6,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B0740-28,55020.469,92.0,-372.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B0740-28,56725.2,2.4,-1.1,Basu+2021 [bsa+21]; also Basu+2019 [bkj+19],False
+B0740-28,59839.4,4304.2,nan,Shaw+2022 [sms+22]; also in Zubieta+2024 [zgp+24] and Grover+2024 [gjs+24],False
+B0756-15,49963.0,0.11,2.0,Espinoza+2011 [elsk11],False
+B0818-13,49927.0,0.035,0.159,Basu+2021 [bsa+21],False
+B0818-13,58063.0,0.082,0.14,Basu+2021 [bsa+21],False
+B0833-45,40280.0,2340.0,10.0,Downs (1981) [dow81],False
+B0833-45,41192.0,2050.0,15.0,Downs (1981) [dow81],False
+B0833-45,41312.0,12.0,3.0,Cordes+1988 [cdk88],False
+B0833-45,42683.0,1990.0,11.0,Downs (1981) [dow81],False
+B0833-45,43693.0,3060.0,18.0,Downs (1981) [dow81],False
+B0833-45,44888.4,1145.0,49.0,Cordes+1988 [cdk88],False
+B0833-45,45192.0,2050.0,23.0,Cordes+1988 [cdk88],False
+B0833-45,46257.228,1601.0,17.0,McCulloch+1987 [mkhr87],False
+B0833-45,47519.8036,1805.0,77.0,McCulloch+1987 [mkhr87],False
+B0833-45,48457.382,2715.0,600.0,Flanagan (1991) [fla91],False
+B0833-45,48550.0,5.55,1.053,Espinoza+2021 [ead+21],False
+B0833-45,49559.0,835.0,0.0,Flanagan+1994 [fm94],False
+B0833-45,49591.2,199.0,120.0,Flanagan (1994) [fla94],False
+B0833-45,50369.345,2110.0,5.95,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B0833-45,51457.0,38.0,3.66,Espinoza+2021 [ead+21],False
+B0833-45,51559.319,3085.72,6.736,"Dodson+2002 [dml02], also in Yu+2012 [ymh+12]",False
+B0833-45,53193.0,2100.0,nan,"Dodson+2004 [dbr+04], also in Yu+2012 [ymh+12]",False
+B0833-45,53960.0,2620.0,230.0,"Flanagan+2006 [fb06], also in Yu+2012 [ymh+12]",False
+B0833-45,55408.8,1940.0,75.0,Buchner (2010) [buc10]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+B0833-45,56556.0,3100.0,148.0,Buchner(2013) [buc13]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+B0833-45,56922.0,0.4,0.1,Jankowski+2015 [jbb+15],False
+B0833-45,57734.4849906,1431.0,nan,Palfreyman+2018; also Basu+2019 [bkj+19]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+B0833-45,58515.5929,2501.2,8.69,Kerr (2019) [kerr19]; also in Lower+2020 [lbs+20]; also in G&#252;gercino&#287;lu+22 [ggyz22] and Grover+2024 [gjs+24],False
+B0833-45,59417.2108,1260.0,nan,Sosa-Fiscella+2021 [szp+21]; also in Zubieta+2024 [zgp+24] and Grover+2024 [gjs+24],False
+B0833-45,59479.0,0.2,0.13,Zubieta+2024 [zgp+24],False
+B0833-45,60429.9,2396.0,23.0,Grover+2025 [ggj+25],False
+J0834-4159,53415.0,102.7,0.26,Yu+2012 [ymh+12],False
+B0844-35,55679.0,0.62,3.0,Basu+2021 [bsa+21],False
+B0853-33,54521.0,0.06,0.03,New - Our measurement,True
+J0901-4624,57179.0,0.9,0.02,Lower+2021 [ljd+21],False
+J0905-5127,49552.0,13.6,-1.8,Yu+2012 [ymh+12],False
+J0905-5127,52931.0,8.3,1.2,Yu+2012 [ymh+12],False
+B0919+06,55152.0,1256.2,0.1,Basu+2021 [bsa+21],False
+J0940-5428,55346.0,1573.9,11.0,Lower+2021 [ljd+21],False
+J0940-5428,58322.0,1100.5,4.0,Lower+2021 [ljd+21],False
+J1016-5857,52549.0,1622.6,3.7,Yu+2012 [ymh+12],False
+J1016-5857,55041.0,1912.0,4.4,Yu+2012 [ymh+12],False
+J1016-5857,55595.0,1464.4,4.0,Lower+2021 [ljd+21],False
+J1016-5857,56975.0,6.21,nan,Lower+2021 [ljd+21],False
+J1019-5749,55595.0,1.33,0.12,Lower+2021 [ljd+21],False
+J1019-5749,55981.0,377.8,0.51,Lower+2021 [ljd+21],False
+J1019-5749,59182.0,8.3,nan,Keith+2024 [kjk+24],False
+J1019-5749,59265.0,398.3,nan,Keith+2024 [kjk+24],False
+J1023-5746,55043.0,3570.0,10.62,G&#252;gercino&#287;lu+22 [ggyz22]; also in Belfore+2011 [3rd Fermi symp.],False
+J1023-5746,56004.0,2822.0,12.6,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1023-5746,56647.0,3306.0,11.0,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1023-5746,57192.0,22.0,-1.74,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1023-5746,57727.0,3784.9,14.82,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1023-5746,58202.0,2729.0,5.2,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1023-5746,58823.0,1681.0,6.77,G&#252;gercino&#287;lu+22 [ggyz22],False
+J1028-5819,57881.0,2296.5,35.0,Lower+2021 [ljd+21]; also in Liu+24 [lyg+24],False
+B1046-58,48944.0,19.0,0.3,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1046-58,49034.0,3000.0,3.7,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1046-58,50791.49,768.0,14.0,"Urama (2002) [ura02], also in Yu+2012 [ymh+12]",False
+B1046-58,52733.0,1838.4,3.7,Yu+2012 [ymh+12],False
+B1046-58,53673.0,28.5,0.2,Yu+2012 [ymh+12],False
+B1046-58,54495.0,3043.1,4.77,"Weltevrede+2010 [wjm+10], also in Yu+2012 [ymh+12] and Lower+2021 [ljd+21]",False
+B1046-58,56756.0,2963.0,9.0,Lower+2021 [ljd+21],False
+B1046-58,59203.9,8.89,nan,Zubieta+2023 [zmf+23],False
+B1046-58,59540.0,9.9,nan,Zubieta+2023 [zmf+23],False
+B1046-58,59732.0,0.91,0.009,Zubieta+2024 [zgp+24],False
+B1046-58,60090.0,4.5,1.01,Zubieta+2024 [zgp+24],False
+B1046-58,60406.6,4078.0,11.0,Zubieta+2024 [zgp+24],False
+1E_1048.1-5937,52386.0,2900.0,76.0,Dib+2008 [dkg08b],False
+1E_1048.1-5937,54185.9,16300.0,-111.0,Dib+2008 [dkg08b],False
+J1052-5954,54526.0,6747.8,14.1,"Weltevrede+2010 [wjm+10], also in Yu+2012 [ymh+12]",False
+J1055-6028,57035.0,105.7,1.3,Lower+2021 [ljd+21],False
+J1105-6107,50417.0,279.7,4.63,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+J1105-6107,50610.0,2.0,0.19,Wang+2000 [wmp+00],False
+J1105-6107,51598.0,971.7,0.1,Yu+2012 [ymh+12],False
+J1105-6107,54711.0,23.0,0.0,"Weltevrede+2010 [wjm+10], also in Yu+2012 [ymh+12]",False
+J1105-6107,55288.0,954.4,nan,Yu+2012 [ymh+12],False
+J1112-6103,51395.0,1825.0,4.7,Yu+2012 [ymh+12],False
+J1112-6103,53337.0,1202.0,7.0,Yu+2012 [ymh+12],False
+J1112-6103,55288.0,1793.0,6.0,Lower+2021 [ljd+21],False
+J1112-6103,57922.0,1283.0,4.9,Lower+2021 [ljd+21],False
+J1119-6127,51398.0,4.4,0.04,"Camilo+2004 [ckl+00], also in Yu+2012 [ymh+12]",False
+J1119-6127,53290.0,321.0,6.0,"Weltevrede+2011 [wje11], also in Yu+2012 [ymh+12]",False
+J1119-6127,54240.0,5419.0,197.8,"Weltevrede+2011 [wje11], also in Yu+2012 [ymh+12]",False
+J1119-6127,57597.5,5790.0,nan,Archibald+2016 (ATel),False
+J1123-6259,49705.87,749.0,1.0,Wang+2000 [wmp+00],False
+J1124-5916,55191.0,16.0,4.73,Ray+2011 [rkp+11],False
+J1141-3322,50521.31,0.4,-4.0,Espinoza+2011 [elsk11],False
+J1248-6344,56043.0,1.7,nan,Lower+2021 [ljd+21],False
+B1254-10,58645.0,3.017,nan,New - Our measurement,True
+B1259-63,50691.0,3.2,2.5,Wang+2004 [wjm04],False
+J1301-6305,51923.0,4630.0,8.6,Yu+2012 [ymh+12],False
+J1301-6305,53383.0,2664.0,3.9,Yu+2012 [ymh+12],False
+J1301-6305,55124.0,4169.0,5.8,Lower+2021 [ljd+21],False
+J1301-6305,57718.0,658.0,6.0,Lower+2021 [ljd+21],False
+J1320-5359,56354.0,10.5,0.2,Lower+2021 [ljd+21],False
+J1320-5359,56737.0,246.8,0.08,Lower+2021 [ljd+21],False
+B1325-43,43590.0,116.0,nan,Newton+1981 [nmc81],True
+B1338-62,47989.0,1509.0,0.2,Wang+2000 [wmp+00],False
+B1338-62,48453.0,23.0,-0.5,Wang+2000 [wmp+00],False
+B1338-62,48645.0,996.0,0.7,Wang+2000 [wmp+00],False
+B1338-62,49134.0,13.0,0.6,Wang+2000 [wmp+00],False
+B1338-62,49363.0,146.0,0.7,Wang+2000 [wmp+00],False
+B1338-62,49523.0,37.0,-0.6,Wang+2000 [wmp+00],False
+B1338-62,49766.0,15.0,-0.3,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,49904.0,31.0,-1.9,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,50008.0,1648.0,3.3,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,50322.0,30.0,0.6,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,50529.0,23.0,1.0,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,50683.0,708.0,1.2,"Wang+2000 [wmp+00], also in Yu+2012 [ymh+12]",False
+B1338-62,51144.0,170.0,nan,Yu+2012 [ymh+12],False
+B1338-62,51617.0,1121.5,nan,Yu+2012 [ymh+12],False
+B1338-62,52093.0,480.0,nan,Yu+2012 [ymh+12],False
+B1338-62,52250.0,454.5,nan,Yu+2012 [ymh+12],False
+B1338-62,52788.0,219.2,-8.3,Yu+2012 [ymh+12],False
+B1338-62,53232.0,277.0,nan,Yu+2012 [ymh+12],False
+B1338-62,53471.0,985.0,nan,Yu+2012 [ymh+12],False
+B1338-62,54128.0,194.0,5.0,Yu+2012 [ymh+12],False
+B1338-62,54468.0,3078.2,nan,"Weltevrede+2010 [wjs10], also in Yu+2012 [ymh+12]",False
+B1338-62,54870.0,3066.7,nan,"Weltevrede+2010 [wjs10], also in Yu+2012 [ymh+12]",False
+B1338-62,55088.0,1579.0,nan,Yu+2012 [ymh+12],False
+B1338-62,55484.0,2.4,0.49,Lower+2021 [ljd+21],False
+B1338-62,55835.0,329.0,0.98,Lower+2021 [ljd+21],False
+B1338-62,56098.0,151.2,0.22,Lower+2021 [ljd+21],False
+B1338-62,56386.0,96.0,nan,Lower+2021 [ljd+21],False
+B1338-62,56479.0,37.0,nan,Lower+2021 [ljd+21],False
+B1338-62,56602.0,1709.7,1.06,Lower+2021 [ljd+21],False
+B1338-62,57357.0,28.7,0.25,Lower+2021 [ljd+21],False
+B1338-62,57492.0,21.7,0.8,Lower+2021 [ljd+21],False
+B1338-62,57647.0,706.0,0.77,Lower+2021 [ljd+21],False
+B1338-62,57880.0,60.0,nan,Lower+2021 [ljd+21],False
+B1338-62,58178.0,nan,nan,Lower+2021 [ljd+21],False
+B1338-62,58214.0,nan,nan,Lower+2021 [ljd+21],False
+J1341-6023,59450.0,5774.98,nan,Keith+2024 [kjk+24],False
+J1357-6429,52021.0,2428.0,6.3,"Espinoza+2011 [elsk11], also in Camilo+2004 [cml+04]",False
+J1357-6429,54803.0,1752.0,2.8,Weltevrede+2010 [wjm+10],False
+J1357-6429,55576.0,4860.0,14.7,Lower+2021 [ljd+21],False
+J1357-6429,57795.0,2250.0,7.0,Lower+2021 [ljd+21],False
+J1357-6429,58148.0,1930.0,nan,Lower+2021 [ljd+21],False
+J1406-6121,56193.0,143.5,2.0,Lower+2021 [ljd+21],False
+J1410-6132,54652.0,272.6,-3.31,Weltevrede+2010 [wjm+10],False
+J1412-6145,51868.0,7253.0,18.0,Yu+2012 [ymh+12],False
+J1413-6205,54735.0,1730.0,nan,Belfore+2011 [3rd Fermi symp.],False
+J1413-6141,51290.0,39.0,nan,Yu+2012 [ymh+12],False
+J1413-6141,51463.0,970.0,nan,Yu+2012 [ymh+12],False
+J1413-6141,51796.3,59.7,-0.3,Yu+2012 [ymh+12],False
+J1413-6141,52092.0,811.0,0.3,Yu+2012 [ymh+12],False
+J1413-6141,52899.4,46.9,nan,Yu+2012 [ymh+12],False
+J1413-6141,53125.0,1410.0,nan,Yu+2012 [ymh+12],False
+J1413-6141,54286.0,2409.8,0.4,Yu+2012 [ymh+12],False
+J1413-6141,55744.0,235.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,56147.0,200.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,56567.0,371.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,56975.0,30.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,57236.0,266.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,57509.0,356.0,nan,Lower+2021 [ljd+21],False
+J1413-6141,57838.0,2137.0,nan,Lower+2021 [ljd+21],False
+J1420-6048,51600.0,1146.2,3.8,Yu+2012 [ymh+12],False
+J1420-6048,52754.0,2019.0,6.6,Yu+2012 [ymh+12],False
+J1420-6048,53725.0,1270.0,3.9,Yu+2012 [ymh+12],False
+J1420-6048,54652.0,937.1,2.95,"Weltevrede+2011 [wje11], also in Yu+2012 [ymh+12]; also in Liu+24 [lyg+24]",False
+J1420-6048,55410.0,1346.0,nan,Yu+2012 [ymh+12]; also in Liu+24 [lyg+24],False
+J1420-6048,56267.0,1954.2,5.7,Lower+2021 [ljd+21]; also in Liu+24 [lyg+24],False
+J1420-6048,57210.0,1210.0,9.0,Lower+2021 [ljd+21]; also in Liu+24 [lyg+24],False
+J1420-6048,58555.0,2777.0,64.0,Liu+24 [lyg+24],False
+B1449-64,54552.0,0.3,0.6,Yu+2012 [ymh+12],False
+B1449-64,59015.0,1.14,nan,Keith+2024 [kjk+24],False
+J1452-6036,55055.22,29.0,0.19,Yu+2012 [ymh+12],False
+J1452-6036,57115.0,0.13,nan,Lower+2021 [ljd+21],False
+J1524-5625,55745.0,2977.0,15.5,Lower+2021 [ljd+21],False
+J1524-5625,59297.0,2076.0,nan,Keith+2024 [kjk+24],False
+B1508+55,41732.0,0.2,-6.0,Manchester+1974 [mt74],False
+B1530+27,49732.0,0.29,-1.0,Espinoza+2011 [elsk11],False
+J1531-5610,51731.0,2637.0,25.0,Yu+2012 [ymh+12],False
+B1535-56,48165.0,2793.0,1.0,Johnston+1995 [jml+95],False
+B1610-50,49803.0,6460.0,9.7,Wang+2000 [wmp+00],False
+B1610-50,53013.0,6242.0,9.14,Yu+2012 [ymh+12],False
+B1610-50,55734.0,4098.0,3.0,Lower+2021 [ljd+21],False
+B1610-50,56443.0,5949.0,nan,Lower+2021 [ljd+21],False
+J1617-5055,46960.0,600.0,nan,Torii+2000 [tgv+00],False
+J1617-5055,54747.0,334.0,9.0,Lower+2021 [ljd+21],False
+J1617-5055,55164.0,11.0,0.8,Lower+2021 [ljd+21],False
+J1617-5055,55316.0,68.0,2.2,Lower+2021 [ljd+21],False
+J1617-5055,55873.0,55.0,1.1,Lower+2021 [ljd+21],False
+J1617-5055,56267.0,2068.0,13.2,Lower+2021 [ljd+21],False
+J1636-2614,56472.0,0.71,0.1,Basu+2021 [bsa+21]; also in Burgay+2019 (as J1636-2614) [bsb+19],False
+B1641-45,43390.0,191.0,2.0,Manchester et al. (1978) [mngh7],False
+B1641-45,46453.0,803.6,0.5,Flanagan (1993) [fla93],False
+B1641-45,47589.0,1.61,1.1,Flanagan (1993) [fla93],False
+B1641-45,56600.0,717.4,0.4,Lower+2021 [ljd+21],False
+B1643-43,53876.0,885.0,1.5,Yu+2012 [ymh+12],False
+B1643-43,55288.0,8591.0,16.0,Lower+2021 [ljd+21],False
+CXO_J164710.2-455216,53999.0,65000.0,nan,Israel+2007 [icd+07],False
+J1650-4502,57778.0,12767.0,290.0,Lower+2021 [ljd+21],False
+J1702-4128,57719.0,3090.0,10.0,Lower+2021 [ljd+21],False
+J1702-4310,53943.0,4810.0,17.0,Yu+2012 [ymh+12],False
+J1702-4310,57510.0,3129.0,5.0,Lower+2021 [ljd+21],False
+B1702-19,48902.0,0.4,1.0,Espinoza+2011 [elsk11],False
+B1702-19,55171.0,0.28,nan,Basu+2021 [bsa+21],False
+B1702-19,55955.0,0.3,nan,Basu+2021 [bsa+21],False
+B1702-19,57954.0,0.18,nan,Basu+2021 [bsa+21],False
+J1705-3423,51956.0,0.59,1.0,Espinoza+2011 [elsk11],False
+J1705-3423,54408.0,0.57,3.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+J1705-3423,55503.0,0.6,5.0,New - Our measurement,True
+J1705-3950,58236.0,9331.0,61.0,Lower+2021 [ljd+21],False
+B1706-44,48775.0,2057.0,4.0,Johnston+1995 [jml+95],False
+B1706-44,51488.0,1167.0,6.2,Yu+2012 [ymh+12],False
+B1706-44,52716.0,2872.0,8.0,Yu+2012 [ymh+12],False
+B1706-44,54710.0,2749.7,4.95,Weltevrede+2010 [wjm+10]; also in Liu+24 [lyg+24],False
+B1706-44,56339.0,2694.0,9.7,Liu+24 [lyg+24],False
+B1706-44,58176.0,52.4,nan,Lower+2018 [lfb+18]; also in Liu+24 [lyg+24],False
+1RXS_J1708-4009,51445.0,561.0,5.0,Dib+2008 [dkg08],False
+1RXS_J1708-4009,52016.0,4202.0,620.0,Dib+2008 [dkg08],False
+1RXS_J1708-4009,52990.0,308.0,0.0,Dib+2008 [dkg08],False
+1RXS_J1708-4009,53366.0,572.0,12.0,Dib+2008 [dkg08],False
+1RXS_J1708-4009,53549.0,2707.0,12.0,Dib+2008 [dkg08],False
+1RXS_J1708-4009,53636.0,737.0,-36.0,Dib+2008 [dkg08],False
+B1717-16,51169.0,1.5,8.0,Espinoza+2011 [elsk11],False
+J1718-3825,54911.0,1.94,-0.12,Yu+2012 [ymh+12]; also in Liu+24 [lyg+24],False
+J1718-3825,57950.0,7.1,nan,Lower+2021 [ljd+21]; also in Liu+24 [lyg+24],False
+J1718-3825,59121.0,1.9,-0.12,Liu+24 [lyg+24],False
+B1718-35,49971.0,7.5,0.3,Espinoza+2011 [elsk11],False
+J1718-3718,54610.0,33250.0,6.0,Manchestre+2011 [mh11],False
+B1727-33,48000.0,3033.0,4.0,Johnston+1995 [jml+95],False
+B1727-33,52107.0,3202.0,5.9,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1727-33,55908.0,2254.0,5.3,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1727-33,58398.0,5.9,nan,New - Our measurement,True
+B1727-47,49387.2,137.0,1.5,"Espinoza+2011 [elsk11], also in D’Alessandro+1997 [dm97],Yu+2012 [ymh+12]",False
+B1727-47,50718.1,4.4,4.0,"Espinoza+2011 [elsk11], also in Wang+2000 [wmp+00],Yu+2012 [ymh+12]",False
+B1727-47,52472.7,126.4,3.4,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1727-47,53582.0,2.7,0.2,Yu+2012 [ymh+12],False
+B1727-47,56975.0,6.4,nan,Lower+2021 [ljd+21],False
+B1727-47,57984.0,3147.7,nan,Jankowski+17 (ATEL #10770); also in Basu+2019 [bkj+19],False
+J1730-3353,54004.0,68.9,nan,New - Our measurement,True
+J1734-3333,56340.0,90.0,1.0,Basu+2021 [bsa+21],False
+J1734-3333,58944.0,24.0,nan,New - agl,True
+B1736-29,46965.0,3.3,1.7,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1737-30,46991.0,421.0,3.4,"Espinoza+2011 [elsk11], also in McKenna+1990 [ml90] Zou+2008 [zwm+08]",False
+B1737-30,47289.0,31.0,11.0,"Espinoza+2011 [elsk11], also in McKenna+1990 [ml90], Zou+2008 [zwm+08]",False
+B1737-30,47337.0,7.0,3.0,"Espinoza+2011 [elsk11], also in McKenna+1990 [ml90], Zou+2008 [zwm+08]",False
+B1737-30,47466.0,26.0,0.0,"Espinoza+2011 [elsk11], also in McKenna+1990 [ml90], Zou+2008 [zwm+08]",False
+B1737-30,47670.22,600.0,3.0,"Espinoza+2011 [elsk11], also in McKenna+1990 [ml90], Zou+2008 [zwm+08]",False
+B1737-30,48158.0,10.0,12.0,Espinoza+2011 [elsk11],False
+B1737-30,48191.69,659.0,57.0,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96], Zou+2008 [zwm+08]",False
+B1737-30,48218.0,48.0,8.0,"Shemar+1996 [sl96], also in Zou+2008 [zwm+08]",False
+B1737-30,48431.3,16.0,3.0,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96], Zou+2008 [zwm+08]",False
+B1737-30,49047.5,17.0,2.0,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96], Zou+2008 [zwm+08]",False
+B1737-30,49239.07,169.7,1.3,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96], Zou+2008 [zwm+08]",False
+B1737-30,49459.0,10.0,2.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Zou+2008 [zwm+08]",False
+B1737-30,49542.3,6.0,1.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Zou+2008 [zwm+08]",False
+B1737-30,50574.83,442.5,2.4,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Zou+2008 [zwm+08]",False
+B1737-30,50939.0,1444.0,1.8,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Urama (2002) [ura02], Zou+2008 [zwm+08], Yu+2012 [ymh+12]",False
+B1737-30,51685.0,0.7,0.1,Janssen+2006 [js06],False
+B1737-30,51827.0,0.9,0.1,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B1737-30,52048.0,2.0,1.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B1737-30,52245.0,4.0,-1.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06], Zou+2008 [zwm+08]",False
+B1737-30,52266.0,16.0,-3.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06], Zou+2008 [zwm+08]",False
+B1737-30,52346.6,158.0,1.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06], Zou+2008 [zwm+08], Yu+2012 [ymh+12]",False
+B1737-30,52576.0,0.9,-0.1,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B1737-30,52779.7,1.7,-0.1,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+B1737-30,52858.78,18.6,1.4,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06], Zou+2008 [zwm+08]",False
+B1737-30,52942.5,20.2,1.5,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06], Zou+2008 [zwm+08]",False
+B1737-30,53023.52,1850.9,2.4,"Espinoza+2011 [elsk11], also in Zou+2008 [zwm+08], Yu+2012 [ymh+12]",False
+B1737-30,53473.56,0.8,0.2,Espinoza+2011 [elsk11],False
+B1737-30,54450.19,45.9,4.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10], Weltevrede+2010 [wjm+10], Yu+2012 [ymh+12]",False
+B1737-30,54695.19,3.0,1.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+B1737-30,54810.9,5.2,1.0,Espinoza+2011 [elsk11],False
+B1737-30,54928.6,2.3,1.0,Espinoza+2011 [elsk11],False
+B1737-30,55213.0,2663.0,1.2,Basu+2021 [bsa+21]; also Yu+2012 [ymh+12],False
+B1737-30,55936.4,18.3,0.4,Basu+2021 [bsa+21],False
+B1737-30,57346.0,1.94,0.0,Jankowski+2016; also Basu+2019 [bkj+19],False
+B1737-30,57468.599,229.4,1.2,"Basu+2021 [bsa+21]; also Jankowski+2016, Basu+2019 [bkj+19]",False
+B1737-30,58241.0,837.9,2.0,Basu+2021 [bsa+21]; also Basu+2019 [bkj+19],False
+B1737-30,59934.8,328.3,1.37,Our measurement; ; also in Zubieta+2024 [zgp+24] and Grover+2024 [gjs+24],False
+B1737-30,60980.0,2810.0,nan,Shaw+2025 [bak+25]; Also in Grover+25 [gjk+25],False
+J1737-3102,57087.0,18.0,nan,Basu+2021 [bsa+21],False
+J1737-3137,51559.0,4.0,0.0,Espinoza+2011 [elsk11],False
+J1737-3137,53040.0,234.0,2.9,Espinoza+2011 [elsk11],False
+J1737-3137,54348.0,1342.4,1.4,"Espinoza+2011 [elsk11], also in Weltevrede+2010 [wjm+10], Yu+2012 [ymh+12]",False
+J1737-3137,57115.0,7.0,0.0,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1737-3137,58147.0,4498.0,1.3,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1737-3137,58858.8,1.53,0.5,New - Our measurement; also in Lower+2021 [ljd+21],True
+J1737-3137,59848.0,215.6,1.22,New - Our measurement,True
+B1740-31,49572.0,2.2,2.0,Espinoza+2011 [elsk11],False
+J1740+1000,54747.6,1.2,1.0,Espinoza+2011 [elsk11],False
+J1740+1000,56164.0,2910.9,11.0,Basu+2021 [bsa+21],False
+J1746-2856,57038.0,24.4,2.1,Basu+2021 [bsa+21],False
+J1751-3323,53004.0,2.3,-1.0,Yuan+2010 [ywml10],False
+J1751-3323,54435.0,3.0,-1.0,Yuan+2010 [ywml10],False
+J1751-3323,57019.0,13.0,-5.0,Basu+2021 [bsa+21],False
+J1751-3323,58438.0,3.4,27.0,Basu+2019 [bkj+19],False
+B1754-24,55716.0,7807.0,6.3,Basu+2021 [bsa+21],False
+B1757-24,49476.0,1987.9,4.6,"Espinoza+2011 [elsk11], also inWang+2000 [wmp+00], Yu+2012 [ymh+12]",False
+B1757-24,50651.0,1247.4,4.7,"Espinoza+2011 [elsk11], also inWang+2000 [wmp+00], Yu+2012 [ymh+12]",False
+B1757-24,52055.0,3755.8,6.8,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1757-24,53033.25,17.4,1.4,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1757-24,54661.0,3101.0,9.3,"Espinoza+2011 [elsk11], also in Weltevrede+2010 [wjm+10], Yu+2012 [ymh+12]",False
+B1757-24,56979.0,2413.0,5.3,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1757-24,58564.76,2250.9,3.82,New - Our measurement,True
+B1758-03,48000.0,3.1,2.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+B1758-23,46907.0,216.3,-0.5,"Espinoza+2011 [elsk11], also in Kaspi+1993 [klm+9]",False
+B1758-23,47855.0,230.7,-0.3,"Espinoza+2011 [elsk11], also in Kaspi+1993 [klm+9]",False
+B1758-23,48453.95,348.0,0.0,"Espinoza+2011 [elsk11], also in Wang+2000 [wmp+00], Yu+2012 [ymh+12]",False
+B1758-23,49701.7,66.0,2.0,"Espinoza+2011 [elsk11], also in Wang+2000 [wmp+00], Yu+2012 [ymh+12]",False
+B1758-23,50055.3,22.0,-2.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Yu+2012 [ymh+12]",False
+B1758-23,50363.06,81.0,2.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03], Yu+2012 [ymh+12]",False
+B1758-23,50939.0,6.0,4.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1758-23,52093.0,646.7,0.9,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+B1758-23,53306.98,497.0,-1.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10]",False
+B1758-23,55360.0,2.9,nan,Basu+2021 [bsa+21]; also Yu+2012 [ymh+12],False
+B1758-23,55841.0,1.7,nan,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1758-23,56149.024,513.8,1.2,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1758-23,57586.2,48.67,0.79,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1758-23,58846.0,5.0,nan,New - Our measurement,True
+B1758-23,58993.5,374.0,nan,New - Our measurement,True
+B1800-21,48245.0,4074.4,9.3,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1800-21,50264.1,7.1,0.5,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+B1800-21,50777.0,3184.0,8.0,"Espinoza+2011 [elsk11], also inWang+2000 [wmp+00], Yu+2012 [ymh+12]",False
+B1800-21,53429.0,3929.3,10.6,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10], Yu+2012 [ymh+12]",False
+B1800-21,55775.0,4793.0,18.6,New - Our measurement; also in Lower+2021 [ljd+21],True
+B1800-21,58958.0,4960.6,8.5,New - Our measurement. Also in Keith+2024 [kjk+24],True
+J1806-2125,51708.0,15773.1,37.0,"Espinoza+2011 [elsk11], also in Hobbs+2002 [hlj+02]",False
+J1809-0119,55406.0,1.7,0.0,"Our measurement, also in Bates+2012 [bbb+12]",False
+J1809-0119,55803.0,3.0,0.0,"Our measurement, also in Bates+2012 [bbb+12]",False
+B1809-173,49932.0,1.5,6.0,Espinoza+2011 [elsk11],False
+B1809-173,53106.2,14.8,7.0,"Espinoza+2011 [elsk11] also, in Yuan+2010 [ywml10]",False
+B1809-173,54365.8,1.4,1.0,"Espinoza+2011 [elsk11] also, in Yuan+2010 [ywml10]",False
+J1809-1917,53251.0,1625.1,7.8,Espinoza+2011 [elsk11],False
+J1809-2004,54196.0,2.0,7.0,Espinoza+2011 [elsk11],False
+J1809-2004,56227.5,48.67,0.79,Basu+2021 [bsa+21],False
+J1809-2004,58743.0,3.47,0.05,New - Our measurement,True
+J1813-1246,55094.0,1166.0,6.4,Ray+2011 [rkp+11],False
+J1814-1744,51371.0,8.0,-3.0,Espinoza+2011 [elsk11],False
+J1814-1744,51678.0,10.0,5.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+J1814-1744,52075.0,34.0,-5.0,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+J1814-1744,53241.0,3.0,0.7,"Espinoza+2011 [elsk11], also in Janssen+2006 [js06]",False
+J1814-1744,53756.4,11.0,8.0,Espinoza+2011 [elsk11],False
+J1814-1744,54768.4,17.0,2.0,New - Our measurement,True
+J1814-1744,55626.0,16.0,0.3,Basu+2021 [bsa+21],False
+B1815-14,52057.0,0.54,-0.7,Yuan+2010 [ywml10],False
+J1818-1607,59828.56,3700.0,-120.0,Hu+20 [hbg+20],False
+J1819-1458,53925.79,725.0,78.0,"Espinoza+2011 [elsk11], also in Lyne+2009 [lmk+09]",False
+J1819-1458,54176.5,72.0,36.0,"Espinoza+2011 [elsk11], also in Lyne+2009 [lmk+09]",False
+B1821-11,54306.0,2877.0,-10.0,Espinoza+2011 [elsk11],False
+J1821-1419,53074.0,225.0,nan,New - Our measurement,True
+J1821-1419,57372.0,109.0,nan,New - Our measurement,True
+J1821-1419,58860.0,222.4,0.92,New - Our measurement,True
+J1821-1419,59586.0,34.0,1.0,New - Our measurement,True
+B1821-24A,51980.0,0.008,0.0,"Espinoza+2011 [elsk11], also in Cognard+2004 [cb04]",False
+B1822-09,49942.1,2.8,-2.0,"Espinoza+2011 [elsk11], also in Shabanova (1998) [sha98]",False
+B1822-09,50314.0,1.3,0.0,Espinoza+2011 [elsk11],False
+B1822-09,52056.0,29.8,3.4,"Espinoza+2011 [elsk11], mentioned in Zou+2004 [zww+04]",False
+B1822-09,52810.0,1.3,-2.0,"Espinoza+2011 [elsk11], mentioned in Zou+2004 [zww+04]",False
+B1822-09,53734.6,4.0,-6.0,"Espinoza+2011 [elsk11], also in Shabanova (2007) [sha07], Yuan+2010 [ywml10]",False
+B1822-09,54114.96,121.0,-4.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10], Yu+2012 [ymh+12]",False
+B1822-09,58486.2,3.8,nan,New - Our measurement,True
+B1823-13,46507.0,2746.0,1.7,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1823-13,49120.0,2984.6,7.6,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1823-13,53206.0,0.6,-1.0,Espinoza+2011 [elsk11],False
+B1823-13,53259.0,3.0,-1.0,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10], Yu+2012 [ymh+12]",False
+B1823-13,53737.0,3581.0,9.6,"Espinoza+2011 [elsk11], also in Yuan+2010 [ywml10], Yu+2012 [ymh+12]",False
+B1823-13,56556.0,2599.7,10.1,Basu+2021 [bsa+21],False
+B1823-13,58879.0,2481.5,5.9,New - Our measurement. Also in Keith+2024 [kjk+24],True
+B1824-10,48764.0,0.4,nan,Basu+2021 [bsa+21],False
+B1828-11,55040.9,6.3,nan,Basu+2021 [bsa+21],False
+J1828-1101,60719.0,1015.27,4.91,New - Our measurement,True
+B1830-08,47541.3,0.9,-0.1,Espinoza+2011 [elsk11],False
+B1830-08,48051.0,1865.6,1.742,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1830-08,54779.0,0.5,0.15,Basu+2021 [bsa+21],False
+B1830-08,58922.0,0.15,-0.03,New - Our measurement,True
+B1830-08,60897.0,1.56,nan,New - Our measurement,True
+J1830-1135,52367.0,2.1,1.0,Espinoza+2011 [elsk11],False
+J1833-1034,54169.0,3.1,1.4,Roy+2012 [rgl12],False
+J1833-1034,54423.0,1.1,4.0,Roy+2012 [rgl12],False
+J1833-1034,54750.0,3.6,-7.7,Roy+2012 [rgl12],False
+J1833-1034,55142.0,7.5,-9.9,Roy+2012 [rgl12],False
+J1832+0029,53498.0,66.0,53.0,New - our measurement,True
+B1834-10,55744.0,3.6,nan,Basu+2021 [bsa+21],False
+B1834-10,58920.0,4702.0,nan,Keith+2024 [kjk+24],False
+B1834-10,59329.0,1.88,0.3,New - Our measurement,True
+J1834-0731,53479.0,4.4,0.6,Espinoza+2011 [elsk11],False
+J1835-0024,58649.0,0.8,1.02,New - Our measurement,True
+J1835-1020,57589.5,3.26,0.2,Basu+2021 [bsa+21],False
+J1835-1106,52225.8,15.6,2.5,"Espinoza+2011 [elsk11], also in Zou+2004 [zww+04], Yu+2012 [ymh+12]",False
+J1835-1106,58488.0,9.3,4.0,New - Our measurement,True
+J1837-0604,55821.0,1398.0,6.9,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1837-0604,56511.0,16.7,nan,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1837-0604,58233.7,70.0,nan,Basu+2019 [bkj+19],False
+J1837-0604,56910.0,3290.0,nan,Keith+2024 [kjk+24],False
+J1837-0559,53150.0,3.2,13.0,Espinoza+2011 [elsk11],False
+J1837-0559,56258.0,0.2,nan,Basu+2021 [bsa+21],False
+J1837-0559,58022.0,3.4,nan,Basu+2021 [bsa+21],False
+AX_1838.0-0655,55010.0,1550.0,nan,Kuiper+2010 [kh10],False
+J1838-0537,55100.0,5500.0,-15.0,Pletsch+2012 [pga+12],False
+J1838-0453,52162.0,9902.0,7.0,Espinoza+2011 [elsk11],False
+J1838-0453,54140.0,9.0,-0.1,Espinoza+2011 [elsk11],False
+J1838-0453,58692.0,71.0,-6.0,New - Our measurement,True
+B1838-04,53388.0,578.6,7.7,"Espinoza+2011 [elsk11] also, in Yuan+2010 [ywml10]",False
+J1839-0223,56994.0,3.17,3.5,Basu+2021 [bsa+21],False
+J1841-0345,56863.0,3879.0,2.7,New - Our Measurement,True
+B1841-05,47452.0,1.0,0.9,Espinoza+2011 [elsk11],False
+J1841-0524,53562.0,29.0,1.0,Espinoza+2011 [elsk11],False
+J1841-0524,54012.9,25.0,2.0,"Espinoza+2011 [elsk11], also in Yu+2012 [ymh+12]",False
+J1841-0524,54503.0,1032.0,0.7,"Espinoza+2011 [elsk11], also in Weltevrede+2010 [wjm+10], Yu+2012 [ymh+12]",False
+J1841-0524,55525.0,804.9,0.8,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1841-0524,56564.6,21.6,nan,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+J1841-0524,57101.53,1011.6,1.01,New - Our measurement,True
+J1841-0524,58738.6,130.4,0.6,New - Our measurement,True
+J1841-0524,59111.6,128.0,0.1,New - Our measurement,True
+1E_1841-045,52464.0,15170.0,96.0,Based on Table 8 in Dib+2008 [dkg08],False
+1E_1841-045,52997.05,2450.0,-1.0,Based on Table 8 in Dib+2008 [dkg08],False
+1E_1841-045,53823.97,1390.0,-7.0,Based on Table 8 in Dib+2008 [dkg08],False
+B1841-04,49358.0,0.22,-0.03,Basu+2021 [bsa+21],False
+J1841-0157,56923.6,33.3,nan,Basu+2021 [bsa+21],False
+J1842+0257,57112.0,12060.9,1.0,Basu+2021 [bsa+21],False
+J1843-0509,59269.0,10.82,1.95,New - Our measurement,True
+J1844-0310,54410.0,1.8,-0.5,New - Our measurement,True
+J1844+00,51435.0,0.3,1.0,Espinoza+2011 [elsk11],False
+J1844+00,51722.5,5.2,4.0,Espinoza+2011 [elsk11],False
+J1844+00,56784.0,249.55,4.1,Basu+2021 [bsa+21],False
+J1845-0316,52128.0,30.0,-2.0,Espinoza+2011 [elsk11],False
+J1845-0316,54170.0,72.0,3.0,Espinoza+2011 [elsk11],False
+J1845-0316,58617.0,818.84,0.67,New - Our measurement,True
+J1845-0743,57939.0,0.04,-0.11,Basu+2021 [bsa+21],False
+J1846-0258,52210.0,2.5,0.93,Livingstone+2006 [lkgk06],False
+J1846-0258,53883.0,6200.0,4.46,"Livingstone+2009 [lkg09], also in Kuiper+2009 [kh09]",False
+B1846-06,60237.0,0.66,0.21,New - Our measurement,True
+B1844-04,55502.0,0.52,0.04,Basu+2021 [bsa+21]; also in Lower+2021 [ljd+21],False
+B1844-04,56041.0,0.102,0.0,New - Our measurement (Shaw/Lyne),True
+B1844-04,58244.0,0.16,0.01,Lower+2021 [ljd+21],False
+J1847-0130,53426.0,15.0,-3.0,Espinoza+2011 [elsk11],False
+J1847-0130,54784.45,80.0,6.0,Espinoza+2011 [elsk11],False
+J1847-0130,58857.79,567.0,1.2,New - Our measurement,True
+J1849-0001,60428.0,1740.0,82.0,Kuiper+2024 [khe+24],False
+J1849-0317,58306.0,33.0,nan,Basu+2021 [bsa+21],False
+J1850-0026,56239.2,14.3,0.9,Basu+2021 [bsa+21],False
+J1850-0026,56425.0,91.9,0.8,Basu+2021 [bsa+21],False
+J1850-0026,57495.3,7.0,0.7,Basu+2021 [bsa+21],False
+J1850-0026,57708.0,1196.7,0.8,Basu+2021 [bsa+21],False
+J1851-0029,54493.0,0.9,-3.0,Espinoza+2011 [elsk11],False
+J1853+0056,54970.0,5.4,0.4,Basu+2021 [bsa+21],False
+B1853+01,54123.0,11569.0,22.0,Espinoza+2011 [elsk11],False
+B1853+01,57325.0,3489.0,2.8,Basu+2021 [bsa+21],False
+J1853+0545,53450.0,1.49,1.6,Yuan+2010 [ywml10],False
+J1854-1557,58639.0,8.21,7.0,New - Our measurement,True
+J1856+0245,56388.0,2672.5,8.4,Basu+2021 [bsa+21],False
+B1859+01,51318.0,42.4,0.8,Espinoza+2011 [elsk11],False
+B1859+01,58149.0,1053.02,2.1,Basu+2021 [bsa+21],False
+B1859+07,46860.95,28.0,119.9,"Espinoza+2011 [elsk11], also in Shemar+1996 [sl96]",False
+B1900+06,48653.7,0.4,0.1,Espinoza+2011 [elsk11],False
+B1900+06,49447.0,0.3,-0.1,Espinoza+2011 [elsk11],False
+B1900+06,50316.0,0.3,0.5,Espinoza+2011 [elsk11],False
+B1900+06,51136.0,0.4,-0.4,Espinoza+2011 [elsk11],False
+B1900+06,54239.0,0.26,-0.7,"Espinoza+2011 [elsk11] also, in Yuan+2010 [ywml10]",False
+B1900+06,55436.0,0.19,nan,Basu+2021 [bsa+21],False
+B1900+06,58675.0,0.57,-0.53,New - Our measurement,True
+J1904-1629,59553.0,4.26,2.1,New - Our measurement,True
+B1907-03,48252.0,0.5,0.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+B1907-03,49228.2,2.5,2.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+B1907-03,53231.14,2.7,3.0,Espinoza+2011 [elsk11],False
+B1907+00,49530.0,0.4,3.0,Espinoza+2011 [elsk11],False
+B1907+00,51224.0,0.2,2.0,Espinoza+2011 [elsk11],False
+B1907+00,53546.0,0.5,3.0,Espinoza+2011 [elsk11],False
+B1907+03,52321.0,1.3,9.0,Espinoza+2011 [elsk11],False
+J1907+0602,55422.0,4660.0,nan,Belfore+2011 [3rd Fermi symp.],False
+J1907+0602,55866.0,1.49,-0.26,Xing+2014 [xw14],False
+J1907+0631,56987.0,2106.0,5.0,Basu+2021 [bsa+21],False
+J1907+0631,57901.0,4986.0,4.7,Basu+2021 [bsa+21],False
+J1909+0749,57491.0,2904.2,3.7,Basu+2021 [bsa+21],False
+B1907+10,52700.0,0.3,1.0,Yuan+2010 [ywml10],False
+J1909+0912,54977.0,4.4,0.09,Basu+2021 [bsa+21],False
+J1909+0912,57552.0,7389.8,4.58,Basu+2021 [bsa+21],False
+B1911+11,57693.0,0.26,0.36,New - Our measurement,True
+J1913+0446,53500.0,6.5,1.4,Espinoza+2011 [elsk11],False
+J1913+0446,55367.0,2.5,nan,Basu+2021 [bsa+21],False
+J1913+0446,56553.0,0.8,0.2,Basu+2021 [bsa+21],False
+J1913+0832,54653.908,38.0,6.0,Espinoza+2011 [elsk11],False
+J1913+0904,56132.8,3.2,nan,Basu+2021 [bsa+21],False
+J1913+1000,56600.0,491.0,nan,Basu+2021 [bsa+21],False
+B1913+10,54154.0,2.7,0.4,"Espinoza+2011 [elsk11] also, in Yuan+2010 [ywml10]",False
+J1913+1011,54431.0,0.2,0.1,Espinoza+2011 [elsk11],False
+B1913+16,52770.0,0.037,nan,Weisberg+2010 [wnt10],False
+B1917+00,50176.6,1.9,10.0,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+J1921+0812,55367.0,3632.9,3.0,Basu+2021 [bsa+21],False
+B1923+04,51495.0,0.08,-0.2,Espinoza+2011 [elsk11],False
+B1930+22,45989.0,629.0,nan,Espinoza+2011 [elsk11],False
+B1930+22,46906.0,4427.0,nan,Espinoza+2011 [elsk11],False
+B1930+22,50253.0,4472.0,12.2,"Espinoza+2011 [elsk11], also in Krawczyk+2003 [klgj03]",False
+J1931+1817,58392.0,8.4,0.5,New - Our measurement,True
+J1931+1817,59018.0,29.23,nan,New - Our measurement,True
+B1933+16,60481.65,0.72,-4.0,New - Our measurement,True
+B1935+25,52032.0,0.03,0.1,Espinoza+2011 [elsk11],False
+J1935+2025,59178.0,93.0,nan,Keith+2024 [kjk+24],False
+J1935+2025,59591.0,2840.0,nan,Keith+2024 [kjk+24],False
+B1946-25,50056.0,0.09,0.05,New - Our measurement,True
+J1948+2819,59322.0,0.54,0.01,New - Our measurement,True
+B1951+32,51967.0,2.3,-0.2,Janssen+2006 [js06],False
+B1951+32,52385.0,0.7,0.0,Janssen+2006 [js06],False
+B1951+32,52912.0,1.3,0.3,Janssen+2006 [js06],False
+B1951+32,53305.0,0.5,0.1,Janssen+2006 [js06],False
+B1951+32,54103.44,5.2,0.0,Espinoza+2011 [elsk11],False
+B1951+32,55328.0,1489.9,5.4,Basu+2021 [bsa+21],False
+B1953+50,46964.0,0.04,-0.6,Espinoza+2011 [elsk11],False
+B1953+50,49038.0,0.021,-0.1,Espinoza+2011 [elsk11],False
+J1954+2529,58813.0,0.26,3.1,New - Our measurement,True
+J1957+2831,52485.0,0.3,0.6,Espinoza+2011 [elsk11],False
+J1957+2831,52912.0,0.13,0.3,Espinoza+2011 [elsk11],False
+J1957+2831,54692.8,5.8,5.0,Espinoza+2011 [elsk11],False
+J1957+2831,56897.3,2.25,1.3,Basu+2021 [bsa+21],False
+J2004+3427,60337.0,4376.0,6.6,New - Our Measurement,True
+J2005-0020,55976.0,12.5,nan,Basu+2021 [bsa+21],False
+J2021+3651,52630.1,2587.0,6.2,Hessels+2004 [hrr+04],False
+J2021+3651,54177.0,745.0,5.5,Espinoza+2011 [elsk11],False
+J2021+3651,55110.0,2228.8,8.5,Basu+2021 [bsa+21],False
+J2021+3651,57200.0,3069.0,10.2,Basu+2021 [bsa+21],False
+J2021+3651,58668.0,1186.5,4.63,New - Our measurement,True
+J2021+3651,60289.0,2523.6,6.2,New - Our measurement,True
+B2020+28,47409.0,0.13,0.5,New - Our measurement,True
+B2021+51,58311.0,0.33,-0.83,New - Our measurement,True
+J2022+3842,54680.0,1900.0,nan,Arzoumanian+2011 [agr+11],False
+B2027+37,56993.6,6.2,nan,Basu+2021 [bsa+21],False
+J2032+4127,55820.0,273.3,1.06,Basu+2021 [bsa+21],False
+J2032+4127,59496.0,36.15,1.21,New - Our measurement,True
+J2111+4606,55700.0,1091.5,3.65,G&#252;gercino&#287;lu+22 [ggyz22],False
+J2111+4606,57562.0,3258.0,7.1,G&#252;gercino&#287;lu+22 [ggyz22],False
+B2113+14,47989.0,0.26,8.0,Espinoza+2011 [elsk11],False
+B2113+14,58627.0,0.4,1.9,New - Our measurement,True
+B2217+47,55857.4,1.16,0.4,Basu+2021 [bsa+21],False
+B2224+65,43072.0,1707.0,3.0,Backus+1982 [btd82],False
+B2224+65,51900.0,0.14,-2.9,Janssen+2006 [js06],False
+B2224+65,52950.0,0.08,-1.4,Janssen+2006 [js06],False
+B2224+65,53434.0,0.2,nan,Janssen+2006 [js06],False
+B2224+65,54266.0,0.4,-0.8,Yuan+2010 [ywml10],False
+B2224+65,60280.0,3764.18,7.85,New - Our measurement,True
+J2229+6114,53064.0,1139.3,12.5,Espinoza+2011 [elsk11],False
+J2229+6114,54110.0,327.0,-3.0,Espinoza+2011 [elsk11],False
+J2229+6114,54781.54,4.5,0.1,Espinoza+2011 [elsk11]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,55134.0,198.4,6.3,Basu+2021 [bsa+21]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,55601.0,1223.6,13.0,Basu+2021 [bsa+21]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,56362.0,66.0,3.2,Basu+2021 [bsa+21]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,56797.0,850.0,11.3,G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,58424.0,1047.1,12.4,Basu+2021 [bsa+21]; also in G&#252;gercino&#287;lu+22 [ggyz22],False
+J2229+6114,59262.0,283.9,6.5,New - Our measurement ; also in G&#252;gercino&#287;lu+22 [ggyz22],True
+B2255+58,49488.2,0.75,1.0,"Espinoza et al. (2011) [elsk11], also in Krawczyk et al. (2003) [klgj03]",False
+1E_2259+586,52443.9,4104.0,1111.0,Kaspi+2003 [kgw+03],False
+1E_2259+586,53750.0,30.8,nan,Icdem+2012 [ibi12],False
+1E_2259+586,54040.0,11167.0,nan,Icdem+2012 [ibi12],False
+1E_2259+586,54184.9032,880.0,nan,"Dib+2014 [dk14], also in Icdem+2012 [ibi12]",False
+1E_2259+586,54880.0,-14.0,-29.3,Icdem+2012 [ibi12],False
+B2323+63,53957.0,0.21,-0.32,Basu+2021 [bsa+21],False
+B2334+61,53642.0,20470.0,23.8,"Espinoza+2011 [elsk11], also in Yuan+2010 [ymw+10]",False
+J2346-0609,57495.0,0.55,2.4,Basu+2021 [bsa+21],False
+M82-X2,56685.8,20000.0,nan,Bachetti+2019 [bmb+19],False

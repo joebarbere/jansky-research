@@ -170,3 +170,54 @@ def test_write_macros_real_namespace(tmp_path):
     assert r"\newcommand{\gpRealNMagnetars}{3}" in txt
     assert r"\newcommand{\gpRealKnownQpOK}{yes}" in txt
     assert r"\newcommand{\gpSynRecovered}{yes}" in txt  # synthetic still live in a real build
+
+
+def test_p_values_are_never_zero_and_carry_mc_se():
+    """(k+1)/(B+1): a Monte-Carlo p of exactly zero is not a valid p-value."""
+    s = gp.synthetic_glitch_series(kind="quasi_periodic", n=20, cv_true=0.05, seed=0)
+    c = gp.classify_pulsar(s, n_boot=2000)
+    assert c["p_regular"] > 0.0
+    assert c["p_regular_mc_se"] > 0.0
+
+
+def test_per_pulsar_seed_is_stable_across_processes():
+    import zlib
+
+    assert zlib.crc32(b"J2229+6114") == zlib.crc32(b"J2229+6114")  # unlike hash(), crc is fixed
+    s = gp.synthetic_glitch_series(kind="exponential", n=10, seed=1)
+    a = gp.classify_pulsar(s, n_boot=2000, jname="J0001+0001")
+    b = gp.classify_pulsar(s, n_boot=2000, jname="J0001+0001")
+    assert a["p_regular"] == b["p_regular"]  # deterministic given the name
+
+
+def test_injection_surface_can_fail_where_the_census_lives():
+    """The old validation injected cv 0.12 only and returned completeness 1.0 everywhere."""
+    surf = gp.injection_surface(cvs=(0.1, 0.5), counts=(6, 20), n_each=20, n_boot=1000)
+    by = {(r["n"], r["cv_true"]): r["completeness"] for r in surf["surface"]}
+    assert by[(20, 0.1)] > 0.9  # the regular regime is still recovered
+    assert by[(6, 0.5)] < 0.9  # ...and the borderline regime measurably is not
+    rates = {r["n"]: r for r in surf["exponential_rows"]}
+    assert set(rates[6]) == {"n", "false_qp_rate", "false_clustered_rate", "dropped_rate"}
+
+
+def test_census_accounting_counts_the_hidden_second_cut():
+    # a pulsar with 5 glitches whose longest wait is a huge gap: excision leaves 3 waits -> dropped
+    mjd = [50000.0, 50100.0, 50200.0, 50300.0, 56000.0]
+    by = {
+        "J1111+1111": {"mjd": np.array(mjd), "size": np.ones(5)},
+        "J2222+2222": {
+            "mjd": np.array([50000, 50365, 50730, 51095, 51460, 51825], float),
+            "size": np.ones(6),
+        },
+    }
+    acct = gp.census_accounting(by)
+    assert acct["n_ge_min_glitches"] == 2
+    assert acct["n_dropped_insufficient_after_excision"] == 1
+
+
+def test_population_significance_poisson_binomial():
+    rows = [{"n": 6, "klass": "quasi_periodic"}] * 3 + [{"n": 6, "klass": "exponential"}] * 12
+    out = gp.population_significance(rows, fp_rate_by_n={6: 0.1})
+    assert "qp_poisson_binomial_p" in out
+    assert out["expected_false_qp_empirical"] == 1.5  # 15 * 0.1
+    assert out["clustered_binomial_p"] is not None

@@ -187,8 +187,15 @@ def waiting_time_fit(
     with np.errstate(invalid="ignore"):
         boot_cv = np.nanstd(kept, axis=1, ddof=0) / np.nanmean(kept, axis=1)
     boot_cv = boot_cv[np.isfinite(boot_cv)]
-    p_low = float(np.mean(boot_cv <= cv))  # P(CV this regular | exponential)
-    p_high = float(np.mean(boot_cv >= cv))  # P(CV this clustered | exponential)
+    nb = int(boot_cv.size)
+    # (k+1)/(B+1): a Monte-Carlo p of exactly zero is not a valid p-value (J0537 and B1338-62
+    # both returned 0.0 under the old np.mean estimator)
+    p_low = float((np.sum(boot_cv <= cv) + 1) / (nb + 1))  # P(CV this regular | exponential)
+    p_high = float((np.sum(boot_cv >= cv) + 1) / (nb + 1))  # P(CV this clustered | exponential)
+    # the decision's own Monte-Carlo standard error, so a margin of two replicates cannot again
+    # masquerade as a classification (the 2026-08-24 referee blocker: the census's headline flip
+    # had p = 0.0495 at n_boot = 4000, i.e. 0.15 MC-SE from its threshold)
+    mc_se = float(np.sqrt(max(p_low * (1 - p_low), 1e-12) / max(nb, 1)))
     if p_low < sig:
         klass = "quasi_periodic"
     elif p_high < sig:
@@ -200,8 +207,12 @@ def waiting_time_fit(
         "n_waits_raw": n_raw,
         "n_gaps_excised": n_gaps,
         "cv": round(cv, 3),
-        "p_regular": round(p_low, 4),
-        "p_clustered": round(p_high, 4),
+        # 6 decimals: at n_boot = 2e5 the floor is (0+1)/(2e5+1) = 5e-6, which 5-decimal
+        # rounding would flatten back to the invalid 0.0
+        "p_regular": round(p_low, 6),
+        "p_regular_mc_se": round(mc_se, 6),
+        "p_clustered": round(p_high, 6),
+        "n_boot": nb,
         "klass": klass,
     }
 
@@ -228,13 +239,23 @@ def size_class(sizes: np.ndarray) -> dict:
     return out
 
 
-def classify_pulsar(d: dict, *, min_glitches: int = MIN_GLITCHES) -> dict:
-    """Full per-pulsar classification (waiting-time class + size summary) for a grouped record."""
+def classify_pulsar(
+    d: dict, *, min_glitches: int = MIN_GLITCHES, n_boot: int = 200_000, jname: str = ""
+) -> dict:
+    """Full per-pulsar classification (waiting-time class + size summary) for a grouped record.
+
+    ``n_boot`` defaults to 2e5 (the census-grade value: MC-SE on a p near 0.05 is then ~5e-4, so
+    a borderline decision cannot ride on a couple of replicates), and the null seed is derived
+    from ``jname`` so pulsars with the same wait count no longer share one null realization.
+    """
     mjd = np.asarray(d["mjd"], float)
     n = int(mjd.size)
     if n < min_glitches:
         return {"n": n, "klass": "insufficient"}
-    wt = waiting_time_fit(waiting_times(mjd))
+    import zlib
+
+    seed = zlib.crc32(jname.encode()) if jname else 0  # stable across processes, unlike hash()
+    wt = waiting_time_fit(waiting_times(mjd), n_boot=n_boot, seed=seed)
     sz = size_class(np.asarray(d.get("size", []), float))
     return {"n": n, "span_yr": round(float((mjd.max() - mjd.min()) / 365.25), 2), **wt, **sz}
 
@@ -243,7 +264,7 @@ def population_census(by_pulsar: dict, *, min_glitches: int = MIN_GLITCHES) -> l
     """Classify every pulsar with >= ``min_glitches`` glitches; return rows sorted by glitch count."""
     rows = []
     for jname, d in by_pulsar.items():
-        c = classify_pulsar(d, min_glitches=min_glitches)
+        c = classify_pulsar(d, min_glitches=min_glitches, jname=jname)
         if c["klass"] == "insufficient":
             continue
         rows.append({"jname": jname, **c})
@@ -251,7 +272,31 @@ def population_census(by_pulsar: dict, *, min_glitches: int = MIN_GLITCHES) -> l
     return rows
 
 
-def population_significance(rows: list[dict], *, sig: float = 0.05) -> dict:
+def census_accounting(by_pulsar: dict, *, min_glitches: int = MIN_GLITCHES) -> dict:
+    """The census's true denominators: pulsars over the count cut, and those silently dropped.
+
+    "N pulsars with >= 5 glitches" was false as published: a pulsar can clear the count cut and
+    still vanish when gap excision leaves fewer than ``min_waits`` intervals -- a second, hidden
+    cut that preferentially removes long-gap (clustered-candidate) pulsars.
+    """
+    n_ge = 0
+    n_dropped = 0
+    for jname, d in by_pulsar.items():
+        if len(np.asarray(d["mjd"])) < min_glitches:
+            continue
+        n_ge += 1
+        c = classify_pulsar(d, min_glitches=min_glitches, n_boot=200, jname=jname)
+        if c["klass"] == "insufficient":
+            n_dropped += 1
+    return {
+        "n_ge_min_glitches": n_ge,
+        "n_dropped_insufficient_after_excision": n_dropped,
+    }
+
+
+def population_significance(
+    rows: list[dict], *, sig: float = 0.05, fp_rate_by_n: dict | None = None
+) -> dict:
     """Is the quasi-periodic FRACTION significant against the all-exponential null (multiple testing)?
 
     Each pulsar is tested one-sided at ``sig``, so under an all-Poisson population ~``n_fit*sig`` false
@@ -264,15 +309,35 @@ def population_significance(rows: list[dict], *, sig: float = 0.05) -> dict:
 
     n_fit = len(rows)
     n_qp = int(sum(r.get("klass") == "quasi_periodic" for r in rows))
+    n_cl = int(sum(r.get("klass") == "clustered" for r in rows))
     exp_false = round(n_fit * sig, 2)
     binom_p = (
         float(binomtest(n_qp, n_fit, sig, alternative="greater").pvalue) if n_fit else float("nan")
     )
-    return {
+    # The nominal rate is contradicted by the slice's own validation (measured not-exponential
+    # rate ~0.094 at small n vs the nominal 0.05), so a second p uses the empirical per-pulsar
+    # false-QP rates from the injection surface when supplied -- a Poisson-binomial, computed
+    # exactly by convolution. The clustered side gets the same chance arithmetic the QP side
+    # always had: one clustered detection among ~31 one-sided 0.05 tests IS the expectation.
+    binom_p_cl = (
+        float(binomtest(n_cl, n_fit, sig, alternative="greater").pvalue) if n_fit else float("nan")
+    )
+    out = {
         "expected_false_qp": exp_false,
         "qp_binomial_p": binom_p,
         "qp_excess_significant": bool(np.isfinite(binom_p) and binom_p < 0.05),
+        "expected_false_clustered": exp_false,
+        "clustered_binomial_p": round(binom_p_cl, 4) if np.isfinite(binom_p_cl) else None,
     }
+    if fp_rate_by_n:
+        # exact Poisson-binomial via convolution over per-pulsar empirical false-QP rates
+        ps = [float(fp_rate_by_n.get(int(r["n"]), fp_rate_by_n.get("default", sig))) for r in rows]
+        pmf = np.array([1.0])
+        for q in ps:
+            pmf = np.convolve(pmf, [1.0 - q, q])
+        out["qp_poisson_binomial_p"] = round(float(pmf[n_qp:].sum()), 6)
+        out["expected_false_qp_empirical"] = round(float(np.sum(ps)), 2)
+    return out
 
 
 def classification_delta(
@@ -291,11 +356,13 @@ def classification_delta(
         mjd = np.asarray(d["mjd"], float)
         size = np.asarray(d["size"], float)
         pre = mjd < split_mjd
-        full_c = classify_pulsar(d, min_glitches=min_glitches)
+        full_c = classify_pulsar(d, min_glitches=min_glitches, jname=jname)
         if full_c["klass"] == "insufficient":
             continue
         pre_c = (
-            classify_pulsar({"mjd": mjd[pre], "size": size[pre]}, min_glitches=min_glitches)
+            classify_pulsar(
+                {"mjd": mjd[pre], "size": size[pre]}, min_glitches=min_glitches, jname=jname
+            )
             if pre.sum() >= min_glitches
             else {"klass": "insufficient"}
         )
@@ -315,6 +382,11 @@ def classification_delta(
             flips.append(
                 {
                     "jname": jname,
+                    # the margins on BOTH sides of the flip, so a two-replicate margin can never
+                    # again be reported as a classification change without its uncertainty
+                    "p_regular_pre": pre_c.get("p_regular"),
+                    "p_regular_now": full_c.get("p_regular"),
+                    "p_mc_se_now": full_c.get("p_regular_mc_se"),
                     "was": pre_c["klass"],
                     "now": full_c["klass"],
                     "n_pre": int(pre.sum()),
@@ -337,6 +409,7 @@ def synthetic_glitch_series(
     n: int = 12,
     mean_yr: float = 2.0,
     start_mjd: float = 50000.0,
+    cv_true: float = 0.12,
     seed: int = 0,
 ) -> dict:
     """Synthetic glitch MJDs from a known waiting-time process, for the recover-a-known.
@@ -349,7 +422,7 @@ def synthetic_glitch_series(
     if kind == "exponential":
         waits = rng.exponential(mean_yr, n - 1)
     elif kind == "quasi_periodic":
-        waits = np.abs(rng.normal(mean_yr, 0.12 * mean_yr, n - 1))
+        waits = np.abs(rng.normal(mean_yr, cv_true * mean_yr, n - 1))
     elif kind == "clustered":
         # bursts of short waits separated by long gaps -> over-dispersed
         short = rng.exponential(0.15 * mean_yr, n - 1)
@@ -360,6 +433,103 @@ def synthetic_glitch_series(
     mjd = start_mjd + np.concatenate([[0.0], np.cumsum(waits) * 365.25])
     sizes = np.power(10.0, rng.normal(1.5, 0.6, n))  # dnu/nu ~ lognormal, arbitrary units
     return {"mjd": mjd, "size": sizes, "kind": kind}
+
+
+def injection_surface(
+    *,
+    cvs=(0.1, 0.3, 0.5, 0.7),
+    counts=(6, 10, 20, 40),
+    n_each: int = 50,
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> dict:
+    """Completeness vs (injected cv, glitch count), plus per-count exponential outcome rates.
+
+    The old validation injected quasi-periodic series only at cv 0.12 --- 4-5x more regular than
+    every real detection (committed cv range 0.183--0.615) --- and returned completeness exactly
+    1.0 at every grid point: a selection function that never visited the regime where the census
+    lives. This surface can fail, and does: completeness drops steeply toward cv ~ 0.5--0.7 at
+    small n, which is where 4 of the 10 real detections and the headline flip sit. The
+    exponential rows split the old pooled "false-positive rate" into its three actually
+    different outcomes (called quasi-periodic / called clustered / dropped by excision), and the
+    per-count false-QP rates feed the Poisson-binomial population significance.
+    """
+    rng = np.random.default_rng(seed)
+    surface = []
+    for n in counts:
+        for cv in cvs:
+            hit = 0
+            for _ in range(n_each):
+                s = synthetic_glitch_series(
+                    kind="quasi_periodic", n=n, cv_true=cv, seed=int(rng.integers(1 << 30))
+                )
+                c = classify_pulsar(s, n_boot=n_boot)
+                hit += c.get("klass") == "quasi_periodic"
+            surface.append({"n": n, "cv_true": cv, "completeness": round(hit / n_each, 3)})
+    exp_rows = []
+    fp_rate_by_n: dict = {}
+    for n in counts:
+        out = {"qp": 0, "clustered": 0, "insufficient": 0, "exponential": 0}
+        for _ in range(n_each):
+            s = synthetic_glitch_series(kind="exponential", n=n, seed=int(rng.integers(1 << 30)))
+            c = classify_pulsar(s, n_boot=n_boot)
+            k = str(c.get("klass"))
+            out["qp" if k == "quasi_periodic" else k] += 1
+        exp_rows.append(
+            {
+                "n": n,
+                "false_qp_rate": round(out["qp"] / n_each, 3),
+                "false_clustered_rate": round(out["clustered"] / n_each, 3),
+                "dropped_rate": round(out["insufficient"] / n_each, 3),
+            }
+        )
+        fp_rate_by_n[n] = out["qp"] / n_each
+    return {"surface": surface, "exponential_rows": exp_rows, "fp_rate_by_n": fp_rate_by_n}
+
+
+def p_uniformity_check(rows: list[dict]) -> dict:
+    """KS test of the census's p_regular values against uniform: the null's own calibration.
+
+    Under a correct null and a mostly-Poisson population, p_regular is ~uniform. A mean well
+    below 0.5 means either the population is more regular than Poisson wholesale, or the null is
+    systematically too dispersed (e.g. a minimum-resolvable-separation dead time truncating
+    short waits). Both are worth knowing; neither was examined.
+    """
+    from scipy import stats as _st
+
+    ps = np.array([r["p_regular"] for r in rows if "p_regular" in r], float)
+    if ps.size < 5:
+        return {"n": int(ps.size)}
+    ks = _st.kstest(ps, "uniform")
+    return {
+        "n": int(ps.size),
+        "mean_p_regular": round(float(ps.mean()), 3),
+        "ks_stat": round(float(ks.statistic), 3),
+        "ks_p": round(float(ks.pvalue), 4),
+    }
+
+
+def gap_factor_sweep(by_pulsar: dict, *, factors=(3.0, 4.0, 6.0, 8.0, 10.0)) -> list[dict]:
+    """The class counts as a function of the gap-excision threshold, committed with the sweep.
+
+    The paper claimed 3--10x stability with no committed evidence; the findings prose recorded
+    "8--11 quasi-periodic", a +/-15% swing in the headline count. One row per factor.
+    """
+    out = []
+    for gf in factors:
+        counts = {"quasi_periodic": 0, "exponential": 0, "clustered": 0, "insufficient": 0}
+        for jname, d in by_pulsar.items():
+            mjd = np.asarray(d["mjd"], float)
+            if mjd.size < MIN_GLITCHES:
+                continue
+            import zlib
+
+            wt = waiting_time_fit(
+                waiting_times(mjd), gap_factor=gf, n_boot=20_000, seed=zlib.crc32(jname.encode())
+            )
+            counts[wt["klass"]] += 1
+        out.append({"gap_factor": gf, **counts})
+    return out
 
 
 def inject_recover(*, counts=(6, 10, 20, 40), n_each: int = 40, seed: int = 0) -> dict:
@@ -378,14 +548,18 @@ def inject_recover(*, counts=(6, 10, 20, 40), n_each: int = 40, seed: int = 0) -
         e_ok = q_ok = 0
         for _ in range(n_each):
             se = int(rng.integers(1 << 30))
-            e = classify_pulsar(synthetic_glitch_series(kind="exponential", n=c, seed=se))
+            e = classify_pulsar(
+                synthetic_glitch_series(kind="exponential", n=c, seed=se), n_boot=4000
+            )
             fp_total += 1
             if e["klass"] == "exponential":
                 e_ok += 1
             else:
                 fp += 1
             sq = int(rng.integers(1 << 30))
-            q = classify_pulsar(synthetic_glitch_series(kind="quasi_periodic", n=c, seed=sq))
+            q = classify_pulsar(
+                synthetic_glitch_series(kind="quasi_periodic", n=c, seed=sq), n_boot=4000
+            )
             if q["klass"] == "quasi_periodic":
                 q_ok += 1
         exp_acc[f"n{c}"] = round(e_ok / n_each, 3)
@@ -420,7 +594,7 @@ def _synthetic_metrics() -> dict:
     rec = inject_recover()
     # the two gap-robust, physically-relevant classes (exponential null + the quasi-periodic signal)
     demos = {
-        k: classify_pulsar(synthetic_glitch_series(kind=k, n=30, seed=3))["klass"]
+        k: classify_pulsar(synthetic_glitch_series(kind=k, n=30, seed=3), n_boot=4000)["klass"]
         for k in ("exponential", "quasi_periodic")
     }
     # clustered is recoverable ONLY without monitoring-gap excision (its long gaps look like gaps);
@@ -506,8 +680,16 @@ def _write_macros(m: dict, path: str | Path) -> None:
         rf"\newcommand{{\gpSynQpCompHigh}}{{{qa.get('n40', '--')}}}",
     ]
     for macro, key in (
-        ("NGlitches", "n_glitches"),
-        ("NPulsars", "n_pulsars"),
+        # matched pairs: glitches and pulsars quoted from the SAME sample, both samples emitted
+        ("NGlitchesRaw", "n_glitches_raw"),
+        ("NPulsarsRaw", "n_pulsars_raw"),
+        ("NGlitches", "n_glitches_analysed"),
+        ("NPulsars", "n_pulsars_analysed"),
+        ("NPreSplit", "n_glitches_pre_split"),
+        ("NPostSplit", "n_glitches_post_split"),
+        ("NRetroPre", "n_retroactive_pre_split"),
+        ("NGeCut", "n_ge_min_glitches"),
+        ("NDropped", "n_dropped_insufficient_after_excision"),
         ("NFit", "n_qualified_full"),
         ("NExp", "n_exponential"),
         ("NQp", "n_quasiperiodic"),
@@ -516,10 +698,20 @@ def _write_macros(m: dict, path: str | Path) -> None:
         ("NStable", "n_stable_sample"),
         ("NFlipped", "n_flipped"),
         ("ExpectedFalseQp", "expected_false_qp"),
+        ("ExpectedFalseQpEmp", "expected_false_qp_empirical"),
+        ("QpPoisBinomP", "qp_poisson_binomial_p"),
+        ("ClusteredBinomP", "clustered_binomial_p"),
+        ("ExpectedFalseClustered", "expected_false_clustered"),
+        ("MeanPRegular", None),
         ("NMagnetars", "n_magnetars_dropped"),
         ("KnownQpOK", "known_quasiperiodic_ok"),
+        ("Retrieved", "retrieved"),
     ):
-        lines.append(rf"\newcommand{{\gpReal{macro}}}{{{g(real, key)}}}")
+        if key is None:
+            v = (real.get("p_uniformity") or {}).get("mean_p_regular")
+            lines.append(rf"\newcommand{{\gpReal{macro}}}{{{'--' if v is None else v}}}")
+        else:
+            lines.append(rf"\newcommand{{\gpReal{macro}}}{{{g(real, key)}}}")
     from .report import _fmt_p
 
     bp = real.get("qp_binomial_p")
