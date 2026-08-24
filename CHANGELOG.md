@@ -11,6 +11,28 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`junodam` revision (all 16 referee findings): the null is quantified, and it contains
+  structure.** The blocker --- a one-sample test that existed nowhere in committed evidence ---
+  is closed by computing and committing it: two-sided sign test p = 0.453, geometric-mean
+  monthly contrast 0.92, **95% CI 0.53--1.59**, so the paper now states that "does not reject
+  unity" equally does not reject a 1.6x enhancement, and the title softens from "Do Not
+  Coherently Organise" to "Are Not Detected to Organise". The new evidence surfaced two real
+  things: **Io-B alone is enhanced (1.67** vs 0.92/0.79/1.28 for A/C/D), the per-region signal
+  the union contrast averages away; and the box-shift scan is flat at every rigid Io-phase
+  offset (0.75--1.18), so no convention error rescues the boxes and the machinery-validated
+  scan (it peaks at zero on injections) makes the weak organisation a measurement. Also: the
+  aggregate contrast now carries a day-block bootstrap error (**1.12 +/- 0.18**; the 44,294
+  active bins are 6,784 episodes, so per-bin errors would overstate N by ~170x); the injection
+  calibration extends to the near-unity regime (injected 1.25 recovers 1.16, the ~30%
+  contraction of the estimator stated with its direction); the noise-promoting upward-rescale
+  null is replaced as primary by a censored census that cannot promote noise (near/far 2.71,
+  same-detector pair 330.4 -> 2.71 quoted in the abstract instead of mixed detectors); the
+  single v01 month is measured, not assumed, benign (v02-only CI 0.48--1.33); the dataset
+  citation is repointed to the v02 DOI with the correct author list; and the per-month table,
+  per-quartile denominators and raw-p90 duty cycles are committed. One previously published
+  value moved: near_far_corrected 2.2 -> 2.25 (the referee's rounding finding).
+
+### Fixed
 - **`skr` revision (all 21 referee findings): the 1.39 is retracted, and the retraction is the
   result.** Three defensible constructions of the 1/r^2 sensitivity null give three answers on
   the same data --- 1.39 (rescale total flux: moves the range-independent noise floor with the
