@@ -92,3 +92,39 @@ survey depth non-uniformity, excluded as the power-dipole carrier.
 `uv run python -m jansky_research.rmdipole --n-scramble 999 --out .` (needs the local 9.3 GB
 DR2 FITS; ~10 min CPU). Offline CI leg: `--offline`. Everything in the paper flows from
 `results/rmdipole_metrics.json` → `generated/macros.tex` + `generated/legs_table.tex`.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 16 findings
+
+The presenter/referee round (paper-presenter + paper-referee agents). All macros resolve, the
+legs table matches the JSON, and the arithmetic checks --- the problems are what the evidence
+does not contain.
+
+**The five MAJORs:**
+1. **The null has no sensitivity.** p=0.933 on the clipped leg means the scramble null's own
+   median amplitude exceeds the observed 0.31 --- and the number needed to state an excluded
+   amplitude (`null_amps`) is computed and stripped before commit (`rmdipole.py:406`). The
+   frblens lesson: "we saw nothing" is a constraint only after dividing by what could be seen.
+   Fix: commit null percentiles, restate the headline as "RA-projected dipoles with |p|/m > X
+   excluded at 95%".
+2. **Table 1's +/- and p contradict each other** (0.311 +/- 0.022 next to p=0.933 is a "14-sigma"
+   amplitude 93% consistent with null): the bootstrap SE is within-realization fit precision, the
+   rmstructure shape. State which column carries significance.
+3. **The tail clip was never tested against a genuine dipole** and 0.99 is a single unswept
+   choice; a variance dipole preferentially populates the clipped tail by construction. The one
+   unit test injects 40-sigma contaminants and cannot fail. Fix: clip the injection leg; sweep
+   0.95/0.98/0.99/0.995.
+4. **The injection control is single-seed** (0.2812 +/- 0.0087 vs injected 0.3 is 2.2 SE low,
+   explained by assertion), Gaussian where the real field is heavy-tailed --- amp 0.28 on the
+   Gaussian injection gives p=0.001 while amp 0.31 on the real clipped field gives p=0.933 at the
+   same positions, so the injection says nothing about detectability in the real residuals.
+5. **"Isotropic at dipole order" is unscoped in the abstract** though the test is blind to the
+   Dec-projected component (the Methods say so; the headline does not).
+
+Eleven MINOR/NIT: the ~6-deg direction-recovery claim traces to a function default, not committed
+evidence; the nn path's own |b| amplitude rise goes unremarked while the same signature indicts
+the latitude path; the tail's apex is quoted but never fit; n_scramble is not in the JSON; four
+bib entries cite preprints now published (incl. the DR2 data citation) and boehme2025/secrest2025/
+malik2026 lack DOIs; the kinematic "two orders of magnitude" is a factor 2.4 in the fitted
+statistic; the committed figure plots the rejected leg and is not in the paper.
+
+**Status: fixes pending** (data local: data/spice-racs.dr2.fits).

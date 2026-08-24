@@ -88,3 +88,50 @@ Real: `uv run python scripts/skr_real.py --year 2017 --doy-min 100 --doy-max 258
 KEY60S days to data/skr/), then `uv run python -m jansky_research.skr --out .` (parse + Horizons).
 
 > Cross-slice note: the 1/r² sensitivity null used here was audited repo-wide (2026-07-09) — see [sensitivity-null-audit.md](sensitivity-null-audit.md). No other merged slice needs the fix.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 21 findings, one BLOCKER
+
+Every macro resolves and reproduces from the JSON exactly; the figure matches the JSON
+point-for-point; the abstract leads with the confound. The problems are the auditability and
+validity of the one number the paper is about.
+
+**BLOCKER: the sibling-census comparison is contradicted by this repo's own evidence.** The paper
+says junodam's "~180x raw ratio was reported ... without an explicit sensitivity null; here the
+null is computed". junodam's committed raw ratio is 196.2, its null IS computed
+(near_far_corrected = 2.2, all four corrected quartiles in its paper), and both clauses went
+stale four hours after skr merged. The sentence asserts a priority the repo refutes.
+
+**MAJORs:**
+- **1.39 has no uncertainty**, and the natural resampling unit is ~9 periapsis passes, not 83,382
+  autocorrelated minutes. Fix: leave-one-orbit-out jackknife on raw and corrected ratios.
+- **The 1/r^2 null rescales the noise floor along with the signal**: `distance_correct_flux`
+  multiplies total band flux (instrumental+galactic background included) by (r/r_ref)^2 and
+  re-detects against a global threshold, imposing an ~0.86 dex range-dependent offset on the
+  floor --- in the direction that manufactures the collapse. junodam corrects the SNR, which is
+  the right choice. Fix: correct the excess over background, not the total flux.
+- **The only test of the null model assumes a range-scaling background** (floor divided by r^2
+  too) and asserts only "closer to flat than raw", which any partial correction passes. Add the
+  control with a range-independent floor.
+- **No sweep over the detection rule** and k/baseline_pct/band/r_ref are absent from the JSON;
+  k=3.0 is never stated in the paper, so the 40.235% duty cycle is unreproducible from the text.
+- **The results file omits the corrected per-quartile duty cycles and the bin edges** (innerrc
+  lesson), so 1.39 cannot be audited and monotonicity cannot be checked.
+- **"~8-21 R_S" contradicts the committed medians** (near-quartile median 7.81 means half the
+  bins are below it; periapsis ~1.3 R_S from the 6.5-d period), and at 1-3 R_S the 1/r^2
+  far-field assumption fails hardest in the bin that drives the ratio, with ring-plane dust
+  impacts as an undiscussed third confound.
+- **provan2019's author list and pages are wrong** (Crossref: Provan, Lamy, Cowley, Bunce;
+  1157-1172) --- the comment above the entry has the right values and the fields were never edited.
+
+Thirteen MINOR/NIT: gurnett2016/ye2016 share one DOI (one entry's subtitle+pages appear
+fabricated); "Ye et al. carried it to the end of the mission" (a 2016 paper cannot); gurnett2009
+title wrong; "flux series AND detection are sound" claims more than the LS anchor tests; 0.05% is
+below the 0.76% periodogram resolution and false for the second period (0.056%); the ~10.34 h
+peak is disclosed but exists in no committed evidence; the date range/NaN-bin count/per-quartile
+counts unrecorded; the latitude confound's SIGN (near = high |lat| = better visibility) is what
+makes 1.39 an upper bound and is never stated; weighted_near_far ships with a docstring GATE-2
+already killed; ls_fap=0.0 committed under an invalid independence assumption; no figure or table
+in the paper; pooled 59-day background; \software lists SciPy (unused), omits Matplotlib;
+fetch hardcodes DOY 200-299.
+
+**Status: fixes pending** (data committed: data/skr/, fully offline).

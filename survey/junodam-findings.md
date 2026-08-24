@@ -107,3 +107,56 @@ same pattern `southern` showed. Updated.
 **Also fixed:** `louis2021jgr` sat in `refs.bib` uncited. It measures latitudinal beaming from
 Juno/Waves flux densities, i.e. exactly this paper's preferred interpretation of the canonical
 regions and the basis of its proposed follow-up. Now cited in both places.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 16 findings, one BLOCKER
+
+The presenter round first caught the committed macros carrying a synthetic run's values --- the
+abstract's opening counts rendered the 28-day fixture (161,280 bins) instead of the 210-day
+census (1,209,600). Introduced by the 2026-08-23 commit that fixed a *different* instance of the
+same class. Fixed before the referee round: macros regenerated from the real JSON,
+\jdNbins/\jdNact/\jdOccIo/\jdOccOut namespaced jdReal*/jdSyn*, audit clean. The referee verified
+the fix, including confirming the committed figure is the real run (210,768 marker invocations
+vs ~34,000 for the fixture).
+
+**BLOCKER: "a one-sample test against unity does not reject" exists nowhere in committed
+evidence.** No test statistic, p-value, or per-month contrast list is in the JSON; the module
+imports no stats; the p-values are hand-typed in this findings file only. And the quoted sign
+test was one-sided (two-sided p = 0.45).
+
+**MAJORs:**
+- The 95% CI on the mean monthly contrast is **0.49-1.64**: "does not reject unity" equally does
+  not reject a 1.6x enhancement, larger than the single-orbit 2.22 the paper walks back. The
+  title's "Do Not Coherently Organise" asserts an absence this interval cannot support.
+- The contrast estimator's one calibration point shows a **20.6% contraction toward unity**
+  (8.75 injected -> 6.95 recovered, boundary-cell dilution), i.e. biased toward the paper's
+  conclusion, and the abstract compresses this to "recovers them".
+- The Io-phase frame convention has **no validation that could detect an error, and its failure
+  mode IS the reported result** (the previous convention bug produced 1.38; a residual offset
+  drives the contrast to ~1). The check that can fail: run a ground-based DAM catalogue through
+  the same io_phase/IO_REGIONS code and recover A/B/C/D; or scan the contrast vs a rigid box
+  shift and show the peak sits at zero offset.
+- Every statistic treats 15-s bins as independent; the figure shows contiguous emission tracks,
+  so the effective N is the episode count, plausibly ~100x smaller --- why nothing has an error
+  bar. Fix: run-length analysis + block bootstrap over episodes.
+- **The dataset citation is the obsoleted DOI with a wrong author list and wrong year**
+  (10.25935/6jg4-mk86, v01 2021, omits Kurth; IsObsoletedBy 10.25935/fwtq-v202, 2023, +Boudouma,
+  whose title the acknowledgments already use). "The 2025 public release" is contradicted by both
+  records.
+- The single v01 month (2017-02) is the single outlier month (2.22), attributed to vantage while
+  the version mix is called "benign" --- a hypothesis, not a demonstration; no per-month table is
+  committed.
+- The 1/r^2 correction **creates** far-quartile detections (0.07% -> 0.112%, a 1.6x enhancement
+  from sub-threshold values pushed across the floor); with no corrected-detector false-positive
+  rate committed, 2.2 could be a LOWER bound --- the opposite of the claim.
+- The like-for-like collapse cannot be audited: the four uncorrected-p90 per-quartile duty
+  cycles are never written, and a code comment calls 196.2 vs 330.4 "closely agreeing" (68% apart).
+- All four Io boxes are ORed into one mask while the committed map shows a coherent diagonal band
+  (cells at ~0.17 vs mean 3.7%) the paper never describes; averaging an enhanced Io-B against
+  boxes off the band can return ~1 with a real per-region signal present.
+
+MINOR/NIT: 0.253/0.112 = 2.26 rounds to 2.3, not the quoted 2.2; the abstract's 12.91/0.07 gives
+184, not 196.2, and mixes detectors; far quartiles rest on ~212 active bins with no denominators;
+the figure caption tells the reader the figure may be synthetic (it is not); \jdCells still
+un-namespaced; archinal2018 uncited.
+
+**Status: macro fix landed; remaining fixes pending** (data local: data/junodam/).

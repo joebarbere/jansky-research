@@ -68,3 +68,36 @@ cycle, with significance from a transit-comb-preserving scramble.
 
 `uv run python -m jansky_research.frbwait --n-scramble 999 --out .` (~4 min CPU with the local
 mirror). Offline CI leg: `--offline`.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 15 findings, one BLOCKER
+
+The anchor recovery is real (16.325 d vs published 16.35 +/- 0.15 at 107 cycles) and the
+refusal to call 3-5-cycle peaks periods is right. The population claim is the problem.
+
+**BLOCKER: the three "clustered" sources are exactly the three highest-rate sources** ---
+probability 1/C(15,3) = 0.0022 under no rate dependence --- which is precisely the ordering the
+paper's own disclosed, unquantified, rate-dependent censoring bias predicts. The three periodic
+detections are the same three sources. "We disclose rather than correct it" does not survive the
+disclosed effect reproducing the entire result set. The decisive experiment: recover k from
+transit-sampled synthetics with known k=1 across the observed rate range (0.02-3.23 bursts/hr).
+
+**MAJORs:** two sources are significantly SUPER-Poissonian (k_ci_low > 1) and never mentioned ---
+the 95% exclusions split 3:2 in opposite directions, which "the population norm" cannot survive;
+the median k=0.831 has no uncertainty and a sign test gives two-sided p=0.12; the offline
+validation injects at ~25-30x below the worst-case source's rate, so the censoring bias is absent
+from the validation and it cannot fail; the scramble redraws each burst's day independently,
+destroying within-transit multiplicity, so the FAP tests "more than one burst per transit"
+rather than periodicity --- largest for exactly the three detected sources; FRB 20220912A's
+"122.67 d" peak is railed at the grid edge (span/3 exactly), so its N_cyc=3 is forced, not
+measured.
+
+Nine MINOR/NIT: duty-cycle consistency with the published 5-d window asserted but the
+convention-matched containments never computed; n_scramble/seed/n_boot not in the JSON; the
+dec-completeness claim traces to no committed number (rows carry no dec); n_boot=200 decides
+boundary cases (two sources sit on the CI edge); the N_cyc rule is stated as <~5 but coded >=10
+with 20201124A at 5.008 rendered as "5"; the Discussion calls non-deconvolved k values a
+"population-synthesis input" two sections after saying they are not; cat2 bib entry lacks the
+published volume/page (ApJS 283, 34); cat1 invoked but never cited; the macros header claims the
+opposite of the guard it calls, and a test asserts the placeholder behaviour.
+
+**Status: fixes pending** (data local: data/chimefrbcat2.csv + exposure h5).
