@@ -547,3 +547,68 @@ typed raw-or-corrected. The same construction, briefed, survived.
   sentence, and quotes "a few × 10⁻⁴" where the committed macros give 1.04 × 10⁻⁴.
 - `hi`'s ±6 is the longitude-to-longitude scatter of six sightlines, not an error on the flat
   level, and is smaller than the ~7 km/s estimator systematic the paper itself discloses.
+
+## Batch 6 — seven papers, and a mechanical transformation with a signature (2026-08-23)
+
+Converted on `style-batch-6`: `solarbursts`, `swaves`, `windwaves`, `triangulate`,
+`type3synthesis`, `rmsky`, `sourcecounts`. Gates clean on all seven before review. **All three
+referee rounds returned revisions** — six batches for six. Twenty-seven conversion defects, all
+fixed here.
+
+### One transformation, two papers, the same defect
+
+A referee noticed that `--- but they ---` had been promoted to a full stop in both `rmsky` and
+`sourcecounts`, and suggested checking the rest of the batch. Grepped: confined to those two.
+The defect is identical in both — "They" originally resolved to the limitations, and after the
+split its nearest plural antecedent became the *positive* clause:
+
+> None of these undermine the recover-a-known: the canonical counts come straight back out of a
+> public catalogue. **They** do, however, bound what a single NVSS cone can claim.
+
+which is false of the counts. Fixed by naming the referent in both. **A referee flagging a
+transformation rather than an instance is worth grepping the batch for.**
+
+### The MAJORs
+
+- **`sourcecounts`** — the abstract's `--- ... ---` became a colon-plus-comma, so "not a new
+  measurement" stopped predicating on *this work* and attached to the published counts it agrees
+  with. For a reproduction paper that is the contribution claim.
+- **`windwaves` (×3)** — "a recover-a-known" (the *class* of exercise) became "recovering a known
+  result" (an assertion the recovery succeeded), two lines after the same abstract says the
+  recovered speed is **below** published values: the abstract claimed both at once. An appositive
+  collapse re-pointed the fitted speed at the *outer point* rather than the whole track — the very
+  error its sibling `swaves` forbids in its methods. And "The honest limitations are substantial"
+  became "Several limitations apply", in the paper whose dominant systematic its own limitation
+  (ii) says exceeds the harmonic factor of two.
+- **`solarbursts`** — the limitations enumeration lost its head sentence, so "(i) The emission mode
+  and density-model fold span a factor of ~3 in speed" now elaborates the *positive* clause
+  "systematics surfaced rather than hidden".
+
+### Superlatives are a conversion hazard
+
+Three papers had the same construction — "We ask the most reproducible version: … can an amateur
+…?" — and two conversions detached the superlative so it asserted that *this analysis* is the most
+reproducible in existence, with no comparator anywhere. The third kept it. Same source sentence,
+same batch, two failures and one pass.
+
+### Pre-existing, NOT fixed here — several are wrong numbers in abstracts
+
+- **`triangulate` says "across two decades" four times.** Its own macros give 0.125–1.975 MHz =
+  **1.20** decades, and the distance span 15.3–106.1 R_sun = **0.84**. `type3synthesis` says "more
+  than three decades" where 78.94/0.125 = **2.80**. Both entrenched in their findings files.
+- **No uncertainty on the fitted speed exists anywhere** for `solarbursts`/`swaves`/`windwaves` —
+  `np.polyfit` is called without covariance and the JSONs carry only R². Yet "directly consistent
+  with 0.17 c", "substantially reduces the slope uncertainty" and "below published values" all
+  lean on one. An R² on a drift fit bounds the straightness of the line, not the speed, and says
+  nothing about the density model behind it.
+- **`triangulate`'s miss-distance threshold is 60 R_sun against source distances of 15–106**, is
+  never stated in the paper, and was never swept — so the headline ratio 2.18 and correlation
+  0.989 could both be functions of a cut that cannot currently fail.
+- `solarbursts`' systematics grid comes from a superseded run and contradicts the committed
+  metrics within the same paragraph (0.137 c against `\sbSpeedC` = 0.1347, R² 0.90 against 0.811).
+- `type3synthesis` says "four single events"; the code sets three distinct dates, two of them the
+  same event by design. And its geometric check validates the **Leblanc** model only — the Newkirk
+  coronal leg, which its own limitation (iv) says differs by ~50% at the handoff, is unchecked.
+- `krupar2014` in `triangulate` is probably the wrong one of two same-year companions: the entry's
+  DOI resolves to the flux-density survey, while the goniopolarimetric paper deriving source
+  *locations and sizes* is `10.1007/s11207-014-0601-z`.
