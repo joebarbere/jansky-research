@@ -125,3 +125,55 @@ its edge". Both now stated honestly.
 Pad sensitivity, for the record: 5 -> 10 moves r2 0.897 -> 0.811, drift -3.259 -> -2.55, speed
 0.1368 -> 0.1347. Both are defensible windows; the committed choice is the wider one the paper's
 numbers have always cited.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 18 findings, one BLOCKER
+
+The referee reproduced the committed headline exactly from the committed ridge CSV (0.1347 /
+62 / 0.811 / 1.622-2.572 and all three grid points) -- committing the ridge was what made the
+audit below possible.
+
+**BLOCKER: Figure 1's plotted line is not the fit the caption describes.** The right panel fits
+all 66 ridge points unweighted (slope -> 0.1154 c, R^2 = 0.411 on the points shown, and the
+clipped 4.97 R_sun outlier is drawn unmarked) under a caption asserting R^2 = 0.811. A reader
+measuring the slope off the axes gets a speed 14% below the headline.
+
+**MAJORs:** the abstract binds the 10.0-78.94 MHz span and the -2.55 MHz/s drift to the
+62-channel fit, but the kept channels span 25.44-78.94 MHz and the drift is the unclipped
+66-point polyfit (robust drift: -3.27, a 28% difference -- and the drift feeds the "25th
+percentile" caveat); `_robust_linfit` is NOT converged at its hard-coded n_iter=3 -- the speed
+ranges 0.111-0.147 c and R^2 0.68-0.94 purely over the iteration count, the returned slope and
+mask come from different iterations (refitting on the reported 62 gives 0.1469 c), and
+convergence is at 55 points / 0.1173 c (the innerrc parameter-on-a-bound shape, in a loop
+bound); no uncertainty anywhere and 40377.5 km/s is six significant figures on a quantity with
+a +/-13% undeclared analysis systematic; the event-selection function (the paper's stated crux)
+has no committed evidence and the three rejections were adjudicated at pad_s=5 (superseded) at
+an unconverged n_iter -- commit a candidates file incl. the storm control at the headline
+parameterisation; the recover-a-known cannot fail (target band spans 5x, model grid spans 3x,
+and all three REJECTED events also land in-band 0.11-0.45 c) -- the storm control is the test
+that can fail and it is the one not committed; harmonic=2 is the assumption that puts the
+headline in-band and is justified nowhere in the manuscript (R^2 does not prefer it: 0.852
+fundamental vs 0.811 harmonic); "directly consistent with the 0.17 c peak-time mean" compares
+one event to a 31-burst ensemble mean derived through a different density model, with the
+paper's own grid showing that choice moves answers 3x.
+
+**MINOR:** the results JSON omits pad_s/snr_threshold/n_iter/clip sigma (pad_s is the exact
+parameter whose invisibility caused the stale-grid incident) and the ridge CSV has no
+provenance header; both quoted band extremes rest on single isolated channels, one of which
+(78.94 MHz at t=367.0) drifts the WRONG WAY for a type III and sets both f_hi and r_lo; the
+abstract says the fundamental point is "at ... the lower half" of the canonical band when it is
+19% below its lower edge (the previously-retracted formulation's shape); "25th percentile" is
+unsourced and computed from the contaminated drift; "15-30% below front-of-beam" -- the cited
+numbers give 15% (peak) and 25% (back), not 30%; the findings file's first two-thirds present
+superseded pad-5 numbers as current; the untracked arxiv-submission still carries the retracted
+"squarely in the established range" abstract.
+
+**NIT:** RECOVER_EVENT docstring says R^2 ~ 0.9 and still carries pad_s 5.0 while --recover
+hard-codes 10.0; \sbTruth/\sbRatio render as -- (namespace as \sbSyn*); left panel shows
+spectrum to ~110 MHz vs "10-90 MHz" prose; kontar2017 pages field carries an article number.
+
+**The one change that matters most: iterate the robust fit to convergence and report the
+headline as an interval over the analysis choices** -- that converts the weakest thing in the
+paper into its actual contribution.
+
+**Status: fixes pending** (all fixable from the committed ridge + one candidates re-run into a
+scratch dir).

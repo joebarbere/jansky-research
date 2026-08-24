@@ -54,3 +54,39 @@ A clean, honest **validation**: a small, tested, offline-capable tool recovers t
 inner Milky Way rotation curve from public LAB HI data, with the absolute normalisation ~9% high (a
 known terminal-velocity-estimator overestimate) and the non-Keplerian shape robust. A tooling +
 validation contribution — and explicitly *not* a standalone dark-matter detection.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 13 findings
+
+Evidence chain verified consistent (JSON -> macros -> prose; DOIs all clean; the make-figures
+clobber is structurally closed). The problems are in what the numbers mean.
+
+**MAJORs:** (1) The load-bearing citation is misattributed: McClure-Griffiths & Dickey 2016's
+~7 km/s is the offset between the Clemens 1985 *CO* terminal curve and their fitted *HI* curve --
+a cross-tracer, cross-survey comparison attributed only partly to the threshold method; they
+never measure threshold-vs-fit on the same HI data. (2) Even at face value ~7 km/s explains only
+about a third of the measured excess (11-28 km/s per longitude, mean ~20.6); the abstract's
+single-cause "because" overstates, and the honest split in this findings file was dropped from
+the paper; MG&D publish a uniform Q1 terminal curve the attribution could be tested against, and
+their error-function edge fit could be run on the cached slices -- neither was done. (3) The
+estimator is a global velocity maximum above 2 K with no contiguity requirement; the l=70/80
+points (implied v_term 29.9/30.9 km/s vs flat-curve expectations ~14/~4) look like a
+local-emission floor, at longitudes where V0 sin(l) is already 88% of the plotted value
+(dropping both moves the mean only 256.6 -> 256.2 -- say so). (4) "Flat" is never quantified:
+from the committed JSON, slope = 2.8 +/- 1.8 km/s/kpc and a Keplerian normalised at the
+innermost point predicts 176 vs 263 measured at R=8 -- both one-liners that strengthen the
+paper. (5) threshold_k=2.0 and flat_radius_min_kpc=4.0 are unswept and uncited (the l=30 point
+sits 0.07 kpc above the cut; excluding it moves the mean to 258.6 -- no committed evidence
+shows robustness).
+
+**MINOR/NIT:** the +/-6 is np.std ddof=0 (ddof=1: 7; SEM: 2.9) and is scatter, not an
+uncertainty, orthogonal to the correlated threshold systematic; the synthetic edge is 0.6 km/s
+wide so threshold ~= inflection by construction (a realistic 5-10 km/s edge would measure the
+bias in-house); the LSR-frame sentence glosses the standard-vs-measured solar motion mismatch;
+N=6 never stated, no (l, R, V) table, and Results opens with a dangling "Table-style," artifact;
+figure lacks error bars/Keplerian curve and draws the mean through excluded bar points;
+arxiv-submission stale (pre style pass); "sub-megabyte survey" and "~30-line tool" both
+overstate; \hiVflat is still un-namespaced mode-dependent (230 offline / 257 real), protected
+today only by the source-marker rule.
+
+**Status: fixes pending** (LAB slices cached; findings 2, 4, 5 fixable from the committed JSON
+plus one edge-fit re-run).
