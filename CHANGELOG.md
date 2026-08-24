@@ -11,6 +11,23 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`rmdipole` revision (all 16 referee findings): the null becomes a limit, and every
+  diagnostic resolved in the paper's favour.** The scramble null's amplitude percentiles are
+  now committed per leg (the old run stripped them), so the headline reads "RA-projected
+  power-dipole amplitudes |p|/m > 0.354 excluded at 95%; nothing below that constrained"
+  instead of an unscoped "isotropic". The clip cannot manufacture the result (an injected 0.3
+  dipole survives the 0.99 clip at p=0.001; quantile swept 0.95--0.995, p stable at
+  0.78--0.93); the injection is unbiased (0.3006 +/- 0.0091 over 20 realizations --- the old
+  single-seed "partial-sky bias" explanation was wrong and the paper now says so); a dipole
+  painted onto the real heavy-tailed field is detectable at p=0.001 (with an uncalibrated
+  amplitude scale, so conclusions are stated as detection/exclusion); the clipped-out tail's
+  own apex is (25 deg, +65 deg), at the survey's Dec edge, not the full-sample apex previously
+  imputed to it; and the >=5-neighbour mask is measured inert. Bib: four now-published
+  preprints completed (incl. the DR2 data citation) and three missing DOIs added; the
+  kinematic expectation restated in the fitted statistic; apex range corrected to 80--153 deg.
+  All original leg values unchanged.
+
+### Fixed
 - **`frbwait` revision (all 15 referee findings): the population claim is retracted, and the
   experiment that killed it is the paper's new spine.** A transit-censored injection curve
   (pure Poisson processes observed through CHIME's 15-minute daily window, fitted exactly as

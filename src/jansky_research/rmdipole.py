@@ -326,7 +326,67 @@ def _dipole_leg(
         "apex_scatter_deg": round(fit.get("apex_scatter_deg", float("nan")), 1),
         "sep_cmb_deg": round(sep["sep_cmb_deg"], 1),
         "p_scramble": round(null["p_value"], 4),
+        # The null's own amplitude distribution is the sensitivity of the test: an excluded
+        # amplitude is the 95th percentile of what the scramble manufactures. Stripping these
+        # (the old code committed only p) left the headline null with no stated sensitivity.
+        "null_amp_p50": round(float(np.percentile(null["amps"], 50)), 4),
+        "null_amp_p95": round(float(np.percentile(null["amps"], 95)), 4),
+        "n_scramble": null["n_scramble"],
+        "seed": seed,
         "null_amps": null["amps"],
+    }
+
+
+def inject_on_real_residuals(
+    res: dict, *, amp: float = 0.3, apex_ra: float = 170.0, apex_dec: float = -7.0, seed: int = 0
+) -> dict:
+    r"""A known power dipole painted onto the REAL residual field.
+
+    The Gaussian injection validates the pipeline on the real footprint but not in the real
+    residual DISTRIBUTION --- measured, amp 0.28 on the Gaussian surrogate gives p = 0.001 while
+    amp 0.31 on the real clipped field gives p = 0.93 at the same positions, so Gaussian
+    detectability says nothing about heavy-tailed detectability. This modulates the observed
+    residuals by :math:`\sqrt{1 + A\,\hat n\cdot\hat d}` (randomly sign-flipping each residual
+    first, so any true sky dipole is erased before injection): the power statistic acquires a
+    fractional dipole ``amp`` on top of the field's own tail structure.
+    """
+    rng = np.random.default_rng(seed)
+    d_hat = _unit_vectors(np.array([apex_ra]), np.array([apex_dec]))[0]
+    mu = _unit_vectors(res["ra"], res["dec"]) @ d_hat
+    flip = rng.choice([-1.0, 1.0], res["resid"].size)
+    resid = res["resid"] * flip * np.sqrt(np.clip(1.0 + amp * mu, 0.0, None))
+    return {
+        "ra": res["ra"],
+        "dec": res["dec"],
+        "resid": resid,
+        "rm_err": res["rm_err"],
+        "true_amp": amp,
+        "true_apex": (apex_ra, apex_dec),
+    }
+
+
+def injection_seed_sweep(
+    ra: np.ndarray, dec: np.ndarray, *, amp: float = 0.3, n_seeds: int = 20
+) -> dict:
+    """Amplitude recovery across injected realizations: bias vs scatter, settled.
+
+    The single-seed injection quoted a within-realization bootstrap SE (+-0.0087) on a recovery
+    2.2 of those SEs below truth, explaining the shortfall as "a partial-sky bias" by assertion.
+    Twenty realizations measure it: the mean recovery minus truth is the bias, the seed-to-seed
+    std is the variance the bootstrap could not see.
+    """
+    amps = []
+    for s in range(n_seeds):
+        syn = synthetic_dipole_catalogue(amp=amp, ra_deg=ra, dec_deg=dec, seed=s)
+        f = fit_dipole(syn["ra"], syn["dec"], syn["resid"], syn["rm_err"], stat="power", n_boot=0)
+        amps.append(f["amp"])
+    arr = np.asarray(amps)
+    return {
+        "true_amp": amp,
+        "n_seeds": n_seeds,
+        "amp_mean": round(float(arr.mean()), 4),
+        "amp_sd": round(float(arr.std(ddof=1)), 4),
+        "bias": round(float(arr.mean() - amp), 4),
     }
 
 
@@ -380,25 +440,61 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
                     leg.update({"b_min": b_min, "method": method})
                     legs.append(leg)
         # tail-drivenness + systematics diagnostics on the primary sample (b>=45, nn):
-        # clipped power (is the power dipole carried by the |residual| tail?) and the
-        # noise-power dipole (does the catalogued sigma^2 map share the apex?)
+        # the clip QUANTILE IS SWEPT (a single 0.99 was an unswept choice), and the noise-power
+        # dipole probes whether the catalogued sigma^2 map shares the apex
         prim = extragalactic_residuals(s, b_min=45.0, method="nn")
-        for stat, clip in (("power", 0.99), ("noise", None)):
-            leg = _dipole_leg(prim, stat=stat, n_scramble=n_scramble, clip_quantile=clip)
+        for clip in (0.95, 0.98, 0.99, 0.995):
+            leg = _dipole_leg(prim, stat="power", n_scramble=n_scramble, clip_quantile=clip)
             leg.update({"b_min": 45.0, "method": "nn"})
             legs.append(leg)
-        # recover-a-known ON THE REAL FOOTPRINT: inject a known power dipole at the actual
-        # source positions of the primary sample and confirm amplitude+direction come back
+        leg = _dipole_leg(prim, stat="noise", n_scramble=n_scramble)
+        leg.update({"b_min": 45.0, "method": "nn"})
+        legs.append(leg)
+        # the clipped-OUT tail's own dipole: the paper quoted the full-sample apex for the tail
+        thr = np.quantile(np.abs(prim["resid"]), 0.99)
+        tail_mask = np.abs(prim["resid"]) > thr
+        tail = {k: prim[k][tail_mask] for k in ("ra", "dec", "resid", "rm_err")}
+        leg = _dipole_leg(tail, stat="power", n_scramble=n_scramble)
+        leg.update({"b_min": 45.0, "method": "tail_only"})
+        legs.append(leg)
+        # the nn-path leakage diagnostic: the same primary leg at nn_min 3/10 (5 is the default);
+        # if N and amp do not move, the neighbour-count mask is inert and the paper says so
+        for nn_min in (3, 10):
+            res_nn = extragalactic_residuals(s, b_min=45.0, method="nn", nn_min=nn_min)
+            leg = _dipole_leg(res_nn, stat="power", n_scramble=n_scramble)
+            leg.update({"b_min": 45.0, "method": f"nn_min{nn_min}"})
+            legs.append(leg)
+        # recover-a-known ON THE REAL FOOTPRINT, three ways that can each fail differently:
+        # (i) the Gaussian injection (pipeline check), now with its true-apex separation and a
+        # 20-seed amplitude sweep (bias vs scatter); (ii) the SAME injection through the 0.99
+        # clip (does the clip destroy a real dipole?); (iii) a dipole painted onto the REAL
+        # residual field (detectability in the real, heavy-tailed distribution).
         inj = synthetic_dipole_catalogue(amp=0.3, ra_deg=prim["ra"], dec_deg=prim["dec"], seed=0)
+        inj_res = {k: inj[k] for k in ("ra", "dec", "resid", "rm_err")}
+        clip_variants: tuple[tuple[str, dict, float | None], ...] = (
+            ("injection", inj_res, None),
+            ("injection_clipped", inj_res, 0.99),
+        )
+        for label, res_i, clip_q in clip_variants:
+            leg = _dipole_leg(res_i, stat="power", n_scramble=n_scramble, clip_quantile=clip_q)
+            leg.update({"b_min": 45.0, "method": label, "true_amp": inj["true_amp"]})
+            v = _unit_vectors(np.array([leg["apex_ra"]]), np.array([leg["apex_dec"]]))[0]
+            w = _unit_vectors(np.array([inj["true_apex"][0]]), np.array([inj["true_apex"][1]]))[0]
+            leg["sep_true_deg"] = round(float(np.degrees(np.arccos(np.clip(v @ w, -1, 1)))), 1)
+            legs.append(leg)
+        realinj = inject_on_real_residuals(prim, amp=0.3, seed=0)
         leg = _dipole_leg(
-            {k: inj[k] for k in ("ra", "dec", "resid", "rm_err")},
+            {k: realinj[k] for k in ("ra", "dec", "resid", "rm_err")},
             stat="power",
             n_scramble=n_scramble,
         )
-        leg.update({"b_min": 45.0, "method": "injection", "true_amp": inj["true_amp"]})
+        leg.update({"b_min": 45.0, "method": "injection_real_field", "true_amp": 0.3})
         legs.append(leg)
         source = f"SPICE-RACS DR2 goodRM ({DR2_DAP})"
-        extra = {}
+        extra = {
+            "injection_seed_sweep": injection_seed_sweep(prim["ra"], prim["dec"], amp=0.3),
+            "n_scramble": n_scramble,
+        }
 
     metrics = {
         "source": source,
@@ -423,8 +519,17 @@ def _write_legs_table(m: dict, path: str | Path) -> None:
         "% Auto-generated by jansky_research.rmdipole._write_legs_table -- do not edit.",
         "% Columns: sample & subtraction & statistic & N & amp+-se & apex & sep_CMB & p_scramble",
     ]
+    labels = {
+        "tail_only": "tail only",
+        "nn_min3": r"nn ($\ge$3 nbr)",
+        "nn_min10": r"nn ($\ge$10 nbr)",
+        "injection_clipped": "injection, clipped",
+        "injection_real_field": "injection, real field",
+    }
     for leg in m["legs"]:
-        method = str(leg.get("method", "synthetic"))
+        method = labels.get(
+            str(leg.get("method", "synthetic")), str(leg.get("method", "synthetic"))
+        )
         b_min = leg.get("b_min")
         sample = rf"$|b|\ge{b_min:.0f}\arcdeg$" if b_min is not None else "mock footprint"
         stat = str(leg["stat"])
@@ -454,7 +559,11 @@ def _figure(legs: list[dict], out_dir: str | Path) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(5.4, 3.9))
-    lead = legs[0]
+    # the conclusion-carrying leg is the clipped core, not legs[0] (which the paper rejects as
+    # tail-driven); fall back to the lead when no clip leg exists (offline)
+    lead = next(
+        (x for x in legs if x.get("clip_quantile") == 0.99 and x.get("method") == "nn"), legs[0]
+    )
     ax.hist(lead["null_amps"], bins=30, color="0.7", label="footprint-scramble null")
     ax.axvline(lead["amp"], color="C3", lw=2, label=f"observed (p={lead['p_scramble']})")
     ax.set(
@@ -483,14 +592,25 @@ def _write_macros(m: dict, path: str | Path) -> None:
     if inj is None and not m.get("is_real"):
         inj = dict(lead or {}, true_amp=m.get("true_amp"))
     legs = m.get("legs", [])
-    clip = next((x for x in legs if x.get("clip_quantile")), None)
+    clip = next(
+        (x for x in legs if x.get("clip_quantile") == 0.99 and x.get("method") == "nn"), None
+    )
+    if clip is None:  # offline runs have no clip sweep; fall back to any clipped leg
+        clip = next((x for x in legs if x.get("clip_quantile")), None)
     noise = next((x for x in legs if x.get("stat") == "noise"), None)
     wabs = next((x for x in legs if x.get("stat") == "abs" and x.get("b_min") == 30.0), None)
+    tail = next((x for x in legs if x.get("method") == "tail_only"), None)
+    inj_clip = next((x for x in legs if x.get("method") == "injection_clipped"), None)
+    inj_real = next((x for x in legs if x.get("method") == "injection_real_field"), None)
+    sweep_legs = [x for x in legs if x.get("clip_quantile") and x.get("method") == "nn"]
+    sweep_amps = [x["amp"] for x in sweep_legs]
+    sweep_ps = [x["p_scramble"] for x in sweep_legs]
+    seed_sweep = m.get("injection_seed_sweep") or {}
     lines = [
         "% Auto-generated by jansky_research.rmdipole._write_macros -- do not edit.",
         "% Synthetic (rmdSyn*) and real (rmdReal*) namespaces are BOTH always emitted; the",
         "% inactive namespace holds placeholders, so synthetic numbers can never masquerade",
-        "% under rmdReal* (an offline rebuild resets rmdReal* to placeholders by design).",
+        "% under rmdReal* (preserve_live_macros keeps the other namespace's committed values).",
         rf"\newcommand{{\rmdSource}}{{{m['source']}}}",
     ]
     for ns in ("rmdSyn", "rmdReal"):
@@ -513,6 +633,23 @@ def _write_macros(m: dict, path: str | Path) -> None:
             rf"\newcommand{{\{ns}NoiseAmp}}{{{g(noise if ns == pref else None, 'amp')}}}",
             rf"\newcommand{{\{ns}NoiseP}}{{{g(noise if ns == pref else None, 'p_scramble')}}}",
             rf"\newcommand{{\{ns}WideAbsP}}{{{g(wabs if ns == pref else None, 'p_scramble')}}}",
+            # the sensitivity the null was missing: what amplitude the clipped-core test excludes
+            rf"\newcommand{{\{ns}ClipNullNinetyFive}}{{{g(clip if ns == pref else None, 'null_amp_p95')}}}",
+            rf"\newcommand{{\{ns}ClipNullFifty}}{{{g(clip if ns == pref else None, 'null_amp_p50')}}}",
+            rf"\newcommand{{\{ns}LeadNullNinetyFive}}{{{g(leg, 'null_amp_p95')}}}",
+            rf"\newcommand{{\{ns}TailApexRa}}{{{g(tail if ns == pref else None, 'apex_ra')}}}",
+            rf"\newcommand{{\{ns}TailApexDec}}{{{g(tail if ns == pref else None, 'apex_dec')}}}",
+            rf"\newcommand{{\{ns}InjSepTrue}}{{{g(ileg, 'sep_true_deg')}}}",
+            rf"\newcommand{{\{ns}InjClipAmp}}{{{g(inj_clip if ns == pref else None, 'amp')}}}",
+            rf"\newcommand{{\{ns}InjClipP}}{{{g(inj_clip if ns == pref else None, 'p_scramble')}}}",
+            rf"\newcommand{{\{ns}InjRealP}}{{{g(inj_real if ns == pref else None, 'p_scramble')}}}",
+            rf"\newcommand{{\{ns}InjRealAmp}}{{{g(inj_real if ns == pref else None, 'amp')}}}",
+            rf"\newcommand{{\{ns}InjBias}}{{{'--' if (ns != pref or not seed_sweep) else seed_sweep.get('bias')}}}",
+            rf"\newcommand{{\{ns}InjSeedSd}}{{{'--' if (ns != pref or not seed_sweep) else seed_sweep.get('amp_sd')}}}",
+            rf"\newcommand{{\{ns}SweepAmpMin}}{{{'--' if (ns != pref or not sweep_amps) else min(sweep_amps)}}}",
+            rf"\newcommand{{\{ns}SweepAmpMax}}{{{'--' if (ns != pref or not sweep_amps) else max(sweep_amps)}}}",
+            rf"\newcommand{{\{ns}SweepPMin}}{{{'--' if (ns != pref or not sweep_ps) else min(sweep_ps)}}}",
+            rf"\newcommand{{\{ns}SweepPMax}}{{{'--' if (ns != pref or not sweep_ps) else max(sweep_ps)}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

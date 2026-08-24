@@ -128,3 +128,40 @@ malik2026 lack DOIs; the kinematic "two orders of magnitude" is a factor 2.4 in 
 statistic; the committed figure plots the rejected leg and is not in the paper.
 
 **Status: fixes pending** (data local: data/spice-racs.dr2.fits).
+
+### Resolved 2026-08-24 (revision): the null becomes a limit, and every diagnostic came back clean
+
+All 16 findings addressed; the real leg re-run with 999 scrambles and eight new legs. Purely
+additive on the original eleven legs.
+
+**The headline is now an exclusion limit.** The scramble null's amplitude percentiles are
+committed per leg (the old code stripped them): the clipped-core null's 95th percentile is
+**0.354**, so the paper states "RA-projected power-dipole amplitudes |p|/m > 0.354 excluded;
+nothing below that constrained" instead of "isotropic". The RA-projection scope is now in the
+abstract, not only the Methods.
+
+**Every referee-demanded diagnostic resolved in the paper's favour, and is now evidence:**
+- *Clip circularity*: the same 0.3 injection pushed through the 0.99 clip is attenuated to 0.223
+  but still detected at p=0.001 -- the clip cannot manufacture the isotropic core from a real
+  dipole. The quantile is swept 0.95-0.995: p = 0.78-0.93 throughout.
+- *Single-seed injection*: twenty realizations give **0.3006 +/- 0.0091 (bias +0.0006)** -- the
+  injection is unbiased, the seed scatter equals the bootstrap SE, and the old "partial-sky
+  bias" explanation of the one low draw (0.2812) was wrong; the ensemble refutes it and the
+  paper now says so.
+- *Real-field detectability*: a 0.3 dipole painted onto the real heavy-tailed residuals
+  (sign-randomised first) is detected at p=0.001, though its recovered amplitude (0.556) shows
+  the amplitude scale is uncalibrated on the real field -- conclusions are therefore stated in
+  detection/exclusion terms.
+- *The tail's own apex*: fitted alone, the 1029 clipped sources have amp 0.52, p=0.002, apex
+  **(25 deg, +65 deg)** -- beyond the survey's Dec +49 edge, 65 deg from the full-sample apex the
+  paper had implicitly assigned them, supporting the leakage/edge-systematics reading.
+- *nn-path leakage*: the neighbour-count requirement is inert (N identical at nn_min 3/5/10),
+  now stated as a property of the catalogue rather than a cut (finding 14 resolved: the >=5
+  mask does nothing).
+
+Bib: the four now-published preprints completed (incl. the DR2 data citation, PASA 43 e089) and
+three missing DOIs added. The kinematic expectation restated in the fitted statistic (4beta).
+The apex range corrected to 80-153 deg; the look-elsewhere clause now says the 17% is
+conservative in the null's favour; n_scramble and seed committed per leg; the figure plots the
+conclusion-carrying clipped leg and its null. One mechanical LaTeX lesson: macro names cannot
+carry digits (\rmdRealClipNull95 silently broke the preamble; renamed NullNinetyFive).
