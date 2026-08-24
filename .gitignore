@@ -49,3 +49,4 @@ dist/
 # lineconf: deliberately unpublished WIP (local branch slice/lineconf) — never commit its artifacts
 results/lineconf*.json
 papers/lineconf/
+build/
