@@ -28,7 +28,7 @@ rays, and cross-checks the geometric heliocentric distance against the Leblanc, 
 (\code{\triSource}; STEREO-A and STEREO-B \triSep$^\circ$ apart), \triNtri\ frequency channels
 (\triFlo--\triFhi~MHz) triangulate to a source at HEEQ longitude \triLon$^\circ$, latitude
 \triLat$^\circ$ (near the ecliptic), spanning \triRlo--\triRhi~$R_\odot$ (\triRloAU--\triRhiAU~AU). The
-geometric and plasma-frequency distances correlate at $r=\triCorr$ across two decades in frequency
+geometric and plasma-frequency distances correlate at $r=\triCorr$ across more than a decade in frequency
 (a cross-validation of two fully independent estimators), while the absolute geometric
 scale runs a factor \triRatio\ high, which we trace to the known outward bias of direction-finding on a
 source of large apparent size (median ray miss \triMiss~$R_\odot$) plus a likely active-region density
@@ -88,7 +88,7 @@ heliocentric distance runs from \triRlo\ to \triRhi~$R_\odot$ (\triRloAU\ to \tr
 interplanetary (Figure~\ref{fig:tri}).
 
 The geometric distance and the independent Leblanc plasma-frequency distance correlate at
-$r=\triCorr$ across the two-decade frequency span. Part of any such correlation is expected by
+$r=\triCorr$ across the \triFlo--\triFhi~MHz span. Part of any such correlation is expected by
 construction, since both estimators decrease monotonically with frequency; even a linear ramp in
 frequency already correlates with the Leblanc curve at $r\approx0.75$, but the \triCorr\ value
 sits well above that floor and specifically tests whether the geometric points follow the correct log--log curvature of the
@@ -108,7 +108,7 @@ with that caveat, with the median miss \triMiss~$R_\odot$ setting its uncertaint
 \plotone{figures/triangulate.pdf}
 \caption{Left: the geometric heliocentric distance per frequency (points, with the ray miss as
 the error bar) against the independent Leblanc plasma-frequency distance (line); the two track in shape
-across two decades. Right: the top-down HEEQ ecliptic geometry: the Sun, STEREO-A and
+across the triangulated band. Right: the top-down HEEQ ecliptic geometry: the Sun, STEREO-A and
 STEREO-B, the two lines of sight, and the triangulated source track.}
 \label{fig:tri}
 \end{figure}
@@ -126,7 +126,7 @@ two spacecraft there is one closest-point solution per frequency, and the miss d
 error ellipsoid, is its consistency check. (iv) The comparison assumes harmonic emission, the
 favourable case (fundamental would worsen the ratio). (v) The two-view geometry needs STEREO-B and so
 is reproducible only on 2007--2014 data. None of these undermine the recover-a-known result (a type III
-is located in 3D and its geometric distance tracks the plasma-frequency distance across two decades),
+is located in 3D and its geometric distance tracks the plasma-frequency distance across the triangulated band),
 but they bound what two lines of sight to a large, fuzzy source can claim. Every number above is written by
 the pipeline into the macros this paper \code{\textbackslash input}s, and
 \code{python -m jansky\_research.triangulate -\,-date 20130515} regenerates them from the public SPDF

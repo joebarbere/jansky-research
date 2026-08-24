@@ -14,7 +14,8 @@ an **independent geometric check** on the density-model distance the whole metho
 | geometric | `triangulate` | STEREO-A+B direction-finding | **none** | 15 → 106 R⊙ | — |
 
 The same drift-to-distance method, with a Newkirk (corona) → Leblanc (heliosphere) density-model handoff,
-spans more than three decades in frequency (~100 MHz → 0.125 MHz) and tracks the beam from the low corona
+spans nearly three decades in frequency (78.94 MHz -> 0.125 MHz, i.e. 2.80; the "~100 MHz"
+here is where an earlier "more than three decades" came from -- the committed metric is 78.94) and tracks the beam from the low corona
 to ~0.4 AU.
 
 ## The centerpiece: a model-free check on the model distances
@@ -25,7 +26,8 @@ so the STEREO/WAVES plasma-frequency distance `r_plasma(f)` and the STEREO-A+B g
 distance `r_geom` are two *independent* estimates of the same quantity. Across the triangulated channels
 they correlate at **r = 0.989**. Both estimators decrease with frequency by construction, so *some*
 correlation is trivial (a linear ramp already gives r ≈ 0.75 vs Leblanc); what the measured value adds
-is agreement in the **log–log curvature** of the density-model track over two decades, not just a shared
+is agreement in the **log-log curvature** of the density-model track over the triangulated range
+(15.3-106.1 Rsun, i.e. 0.84 decades, not the "two decades" claimed earlier), not just a shared
 monotone trend. The absolute geometric scale runs ~2× high (ratio ≈ 2.18): direction-finding outward
 bias on a degrees-wide source, a likely active-region density enhancement, **and radio-wave scattering
 shifting the apparent interplanetary source outward of the plasma level** (Krupar et al. 2015) all push

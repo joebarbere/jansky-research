@@ -10,6 +10,24 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **Three wrong span claims in the solar-burst papers, two of them in abstracts.** Each was a
+  round-number restatement of a macro pair that nobody re-derived after the runs settled.
+  `triangulate` called its 0.125--1.975 MHz band "two decades of frequency" in four places; it is
+  **1.20** decades (its distance range, 15.3--106.1 R_sun, is 0.84). The text now cites
+  `\triFlo`/`\triFhi`, so the span cannot drift from the run again. `type3synthesis` claimed
+  "more than three decades" for 0.125--78.94 MHz, which is **2.80**; the same paper counted "four
+  single events" and "four regimes" where its own committed table has three, and its abstract
+  claimed validation of a coronal density model the triangulated band never touches --- that leg
+  is entirely interplanetary, so only Leblanc is tested, now stated in the limitations too.
+- `solarbursts` printed `$0.137\,c$` for the harmonic/1x grid point three lines below
+  `\sbSpeedC` = **0.1347** for the same point; that value now cites the macro. The two flanking
+  grid values (0.086, 0.272) come from the same superseded run and are **not** silently patched:
+  `exciter_speed` needs the raw ridge and only its summary is committed, so they cannot be
+  recomputed from evidence. `survey/solarbursts-findings.md` tabulates the whole stale-vs-committed
+  set (R^2 0.90 vs 0.811, drift -3.3 vs -2.55 MHz/s) and records the fix as emitting the grid on
+  the next real run. Inventing two numbers to match would have been the worse repair.
+
 ### Changed
 - Papers restyled to traditional pre-LLM register (batch 6: `solarbursts`, `swaves`, `windwaves`,
   `triangulate`, `type3synthesis`, `rmsky`, `sourcecounts`). Gates clean on every file before

@@ -74,3 +74,28 @@ independently validate the density model against the real corona.
   RFI flagging across many stations.
 - **Reproducible:** `python -m jansky_research.solarbursts --recover` regenerates the 2011-09-14 result,
   the metrics JSON, the dynamic-spectrum + height–time figure, and the macros from the public FITS.
+
+## Stale systematics grid (found 2026-08-23, partially fixed)
+
+The Results paragraph quotes a harmonic/fold grid --- "$0.086\,c$ (fundamental, $1\times$) through
+$0.137\,c$ (harmonic, $1\times$) to $0.272\,c$ (harmonic, $4\times$)" --- whose middle value
+contradicted `\sbSpeedC` = **0.1347** three lines above it, for the *same* grid point. The grid
+comes from a superseded run that differs from the committed evidence on every axis:
+
+| quantity | this findings file (earlier run) | `results/solarbursts_metrics.json` |
+|---|---|---|
+| R^2 | 0.90 | **0.811** |
+| drift | -3.3 MHz/s | **-2.55** |
+| heights, harmonic 1x | 1.76--2.41 R_sun | **1.622--2.572** |
+| ridge channels kept | 61 | **62** |
+| speed, harmonic 1x | 0.137 c | **0.1347** |
+
+**Fixed:** the harmonic-1x point now cites `\sbSpeedC`, so that value is regenerable and cannot
+drift again.
+
+**NOT fixed, deliberately:** the flanking values (0.086, 0.272) and the "3.6 R_sun" figure in the
+Discussion are still hand-typed from the superseded run. They cannot be recomputed from committed
+evidence, because `exciter_speed` needs the raw ridge (frequencies and times) and only its summary
+is in the metrics. The conclusion is unaffected --- the bracket is still ~0.09--0.27 c, inside the
+canonical band --- but the grid is not auditable. The fix is to emit the full harmonic x fold grid
+into `results/solarbursts_metrics.json` on the next real run and macro-ise all three points.
