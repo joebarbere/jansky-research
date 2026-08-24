@@ -10,6 +10,31 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **Review round 4: full presenter/referee rounds on rmstructure, typeii, glitchpop and vlass.**
+  All four returned **major revision** (six blockers between them); every verdict and complete
+  finding list is in the slice's findings file, fixes pending:
+  - *rmstructure*: the headline 11.17 +/- 0.10 uses the i.i.d. bootstrap the slice's own
+    recorded lesson warns about, on a spatially correlated, ~25%-duplicated sample (honest error
+    likely ~6x larger; fix is a spatial block jackknife); the sample definition conflicts with
+    the release's published counts; the abstract's closing claim rests on an uncommitted run.
+  - *typeii*: the tracked arxiv.yaml still says "48 days, zero failures" --- the original
+    clobber's number, in the submission metadata, outside the macro system's protection; the
+    CME match-rate deficit REVERSES (0.676 > chance 0.619) once the 57 detections beyond
+    CDAW's coverage end are excluded, so the committed association_is_background_like boolean
+    is wrong as computed; the synthetic leg has no committed results file at all.
+  - *glitchpop*: the title flip has margin two bootstrap replicates (0.15 MC-SE of its own
+    null), the abstract counts glitches and pulsars on different samples, no catalogue snapshot
+    is committed (three scrapes, three counts), and the out-of-sample Howitt+2018 anchor the
+    validation needs (B1338-62) exists in the census and is never used.
+  - *vlass*: the 52% completeness saturation is an artifact of `e[k] *= fac` in the injection's
+    error model (the paper's "three-epoch ceiling" explanation is refuted by its own committed
+    v_threshold), and the second candidate's rejection --- the step that yields "one genuine
+    variable" --- exists only in prose while the committed CSV still marks it confirmed.
+- README corrections from the round: the glitchpop rows now match the committed census
+  (31 classifiable: 20/10/1 --- the old row omitted the clustered class entirely), and the
+  rmstructure row no longer says the DR2 contrast "awaits the public file".
+
 ### Fixed
 - **`rmdipole` revision (all 16 referee findings): the null becomes a limit, and every
   diagnostic resolved in the paper's favour.** The scramble null's amplitude percentiles are

@@ -105,3 +105,45 @@ Offline (classifier + synthetic recover-a-known + vendored-sample parser test):
 `uv run python -m jansky_research.glitchpop --offline --out .`
 Real (scrapes the live JBO table): `uv run python scripts/glitchpop_real.py`
 (writes `results/glitchpop_metrics.json` + `results/glitchpop_census.json`, `is_real=True`).
+
+## Full referee round (2026-08-24): MAJOR REVISION, 19 findings, two BLOCKERs
+
+The gap-excision insight is real and load-bearing; the macros, the binomial arithmetic and all
+four DOIs check exactly. The problems: the title result's stability, the sample accounting, and
+regenerability.
+
+**BLOCKERs:** (1) The headline flip (J2229+6114, exponential -> quasi-periodic) has margin
+p = 0.0495 vs 0.05 -- TWO bootstrap replicates out of 4000, 0.15 MC-SE from its own threshold; a
+different seed flips the title result about half the time, and the pre-2019 margin isn't recorded
+at all. B1758-23 (0.0473) is in the same condition. (2) The abstract's first sentence counts
+727 glitches on the UNFILTERED catalogue but 220 pulsars on the magnetar-FILTERED sample -- the
+source of the 220/222/223 confusion across the findings file, refs.bib and the module docstring.
+
+**MAJORs:** the census is a live scrape with no committed snapshot (three scrapes, three counts;
+not regenerable even in principle -- fix: commit the 727-row parsed table + --from-csv). The
+synthetic validation cannot fail: injected qp at cv 0.12 vs real detections at 0.18-0.62, hence
+completeness exactly 1.0 at every grid point; the selection function at cv~0.5, n~6 (where 4 of
+10 detections and the flip live) was never measured. \gpSynFP=0.0938 pools false-qp,
+false-clustered AND insufficient-dropped -- not "a Poisson series called regular". The population
+p=1.6e-6 uses the nominal 0.05 rate the paper's own validation contradicts (measured 0.0938;
+recomputed P(>=10|31,0.0938)=3.7e-4 -- 220x weaker, still significant). "The single clustered
+source is a lower bound" asserts existence where 1 detection IS the chance expectation (1.55),
+resting on 4 retained waits at the min_waits floor. "31 pulsars with >=5 glitches" is really
+survived-TWO-cuts (excision can drop a >=5-glitch pulsar entirely; the drop count is unrecorded
+and biased against clustered candidates). The gap-factor 3-10x stability claim has no committed
+sweep, and the range in the findings prose (8-11 qp) is a +/-15% swing in the headline. The
+out-of-sample anchor EXISTS and is unused: Howitt+2018's independent B1338-62 reclassification,
+which the committed census reproduces (cv 0.555, p 0.0) -- promote it, ideally as a full agreement
+table.
+
+**MINOR:** the null is never calibration-checked against the real data, and the committed
+p_regular values hint it may be off (mean 0.28 vs 0.5 expected; z=-2.3 on the exponential
+subset) -- either the population is more regular than Poisson wholesale, or the null is too
+dispersed; both interesting, neither examined. All pulsars with the same wait count share ONE
+4000-draw null (seed never varied); p=0.0 occurs (invalid MC p). Documentation contradicts the
+JSON in four places (README says 33/23 and omits the clustered class entirely; findings says
+222/223 pulsars and "0 clustered"). The paper contains neither the census table nor any figure.
+Three verbs stronger than the evidence (title's "Change"; "still shifting"; "warranted").
+The synthetic leg has no committed results file.
+
+**Status: fixes pending** (needs one live scrape to commit the snapshot; everything else offline).

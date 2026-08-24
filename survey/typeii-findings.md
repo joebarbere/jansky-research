@@ -133,3 +133,45 @@ days (3 backfilled by OVRO since the original 765-day run) yielding **332** cand
 All conclusions unchanged — the extra day's candidate joins the false-positive-dominated
 population; the purity confounds re-derive to the same verdict. The paper macros now carry the
 regenerated numbers; this file's prose above describes the original run.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 15 findings, one BLOCKER
+
+The null is real and verified (window saturation 0.828 recomputed exactly; 167/332 at the window
+length; the flare-class trend confirmed). What blocks: the apparatus around it.
+
+**BLOCKER: the tracked arxiv.yaml still says "48 days, zero failures"** -- the synthetic event
+count in place of 768 real days, the exact number from the original \tiiNEvents clobber, in the
+hand-authored submission abstract that sits outside the macro system's protection, already baked
+into the built arxiv-submission/metadata.yaml.
+
+**MAJORs:** the entire synthetic leg (purity 1.0, the SNR curve) has NO committed results file --
+structurally, since preserve_live_results correctly refuses to let the offline leg write into the
+real metrics file, and the slice has nowhere else to put it; meanwhile the paper claims "every
+synthetic number above is pipeline-generated (results/typeii_metrics.json -> macros)", false for
+every one of them. Purity 1.0 is one seed and 24 negatives (95% bound: 11.7%), quoted with no
+denominator or interval. The purity test cannot fail the way the real data fails: the injected
+contaminants (fast type III, zero-drift RFI) sit orders of magnitude from the acceptance band,
+while the class that dominates the census -- coherent slow-drift window-filling background, |df/dt|
+0.012-0.064 -- was never injected; and the 24-negative test is ~25x too small to see the census's
+~0.5%/window false rate, so "this is not a detector defect" is unsupported. **The match-rate
+deficit is an artifact of the CDAW coverage gap**: coverage ends 2026-03-31, 57 detections (17%)
+lie beyond it with no possible match, and restricted to the covered span the comparison REVERSES
+(0.676 > chance 0.619) -- the committed association_is_background_like boolean is wrong as
+computed. The harmonic-cut "confirming" sentence rests on 8 CMEs and reverses at >=0.7 (median
+469, frac_fast 0.25). The SNR-completeness curve was measured at 300 s / 0.5 s bins / Gaussian
+noise vs the deployed 900 s / 4.1 s / real band, with every injection window-saturating and one
+duration/speed -- so the duration and drift cuts have no measured completeness. The "~4x RSTN"
+compares a solar-max-only rate to a whole-cycle average, and n_windows_swept is unrecorded. The
+matched sample is 3.3x enriched in fast CMEs (z=7.8) and the one macro showing it
+(\tiiRealFracFast=0.194) is the one macro left uncited while \tiiRealBgFracFast IS cited in the
+"essentially the background" sentence.
+
+**MINOR/NIT:** 14 candidates are the same structure in adjacent 50%-overlap windows (dedup: 318);
+the Method says a ~1-hr asymmetric match window where the code uses +/-2 h symmetric; r=0.058
+lacks its CI (-0.09, +0.20); the committed figure has an INVERTED frequency axis (drift appears
+upward in a slow-drift paper) and renders nulls as zero-height bars, and the paper includes no
+figure at all; lawrance2024 pages=75 is an article number; the findings file itself tells readers
+to run --out . (the gutting command).
+
+**Status: fixes pending** (all recomputations possible from the committed event list; purity
+ensemble offline).
