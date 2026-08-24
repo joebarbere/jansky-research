@@ -11,6 +11,21 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`triangulate` cited the wrong one of two same-year Krupar companions.** The entry was
+  internally consistent --- DOI `10.1007/s11207-014-0522-x` matched its own volume 289, issue 8,
+  pages 3121--3135 --- so a coordinate check passes it. But it is the *flux-density* paper, and the
+  citation supports an apparent-source-size claim. The ~60 deg figure is in the goniopolarimetric
+  companion (`10.1007/s11207-014-0601-z`), whose 125 kHz--2 MHz band is also exactly this paper's
+  `\triFlo`--`\triFhi`. When two same-year companions share a title stem, the discriminator is the
+  subtitle and the claim, not the identifier. The same sentence also stated ~60 deg as a constant
+  where the source reports it at the *lowest* analyzed frequencies; now qualified.
+- `triangulate`'s Method said channels are kept when the ray miss distance is "below a threshold"
+  and never gave it. It is 60 R_sun, against inferred distances of 15.3--106.1 R_sun, so at the
+  high-frequency end it admits rays missing by four times the distance being measured. Stated, with
+  its permissiveness noted. Sweeping it needs a real-leg re-run: the committed results file keeps
+  only summary scalars, not the per-channel arrays the headline is computed from.
+
+### Fixed
 - **`ecallisto_pipeline`'s only quantitative result was drawn from the wrong run.** Found by the
   referee round on the style conversion. `_write_macros` emitted seven un-namespaced names from both
   legs and `run()` wrote both legs to one results file, so the real 2011-09-14 archive day (which
