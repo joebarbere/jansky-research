@@ -104,4 +104,35 @@ signs" overstates rmsky's own docstring ("conflates" quadrants); the stale arXiv
 dangling-citation abstract ("(per-region NVSS structure functions exist; )"); 11.17 +/- 0.1
 precision mismatch; README rows stale (says "awaits the public DR2 file").
 
-**Status: fixes pending** (data local: data/spice-racs.dr2.fits).
+**Status: RESOLVED (2026-08-24).** The full DR2 leg re-ran with every fix in place.
+
+**Blocker 2 (sample definition), dissolved by one dedup.** The 333,173 goodRM rows contain
+tile-overlap repeats: 246,508 unique `cat_id` — exactly the release's published post-dedup
+8-sigma count. `load_spice_racs_dr2` now dedups (one row per `cat_id`, keeping the observation
+nearest its tile centre, `snr_polint` tie-break) and commits the whole cascade with the S/N
+column named: 9,294,225 raw → 338,313 (snr_polint ≥ 8) → 337,548 (finite) → 333,173 (goodRM) →
+246,508. The paper's old defence ("duplicates sit below the smallest SF bin") was wrong twice
+over: same-source pairs at ~0 separation inject pure noise power into the smallest bins, and
+26% of sources were double-weighted in every median.
+
+**The headline error was understated 11x, not ~6x.** On the deduped sample the enhancement
+ratio is 10.97 with a leave-one-block-out jackknife (601 blocks of 10 deg) SE of **1.1**; the
+i.i.d. source bootstrap says 0.10. Quoted as 11.0 ± 1.1 (display precision matched). The new
+test proves the jackknife exceeds the bootstrap on the correlated fixture, so the failure mode
+is pinned in CI, not just fixed once.
+
+**Blocker 1 (quality-flag claim), now measured on committed runs.** Unflagged + deduped:
+high-|b| half-plateau scale 0.87 deg; flagged: 2.29 deg. The claim survives in direction; the
+old numbers (0.5 vs 3.70) were pre-dedup and the flagged one changed materially — which is
+exactly why an uncommitted variant run was a blocker.
+
+**The rest:** per-seed ensemble committed (results/rmstructure_synthetic.json, 30 ratios,
+allowlisted as synthetic-by-design); ratio defined in the abstract; fixture scope stated (pole
+cut 15 vs 60 deg; why the band median must sit below the injected peak boost of 5); ladder rows
+carry plateau_err, sigma_rm_err, n_pairs, pair_fraction; the floor is quoted (12.3 ± 0.21) with
+its leverage made explicit — plane bins insensitive (201.9 vs 201.1 under a floor nearly twice
+as large), the 30–50 deg bin dominated (18.3, spanning 16.1–20.1 across literature floors
+9–15); provenance macros namespaced (\rmsRealSource / \rmsSynSource under the live \rmsSource
+the guard reads); thomson2023 cited at the DR1 sentence; "quadrant signs" → "coarse net RM sign
+per quadrant"; abstract cut to arXiv's 1920-char limit and the arXiv package rebuilt clean
+(the dangling-citation abstract is gone); README row updated.

@@ -27,6 +27,8 @@ from .rmsky import _ratio_bootstrap_se, enhancement_ratio
 
 __all__ = [
     "latitude_ladder",
+    "load_spice_racs_dr2",
+    "spatial_block_jackknife",
     "structure_function",
     "synthetic_rm_screen",
     "fetch_spice_racs_dr1",
@@ -201,12 +203,22 @@ DR2_LOCAL = Path("data/spice-racs.dr2.fits")  # gunzipped from the DAP .gz so as
 
 
 def load_spice_racs_dr2(
-    path: str | Path = DR2_LOCAL, *, snr_min: float = 8.0
+    path: str | Path = DR2_LOCAL, *, snr_min: float = 8.0, goodrm: bool = True, dedup: bool = True
 ) -> dict:  # pragma: no cover - needs the 5 GB DAP file
     """Load the public SPICE-RACS DR2 catalogue FITS (CSIRO DAP csiro:64891, no auth).
 
     Column names follow the DR1 convention (rm, rm_err, snr_polint, l, b); any variant casing is
-    resolved by lookup. Applies the S/N cut and finite-error filter used throughout.
+    resolved by lookup, and the column each cut actually used is **recorded** in the returned
+    ``meta`` dict together with the full cut cascade (raw rows, S/N cut, finite-error cut,
+    ``goodRM_flag``, dedup) — a referee round found the sample definition unauditable without it.
+
+    ``dedup=True`` keeps one row per ``cat_id``: RACS tiles overlap, so ~26% of goodRM rows are
+    repeat observations of the same component (333,173 rows but 246,508 unique ``cat_id``, which
+    is the release's own published post-dedup 8-sigma count). The kept row is the one observed
+    closest to its tile centre (best PSF/leakage behaviour), with highest ``snr_polint`` as the
+    tie-break. Duplicates are not merely redundant for pair statistics: a pair of rows for the
+    SAME source at zero separation with independent noise puts pure noise power into the smallest
+    SF bins, and duplicated sources are double-weighted in every median.
     """
     from astropy.io import fits
     from astropy.table import Table
@@ -214,33 +226,87 @@ def load_spice_racs_dr2(
     with fits.open(path, memmap=True) as hdul:
         t = Table(hdul[1].data)
     cols = {c.lower(): c for c in t.colnames}
+    used: dict[str, str] = {}
 
-    def col(*names):
+    def col(field: str, *names):
         for nm in names:
             if nm in cols:
+                used[field] = cols[nm]
                 return np.asarray(t[cols[nm]], float)
         raise KeyError(f"none of {names} in DR2 table (has: {sorted(cols)[:40]}...)")
 
-    rm = col("rm")
-    rm_err = col("rm_err", "e_rm", "rm_err_obs")
-    snr = col("snr_polint", "snr_pi", "snr")
-    gl = col("l", "gal_l", "glon")
-    gb = col("b", "gal_b", "glat")
-    ra = col("ra", "ra_deg")
-    dec = col("dec", "dec_deg")
-    m = (snr >= snr_min) & np.isfinite(rm) & (rm_err > 0)
+    rm = col("rm", "rm")
+    rm_err = col("rm_err", "rm_err", "e_rm", "rm_err_obs")
+    snr = col("snr", "snr_polint", "snr_pi", "snr")
+    gl = col("gal_l", "l", "gal_l", "glon")
+    gb = col("gal_b", "b", "gal_b", "glat")
+    ra = col("ra", "ra", "ra_deg")
+    dec = col("dec", "dec", "dec_deg")
+    meta: dict = {"snr_column": used["snr"], "n_raw": int(rm.size), "snr_min": float(snr_min)}
+    m = snr >= snr_min
+    meta["n_after_snr"] = int(m.sum())
+    m &= np.isfinite(rm) & (rm_err > 0)
+    meta["n_after_finite"] = int(m.sum())
     # the survey's own quality selection: goodRM_flag folds in leakage/snr/StokesI-fit rejection
     # (GATE-2 delta: without it the sample is leakage-contaminated, worst near the plane)
-    if "goodrm_flag" in cols:
+    if goodrm and "goodrm_flag" in cols:
         m &= np.asarray(t[cols["goodrm_flag"]], bool)
+    meta["goodrm_applied"] = bool(goodrm and "goodrm_flag" in cols)
+    meta["n_after_goodrm"] = int(m.sum())
+    idx = np.where(m)[0]
+    if dedup and "cat_id" in cols:
+        cat = np.asarray(t[cols["cat_id"]])[idx]
+        septc = (
+            np.asarray(t[cols["separation_tile_centre"]], float)[idx]
+            if "separation_tile_centre" in cols
+            else np.zeros(idx.size)
+        )
+        # smallest tile-centre separation first, then highest S/N; first occurrence per cat_id wins
+        order = np.lexsort((-snr[idx], septc))
+        _, first = np.unique(cat[order], return_index=True)
+        idx = idx[order[np.sort(first)]]
+        meta["dedup"] = "one row per cat_id: min separation_tile_centre, then max snr_polint"
+    meta["n_final"] = int(idx.size)
     return {
-        "ra": ra[m],
-        "dec": dec[m],
-        "gal_l": gl[m],
-        "gal_b": gb[m],
-        "rm": rm[m],
-        "rm_err": rm_err[m],
+        "ra": ra[idx],
+        "dec": dec[idx],
+        "gal_l": gl[idx],
+        "gal_b": gb[idx],
+        "rm": rm[idx],
+        "rm_err": rm_err[idx],
+        "meta": meta,
     }
+
+
+def spatial_block_jackknife(
+    gal_l: np.ndarray,
+    gal_b: np.ndarray,
+    stat_fn,
+    *,
+    block_deg: float = 10.0,
+    min_blocks: int = 5,
+) -> dict:
+    """Leave-one-sky-block-out jackknife for a statistic of a spatially correlated field.
+
+    An i.i.d. source bootstrap on an RM sky with a ~2 deg coherence length resamples
+    *within* correlated patches, so it measures shot noise and understates the field-level
+    uncertainty — the slice's own recorded lesson, which its real-data headline then repeated.
+    Blocks of ``block_deg`` (several coherence lengths) are the exchangeable unit. ``stat_fn``
+    receives a boolean keep-mask over sources and returns the statistic. Returns the full-sample
+    statistic, the jackknife SE, and the block count.
+    """
+    gal_l = np.asarray(gal_l, float)
+    gal_b = np.asarray(gal_b, float)
+    ids = np.floor(gal_l / block_deg) * 1000 + np.floor((gal_b + 90.0) / block_deg)
+    uniq = np.unique(ids)
+    full = float(stat_fn(np.ones(gal_l.size, bool)))
+    vals = np.asarray([stat_fn(ids != u) for u in uniq], float)
+    vals = vals[np.isfinite(vals)]
+    k = vals.size
+    if k < min_blocks:
+        return {"stat": full, "se": float("nan"), "n_blocks": int(k)}
+    se = float(np.sqrt((k - 1) / k * np.sum((vals - vals.mean()) ** 2)))
+    return {"stat": full, "se": se, "n_blocks": int(k)}
 
 
 def latitude_ladder(
@@ -266,6 +332,9 @@ def latitude_ladder(
         "plateau": [],
         "plateau_err": [],
         "sigma_rm": [],
+        "sigma_rm_err": [],
+        "n_pairs": [],
+        "pair_fraction": [],
     }
     for lo, hi in zip(b_edges[:-1], b_edges[1:], strict=True):
         m = (ab >= lo) & (ab < hi)
@@ -273,9 +342,9 @@ def latitude_ladder(
         out["b_hi"].append(hi)
         out["n"].append(int(m.sum()))
         if m.sum() < 200:
-            out["plateau"].append(float("nan"))
-            out["plateau_err"].append(float("nan"))
-            out["sigma_rm"].append(float("nan"))
+            for k in ("plateau", "plateau_err", "sigma_rm", "sigma_rm_err", "pair_fraction"):
+                out[k].append(float("nan"))
+            out["n_pairs"].append(0)
             continue
         sf = structure_function(
             s["ra"][m],
@@ -290,14 +359,38 @@ def latitude_ladder(
         perr = float(np.nanmedian(sf["sf_err"][good][-3:])) if good.sum() >= 3 else float("nan")
         out["plateau"].append(plat)
         out["plateau_err"].append(perr)
-        out["sigma_rm"].append(float(np.sqrt(plat / 2.0)) if plat > 0 else float("nan"))
+        sig = float(np.sqrt(plat / 2.0)) if plat > 0 else float("nan")
+        out["sigma_rm"].append(sig)
+        # error propagation through sigma = sqrt(plateau/2): dsigma = dplateau / (4 sigma) * ...
+        out["sigma_rm_err"].append(
+            float(perr / (2.0 * np.sqrt(2.0 * plat))) if plat > 0 else float("nan")
+        )
+        out["n_pairs"].append(int(np.sum(sf["n_pairs"])))
+        out["pair_fraction"].append(float(sf["pair_fraction"]))
     lad: dict[str, Any] = {k: np.asarray(v) for k, v in out.items()}
     # first-order floor subtraction: the highest-|b| bin estimates the latitude-independent
     # intrinsic+extragalactic floor; sigma_gal = sqrt(sigma^2 - floor^2) (NaN where <= floor)
-    floor = lad["sigma_rm"][np.isfinite(lad["sigma_rm"])][-1]
+    fin = np.isfinite(lad["sigma_rm"])
+    floor = lad["sigma_rm"][fin][-1]
+    floor_err = lad["sigma_rm_err"][fin][-1]
     with np.errstate(invalid="ignore"):
         lad["sigma_gal"] = np.sqrt(np.clip(lad["sigma_rm"] ** 2 - floor**2, 0.0, None))
     lad["floor_sigma"] = float(floor)
+    lad["floor_sigma_err"] = float(floor_err)
+    # Floor sensitivity: the subtraction is licensed by ONE bin's plateau, so quote how the
+    # plane-bin Galactic dispersion moves when the floor is taken instead from the neighbouring
+    # high-|b| bin (the plausible alternative) and across the floor's own +/-1 sigma.
+    plane_sig = lad["sigma_rm"][fin][0]
+    alt_floor = lad["sigma_rm"][fin][-2] if fin.sum() >= 2 else float("nan")
+
+    def _gal(f: float) -> float:
+        return float(np.sqrt(plane_sig**2 - f**2)) if plane_sig > f else float("nan")
+
+    lad["sigma_gal_plane"] = _gal(floor)
+    lad["sigma_gal_plane_floor_alt"] = _gal(alt_floor)
+    lad["sigma_gal_plane_floor_lo"] = _gal(floor + floor_err)
+    lad["sigma_gal_plane_floor_hi"] = _gal(max(floor - floor_err, 0.0))
+    lad["alt_floor_sigma"] = float(alt_floor)
     return lad
 
 
@@ -336,7 +429,16 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     pole = 15.0 if offline else 60.0  # the synthetic patch spans only ±20 deg
     ratio = enhancement_ratio(s["rm"], s["gal_b"], pole_deg=pole)
     ratio_se = _ratio_bootstrap_se(s["rm"], s["gal_b"], pole_deg=pole)
+    # The i.i.d. source bootstrap resamples within correlated patches (coherence ~2 deg), so on
+    # the real sky it understates the field-level error; the sky-block jackknife is the honest
+    # uncertainty on the real leg, exactly as the seed ensemble is on the synthetic one.
+    jk = spatial_block_jackknife(
+        s["gal_l"],
+        s["gal_b"],
+        lambda m: enhancement_ratio(s["rm"][m], s["gal_b"][m], pole_deg=pole),
+    )
     ratio_ens = ratio_ens_se = None
+    ens: list[float] = []
     if offline:
         # The bootstrap resamples sources WITHIN one fixed field realization, so it measures
         # sampling noise and not the realization variance of a correlated random field. On
@@ -358,9 +460,14 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         "n_sources": int(s["rm"].size),
         "enhancement_ratio": round(float(ratio), 2),
         "enhancement_ratio_se": round(float(ratio_se), 2),
+        "enhancement_ratio_jackknife_se": round(float(jk["se"]), 2),
+        "n_jackknife_blocks": jk["n_blocks"],
         # Offline only: the honest uncertainty on a recover-a-known over a random field.
         "enhancement_ratio_ensemble": None if ratio_ens is None else round(ratio_ens, 2),
         "enhancement_ratio_ensemble_sd": None if ratio_ens_se is None else round(ratio_ens_se, 2),
+        "enhancement_ratio_ensemble_sem": None
+        if ratio_ens_se is None
+        else round(ratio_ens_se / np.sqrt(N_SYNTHETIC_REALIZATIONS), 2),
         "n_realizations": N_SYNTHETIC_REALIZATIONS if offline else None,
         "sf_plateau_low_b": round(float(np.nanmedian(sf_lo["sf"][-3:])), 1),
         "sf_plateau_high_b": round(float(np.nanmedian(sf_hi["sf"][-3:])), 1),
@@ -368,6 +475,8 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         "sf_break_high_b_deg": round(break_hi, 2) if np.isfinite(break_hi) else None,
         "true_coherence_deg": s.get("coherence_deg"),
     }
+    if "meta" in s:  # pragma: no cover - big data only
+        metrics["sample_cascade"] = s["meta"]
     if ladder is not None:  # pragma: no cover - big data only
         fin = np.isfinite(ladder["sigma_rm"])
         metrics.update(
@@ -376,7 +485,12 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                     {
                         "b": f"{ladder['b_lo'][i]:.0f}-{ladder['b_hi'][i]:.0f}",
                         "n": int(ladder["n"][i]),
+                        "n_pairs": int(ladder["n_pairs"][i]),
+                        "pair_fraction": round(float(ladder["pair_fraction"][i]), 4),
+                        "plateau": round(float(ladder["plateau"][i]), 1),
+                        "plateau_err": round(float(ladder["plateau_err"][i]), 1),
                         "sigma_rm": round(float(ladder["sigma_rm"][i]), 1),
+                        "sigma_rm_err": round(float(ladder["sigma_rm_err"][i]), 2),
                         "sigma_gal": round(float(ladder["sigma_gal"][i]), 1),
                     }
                     for i in range(len(ladder["n"]))
@@ -385,13 +499,43 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                 "sigma_rm_plane": round(float(ladder["sigma_rm"][fin][0]), 1),
                 "sigma_rm_pole": round(float(ladder["sigma_rm"][fin][-1]), 1),
                 "ladder_floor_sigma": round(ladder["floor_sigma"], 1),
+                "ladder_floor_sigma_err": round(ladder["floor_sigma_err"], 2),
+                "ladder_alt_floor_sigma": round(ladder["alt_floor_sigma"], 1),
+                "sigma_gal_plane": round(ladder["sigma_gal_plane"], 1),
+                "sigma_gal_plane_floor_alt": round(ladder["sigma_gal_plane_floor_alt"], 1),
+                "sigma_gal_plane_floor_lo": round(ladder["sigma_gal_plane_floor_lo"], 1),
+                "sigma_gal_plane_floor_hi": round(ladder["sigma_gal_plane_floor_hi"], 1),
             }
         )
+    if dr2 and not offline:  # pragma: no cover - big data only
+        # The unflagged variant behind the paper's quality-flag claim: same dedup, goodRM off.
+        # Its high-|b| break was previously asserted from an uncommitted run; measure and commit.
+        su = load_spice_racs_dr2(goodrm=False)
+        hiu = np.abs(su["gal_b"]) > 10.0
+        sf_hiu = structure_function(su["ra"][hiu], su["dec"][hiu], su["rm"][hiu], su["rm_err"][hiu])
+        break_hiu = _sf_break(sf_hiu["sep_deg"], sf_hiu["sf"])
+        metrics["unflagged_n_sources"] = int(su["rm"].size)
+        metrics["unflagged_sf_break_high_b_deg"] = (
+            round(break_hiu, 2) if np.isfinite(break_hiu) else None
+        )
+        metrics["unflagged_sf_plateau_high_b"] = round(float(np.nanmedian(sf_hiu["sf"][-3:])), 1)
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
     write_results(metrics, op / "results" / "rmstructure_metrics.json")
+    if offline:
+        # The per-seed ratios behind the ensemble mean/SD: committed so "3.15 +/- 1.11 over 30
+        # realizations" is auditable, not just asserted (a referee round flagged the omission).
+        write_results(
+            {
+                "source": "synthetic RM screen seed ensemble (recover-a-known)",
+                "pole_deg": pole,
+                "injected_plane_boost": 5.0,
+                "ratios": [round(float(x), 3) for x in ens],
+            },
+            op / "results" / "rmstructure_synthetic.json",
+        )
     _figure(s, sf_lo, sf_hi, op / "papers" / "rmstructure" / "figures")
     _write_macros(metrics, op / "papers" / "rmstructure" / "generated" / "macros.tex")
     return metrics
@@ -434,29 +578,74 @@ def _figure(s, sf_lo, sf_hi, out_dir) -> None:
     plt.close(fig)
 
 
+#: Literature intrinsic+extragalactic RM floor range (rad/m^2) used for the floor-sensitivity
+#: macros (Mao et al. 2010; the Taylor et al. 2009 discussion) — the plausible span a reader
+#: might adopt instead of this paper's measured polar plateau.
+LITERATURE_FLOOR_RANGE = (9.0, 15.0)
+
+# Ratio-family macros are display-rounded to one decimal so the quoted value and its error
+# carry matching precision (a referee flagged 11.17 +/- 0.1).
+_ONE_DP = {
+    "enhancement_ratio",
+    "enhancement_ratio_se",
+    "enhancement_ratio_jackknife_se",
+    "enhancement_ratio_ensemble",
+    "enhancement_ratio_ensemble_sd",
+    "enhancement_ratio_ensemble_sem",
+}
+
+
 def _write_macros(m: dict, path) -> None:
     from pathlib import Path
 
     def _fmt(key: str) -> str:
         val = m.get(key)
+        if val is None:
+            return "--"
+        if key in _ONE_DP:
+            return f"{float(val):.1f}"
+        return str(val)
+
+    def _casc(key: str) -> str:
+        c = m.get("sample_cascade") or {}
+        val = c.get(key)
         return "--" if val is None else str(val)
+
+    # Floor sensitivity where it actually bites: the plane bins are floor-insensitive in
+    # quadrature, so also derive sigma_Gal for the SECOND-highest-|b| bin (the one within a
+    # factor ~2 of the floor) under the measured floor and across the literature floor range.
+    bins = m.get("ladder_bins") or []
+    if len(bins) >= 2:
+        sig_mid = float(bins[-2]["sigma_rm"])
+        m = dict(m)
+        m["sigma_gal_mid_bin"] = bins[-2]["b"]
+        m["sigma_gal_mid"] = bins[-2]["sigma_gal"]
+        for name, f in zip(("lit_lo", "lit_hi"), LITERATURE_FLOOR_RANGE, strict=True):
+            m[f"sigma_gal_mid_floor_{name}"] = round(float(np.sqrt(max(sig_mid**2 - f**2, 0.0))), 1)
 
     pref = "rmsReal" if m.get("is_real") else "rmsSyn"
     lines = [
         "% Auto-generated by jansky_research.rmstructure._write_macros -- do not edit.",
         "% Synthetic (rmsSyn*) and real (rmsReal*) namespaces are BOTH always emitted; the",
         "% inactive namespace holds placeholders so offline CI and real runs never collide.",
+        # \rmsSource (read first by the merge guard) carries the LIVE run's provenance; the
+        # per-namespace sources below it are for display, so the paper can cite each leg's
+        # provenance without the shared marker inverting when the other leg rebuilds.
         rf"\newcommand{{\rmsSource}}{{{m['source']}}}",
     ]
     for ns in ("rmsSyn", "rmsReal"):
         live = ns == pref
         g = (lambda k: _fmt(k)) if live else (lambda k: "--")
         lines += [
+            rf"\newcommand{{\{ns}Source}}{{{m['source'] if live else '--'}}}",
             rf"\newcommand{{\{ns}N}}{{{g('n_sources')}}}",
             rf"\newcommand{{\{ns}Ratio}}{{{g('enhancement_ratio')}}}",
             rf"\newcommand{{\{ns}RatioSe}}{{{g('enhancement_ratio_se')}}}",
+            rf"\newcommand{{\{ns}RatioJkSe}}{{{g('enhancement_ratio_jackknife_se')}}}",
+            rf"\newcommand{{\{ns}JkBlocks}}{{{g('n_jackknife_blocks')}}}",
             rf"\newcommand{{\{ns}RatioEns}}{{{g('enhancement_ratio_ensemble')}}}",
             rf"\newcommand{{\{ns}RatioEnsSd}}{{{g('enhancement_ratio_ensemble_sd')}}}",
+            rf"\newcommand{{\{ns}RatioEnsSem}}{{{g('enhancement_ratio_ensemble_sem')}}}",
             rf"\newcommand{{\{ns}NReal}}{{{g('n_realizations')}}}",
             rf"\newcommand{{\{ns}PlatLo}}{{{g('sf_plateau_low_b')}}}",
             rf"\newcommand{{\{ns}PlatHi}}{{{g('sf_plateau_high_b')}}}",
@@ -464,6 +653,22 @@ def _write_macros(m: dict, path) -> None:
             rf"\newcommand{{\{ns}BreakHi}}{{{g('sf_break_high_b_deg')}}}",
             rf"\newcommand{{\{ns}SigPlane}}{{{g('sigma_rm_plane')}}}",
             rf"\newcommand{{\{ns}SigPole}}{{{g('sigma_rm_pole')}}}",
+            rf"\newcommand{{\{ns}FloorSig}}{{{g('ladder_floor_sigma')}}}",
+            rf"\newcommand{{\{ns}FloorSigErr}}{{{g('ladder_floor_sigma_err')}}}",
+            rf"\newcommand{{\{ns}AltFloorSig}}{{{g('ladder_alt_floor_sigma')}}}",
+            rf"\newcommand{{\{ns}SigGalPlane}}{{{g('sigma_gal_plane')}}}",
+            rf"\newcommand{{\{ns}SigGalPlaneAltFloor}}{{{g('sigma_gal_plane_floor_alt')}}}",
+            rf"\newcommand{{\{ns}SigGalPlaneFloorLo}}{{{g('sigma_gal_plane_floor_lo')}}}",
+            rf"\newcommand{{\{ns}SigGalPlaneFloorHi}}{{{g('sigma_gal_plane_floor_hi')}}}",
+            rf"\newcommand{{\{ns}SigGalMidBin}}{{{g('sigma_gal_mid_bin')}}}",
+            rf"\newcommand{{\{ns}SigGalMid}}{{{g('sigma_gal_mid')}}}",
+            rf"\newcommand{{\{ns}SigGalMidFloorLitLo}}{{{g('sigma_gal_mid_floor_lit_lo')}}}",
+            rf"\newcommand{{\{ns}SigGalMidFloorLitHi}}{{{g('sigma_gal_mid_floor_lit_hi')}}}",
+            rf"\newcommand{{\{ns}BreakHiUnflagged}}{{{g('unflagged_sf_break_high_b_deg')}}}",
+            rf"\newcommand{{\{ns}NUnflagged}}{{{g('unflagged_n_sources')}}}",
+            rf"\newcommand{{\{ns}NRowsRaw}}{{{_casc('n_raw') if live else '--'}}}",
+            rf"\newcommand{{\{ns}NAfterSnr}}{{{_casc('n_after_snr') if live else '--'}}}",
+            rf"\newcommand{{\{ns}NAfterGoodrm}}{{{_casc('n_after_goodrm') if live else '--'}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
