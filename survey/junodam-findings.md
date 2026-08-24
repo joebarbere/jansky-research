@@ -160,3 +160,44 @@ the figure caption tells the reader the figure may be synthetic (it is not); \jd
 un-namespaced; archinal2018 uncited.
 
 **Status: macro fix landed; remaining fixes pending** (data local: data/junodam/).
+
+### Resolved 2026-08-24 (revision): the null is quantified, and two real structures surface
+
+All 16 findings addressed; the real leg re-run (210 CDFs + Horizons). Only one previously
+published value moved: `near_far_corrected` 2.2 -> 2.25 (the rounding defect the referee found;
+now 2 d.p. from the unrounded quartiles).
+
+**The blocker is closed the strong way.** `monthly_contrast_test` computes and commits the test
+the abstract used to assert: per-month contrasts, log-scale t (-0.37), TWO-sided sign test
+(p = 0.453), geometric mean 0.92, **95% CI 0.53--1.59** --- the referee's reconstruction exactly.
+The paper now states what "does not reject" is worth: it equally does not reject a 1.6x
+enhancement, so the title and headings were softened from "Do Not Coherently Organise" to "Are
+Not Detected to Organise". The v02-only variant (excluding the sole v01 month, which is also the
+outlier) gives CI 0.48--1.33: the version mix is now *measured* benign.
+
+**What the new evidence found:**
+- **Io-B alone is enhanced (1.67)** against A/C/D at 0.92/0.79/1.28 --- the diagonal band the
+  referee saw in the figure is real per-region structure the union statistic averages away.
+  Committed as `per_region_contrast` and stated in Results.
+- **The box-shift scan is flat** (0.75--1.18 across all rigid Io-phase offsets, zero included):
+  no convention offset rescues the boxes, and the flatness itself is the strongest statement of
+  weak organisation. The synthetic version of the scan peaks at zero shift (tested), so the
+  machinery would have found an offset if one existed. External certification against a
+  ground-based catalogue remains the follow-up, stated in the limits.
+- **The near-unity injection curve**: injected 1.25/1.5/2.0/8.75 recover 1.16/1.37/1.8/6.8, so
+  the estimator contracts (C-1) by ~25-35% and the bias direction (toward the paper's own
+  conclusion) is now stated with the measured curve, not a single 8.75-point.
+- **The effective N**: the 44,294 active bins are 6,784 contiguous episodes (median 1 bin, max
+  ~9 h), which is why the day-block bootstrap (aggregate contrast **1.12 +/- 0.18**, CI
+  0.75--1.48) replaces any per-bin statistic.
+- **The censored census** (downward-only, cannot promote noise -- the skr lesson) gives
+  near/far = 2.71 vs the upward-rescale's 2.25; both are reported, the censored one as primary,
+  and the abstract now uses the same-detector pair (330.4 -> 2.71) instead of mixing detectors
+  (196 vs 12.91/0.07 = 184).
+
+Bib: the dataset citation repointed to the v02 DOI (10.25935/fwtq-v202, 2023, Louis, Zarka,
+Cecconi, Boudouma) with the obsoleted v01 noted; "the 2025 public release" corrected; archinal2018
+now cited; the figure caption no longer suggests the CI build might be what the reader sees.
+Committed per-quartile denominators, per-month table with versions, and per-quartile raw-p90
+duty cycles (the "agree closely" comment about 196 vs 330 is gone -- they differ by 70% and the
+paper says so).

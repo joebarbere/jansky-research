@@ -24,11 +24,232 @@
   "activity_q4_corr_pct": 0.112,
   "near_far_raw": 196.2,
   "near_far_raw_p90": 330.4,
-  "near_far_corrected": 2.2,
+  "near_far_corrected": 2.25,
   "range_near_rj": 39.3,
   "range_far_rj": 111.4,
   "n_months": 7,
   "io_contrast_month_median": 0.87,
   "io_contrast_month_min": 0.35,
-  "io_contrast_month_max": 2.22
+  "io_contrast_month_max": 2.22,
+  "activity_q1_raw_p90_pct": 11.145,
+  "activity_q1_cens_pct": 0.075,
+  "n_active_q1": 39042,
+  "cells_used_q1": 324,
+  "activity_q2_raw_p90_pct": 0.928,
+  "activity_q2_cens_pct": 0.037,
+  "n_active_q2": 4453,
+  "cells_used_q2": 324,
+  "activity_q3_raw_p90_pct": 0.11,
+  "activity_q3_cens_pct": 0.066,
+  "n_active_q3": 600,
+  "cells_used_q3": 324,
+  "activity_q4_raw_p90_pct": 0.034,
+  "activity_q4_cens_pct": 0.028,
+  "n_active_q4": 199,
+  "cells_used_q4": 324,
+  "near_far_censored": 2.71,
+  "per_month": [
+    {
+      "month": "201608",
+      "n_days": 31,
+      "n_bins": 178560,
+      "n_active": 7129,
+      "contrast": 1.56,
+      "versions": [
+        "v02"
+      ]
+    },
+    {
+      "month": "201702",
+      "n_days": 27,
+      "n_bins": 155520,
+      "n_active": 6244,
+      "contrast": 2.22,
+      "versions": [
+        "v01"
+      ]
+    },
+    {
+      "month": "201705",
+      "n_days": 31,
+      "n_bins": 178560,
+      "n_active": 5898,
+      "contrast": 0.87,
+      "versions": [
+        "v02"
+      ]
+    },
+    {
+      "month": "201711",
+      "n_days": 30,
+      "n_bins": 172800,
+      "n_active": 2623,
+      "contrast": 0.35,
+      "versions": [
+        "v02"
+      ]
+    },
+    {
+      "month": "201805",
+      "n_days": 31,
+      "n_bins": 178560,
+      "n_active": 14814,
+      "contrast": 0.93,
+      "versions": [
+        "v02"
+      ]
+    },
+    {
+      "month": "201811",
+      "n_days": 30,
+      "n_bins": 172800,
+      "n_active": 1075,
+      "contrast": 0.7,
+      "versions": [
+        "v02"
+      ]
+    },
+    {
+      "month": "201905",
+      "n_days": 30,
+      "n_bins": 172800,
+      "n_active": 6511,
+      "contrast": 0.84,
+      "versions": [
+        "v02"
+      ]
+    }
+  ],
+  "monthly_contrast_test": {
+    "n": 7,
+    "contrasts": [
+      1.56,
+      2.22,
+      0.87,
+      0.35,
+      0.93,
+      0.7,
+      0.84
+    ],
+    "log_mean": -0.082,
+    "log_sd": 0.591,
+    "t": -0.37,
+    "p_sign_two_sided": 0.453,
+    "geo_mean": 0.92,
+    "ci95": [
+      0.53,
+      1.59
+    ]
+  },
+  "monthly_contrast_test_v02_only": {
+    "n": 6,
+    "contrasts": [
+      1.56,
+      0.87,
+      0.35,
+      0.93,
+      0.7,
+      0.84
+    ],
+    "log_mean": -0.225,
+    "log_sd": 0.486,
+    "t": -1.13,
+    "p_sign_two_sided": 0.219,
+    "geo_mean": 0.8,
+    "ci95": [
+      0.48,
+      1.33
+    ]
+  },
+  "box_shift_scan": [
+    {
+      "shift_deg": -180.0,
+      "contrast": 1.0
+    },
+    {
+      "shift_deg": -150.0,
+      "contrast": 1.11
+    },
+    {
+      "shift_deg": -120.0,
+      "contrast": 1.17
+    },
+    {
+      "shift_deg": -90.0,
+      "contrast": 1.18
+    },
+    {
+      "shift_deg": -60.0,
+      "contrast": 1.14
+    },
+    {
+      "shift_deg": -30.0,
+      "contrast": 1.05
+    },
+    {
+      "shift_deg": 0.0,
+      "contrast": 1.12
+    },
+    {
+      "shift_deg": 30.0,
+      "contrast": 0.75
+    },
+    {
+      "shift_deg": 60.0,
+      "contrast": 0.75
+    },
+    {
+      "shift_deg": 90.0,
+      "contrast": 0.87
+    },
+    {
+      "shift_deg": 120.0,
+      "contrast": 0.96
+    },
+    {
+      "shift_deg": 150.0,
+      "contrast": 0.97
+    },
+    {
+      "shift_deg": 180.0,
+      "contrast": 1.0
+    }
+  ],
+  "contrast_day_bootstrap": {
+    "se": 0.18,
+    "ci95": [
+      0.75,
+      1.48
+    ],
+    "n_boot_ok": 200
+  },
+  "episodes": {
+    "n_episodes": 6784,
+    "median_episode_bins": 1,
+    "max_episode_bins": 2171
+  },
+  "per_region_contrast": {
+    "Io-A": 0.92,
+    "Io-B": 1.67,
+    "Io-C": 0.79,
+    "Io-D": 1.28
+  },
+  "recovery_curve": [
+    {
+      "injected": 1.25,
+      "recovered": 1.16
+    },
+    {
+      "injected": 1.5,
+      "recovered": 1.37
+    },
+    {
+      "injected": 2.0,
+      "recovered": 1.8
+    },
+    {
+      "injected": 8.75,
+      "recovered": 6.8
+    }
+  ]
 }

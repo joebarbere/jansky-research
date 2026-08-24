@@ -194,6 +194,172 @@ def io_region_contrast(m: dict) -> dict:
     }
 
 
+def sensitivity_censored_active(
+    snr_p90: np.ndarray, dist_au: np.ndarray, *, far_pct: float = 95.0
+) -> np.ndarray:
+    r"""The common-sensitivity census: detections censored DOWN to the far-range threshold.
+
+    ``sensitivity_corrected_active`` multiplies far-range SNRs by :math:`(d/d_\mathrm{ref})^2 > 1`
+    and re-thresholds, which promotes sub-threshold far-range values --- noise included --- across
+    the floor (measured: the far-quartile duty rose 0.07% -> 0.112% under it, with no committed
+    false-positive rate; the sibling ``skr`` slice hit the same failure and its controls are in
+    ``tests/test_skr.py``). This estimator only ever scales down: a bin counts when it is raw-active
+    (``snr_p90 >= 1``) AND its SNR rescaled to the ``far_pct``-percentile range still clears 1, so
+    every kept detection would have been visible from the far reference and noise is never promoted.
+    """
+    s = np.asarray(snr_p90, float)
+    d = np.asarray(dist_au, float)
+    good = np.isfinite(s) & np.isfinite(d)
+    d_far = float(np.nanpercentile(d[good], far_pct)) if good.any() else float("nan")
+    out = np.zeros(s.shape, bool)
+    out[good] = (s[good] >= 1.0) & (s[good] * (d[good] / d_far) ** 2 >= 1.0)
+    return out
+
+
+def monthly_contrast_test(contrasts: list | np.ndarray) -> dict:
+    """The one-sample test the abstract cites, computed and committed rather than asserted.
+
+    A ratio is tested against unity on the log scale (a t-test on raw ratios against 1 is the
+    wrong parameterisation), with a TWO-sided sign test alongside. Returns the per-month list,
+    log-scale mean/sd/t, the two-sided sign-test p, and the 95% CI on the mean monthly contrast
+    (log-scale, exponentiated) --- the number that shows what "does not reject" is worth: an
+    interval spanning [0.5, 1.6] does not reject a 1.6x enhancement either.
+    """
+    c = np.asarray(contrasts, float)
+    c = c[np.isfinite(c) & (c > 0)]
+    n = int(c.size)
+    if n < 2:
+        return {"n": n, "contrasts": [round(float(x), 2) for x in c]}
+    lg = np.log(c)
+    mean, sd = float(lg.mean()), float(lg.std(ddof=1))
+    se = sd / np.sqrt(n)
+    t_stat = mean / se if se > 0 else float("nan")
+    # two-sided sign test against unity: P(X <= k) + P(X >= n-k) under Binomial(n, 1/2)
+    from math import comb
+
+    k = int(np.sum(c > 1.0))
+    lo = min(k, n - k)
+    p_sign = min(1.0, 2.0 * sum(comb(n, i) for i in range(lo + 1)) / 2.0**n)
+    # 95% CI on the mean log contrast, using the t quantile for small n
+    from scipy import stats as _st
+
+    tq = float(_st.t.ppf(0.975, n - 1))
+    ci = (float(np.exp(mean - tq * se)), float(np.exp(mean + tq * se)))
+    return {
+        "n": n,
+        "contrasts": [round(float(x), 2) for x in c],
+        "log_mean": round(mean, 3),
+        "log_sd": round(sd, 3),
+        "t": round(t_stat, 2),
+        "p_sign_two_sided": round(p_sign, 3),
+        "geo_mean": round(float(np.exp(mean)), 2),
+        "ci95": [round(ci[0], 2), round(ci[1], 2)],
+    }
+
+
+def box_shift_scan(
+    cml: np.ndarray, pha: np.ndarray, active: np.ndarray, *, shifts=None
+) -> list[dict]:
+    """Io-box contrast under a rigid shift of the box set in Io phase: the frame-convention probe.
+
+    The one systematic capable of manufacturing this census's null is a residual offset in the
+    Io-phase convention (``io_phase`` mixes an eastward inertial mean longitude with a westward
+    System III sub-observer longitude, and an earlier convention bug produced exactly a washed-out
+    contrast). A synthetic round-trip cannot catch it: injection and recovery share the frame. This
+    scan can: shift every canonical box rigidly in phase and recompute the contrast. If the true
+    boxes organise the emission, the maximum sits at zero shift; a maximum at a large offset says
+    the convention is wrong; a flat scan says the boxes do not organise this data from any offset.
+    """
+    if shifts is None:
+        shifts = np.arange(-180.0, 181.0, 30.0)
+    out = []
+    for sh in shifts:
+        m = occurrence_map(cml, (np.asarray(pha, float) - sh) % 360.0, active)
+        con = io_region_contrast(m)
+        out.append(
+            {
+                "shift_deg": float(sh),
+                "contrast": round(con["contrast"], 2) if np.isfinite(con["contrast"]) else None,
+            }
+        )
+    return out
+
+
+def day_block_bootstrap_contrast(
+    jd: np.ndarray,
+    cml: np.ndarray,
+    pha: np.ndarray,
+    active: np.ndarray,
+    *,
+    n_boot: int = 200,
+    seed: int = 0,
+) -> dict:
+    """A day-block bootstrap error for the Io-box contrast.
+
+    The 15-s bins are not independent --- the committed map shows contiguous emission episodes ---
+    so a per-bin error would be fiction. Days are the natural block (episodes do not span the
+    ~9.9 h rotation many times within one). Resamples whole days with replacement and returns the
+    bootstrap SE and the 2.5/97.5 percentiles of the contrast.
+    """
+    rng = np.random.default_rng(seed)
+    day = np.floor(np.asarray(jd, float)).astype(int)
+    udays = np.unique(day)
+    idx_by_day = {d: np.where(day == d)[0] for d in udays}
+    vals = []
+    for _ in range(n_boot):
+        pick = rng.choice(udays, size=udays.size, replace=True)
+        idx = np.concatenate([idx_by_day[d] for d in pick])
+        con = io_region_contrast(occurrence_map(cml[idx], pha[idx], active[idx]))
+        if np.isfinite(con["contrast"]):
+            vals.append(con["contrast"])
+    if len(vals) < 10:
+        return {"se": None, "ci95": None, "n_boot_ok": len(vals)}
+    arr = np.asarray(vals)
+    return {
+        "se": round(float(arr.std(ddof=1)), 2),
+        "ci95": [
+            round(float(np.percentile(arr, 2.5)), 2),
+            round(float(np.percentile(arr, 97.5)), 2),
+        ],
+        "n_boot_ok": len(vals),
+    }
+
+
+def episode_stats(active: np.ndarray) -> dict:
+    """Run-length statistics of the active flag: the effective-N behind every error bar."""
+    a = np.asarray(active, bool).astype(int)
+    d = np.diff(np.r_[0, a, 0])
+    starts = np.where(d == 1)[0]
+    ends = np.where(d == -1)[0]
+    lengths = ends - starts
+    return {
+        "n_episodes": int(lengths.size),
+        "median_episode_bins": int(np.median(lengths)) if lengths.size else 0,
+        "max_episode_bins": int(lengths.max()) if lengths.size else 0,
+    }
+
+
+def per_region_contrast(m: dict) -> dict:
+    """The contrast per canonical Io box, not just the union: averaging an enhanced Io-B against
+    boxes on the dark side of the plane's structure can return ~1 while a per-region signal is
+    present."""
+    edges = m["edges"]
+    cen = 0.5 * (edges[:-1] + edges[1:])
+    cml_g, pha_g = np.meshgrid(cen, cen, indexing="ij")
+    occ = m["occ"]
+    good = np.isfinite(occ)
+    out = {}
+    outside = np.ones_like(cml_g, bool)
+    for box in IO_REGIONS.values():
+        outside &= ~_in_box(cml_g, pha_g, box)
+    base = float(np.nanmean(occ[outside & good])) if (outside & good).any() else float("nan")
+    for name, box in IO_REGIONS.items():
+        inside = _in_box(cml_g, pha_g, box)
+        v = float(np.nanmean(occ[inside & good])) if (inside & good).any() else float("nan")
+        out[name] = round(v / base, 2) if (np.isfinite(v) and base > 0) else None
+    return out
+
+
 def synthetic_orbit(
     n_days: float = 28.0,
     *,
@@ -228,6 +394,21 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         cml, pha, active = s["cml"], s["io_phase"], s["active"]
         source = "synthetic orbit (canonical Io boxes injected)"
         expected = s["p_in"] / s["p_out"]
+        # The recovered-vs-injected curve, including contrasts near unity -- the regime the real
+        # measurement (1.12) lives in and the single 8.75-point calibration said nothing about.
+        # The estimator's boundary-cell dilution contracts every point toward 1; committing the
+        # curve makes the contraction a measured correction instead of an unstated bias.
+        curve = []
+        for p_in_c, p_out_c in ((0.05, 0.04), (0.06, 0.04), (0.08, 0.04), (0.35, 0.04)):
+            sc = synthetic_orbit(p_in=p_in_c, p_out=p_out_c, seed=1)
+            cc = io_region_contrast(occurrence_map(sc["cml"], sc["io_phase"], sc["active"]))
+            curve.append(
+                {
+                    "injected": round(p_in_c / p_out_c, 2),
+                    "recovered": round(cc["contrast"], 2) if np.isfinite(cc["contrast"]) else None,
+                }
+            )
+        extra_syn = {"recovery_curve": curve}
     else:  # pragma: no cover - data files + network
         files = sorted(DATA_DIR.glob("jno_wav_cdr_lesia_*_v0?.cdf"))
         parts = [read_waves_cdf(f) for f in files]
@@ -250,7 +431,11 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         pha = io_phase(jd, cml)
         active = detect_active(af)
         active_p90 = snr_p90 >= 1.0  # the p90 surrogate detector (uncorrected baseline)
-        active_corr = sensitivity_corrected_active(snr_p90, dist)  # 1/r^2 null, SAME p90 detector
+        # PRIMARY null: the censored (downward-only) census, which cannot promote noise. The
+        # upward-rescale variant is kept as a recorded comparison; it promotes sub-threshold
+        # far-range values across the floor (its far-quartile duty EXCEEDS the raw one).
+        active_cens = sensitivity_censored_active(snr_p90, dist)
+        active_corr = sensitivity_corrected_active(snr_p90, dist)  # superseded, recorded
         source = f"Juno/Waves L3a v01+v02, {len(files)} days"
         expected = float("nan")
         # the vantage dimension: Juno--Jupiter range dominates detection (proximity, not clock)
@@ -273,41 +458,79 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             dist > qs[2],
         ]
         for k, msk in enumerate(qmasks, start=1):
-            cq = io_region_contrast(occurrence_map(cml[msk], pha[msk], active[msk]))
+            mq = occurrence_map(cml[msk], pha[msk], active[msk])
+            cq = io_region_contrast(mq)
             extra[f"io_contrast_q{k}"] = (
                 round(cq["contrast"], 2) if np.isfinite(cq["contrast"]) else None
             )
             extra[f"activity_q{k}_pct"] = round(100 * float(active[msk].mean()), 2)
-            # the 1/r^2 sensitivity null: same range bins, distance-corrected detection
+            # like-for-like: the SAME p90 detector raw, then under each null
+            extra[f"activity_q{k}_raw_p90_pct"] = round(100 * float(active_p90[msk].mean()), 3)
+            extra[f"activity_q{k}_cens_pct"] = round(100 * float(active_cens[msk].mean()), 3)
             extra[f"activity_q{k}_corr_pct"] = round(100 * float(active_corr[msk].mean()), 3)
-        # raw vs sensitivity-corrected near/far ratio: how much of the ~180x proximity trend
-        # survives once the 1/r^2 detection advantage of perijove is divided out. near_far_raw is
-        # the original active_frac detector; near_far_raw_p90 is the SAME p90 detector as the
-        # corrected column (so raw_p90 -> corrected isolates the distance correction, not a
-        # detector swap); the two raw baselines agree closely.
+            extra[f"n_active_q{k}"] = int(active[msk].sum())
+            extra[f"cells_used_q{k}"] = cq["cells_used"]
+        # raw vs corrected near/far ratios, all on the SAME p90 detector so the correction is
+        # isolated from a detector swap. NOTE the two raw baselines (active_frac vs p90) differ
+        # by ~70% (196 vs 330) -- they are different detectors and are reported as such.
         near_raw, far_raw = float(active[qmasks[0]].mean()), float(active[qmasks[3]].mean())
         near_p, far_p = float(active_p90[qmasks[0]].mean()), float(active_p90[qmasks[3]].mean())
         near_c, far_c = float(active_corr[qmasks[0]].mean()), float(active_corr[qmasks[3]].mean())
+        near_z, far_z = float(active_cens[qmasks[0]].mean()), float(active_cens[qmasks[3]].mean())
         extra["near_far_raw"] = round(near_raw / far_raw, 1) if far_raw > 0 else None
         extra["near_far_raw_p90"] = round(near_p / far_p, 1) if far_p > 0 else None
-        extra["near_far_corrected"] = round(near_c / far_c, 1) if far_c > 0 else None
+        extra["near_far_corrected"] = round(near_c / far_c, 2) if far_c > 0 else None
+        extra["near_far_censored"] = round(near_z / far_z, 2) if far_z > 0 else None
         extra["range_near_rj"] = round(float(np.median(dist[qmasks[0]])) / RJ_AU, 1)
         extra["range_far_rj"] = round(float(np.median(dist[qmasks[3]])) / RJ_AU, 1)
         # per-month Io contrast: the robustness spread across orbital configurations
         pm = []
+        month_rows = []
+        versions = [f.name.split("_")[-1].split(".")[0] for f in files]
         for ym in sorted(set(months)):
             sel = np.zeros(jd.size, bool)
-            for f_m, p in zip(months, parts, strict=True):
+            vset = set()
+            n_days_m = 0
+            for f_m, ver, p in zip(months, versions, parts, strict=True):
                 if f_m == ym:
                     sel[np.searchsorted(jd, p["jd"])] = True
+                    vset.add(ver)
+                    n_days_m += 1
             cm = io_region_contrast(occurrence_map(cml[sel], pha[sel], active[sel]))
+            row = {
+                "month": ym,
+                "n_days": n_days_m,
+                "n_bins": int(sel.sum()),
+                "n_active": int(active[sel].sum()),
+                "contrast": round(cm["contrast"], 2) if np.isfinite(cm["contrast"]) else None,
+                "versions": sorted(vset),
+            }
+            month_rows.append(row)
             if np.isfinite(cm["contrast"]):
                 pm.append(cm["contrast"])
+        extra["per_month"] = month_rows
         if pm:
             extra["n_months"] = len(pm)
             extra["io_contrast_month_median"] = round(float(np.median(pm)), 2)
             extra["io_contrast_month_min"] = round(float(np.min(pm)), 2)
             extra["io_contrast_month_max"] = round(float(np.max(pm)), 2)
+            # The one-sample test the abstract cites, committed rather than asserted, with the
+            # CI that shows what "does not reject" is worth.
+            extra["monthly_contrast_test"] = monthly_contrast_test(pm)
+            # ...and the same statistics with the single v01 month excluded, so "the version mix
+            # is benign" is a measurement instead of a hypothesis.
+            pm_v02 = [
+                r["contrast"]
+                for r in month_rows
+                if r["contrast"] is not None and r["versions"] == ["v02"]
+            ]
+            if len(pm_v02) >= 2:
+                extra["monthly_contrast_test_v02_only"] = monthly_contrast_test(pm_v02)
+        # the frame-convention probe, the day-block error bar, the effective N, per-region
+        extra["box_shift_scan"] = box_shift_scan(cml, pha, active)
+        extra["contrast_day_bootstrap"] = day_block_bootstrap_contrast(jd, cml, pha, active)
+        extra["episodes"] = episode_stats(active)
+        extra["per_region_contrast"] = per_region_contrast(occurrence_map(cml, pha, active))
 
     m = occurrence_map(cml, pha, active)
     con = io_region_contrast(m)
@@ -321,7 +544,9 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "expected_contrast": round(expected, 2) if np.isfinite(expected) else None,
         "cells_used": con["cells_used"],
     }
-    if not offline:  # pragma: no cover - real-leg extras
+    if offline:
+        metrics.update(extra_syn)
+    else:  # pragma: no cover - real-leg extras
         metrics.update(extra)
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -395,7 +620,8 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\jdSynOccIo}}{{{_fmt('occ_io_regions') if not _real else '--'}}}",
         rf"\newcommand{{\jdRealOccOut}}{{{_fmt('occ_elsewhere') if _real else '--'}}}",
         rf"\newcommand{{\jdSynOccOut}}{{{_fmt('occ_elsewhere') if not _real else '--'}}}",
-        rf"\newcommand{{\jdCells}}{{{_fmt('cells_used')}}}",
+        rf"\newcommand{{\jdRealCells}}{{{_fmt('cells_used') if _real else '--'}}}",
+        rf"\newcommand{{\jdSynCells}}{{{_fmt('cells_used') if not _real else '--'}}}",
         # Mode-dependent: see the docstring. Only the active mode's namespace is filled.
         rf"\newcommand{{\jdRealContrast}}{{{_fmt('io_contrast') if _real else '--'}}}",
         rf"\newcommand{{\jdSynContrast}}{{{_fmt('io_contrast') if not _real else '--'}}}",
@@ -423,6 +649,35 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\jdCmMin}}{{{_fmt('io_contrast_month_min')}}}",
         rf"\newcommand{{\jdCmMax}}{{{_fmt('io_contrast_month_max')}}}",
     ]
+    # Revision evidence (2026-08-24): the committed test, its CI, the day-block error, the
+    # censored census, per-region contrasts, the episode count, and the near-unity injection.
+    mt = m.get("monthly_contrast_test") or {}
+    ci = mt.get("ci95") or [None, None]
+    boot = m.get("contrast_day_bootstrap") or {}
+    bci = boot.get("ci95") or [None, None]
+    reg = m.get("per_region_contrast") or {}
+    epi = m.get("episodes") or {}
+    curve = {c["injected"]: c["recovered"] for c in m.get("recovery_curve", [])}
+    derived = [
+        ("jdMonthSignP", mt.get("p_sign_two_sided")),
+        ("jdMonthT", mt.get("t")),
+        ("jdMonthGeoMean", mt.get("geo_mean")),
+        ("jdMonthCIlo", ci[0]),
+        ("jdMonthCIhi", ci[1]),
+        ("jdContrastSe", boot.get("se")),
+        ("jdContrastCIlo", bci[0]),
+        ("jdContrastCIhi", bci[1]),
+        ("jdNearFarCens", m.get("near_far_censored")),
+        ("jdNEpisodes", epi.get("n_episodes")),
+        ("jdRegA", reg.get("Io-A")),
+        ("jdRegB", reg.get("Io-B")),
+        ("jdRegC", reg.get("Io-C")),
+        ("jdRegD", reg.get("Io-D")),
+        ("jdSynRecNearUnity", curve.get(1.25)),
+        ("jdSynRecMid", curve.get(2.0)),
+    ]
+    for name, v in derived:
+        lines.append(rf"\newcommand{{\{name}}}{{{'--' if v is None else v}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
