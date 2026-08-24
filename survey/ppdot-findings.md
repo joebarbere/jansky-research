@@ -59,3 +59,43 @@ $B = 3.8\times10^{12}$ G and $\tau = P/2\dot P \approx 1.26\times10^3$ yr, both 
   ATNF results, which have no ground-truth class labels.
 - **Reproducible:** `python -m jansky_research.ppdot` regenerates the metrics, the P–Ṗ-diagram figure,
   and the macros from the public VizieR catalogue.
+
+## Referee round on the style conversion (2026-08-24)
+
+**Restyle finding, fixed.** Collapsing an em-dash appositive to commas turned a three-item list
+(field, age, luminosity) into a four-item one, so "the standard orthogonal-rotator estimate" read as
+a *separate quantity the code computes* rather than a gloss on the $B$ formula. That parenthesis is
+the only statement in the paper that the three headline fields are convention-dependent: under the
+aligned/equatorial coefficient every quoted value shifts by log10(sqrt2) = 0.15 dex
+(8.42 -> 8.57, 12.05 -> 12.20, 13.31 -> 13.46). Re-fenced with a relative clause and semicolons.
+
+## Two pre-existing defects, NOT fixed here (queued for a real-run follow-up)
+
+**1. The Crab "validation" is in the abstract, is hand-typed, and never touches the real data path.**
+The abstract says "The Crab pulsar validates the derivations ($B=3.8\times10^{12}$ G,
+$\tau\approx1260$ yr)". Neither number is in `results/ppdot_metrics.json` (nine keys, none
+Crab-related) or in `generated/macros.tex` (ten macros, none Crab-related). The only Crab check in
+the repo is `tests/test_ppdot.py::test_magnetic_field_and_age_crab`, which evaluates the closed forms
+at **hand-entered literature values** and asserts a wide window. The real run *cannot* identify the
+Crab at all: `fetch_atnf_ppdot` requests the `PSRJ` column and then discards it. Placing the claim in
+Results, after the 2052-pulsar census, invites the reader to infer the Crab was found in the analysed
+sample. Ask what would make this test fail: only a typo in a two-term formula. It exercises none of
+the real path's failure modes (the VizieR `P1` units, row parsing, the positive-Pdot cut).
+
+**Fix (needs a real re-run, VizieR confirmed reachable):** keep `PSRJ`, look up J0534+2200 in the
+analysed sample, emit `\ppCrabB`/`\ppCrabTau`. Then "validates" is earned.
+
+**2. "Of the ~3500 entries" is wrong, and the reproducibility universal is false.** Queried directly:
+`Vizier B/psr/psr` returns **2536** rows, which is also the number `survey/pulsarspec-findings.md`
+records for the same table fetched by the same call. So ppdot's ~3500 is a recollection, not a
+measurement, and the two slices disagreed about the size of one table. Neither number was auditable
+from `results/`.
+
+Relatedly, the paper says "Every number above is written by the pipeline into the macros this
+manuscript `\input`s" and the file's own comment says "none typed by hand". Both are false: the two
+Crab numbers, "~3500 entries", "a factor of ~80,000", "~1.8\%" and "~30 true magnetars" are all
+typed. In a paper whose claimed contribution *is* reproducibility, a false universal about
+reproducibility is the one sentence that has to be right. Note ~80,000 and ~1.8% are arithmetic on
+`\ppLogBmagnetar - \ppLogBmsp` and `1 - \ppFracAlive`: correct today, silently stale after a re-run.
+
+**Fix:** emit the fetched row count as a macro, and scope the universal to catalogue-derived numbers.

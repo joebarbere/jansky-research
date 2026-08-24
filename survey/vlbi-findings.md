@@ -86,3 +86,40 @@ S/X jet, its core variability is not captured — an honest small-N edge case, n
   control-floor calibration applied per declination/epoch-count bin.
 - **Reproducible:** `python -m jansky_research.vlbi --online` regenerates `results/vlbi_candidates.csv`,
   the metrics JSON, and the η–V figure from the public Astrogeo files.
+
+## Referee round on the style conversion (2026-08-24)
+
+**Restyle findings, fixed.** The emphasis audit passed (all nine `\emph{}` spans survive as plain
+text, none deleted) and the caveat audit did not: deletions occurred *adjacent* to three of them and
+each removed a qualification.
+
+1. **MAJOR.** "We stress that $f=0.05$ is only a common starting assumption, \emph{not} a value
+   prescribed for these heterogeneous networks" had become "We note ... not ...". Two stress markers
+   came off the same caveat in one edit. This is the paper's only advance warning that the 5%
+   per-point error is an assumption, in a paper whose central result is that it fails by ~4x
+   (control median `v_floor` = 0.193 against the assumed 0.05). Restored.
+2. The abstract lost "The central methodological point is that", so "much larger than a naive
+   few-percent floor" stood as a free-floating claim about VLBI in general rather than something
+   this paper measured.
+3. A comma made the research question's condition non-restrictive: "can one recover the known
+   variability of well-studied AGN**,** with the dominant VLBI systematic honestly handled?"
+   presupposes the honest handling instead of asking whether recovery survives it.
+4. "not a discovery claim" was demoted to the third item of a comma series; promoted to its own
+   sentence, which leaves it stronger than it was before the conversion.
+
+## Two pre-existing defects, fixed here
+
+**1. "The most variable source is OJ 287" ranked by the statistic the paper declares unusable.**
+`\viTopName` is `argmax(eta)`. The paper's own thesis is that absolute eta is not a usable
+discriminant and that V relative to the control floor is. On V, BL Lac (J2202+4216) leads at 0.540
+and OJ 287 (J0854+2006) is second at 0.480 --- so "the other archetypal blazars (BL Lac, ...) follow"
+was false on the preferred statistic. Reworded to "the most significantly variable", with the
+V-ranking stated.
+
+**2. The 13/14 recovery count turns on a tie at the floor.** J2232+1143 has V = 0.193, identical to
+`v_floor` = 0.193 at the quoted precision, and is scored `above_floor = 1`. Now stated as twelve
+unambiguous plus one at the floor.
+
+**Still open (needs a decision, not a re-run):** `\viInjected`, `\viCompleteness` and `\viPurity` are
+`--` in the macro file but unused in `main.tex`, so the Methods sentence "recovered at high
+completeness and purity" is an unquantified claim. Either cite those macros or drop the adjectives.
