@@ -48,6 +48,15 @@ recommend the next version number.
 Both real re-runs were purely additive: every previously published value is unchanged and no macro
 changed value.
 
+- **A test in the suite was making a live VizieR call**, and it failed CI here by timing out.
+  `stokesv.forced_photometry_recover` fetched the radio-star catalogue *before* checking for
+  `CASDA_USERNAME`, so `test_real_path_does_not_write_the_synthetic_figure_before_the_real_leg` ---
+  which asserts the real path raises on a missing credential --- only reached its `RuntimeError`
+  after a network round trip. It passed whenever VizieR was fast, which is why it had never been
+  noticed. The credential is now checked first, which is also the right behaviour (a missing
+  credential dooms the run either way, so there is no reason to query the archive). That test file
+  now runs in under two seconds; it was the only test exercising a real path without a monkeypatch.
+
 ### Changed
 - **Traditional-style conversion complete: all 45 papers.** Batch 8 converts `ppdot`, `pulsarspec`,
   `rfitrend`, `stacking` and `vlbi`. Every batch's referee round returned revisions (eight for
