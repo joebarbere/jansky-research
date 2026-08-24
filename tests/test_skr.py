@@ -165,3 +165,93 @@ def test_write_macros_dual_namespace(tmp_path):
     txt = p.read_text()
     assert r"\newcommand{\skrRealNearFar}{5.0}" in txt
     assert r"\newcommand{\skrSynNearFar}{--}" in txt
+
+
+def test_excess_correction_flattens_pure_sensitivity_with_range_independent_floor():
+    """The control the old test lacked: the floor does NOT scale with range.
+
+    The old null (`distance_correct_flux`) rescaled the total flux, floor included; its only
+    test built `flux = base/r**2` so the correction exactly inverted the injection and could
+    fail only by making things worse. Here the floor is range-independent (as the real
+    instrumental+galactic floor is), the signal alone falls as 1/r^2, and the intrinsic
+    emission rate is flat with range -- so a correct null must return the corrected ratio to
+    ~1, and the OLD flux-scaled null must NOT (it drags the floor with the signal).
+    """
+    rng = np.random.default_rng(7)
+    n = 8 * 1440
+    t_hr = np.arange(n) / 60.0
+    range_rs = 31.5 - 28.5 * np.cos(2 * np.pi * t_hr / (8 * 24.0))
+    jd = 2.456e6 + np.arange(n) / 1440.0
+    floor = 10.0 ** rng.normal(-14.0, 0.1, n)  # range-INDEPENDENT floor
+    active_true = rng.random(n) < 0.25  # intrinsic rate flat with range
+    # Per-event luminosities span the detection threshold across the range sweep: at periapsis
+    # most events are visible, at apoapsis only the bright tail -- the realistic case where a
+    # 1/r^2 sensitivity trend actually exists for a threshold detector.
+    amp = 10.0 ** rng.normal(-11.8, 0.7, n)
+    flux = floor + amp * active_true / range_rs**2
+
+    raw = skr.proximity_duty_cycle(skr.detect_skr(flux), range_rs)["near_far_ratio"]
+    com = skr.common_sensitivity_active(flux, range_rs)
+    corr = skr.proximity_duty_cycle(com, range_rs)["near_far_ratio"]
+    old = skr.proximity_duty_cycle(
+        skr.detect_skr(skr.distance_correct_flux(flux, range_rs)), range_rs
+    )["near_far_ratio"]
+    up = skr.proximity_duty_cycle(
+        skr.detect_skr(skr.distance_correct_excess(flux, range_rs)), range_rs
+    )["near_far_ratio"]
+    assert raw > 2.0  # the sensitivity trend is there to remove
+    # the common census flattens a flat intrinsic rate, with no noise promoted
+    assert abs(corr - 1.0) < 0.4
+    assert (com & ~active_true).sum() == 0
+    # and both superseded null models are measurably worse on the same control: the total-flux
+    # rescale collapses (or empties a bin entirely); the excess-up rescale reverses the trend
+    assert old is None or abs(corr - 1.0) < abs(old - 1.0)
+    assert up is None or abs(corr - 1.0) < abs(up - 1.0)
+    del jd
+
+
+def test_common_census_recovers_a_real_proximity_trend():
+    """The estimator must not flatten everything: an injected intrinsic trend survives.
+
+    The injected rate is 0.25*(1 + 2*(1/r)/(1/3)); between the NEAR-BIN and FAR-BIN medians
+    (~7.8 and ~55 R_S on this sweep) that is an intrinsic bin contrast of ~1.6, which is what
+    the census should return -- the endpoint contrast (2.7 at r=3 vs 60) is not the estimand.
+    """
+    rng = np.random.default_rng(7)
+    n = 32 * 1440
+    t_hr = np.arange(n) / 60.0
+    range_rs = 31.5 - 28.5 * np.cos(2 * np.pi * t_hr / (8 * 24.0))
+    floor = 10.0 ** rng.normal(-14.0, 0.1, n)
+    p_near = 1.0 / range_rs
+    active_true = rng.random(n) < 0.25 * (1 + 2 * p_near / p_near.max())
+    flux = floor + 10.0 ** rng.normal(-11.8, 0.7, n) * active_true / range_rs**2
+    corr = skr.proximity_duty_cycle(skr.common_sensitivity_active(flux, range_rs), range_rs)[
+        "near_far_ratio"
+    ]
+    assert corr > 1.3  # the intrinsic bin contrast (~1.6) is recovered, not flattened
+
+
+def test_orbit_segments_and_jackknife_report_orbit_level_scatter():
+    s = skr.synthetic_skr(n_days=16.0)
+    segs = skr.orbit_segments(s["jd"], s["range_rs"])
+    assert 2 <= len(segs) <= 5  # ~2 apoapses in 16 days of an 8-day sweep -> 2-3 segments
+    jk = skr.jackknife_near_far(s["jd"], s["flux"], s["range_rs"], mode="raw")
+    assert jk["n_orbits"] == len(segs)
+    assert jk["jk_se"] is not None and jk["jk_se"] >= 0.0
+
+
+def test_threshold_sweep_covers_the_rule_grid():
+    s = skr.synthetic_skr()
+    sw = skr.threshold_sweep(s["flux"], s["range_rs"], ks=(4.0, 6.0), baselines=(25.0,))
+    assert [(r["k"], r["baseline_pct"]) for r in sw] == [(4.0, 25.0), (6.0, 25.0)]
+    assert all(r["corrected_near_far"] is not None for r in sw)
+
+
+def test_block_permutation_p_flags_a_real_rotation_and_passes_noise():
+    s = skr.synthetic_skr(n_days=8.0)
+    real = skr.block_permutation_p(s["jd"], s["flux"], n_perm=19, seed=1)
+    assert real["p_perm"] <= 0.10  # injected dual period survives day-block permutation
+    rng = np.random.default_rng(2)
+    noise = 10.0 ** rng.normal(-14.0, 0.15, s["flux"].size)
+    null = skr.block_permutation_p(s["jd"], noise, n_perm=19, seed=1)
+    assert null["p_perm"] > 0.10  # pure noise does not

@@ -29,7 +29,7 @@
   "duty_near_pct": 66.0,
   "duty_far_pct": 19.8,
   "near_far_ratio": 3.33,
-  "sensitivity_corrected_near_far": 1.39,
+  "sensitivity_corrected_near_far": 3.58,
   "weighted_near_far_ratio": 3.39,
   "abs_lat_median_by_bin": [
     36.3,
@@ -39,5 +39,129 @@
   ],
   "abs_lat_span_deg": 28.0,
   "expected_near_far_ratio": null,
-  "expected_period_hr": null
+  "expected_period_hr": null,
+  "n_flux_nan": 0,
+  "range_edges_rs": [
+    1.02,
+    12.15,
+    17.51,
+    20.31,
+    21.17
+  ],
+  "duty_by_range_bin_corrected": [
+    0.1193,
+    0.1078,
+    0.0899,
+    0.0333
+  ],
+  "n_active_corrected": 7303,
+  "sensitivity_corrected_near_far_fluxscaled": 1.39,
+  "near_far_jackknife": {
+    "full": 3.33,
+    "jk_mean": 3.38,
+    "jk_se": 0.93,
+    "n_orbits": 10
+  },
+  "corrected_near_far_jackknife": {
+    "full": 3.58,
+    "jk_mean": 3.75,
+    "jk_se": 2.75,
+    "n_orbits": 10
+  },
+  "threshold_sweep": [
+    {
+      "k": 4.0,
+      "baseline_pct": 10.0,
+      "corrected_near_far": 1.14
+    },
+    {
+      "k": 6.0,
+      "baseline_pct": 10.0,
+      "corrected_near_far": 1.18
+    },
+    {
+      "k": 8.0,
+      "baseline_pct": 10.0,
+      "corrected_near_far": 1.23
+    },
+    {
+      "k": 10.0,
+      "baseline_pct": 10.0,
+      "corrected_near_far": 1.3
+    },
+    {
+      "k": 4.0,
+      "baseline_pct": 25.0,
+      "corrected_near_far": 2.15
+    },
+    {
+      "k": 6.0,
+      "baseline_pct": 25.0,
+      "corrected_near_far": 3.58
+    },
+    {
+      "k": 8.0,
+      "baseline_pct": 25.0,
+      "corrected_near_far": 9.92
+    },
+    {
+      "k": 10.0,
+      "baseline_pct": 25.0,
+      "corrected_near_far": 34.95
+    },
+    {
+      "k": 4.0,
+      "baseline_pct": 50.0,
+      "corrected_near_far": null
+    },
+    {
+      "k": 6.0,
+      "baseline_pct": 50.0,
+      "corrected_near_far": null
+    },
+    {
+      "k": 8.0,
+      "baseline_pct": 50.0,
+      "corrected_near_far": null
+    },
+    {
+      "k": 10.0,
+      "baseline_pct": 50.0,
+      "corrected_near_far": null
+    }
+  ],
+  "rotation_peak_perm": {
+    "p_perm": 0.325,
+    "n_perm": 199,
+    "obs_power": 0.005230355682711884
+  },
+  "broad_peak_periods_hr": [
+    10.339,
+    11.462
+  ],
+  "broad_peak_powers": [
+    0.0089,
+    0.0087
+  ],
+  "corrected_near_far_farfield_only": 3.17,
+  "corrected_near_far_perday_background": 0.59,
+  "detect_k": 3.0,
+  "detect_baseline_pct": 25.0,
+  "band_hz": [
+    100000.0,
+    1200000.0
+  ],
+  "ref_rs": 17.51,
+  "jd_range": [
+    2457953.5,
+    2458011.94
+  ],
+  "_merge": {
+    "retained_from_previous_run": [
+      "ls_fap"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  },
+  "common_census_k": 6.0,
+  "sensitivity_corrected_near_far_excess_up": 1.68
 }

@@ -10,6 +10,29 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`skr` revision (all 21 referee findings): the 1.39 is retracted, and the retraction is the
+  result.** Three defensible constructions of the 1/r^2 sensitivity null give three answers on
+  the same data --- 1.39 (rescale total flux: moves the range-independent noise floor with the
+  signal, biased toward a collapse), 1.68 (rescale excess upward: amplifies far-range noise,
+  biased toward a reversal; the flat-rate control comes out at 0.26), and 3.58 (the adopted
+  common-sensitivity census, which only ever scales excesses down and passes both injection
+  controls). The adopted estimator's own numbers then show the decomposition is not measurable:
+  orbit jackknife +/-2.75, rule sweep 1.14--34.95, per-day background 0.59. The paper now quotes
+  the raw trend (**3.33 +/- 0.93**, leave-one-periapsis-out over 10 passes) and no residual, and
+  says plainly that the old "the null removes essentially the whole effect" was an artifact of
+  rescaling the floor. Also: the rotation anchor restated as a location match (0.05%/0.06%
+  within a 0.08 h resolution; peak power NOT significant under a day-block permutation, p=0.325;
+  the analytic ls_fap dropped); the ~10.34 h broad-band peak committed as evidence; the stale
+  junodam-priority sentence deleted; provan2019's author list and pages corrected per Crossref;
+  the fabricated ye2016 "Local Time and Latitude Dependence" entry (a subtitle and page range
+  that exist nowhere) removed and the duplicate-DOI pair collapsed to the one real paper;
+  gurnett2009's title corrected; the detection rule, band, reference range, bin edges (periapsis
+  reaches ~1 R_S, not the "~8" the paper claimed), corrected per-quartile duty cycles, date
+  range and NaN count all committed; the latitude confound's sign stated; the figure added to
+  the paper; the DOY-bucket hardcode in the fetcher fixed. Two new controls that can fail are in
+  the test suite, and both rejected null models measurably fail one of them.
+
 ### Changed
 - **README rewritten in a plain register and brought current.** Stale facts fixed: "Forty
   slices" is forty-five; "What's next" recommended work that was executed weeks ago and now

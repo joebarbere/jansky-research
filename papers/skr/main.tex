@@ -4,34 +4,39 @@
 \shorttitle{Cassini SKR proximity duty-cycle census}
 \shortauthors{Barbere}
 \begin{document}
-\title{Is SKR Detection Occurrence a Saturn-Proximity Law? A Sensitivity-Null
-Census from Cassini/RPWS, Anchored to the Known Rotation Period}
+\title{Is SKR Detection Occurrence a Saturn-Proximity Law? A Cassini/RPWS Census
+Whose Sensitivity Decomposition Proves Method-Limited}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
 Saturn Kilometric Radiation (SKR), Saturn's dominant auroral radio emission, shows dual
 rotation-modulation periods ($\sim$10.6/10.8~h north/south) tracked end-to-end across the
-Cassini mission \citep{gurnett2009,fischer2015,gurnett2016,provan2019}. We port the occurrence-census
+Cassini mission \citep{gurnett2009,fischer2015,ye2016,provan2019}. We port the occurrence-census
 method of a sibling Jovian-decametric study to Saturn, using \skrNBins\ one-minute RPWS
 key-parameter bins from the 2017 proximal (Grand Finale) orbits: the electric spectral density is
 band-integrated over the SKR band, bins are flagged SKR-active by a background$+k\sigma$
 threshold, and detection occurrence is folded against the Cassini--Saturn range from JPL Horizons.
-Two results follow, in order of confidence. First, a pipeline validation: a Lomb-Scargle
-analysis of the intensity series recovers the dual SKR rotation period at \skrRealAnchorPeriod\
-and \skrRealPeriodTwo~h, within \skrRealAnchorDev\% of the published late-mission values
-\citep{provan2019}, so the flux series and detection are sound, and we claim no new period result,
-since the record is already complete. Second, the occurrence census: the SKR-active duty cycle
-rises from \skrRealDutyFar\% at \skrRealRangeFar~$R_S$ to \skrRealDutyNear\% at
-\skrRealRangeNear~$R_S$, a raw near/far ratio of \skrRealNearFar. But this is almost entirely a
-$1/r^2$ sensitivity effect: correcting each bin's flux to a common range and re-thresholding
-collapses the ratio to \skrRealSensCorrNearFar. Even that residual is not clean, since the near
-and far range bins differ in sub-spacecraft latitude by \skrRealAbsLatSpan$^\circ$, so SKR's
-known latitude-dependent visibility is entangled with range and is not removed. The result is therefore
-a near-null: the apparent SKR ``proximity law'' is dominated by inverse-square detection
-sensitivity, with at most a $\sim$\skrRealSensCorrNearFar$\times$ residual that we cannot cleanly
-separate from viewing geometry. The value is the bounded, honestly-framed measurement and the
-validated, reusable tooling, not a proximity law.
+Two results follow, in order of confidence. First, a validation: the intensity periodogram
+peaks at \skrRealAnchorPeriod\ and \skrRealPeriodTwo~h, matching the published late-mission
+values \citep{provan2019} to 0.05\% and 0.06\%, though within a 0.08~h periodogram resolution
+and with a peak power a day-block permutation null does not call significant
+($p=\skrRealPermP$); the match certifies the band-integrated flux series against the known
+record rather than re-detecting the period. Second, the census: the SKR-active duty cycle rises
+from \skrRealDutyFar\% at \skrRealRangeFar~$R_S$ to \skrRealDutyNear\% at
+\skrRealRangeNear~$R_S$, a raw near/far ratio of $\skrRealNearFar\pm\skrRealNearFarJkSe$
+(leave-one-orbit-out jackknife over \skrRealNOrbits\ periapsis passes). What this dataset
+cannot do is decompose that trend into inverse-square detection sensitivity versus intrinsic
+occurrence. Three defensible null models give corrected ratios of
+\skrRealCorrNearFarFluxScaled, 1.68 and \skrRealSensCorrNearFar; the adopted
+common-sensitivity census, the one construction that passes its injection controls, carries an
+orbit-to-orbit scatter of $\pm$\skrRealCorrNearFarJkSe\ and a detection-rule dependence
+spanning \skrRealSweepMin--\skrRealSweepMax, and a per-day background convention lands below
+unity. The near and far bins also differ in sub-spacecraft latitude by
+\skrRealAbsLatSpan$^\circ$, entangling viewing geometry with range. We therefore quote the raw
+trend and no residual: the sensitivity decomposition is method-dominated at this range span. The
+census machinery, the controls that expose each null model's bias, and the anchor are the
+contribution.
 \end{abstract}
 
 \keywords{Saturn (1426) --- Planetary magnetospheres (997) --- Radio astronomy (1338) ---
@@ -42,13 +47,13 @@ Saturn Kilometric Radiation (SKR; $\sim$100--400~kHz, cyclotron-maser emission f
 regions) is modulated near Saturn's rotation period, with the striking property of two close
 periods from the northern and southern auroral systems that drift and swap across equinox
 \citep{gurnett2009,fischer2015}. That periodicity record is complete: Fischer et al.\ tracked it
-through early 2013 \citep{fischer2015}, and Ye et al.\ and Provan et al.\ carried it to the
-end of the mission \citep{gurnett2016,provan2019}. What has not been asked is a simpler
+through early 2013 \citep{fischer2015}, Ye et al.\ through the post-equinox epoch
+\citep{ye2016}, and Provan et al.\ to the end of the mission \citep{provan2019}. What has not been asked is a simpler
 occurrence question, by analogy to a proximity--occurrence law reported for Jovian decametric
 emission from Juno: does SKR detection occurrence depend on the observer's distance from
 the planet? Cassini's range to Saturn varied by more than an order of magnitude across each orbit,
 so its own key-parameter archive answers the question directly. The occurrence and visibility of
-SKR versus observer local time and latitude have been mapped \citep{lamy2008,ye2016}; the
+SKR versus observer local time and latitude have been mapped \citep{lamy2008}; the
 observer-range axis, and specifically whether a $1/r^2$ sensitivity trend leaves any
 residual occurrence dependence, has not. We build that census, using the known rotation period as
 a built-in validation.
@@ -61,68 +66,108 @@ calibrated electric spectral densities on a 73-channel electric-antenna grid but
 pre-integrated SKR flux; we therefore integrate the electric spectral density over the SKR band
 (0.1--1.2~MHz) ourselves (\code{read\_key\_params} $+$ \code{band\_integrated\_flux}, tested
 against the fixed-width PDS3 record layout). A bin is SKR-active when its band flux exceeds a
-robust background ($25$th log-flux percentile) plus $k\sigma$ (the sibling census's
-detection rule). The Cassini--Saturn range and sub-spacecraft latitude come from JPL Horizons
-(target Saturn, observer Cassini). We analyze the 2017 proximal orbits (\skrNBins\ one-minute
-bins), where the range sweeps repeatedly over $\sim$8--21~$R_S$.
+robust background (the 25th log-flux percentile) plus $k\sigma$ with $k=3$, the sibling census's
+detection rule; the rule's parameters are committed with the results. The Cassini--Saturn range
+and sub-spacecraft latitude come from JPL Horizons (target Saturn, observer Cassini). We analyze
+the 2017 proximal orbits, 2017 July 19 -- September 15 (\skrNBins\ one-minute bins over
+\skrRealNOrbits\ periapsis passes), where the range sweeps repeatedly over
+\skrRealRangeMin--\skrRealRangeMax~$R_S$. Half the near-quartile bins lie below its
+\skrRealRangeNear~$R_S$ median: periapsis reaches $\sim$1~$R_S$, where far-field $1/r^2$
+geometry is at its least valid and ring-plane dust impacts can contribute range-correlated
+broadband signal, so a far-field-only variant (excluding $r<5~R_S$) is reported alongside every
+corrected ratio.
 
 Before any occurrence claim, we run a Lomb-Scargle periodogram of the log-intensity series in
 the physically-motivated Saturn-rotation band (10.4--11.0~h, bracketing the established
-$\sim$10.6--10.8~h periods). It must recover the known period; it does (\S\ref{sec:results}). A
-broader search also shows a stronger, unexplained sub-11~h feature near $\sim$10.34~h, which we
-deliberately exclude from the rotation anchor; it is plausibly a sampling/aliasing artefact of
-the orbit-modulated duty cycle. Stated, not hidden.
+$\sim$10.6--10.8~h periods), with significance judged by a day-block permutation null rather
+than the analytic false-alarm probability, which assumes independent samples and underflows on
+83,000 autocorrelated minutes. A broader 10.0--11.5~h search shows its strongest peak at
+\skrRealBroadPeak~h (committed with the results), outside the rotation band; we exclude it from
+the anchor as a plausible sampling harmonic of the 6.5-day orbit, and the exclusion is a stated
+choice.
 
 For the proximity census, we bin the SKR-active flag by Cassini--Saturn range quartile and
-report the duty cycle per bin. The dominant confound is inverse-square sensitivity: at smaller
-range the same intrinsic emission produces a larger flux and clears the fixed threshold more
-often. We test it directly: we correct each bin's flux to a common reference range
-($S\to S\,(r/r_\mathrm{ref})^2$), re-threshold, and recompute the near/far ratio. If the trend is
-pure sensitivity the corrected ratio is unity; any excess is the intrinsic$+$beaming part. A
-second confound is latitude: SKR is auroral and beamed, and range correlates with sub-spacecraft
-latitude along the orbit, so we report the $|\mathrm{lat}|$ span between the range bins to make
-the residual entanglement visible rather than assert it away.
+report the duty cycle per bin, with a leave-one-periapsis-out jackknife supplying the error bar
+(the orbit, not the autocorrelated minute, is the independent unit). The dominant confound is
+inverse-square sensitivity: at smaller range the same intrinsic emission clears a fixed threshold
+more often. Constructing a valid null for that proved to be the hard part of this paper, and two
+plausible constructions fail on injection controls. Rescaling the total flux to a common
+range moves the range-independent instrumental-plus-galactic noise floor along with the signal
+and is biased toward a collapse; rescaling the excess over the floor upward at far range
+amplifies far-range noise deviations and is biased toward a reversal. The estimator we adopt is a
+common-sensitivity census: each bin's excess over the floor is scaled by $(r/r_\mathrm{far})^2
+\le 1$, only ever down, so noise is never promoted, and a bin counts only if it is
+raw-active and its scaled excess still clears the raw threshold. On controls with a
+range-independent floor, a flat intrinsic rate comes out flat with zero noise promotions and an
+injected intrinsic trend is recovered; both controls, and both failure modes of the rejected
+constructions, are in the test suite. A second confound is latitude: SKR is auroral and beamed,
+and range correlates with sub-spacecraft latitude along the orbit: the near quartile sits at
+median $|$lat$|$ 36$^\circ$ against the far quartile's 8$^\circ$, and higher-latitude viewing
+favours SKR visibility \citep{lamy2008}, so the latitude confound inflates the near bins and any
+corrected residual is an upper bound on the intrinsic part for that reason alone.
 
 \section{Results}
 \label{sec:results}
-As a validation, the Lomb-Scargle analysis recovers the dual SKR rotation period at
-\skrRealAnchorPeriod\ and \skrRealPeriodTwo~h, matching the published late-mission northern
-($\sim$10.79~h) and southern ($\sim$10.68~h) values \citep{provan2019} to better than 1\%. This
-is a reproduction, not a new result; its role is to certify that the band-integrated flux series
-and the detection are physically faithful before we trust the occurrence census.
+As a validation, the rotation-band periodogram peaks at \skrRealAnchorPeriod\ and
+\skrRealPeriodTwo~h (Figure~\ref{fig:skr}, left), matching the published late-mission southern
+($\sim$10.68~h) and northern ($\sim$10.79~h) values \citep{provan2019} to 0.05\% and 0.06\%.
+Three qualifications keep this a certification of the flux series rather than a detection. The
+periodogram resolution over this 59-day baseline is $P^2/T \approx 0.08$~h, sixteen times the
+quoted agreement, and the two peaks are separated by 1.5 resolution elements, i.e.\ marginally
+resolved. The peak power is not significant against a day-block permutation null
+($p=\skrRealPermP$ over 199 permutations), so the periodogram alone would not discover this
+period; it recovers a known one at the right location. And the strongest peak in a broader
+10.0--11.5~h search is at \skrRealBroadPeak~h, outside the rotation band, which we read as an
+orbit-sampling harmonic. What the anchor certifies is the band-integrated flux series; the
+detection threshold is untouched by it.
 
-The occurrence census is a near-null, and the raw numbers must be read with that in mind.
-Across \skrNBins\ bins the overall SKR-active duty cycle is \skrRealDutyPct\%. The raw duty
-cycle rises monotonically with proximity, from \skrRealDutyFar\% at $\sim$\skrRealRangeFar~$R_S$
-to \skrRealDutyNear\% at $\sim$\skrRealRangeNear~$R_S$ (near/far \skrRealNearFar). The $1/r^2$
-null model accounts for almost all of it: after correcting the flux to a common range and
-re-thresholding, the near/far ratio falls to \skrRealSensCorrNearFar. So the apparent proximity
-``law'' is dominated by inverse-square detection sensitivity. The residual
-$\sim$\skrRealSensCorrNearFar$\times$ is also not cleanly intrinsic: the near and far range
-quartiles differ in $|$sub-spacecraft latitude$|$ by \skrRealAbsLatSpan$^\circ$, and SKR
-visibility is latitude-dependent \citep{lamy2008,ye2016}, so this residual is entangled with
-viewing geometry and is at most an upper bound on any intrinsic occurrence-versus-range effect.
+Across \skrNBins\ bins the overall SKR-active duty cycle is 40.2\%. The raw duty cycle
+rises monotonically with proximity, from \skrRealDutyFar\% at $\sim$\skrRealRangeFar~$R_S$ to
+\skrRealDutyNear\% at $\sim$\skrRealRangeNear~$R_S$: near/far
+$\skrRealNearFar\pm\skrRealNearFarJkSe$ over \skrRealNOrbits\ periapsis passes
+(Figure~\ref{fig:skr}, right). The trend itself is well measured; its decomposition is not. The
+common-sensitivity census gives a corrected ratio of \skrRealSensCorrNearFar,
+indistinguishable from the raw trend, but with an orbit-to-orbit jackknife scatter of
+$\pm$\skrRealCorrNearFarJkSe, a detection-rule dependence spanning
+\skrRealSweepMin--\skrRealSweepMax\ over $k\in[4,10]$ and baseline percentiles 10--25 (at the
+50th percentile the floor absorbs real emission, 40\% of bins being active, and the estimator
+degenerates), a far-field-only value of \skrRealCorrNearFarFarField, and a per-day background
+value of \skrRealCorrNearFarPerDay, on the other side of unity. The two rejected null models
+bracket it: rescaling total flux gives \skrRealCorrNearFarFluxScaled\ (biased toward a collapse:
+that is the number an earlier version of this paper reported as ``the null removes essentially
+the whole effect''), and rescaling the excess upward gives 1.68. When the answer moves by a
+factor of $\sim$30 across defensible analysis choices, the measurement is the spread, not any
+one value: this dataset does not determine how much of the raw trend is sensitivity. The
+\skrRealAbsLatSpan$^\circ$ latitude difference between the near and far quartiles
+\citep{lamy2008} entangles viewing geometry with range on top of that, in the direction that
+inflates the near bins.
 
-The result is therefore a bounded near-null, not a proximity law: SKR detection occurrence
-versus Cassini range is explained by $1/r^2$ sensitivity to within a
-$\sim$\skrRealSensCorrNearFar$\times$ residual that we cannot separate from the
-\skrRealAbsLatSpan$^\circ$ latitude difference between bins. This is a cleaner statement than the
-sibling Jovian-decametric census, whose $\sim$180$\times$ raw proximity ratio was reported as
-proximity-dominated detection but without an explicit sensitivity null; here the null is computed
-and it removes essentially the whole effect.
+\begin{figure*}
+\plotone{figures/skr.pdf}
+\caption{Left: the rotation-band Lomb-Scargle periodogram; the two marked peaks sit at
+\skrRealAnchorPeriod\ and \skrRealPeriodTwo~h, at the published \citet{provan2019} locations,
+with a resolution of 0.08~h. Right: the raw SKR-active duty cycle per Cassini-range quartile;
+three of the four quartiles lie between 15 and 21~$R_S$, so the raw trend is carried largely by
+the first quartile's short-range lever arm.}
+\label{fig:skr}
+\end{figure*}
 
 \section{Conclusions}
-Cassini's own RPWS key-parameter archive yields a bounded near-null: the raw $\sim$3$\times$ rise
-in SKR detection occurrence from $\sim$21 to $\sim$8~$R_S$ across the 2017 proximal orbits is
-almost entirely $1/r^2$ detection sensitivity; the null model collapses it to
-$\sim$\skrRealSensCorrNearFar$\times$, and that residual is itself entangled with a
-\skrRealAbsLatSpan$^\circ$ latitude difference between the range bins. The one firm result is the
-validation: the pipeline recovers the published dual rotation period to \skrRealAnchorDev\%. Two
-follow-ons use the same tooling: extending the range baseline with earlier, higher-apoapsis orbits
-(to $\sim$60~$R_S$), where a real intrinsic dependence would have more leverage against the
-sensitivity floor; and a proper SKR beaming/visibility model to disentangle the residual from
-latitude. The sensitivity-null method, the rotation-period anchor, and the tested KEY60S tooling
-are the deliverable.
+Cassini's RPWS key-parameter archive gives a well-measured raw proximity trend
+($\skrRealNearFar\pm\skrRealNearFarJkSe$ from $\sim$21 to $\sim$8~$R_S$) whose decomposition
+into detection sensitivity versus intrinsic occurrence this dataset cannot deliver: three
+defensible null models span corrected ratios of \skrRealCorrNearFarFluxScaled\ to
+\skrRealSensCorrNearFar, the rule sweep spans \skrRealSweepMin--\skrRealSweepMax, and the
+per-day background convention lands below unity. An earlier version of this paper quoted the
+\skrRealCorrNearFarFluxScaled\ as ``the null removes essentially the whole effect''; that number
+is an artifact of rescaling the noise floor along with the signal, and the retraction is the
+methodological result: a threshold census's $1/r^2$ null is only as good as its treatment of the
+range-independent background, and controls that can fail must accompany it. The firm results are
+the raw trend with its orbit-level error, the flux-series anchor (peak locations matching
+\citet{provan2019} to 0.05--0.06\%, not independently significant at $p=\skrRealPermP$), and
+the tested tooling. The follow-on with real leverage is the range baseline: earlier
+higher-apoapsis orbits (to $\sim$60~$R_S$) widen the span where the estimators above disagree
+by construction.
 
 \textit{Reproducibility.} \code{jansky\_research.skr} (parser $+$ detection $+$ Lomb-Scargle $+$
 proximity census, synthetic recover-a-known in core CI) $+$ \code{scripts/skr\_real.py} (the
@@ -131,8 +176,7 @@ PDS-PPI KEY60S downloader); every number above is pipeline-generated
 Horizons.
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
-NumPy, SciPy, Astropy. Analysis assisted by Claude \citep{anthropicclaude}; all results
-verified by the pipeline's test suite.}
+NumPy, Astropy, Matplotlib, astroquery. Analysis assisted by Claude \citep{anthropicclaude}.}
 
 \bibliography{refs}
 \bibliographystyle{aasjournal}
