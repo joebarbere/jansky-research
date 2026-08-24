@@ -16,19 +16,45 @@
     2.0,
     3.0,
     5.0,
-    10.0
+    10.0,
+    20.0,
+    50.0
   ],
   "completeness_recovered": [
-    0.0025,
-    0.0,
-    0.005,
-    0.0325,
-    0.335,
-    0.5225
+    0.002,
+    0.00075,
+    0.003999999999999999,
+    0.0195,
+    0.7205,
+    0.9954999999999998,
+    0.999,
+    0.99975
   ],
-  "completeness_50_factor": 9.400000000000002,
-  "completeness_90_factor": NaN,
-  "completeness_max": 0.5225,
+  "completeness_50_factor": 4.373464261102121,
+  "completeness_90_factor": 8.263636363636365,
+  "completeness_max": 0.99975,
   "n_confirm_attempted": 40,
-  "n_image_confirmed": 2
+  "n_image_confirmed": 2,
+  "n_single_epoch_only": 3722,
+  "completeness_recovered_se": [
+    0.0010408329997330663,
+    0.0003818813079129867,
+    0.001,
+    0.0019293061504650373,
+    0.010115993936995677,
+    0.0008164965809277244,
+    0.00040824829046385436,
+    0.0002499999999999947
+  ],
+  "completeness_50_factor_se": 0.06268961654958892,
+  "completeness_at_ten": 0.9954999999999998,
+  "completeness_max_factor": 50.0,
+  "n_archival_attempted": 2,
+  "n_archival_survivors": 1,
+  "candidates_v_min": 0.883,
+  "candidates_v_max": 1.324,
+  "forced_v_median": 0.099,
+  "forced_v_max": 0.918,
+  "variable_fraction_floor": 2.7059205541725295e-05,
+  "variable_fraction_ten_corrected": 2.718152239249151e-05
 }

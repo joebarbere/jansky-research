@@ -27,6 +27,7 @@ import numpy as np
 __all__ = [
     "VariabilityMetrics",
     "apply_flux_scale",
+    "archival_vet",
     "confirm_candidates",
     "crossmatch_epochs",
     "debiased_modulation_index",
@@ -40,6 +41,7 @@ __all__ = [
     "isolated_mask",
     "measure_image_flux",
     "run",
+    "run_archival",
     "select_candidates",
     "synthetic_epochs",
     "v_metric",
@@ -266,45 +268,87 @@ def injection_recovery(
     flux: np.ndarray,
     err: np.ndarray,
     *,
-    factors: tuple[float, ...] = (1.25, 1.5, 2.0, 3.0, 5.0, 10.0),
+    factors: tuple[float, ...] = (1.25, 1.5, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0),
     sigma: float = 3.0,
+    eta_thr: float | None = None,
+    v_thr: float | None = None,
+    sys_frac: float = VLASS_SYS_FRAC,
     n_per_factor: int = 400,
     seed: int = 0,
-) -> tuple[np.ndarray, np.ndarray]:
+    n_seeds: int = 10,
+) -> dict:
     """Selection completeness vs single-epoch flare amplitude, by injection into the real light curves.
 
-    For each flare ``factor``, takes steady (all-epoch-detected) light curves, multiplies one random
-    epoch by the factor (scaling that epoch's error with it, preserving the fractional error), and
-    measures the fraction that cross the field's own 2-D $(\\eta, V)$ threshold. This is the honest,
-    data-driven completeness: it uses the real per-source noise and the real selection cut, so the
-    observed variable fraction can be corrected for what the selection actually sees. Returns
-    ``(factors, recovered_fraction)``.
+    For each flare ``factor``, multiplies one random observed epoch of a random light curve by the
+    factor and measures the fraction that cross the census's own 2-D $(\\eta, V)$ threshold (pass
+    ``eta_thr``/``v_thr``; if omitted they are re-derived from the input, the offline path).
+
+    The error model matters. The per-epoch error out of :func:`apply_flux_scale` is
+    $\\sigma^2 = \\sigma_{\\rm cat}^2 + ({\\rm sys\\_frac}\\cdot S)^2$; a flare changes the flux, so only
+    the *systematic* term scales with it, and the catalogue term (thermal noise + fit error at the
+    quiescent flux) is held fixed. An earlier version scaled the whole error with the flare
+    (``e[k] *= fac``), which suppressed the flare epoch's $\\chi^2$ by up to ``fac``$^2$ and capped
+    $\\eta$ at a finite asymptote — the reported "52% saturation" measured that error model, not the
+    three-epoch selection.
+
+    Injections are drawn from every light curve with $\\ge$2 observed epochs (the same population the
+    census selects on when the caller passes the usable subset), and the whole grid is repeated over
+    ``n_seeds`` independent seeds so the 50%-completeness factor carries a Monte-Carlo error. Returns
+    a dict with ``factors``, ``recovered`` (mean), ``recovered_se``, ``c50`` and ``c50_se``.
     """
     flux = np.asarray(flux, dtype=float)
     err = np.asarray(err, dtype=float)
-    steady = np.all(np.isfinite(flux), axis=1) & np.all(np.isfinite(err) & (err > 0), axis=1)
-    fs, es = flux[steady], err[steady]
+    fin = np.isfinite(flux) & np.isfinite(err) & (err > 0)
+    eligible = np.where(fin.sum(axis=1) >= 2)[0]
     factors = tuple(float(f) for f in factors)
-    if fs.shape[0] < 20:
-        return np.asarray(factors), np.zeros(len(factors))
-    eta = np.array([eta_metric(f, e) for f, e in zip(fs, es, strict=True)])
-    v = np.array([v_metric(f) for f in fs])
-    _, eta_thr, v_thr = select_candidates(eta, v, sigma=sigma)
-    rng = np.random.default_rng(seed)
-    recovered = []
-    for fac in factors:
-        hits = 0
-        for _ in range(n_per_factor):
-            j = int(rng.integers(fs.shape[0]))
-            f = fs[j].copy()
-            e = es[j].copy()
-            k = int(rng.integers(f.size))
-            f[k] *= fac
-            e[k] *= fac  # error scales with flux -> fractional error preserved
-            if eta_metric(f, e) > eta_thr and v_metric(f) > v_thr:
-                hits += 1
-        recovered.append(hits / n_per_factor)
-    return np.asarray(factors), np.asarray(recovered)
+    if eligible.size < 20:
+        return {
+            "factors": np.asarray(factors),
+            "recovered": np.zeros(len(factors)),
+            "recovered_se": np.zeros(len(factors)),
+            "c50": float("nan"),
+            "c50_se": float("nan"),
+        }
+    if eta_thr is None or v_thr is None:
+        eta = np.array([eta_metric(f[m], e[m]) for f, e, m in zip(flux, err, fin, strict=True)])
+        v = np.array([v_metric(f[m]) for f, m in zip(flux, fin, strict=True)])
+        _, eta_thr, v_thr = select_candidates(eta[eligible], v[eligible], sigma=sigma)
+    per_seed = np.empty((n_seeds, len(factors)))
+    c50s = []
+    for s in range(n_seeds):
+        rng = np.random.default_rng(seed + s)
+        for fi, fac in enumerate(factors):
+            hits = 0
+            for _ in range(n_per_factor):
+                j = int(eligible[rng.integers(eligible.size)])
+                m = fin[j]
+                f = flux[j][m].copy()
+                e = err[j][m].copy()
+                k = int(rng.integers(f.size))
+                # Hold the catalogue error fixed; rescale only the flux-proportional systematic.
+                sig_cat = np.sqrt(max(e[k] ** 2 - (sys_frac * f[k]) ** 2, 0.0))
+                f[k] *= fac
+                e[k] = float(np.hypot(sig_cat, sys_frac * f[k]))
+                if eta_metric(f, e) > eta_thr and v_metric(f) > v_thr:
+                    hits += 1
+            per_seed[s, fi] = hits / n_per_factor
+        rec = per_seed[s]
+        c50s.append(float(np.interp(0.5, rec, factors)) if rec.max() >= 0.5 else float("nan"))
+    recovered = per_seed.mean(axis=0)
+    if n_seeds > 1:
+        rec_se = per_seed.std(axis=0, ddof=1) / np.sqrt(n_seeds)
+    else:
+        rec_se = np.sqrt(recovered * (1.0 - recovered) / n_per_factor)
+    c50_arr = np.asarray([c for c in c50s if np.isfinite(c)])
+    c50 = float(c50_arr.mean()) if c50_arr.size else float("nan")
+    c50_se = float(c50_arr.std(ddof=1)) if c50_arr.size > 1 else float("nan")
+    return {
+        "factors": np.asarray(factors),
+        "recovered": recovered,
+        "recovered_se": rec_se,
+        "c50": c50,
+        "c50_se": c50_se,
+    }
 
 
 def synthetic_epochs(
@@ -389,11 +433,12 @@ def run(
     v[~usable] = np.nan
     mask, eta_thr, v_thr = select_candidates(eta, v, sigma=sigma)
 
-    # Census statistics: variable fraction + data-driven completeness vs flare amplitude (so the
-    # observed fraction can be corrected for what the selection actually sees).
+    # Census statistics: variable fraction + data-driven completeness vs flare amplitude, measured
+    # on the census's own selection population (usable sources) against the census's own thresholds
+    # -- not a recomputed cut over a different population.
     n_usable = int(usable.sum())
-    factors, recovered = injection_recovery(flux, err, sigma=sigma)
-    c50 = float(np.interp(0.5, recovered, factors)) if recovered.max() >= 0.5 else float("nan")
+    inj = injection_recovery(flux[usable], err[usable], sigma=sigma, eta_thr=eta_thr, v_thr=v_thr)
+    factors, recovered = inj["factors"], inj["recovered"]
     c90 = float(np.interp(0.9, recovered, factors)) if recovered.max() >= 0.9 else float("nan")
 
     area = 0.0 if (offline or center is None) else _cone_area_deg2(radius_deg)
@@ -402,6 +447,9 @@ def run(
         "area_deg2": area,
         "n_sources": int(ra.size),
         "n_detected_multi_epoch": int(detected.sum()),
+        # Sources with an Epoch-1 (anchor) detection but no cross-epoch match: no light curve, so
+        # they never enter the selection. The census is anchored on Epoch-1 detection either way.
+        "n_single_epoch_only": int(ra.size - detected.sum()),
         "n_excluded_crowded": int(np.sum(detected & ~isolated)),
         "n_usable": n_usable,
         "n_candidates": int(mask.sum()),
@@ -411,9 +459,15 @@ def run(
         "sigma": sigma,
         "completeness_factors": factors.tolist(),
         "completeness_recovered": recovered.tolist(),
-        "completeness_50_factor": c50,
+        "completeness_recovered_se": inj["recovered_se"].tolist(),
+        "completeness_50_factor": inj["c50"],
+        "completeness_50_factor_se": inj["c50_se"],
         "completeness_90_factor": c90,
+        "completeness_at_ten": float(recovered[factors == 10.0][0])
+        if 10.0 in factors
+        else float("nan"),
         "completeness_max": float(recovered.max()),
+        "completeness_max_factor": float(factors[-1]),
     }
     if truth is not None:  # synthetic: report recovery of the injected variables
         n_true = int(truth.sum())
@@ -443,7 +497,7 @@ def run(
     _write_macros(metrics, op / "papers" / "vlass" / "generated" / "macros.tex")
     figs = op / "papers" / "vlass" / "figures"
     _figure(eta, v, mask, eta_thr, v_thr, figs)
-    _completeness_figure(factors, recovered, c50, figs)
+    _completeness_figure(factors, recovered, inj["c50"], figs)
     _confirmed_figure(conf, figs)
     _write_candidates(
         op / "results" / "vlass_candidates.csv", ra, dec, flux, eta, v, mask, conf, vet
@@ -493,6 +547,8 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
             + [
                 "image_confirmed",
                 *[f"forced_e{e + 1}" for e in range(n_epochs)],
+                *[f"forced_rms_e{e + 1}" for e in range(n_epochs)],
+                *[f"forced_off_e{e + 1}" for e in range(n_epochs)],
                 "forced_eta",
                 "forced_v",
                 "forced_offset",
@@ -512,12 +568,16 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
             c = cmap.get(k, {})
             m = vmap.get(k, {})
             fphot = c.get("forced_flux") or [None] * n_epochs
+            frms = c.get("forced_rms") or [None] * n_epochs
+            foff = c.get("forced_offsets") or [None] * n_epochs
             w.writerow(
                 [f"{ra[i]:.6f}", f"{dec[i]:.6f}"]
                 + [f"{flux[i, e]:.3f}" if np.isfinite(flux[i, e]) else "" for e in range(n_epochs)]
                 + [f"{eta[i]:.2f}", f"{v[i]:.3f}"]
                 + [c.get("confirmed", "")]
                 + [("" if fphot[e] is None else fphot[e]) for e in range(n_epochs)]
+                + [("" if frms[e] is None else frms[e]) for e in range(n_epochs)]
+                + [("" if foff[e] is None else foff[e]) for e in range(n_epochs)]
                 + [c.get("forced_eta", ""), c.get("forced_v", ""), c.get("forced_offset", "")]
                 + [
                     m.get("simbad_name", ""),
@@ -896,6 +956,10 @@ def confirm_candidates(
                 "ra": float(r),
                 "dec": float(d),
                 "forced_flux": [round(float(x), 3) if np.isfinite(x) else None for x in flux],
+                # Per-epoch local rms and peak offsets: the numbers the p<p_max confirmation (or a
+                # "only noise" rejection) rests on, committed so the verdict is auditable.
+                "forced_rms": [round(float(x), 4) if np.isfinite(x) else None for x in err],
+                "forced_offsets": [round(float(x), 2) if np.isfinite(x) else None for x in off],
                 "forced_eta": round(m.eta, 2),
                 "forced_v": round(m.v, 3),
                 "forced_p": m.p_value,
@@ -913,6 +977,184 @@ def _cone_area_deg2(radius_deg: float) -> float:
     return float(2.0 * np.pi * (1.0 - np.cos(np.radians(radius_deg))) * (180.0 / np.pi) ** 2)
 
 
+# Archival radio/IR catalogues used by the follow-up vet (VizieR identifiers).
+ARCHIVAL_CATALOGUES: dict[str, str] = {
+    "NVSS": "VIII/65/nvss",
+    "FIRST": "VIII/92/first14",
+    "TGSS": "J/A+A/598/A78/table3",
+    "AllWISE": "II/328/allwise",
+}
+
+
+def _vizier_nearest_sep(c, catalogue: str, radius_arcsec: float):  # pragma: no cover - network
+    """Nearest-counterpart separation (arcsec) in one VizieR catalogue, or None if none/unreachable."""
+    from astropy import units as u
+    from astroquery.vizier import Vizier
+
+    try:
+        res = Vizier(columns=["+_r"], row_limit=5).query_region(
+            c, radius=radius_arcsec * u.arcsec, catalog=catalogue
+        )
+        if not res:
+            return None
+        col = res[0]["_r"]
+        sep = (np.asarray(col, float)[0] * (col.unit or u.arcsec)).to_value(u.arcsec)
+        return round(float(sep), 2)
+    except Exception:
+        return None
+
+
+def archival_vet(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    *,
+    epochs: tuple[int, ...] = (1, 2, 3, 4),
+    det_snr: float = 4.0,
+    fixed_arcsec: float = 0.75,
+    counterpart_arcsec: float = 30.0,
+) -> list[dict]:  # pragma: no cover - network
+    """Archival + next-epoch follow-up of image-confirmed candidates — the last rung of the ladder.
+
+    Image confirmation (three-epoch forced photometry) is necessary but not sufficient: a
+    single-epoch imaging artefact can pass it. This stage forces photometry through every available
+    epoch **including the independent Epoch 4 release** and counts epochs with a
+    $>$``det_snr``$\\times$rms detection *at the fixed position* (peak within ``fixed_arcsec``,
+    i.e.\\ essentially the pixel at the propagated coordinates — a genuinely forced measurement,
+    since a peak searched over a beam-sized box is biased high on blank sky and can read a bright
+    neighbour's wings; the stokesv lesson). The box-searched peak and its offset are recorded
+    alongside for photometric continuity with :func:`confirm_candidates`. A source with a fixed
+    detection in $<$2 epochs is a single-epoch artefact, not a variable. Nearest-counterpart
+    separations in the archival catalogues (:data:`ARCHIVAL_CATALOGUES`) are recorded too, so the
+    verdict is auditable from the committed JSON rather than asserted in prose.
+    """
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+
+    out = []
+    for r, d in zip(np.asarray(ra, float), np.asarray(dec, float), strict=True):
+        cuts = fetch_vlass_cutouts(r, d, epochs=epochs, size_arcmin=1.5)
+        flux, rms, off, fixed = [], [], [], []
+        for e in epochs:
+            if e not in cuts:
+                flux.append(float("nan"))
+                rms.append(float("nan"))
+                off.append(float("nan"))
+                fixed.append(float("nan"))
+                continue
+            data, w = cuts[e]
+            f, s, o = measure_image_flux(data, w, r, d, search_arcsec=4.0)
+            fx, _, _ = measure_image_flux(data, w, r, d, search_arcsec=fixed_arcsec)
+            flux.append(f)
+            rms.append(s)
+            off.append(o)
+            fixed.append(fx)
+        det = [
+            bool(np.isfinite(fx) and np.isfinite(s) and s > 0 and fx > det_snr * s)
+            for fx, s in zip(fixed, rms, strict=True)
+        ]
+        c = SkyCoord(r * u.deg, d * u.deg)
+        out.append(
+            {
+                "ra": float(r),
+                "dec": float(d),
+                "epochs": list(epochs),
+                "forced_flux": [round(float(x), 3) if np.isfinite(x) else None for x in flux],
+                "forced_fixed": [round(float(x), 3) if np.isfinite(x) else None for x in fixed],
+                "forced_rms": [round(float(x), 4) if np.isfinite(x) else None for x in rms],
+                "forced_offsets": [round(float(x), 2) if np.isfinite(x) else None for x in off],
+                "detected": det,
+                "n_epochs_detected": int(sum(det)),
+                "survives": bool(sum(det) >= 2),
+                "counterpart_sep_arcsec": {
+                    name: _vizier_nearest_sep(c, cat, counterpart_arcsec)
+                    for name, cat in ARCHIVAL_CATALOGUES.items()
+                },
+            }
+        )
+    return out
+
+
+def run_archival(out: str = ".") -> dict:  # pragma: no cover - network
+    """Run the archival vet on the census's image-confirmed candidates and commit the evidence.
+
+    Reads the image-confirmed rows from ``results/vlass_candidates.csv``, runs :func:`archival_vet`,
+    writes ``results/vlass_archival.json``, adds an ``archival_survives`` column to the candidates
+    CSV, and folds the survivor count and the derived variable fractions into the census metrics and
+    macros (via the merge guards, so nothing real is ever blanked).
+    """
+    import csv as _csv
+    import json
+    from pathlib import Path
+
+    from .report import write_results
+
+    op = Path(out)
+    cand_path = op / "results" / "vlass_candidates.csv"
+    with open(cand_path, newline="") as fh:
+        rows = list(_csv.DictReader(fh))
+    confirmed = [r for r in rows if r.get("image_confirmed") == "True"]
+    if not confirmed:
+        raise ValueError("no image-confirmed candidates in results/vlass_candidates.csv")
+    ra = np.asarray([float(r["ra"]) for r in confirmed])
+    dec = np.asarray([float(r["dec"]) for r in confirmed])
+    vet = archival_vet(ra, dec)
+
+    metrics_path = op / "results" / "vlass_metrics.json"
+    metrics = json.loads(metrics_path.read_text())
+    n_surv = int(sum(v["survives"] for v in vet))
+    n_usable = int(metrics["n_usable"])
+    r_ten = float(metrics.get("completeness_at_ten", float("nan")))
+    # Candidate-amplitude summary, from the committed CSV: the catalogue amplitudes of the
+    # candidates versus the forced-photometry amplitudes the images actually show. This is the
+    # paper's thesis in two numbers, so it must come from the pipeline, not from prose.
+    cat_v = np.asarray([float(r["v"]) for r in rows if r.get("v")])
+    forced_v = np.asarray([float(r["forced_v"]) for r in rows if r.get("forced_v")])
+    metrics.update(
+        {
+            "n_archival_attempted": len(vet),
+            "n_archival_survivors": n_surv,
+            "candidates_v_min": float(cat_v.min()) if cat_v.size else float("nan"),
+            "candidates_v_max": float(cat_v.max()) if cat_v.size else float("nan"),
+            "forced_v_median": float(np.median(forced_v)) if forced_v.size else float("nan"),
+            "forced_v_max": float(forced_v.max()) if forced_v.size else float("nan"),
+            # The floor: archival-surviving variables over the usable census.
+            "variable_fraction_floor": n_surv / n_usable if n_usable else 0.0,
+            # Completeness-corrected rate of >=10x single-epoch flares implied by the floor.
+            "variable_fraction_ten_corrected": (
+                n_surv / (n_usable * r_ten)
+                if (n_usable and np.isfinite(r_ten) and r_ten > 0)
+                else float("nan")
+            ),
+        }
+    )
+    write_results(
+        {
+            "source": metrics["source"] + " + archival vet (epoch 4, NVSS/FIRST/TGSS/AllWISE)",
+            **{k: metrics[k] for k in ("n_archival_attempted", "n_archival_survivors")},
+            "vet": vet,
+        },
+        op / "results" / "vlass_archival.json",
+    )
+    write_results(metrics, metrics_path)
+    _write_macros(metrics, op / "papers" / "vlass" / "generated" / "macros.tex")
+
+    # Record the verdict next to the image-confirmation flag it supersedes.
+    key = lambda r, d: (round(float(r), 6), round(float(d), 6))  # noqa: E731
+    vmap = {key(v["ra"], v["dec"]): v["survives"] for v in vet}
+    fields = list(rows[0].keys())
+    if "archival_survives" not in fields:
+        fields.append("archival_survives")
+    for r in rows:
+        r["archival_survives"] = (
+            str(vmap[key(r["ra"], r["dec"])]) if key(r["ra"], r["dec"]) in vmap else ""
+        )
+    with open(cand_path, "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+    return metrics
+
+
 def _write_macros(m: dict, path) -> None:
     """Emit LaTeX ``\\newcommand`` macros so the paper hard-codes no census number."""
     from pathlib import Path
@@ -925,15 +1167,40 @@ def _write_macros(m: dict, path) -> None:
     # emitted alongside them.
     real = not str(m.get("source", "")).lower().startswith("synthetic")
     ns, other = ("vlassReal", "vlassSyn") if real else ("vlassSyn", "vlassReal")
+
+    def _num(key: str, fmt: str, scale: float = 1.0) -> str:
+        x = m.get(key)
+        if x is None or not np.isfinite(float(x)):
+            return "--"
+        return format(float(x) * scale, fmt)
+
+    def _sci(key: str) -> str:
+        x = m.get(key)
+        if x is None or not np.isfinite(float(x)) or float(x) <= 0:
+            return "--"
+        exp = int(np.floor(np.log10(float(x))))
+        return rf"{float(x) / 10**exp:.1f}\times10^{{{exp}}}"
+
     counts = (
         ("Area", f"{m['area_deg2']:.0f}"),
         ("Nsources", f"{m['n_sources']}"),
+        ("NsingleEpoch", f"{m.get('n_single_epoch_only', '--')}"),
         ("Nusable", f"{m['n_usable']}"),
         ("Nexcluded", f"{m['n_excluded_crowded']}"),
         ("Ncand", f"{m['n_candidates']}"),
         ("Nconfirmed", f"{m.get('n_image_confirmed', 0)}"),
-        ("ComplFifty", f"{m['completeness_50_factor']:.0f}"),
+        ("Narchival", f"{m['n_archival_survivors']}" if "n_archival_survivors" in m else "--"),
+        ("ComplFifty", _num("completeness_50_factor", ".1f")),
+        ("ComplFiftyErr", _num("completeness_50_factor_se", ".1f")),
+        ("ComplTen", _num("completeness_at_ten", ".1f", 100.0)),
         ("ComplMax", f"{100 * m['completeness_max']:.0f}"),
+        ("ComplMaxFactor", _num("completeness_max_factor", ".0f")),
+        ("FracFloor", _sci("variable_fraction_floor")),
+        ("FracTenCorr", _sci("variable_fraction_ten_corrected")),
+        ("CandVmin", _num("candidates_v_min", ".2f")),
+        ("CandVmax", _num("candidates_v_max", ".2f")),
+        ("ForcedVmed", _num("forced_v_median", ".3f")),
+        ("ForcedVmax", _num("forced_v_max", ".2f")),
     )
     lines = [
         "% Auto-generated by jansky_research.vlass._write_macros — do not edit by hand.",
@@ -1018,7 +1285,15 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--dec", type=float, help="cone-centre Dec (deg) for a real-data run")
     p.add_argument("--radius", type=float, default=1.0, help="cone radius (deg)")
     p.add_argument("--epochs", default="1,2,3", help="comma-separated VLASS epochs, e.g. 1,2,3")
+    p.add_argument(
+        "--archival",
+        action="store_true",
+        help="archival-vet the committed image-confirmed candidates (epoch 4 + VizieR)",
+    )
     args = p.parse_args(argv)
+    if args.archival:
+        print(json.dumps(run_archival(args.out), indent=2))
+        return 0
     center = None if (args.offline or args.ra is None) else (args.ra, args.dec)
     epochs = tuple(int(e) for e in args.epochs.split(","))
     print(
