@@ -170,3 +170,50 @@ def test_write_macros_placeholder(tmp_path):
     rmd._write_macros({"source": "x", "is_real": True, "legs": [{"amp": None}]}, p)
     txt = p.read_text()
     assert r"\newcommand{\rmdRealAmp}{--}" in txt and r"\newcommand{\rmdSynAmp}{--}" in txt
+
+
+def test_null_percentiles_are_committed_per_leg():
+    """The sensitivity evidence the old run stripped: the null's own amplitude distribution."""
+    syn = rmd.synthetic_dipole_catalogue(n_sources=3000, amp=0.0, seed=3)
+    leg = rmd._dipole_leg(
+        {k: syn[k] for k in ("ra", "dec", "resid", "rm_err")}, stat="power", n_scramble=50
+    )
+    assert leg["null_amp_p95"] > leg["null_amp_p50"] > 0
+    assert leg["n_scramble"] == 50 and "seed" in leg
+
+
+def test_clip_does_not_erase_a_genuine_variance_dipole():
+    """The circularity check: clipping the top 1% must not clip away a real dipole."""
+    syn = rmd.synthetic_dipole_catalogue(n_sources=20000, amp=0.3, seed=4)
+    full = rmd.fit_dipole(syn["ra"], syn["dec"], syn["resid"], syn["rm_err"], stat="power")
+    clipped = rmd.fit_dipole(
+        syn["ra"], syn["dec"], syn["resid"], syn["rm_err"], stat="power", clip_quantile=0.99
+    )
+    # a variance dipole IS attenuated by the clip (the tail carries variance), but a real
+    # signal must survive at well over half its amplitude -- total erasure would mean the
+    # "isotropic core" result was guaranteed by construction
+    assert clipped["amp"] > 0.5 * full["amp"]
+
+
+def test_inject_on_real_residuals_recovers_on_a_heavy_tailed_field():
+    rng = np.random.default_rng(5)
+    n = 20000
+    ra = rng.uniform(0, 360, n)
+    dec = np.degrees(np.arcsin(rng.uniform(-1, 0.7, n)))
+    # a heavy-tailed residual field (Student-t), no true dipole
+    res = {"ra": ra, "dec": dec, "resid": 10.0 * rng.standard_t(3, n), "rm_err": np.full(n, 2.0)}
+    inj = rmd.inject_on_real_residuals(res, amp=0.3, seed=0)
+    f = rmd.fit_dipole(inj["ra"], inj["dec"], inj["resid"], inj["rm_err"], stat="power")
+    sep = rmd.compare_directions(f["apex_ra"], f["apex_dec"])  # noqa: F841
+    assert f["amp"] > 0.1  # the injected dipole is present in the power statistic
+
+
+def test_injection_seed_sweep_reports_bias_and_scatter():
+    rng = np.random.default_rng(6)
+    n = 8000
+    ra = rng.uniform(0, 360, n)
+    dec = np.degrees(np.arcsin(rng.uniform(-1, 0.7, n)))
+    sw = rmd.injection_seed_sweep(ra, dec, amp=0.3, n_seeds=5)
+    assert sw["n_seeds"] == 5
+    assert abs(sw["amp_mean"] - 0.3) < 0.1
+    assert sw["amp_sd"] is not None and sw["amp_sd"] > 0
