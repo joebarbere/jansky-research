@@ -8,7 +8,7 @@
 % an offline rebuild turned \tiiNEvents from 768 real observing days into 48 synthetic
 % events, under prose reading "...days, zero failures". Merging cannot fix a name
 % collision -- only namespacing can.
-\newcommand{\tiiSynSource}{synthetic mixed census (type II + III + RFI; Gopalswamy CME bias injected)}
+\newcommand{\tiiSynSource}{synthetic mixed census (type II + III + RFI + slow-drift bg; Gopalswamy CME bias)}
 \newcommand{\tiiSynNEvents}{48}
 \newcommand{\tiiSynCompleteness}{0.917}
 \newcommand{\tiiSynPurity}{1.0}
@@ -42,6 +42,18 @@
 \newcommand{\tiiSynObsMatch}{--}
 \newcommand{\tiiSynDriftSpeedCorr}{--}
 \newcommand{\tiiSynWindowSat}{--}
+\newcommand{\tiiSynMatchFracFast}{--}
+\newcommand{\tiiSynSpeedKsP}{--}
+\newcommand{\tiiSynNCovered}{--}
+\newcommand{\tiiSynNDedup}{--}
+\newcommand{\tiiSynNCorrPairs}{--}
+\newcommand{\tiiSynPurityEnsMean}{0.883}
+\newcommand{\tiiSynPurityEnsSd}{0.054}
+\newcommand{\tiiSynFpSlowBg}{91}
+\newcommand{\tiiSynNSlowBg}{240}
+\newcommand{\tiiSynFpSlowBgUpper}{0.442}
+\newcommand{\tiiSynFpTypeIIIUpper}{0.0079}
+\newcommand{\tiiSynFpRfiUpper}{0.0158}
 \newcommand{\tiiRealNTypeII}{332}
 \newcommand{\tiiRealFracFast}{0.194}
 \newcommand{\tiiRealFracWide}{0.613}
@@ -53,10 +65,22 @@
 \newcommand{\tiiRealOccPearson}{-0.08}
 \newcommand{\tiiRealOccSpearman}{0.053}
 \newcommand{\tiiRealDetRate}{0.432}
-\newcommand{\tiiRealBgCmeMed}{378.0}
-\newcommand{\tiiRealBgFracFast}{0.059}
-\newcommand{\tiiRealMatchCmeMed}{472.5}
-\newcommand{\tiiRealChanceMatch}{0.619}
-\newcommand{\tiiRealObsMatch}{0.56}
-\newcommand{\tiiRealDriftSpeedCorr}{0.058}
+\newcommand{\tiiRealBgCmeMed}{372.0}
+\newcommand{\tiiRealBgFracFast}{0.057}
+\newcommand{\tiiRealMatchCmeMed}{476.5}
+\newcommand{\tiiRealChanceMatch}{0.612}
+\newcommand{\tiiRealObsMatch}{0.68}
+\newcommand{\tiiRealDriftSpeedCorr}{0.044}
 \newcommand{\tiiRealWindowSat}{0.828}
+\newcommand{\tiiRealMatchFracFast}{0.184}
+\newcommand{\tiiRealSpeedKsP}{0.0}
+\newcommand{\tiiRealNCovered}{303}
+\newcommand{\tiiRealNDedup}{320}
+\newcommand{\tiiRealNCorrPairs}{206}
+\newcommand{\tiiRealPurityEnsMean}{--}
+\newcommand{\tiiRealPurityEnsSd}{--}
+\newcommand{\tiiRealFpSlowBg}{--}
+\newcommand{\tiiRealNSlowBg}{--}
+\newcommand{\tiiRealFpSlowBgUpper}{--}
+\newcommand{\tiiRealFpTypeIIIUpper}{--}
+\newcommand{\tiiRealFpRfiUpper}{--}

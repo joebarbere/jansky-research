@@ -10,6 +10,26 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`typeii` revision (all 15 referee findings): the contaminant that can fail was injected,
+  and it failed.** A 30-seed ensemble measures the detector per contaminant class: clean against
+  fast type III (0/480) and narrowband RFI (0/240), but **false-positive at ~38%** (91/240)
+  against coherent slow-drift window-filling background --- the class the real band contains and
+  the old single-seed purity 1.0 never tested. "This is not a detector defect" is retracted; the
+  census's 83% window saturation and the ensemble's failure mode now corroborate each other, and
+  the null is stronger for it. **The match-rate deficit is retracted as a coverage artifact**:
+  with coverage-aware diagnostics and a fresh CDAW fetch, the covered match rate is 0.68, above
+  the 0.612 chance rate; the committed `association_is_background_like` no longer keys on it.
+  The speed test is sharpened with the matched fast-fraction (0.184 vs background 0.057, KS
+  p ~ 0): a real but modest enrichment, the flare--CME confound's signature. Also: the
+  **arxiv.yaml blocker fixed** ("48 days, zero failures" --- the original clobber's number
+  surviving in the hand-authored submission abstract --- is now 768); the synthetic leg writes
+  its own committed results file (the paper's provenance claim had been false for every
+  synthetic number); the harmonic-cut sweep committed with denominators ("confirming" downgraded
+  --- 8 matched CMEs, trend reversing at the next cut); 332 detections = 320 distinct structures
+  after adjacent-window dedup, stated; the RSTN comparison scoped as cycle-phase inflated; the
+  committed figure's inverted frequency axis and null-as-zero bars fixed.
+
 ### Added
 - **Review round 4: full presenter/referee rounds on rmstructure, typeii, glitchpop and vlass.**
   All four returned **major revision** (six blockers between them); every verdict and complete

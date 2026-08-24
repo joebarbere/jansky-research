@@ -495,6 +495,95 @@ def _synthetic_census(seed: int = 0) -> dict:
     }
 
 
+def synthetic_slow_background(
+    *,
+    n_freq: int = 240,
+    n_time: int = 600,
+    duration_s: float = 300.0,
+    drift_mhz_s: float = 0.03,
+    amp: float = 6.0,
+    seed: int = 0,
+) -> dict:
+    """The contaminant class that dominates the real census: a coherent, slowly drifting,
+    window-filling background ridge that is NOT a type II burst.
+
+    The original purity test injected only fast type III (drift orders of magnitude above the
+    acceptance band) and zero-drift RFI lines (below it) -- neither could enter the 0.01--2 MHz/s
+    band, so purity 1.0 said nothing about the failure mode the real data exhibits. This ridge
+    drifts inside the band, spans the whole window, and is spectrally broad: exactly what the
+    real 332 candidates look like (|df/dt| 0.012--0.064 MHz/s, 83% window-saturated).
+    """
+    rng = np.random.default_rng(seed)
+    freqs = np.linspace(88.0, 20.0, n_freq)
+    times = np.linspace(0.0, duration_s, n_time)
+    d = rng.normal(0.0, 1.0, (n_freq, n_time))
+    f0 = rng.uniform(35.0, 70.0)
+    centre = f0 - drift_mhz_s * times  # slow downward drift across the full window
+    width = rng.uniform(3.0, 8.0)  # spectrally broad, unlike a type II lane
+    d += amp * np.exp(-0.5 * ((freqs[:, None] - centre[None, :]) / width) ** 2)
+    return {"data": d, "freqs": freqs, "times": times}
+
+
+def synthetic_census_ensemble(*, n_seeds: int = 30) -> dict:
+    """The purity/completeness census over seeds, with the contaminant class that can fail.
+
+    Reports per-class false-positive counts pooled over seeds and a Wilson upper bound on each
+    false rate -- a single-seed purity of 1.0 over 24 negatives bounds the rate only below 11.7%
+    at 95%, which is ~25x too coarse to see the real census's ~0.5%-per-window rate.
+    """
+    from math import sqrt
+
+    comp, pur = [], []
+    fp_by_class = {"type_III": 0, "rfi": 0, "slow_bg": 0}
+    n_by_class = {"type_III": 0, "rfi": 0, "slow_bg": 0}
+    for s in range(n_seeds):
+        cen = _synthetic_census(seed=s)
+        # append the contaminant class the real band actually contains
+        rng = np.random.default_rng(10_000 + s)
+        for _ in range(8):
+            cen["events"].append(
+                synthetic_slow_background(
+                    drift_mhz_s=float(rng.uniform(0.01, 0.07)),
+                    seed=int(rng.integers(1 << 30)),
+                )
+            )
+            cen["truth"].append("slow_bg")
+        results = [detect_typeii(e["data"], e["freqs"], e["times"]) for e in cen["events"]]
+        truth = cen["truth"]
+        det = [i for i, r in enumerate(results) if r["detected"]]
+        true_ii = [i for i, tr in enumerate(truth) if tr == "type_II"]
+        tp = len([i for i in det if truth[i] == "type_II"])
+        comp.append(tp / max(len(true_ii), 1))
+        pur.append(tp / max(len(det), 1))
+        for i, tr in enumerate(truth):
+            if tr in fp_by_class:
+                n_by_class[tr] += 1
+                if i in det:
+                    fp_by_class[tr] += 1
+
+    def wilson_upper(k: int, n: int, z: float = 1.96) -> float:
+        if n == 0:
+            return float("nan")
+        ph = k / n
+        den = 1 + z * z / n
+        centre = ph + z * z / (2 * n)
+        half = z * sqrt(ph * (1 - ph) / n + z * z / (4 * n * n))
+        return (centre + half) / den
+
+    return {
+        "n_seeds": n_seeds,
+        "purity_mean": round(float(np.mean(pur)), 3),
+        "purity_sd": round(float(np.std(pur, ddof=1)), 3),
+        "completeness_mean": round(float(np.mean(comp)), 3),
+        "completeness_sd": round(float(np.std(comp, ddof=1)), 3),
+        "fp_by_class": fp_by_class,
+        "n_by_class": n_by_class,
+        "fp_rate_upper95_by_class": {
+            k: round(wilson_upper(fp_by_class[k], n_by_class[k]), 4) for k in fp_by_class
+        },
+    }
+
+
 def run(out: str = ".", *, offline: bool = True) -> dict:
     """Offline: synthetic census (detector completeness/purity + recovered CME bias). Real: OVRO-LWA."""
 
@@ -527,7 +616,11 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
                 for k in range(24)
             )
             curve[f"snr{amp:g}"] = round(hits / 24, 3)
-        source = "synthetic mixed census (type II + III + RFI; Gopalswamy CME bias injected)"
+        source = "synthetic mixed census (type II + III + RFI + slow-drift bg; Gopalswamy CME bias)"
+        # The seeded ensemble with the contaminant class that can fail. The single-seed
+        # purity=1.0 over 24 negatives bounded the false rate only below 11.7%; the ensemble
+        # measures per-class rates, including the slow-drift background the real band contains.
+        ens = synthetic_census_ensemble(n_seeds=30)
         metrics: dict = {
             "source": source,
             "is_real": False,
@@ -535,10 +628,14 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
             "n_typeii_detected": len(det_ii),
             "completeness": round(completeness, 3),
             "purity": round(purity, 3),
+            "n_injected_typeii": 24,
+            "n_negatives_typeiii": 16,
+            "n_negatives_rfi": 8,
             "completeness_vs_snr": curve,
             "median_rfi_masked_frac": round(
                 float(np.median([r["rfi_masked_frac"] for r in results])), 3
             ),
+            "ensemble": ens,
             **{f"assoc_{k}": v for k, v in assoc.items()},
         }
     else:  # pragma: no cover - the streaming real census needs explicit dates + a CME table
@@ -552,7 +649,12 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
-    write_results(metrics, op / "results" / "typeii_metrics.json")
+    # Each leg keeps its own evidence file: preserve_live_results (correctly) refuses to let a
+    # synthetic run write into the real census file, which previously meant the synthetic leg's
+    # numbers -- purity, the SNR curve -- existed in NO committed results file while the paper
+    # claimed they were "pipeline-generated (results/typeii_metrics.json -> macros)".
+    stem = "typeii_metrics" if not offline else "typeii_synthetic_metrics"
+    write_results(metrics, op / "results" / f"{stem}.json")
     _figure(metrics, op / "papers" / "typeii" / "figures")
     _write_macros(metrics, op / "papers" / "typeii" / "generated" / "macros.tex")
     return metrics
@@ -755,9 +857,33 @@ def purity_diagnostics(
     rng = np.random.default_rng(seed)
     rand = rng.uniform(onsets.min(), onsets.max(), 5000)
     chance = float(np.mean([np.any(np.abs(onsets - t) <= window_hr) for t in rand]))
-    obs_rate = sum(c is not None for c in matched) / len(detections)
+    # The CME catalogue does not cover the full census span (CDAW publishes with months of lag),
+    # so detections after the last catalogued onset CANNOT match. Computing the observed match
+    # rate over ALL detections while the chance rate samples only the covered span compared two
+    # different time domains and manufactured a "deficit" -- measured, 57 of 332 detections
+    # (17%) lay beyond coverage and the corrected comparison REVERSES (0.676 > 0.619). The rate
+    # is now computed over covered detections only, and the per-detection coverage flag is
+    # returned so the census can commit it.
+    cov_end = float(onsets.max()) if onsets.size else float("-inf")
+    covered = [float(r["burst_hr"]) <= cov_end for r in detections]
+    n_cov = int(sum(covered))
+    obs_rate = (
+        sum(c is not None for c, cv in zip(matched, covered, strict=True) if cv) / n_cov
+        if n_cov
+        else float("nan")
+    )
     bg_med = float(np.median(bg_speed))
     m_med = float(np.median(m_speed)) if m_speed.size else float("nan")
+    # The matched sample's own fast fraction, and a two-sample test against the background: two
+    # bare medians cannot show whether the matched CMEs are "the background population".
+    m_frac_fast = float((m_speed >= FAST_CME_KMS).mean()) if m_speed.size else float("nan")
+    if m_speed.size >= 5:
+        from scipy import stats as _st
+
+        ks = _st.ks_2samp(m_speed, bg_speed)
+        ks_p = float(ks.pvalue)
+    else:
+        ks_p = float("nan")
     # (2) does the burst drift know anything about the matched CME speed? (real type II: yes)
     pairs = [
         (abs(float(r["drift_mhz_s"])), float(c["speed_kms"]))
@@ -779,18 +905,73 @@ def purity_diagnostics(
         "bg_cme_median_kms": round(bg_med, 1),
         "bg_cme_frac_fast": round(float((bg_speed >= FAST_CME_KMS).mean()), 3),
         "matched_cme_median_kms": round(m_med, 1) if np.isfinite(m_med) else None,
+        "matched_cme_frac_fast": round(m_frac_fast, 3) if np.isfinite(m_frac_fast) else None,
+        "matched_vs_bg_speed_ks_p": round(ks_p, 4) if np.isfinite(ks_p) else None,
         "chance_cme_match_rate": round(chance, 3),
-        "observed_cme_match_rate": round(obs_rate, 3),
+        "observed_cme_match_rate": round(obs_rate, 3) if np.isfinite(obs_rate) else None,
+        "cme_coverage_end_hr": round(cov_end, 1) if np.isfinite(cov_end) else None,
+        "n_detections_in_cme_coverage": n_cov,
+        "cme_covered_flags": covered,
         "drift_cme_speed_corr": round(drift_speed_corr, 3)
         if np.isfinite(drift_speed_corr)
         else None,
+        "n_matched_for_corr": len(pairs),
         "window_saturation_frac": round(sat, 3) if np.isfinite(sat) else None,
-        # matches ~ background population, radio props decorrelated from CME speed, and ridges
-        # saturate the window -> the candidate list is false-positive-dominated
+        # The verdict rests on the SPEED comparison and the window saturation; the match-rate
+        # test is uninformative at solar max (and, corrected for coverage, sits above chance).
         "association_is_background_like": bool(
-            np.isfinite(m_med) and m_med < 1.5 * bg_med and obs_rate <= chance
+            np.isfinite(m_med) and m_med < 1.5 * bg_med and np.isfinite(sat) and sat > 0.5
         ),
     }
+
+
+def harmonic_cut_sweep(
+    detections: list[dict],
+    cme_list: list[dict],
+    *,
+    cuts=(0.0, 0.3, 0.5, 0.7),
+    window_hr: float = 2.0,
+) -> list[dict]:
+    """Matched-CME statistics as a function of the harmonic-score cut, committed with their N.
+
+    The paper's "a tighter cut makes the association worse, confirming..." rested on a single
+    uncommitted variant whose matched sample was 8 CMEs, and the trend reverses at the next cut
+    up -- a robustness check must ship its N and its non-monotonicity.
+    """
+    out = []
+    for cut in cuts:
+        sel = [r for r in detections if float(r.get("harmonic_score") or 0.0) >= cut]
+        matched = [crossmatch_cme(r["burst_hr"], cme_list, window_hr=window_hr) for r in sel]
+        spd = np.array([float(c["speed_kms"]) for c in matched if c is not None])
+        out.append(
+            {
+                "cut": cut,
+                "n_candidates": len(sel),
+                "n_matched": int(spd.size),
+                "matched_median_kms": round(float(np.median(spd)), 1) if spd.size else None,
+                "matched_frac_fast": round(float((spd >= FAST_CME_KMS).mean()), 3)
+                if spd.size
+                else None,
+            }
+        )
+    return out
+
+
+def dedup_adjacent_windows(detections: list[dict], *, step_s: float = SWEEP_STEP_S) -> int:
+    """Count distinct structures: detections in adjacent overlapping windows merged.
+
+    The sweep steps ``step_s`` with a 2x window, so one window-filling structure is detected by
+    consecutive windows exactly ``step_s`` apart. Returns the deduplicated count.
+    """
+    hrs = sorted(float(r["burst_hr"]) for r in detections)
+    if not hrs:
+        return 0
+    step_hr = step_s / 3600.0
+    n = 1
+    for a, b in zip(hrs[:-1], hrs[1:], strict=True):
+        if not (abs((b - a) - step_hr) < 1e-6):
+            n += 1
+    return n
 
 
 def fetch_lasco_cme(dates: list[str]) -> list[dict]:  # pragma: no cover - network (CDAW HTML)
@@ -945,8 +1126,12 @@ def _figure(m: dict, out_dir: str | Path) -> None:
     keep = rfi_mask(s["data"])
     rt, rf = track_drift_ridge(s["data"], s["freqs"], s["times"], keep=keep)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.9))
+    # freqs is DESCENDING (88 -> 20): with origin="lower", data row 0 must map to the top of
+    # the y-axis, so flip the array rather than the extent -- the previous extent-only version
+    # rendered the spectrum inverted (drift appeared UPWARD in a slow-drift paper) with the
+    # tracked ridge floating off the emission entirely.
     ax1.imshow(
-        background_subtract(s["data"]),
+        background_subtract(s["data"])[::-1, :],
         aspect="auto",
         origin="lower",
         extent=[s["times"][0], s["times"][-1], s["freqs"][-1], s["freqs"][0]],
@@ -955,15 +1140,19 @@ def _figure(m: dict, out_dir: str | Path) -> None:
     ax1.plot(rt, rf, ".", color="r", ms=2, label="tracked ridge")
     ax1.set(xlabel="time (s)", ylabel="freq (MHz)", title="Synthetic type II + ridge")
     ax1.legend(fontsize=8)
-    labels = ["complete.", "purity", "frac fast", "frac wide"]
-    vals = [
-        m.get("completeness"),
-        m.get("purity"),
-        m.get("assoc_frac_fast"),
-        m.get("assoc_frac_wide"),
+    # Only this run mode's own metrics are plotted; a missing value is SKIPPED, not rendered as
+    # a zero-height bar (the previous version silently drew the real run's null completeness and
+    # purity as zeros next to real association fractions -- a cross-mode mashup).
+    pairs = [
+        ("complete.", m.get("completeness"), "C0"),
+        ("purity", m.get("purity"), "C0"),
+        ("frac fast", m.get("assoc_frac_fast"), "C3"),
+        ("frac wide", m.get("assoc_frac_wide"), "C3"),
     ]
-    vals = [v if isinstance(v, (int, float)) else 0.0 for v in vals]
-    ax2.bar(labels, vals, color=["C0", "C0", "C3", "C3"])
+    pairs = [(lab, v, c) for lab, v, c in pairs if isinstance(v, (int, float))]
+    if pairs:
+        labels, vals, colors = zip(*pairs, strict=True)
+        ax2.bar(labels, vals, color=list(colors))
     ax2.set(ylim=(0, 1.05), ylabel="fraction", title="Detector + CME association")
     fig.tight_layout()
     fig.savefig(out / "typeii.pdf")
@@ -1030,8 +1219,26 @@ def _write_macros(m: dict, path: str | Path) -> None:
             ("ObsMatch", "observed_cme_match_rate"),
             ("DriftSpeedCorr", "drift_cme_speed_corr"),
             ("WindowSat", "window_saturation_frac"),
+            ("MatchFracFast", "matched_cme_frac_fast"),
+            ("SpeedKsP", "matched_vs_bg_speed_ks_p"),
+            ("NCovered", "n_detections_in_cme_coverage"),
+            ("NDedup", "n_distinct_structures"),
+            ("NCorrPairs", "n_matched_for_corr"),
         ):
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
+        # ensemble purity with the contaminant class that can fail (offline leg only)
+        ens = m.get("ensemble") or {}
+        fp = ens.get("fp_rate_upper95_by_class") or {}
+        for macro, v in (
+            ("PurityEnsMean", ens.get("purity_mean") if live else None),
+            ("PurityEnsSd", ens.get("purity_sd") if live else None),
+            ("FpSlowBg", None if not live else (ens.get("fp_by_class") or {}).get("slow_bg")),
+            ("NSlowBg", None if not live else (ens.get("n_by_class") or {}).get("slow_bg")),
+            ("FpSlowBgUpper", fp.get("slow_bg") if live else None),
+            ("FpTypeIIIUpper", fp.get("type_III") if live else None),
+            ("FpRfiUpper", fp.get("rfi") if live else None),
+        ):
+            lines.append(rf"\newcommand{{\{ns}{macro}}}{{{'--' if v is None else v}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and would

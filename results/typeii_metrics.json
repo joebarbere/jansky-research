@@ -23,7 +23,8 @@
         "width_deg": 82.0,
         "speed_kms": 275.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 2359.106,
@@ -35,7 +36,8 @@
         "width_deg": 27.0,
         "speed_kms": 607.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 2465.583,
@@ -47,7 +49,8 @@
         "width_deg": 65.0,
         "speed_kms": 814.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 2661.417,
@@ -59,7 +62,8 @@
         "width_deg": 82.0,
         "speed_kms": 460.0
       },
-      "goes_class": "C3.2"
+      "goes_class": "C3.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 2730.083,
@@ -71,7 +75,8 @@
         "width_deg": 173.0,
         "speed_kms": 596.0
       },
-      "goes_class": "M2.9"
+      "goes_class": "M2.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 2750.208,
@@ -83,7 +88,8 @@
         "width_deg": 102.0,
         "speed_kms": 300.0
       },
-      "goes_class": "C9.4"
+      "goes_class": "C9.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 2752.584,
@@ -95,7 +101,8 @@
         "width_deg": 116.0,
         "speed_kms": 282.0
       },
-      "goes_class": "C3.4"
+      "goes_class": "C3.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 2847.5,
@@ -103,7 +110,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.155,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 2871.375,
@@ -115,7 +123,8 @@
         "width_deg": 71.0,
         "speed_kms": 369.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 2972.154,
@@ -127,7 +136,8 @@
         "width_deg": 22.0,
         "speed_kms": 488.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3066.458,
@@ -135,7 +145,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.038,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3112.833,
@@ -143,7 +154,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.0,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3144.958,
@@ -155,7 +167,8 @@
         "width_deg": 360.0,
         "speed_kms": 1614.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3145.333,
@@ -167,7 +180,8 @@
         "width_deg": 360.0,
         "speed_kms": 1614.0
       },
-      "goes_class": "X5.8"
+      "goes_class": "X5.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3229.875,
@@ -179,7 +193,8 @@
         "width_deg": 112.0,
         "speed_kms": 357.0
       },
-      "goes_class": "X1.2"
+      "goes_class": "X1.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3232.75,
@@ -191,7 +206,8 @@
         "width_deg": 360.0,
         "speed_kms": 2010.0
       },
-      "goes_class": "X8.7"
+      "goes_class": "X8.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3233.375,
@@ -203,7 +219,8 @@
         "width_deg": 360.0,
         "speed_kms": 2010.0
       },
-      "goes_class": "X8.7"
+      "goes_class": "X8.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3254.375,
@@ -211,7 +228,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.138,
       "cme": null,
-      "goes_class": "M3.2"
+      "goes_class": "M3.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3260.5,
@@ -223,7 +241,8 @@
         "width_deg": 360.0,
         "speed_kms": 1250.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3502.917,
@@ -235,7 +254,8 @@
         "width_deg": 49.0,
         "speed_kms": 226.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3590.458,
@@ -247,7 +267,8 @@
         "width_deg": 360.0,
         "speed_kms": 823.0
       },
-      "goes_class": "X1.4"
+      "goes_class": "X1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3666.583,
@@ -259,7 +280,8 @@
         "width_deg": 360.0,
         "speed_kms": 946.0
       },
-      "goes_class": "X1.0"
+      "goes_class": "X1.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3667.208,
@@ -271,7 +293,8 @@
         "width_deg": 360.0,
         "speed_kms": 946.0
       },
-      "goes_class": "X1.0"
+      "goes_class": "X1.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3667.834,
@@ -283,7 +306,8 @@
         "width_deg": 360.0,
         "speed_kms": 946.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3668.458,
@@ -295,7 +319,8 @@
         "width_deg": 360.0,
         "speed_kms": 946.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3669.708,
@@ -303,7 +328,8 @@
       "duration_s": 827.4,
       "harmonic_score": 0.391,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3672.958,
@@ -311,7 +337,8 @@
       "duration_s": 811.0,
       "harmonic_score": 0.089,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3737.959,
@@ -319,7 +346,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.092,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 3910.333,
@@ -331,7 +359,8 @@
         "width_deg": 360.0,
         "speed_kms": 1988.0
       },
-      "goes_class": "C2.7"
+      "goes_class": "C2.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3910.459,
@@ -343,7 +372,8 @@
         "width_deg": 360.0,
         "speed_kms": 1988.0
       },
-      "goes_class": "C2.7"
+      "goes_class": "C2.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3935.083,
@@ -355,7 +385,8 @@
         "width_deg": 360.0,
         "speed_kms": 751.0
       },
-      "goes_class": "M1.2"
+      "goes_class": "M1.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 3935.208,
@@ -367,7 +398,8 @@
         "width_deg": 360.0,
         "speed_kms": 751.0
       },
-      "goes_class": "M1.2"
+      "goes_class": "M1.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4151.334,
@@ -379,7 +411,8 @@
         "width_deg": 43.0,
         "speed_kms": 175.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 4454.417,
@@ -391,7 +424,8 @@
         "width_deg": 131.0,
         "speed_kms": 305.0
       },
-      "goes_class": "M1.0"
+      "goes_class": "M1.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4459.917,
@@ -403,7 +437,8 @@
         "width_deg": 122.0,
         "speed_kms": 745.0
       },
-      "goes_class": "M1.4"
+      "goes_class": "M1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4485.056,
@@ -415,7 +450,8 @@
         "width_deg": 74.0,
         "speed_kms": 369.0
       },
-      "goes_class": "C5.5"
+      "goes_class": "C5.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4694.0,
@@ -427,7 +463,8 @@
         "width_deg": 68.0,
         "speed_kms": 181.0
       },
-      "goes_class": "C5.1"
+      "goes_class": "C5.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4791.665,
@@ -435,7 +472,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.286,
       "cme": null,
-      "goes_class": "C6.2"
+      "goes_class": "C6.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4935.542,
@@ -447,7 +485,8 @@
         "width_deg": 56.0,
         "speed_kms": 398.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 4959.542,
@@ -459,7 +498,8 @@
         "width_deg": 66.0,
         "speed_kms": 437.0
       },
-      "goes_class": "M1.3"
+      "goes_class": "M1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 4959.667,
@@ -471,7 +511,8 @@
         "width_deg": 66.0,
         "speed_kms": 437.0
       },
-      "goes_class": "M1.3"
+      "goes_class": "M1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5006.166,
@@ -479,7 +520,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.161,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5036.917,
@@ -491,7 +533,8 @@
         "width_deg": 10.0,
         "speed_kms": 544.0
       },
-      "goes_class": "M1.9"
+      "goes_class": "M1.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5054.667,
@@ -503,7 +546,8 @@
         "width_deg": 63.0,
         "speed_kms": 855.0
       },
-      "goes_class": "M4.2"
+      "goes_class": "M4.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5059.541,
@@ -515,7 +559,8 @@
         "width_deg": 104.0,
         "speed_kms": 1189.0
       },
-      "goes_class": "C7.0"
+      "goes_class": "C7.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5102.125,
@@ -527,7 +572,8 @@
         "width_deg": 116.0,
         "speed_kms": 1018.0
       },
-      "goes_class": "M4.4"
+      "goes_class": "M4.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5109.625,
@@ -535,7 +581,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.096,
       "cme": null,
-      "goes_class": "C8.6"
+      "goes_class": "C8.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5132.875,
@@ -547,7 +594,8 @@
         "width_deg": 165.0,
         "speed_kms": 371.0
       },
-      "goes_class": "M1.2"
+      "goes_class": "M1.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5206.0,
@@ -559,7 +607,8 @@
         "width_deg": 104.0,
         "speed_kms": 302.0
       },
-      "goes_class": "C4.6"
+      "goes_class": "C4.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5231.851,
@@ -567,7 +616,8 @@
       "duration_s": 720.9,
       "harmonic_score": 0.14,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5299.334,
@@ -579,7 +629,8 @@
         "width_deg": 360.0,
         "speed_kms": 789.0
       },
-      "goes_class": "X1.3"
+      "goes_class": "X1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5304.208,
@@ -591,7 +642,8 @@
         "width_deg": 36.0,
         "speed_kms": 249.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5325.708,
@@ -603,7 +655,8 @@
         "width_deg": 360.0,
         "speed_kms": 638.0
       },
-      "goes_class": "M4.5"
+      "goes_class": "M4.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5325.833,
@@ -615,7 +668,8 @@
         "width_deg": 360.0,
         "speed_kms": 638.0
       },
-      "goes_class": "M4.5"
+      "goes_class": "M4.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5327.084,
@@ -627,7 +681,8 @@
         "width_deg": 131.0,
         "speed_kms": 378.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5342.958,
@@ -635,7 +690,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.071,
       "cme": null,
-      "goes_class": "M1.3"
+      "goes_class": "M1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 5346.583,
@@ -643,7 +699,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.076,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5394.583,
@@ -655,7 +712,8 @@
         "width_deg": 50.0,
         "speed_kms": 179.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5586.235,
@@ -667,7 +725,8 @@
         "width_deg": 93.0,
         "speed_kms": 361.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5728.75,
@@ -675,7 +734,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.239,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 5823.333,
@@ -687,7 +747,8 @@
         "width_deg": 186.0,
         "speed_kms": 539.0
       },
-      "goes_class": "C5.5"
+      "goes_class": "C5.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6135.0,
@@ -699,7 +760,8 @@
         "width_deg": 69.0,
         "speed_kms": 187.0
       },
-      "goes_class": "M1.6"
+      "goes_class": "M1.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6595.875,
@@ -711,7 +773,8 @@
         "width_deg": 42.0,
         "speed_kms": 470.0
       },
-      "goes_class": "M1.5"
+      "goes_class": "M1.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6598.125,
@@ -723,7 +786,8 @@
         "width_deg": 360.0,
         "speed_kms": 598.0
       },
-      "goes_class": "X7.1"
+      "goes_class": "X7.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6644.088,
@@ -735,7 +799,8 @@
         "width_deg": 210.0,
         "speed_kms": 1013.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 6668.708,
@@ -747,7 +812,8 @@
         "width_deg": 175.0,
         "speed_kms": 639.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 6669.708,
@@ -759,7 +825,8 @@
         "width_deg": 175.0,
         "speed_kms": 639.0
       },
-      "goes_class": "M1.1"
+      "goes_class": "M1.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6687.028,
@@ -771,7 +838,8 @@
         "width_deg": 131.0,
         "speed_kms": 629.0
       },
-      "goes_class": "C8.6"
+      "goes_class": "C8.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6687.529,
@@ -783,7 +851,8 @@
         "width_deg": 131.0,
         "speed_kms": 629.0
       },
-      "goes_class": "C8.6"
+      "goes_class": "C8.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6712.083,
@@ -795,7 +864,8 @@
         "width_deg": 66.0,
         "speed_kms": 280.0
       },
-      "goes_class": "M1.3"
+      "goes_class": "M1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6739.084,
@@ -807,7 +877,8 @@
         "width_deg": 360.0,
         "speed_kms": 967.0
       },
-      "goes_class": "X2.1"
+      "goes_class": "X2.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6739.958,
@@ -819,7 +890,8 @@
         "width_deg": 360.0,
         "speed_kms": 967.0
       },
-      "goes_class": "X2.1"
+      "goes_class": "X2.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6740.583,
@@ -831,7 +903,8 @@
         "width_deg": 360.0,
         "speed_kms": 967.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 6832.292,
@@ -843,7 +916,8 @@
         "width_deg": 128.0,
         "speed_kms": 334.0
       },
-      "goes_class": "M1.4"
+      "goes_class": "M1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 6884.0,
@@ -851,7 +925,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.369,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7024.083,
@@ -859,7 +934,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.297,
       "cme": null,
-      "goes_class": "C2.5"
+      "goes_class": "C2.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7270.25,
@@ -867,7 +943,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.181,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7314.958,
@@ -879,7 +956,8 @@
         "width_deg": 53.0,
         "speed_kms": 562.0
       },
-      "goes_class": "M1.0"
+      "goes_class": "M1.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7362.333,
@@ -891,7 +969,8 @@
         "width_deg": 102.0,
         "speed_kms": 224.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7435.417,
@@ -899,7 +978,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.093,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7456.167,
@@ -911,7 +991,8 @@
         "width_deg": 25.0,
         "speed_kms": 275.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7457.416,
@@ -923,7 +1004,8 @@
         "width_deg": 116.0,
         "speed_kms": 509.0
       },
-      "goes_class": "M1.2"
+      "goes_class": "M1.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7480.417,
@@ -931,7 +1013,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.149,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7481.042,
@@ -939,7 +1022,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.561,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7482.291,
@@ -947,7 +1031,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.169,
       "cme": null,
-      "goes_class": "C4.7"
+      "goes_class": "C4.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7484.417,
@@ -955,7 +1040,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.418,
       "cme": null,
-      "goes_class": "C4.4"
+      "goes_class": "C4.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7534.125,
@@ -963,7 +1049,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.059,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7534.25,
@@ -971,7 +1058,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.044,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7555.023,
@@ -983,7 +1071,8 @@
         "width_deg": 70.0,
         "speed_kms": 179.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7576.25,
@@ -995,7 +1084,8 @@
         "width_deg": 108.0,
         "speed_kms": 579.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7600.083,
@@ -1003,7 +1093,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.114,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7606.458,
@@ -1015,7 +1106,8 @@
         "width_deg": 44.0,
         "speed_kms": 137.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7744.167,
@@ -1027,7 +1119,8 @@
         "width_deg": 95.0,
         "speed_kms": 176.0
       },
-      "goes_class": "C4.3"
+      "goes_class": "C4.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7746.917,
@@ -1039,7 +1132,8 @@
         "width_deg": 174.0,
         "speed_kms": 499.0
       },
-      "goes_class": "C6.6"
+      "goes_class": "C6.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7747.541,
@@ -1051,7 +1145,8 @@
         "width_deg": 174.0,
         "speed_kms": 499.0
       },
-      "goes_class": "M2.0"
+      "goes_class": "M2.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7768.292,
@@ -1063,7 +1158,8 @@
         "width_deg": 56.0,
         "speed_kms": 479.0
       },
-      "goes_class": "C3.1"
+      "goes_class": "C3.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7818.0,
@@ -1075,7 +1171,8 @@
         "width_deg": 360.0,
         "speed_kms": 1436.0
       },
-      "goes_class": "C5.9"
+      "goes_class": "C5.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7864.375,
@@ -1083,7 +1180,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.274,
       "cme": null,
-      "goes_class": "M1.1"
+      "goes_class": "M1.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 7918.583,
@@ -1095,7 +1193,8 @@
         "width_deg": 216.0,
         "speed_kms": 574.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 7966.708,
@@ -1107,7 +1206,8 @@
         "width_deg": 11.0,
         "speed_kms": 379.0
       },
-      "goes_class": "C3.4"
+      "goes_class": "C3.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8081.167,
@@ -1119,7 +1219,8 @@
         "width_deg": 37.0,
         "speed_kms": 180.0
       },
-      "goes_class": "C4.9"
+      "goes_class": "C4.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8128.125,
@@ -1131,7 +1232,8 @@
         "width_deg": 18.0,
         "speed_kms": 305.0
       },
-      "goes_class": "C3.0"
+      "goes_class": "C3.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8152.625,
@@ -1143,7 +1245,8 @@
         "width_deg": 169.0,
         "speed_kms": 800.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 8708.75,
@@ -1151,7 +1254,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.415,
       "cme": null,
-      "goes_class": "C8.6"
+      "goes_class": "C8.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8730.875,
@@ -1163,7 +1267,8 @@
         "width_deg": 56.0,
         "speed_kms": 318.0
       },
-      "goes_class": "M3.3"
+      "goes_class": "M3.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8754.75,
@@ -1171,7 +1276,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.211,
       "cme": null,
-      "goes_class": "M1.7"
+      "goes_class": "M1.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8757.375,
@@ -1179,7 +1285,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.3,
       "cme": null,
-      "goes_class": "C6.5"
+      "goes_class": "C6.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8920.375,
@@ -1187,7 +1294,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.181,
       "cme": null,
-      "goes_class": "M4.8"
+      "goes_class": "M4.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 8925.125,
@@ -1199,7 +1307,8 @@
         "width_deg": 27.0,
         "speed_kms": 446.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9088.5,
@@ -1211,7 +1320,8 @@
         "width_deg": 68.0,
         "speed_kms": 197.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9140.916,
@@ -1223,7 +1333,8 @@
         "width_deg": 38.0,
         "speed_kms": 379.0
       },
-      "goes_class": "C3.5"
+      "goes_class": "C3.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9352.333,
@@ -1235,7 +1346,8 @@
         "width_deg": 36.0,
         "speed_kms": 222.0
       },
-      "goes_class": "C8.8"
+      "goes_class": "C8.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9401.583,
@@ -1247,7 +1359,8 @@
         "width_deg": 47.0,
         "speed_kms": 307.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9474.25,
@@ -1259,7 +1372,8 @@
         "width_deg": 75.0,
         "speed_kms": 420.0
       },
-      "goes_class": "C3.3"
+      "goes_class": "C3.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9476.0,
@@ -1271,7 +1385,8 @@
         "width_deg": 75.0,
         "speed_kms": 420.0
       },
-      "goes_class": "C2.4"
+      "goes_class": "C2.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9499.75,
@@ -1283,7 +1398,8 @@
         "width_deg": 83.0,
         "speed_kms": 338.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9573.666,
@@ -1295,7 +1411,8 @@
         "width_deg": 360.0,
         "speed_kms": 657.0
       },
-      "goes_class": "C6.6"
+      "goes_class": "C6.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9620.611,
@@ -1307,7 +1424,8 @@
         "width_deg": 20.0,
         "speed_kms": 402.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9712.584,
@@ -1319,7 +1437,8 @@
         "width_deg": 76.0,
         "speed_kms": 201.0
       },
-      "goes_class": "C3.7"
+      "goes_class": "C3.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9786.25,
@@ -1331,7 +1450,8 @@
         "width_deg": 194.0,
         "speed_kms": 469.0
       },
-      "goes_class": "C7.2"
+      "goes_class": "C7.2",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9860.75,
@@ -1343,7 +1463,8 @@
         "width_deg": 283.0,
         "speed_kms": 289.0
       },
-      "goes_class": "M1.8"
+      "goes_class": "M1.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9861.25,
@@ -1355,7 +1476,8 @@
         "width_deg": 283.0,
         "speed_kms": 289.0
       },
-      "goes_class": "M1.8"
+      "goes_class": "M1.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 9864.224,
@@ -1367,7 +1489,8 @@
         "width_deg": 38.0,
         "speed_kms": 208.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9879.791,
@@ -1379,7 +1502,8 @@
         "width_deg": 11.0,
         "speed_kms": 807.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 9954.666,
@@ -1391,7 +1515,8 @@
         "width_deg": 39.0,
         "speed_kms": 409.0
       },
-      "goes_class": "C1.8"
+      "goes_class": "C1.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10075.375,
@@ -1403,7 +1528,8 @@
         "width_deg": 191.0,
         "speed_kms": 1388.0
       },
-      "goes_class": "X2.0"
+      "goes_class": "X2.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10171.093,
@@ -1415,7 +1541,8 @@
         "width_deg": 84.0,
         "speed_kms": 275.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10338.375,
@@ -1423,7 +1550,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.333,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10360.5,
@@ -1435,7 +1563,8 @@
         "width_deg": 88.0,
         "speed_kms": 281.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10363.75,
@@ -1447,7 +1576,8 @@
         "width_deg": 67.0,
         "speed_kms": 656.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10409.042,
@@ -1455,7 +1585,8 @@
       "duration_s": 880.6,
       "harmonic_score": 0.411,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10411.041,
@@ -1463,7 +1594,8 @@
       "duration_s": 852.0,
       "harmonic_score": 0.197,
       "cme": null,
-      "goes_class": "C2.5"
+      "goes_class": "C2.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10411.667,
@@ -1471,7 +1603,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.289,
       "cme": null,
-      "goes_class": "C2.5"
+      "goes_class": "C2.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10507.459,
@@ -1479,7 +1612,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.326,
       "cme": null,
-      "goes_class": "C7.9"
+      "goes_class": "C7.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10511.583,
@@ -1487,7 +1621,8 @@
       "duration_s": 864.3,
       "harmonic_score": 0.333,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10623.041,
@@ -1499,7 +1634,8 @@
         "width_deg": 49.0,
         "speed_kms": 357.0
       },
-      "goes_class": "C1.7"
+      "goes_class": "C1.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10845.417,
@@ -1511,7 +1647,8 @@
         "width_deg": 82.0,
         "speed_kms": 595.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10863.292,
@@ -1523,7 +1660,8 @@
         "width_deg": 360.0,
         "speed_kms": 1986.0
       },
-      "goes_class": "X1.1"
+      "goes_class": "X1.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10895.917,
@@ -1535,7 +1673,8 @@
         "width_deg": 108.0,
         "speed_kms": 425.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10959.708,
@@ -1543,7 +1682,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.091,
       "cme": null,
-      "goes_class": "C2.1"
+      "goes_class": "C2.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 10960.458,
@@ -1555,7 +1695,8 @@
         "width_deg": 60.0,
         "speed_kms": 314.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10986.708,
@@ -1563,7 +1704,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.068,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 10992.708,
@@ -1571,7 +1713,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.188,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11015.625,
@@ -1579,7 +1722,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.086,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11103.541,
@@ -1591,7 +1735,8 @@
         "width_deg": 50.0,
         "speed_kms": 475.0
       },
-      "goes_class": "C5.3"
+      "goes_class": "C5.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 11135.458,
@@ -1599,7 +1744,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.228,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11151.541,
@@ -1607,7 +1753,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.075,
       "cme": null,
-      "goes_class": "C2.1"
+      "goes_class": "C2.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 11469.089,
@@ -1619,7 +1766,8 @@
         "width_deg": 16.0,
         "speed_kms": 184.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11495.333,
@@ -1631,7 +1779,8 @@
         "width_deg": 25.0,
         "speed_kms": 655.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11538.583,
@@ -1643,7 +1792,8 @@
         "width_deg": 12.0,
         "speed_kms": 374.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11565.25,
@@ -1655,7 +1805,8 @@
         "width_deg": 16.0,
         "speed_kms": 550.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11585.75,
@@ -1667,7 +1818,8 @@
         "width_deg": 16.0,
         "speed_kms": 282.0
       },
-      "goes_class": "C1.4"
+      "goes_class": "C1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 11727.167,
@@ -1679,7 +1831,8 @@
         "width_deg": 48.0,
         "speed_kms": 172.0
       },
-      "goes_class": "C2.0"
+      "goes_class": "C2.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 11774.041,
@@ -1691,7 +1844,8 @@
         "width_deg": 107.0,
         "speed_kms": 529.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 11880.958,
@@ -1699,7 +1853,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.297,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12161.292,
@@ -1711,7 +1866,8 @@
         "width_deg": 62.0,
         "speed_kms": 39.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12183.292,
@@ -1723,7 +1879,8 @@
         "width_deg": 88.0,
         "speed_kms": 603.0
       },
-      "goes_class": "B8.8"
+      "goes_class": "B8.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12185.042,
@@ -1735,7 +1892,8 @@
         "width_deg": 88.0,
         "speed_kms": 603.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12301.916,
@@ -1743,7 +1901,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.413,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12385.458,
@@ -1755,7 +1914,8 @@
         "width_deg": 360.0,
         "speed_kms": 1752.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12385.583,
@@ -1767,7 +1927,8 @@
         "width_deg": 360.0,
         "speed_kms": 1752.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12421.958,
@@ -1775,7 +1936,8 @@
       "duration_s": 876.5,
       "harmonic_score": 0.409,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12425.333,
@@ -1787,7 +1949,8 @@
         "width_deg": 21.0,
         "speed_kms": 165.0
       },
-      "goes_class": "C3.8"
+      "goes_class": "C3.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12445.833,
@@ -1799,7 +1962,8 @@
         "width_deg": 20.0,
         "speed_kms": 909.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 12469.833,
@@ -1807,7 +1971,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.091,
       "cme": null,
-      "goes_class": "M1.4"
+      "goes_class": "M1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12469.958,
@@ -1815,7 +1980,8 @@
       "duration_s": 876.5,
       "harmonic_score": 0.04,
       "cme": null,
-      "goes_class": "M1.4"
+      "goes_class": "M1.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12553.872,
@@ -1823,7 +1989,8 @@
       "duration_s": 274.4,
       "harmonic_score": 0.127,
       "cme": null,
-      "goes_class": "C2.5"
+      "goes_class": "C2.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12762.458,
@@ -1835,7 +2002,8 @@
         "width_deg": 360.0,
         "speed_kms": 1092.0
       },
-      "goes_class": "M8.4"
+      "goes_class": "M8.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12769.583,
@@ -1847,7 +2015,8 @@
         "width_deg": 165.0,
         "speed_kms": 1020.0
       },
-      "goes_class": "C6.5"
+      "goes_class": "C6.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12830.583,
@@ -1855,7 +2024,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.131,
       "cme": null,
-      "goes_class": "C2.6"
+      "goes_class": "C2.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12881.458,
@@ -1867,7 +2037,8 @@
         "width_deg": 102.0,
         "speed_kms": 677.0
       },
-      "goes_class": "M1.0"
+      "goes_class": "M1.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 12929.084,
@@ -1879,7 +2050,8 @@
         "width_deg": 52.0,
         "speed_kms": 124.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13141.916,
@@ -1891,7 +2063,8 @@
         "width_deg": 12.0,
         "speed_kms": 633.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13165.791,
@@ -1903,7 +2076,8 @@
         "width_deg": 32.0,
         "speed_kms": 275.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13287.0,
@@ -1915,7 +2089,8 @@
         "width_deg": 18.0,
         "speed_kms": 381.0
       },
-      "goes_class": "C1.3"
+      "goes_class": "C1.3",
+      "cme_coverage": true
     },
     {
       "burst_hr": 13288.5,
@@ -1927,7 +2102,8 @@
         "width_deg": 18.0,
         "speed_kms": 381.0
       },
-      "goes_class": "C1.8"
+      "goes_class": "C1.8",
+      "cme_coverage": true
     },
     {
       "burst_hr": 13550.708,
@@ -1935,7 +2111,8 @@
       "duration_s": 610.3,
       "harmonic_score": 0.304,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13646.083,
@@ -1947,7 +2124,8 @@
         "width_deg": 25.0,
         "speed_kms": 943.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13771.167,
@@ -1955,7 +2133,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.166,
       "cme": null,
-      "goes_class": "C3.1"
+      "goes_class": "C3.1",
+      "cme_coverage": true
     },
     {
       "burst_hr": 13772.292,
@@ -1963,7 +2142,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.141,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13777.756,
@@ -1971,7 +2151,8 @@
       "duration_s": 639.0,
       "harmonic_score": 0.352,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13958.125,
@@ -1979,7 +2160,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.107,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 13985.25,
@@ -1991,7 +2173,8 @@
         "width_deg": 121.0,
         "speed_kms": 338.0
       },
-      "goes_class": "C4.4"
+      "goes_class": "C4.4",
+      "cme_coverage": true
     },
     {
       "burst_hr": 14031.333,
@@ -2003,7 +2186,8 @@
         "width_deg": 42.0,
         "speed_kms": 95.0
       },
-      "goes_class": "C6.5"
+      "goes_class": "C6.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 14036.958,
@@ -2015,7 +2199,8 @@
         "width_deg": 22.0,
         "speed_kms": 151.0
       },
-      "goes_class": "C8.5"
+      "goes_class": "C8.5",
+      "cme_coverage": true
     },
     {
       "burst_hr": 14107.708,
@@ -2023,7 +2208,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.042,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14174.834,
@@ -2031,7 +2217,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.149,
       "cme": null,
-      "goes_class": "C2.6"
+      "goes_class": "C2.6",
+      "cme_coverage": true
     },
     {
       "burst_hr": 14204.129,
@@ -2043,7 +2230,8 @@
         "width_deg": 25.0,
         "speed_kms": 537.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14342.667,
@@ -2051,7 +2239,8 @@
       "duration_s": 589.8,
       "harmonic_score": 0.683,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14588.584,
@@ -2063,7 +2252,8 @@
         "width_deg": 360.0,
         "speed_kms": 914.0
       },
-      "goes_class": "M2.7"
+      "goes_class": "M2.7",
+      "cme_coverage": true
     },
     {
       "burst_hr": 14706.167,
@@ -2075,7 +2265,8 @@
         "width_deg": 73.0,
         "speed_kms": 623.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14707.667,
@@ -2087,7 +2278,8 @@
         "width_deg": 162.0,
         "speed_kms": 570.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14872.517,
@@ -2099,7 +2291,8 @@
         "width_deg": 49.0,
         "speed_kms": 294.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 14899.125,
@@ -2107,7 +2300,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.237,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15021.992,
@@ -2119,7 +2313,8 @@
         "width_deg": 70.0,
         "speed_kms": 201.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15041.202,
@@ -2131,7 +2326,8 @@
         "width_deg": 93.0,
         "speed_kms": 509.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15042.077,
@@ -2143,7 +2339,8 @@
         "width_deg": 93.0,
         "speed_kms": 509.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15042.452,
@@ -2155,7 +2352,8 @@
         "width_deg": 93.0,
         "speed_kms": 509.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15046.202,
@@ -2167,7 +2365,8 @@
         "width_deg": 122.0,
         "speed_kms": 429.0
       },
-      "goes_class": "C2.0"
+      "goes_class": "C2.0",
+      "cme_coverage": true
     },
     {
       "burst_hr": 15047.077,
@@ -2179,7 +2378,8 @@
         "width_deg": 122.0,
         "speed_kms": 429.0
       },
-      "goes_class": "C2.9"
+      "goes_class": "C2.9",
+      "cme_coverage": true
     },
     {
       "burst_hr": 15113.042,
@@ -2191,7 +2391,8 @@
         "width_deg": 14.0,
         "speed_kms": 268.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15136.042,
@@ -2203,7 +2404,8 @@
         "width_deg": 73.0,
         "speed_kms": 467.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15352.5,
@@ -2211,7 +2413,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.275,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15693.375,
@@ -2223,7 +2426,8 @@
         "width_deg": 123.0,
         "speed_kms": 684.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15736.75,
@@ -2235,7 +2439,8 @@
         "width_deg": 101.0,
         "speed_kms": 406.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15833.708,
@@ -2243,7 +2448,8 @@
       "duration_s": 864.3,
       "harmonic_score": 0.086,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15834.958,
@@ -2255,7 +2461,8 @@
         "width_deg": 360.0,
         "speed_kms": 1192.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15836.083,
@@ -2267,7 +2474,8 @@
         "width_deg": 360.0,
         "speed_kms": 1192.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15861.167,
@@ -2279,7 +2487,8 @@
         "width_deg": 360.0,
         "speed_kms": 1225.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15881.291,
@@ -2291,7 +2500,8 @@
         "width_deg": 54.0,
         "speed_kms": 575.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15881.417,
@@ -2303,7 +2513,8 @@
         "width_deg": 54.0,
         "speed_kms": 575.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 15977.125,
@@ -2315,7 +2526,8 @@
         "width_deg": 44.0,
         "speed_kms": 273.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16096.833,
@@ -2323,7 +2535,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.076,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16216.667,
@@ -2335,7 +2548,8 @@
         "width_deg": 38.0,
         "speed_kms": 336.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16216.917,
@@ -2343,7 +2557,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.349,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16219.167,
@@ -2351,7 +2566,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.383,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16219.667,
@@ -2359,7 +2575,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.306,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16222.041,
@@ -2367,7 +2584,8 @@
       "duration_s": 864.3,
       "harmonic_score": 0.039,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16240.792,
@@ -2375,7 +2593,8 @@
       "duration_s": 864.3,
       "harmonic_score": 0.181,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16242.542,
@@ -2383,7 +2602,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.133,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16315.875,
@@ -2391,7 +2611,8 @@
       "duration_s": 880.6,
       "harmonic_score": 0.167,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16508.292,
@@ -2403,7 +2624,8 @@
         "width_deg": 24.0,
         "speed_kms": 156.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16600.625,
@@ -2411,7 +2633,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.245,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16675.708,
@@ -2423,7 +2646,8 @@
         "width_deg": 135.0,
         "speed_kms": 747.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16750.208,
@@ -2435,7 +2659,8 @@
         "width_deg": 36.0,
         "speed_kms": 684.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16847.317,
@@ -2447,7 +2672,8 @@
         "width_deg": 25.0,
         "speed_kms": 250.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 16940.5,
@@ -2459,7 +2685,8 @@
         "width_deg": 360.0,
         "speed_kms": 804.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17009.833,
@@ -2471,7 +2698,8 @@
         "width_deg": 56.0,
         "speed_kms": 772.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17080.333,
@@ -2479,7 +2707,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.486,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17227.041,
@@ -2487,7 +2716,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.457,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17297.792,
@@ -2499,7 +2729,8 @@
         "width_deg": 10.0,
         "speed_kms": 478.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17371.0,
@@ -2507,7 +2738,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.144,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17416.625,
@@ -2515,7 +2747,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.091,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17441.25,
@@ -2527,7 +2760,8 @@
         "width_deg": 16.0,
         "speed_kms": 949.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17441.375,
@@ -2539,7 +2773,8 @@
         "width_deg": 16.0,
         "speed_kms": 949.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17468.0,
@@ -2547,7 +2782,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.201,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17512.625,
@@ -2559,7 +2795,8 @@
         "width_deg": 81.0,
         "speed_kms": 271.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17513.875,
@@ -2571,7 +2808,8 @@
         "width_deg": 81.0,
         "speed_kms": 271.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17536.375,
@@ -2579,7 +2817,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.227,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17542.0,
@@ -2591,7 +2830,8 @@
         "width_deg": 16.0,
         "speed_kms": 752.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17560.875,
@@ -2603,7 +2843,8 @@
         "width_deg": 12.0,
         "speed_kms": 246.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17561.0,
@@ -2615,7 +2856,8 @@
         "width_deg": 12.0,
         "speed_kms": 246.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17561.125,
@@ -2627,7 +2869,8 @@
         "width_deg": 12.0,
         "speed_kms": 246.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17584.75,
@@ -2639,7 +2882,8 @@
         "width_deg": 199.0,
         "speed_kms": 839.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17585.125,
@@ -2651,7 +2895,8 @@
         "width_deg": 199.0,
         "speed_kms": 839.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17608.625,
@@ -2663,7 +2908,8 @@
         "width_deg": 70.0,
         "speed_kms": 329.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17635.875,
@@ -2675,7 +2921,8 @@
         "width_deg": 13.0,
         "speed_kms": 490.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17656.875,
@@ -2687,7 +2934,8 @@
         "width_deg": 50.0,
         "speed_kms": 344.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17732.0,
@@ -2695,7 +2943,8 @@
       "duration_s": 868.4,
       "harmonic_score": 0.078,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17806.125,
@@ -2707,7 +2956,8 @@
         "width_deg": 360.0,
         "speed_kms": 1417.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17806.25,
@@ -2719,7 +2969,8 @@
         "width_deg": 360.0,
         "speed_kms": 1417.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 17824.75,
@@ -2727,7 +2978,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.257,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18064.542,
@@ -2739,7 +2991,8 @@
         "width_deg": 26.0,
         "speed_kms": 332.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18089.208,
@@ -2751,7 +3004,8 @@
         "width_deg": 204.0,
         "speed_kms": 466.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18160.583,
@@ -2763,7 +3017,8 @@
         "width_deg": 50.0,
         "speed_kms": 405.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18232.375,
@@ -2775,7 +3030,8 @@
         "width_deg": 43.0,
         "speed_kms": 1196.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18232.5,
@@ -2787,7 +3043,8 @@
         "width_deg": 43.0,
         "speed_kms": 1196.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18280.25,
@@ -2799,7 +3056,8 @@
         "width_deg": 51.0,
         "speed_kms": 418.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18307.875,
@@ -2807,7 +3065,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.281,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18308.018,
@@ -2815,7 +3074,8 @@
       "duration_s": 127.0,
       "harmonic_score": 0.188,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18568.25,
@@ -2823,7 +3083,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.209,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18643.667,
@@ -2831,7 +3092,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.421,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 18664.167,
@@ -2843,7 +3105,8 @@
         "width_deg": 7.0,
         "speed_kms": 308.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19024.333,
@@ -2851,7 +3114,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.13,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19073.0,
@@ -2863,7 +3127,8 @@
         "width_deg": 55.0,
         "speed_kms": 179.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19096.75,
@@ -2875,7 +3140,8 @@
         "width_deg": 122.0,
         "speed_kms": 191.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19102.0,
@@ -2883,7 +3149,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.087,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19167.291,
@@ -2895,7 +3162,8 @@
         "width_deg": 38.0,
         "speed_kms": 194.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19192.042,
@@ -2903,7 +3171,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.252,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19242.508,
@@ -2911,7 +3180,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.219,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19244.508,
@@ -2919,7 +3189,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.298,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19263.958,
@@ -2927,7 +3198,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.353,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19287.834,
@@ -2935,7 +3207,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.22,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19482.708,
@@ -2943,7 +3216,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.495,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19680.792,
@@ -2955,7 +3229,8 @@
         "width_deg": 30.0,
         "speed_kms": 470.0
       },
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19746.458,
@@ -2963,7 +3238,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.363,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19793.75,
@@ -2971,7 +3247,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.269,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19794.875,
@@ -2979,7 +3256,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.274,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 19916.417,
@@ -2987,7 +3265,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.377,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20249.083,
@@ -2995,7 +3274,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.188,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20254.959,
@@ -3003,7 +3283,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.245,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20273.333,
@@ -3011,7 +3292,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.201,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20274.083,
@@ -3019,7 +3301,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.165,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20274.334,
@@ -3027,7 +3310,8 @@
       "duration_s": 626.7,
       "harmonic_score": 0.145,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20294.583,
@@ -3035,7 +3319,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.135,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20326.208,
@@ -3043,7 +3328,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.024,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20439.542,
@@ -3051,7 +3337,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.317,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20462.041,
@@ -3059,7 +3346,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.01,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20514.292,
@@ -3067,7 +3355,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.336,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20561.334,
@@ -3075,7 +3364,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.282,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20583.708,
@@ -3083,7 +3373,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.3,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20654.208,
@@ -3091,7 +3382,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.187,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20677.958,
@@ -3099,7 +3391,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.053,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20753.625,
@@ -3107,7 +3400,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.443,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20783.125,
@@ -3115,7 +3409,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.229,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20800.25,
@@ -3123,7 +3418,8 @@
       "duration_s": 880.6,
       "harmonic_score": 0.062,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20802.25,
@@ -3131,7 +3427,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.108,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20804.125,
@@ -3139,7 +3436,8 @@
       "duration_s": 827.4,
       "harmonic_score": 0.105,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20847.5,
@@ -3147,7 +3445,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.471,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 20971.792,
@@ -3155,7 +3454,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.112,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 21087.417,
@@ -3163,7 +3463,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.048,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 21112.058,
@@ -3171,7 +3472,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.228,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 21163.709,
@@ -3179,7 +3481,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.045,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": true
     },
     {
       "burst_hr": 21208.708,
@@ -3187,7 +3490,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.241,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21209.084,
@@ -3195,7 +3499,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.11,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21258.458,
@@ -3203,7 +3508,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.443,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21302.334,
@@ -3211,7 +3517,8 @@
       "duration_s": 880.6,
       "harmonic_score": 0.05,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21331.583,
@@ -3219,7 +3526,8 @@
       "duration_s": 860.2,
       "harmonic_score": 0.122,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21375.958,
@@ -3227,7 +3535,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.53,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21430.333,
@@ -3235,7 +3544,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.35,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21451.333,
@@ -3243,7 +3553,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.145,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21453.208,
@@ -3251,7 +3562,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.149,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21522.458,
@@ -3259,7 +3571,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.158,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21567.083,
@@ -3267,7 +3580,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.168,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21570.458,
@@ -3275,7 +3589,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.104,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21667.333,
@@ -3283,7 +3598,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.561,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21667.709,
@@ -3291,7 +3607,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.663,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21686.833,
@@ -3299,7 +3616,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.507,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21690.958,
@@ -3307,7 +3625,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.546,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21765.458,
@@ -3315,7 +3634,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.205,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21807.417,
@@ -3323,7 +3643,8 @@
       "duration_s": 884.7,
       "harmonic_score": 0.162,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21857.417,
@@ -3331,7 +3652,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.181,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21877.791,
@@ -3339,7 +3661,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.188,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21877.916,
@@ -3347,7 +3670,8 @@
       "duration_s": 897.0,
       "harmonic_score": 0.252,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21903.292,
@@ -3355,7 +3679,8 @@
       "duration_s": 860.2,
       "harmonic_score": 0.079,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21913.667,
@@ -3363,7 +3688,8 @@
       "duration_s": 872.4,
       "harmonic_score": 0.096,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21953.792,
@@ -3371,7 +3697,8 @@
       "duration_s": 892.9,
       "harmonic_score": 0.178,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21954.042,
@@ -3379,7 +3706,8 @@
       "duration_s": 880.6,
       "harmonic_score": 0.087,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21954.917,
@@ -3387,7 +3715,8 @@
       "duration_s": 774.1,
       "harmonic_score": 0.161,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21980.167,
@@ -3395,7 +3724,8 @@
       "duration_s": 888.8,
       "harmonic_score": 0.187,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 21980.542,
@@ -3403,7 +3733,8 @@
       "duration_s": 819.2,
       "harmonic_score": 0.419,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     },
     {
       "burst_hr": 22070.0,
@@ -3411,21 +3742,58 @@
       "duration_s": 778.2,
       "harmonic_score": 0.202,
       "cme": null,
-      "goes_class": null
+      "goes_class": null,
+      "cme_coverage": false
     }
   ],
   "detection_rate_per_day": 0.432,
-  "bg_cme_median_kms": 378.0,
-  "bg_cme_frac_fast": 0.059,
-  "matched_cme_median_kms": 472.5,
-  "chance_cme_match_rate": 0.619,
-  "observed_cme_match_rate": 0.56,
-  "drift_cme_speed_corr": 0.058,
+  "bg_cme_median_kms": 372.0,
+  "bg_cme_frac_fast": 0.057,
+  "matched_cme_median_kms": 476.5,
+  "chance_cme_match_rate": 0.612,
+  "observed_cme_match_rate": 0.68,
+  "drift_cme_speed_corr": 0.044,
   "window_saturation_frac": 0.828,
   "association_is_background_like": true,
   "assoc_n_matched": 186,
   "assoc_frac_fast": 0.194,
   "assoc_frac_wide": 0.613,
   "assoc_frac_fast_and_wide": 0.161,
-  "assoc_median_speed_kms": 472.5
+  "assoc_median_speed_kms": 472.5,
+  "matched_cme_frac_fast": 0.184,
+  "matched_vs_bg_speed_ks_p": 0.0,
+  "cme_coverage_end_hr": 21167.6,
+  "n_detections_in_cme_coverage": 303,
+  "n_matched_for_corr": 206,
+  "harmonic_cut_sweep": [
+    {
+      "cut": 0.0,
+      "n_candidates": 332,
+      "n_matched": 206,
+      "matched_median_kms": 476.5,
+      "matched_frac_fast": 0.184
+    },
+    {
+      "cut": 0.3,
+      "n_candidates": 90,
+      "n_matched": 56,
+      "matched_median_kms": 448.5,
+      "matched_frac_fast": 0.125
+    },
+    {
+      "cut": 0.5,
+      "n_candidates": 15,
+      "n_matched": 8,
+      "matched_median_kms": 352.0,
+      "matched_frac_fast": 0.125
+    },
+    {
+      "cut": 0.7,
+      "n_candidates": 4,
+      "n_matched": 4,
+      "matched_median_kms": 469.0,
+      "matched_frac_fast": 0.25
+    }
+  ],
+  "n_distinct_structures": 320
 }
