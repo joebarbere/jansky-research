@@ -587,7 +587,9 @@ def _write_macros(m: dict, path: str | Path) -> None:
         curve = {c["rate_per_hr"]: c for c in m.get("rate_bias_curve", [])}
         hi_rate = curve.get(3.2) or {}
         mid_rate = curve.get(0.6) or {}
-        anchor_row: dict = next((r for r in m.get("rows", []) if r.get("name") == "FRB20180916B"), {})
+        anchor_row: dict = next(
+            (r for r in m.get("rows", []) if r.get("name") == "FRB20180916B"), {}
+        )
         dv = m.get("anchor_duty_variants") or {}
         derived = [
             ("NDispersed", m.get("n_dispersed")),
