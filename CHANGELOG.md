@@ -11,6 +11,26 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`frbwait` revision (all 15 referee findings): the population claim is retracted, and the
+  experiment that killed it is the paper's new spine.** A transit-censored injection curve
+  (pure Poisson processes observed through CHIME's 15-minute daily window, fitted exactly as
+  the census fits real sources) recovers k = 0.78--0.91 at typical census rates and **k = 0.47
+  at 3.2 bursts/hr** --- so the census median (0.831, CI 0.73--0.98) is what Poisson arrivals
+  look like through the transit comb, and "sub-Poissonian clustering is the population norm"
+  is gone. The three flagged sources still sit below the curve at their own rates (some
+  clustering beyond selection remains indicated); one source is significantly
+  super-Poissonian and is no longer hidden by the one-sided flag. A group-preserving scramble
+  (whole transits move rigidly) settles the detections: the anchor survives at the floor while
+  the two other "significant" peaks collapse to p = 0.046 and 0.021 --- their significance was
+  within-transit multiplicity. FRB20220912A's peak is flagged as railed at the period-grid
+  edge. The anchor's duty is convention-matched (the full-containment arc, 6.3 d, is wider
+  than the published 5-d window; the 90% arc, 3.5 d, sits inside it --- the old "consistent
+  once conventions are matched" was wrong as written). Median-k CI and sign test, run
+  configuration, per-row declinations, grid-edge flags and the bias curve are all committed;
+  cat2's bib entry gains its published volume/page; the placeholder-asserting test is replaced
+  by a two-step guard test. No previously published value moved.
+
+### Fixed
 - **`junodam` revision (all 16 referee findings): the null is quantified, and it contains
   structure.** The blocker --- a one-sample test that existed nowhere in committed evidence ---
   is closed by computing and committing it: two-sided sign test p = 0.453, geometric-mean

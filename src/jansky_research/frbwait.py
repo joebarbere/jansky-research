@@ -129,6 +129,28 @@ def sidereal_scramble(mjds: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     return np.sort(n_new * SIDEREAL_DAY + phase)
 
 
+def sidereal_scramble_grouped(mjds: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """The sidereal scramble with within-transit burst groups kept INTACT.
+
+    The per-burst scramble redraws every burst's day independently, so bursts that arrived in
+    the same transit --- which share a phase at every trial period much longer than a day and add
+    coherently in Z^2 --- are scattered onto different days in every null realisation. The
+    observed statistic then carries a coherent contribution no null can reproduce, at every
+    period, for exactly the high-rate sources. This variant redraws one day per transit GROUP
+    and moves the group rigidly, so the null contains the real data's burst-per-transit
+    multiplicity and destroys only the multi-day structure.
+    """
+    t = np.asarray(mjds, float)
+    n = np.floor(t / SIDEREAL_DAY)
+    phase = t - n * SIDEREAL_DAY
+    out = []
+    for day in np.unique(n):
+        m = n == day
+        n_new = rng.integers(int(n.min()), int(n.max()) + 1)
+        out.append(n_new * SIDEREAL_DAY + phase[m])
+    return np.sort(np.concatenate(out))
+
+
 def _z2_grid(times: np.ndarray, periods: np.ndarray) -> np.ndarray:
     """Vectorised Rayleigh Z^2_1 over a period grid (same statistic as frbperiod.rayleigh_z2)."""
     t = np.asarray(times, float)
@@ -152,6 +174,7 @@ def scramble_fap_periodogram(
     periods: np.ndarray | None = None,
     n_scramble: int = 200,
     seed: int = 0,
+    grouped: bool = False,
 ) -> dict:
     """Rayleigh periodogram whose peak FAP is calibrated by the sidereal scramble null.
 
@@ -166,9 +189,10 @@ def scramble_fap_periodogram(
     k_best = int(np.argmax(z2))
     z2_obs = float(z2[k_best])
     rng = np.random.default_rng(seed)
+    scr = sidereal_scramble_grouped if grouped else sidereal_scramble
     null_max = np.empty(n_scramble)
     for i in range(n_scramble):
-        null_max[i] = _z2_grid(sidereal_scramble(t, rng), periods).max()
+        null_max[i] = _z2_grid(scr(t, rng), periods).max()
     p = float((null_max >= z2_obs).sum() + 1) / (n_scramble + 1)
     return {
         "periods": periods,
@@ -225,26 +249,40 @@ def census(
             "span_days": float(t.max() - t.min()) if t.size > 1 else 0.0,
             "exp_up_hr": tr["exp_up_hr"],
             "rate_per_hr": float(t.size / tr["exp_up_hr"]) if tr["exp_up_hr"] > 0 else np.nan,
+            "dec": tr.get("dec", float("nan")),
         }
         if t.size >= min_bursts_stats and row["span_days"] > 30.0:
-            fit = fit_weibull_waits(t, n_boot=200, seed=seed + j)
+            fit = fit_weibull_waits(t, n_boot=2000, seed=seed + j)
             pg = scramble_fap_periodogram(t, n_scramble=n_scramble, seed=seed + j)
+            grid = default_period_grid(row["span_days"])
             row.update(
                 {
                     "weibull_k": fit.k,
                     "k_ci_low": fit.k_ci_low,
                     "k_ci_high": fit.k_ci_high,
                     "clustered": bool(fit.clustered),
+                    # the two-sided complement: significantly SUPER-Poissonian sources exist in
+                    # this census and a one-sided flag hid them
+                    "dispersed": bool(fit.k_ci_low > 1.0),
                     "best_period": pg["best_period"],
                     # span/period: peaks with few cycles are activity-EPOCH degeneracies,
                     # not established periods -- the paper separates them by this number
                     "n_cycles": float(row["span_days"] / pg["best_period"]),
+                    # a peak at the last grid period is railed, and its n_cycles = span/p_max
+                    # is forced by the grid, not measured
+                    "peak_at_grid_edge": bool(abs(pg["best_period"] - grid[-1]) < 1e-9 * grid[-1]),
                     "best_z2": pg["best_z2"],
                     "p_scramble": pg["p_scramble"],
                 }
             )
             if pg["p_scramble"] <= fap_threshold:
                 row["duty_cycle"] = activity_window(t, pg["best_period"])["duty_cycle"]
+                # the group-preserving null for every claimed detection: bursts sharing a
+                # transit stay together, so within-transit multiplicity cannot fake a period
+                pg_g = scramble_fap_periodogram(
+                    t, n_scramble=n_scramble, seed=seed + j, grouped=True
+                )
+                row["p_scramble_grouped"] = pg_g["p_scramble"]
         rows.append(row)
     return rows
 
@@ -291,6 +329,73 @@ def synthetic_repeater_set(
     }
 
 
+def transit_censored_poisson(
+    rate_per_hr: float,
+    *,
+    span: float = 1200.0,
+    transit_window_min: float = 15.0,
+    seed: int = 0,
+) -> np.ndarray:
+    """A KNOWN-Poisson (k=1) burst process observed only through the daily transit window.
+
+    Bursts occur continuously at ``rate_per_hr`` (per hour, always-on); CHIME sees only those
+    landing inside a ``transit_window_min``-minute window once per sidereal day. Unlike
+    ``synthetic_repeater_set``, which snaps surviving bursts onto the comb, this censors: bursts
+    outside the window are simply never observed, which is the mechanism the paper's k-bias
+    disclosure describes. The returned TOAs have ``rate = n_observed / exposure_hr`` equal to the
+    intrinsic hourly rate in expectation, so the curve is parameterised by the same
+    ``rate_per_hr`` the census tabulates.
+    """
+    rng = np.random.default_rng(seed)
+    n_expect = rate_per_hr * span * 24.0
+    n_draw = rng.poisson(n_expect * 1.05 + 10)
+    t = np.sort(rng.uniform(0.0, span, n_draw))  # Poisson process == uniform order statistics
+    day = np.floor(t / SIDEREAL_DAY)
+    phase = t - day * SIDEREAL_DAY
+    w = transit_window_min / (24.0 * 60.0)
+    seen = (phase >= 0.3) & (phase < 0.3 + w)  # the daily transit window
+    return t[seen] + 59000.0
+
+
+def rate_bias_curve(
+    rates_per_hr=(0.02, 0.1, 0.3, 0.6, 1.0, 3.2),
+    *,
+    span: float = 1200.0,
+    n_seeds: int = 5,
+    min_bursts: int = 10,
+) -> list[dict]:
+    """Recovered Weibull k from transit-censored Poisson trains, across the observed rate range.
+
+    The experiment the census's headline depends on: the three "clustered" sources are exactly
+    the three highest-rate sources, which is what the disclosed, rate-dependent censoring bias
+    predicts --- and until this curve existed, nothing separated the bias from the astrophysics.
+    For each rate, ``n_seeds`` independent k=1 trains are censored to the transit comb and fitted
+    exactly as the census fits real sources. If the recovered k at the top of the observed rate
+    range sits near the measured 0.30, the census's small-k values are the selection function; if
+    it stays near 1, they are astrophysics.
+    """
+    from .frbstats import fit_weibull_waits
+
+    out = []
+    for rate in rates_per_hr:
+        ks = []
+        n_obs = []
+        for s in range(n_seeds):
+            toas = transit_censored_poisson(rate, span=span, seed=100 + s)
+            if toas.size < min_bursts:
+                continue
+            fit = fit_weibull_waits(toas, n_boot=50, seed=s)
+            ks.append(fit.k)
+            n_obs.append(int(toas.size))
+        row = {"rate_per_hr": rate, "n_seeds_ok": len(ks)}
+        if ks:
+            row["k_recovered_mean"] = round(float(np.mean(ks)), 3)
+            row["k_recovered_sd"] = round(float(np.std(ks, ddof=1)), 3) if len(ks) > 1 else None
+            row["n_observed_mean"] = int(np.mean(n_obs))
+        out.append(row)
+    return out
+
+
 def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
     """Offline: k/period/duty recover-a-known on transit-sampled synthetics; real: the census."""
 
@@ -319,22 +424,61 @@ def run(out: str = ".", *, offline: bool = True, n_scramble: int = 200) -> dict:
 
     with_stats = [r for r in rows if "weibull_k" in r]
     clustered = [r for r in with_stats if r["clustered"]]
+    dispersed = [r for r in with_stats if r.get("dispersed")]
     significant = [r for r in with_stats if r["p_scramble"] <= fap_threshold]
     anchor = next((r for r in rows if r["name"] == anchor_name), None)
+    ks = np.array([r["weibull_k"] for r in with_stats]) if with_stats else np.array([])
+    # the median k needs an uncertainty (bootstrap over SOURCES) and a sign test; three decimals
+    # on an unquantified median was the defect
+    med_boot = None
+    sign_p = None
+    if ks.size >= 3:
+        rng = np.random.default_rng(0)
+        meds = [float(np.median(rng.choice(ks, ks.size, replace=True))) for _ in range(2000)]
+        med_boot = [
+            round(float(np.percentile(meds, 2.5)), 2),
+            round(float(np.percentile(meds, 97.5)), 2),
+        ]
+        from math import comb
+
+        below = int((ks < 1.0).sum())
+        lo = min(below, ks.size - below)
+        sign_p = round(
+            min(1.0, 2.0 * sum(comb(ks.size, i) for i in range(lo + 1)) / 2.0**ks.size), 3
+        )
+    anchor_duty_variants = None
+    if anchor is not None and "best_period" in anchor:
+        t_anchor = trains[anchor_name]["mjd"]
+        t_anchor = t_anchor[np.isfinite(t_anchor)]
+        anchor_duty_variants = {
+            f"c{int(100 * c)}_p{p_lab}": round(
+                activity_window(t_anchor, per, containment=c)["duty_cycle"], 3
+            )
+            for c in (0.5, 0.9, 1.0)
+            for p_lab, per in (("fit", anchor["best_period"]), ("pub", 16.35))
+        }
     metrics = {
         "source": source,
         "is_real": not offline,
         "n_sources": len(rows),
         "n_with_stats": len(with_stats),
         "n_clustered": len(clustered),
+        "n_dispersed": len(dispersed),
+        "dispersed_names": sorted(r["name"] for r in dispersed),
         "n_periodic_p01": len(significant),
-        "median_k": round(float(np.median([r["weibull_k"] for r in with_stats])), 3)
-        if with_stats
-        else None,
+        "median_k": round(float(np.median(ks)), 3) if ks.size else None,
+        "median_k_ci95": med_boot,
+        "k_below_one_sign_p": sign_p,
         "periodic_names": sorted(r["name"] for r in significant),
         "anchor_period": round(anchor["best_period"], 2) if anchor else None,
         "anchor_p": anchor["p_scramble"] if anchor else None,
         "anchor_duty": round(anchor.get("duty_cycle", float("nan")), 3) if anchor else None,
+        "anchor_duty_variants": anchor_duty_variants,
+        # run configuration: the committed evidence must carry what produced it
+        "n_scramble": n_scramble,
+        "fap_threshold": fap_threshold,
+        "n_boot_weibull": 2000,
+        "seed": 0,
         "rows": rows,
         **extra,
     }
@@ -420,7 +564,7 @@ def _write_macros(m: dict, path: str | Path) -> None:
         "% Auto-generated by jansky_research.frbwait._write_macros -- do not edit.",
         "% Synthetic (fwSyn*) and real (fwReal*) namespaces are BOTH always emitted; the",
         "% inactive namespace holds placeholders, so synthetic numbers can never masquerade",
-        "% under fwReal* (an offline rebuild resets fwReal* to placeholders by design).",
+        "% under fwReal* (preserve_live_macros keeps the other namespace's committed values).",
         rf"\newcommand{{\fwSource}}{{{m['source']}}}",
     ]
     keys = (
@@ -437,6 +581,32 @@ def _write_macros(m: dict, path: str | Path) -> None:
         live = ns == pref
         for macro, key in keys:
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
+        # revision evidence: the two-sided census, the median's uncertainty, the run config,
+        # the rate-bias curve, the grouped-null p for the anchor, and the anchor duty variants
+        ci = m.get("median_k_ci95") or [None, None]
+        curve = {c["rate_per_hr"]: c for c in m.get("rate_bias_curve", [])}
+        hi_rate = curve.get(3.2) or {}
+        mid_rate = curve.get(0.6) or {}
+        anchor_row: dict = next(
+            (r for r in m.get("rows", []) if r.get("name") == "FRB20180916B"), {}
+        )
+        dv = m.get("anchor_duty_variants") or {}
+        derived = [
+            ("NDispersed", m.get("n_dispersed")),
+            ("MedianKlo", ci[0]),
+            ("MedianKhi", ci[1]),
+            ("SignP", m.get("k_below_one_sign_p")),
+            ("NScramble", m.get("n_scramble")),
+            ("BiasKHiRate", hi_rate.get("k_recovered_mean")),
+            ("BiasKMidRate", mid_rate.get("k_recovered_mean")),
+            ("AnchorPGrouped", anchor_row.get("p_scramble_grouped")),
+            ("AnchorDutyFull", dv.get("c100_pfit")),
+            ("AnchorDutyFullPub", dv.get("c100_ppub")),
+            ("AnchorDutyHalf", dv.get("c50_pfit")),
+        ]
+        for macro, v in derived:
+            vv = v if live else None
+            lines.append(rf"\newcommand{{\{ns}{macro}}}{{{'--' if vv is None else vv}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
@@ -461,7 +631,11 @@ def _write_census_table(rows: list[dict], path: str | Path, *, top_n: int = 20) 
         duty = (
             f"{r['duty_cycle']:.2f}" if "duty_cycle" in r and r.get("n_cycles", 0) >= 10 else "--"
         )
-        cyc = f"{r['n_cycles']:.0f}" if "n_cycles" in r else "--"
+        # one decimal, so 5.01 does not render as the "5" the decision rule keys on; a railed
+        # grid-edge peak is flagged, since its cycle count is forced by the grid, not measured
+        cyc = f"{r['n_cycles']:.1f}" if "n_cycles" in r else "--"
+        if r.get("peak_at_grid_edge"):
+            cyc += r"$^{\dagger}$"
         out.append(
             f"{r['name']} & {r['n_bursts']} & "
             f"${r['weibull_k']:.2f}^{{+{r['k_ci_high'] - r['weibull_k']:.2f}}}"
