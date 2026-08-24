@@ -162,3 +162,49 @@ honest, completeness-bounded floor on the rest — not a discovery, but a valida
 The pipeline runs end-to-end on real VLASS data with the QL systematics handled, and it correctly
 finds that this field's variability candidates are **all extraction artefacts** — demonstrated by
 image vetting, which is therefore mandatory. A tooling + methodology + honest-negative contribution.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 14 findings, one BLOCKER
+
+Every abstract number traces to committed evidence and FK Com is genuinely auditable. The
+problems: the completeness's cause, and the second candidate's rejection.
+
+**BLOCKER: the "three-epoch ceiling" explanation for the 52% completeness saturation is
+arithmetically refuted by the committed thresholds, and the number is an artifact of the
+injection's error model.** V for a 10x flare is 1.30 (asymptote 1.73) vs the committed
+v_threshold 0.881 -- V cannot bind. What binds is `e[k] *= fac` in injection_recovery: scaling
+the flare epoch's error with its flux gives eta a FINITE asymptote (~(S/sigma)^2/2), so "52%"
+really means "52% of steady sources have quiescent SNR >~ 11". The real error model
+(apply_flux_scale) is sigma_cat-dominated for the faint majority, so the scaling inflates the
+flare epoch's error up to 10x and suppresses its chi^2 up to 100x. The 52%, the 9x, the
+"<5% below 3x", the three-epoch diagnosis and the closing recommendation all descend from that
+line.
+
+**MAJORs:** "saturates near 52%" reports the value at the largest factor tested while the curve
+is still rising steeply (0.335 -> 0.5225); "50% at ~9x" swings between 8.9 and NaN within 1
+MC-SE (n=400, one seed) and carries no uncertainty. The abstract's "necessary and sufficient"
+is refuted three pages later (the three mitigations left a 50%-false survivor list; the remedy
+is a fourth stage), and no ablation for "necessary" is committed. **The second candidate's
+rejection exists only as prose**: commit a0bf180 touched only main.tex and the findings file, no
+code fetches Epoch 4 / NVSS / FIRST / TGSS / WISE, and the committed CSV still says
+image_confirmed=True for the retracted candidate (the findings file also contradicts itself
+about it). The completeness is measured on a DIFFERENT population (no isolation mask, includes
+the 2043 crowded; excludes two-epoch sources) with RECOMPUTED thresholds -- not the census's own
+selection. Two selection-function facts absent: the census is anchored on Epoch-1 detection
+(transients turning on later have completeness identically zero -- the "single-epoch-variable
+fraction" sentence reads as about transients in general), and the source counts don't close
+(42721 - 2043 != 36956; the missing 3722 are epoch-match failures the paper never mentions).
+The "few x 10^-4" fraction is in no results file and is stale from when the paper claimed two
+variables (candidate derivations give 2.7-10 x 10^-5). The "forced" photometry searches (median
+brightest-epoch offset 2.86", 27/39 beyond the centring gate) and per-epoch rms/offsets are not
+committed, so neither the p<0.01 confirmation nor the "only noise" rejection is auditable.
+
+**MINOR/NIT:** the AGN sentence says "few-tens-of-percent" where the median forced V is 0.085
+(and misses the better fact: catalogue V 0.88-1.24 vs forced 0.007-0.23 -- up to 160x, the
+paper's own thesis); "artifact-dominated" is a single-operating-point result stated generally
+(sigma=3.0 is the only value ever run) and its purity/completeness halves are mechanically
+linked; gordon2021 has the right DOI under a title belonging to a different paper (fix the
+title, not the DOI); Figure 2's caption calls both tracks "variables"; prose says ~15% QL
+correction where the code applies 1.13; archival counterpart lists drift between files.
+
+**Status: fixes pending** (catalogues cached; the completeness re-derivation needs the real
+light curves -- cached; the archival vet needs network).

@@ -68,3 +68,40 @@ staked out. Caveat added: disc sightlines also gain depolarisation-selected popu
 DEFROST-style separation would tighten the difference argument. Pairs at this scale are drawn by
 random sampling (unbiased; fraction recorded). Reproduce: download csiro:64891, gunzip, then
 `uv run python -m jansky_research.rmstructure --dr2 --out .`.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 18 findings, two BLOCKERs
+
+The honesty discipline held (verbs, upper-bound framing, macros all resolve; every abstract number
+traces). The problems are what the evidence does not contain.
+
+**BLOCKERs:** (1) The abstract's closing claim -- the quality flags "proved material", moving the
+high-|b| break from 0.5 to 3.70 deg -- rests on a hard-coded 0.5 whose run was never committed; a
+1.3% cut credited with a three-bin shift, asserted with one number and an unevidenced leakage
+mechanism. (2) The sample definition contradicts the release's own published counts: DR2's 8-sigma
+post-dedup count is 2.5e5 and its 6-sigma count 3.4e5, while this paper's "S/N >= 8" sample is
+333,173 -- and the code resolves the S/N column by unrecorded fallback chain, so nobody can say
+which column the cut used or whether it bit.
+
+**MAJORs:** the headline 11.17 +/- 0.10 is an i.i.d. source bootstrap on a field the paper itself
+shows is spatially correlated (coherence 2.29 deg -> effective N ~patches, error understated ~6x)
+and ~25% duplicated -- the slice's own recorded lesson, on the real leg; fix is a spatial block
+jackknife. The enhancement ratio is never defined in the paper, and the recover-a-known validates
+a DIFFERENT statistic (fixture pole cut |b|>15 vs the science |b|>60). The floor
+latitude-independence premise is challenged in the findings file (depolarisation-selected disc
+populations) and the caveat never reached the manuscript. The floor value licensing the
+subtraction is never quoted and moves sigma_Gal 13.5-18.1 across its 9-15 range. plateau_err,
+n_pairs, pair_fraction are computed and discarded, so the six-figure plateaus and the "monotonic"
+ladder carry no uncertainties. The 30-seed ensemble exists only as mean/std in macros (per-seed
+ratios uncommitted; though 30 seeds IS enough for "threefold": 3.17 +/- 0.42). The SD 1.11 is
+quoted where the response claim needs the SEM (10.6 sigma); 3.15-vs-5 is unexplained in the paper
+(band-average over a 5-deg profile cannot equal the peak boost). Duplicates are defended for the
+SF and undefended for the two statistics that carry the paper.
+
+**MINOR/NIT:** committed metrics predate the current code (missing keys); \rmsSource says
+"synthetic" in the file carrying real values (the guard's marker inverted -- namespace it); DR1
+numbers evidenced nowhere and thomson2023 uncited at the sentence attributing them; "quadrant
+signs" overstates rmsky's own docstring ("conflates" quadrants); the stale arXiv package has a
+dangling-citation abstract ("(per-region NVSS structure functions exist; )"); 11.17 +/- 0.1
+precision mismatch; README rows stale (says "awaits the public DR2 file").
+
+**Status: fixes pending** (data local: data/spice-racs.dr2.fits).
