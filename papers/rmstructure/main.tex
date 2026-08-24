@@ -11,28 +11,26 @@ Method, Recover-a-Known, and the Full-Sky Disc--Halo Contrast from DR2}
 
 \begin{abstract}
 The SPICE-RACS programme has multiplied the Faraday rotation-measure (RM) grid; its second data
-release \citep{spiceracs_dr2} ships $\sim$3.3$\times$10$^5$ quality-flagged (goodRM) components
-over 87.5\% of the sky. The release does not include a systematic Galactic structure-function
-analysis (per-region NVSS structure functions exist; \citealt{stil2011}). We supply the
+release \citep{spiceracs_dr2} ships $\sim$3.3$\times$10$^5$ quality-flagged (goodRM) rows over
+87.5\% of the sky, without a systematic Galactic structure-function analysis. We supply the
 reproducible tool and its validation: a second-order RM structure function, noise-debiased by
-subtracting the per-pair measurement variance \citep[the convention of][]{haverkorn2004}, with
-source-level bootstrap errors and recorded (unique-)pair subsampling. On a synthetic RM screen the
-pipeline responds to an injected low-latitude amplitude boost
-(\rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ across \rmsSynNReal\ field realizations; the
-single-realization bootstrap, \rmsSynRatio$\pm$\rmsSynRatioSe, understates that scatter
-threefold) and recovers an injected 2$^\circ$ coherence scale within the Gaussian-ACF factor
-$2\sqrt{\ln 2}\approx1.67$ and the log-bin resolution; a pure-noise sky debiases to
-$\mathrm{SF}\approx0$. Applied to the DR2 goodRM sample (\rmsRealN\ components at S/N
-$\ge 8$, matching the release's pre-deduplication goodRM count to one row), the latitude
-enhancement ratio is \rmsRealRatio$\pm$\rmsRealRatioSe\ (bootstrap-statistical error only), the
-disc/halo SF plateaus are \rmsRealPlatLo/\rmsRealPlatHi~rad$^2$\,m$^{-4}$, and a six-bin
-latitude ladder falls monotonically from $\sigma_\mathrm{RM}=\rmsRealSigPlane$ to
-\rmsRealSigPole~rad\,m$^{-2}$, the polar endpoint at the literature intrinsic+extragalactic
-floor, licensing a first-order quadrature floor subtraction. Each plateau individually is an
-upper bound (source-intrinsic scatter unremoved; the disc bins additionally mix secular plane
-gradients into the large-separation SF), but the floor is latitude-independent, so the Galactic
-magneto-ionic medium dominates the disc--halo difference and the shape of the ladder. Applying the survey's own quality flags proved material: without them the sample is
-leakage-contaminated and the high-latitude break scale is spuriously small.
+subtracting the per-pair measurement variance \citep{haverkorn2004}, with recorded pair
+subsampling. On a synthetic screen the pipeline responds to an injected low-latitude amplitude
+boost (\rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ SD over \rmsSynNReal\ field realizations, per-seed
+values committed) and recovers an injected 2$^\circ$ coherence scale to within the binning; a
+pure-noise sky debiases to $\mathrm{SF}\approx0$. Applied to the DR2 goodRM sample deduplicated
+to one row per component (\rmsRealN\ components, the release's own post-deduplication count),
+the latitude enhancement ratio --- median $|$RM$|$ at $|b|<10^\circ$ over that at $|b|>60^\circ$
+--- is \rmsRealRatio$\pm$\rmsRealRatioJkSe\ (sky-block jackknife over \rmsRealJkBlocks\ blocks;
+an i.i.d.\ source bootstrap would claim $\pm$\rmsRealRatioSe), and a six-bin latitude ladder
+falls monotonically from $\sigma_\mathrm{RM}=\rmsRealSigPlane$ to \rmsRealSigPole~rad\,m$^{-2}$,
+the polar endpoint (\rmsRealFloorSig$\pm$\rmsRealFloorSigErr) at the literature
+intrinsic+extragalactic floor, licensing a first-order quadrature floor subtraction. Each
+plateau is an upper bound (source-intrinsic scatter unremoved; the disc bins mix secular plane
+gradients), but the floor is latitude-independent, so the Galactic magneto-ionic medium
+dominates the disc--halo contrast and the ladder's shape. The survey's quality flags are
+material: unflagged, the high-latitude half-plateau scale falls from \rmsRealBreakHi$^\circ$ to
+\rmsRealBreakHiUnflagged$^\circ$, leakage masquerading as small-scale RM structure.
 \end{abstract}
 
 \keywords{Interstellar magnetic fields (845) --- Galactic radio sources (571) ---
@@ -42,9 +40,10 @@ Astronomy data analysis (1858)}
 RM grids sample the integral $\int n_e B_\parallel\,dl$ along every extragalactic sightline; the
 spatial structure of the RM sky (how RM decorrelates with angular separation) encodes
 the outer scale and amplitude of magneto-ionic turbulence \citep{haverkorn2004}. Our earlier
-slice recovered the Taylor et al. (2009) latitude profile and quadrant signs from 37,543 NVSS RMs
-\citep{taylor2009}; SPICE-RACS raises the areal density to 6.7~deg$^{-2}$
-\citep{spiceracs_dr2}, making per-latitude-bin structure functions newly measurable. The DR2
+slice recovered the Taylor et al. (2009) latitude profile and the coarse net RM sign per
+quadrant from 37,543 NVSS RMs \citep{taylor2009}; SPICE-RACS raises the areal density to
+6.7~deg$^{-2}$ \citep{thomson2023,spiceracs_dr2}, making per-latitude-bin structure functions
+newly measurable. The DR2
 release paper provides the catalogue but not this analysis; we build the reproducible tool.
 
 \section{Method and recover-a-known}
@@ -56,32 +55,52 @@ pair counts are capped with the subsample fraction recorded. Validation: (i) a p
 debiases to $\mathrm{SF}\approx0$; (ii) a synthetic Gaussian-blob screen with a 2$^\circ$
 coherence scale and a 5$\times$ plane amplitude boost returns an enhancement ratio of
 \rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ over \rmsSynNReal\ realizations
-(single-realization bootstrap \rmsSynRatio$\pm$\rmsSynRatioSe), a low-$|b|$/high-$|b|$ SF plateau ratio $\gg$1
+(single-realization bootstrap \rmsSynRatio$\pm$\rmsSynRatioSe; the per-seed ratios are committed
+in \code{results/rmstructure\_synthetic.json}), a low-$|b|$/high-$|b|$ SF plateau ratio $\gg$1
 (fixture values in the \code{rmsSyn} macro namespace), and a half-plateau break
 consistent with the injected scale times the Gaussian-ACF factor $2\sqrt{\ln 2}\approx1.67$
 (the binned estimator resolves this only to the log-bin width, $\sim$30\% at that scale).
+Two properties of the fixture bound what this validates. The recovered ratio sits below the
+injected peak boost of 5 by construction, not by failure: the boost has a 5$^\circ$-scale
+Gaussian latitude profile, so the $|b|<10^\circ$ band median averages well down the profile, and
+blob-scale mixing across the band edge contracts it further --- the ensemble quantifies the
+machinery's \emph{response}, it is not a calibration of the sky statistic. And the fixture's
+patch spans only $\pm20^\circ$, so its plane/pole cut is $|b|>15^\circ$ where the science cut is
+$|b|>60^\circ$: the recover-a-known exercises the same code path, not the identical statistic.
 
 \section{Real data: DR1, then the full-sky DR2 goodRM sample}
 The first, bounded leg used the DR1 catalogue on CASDA TAP; its raw S/N cut (7{,}707 rows)
-exceeds the DR1 paper's fully-flagged 5{,}818 RM measurements because the leakage and
-Stokes-I-fit flags were not applied, a lesson promoted to the main result: the DR2 leg uses
-the release's own \code{goodRM} flag instead, and the resulting \rmsRealN\ components match the DR2 paper's
-pre-deduplication goodRM count to one row (field-overlap duplicates sit at arcsecond
-separations, below our smallest SF bin, so they do not enter any pair statistic). On this
-sample the latitude enhancement ratio is \rmsRealRatio$\pm$\rmsRealRatioSe, roughly double
-the 5.4 we recover from Taylor et al.\ (2009) with the same statistic. That comparison is not
-directly comparable, and both dominant differences are expected to raise the SPICE-RACS
-value: NVSS's two-band $n\pi$ ambiguity caps large plane $|\mathrm{RM}|$ (deflating
-its plane median), and the southern coverage adds inner-Galaxy sightlines. The quoted error is
-bootstrap-statistical only, with these systematics dominating. The disc/halo SF plateaus are
-\rmsRealPlatLo\ and \rmsRealPlatHi~rad$^2$\,m$^{-4}$, and the six-bin ladder gives
-$\sigma_\mathrm{RM}$ falling monotonically from \rmsRealSigPlane\ ($|b|<5^\circ$) to
-\rmsRealSigPole~rad\,m$^{-2}$ ($|b|>50^\circ$), a factor $\sim$18 profile whose polar
-endpoint sits at the literature floor \citep{mao2010,taylor2009}, licensing the quadrature
-floor subtraction for the Galactic-only shape. Quality flags proved material beyond
-counts: on the unflagged sample the high-latitude half-plateau scale is spuriously small
-(0.5$^\circ$ vs \rmsRealBreakHi$^\circ$ flagged); leakage-contaminated sources masquerade
-as small-scale RM structure.
+exceeds the DR1 paper's fully-flagged 5{,}818 RM measurements \citep{thomson2023} because the
+leakage and Stokes-I-fit flags were not applied, a lesson promoted to the main result: the DR2
+leg uses the release's own \code{goodRM} flag. The full cut cascade is committed with the
+results: \rmsRealNRowsRaw\ catalogue rows, \rmsRealNAfterSnr\ at \code{snr\_polint}
+$\ge 8$ (the S/N column is recorded, not resolved silently), \rmsRealNAfterGoodrm\ after
+\code{goodRM}, deduplicated to \rmsRealN\ unique components (one row per \code{cat\_id}, keeping
+the observation nearest its tile centre) --- the release's own post-deduplication 8$\sigma$
+count. Deduplication matters beyond bookkeeping: tile-overlap repeats are the same source with
+independent noise, so they inject pure noise power into the smallest SF bins and double-weight
+$\sim$26\% of sources in every median.
+
+On this sample the latitude enhancement ratio is \rmsRealRatio$\pm$\rmsRealRatioJkSe,
+where the error is a leave-one-block-out jackknife over \rmsRealJkBlocks\ sky blocks of
+$10^\circ$ (several coherence lengths, the exchangeable unit on a correlated field). The
+i.i.d.\ source bootstrap gives $\pm$\rmsRealRatioSe; the same understatement the synthetic
+ensemble exposes on the fixture, here on the real leg. The ratio is roughly double the 5.4 we
+recover from Taylor et al.\ (2009) with the same statistic. That comparison is not directly
+comparable, and both dominant differences are expected to raise the SPICE-RACS value: NVSS's
+two-band $n\pi$ ambiguity caps large plane $|\mathrm{RM}|$ (deflating its plane median), and the
+southern coverage adds inner-Galaxy sightlines; these systematics dominate the quoted error.
+The disc/halo SF plateaus are \rmsRealPlatLo\ and \rmsRealPlatHi~rad$^2$\,m$^{-4}$, and the
+six-bin ladder gives $\sigma_\mathrm{RM}$ falling monotonically from \rmsRealSigPlane\
+($|b|<5^\circ$) to \rmsRealSigPole~rad\,m$^{-2}$ ($|b|>50^\circ$); per-bin plateau
+uncertainties, pair counts and sampled pair fractions are committed with the results. The polar
+endpoint, \rmsRealFloorSig$\pm$\rmsRealFloorSigErr~rad\,m$^{-2}$, sits at the literature floor
+\citep{mao2010,taylor2009}, licensing the quadrature floor subtraction for the Galactic-only
+shape; the subtraction's sensitivity to that single number is quoted in Section~4. Quality
+flags are material beyond counts: on the unflagged sample (\rmsRealNUnflagged\ rows, same
+deduplication) the high-latitude half-plateau scale is \rmsRealBreakHiUnflagged$^\circ$ against
+\rmsRealBreakHi$^\circ$ flagged --- both from committed runs of the same code ---
+leakage-contaminated sources masquerading as small-scale RM structure.
 
 \begin{figure}
 \plotone{figures/rmstructure.pdf}
@@ -97,16 +116,23 @@ the (upper-bound) RM dispersion and the half-plateau scale tracks the coherence 
 scatter is unremoved, and in the disc bins the large-separation SF additionally mixes secular
 plane gradients (ordered-field structure over tens of degrees), so the plane
 $\sigma_\mathrm{RM}$ is an effective, not purely turbulent, amplitude. (ii) The floor
-subtraction treats the polar bin as pure floor; any true polar Galactic term biases the
-subtracted profile low near the pole. (iii) The Taylor et al.\ (2009) ratio comparison carries
-frequency, $n\pi$-handling, and sky-coverage systematics (Section 3) that dominate the quoted
-statistical errors. (iv) The half-plateau break statistic is bin-width-limited ($\sim$30\% at
+subtraction rests on one number, the polar bin's \rmsRealFloorSig$\pm$\rmsRealFloorSigErr\
+rad\,m$^{-2}$, and its leverage is latitude-dependent. The plane bins are insensitive in
+quadrature ($\sigma_\mathrm{Gal}$ at $|b|<5^\circ$ is \rmsRealSigGalPlane\ at the measured floor
+and still \rmsRealSigGalPlaneAltFloor\ under the far more conservative floor from the
+neighbouring \rmsRealAltFloorSig~rad\,m$^{-2}$ bin), but the high-$|b|$ bins are dominated by
+it: at $|b|=$\rmsRealSigGalMidBin$^\circ$, $\sigma_\mathrm{Gal}=$ \rmsRealSigGalMid\ at the
+measured floor and spans \rmsRealSigGalMidFloorLitHi--\rmsRealSigGalMidFloorLitLo\ if one adopts
+literature floor values of 15--9 rad\,m$^{-2}$ instead \citep{mao2010}. Any true polar Galactic
+term biases the whole subtracted profile low. (iii) The Taylor et al.\ (2009) ratio comparison
+carries frequency, $n\pi$-handling, and sky-coverage systematics (Section 3) that dominate the
+quoted errors. (iv) The half-plateau break statistic is bin-width-limited ($\sim$30\% at
 these scales) and validated only against the fixture's known scale, not a turbulence model.
-(v) Bootstrap errors use a unique-set source resample (conservative by $\sim$30\%); pair
-fractions are quoted per unique pair (ordered draws double-count). (vi) $n\pi$ resolution is
-inherited from the upstream RM-synthesis pipeline. (vii) At DR2 scale pairs are randomly
-sampled rather than exhausted (an unbiased estimator of the bin means), with the sampled
-fraction recorded.
+(v) SF bootstrap errors use a unique-set source resample (conservative by $\sim$30\%); pair
+fractions are quoted per unique pair (ordered draws double-count); the headline ratio's error
+is the sky-block jackknife, not a bootstrap. (vi) $n\pi$ resolution is inherited from the
+upstream RM-synthesis pipeline. (vii) At DR2 scale pairs are randomly sampled rather than
+exhausted (an unbiased estimator of the bin means), with the sampled fraction recorded.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

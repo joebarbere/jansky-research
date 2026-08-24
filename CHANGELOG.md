@@ -11,6 +11,22 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`rmstructure` revision (referee round of 2026-08-24, two blockers): the sample now matches
+  the release and the headline error was understated eleven-fold.** The "S/N >= 8" sample
+  (333,173 rows) was the goodRM sample with tile-overlap duplicates; `load_spice_racs_dr2` now
+  dedups to one row per `cat_id` (246,508 -- the release's published post-dedup count) and
+  commits the full cut cascade with the S/N column named. The enhancement ratio's error is now
+  a leave-one-block-out jackknife over 601 10-degree sky blocks (11.0 +/- 1.1, display
+  precision matched) instead of the i.i.d. source bootstrap (+/-0.10) the slice's own recorded
+  lesson warns about, with a test pinning jackknife > bootstrap on the correlated fixture. The
+  quality-flag claim is measured on committed runs of both variants (unflagged high-|b| break
+  0.87 deg vs 2.29 deg flagged; the old 0.5-vs-3.70 numbers were pre-dedup and uncommitted).
+  The 30-seed ensemble ratios are committed (`results/rmstructure_synthetic.json`); ladder rows
+  carry plateau/sigma errors and pair accounting; the floor subtraction quotes its one input
+  (12.3 +/- 0.21) and its latitude-dependent leverage; provenance macros are namespaced so an
+  offline rebuild cannot invert the file's marker; the fixture's scope (pole cut 15 vs 60 deg,
+  band-median vs peak boost) is stated; thomson2023 is cited; the stale arXiv package with the
+  dangling-citation abstract is rebuilt clean under the 1,920-char limit.
 - **`vlass` revision (referee round of 2026-08-24, one blocker): the completeness curve
   measured its own error model, and the archival rejection is now committed evidence.**
   `injection_recovery` scaled the whole per-epoch error with the injected flare

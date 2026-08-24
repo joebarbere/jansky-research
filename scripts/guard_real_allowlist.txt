@@ -27,3 +27,7 @@ ecallisto_synthetic_metrics.json
 # refuses to let the offline leg write into the real census file. Same pattern as
 # vgpra_synthetic_* / ecallisto_synthetic_*.
 typeii_synthetic_metrics.json
+# The rmstructure SEED-ENSEMBLE leg, committed 2026-08-24 (round-4 referee): the paper quotes
+# "3.15 +/- 1.11 over 30 realizations" and the 30 per-seed ratios had never been committed.
+# Synthetic by design -- it is the recover-a-known ensemble, not a real-data result.
+rmstructure_synthetic.json
