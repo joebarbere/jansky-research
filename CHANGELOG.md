@@ -10,6 +10,46 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **README rewritten in a plain register and brought current.** Stale facts fixed: "Forty
+  slices" is forty-five; "What's next" recommended work that was executed weeks ago and now
+  describes the actual current work (review campaign, publishing queue, station); the arXiv
+  queue reads atlas3i -> dr20radio -> lptv -> innerrc; the three RNAAS notes are listed; the
+  skills/agents/plans listings match the tree; the missing lptduty row is added. The Reviewed
+  column now records the 2026-08 referee-driven fixes paper by paper. Register: the 22 longest
+  table cells cut from paragraphs to a line, "honest/honestly" reduced from ~30 uses to one,
+  bold-pair contrasts and stock phrasing removed.
+
+### Added
+- **Review round 3: full presenter/referee rounds on rmdipole, frbwait, skr and junodam** ---
+  the four highest-risk unreviewed papers. All four returned **major revision** (three with a
+  blocker); every verdict is recorded in the slice's findings file, fixes pending:
+  - *rmdipole*: the isotropy null has no stated sensitivity, and the evidence needed to state
+    one (the scramble-null amplitude distribution) is stripped before commit. The tail clip is
+    never tested against a genuine dipole; the injection control is single-seed and Gaussian
+    where the real field is heavy-tailed.
+  - *frbwait*: the three "clustered" sources are exactly the three highest-rate sources
+    (p = 0.0022 by chance), which is what the paper's own disclosed censoring bias predicts;
+    two significantly super-Poissonian sources are never mentioned; the offline validation runs
+    ~25x below the worst-case rate and cannot fail.
+  - *skr*: the sibling-census comparison is contradicted by the repo's own committed junodam
+    evidence; the headline 1.39x has no uncertainty; the 1/r^2 null rescales the noise floor
+    along with the signal, in the direction that manufactures the collapse.
+  - *junodam*: the abstract's "one-sample test against unity does not reject" exists nowhere in
+    committed evidence, and the 95% CI (0.49-1.64) admits a 1.6x enhancement; the dataset DOI is
+    the obsoleted v01 with a wrong author list; the frame convention whose failure mode IS the
+    reported null has no test that could catch it.
+
+### Fixed
+- **junodam's committed macros were carrying a synthetic run's values** --- the abstract's opening
+  counts rendered the 28-day fixture (161,280 bins / 12,729 active) instead of the real 210-day
+  census (1,209,600 / 44,294), with `\jdSource` reading "synthetic orbit". Introduced by the
+  2026-08-23 commit that fixed a different instance of the same clobber class; caught by the
+  presenter round. Macros regenerated from the committed real JSON, and the four remaining
+  mode-dependent names (`\jdNbins`, `\jdNact`, `\jdOccIo`, `\jdOccOut`) namespaced
+  `jdReal*`/`jdSyn*`; the namespace audit is clean and the referee verified the fix, including
+  that the committed figure is the real run.
+
 ### Added
 - **`triangulate`: the miss-distance sweep is measured, and the cut is not load-bearing.** The real
   2013-05-15 leg was re-fetched from SPDF and the threshold swept over 15/30/60/100 R_sun via the
