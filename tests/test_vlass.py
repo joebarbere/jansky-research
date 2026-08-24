@@ -149,4 +149,8 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "papers" / "vlass" / "figures" / "completeness.pdf").exists()
     assert (tmp_path / "papers" / "vlass" / "figures" / "confirmed.pdf").exists()
     macros = (tmp_path / "papers" / "vlass" / "generated" / "macros.tex").read_text()
-    assert r"\vlassNsources" in macros and r"\vlassNconfirmed" in macros
+    # Namespaced: an offline run fills the SYNTHETIC side only, so it cannot write its
+    # census over the real one (\vlassNconfirmed 2 -> 0 was the live clobber).
+    assert r"\vlassSynNsources" in macros and r"\vlassSynNconfirmed" in macros
+    assert r"\newcommand{\vlassRealNconfirmed}{--}" in macros
+    assert r"\vlassSource" in macros, "provenance marker missing; the merge guard is blind"

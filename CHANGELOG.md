@@ -10,6 +10,24 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **The two slices no guard could protect are now namespaced.** The audit's own output pointed
+  at them: of the eight slices emitting no `*Source` macro, `vlass` and `type3synthesis` were the
+  two with real numeric hazards, so `preserve_live_macros` could not even tell their run modes
+  apart. `vlass`'s census counts are now `vlassReal*`/`vlassSyn*` (the live clobber was
+  `\vlassNconfirmed` 2 -> 0 and `\vlassArea` 703 -> 0) and `type3synthesis`'s ladder is
+  `synReal*`/`synSyn*` (corona speed 0.1347 real against 0.3002 offline). Both now emit their
+  provenance, and `type3synthesis` records a `source` in its metrics --- it had none, which is why
+  it was the single results file a forced offline rebuild could still change. Verified: a direct
+  offline run leaves both papers' macros byte-identical, and the audit reports 0 for each.
+- **The audit had two bugs of its own, both found by using it.** `re.IGNORECASE` made its
+  `Syn|Real` marker match the `syn` *prefix* of every `type3synthesis` macro, silently exempting
+  the whole slice --- a detector reporting a clean bill for a slice it never looked at. And it
+  flagged the `*Source` macro itself, which is *supposed* to differ between modes since it is what
+  the merge guard reads. Now case-sensitive, requiring an upper-case component boundary, with
+  provenance macros exempt.
+
+
 ### Added
 - **`scripts/audit_macro_namespaces.py`** --- the repo-wide grep for mode-dependent macros that
   are not namespaced. It runs every slice's offline leg into a throwaway directory and diffs the

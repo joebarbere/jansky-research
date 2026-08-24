@@ -10,7 +10,7 @@
 \begin{document}
 
 \title{A Reproducible CPU-Only Pipeline for VLASS Multi-Epoch Radio Variability:
-Quick-Look Systematics, a \vlassArea\,deg$^2$ Census, and the Recovery of FK~Comae~Berenices}
+Quick-Look Systematics, a \vlassRealArea\,deg$^2$ Census, and the Recovery of FK~Comae~Berenices}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
@@ -25,14 +25,14 @@ is dominated by source-extraction artefacts: component deblending, cross-match
 incompleteness, and bright-neighbour confusion. We show that three mitigations are necessary
 and sufficient to obtain a believable candidate list: a per-epoch QL flux-scale correction
 \citep{vlassmemo13, vlassmemo22}, a deblending isolation cut, and automatic forced-photometry
-confirmation against the actual images with a peak-centring gate. Over a \vlassArea~deg$^2$ census
-(\vlassNsources\ sources, \vlassNusable\ usable), the $\vlassSigma\sigma$ selection yields
-\vlassNcand\ candidates, of which \vlassNconfirmed\ survive image confirmation. Archival follow-up
+confirmation against the actual images with a peak-centring gate. Over a \vlassRealArea~deg$^2$ census
+(\vlassRealNsources\ sources, \vlassRealNusable\ usable), the $\vlassSigma\sigma$ selection yields
+\vlassRealNcand\ candidates, of which \vlassRealNconfirmed\ survive image confirmation. Archival follow-up
 (the independent VLASS Epoch~4 release plus NVSS/FIRST/optical cross-matches) then leaves
 one genuine variable, the known rapidly rotating active giant FK~Comae~Berenices,
 recovered with a clean $\sim$7$\to$1~mJy decline at a $0.9\arcsec$ match; the other image-confirmed
 candidate is a single-epoch imaging artefact. Injection--recovery shows the three-epoch selection
-saturates near \vlassComplMax\% completeness even for extreme flares (50\% at $\sim\vlassComplFifty\times$),
+saturates near \vlassRealComplMax\% completeness even for extreme flares (50\% at $\sim\vlassRealComplFifty\times$),
 so the confirmed sources are a floor, not a rate. The result is a tooling and methodology
 contribution, a validation (FK~Com) plus a completeness-bounded limit, not a discovery.
 \end{abstract}
@@ -87,9 +87,9 @@ every source appear variable; we detect it from the catalogue flux floor (the $\
 threshold) and rescale.
 
 \section{Results}
-Over a \vlassArea~deg$^2$ cone (\vlassNsources\ sources; \vlassNexcluded\ dropped as crowded;
-\vlassNusable\ usable), the selection flags \vlassNcand\ candidates and image confirmation keeps
-\vlassNconfirmed.
+Over a \vlassRealArea~deg$^2$ cone (\vlassRealNsources\ sources; \vlassRealNexcluded\ dropped as crowded;
+\vlassRealNusable\ usable), the selection flags \vlassRealNcand\ candidates and image confirmation keeps
+\vlassRealNconfirmed.
 
 \paragraph{A real recovery.} One confirmed source matches FK~Comae~Berenices at $0.9\arcsec$,
 the prototype of the FK~Com class of rapidly rotating, magnetically active single giants and a known
@@ -112,9 +112,9 @@ over-claimed.
 
 \paragraph{Completeness and the three-epoch ceiling.} Injection--recovery (Figure~\ref{fig:compl})
 shows the selection recovers $<$5\% of $\le$3$\times$ single-epoch flares and saturates near
-\vlassComplMax\% even at $10\times$ (50\% at $\sim\vlassComplFifty\times$). This is intrinsic to
+\vlassRealComplMax\% even at $10\times$ (50\% at $\sim\vlassRealComplFifty\times$). This is intrinsic to
 three epochs: a single-epoch flare's coefficient of variation tops out at $1/\sqrt{3}/(1/3)=1.73$ as
-the amplitude $\to\infty$, just above the noisy three-epoch $V$ threshold. The \vlassNconfirmed\
+the amplitude $\to\infty$, just above the noisy three-epoch $V$ threshold. The \vlassRealNconfirmed\
 confirmed sources are therefore a floor; the strong-single-epoch-variable fraction is of order a few
 $\times10^{-4}$.
 
@@ -127,7 +127,7 @@ candidates (outliers in both, dotted thresholds) are highlighted.}
 
 \begin{figure}
 \plotone{figures/confirmed.pdf}
-\caption{Forced light curves of the \vlassNconfirmed\ image-confirmed variables. The upper track is
+\caption{Forced light curves of the \vlassRealNconfirmed\ image-confirmed variables. The upper track is
 FK~Comae~Berenices, a clean monotonic $\sim$7$\to$1~mJy/beam decline across the three VLASS epochs;
 the lower is the faint centred fader.}
 \label{fig:fkcom}
@@ -136,7 +136,7 @@ the lower is the faint centred fader.}
 \begin{figure}
 \plotone{figures/completeness.pdf}
 \caption{Data-driven completeness: recovered fraction of injected single-epoch flares versus flare
-factor. The selection saturates near \vlassComplMax\%, the three-epoch ceiling.}
+factor. The selection saturates near \vlassRealComplMax\%, the three-epoch ceiling.}
 \label{fig:compl}
 \end{figure}
 

@@ -30,7 +30,12 @@ def test_run_offline_spans_corona_to_interplanetary(tmp_path):
     assert (tmp_path / "results" / "type3synthesis_metrics.json").exists()
     assert (tmp_path / "papers" / "type3synthesis" / "figures" / "type3synthesis.pdf").exists()
     macros = (tmp_path / "papers" / "type3synthesis" / "generated" / "macros.tex").read_text()
-    assert r"\synGeomCorr" in macros and r"\synOverallRhiAU" in macros
+    # Namespaced: an offline run fills the SYNTHETIC side only. Before this, its ladder
+    # (corona speed 0.3002) overwrote the real one (0.1347) under shared names, and this
+    # slice emitted no provenance macro so neither merge guard could even see the mode.
+    assert r"\synSynGeomCorr" in macros and r"\synSynOverallRhiAU" in macros
+    assert r"\newcommand{\synRealGeomCorr}{--}" in macros
+    assert r"\synSource" in macros, "provenance marker missing; both merge guards are blind"
 
 
 def test_model_curves_monotone():

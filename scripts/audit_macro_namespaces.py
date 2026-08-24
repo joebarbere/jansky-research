@@ -36,8 +36,15 @@ REPO = Path(__file__).resolve().parent.parent
 SNAKEFILE = REPO / "workflow" / "Snakefile"
 MACRO = re.compile(r"\\newcommand\{\\([A-Za-z]+)\}\{(.*)\}\s*$")
 PLACEHOLDER = "--"
-#: A name carrying either marker is already mode-namespaced and cannot collide across runs.
-NAMESPACED = re.compile(r"Syn|Real", re.IGNORECASE)
+#: A name carrying either marker as its own capitalised component is already mode-namespaced.
+#: Case matters and the following character must be upper-case: with ``re.IGNORECASE`` this
+#: matched the ``syn`` PREFIX of every ``type3synthesis`` macro (``\synFhi``), silently
+#: exempting the whole slice -- a detector that reported a clean bill for a slice it never
+#: looked at.
+NAMESPACED = re.compile(r"(Syn|Real)[A-Z]")
+#: The provenance macro is *supposed* to differ between modes -- it is what the merge guard
+#: reads to tell them apart -- so a difference there is the mechanism working, not a hazard.
+PROVENANCE = re.compile(r"[Ss]ource$")
 
 
 def slice_map() -> dict[str, tuple[str, str]]:
@@ -92,7 +99,7 @@ def audit_slice(slice_name: str, module: str, extra: str) -> dict:
     hazards = []
     for name, syn_val in offline.items():
         real_val = committed.get(name)
-        if real_val is None or NAMESPACED.search(name):
+        if real_val is None or NAMESPACED.search(name) or PROVENANCE.search(name):
             continue
         # A placeholder on either side is the case preserve_live_macros already arbitrates.
         if syn_val == PLACEHOLDER or real_val == PLACEHOLDER or syn_val == real_val:
