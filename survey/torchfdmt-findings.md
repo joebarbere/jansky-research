@@ -96,3 +96,52 @@ benchmark columns (a CPU run writes them null), which is the same two-mode hazar
 `preserve_live_macros` exists to arbitrate for macros and which the results JSON does not yet
 have. The paper therefore states the quantisation qualitatively rather than quoting a trial
 count it cannot yet cite from evidence.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 15 findings, two BLOCKERs
+
+**BLOCKER 1: the committed figure shows no butterfly peak at the DM the paper says it peaks at.**
+The left panel plots `plane.max(dim=1)` -- the RAW track sum, which rises with delay row because
+higher rows integrate more samples -- so the displayed maximum is at DM ~118, not 56.59, and the
+claimed detection is invisible. `best_dm` comes from `FDMTResult.best()`, which median/MAD-
+normalises per row first. The figure plots a different statistic from the one that produced the
+quoted number. Fix: plot the normalised curve (or both, labelled).
+
+**BLOCKER 2: "recovers ... at butterfly S/N = 6.0" carries no trials factor.** The plane is
+~1914 x ~4102 ~ 7.9e6 cells; the expected noise maximum is ~5.2 (Gumbel p(6.0) ~ 0.01, ~2.3
+sigma), and the suite's own noise-only test asserts snr < 10 -- a bound that does not exclude
+the paper's detection value. The evidence that IS strong and unquoted: the peak lands 2.9 DM
+trials from the catalogue value out of ~1914 (p ~ 0.003 positionally) and the boxcar S/N 14 on
+~2.5e4 trials is overwhelming. Demote the butterfly height; state the coincidence + boxcar. A
+~200-rep per-channel circular-shift null (into a tmpdir) should be quoted beside the 6.0.
+
+**MAJORs:** the 29x brute speed-up divides the Aug-4 CPU time (44.12 s) by the Aug-10 GPU time
+(1.5 s) while the Aug-10 invocation's own CPU leg (37.9 s, committed twice in CHANGELOG) was
+never written -- same-run ratio 25.3x, and the splice retained the CPU number that flatters the
+GPU ratio by 16% (the FDMT "~1x" pair is likewise cross-invocation); `benchmark_device` /
+`benchmark_hardware` are written by NO code in the repo (hand-entered in 602e0ca) and
+`preserve_live_results` will now perpetuate them onto future runs on different hardware -- emit
+them from torch introspection and re-run; the benchmark's device set is derived from the science
+leg's device (`devs = ("cpu","cuda") if device != "cpu"`), so the combination the paper reports
+(CPU science + both benchmark columns) is unreachable by any single invocation -- add a
+decoupled --bench-devices; "Every production GPU dedisperser ships CUDA kernels" is falsified by
+Sclocco et al. 2016 (OpenCL, auto-tuned, deployed in AMBER/ARTS) -- keep the narrower "no
+maintained PyTorch/JAX FDMT" claim.
+
+**MINOR:** the findings file still displays the retracted benchmark table (36.1 s / 24x / 3.6x)
+above its own retraction, and calls 0.45-vs-1.50 "same-run" when they are not; three fixes
+described in the past tense are absent from the committed evidence (`source` still names only
+the real leg above synthetic values; `real_dm_step_pc` / `bench_devices` still missing, and the
+stated blocker to re-running -- results-clobber -- is gone now that preserve_live_results
+merges); \spTrueDm (the synthetic injection default) is cited as the ATNF catalogue value -- add
+\spCatDm from CRAB_DM; sp_pos/sp_width/n_time uncommitted while ~47% of the best-DM series is
+boundary-affected and the figure's tallest sample is not the marked one; the brute baseline is
+gather-bound (1.5 GB index tensors -- say the baseline is the naive in-framework gather;
+`numpy_oracle_reduced_s` is measured and discarded); the Crab giant-pulse rate claim is
+uncited.
+
+**NIT:** \spSnr (synthetic S/N 113.5) generated and unused -- the 113.5-vs-6.0 contrast belongs
+in the paper; "Every number is \input" is not literally true (instrument constants are typed,
+all verified correct); the untracked arxiv-submission still carries the retracted 24x.
+
+**Status: fixes pending** (one fdmt.benchmark re-run on the ROCm venv; one replot; one null run
+into a tmpdir).

@@ -10,6 +10,21 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **Review round 5 verdicts recorded (presenter + referee): `southern`, `hi`, `torchfdmt`,
+  `solarbursts` -- four major revisions, five blockers.** southern: GLEAM-X DR2 *does* publish
+  per-band errors (the assumed 10% proportional error is ~10x too small for the faint majority)
+  and the alpha_lo purity gate is anchored on the noisiest sub-band -- three of the figure's own
+  six candidates flip under a one-sub-band change; hi: the load-bearing ~7 km/s citation is a
+  CO-vs-HI cross-tracer offset, not the threshold-vs-fit measurement the paper says it is, and
+  "flat" is never quantified; torchfdmt: the committed figure plots the raw track sum (maximum
+  at DM ~118, not the quoted 56.59) and the butterfly S/N 6.0 carries no trials factor against
+  an expected noise maximum of ~5.2, while the 29x benchmark ratio splices two invocations
+  keeping the CPU number that flatters it; solarbursts: the figure plots the unclipped fit
+  (R^2 0.41) under the R^2 0.811 caption, and the robust fit is unconverged -- the headline
+  speed spans 0.111-0.147 c over a hard-coded iteration count. Verdicts and full finding lists
+  in each survey/<slice>-findings.md; fixes to follow per slice.
+
 ### Fixed
 - **`rmstructure` revision (referee round of 2026-08-24, two blockers): the sample now matches
   the release and the headline error was understated eleven-fold.** The "S/N >= 8" sample

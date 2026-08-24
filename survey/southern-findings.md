@@ -67,3 +67,53 @@ designed).
   mean $\nu_\mathrm{pk}$ in that gap is interpolated; a sampled point in the gap (e.g. SUMSS 843 MHz,
   or RACS-low at 888 MHz which we already use) constrains it.
 - **Compactness cut is blunt** (GLEAM 2′ only); a RACS-resolution morphology cut would be cleaner.
+
+## Full referee round (2026-08-24): MAJOR REVISION, 18 findings, two BLOCKERs
+
+**BLOCKER 1: "GLEAM-X DR2 exposes no per-band uncertainties via VizieR" is false.** VizieR
+VIII/113/catalog2 carries `e_Fint076 ... e_Fint227` in exact parallel with the `Fint` columns
+`fetch_gleamx` already requests, populated (~7-8 mJy at 76 MHz in this very field), plus per-band
+local rms and DR2's own curved-SED fit columns (`alpha-SP`/`beta-CSP`/chi2). The substituted 10%
+*proportional* error is inverted relative to the true *floor* -- ~10x too small for the faint
+sources that dominate the candidates (two of eight sampled rows have 76 MHz SNR ~1) -- and it sets
+the fit weights, so the "weighted" fit is effectively unweighted with GLEAM outvoting RACS 6:1.
+The false limitation is also used twice to excuse the over-selection.
+
+**BLOCKER 2: the primary purity cut selects on noise.** `alpha_lo` is a two-point index anchored
+on the single noisiest sub-band (76 MHz). Decoding the committed figure's own six SEDs (first six
+of the 90, not cherry-picked): five are sub-band-level noise (adjacent-band ratios up to 122x);
+moving the anchor one sub-band (76 -> 84 MHz) flips three of six across the gate; one candidate's
+alpha_lo = +4.40 comes entirely from a 0.21 mJy point beside 25.6 mJy. The one-sided positivity
+clip (drop negatives, keep low positive excursions) censors noise asymmetrically at exactly these
+bands. The 90/59/28 counts and the 210.9 MHz median are not yet supportable; the median still
+sits 0.032 dex below the topmost sub-band, the same band-edge signature the cut claimed to remove.
+
+**MAJORs:** chi2_red computed and discarded (would have caught both blockers; O(10^2) for the
+noisy candidates); Callingham denominator is n_tried not n_with_coverage (the honest denominator
+is computed and never written; bare except folds VizieR timeouts into "not recovered"); "recovery
+climbs with published nu_pk" has no committed support and the only recorded numbers (23/6/1)
+point the other way, with the expectation written into the docstring before the measurement; the
+0.112 dex accuracy is conditioned on the is_peaked gate (catastrophic errors are routed to "not
+recovered"; unconditional: 35/50 = 70% within 2x, not 92%); nearest-neighbour crossmatch is not
+bijective and the compactness cut operates at GLEAM resolution, blind to RACS-scale doubles that
+fake turnovers in the 227-887 MHz gap; the "~16%" naive fraction and the 246->197->90 cascade are
+in no committed file (and irreconcilable with n_extended=28 -- the code applies the cuts in a
+different order than the narrative); the 2.5x over-density has neither of its inputs committed
+(arithmetic gives 2.65x) and compares different flux limits -- the dr20radio "what is the check
+free to change" shape; a scout-catalogue paper commits NO catalogue (nine scalars; no positions,
+fluxes, nu_pk, classifications for any of the 90); Figure 1's caption ("each rises ... and turns
+over") is contradicted by its own decoded curves (only one of six rises coherently).
+
+**MINOR/NIT:** measured-vs-interpolated never resolved for the 227-887 MHz gap (the synthetic
+injects nu_pk 0.3-0.7 GHz, entirely inside the gap, while the real median is outside it); the
+offline validation cannot fail on either headline cut (no flattening contaminant; compactness cut
+untested anywhere); findings file stale on 4 of 9 headline numbers (40/30/0.12/90% vs committed
+50/38/0.112/92%); 19 bands vs "20" in abstract and Discussion (and 22 points over 21.8x, not
+23/23); racsmid2024 authors 2-3 wrong + paraphrased title; kerrison2025 missing its DOI
+(10.1093/mnras/staf1643) with a wrong 4th author; arxiv-submission metadata stale/degraded.
+
+**The one change that matters most:** re-run the census with the catalogue's own per-band errors
+and report whatever comes out -- if the candidate list collapses, the honest paper is a methods
+paper plus a null on this field.
+
+**Status: fixes pending.**
