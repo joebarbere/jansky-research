@@ -11,5 +11,28 @@
   "r_lo_rsun": 1.622,
   "r_hi_rsun": 2.572,
   "speed_kms": 40377.5,
-  "speed_c": 0.1347
+  "speed_c": 0.1347,
+  "speed_grid": [
+    {
+      "harmonic": 1,
+      "fold": 1.0,
+      "speed_c": 0.0813,
+      "r_lo_rsun": 1.411,
+      "r_hi_rsun": 1.894
+    },
+    {
+      "harmonic": 2,
+      "fold": 1.0,
+      "speed_c": 0.1347,
+      "r_lo_rsun": 1.622,
+      "r_hi_rsun": 2.572
+    },
+    {
+      "harmonic": 2,
+      "fold": 4.0,
+      "speed_c": 0.2448,
+      "r_lo_rsun": 2.096,
+      "r_hi_rsun": 4.01
+    }
+  ]
 }

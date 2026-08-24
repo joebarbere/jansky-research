@@ -246,6 +246,7 @@ def synthetic_month_stack(
     line_rise: float = 4.0,  # total narrowband-LINE excess rise tracking Starlink (primary metric)
     gain_sigma: float = 2.0,  # per-month station-gain drift (common-mode -- must cancel)
     burst_frac: float = 0.3,  # fraction of months with a broadband solar burst (must not bias)
+    flank_rise: float = 0.0,  # local RFI accruing in the lines' FLANKING channels only (see below)
     seed: int = 0,
 ) -> dict:
     """Synthetic per-month spectra with a KNOWN UEM trend + gain drift + solar bursts, for recovery.
@@ -255,6 +256,14 @@ def synthetic_month_stack(
     broadband bursts. A broadband UEM-band level rise is injected for the differential; NARROWBAND
     excesses at the UEM lines are injected on top for the line test. The FM control carries no
     injected trend. Returns per-month (data, freqs) plus the decimal-year and truth.
+
+    ``flank_rise`` injects the systematic the two arms above CANNOT probe, because the
+    line-vs-adjacent difference cancels anything common to core and flank algebraically: local
+    terrestrial RFI accruing in the lines' *flanking* channels only, as a linear-in-time ramp
+    (local RFI has no reason to track the Starlink deployment curve). This is the mechanism the
+    paper names as decisive for the sign disagreement -- a station whose flanks fill in faster
+    than its lines registers a FALLING excess under a rising true signal. Before this arm existed
+    the validation could not fail in the regime that limits the study.
     """
     rng = np.random.default_rng(seed)
     freqs = np.linspace(45.0, 450.0, n_freq)
@@ -271,6 +280,12 @@ def synthetic_month_stack(
         data = rng.normal(10.0, 0.5, (n_freq, n_time)) + gain
         data[uem_sel] += uem_rise * star_frac[i]  # band-specific UEM level (post-2019)
         data[line_sel] += line_rise * star_frac[i]  # narrowband line excess on top (primary metric)
+        if flank_rise:
+            # local RFI in the flanks only: linear ramp, NOT Starlink-shaped
+            flank_sel = np.zeros(n_freq, bool)
+            for line in UEM_LINES_MHZ:
+                flank_sel |= (np.abs(freqs - line) > 1.0) & (np.abs(freqs - line) <= 3.0)
+            data[flank_sel] += flank_rise * (i / max(n_months - 1, 1))
         if rng.random() < burst_frac:  # a broadband solar burst in a few time columns
             t0 = rng.integers(0, n_time - 10)
             data[:, t0 : t0 + 8] += rng.uniform(8, 20)
@@ -320,6 +335,12 @@ def _synthetic_metrics() -> dict:
     ctrl_tr = trend_fit(s["years"], fm_self)
     corr = float(np.corrcoef(s["star_frac"], diff)[0, 1])
     line_corr = float(np.corrcoef(s["star_frac"], line)[0, 1])
+    # The arm that can fail: same injected line rise, plus local RFI accruing in the flanking
+    # channels only. The line-vs-adjacent difference cannot cancel it (it is not common to core
+    # and flank), so the recovered slope is BIASED -- with a large enough flank ramp, past zero.
+    sf = synthetic_month_stack(flank_rise=6.0)
+    flank_line = np.array([line_vs_adjacent(m["data"], m["freqs"]) for m in sf["months"]])
+    flank_tr = trend_fit(sf["years"], flank_line)
     return {
         "source": "synthetic monthly stack (injected UEM trend + gain drift + solar bursts)",
         "is_real": False,
@@ -336,6 +357,11 @@ def _synthetic_metrics() -> dict:
         "recovered_uem_trend": bool(tr["p_value"] < 0.01 and corr > 0.8),
         "recovered_line_trend": bool(line_tr["p_value"] < 0.01 and line_corr > 0.8),
         "control_flat": bool(ctrl_tr["p_value"] > 0.05),
+        # Flank-contamination arm: the recovered slope under flank RFI, and its bias against the
+        # clean arm's slope. A sign flip here is the ALMATY mechanism reproduced end-to-end.
+        "flank_line_slope_per_yr": round(flank_tr["slope"], 4),
+        "flank_slope_bias_per_yr": round(flank_tr["slope"] - line_tr["slope"], 4),
+        "flank_sign_flipped": bool(np.sign(flank_tr["slope"]) != np.sign(line_tr["slope"])),
     }
 
 
@@ -607,6 +633,8 @@ def _write_macros(m: dict, path: str | Path) -> None:
         rf"\newcommand{{\rfSynCtrlSlope}}{{{g(syn, 'control_slope_per_yr')}}}",
         rf"\newcommand{{\rfSynCorr}}{{{g(syn, 'corr_with_starlink')}}}",
         rf"\newcommand{{\rfSynLineExcessSlope}}{{{g(syn, 'line_excess_slope_per_yr')}}}",
+        rf"\newcommand{{\rfSynFlankSlope}}{{{g(syn, 'flank_line_slope_per_yr')}}}",
+        rf"\newcommand{{\rfSynFlankBias}}{{{g(syn, 'flank_slope_bias_per_yr')}}}",
         rf"\newcommand{{\rfSynLineCorr}}{{{g(syn, 'line_corr_with_starlink')}}}",
         rf"\newcommand{{\rfRealSlope}}{{{g(real, 'line_excess_slope_per_yr')}}}",
         rf"\newcommand{{\rfRealTrendP}}{{{gp(real, 'line_excess_trend_p')}}}",

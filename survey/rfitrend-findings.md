@@ -185,3 +185,19 @@ contamination of a line's *flanking* channels, is never injected: ask what would
 and the answer is nothing in the regime that matters. The paper now says what the validation does and
 does not cover; adding a flank-contamination arm and reporting the recovered slope bias is the real
 fix.
+
+### Resolved 2026-08-24: the flank-contamination arm exists and the validation can now fail
+
+`synthetic_month_stack(flank_rise=...)` injects local RFI into the lines' *flanking* channels only,
+as a linear ramp uncorrelated with the Starlink curve --- the systematic the paper names as decisive
+and the line-vs-adjacent difference cannot cancel. Measured (committed as `flank_*` in the metrics
+and `\rfSynFlankSlope`/`\rfSynFlankBias`):
+
+- clean arm: +0.2404 /yr recovered (the injected rise)
+- flank arm: **-0.1907 /yr** --- a bias of -0.4311 /yr that **flips the recovered sign**
+
+The ALMATY mechanism is therefore reproduced end-to-end: a station whose flanks fill in faster than
+its lines registers a falling excess under a rising true signal. The paper's validation paragraph
+now reports this instead of disclaiming it, and states the consequence --- a station's falling line
+excess cannot, by itself, be read as a falling UEM signal. Two tests pin the arm (bias is negative;
+sign flips; the committed bias equals the difference of the two committed slopes).

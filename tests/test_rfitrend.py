@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import pytest
 
 from jansky_research import rfitrend as rf
 
@@ -207,3 +208,33 @@ def test_write_macros_offline_leaves_real_placeholders(tmp_path):
     txt = p.read_text()
     assert r"\newcommand{\rfRealSlope}{--}" in txt  # no real run -> placeholder
     assert r"\newcommand{\rfSynSlope}{--}" not in txt  # synthetic always live
+
+
+def test_flank_contamination_biases_the_line_slope_and_can_flip_its_sign():
+    """The validation arm that can fail in the regime that limits the study.
+
+    The clean arms inject only what the line-vs-adjacent difference cancels algebraically
+    (common-mode gain, broadband bursts), so they could not fail. Local RFI accruing in the
+    flanking channels only is the systematic the paper names as decisive for the HUMAIN/ALMATY
+    sign disagreement, and the difference cannot cancel it: the recovered slope must be biased
+    low, and with a large enough flank ramp must come out FALLING under a rising injected line.
+    """
+    clean = rf.synthetic_month_stack()
+    dirty = rf.synthetic_month_stack(flank_rise=6.0)
+    line_c = np.array([rf.line_vs_adjacent(m["data"], m["freqs"]) for m in clean["months"]])
+    line_d = np.array([rf.line_vs_adjacent(m["data"], m["freqs"]) for m in dirty["months"]])
+    tr_c = rf.trend_fit(clean["years"], line_c)
+    tr_d = rf.trend_fit(dirty["years"], line_d)
+    assert tr_c["slope"] > 0  # the clean arm recovers the injected rise
+    assert tr_d["slope"] < tr_c["slope"]  # flank RFI biases the slope low...
+    assert tr_d["slope"] < 0  # ...and here flips its sign: the ALMATY mechanism end-to-end
+
+
+def test_synthetic_metrics_report_the_flank_bias():
+    m = rf._synthetic_metrics()
+    assert m["flank_sign_flipped"] is True
+    assert m["flank_slope_bias_per_yr"] < 0
+    # the bias is the difference of the two committed slopes, not an independent number
+    assert m["flank_slope_bias_per_yr"] == pytest.approx(
+        m["flank_line_slope_per_yr"] - m["line_excess_slope_per_yr"], abs=1e-3
+    )

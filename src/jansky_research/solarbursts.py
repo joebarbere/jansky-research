@@ -238,6 +238,36 @@ def exciter_speed(
     }
 
 
+#: The systematics grid the paper quotes: emission interpretation x Newkirk fold factor. The three
+#: points bracket the model dependence -- fundamental vs harmonic is a factor of two in density,
+#: and fold 4 is the active-region enhancement.
+SPEED_GRID = ((1, 1.0), (2, 1.0), (2, 4.0))
+
+
+def speed_grid(ridge_freqs: np.ndarray, ridge_times: np.ndarray) -> list[dict]:
+    """Exciter speed over the harmonic x fold systematics grid, from one fitted ridge.
+
+    The ridge itself is model-independent; only the frequency-to-radius mapping changes with the
+    grid point, so one detection yields the whole grid. The paper's Results paragraph used to
+    hand-type these three speeds from a superseded run -- 0.137 c for the harmonic/1x point three
+    lines under a macro saying 0.1347 -- because nothing emitted them. Now they are computed from
+    the same ridge as the headline number and cannot drift from it.
+    """
+    out = []
+    for harmonic, fold in SPEED_GRID:
+        spd = exciter_speed(ridge_freqs, ridge_times, harmonic=harmonic, fold=fold)
+        out.append(
+            {
+                "harmonic": harmonic,
+                "fold": fold,
+                "speed_c": round(spd["speed_c"], 4) if np.isfinite(spd["speed_c"]) else None,
+                "r_lo_rsun": round(spd["r_lo"], 3) if np.isfinite(spd["r_lo"]) else None,
+                "r_hi_rsun": round(spd["r_hi"], 3) if np.isfinite(spd["r_hi"]) else None,
+            }
+        )
+    return out
+
+
 def fetch_ecallisto(
     station: str, date_yyyymmdd: str, hhmm: str
 ) -> dict:  # pragma: no cover - network
@@ -325,6 +355,7 @@ def run(
         "speed_kms": round(spd["speed_kms"], 1) if np.isfinite(spd["speed_kms"]) else None,
         "speed_c": round(spd["speed_c"], 4) if np.isfinite(spd["speed_c"]) else None,
     }
+    metrics["speed_grid"] = speed_grid(rf, rt)
     if truth is not None:
         metrics["truth_speed_c"] = truth
         if np.isfinite(spd["speed_c"]):
@@ -335,6 +366,15 @@ def run(
     from .report import write_results
 
     write_results(metrics, op / "results" / "solarbursts_metrics.json")
+    # The raw fitted ridge, committed alongside the summary: exciter_speed needs it, so without it
+    # neither the headline speed nor the grid is recomputable from evidence (the innerrc lesson --
+    # a results file omitting the numbers its own headline is computed from).
+    import csv as _csv
+
+    with (op / "results" / "solarbursts_ridge.csv").open("w", newline="") as fh:
+        w = _csv.writer(fh)
+        w.writerow(["freq_mhz", "time_s"])
+        w.writerows(zip(np.round(rf, 4), np.round(rt, 4), strict=True))
     _figure(burst, rf, rt, harmonic, fold, op / "papers" / "solarbursts" / "figures")
     _write_macros(metrics, op / "papers" / "solarbursts" / "generated" / "macros.tex")
     return metrics
@@ -401,6 +441,15 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\sbTruth}}{{{_fmt('truth_speed_c')}}}",
         rf"\newcommand{{\sbRatio}}{{{_fmt('recovery_ratio')}}}",
     ]
+    # The systematics grid, one macro per point, so the Results paragraph cannot hand-type them.
+    grid = {(g["harmonic"], g["fold"]): g for g in m.get("speed_grid", [])}
+    for (h, f), name in (((1, 1.0), "FundOne"), ((2, 1.0), "HarmOne"), ((2, 4.0), "HarmFour")):
+        g = grid.get((h, f), {})
+        v = g.get("speed_c")
+        lines.append(rf"\newcommand{{\sbGrid{name}}}{{{'--' if v is None else v}}}")
+        rl, rh = g.get("r_lo_rsun"), g.get("r_hi_rsun")
+        lines.append(rf"\newcommand{{\sbGrid{name}Rhi}}{{{'--' if rh is None else rh}}}")
+        lines.append(rf"\newcommand{{\sbGrid{name}Rlo}}{{{'--' if rl is None else rl}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
@@ -438,7 +487,11 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
             hhmm="1150",
             harmonic=2,
             fold=1.0,
-            pad_s=5.0,
+            # 10.0, not 5.0: the committed evidence was produced with the run() default, and
+            # pad 5 gives a materially different fit (r2 0.897 vs 0.811, speed 0.1368 vs
+            # 0.1347). --recover exists to regenerate the committed result, so it must pin the
+            # committed parameterization; the pad sensitivity is recorded in the findings file.
+            pad_s=10.0,
         )
     else:
         metrics = run(

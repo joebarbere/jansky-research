@@ -204,6 +204,47 @@ def triangulate_track(
     }
 
 
+#: The miss-distance thresholds the robustness sweep reports (R_sun). 60 is the analysis cut.
+MISS_SWEEP_RSUN = (15.0, 30.0, 60.0, 100.0)
+
+
+def miss_sweep(track: dict, thresholds=MISS_SWEEP_RSUN) -> list[dict]:
+    """The shape cross-check and distance ratio as a function of the miss-distance cut.
+
+    Pure filtering: ``triangulate_track`` already returns the per-channel miss distances, so the
+    cut is re-applied to the arrays rather than re-triangulating. Run it on a track built with the
+    cut OPEN (``max_miss_rsun=inf``); each row then reports ``corr_geom_plasma``,
+    ``ratio_geom_plasma`` and ``n`` for channels with miss below that threshold. The paper's
+    Method states a 60 R_sun cut that exceeds the smallest inferred distance, so which side of
+    the claim survives a tighter cut is exactly what a referee will ask.
+    """
+    f = np.asarray(track["freq_mhz"], float)
+    rg = np.asarray(track["r_geom"], float)
+    rp = np.asarray(track["r_plasma"], float)
+    miss = np.asarray(track["miss"], float)
+    out = []
+    for thr in thresholds:
+        k = miss <= thr
+        n = int(k.sum())
+        corr = (
+            float(np.corrcoef(rg[k], rp[k])[0, 1])
+            if n >= 3 and np.ptp(rg[k]) > 0 and np.ptp(rp[k]) > 0
+            else None
+        )
+        ratio = float(np.median(rg[k] / rp[k])) if n and np.all(rp[k] > 0) else None
+        out.append(
+            {
+                "max_miss_rsun": float(thr),
+                "n": n,
+                "corr_geom_plasma": round(corr, 3) if corr is not None else None,
+                "ratio_geom_plasma": round(ratio, 2) if ratio is not None else None,
+                "f_lo_mhz": round(float(f[k].min()), 4) if n else None,
+                "f_hi_mhz": round(float(f[k].max()), 3) if n else None,
+            }
+        )
+    return out
+
+
 def _baseline_separation_deg(pa: np.ndarray, pb: np.ndarray) -> float:
     """Angular separation (deg) of the two spacecraft as seen from the Sun."""
     ca = pa / np.linalg.norm(pa)
@@ -414,12 +455,38 @@ def run(
         max_miss_rsun=max_miss_rsun,
     )
     metrics = _metrics(track, source, harmonic, truth)
+    # The sweep runs on a track with the miss cut OPEN, so every threshold filters the same
+    # channel set; the analysis cut (60) is one row of it rather than a separate universe.
+    open_track = triangulate_track(
+        spec_a,
+        spec_b,
+        t_center=t_center,
+        half_s=half_s,
+        harmonic=harmonic,
+        max_miss_rsun=float("inf"),
+    )
+    metrics["miss_sweep"] = miss_sweep(open_track)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
     write_results(metrics, op / "results" / "triangulate_metrics.json")
+    # Per-channel arrays with the cut open, so the 60 R_sun choice is auditable and any future
+    # sweep is offline -- the innerrc lesson: a committed results file must carry the numbers
+    # its own headline is computed from.
+    import csv as _csv
+
+    with (op / "results" / "triangulate_channels.csv").open("w", newline="") as fh:
+        w = _csv.writer(fh)
+        w.writerow(["freq_mhz", "r_geom_rsun", "r_plasma_rsun", "miss_rsun", "lon_deg", "lat_deg"])
+        for i in range(open_track["freq_mhz"].size):
+            w.writerow(
+                [
+                    round(float(open_track[key][i]), 4)
+                    for key in ("freq_mhz", "r_geom", "r_plasma", "miss", "lon", "lat")
+                ]
+            )
     _figure(track, op / "papers" / "triangulate" / "figures")
     _write_macros(metrics, op / "papers" / "triangulate" / "generated" / "macros.tex")
     return metrics
@@ -500,6 +567,20 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\triLat}}{{{_fmt('lat_med_deg')}}}",
         rf"\newcommand{{\triCorr}}{{{_fmt('corr_geom_plasma')}}}",
         rf"\newcommand{{\triRatio}}{{{_fmt('ratio_geom_plasma')}}}",
+    ]
+    # The miss-cut sweep, one macro triple per threshold, so the paper's robustness sentence is
+    # regenerable rather than hand-typed.
+    sweep = {s["max_miss_rsun"]: s for s in m.get("miss_sweep", [])}
+    for thr, name in ((15.0, "Fifteen"), (30.0, "Thirty"), (60.0, "Sixty"), (100.0, "Hundred")):
+        s = sweep.get(thr, {})
+        for key, suffix in (
+            ("corr_geom_plasma", "Corr"),
+            ("ratio_geom_plasma", "Ratio"),
+            ("n", "N"),
+        ):
+            v = s.get(key)
+            lines.append(rf"\newcommand{{\triSweep{name}{suffix}}}{{{'--' if v is None else v}}}")
+    lines += [
         rf"\newcommand{{\triTruthLon}}{{{_fmt('truth_lon_deg')}}}",
         rf"\newcommand{{\triTruthLat}}{{{_fmt('truth_lat_deg')}}}",
         rf"\newcommand{{\triLonErr}}{{{_fmt('lon_err_deg')}}}",

@@ -126,7 +126,11 @@ solar-cycle correlation.
 \item \textbf{The real census is coverage- and detection-limited.} A real multi-station coincidence
 needs the full active-station set for each window and event-tuned detection thresholds; a small
 station subset with the synthetic-tuned thresholds yields a coverage-limited lower bound (a six-station
-snapshot of a known burst day produced zero confirmed events in the coincidence study). Producing the
+snapshot of a known burst day produced zero confirmed events in the coincidence study). An
+illustrative real ingest over \ecsRealNdays\ sampled days found \ecsRealNevents\ confirmed events on
+\ecsRealNdaysWithEvents\ days, correlating with the sunspot number at only $r=\ecsRealPearson$: five
+events cannot support a correlation measurement, which is the data-volume point made concrete rather
+than asserted. Producing the
 real multi-cycle census is therefore a large ingest, many years $\times$ full station coverage, which
 is exactly what the scheduled, backfilling Airflow pipeline was built to run, and not a method gap.
 \item \textbf{Type~III only.} The underlying detector targets fast negative-drift ridges; a type~II

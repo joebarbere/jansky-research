@@ -99,3 +99,33 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "papers" / "solarbursts" / "figures" / "burst.pdf").exists()
     macros = (tmp_path / "papers" / "solarbursts" / "generated" / "macros.tex").read_text()
     assert r"\sbSpeedC" in macros and r"\sbRatio" in macros
+
+
+def test_speed_grid_from_one_ridge():
+    """The grid re-maps one ridge through the model choices; it must bracket the headline point.
+
+    The paper's grid was hand-typed from a superseded run, so its harmonic/1x value (0.137)
+    contradicted \\sbSpeedC (0.1347) three lines above it. Computed from the same ridge, the
+    middle grid point IS the headline number by construction.
+    """
+    burst = solarbursts.synthetic_burst()
+    window = solarbursts.find_burst_window(burst["data"], burst["times"])
+    rf_, rt_ = solarbursts.detect_burst_ridge(
+        burst["data"], burst["freqs"], burst["times"], window=window
+    )
+    grid = solarbursts.speed_grid(rf_, rt_)
+    assert [(g["harmonic"], g["fold"]) for g in grid] == [(1, 1.0), (2, 1.0), (2, 4.0)]
+    fund, harm, harm4 = (g["speed_c"] for g in grid)
+    spd = solarbursts.exciter_speed(rf_, rt_, harmonic=2, fold=1.0)
+    assert harm == round(spd["speed_c"], 4)  # the middle point is the headline number
+    # fundamental emission puts the plasma level closer in -> slower; fold 4 pushes it out -> faster
+    assert fund < harm < harm4
+
+
+def test_run_offline_emits_grid_macros_and_ridge(tmp_path):
+    solarbursts.run(out=str(tmp_path), offline=True)
+    macros = (tmp_path / "papers" / "solarbursts" / "generated" / "macros.tex").read_text()
+    for name in (r"\sbGridFundOne", r"\sbGridHarmOne", r"\sbGridHarmFour"):
+        assert name in macros, name
+    ridge = (tmp_path / "results" / "solarbursts_ridge.csv").read_text().splitlines()
+    assert ridge[0] == "freq_mhz,time_s" and len(ridge) > 10

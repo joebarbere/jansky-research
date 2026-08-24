@@ -10,6 +10,45 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`triangulate`: the miss-distance sweep is measured, and the cut is not load-bearing.** The real
+  2013-05-15 leg was re-fetched from SPDF and the threshold swept over 15/30/60/100 R_sun via the
+  new tested `miss_sweep` (pure filtering on a track built with the cut open). Tightening 60 -> 15
+  keeps only 12 of 38 channels and moves the correlation 0.989 -> 0.977 and the ratio 2.18 -> 2.20;
+  no kept channel misses by more than 60, so the 100-row is identical. Stated in the paper with
+  `\triSweep*` macros, and the per-channel arrays (cut open) are committed as
+  `results/triangulate_channels.csv`, so the choice is auditable and any future sweep is offline.
+- **`rfitrend`: the validation can now fail.** A third fixture arm injects local RFI into the
+  lines' *flanking* channels only --- the systematic the paper names as decisive and the
+  line-vs-adjacent difference cannot cancel, which the old arms (common-mode gain, broadband
+  bursts) cancelled algebraically. Measured: the same injected rising line (+0.2404/yr clean)
+  recovers at **-0.1907/yr** under flank contamination, a bias of -0.4311/yr that **flips the
+  recovered sign** --- the ALMATY mechanism reproduced end-to-end. The paper's validation paragraph
+  now reports this (`\rfSynFlankSlope`/`\rfSynFlankBias`) instead of disclaiming it.
+- **`solarbursts`: the systematics grid is emitted, and the stale-grid mystery is solved.**
+  `speed_grid` computes all three harmonic x fold points from the same fitted ridge as the
+  headline, so the middle point IS `\sbSpeedC` by construction; the raw 66-channel ridge is
+  committed as `results/solarbursts_ridge.csv`. The discrepancy the findings file recorded was a
+  *parameterization*, not code drift: `pad_s=10.0` reproduces the committed evidence byte-for-byte,
+  while `--recover` had `pad_s=5.0` pinned --- so the one command documented as regenerating the
+  committed result produced different numbers (r2 0.897 vs 0.811, speed 0.1368 vs 0.1347).
+  `--recover` now pins the committed parameterization. Grid: 0.0813 / 0.1347 / 0.2448 c.
+- **`ecallisto_census`: the committed real leg is cited.** `\ecsReal*` macros (both namespaces on
+  every run, per the accumulates-values-not-names rule) carry the 168-day illustrative ingest
+  (5 events on 2 days, r = 0.28), and the limitations section now presents it as the data-volume
+  point made concrete rather than leaving committed real evidence unmentioned.
+
+### Fixed
+- Two hand-typed numbers in `solarbursts` were stale against the committed grid and are now
+  macro-backed: the abstract's bracket ("0.09 c ... 0.27 c" -> `\sbGridFundOne`/`\sbGridHarmFour`)
+  and the Discussion's outer radius ("3.6 R_sun" -> `\sbGridHarmFourRhi` = 4.01, which
+  extrapolates *beyond* the Newkirk model's constrained range, not "near its edge"). And the claim
+  "All three lie within the canonical 0.1--0.5 c band" was false --- the fundamental point (0.0813,
+  previously 0.086) is below it --- and now says so.
+
+All three real re-runs (SPDF, e-Callisto) are purely additive against the committed evidence:
+no previously published value moved.
+
 ### Fixed
 - **`pulsarspec`'s null now has a sensitivity, which turns it from an impression into a limit.**
   "Millisecond pulsars are not significantly flatter" rested on two rounded means; `run()` computed
