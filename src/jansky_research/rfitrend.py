@@ -627,6 +627,10 @@ def _write_macros(m: dict, path: str | Path) -> None:
         )
         lines.append(rf"\newcommand{{\rfReal{name}Perez}}{{{g(d, 'perez_2012_2019_change')}}}")
         lines.append(rf"\newcommand{{\rfReal{name}NMonths}}{{{g(d, 'n_months')}}}")
+        # The pre-screening count, so the config-stability screen's attrition is visible. It is
+        # not uniform and it is not incidental: ALMATY loses 28% of its months and ALMATY is the
+        # station carrying the sign disagreement the paper's null rests on.
+        lines.append(rf"\newcommand{{\rfReal{name}NMonthsRaw}}{{{g(d, 'n_months_raw')}}}")
         sl = d.get("stable_lines") or []
         lines.append(
             # "none" for an empty result, NOT "--". A station with no stable lines is a

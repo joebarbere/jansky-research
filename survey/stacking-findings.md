@@ -91,3 +91,38 @@ result; the redshift run is the honest "it also runs on $z$, and here's what the
   the machinery generalises and recover a clean radio--optical correlation; the redshift run is
   non-monotonic and observed-frame, so it is *not* read as luminosity evolution. A larger sample would
   tighten the marginal (faintest / highest-$z$) bins.
+
+## Referee round on the style conversion (2026-08-24)
+
+All 11 macros re-verified against `results/stacking_metrics.json`; no number moved. Fixed:
+
+1. **MAJOR.** "The honest limitations **are** those of any catalogue-and-cutout stacking" had become
+   "**Several** limitations **apply to any** ... stacking". Two things changed beyond tone: the
+   grammatical subject moved from *this work's* limitations to the method class (while the list that
+   follows still opens "the result depends on the Single-Epoch coverage at the target positions",
+   i.e. this paper's result), and a definite claim of completeness became an explicit subset claim.
+   That downgrade is not survivable here: the dropped-source selection has **no stated denominator**
+   anywhere (`\stN` = 236 is the *stacked* count, and the number of DR16Q targets queried is in
+   neither the paper nor the metrics), the injection-recovery ratio of exactly 1.0 is the sole
+   support for the paper's central word *calibrated*, and the binned trends the abstract headlines
+   rest on bins of SNR 2.6--4.7. Restored to a definite, this-work-owned sentence.
+2. The abstract's global "not a new astrophysical claim" had become the last item of a comma series,
+   so it read as qualifying only the third contribution rather than all of them. Given its own clause.
+3. "**We do not over-read this:**" was deleted from the redshift paragraph. The operative limitation
+   survived, but that clause was the only signal that what follows is a *refusal to interpret*.
+   Restored.
+4. A sentence split let a bin-level ratio generalise: "The optically-brightest quasars are ~2x
+   radio-brighter on average" acquired a generic plural subject, where under the em-dash it was a
+   gloss tethered to the two numbers just quoted (82.8/43.8 = 1.89 in these three bins of these 236
+   objects). Re-tethered.
+5. Deleting "This is the kind of population trend a single stacked number cannot show" was
+   **correct** --- the point is made twice already and the deleted form was an unsupported
+   impossibility claim. But it left the paragraph *ending* on "the monotonic ordering across the
+   three bins is clean", and terminal position is emphatic. Checked against the committed bins
+   (error = flux/snr, since `snr = peak/rms`): adjacent steps are **1.00 sigma** and **0.60 sigma**,
+   end-to-end **1.60 sigma**. The ordering is monotonic in the central values only; no adjacent pair
+   is resolved. Reworded to say so.
+
+**Also fixed (pre-existing):** the magnitude paragraph pointed the reader at
+"(Figure~\ref{fig:stack}, **right**)" where the caption puts the magnitude panel in the **middle**,
+and the redshift paragraph points at "right" too. Both pointed at the same panel.

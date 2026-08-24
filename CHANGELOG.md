@@ -10,6 +10,58 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **Traditional-style conversion complete: all 45 papers.** Batch 8 converts `ppdot`, `pulsarspec`,
+  `rfitrend`, `stacking` and `vlbi`. Every batch's referee round returned revisions (eight for
+  eight), and all of this batch's findings are fixed here. The restyle MAJORs were again scope and
+  claim-strength drift no linter sees: `stacking` moved its limitations sentence from *this work's*
+  limitations to the method class while the list still opened "the result depends on ..."; `vlbi`
+  softened "**We stress** that $f=0.05$ is only a common starting assumption" to "We note", the
+  paper's only advance warning that the assumption its central result overturns is an assumption;
+  `rfitrend` promoted a signpost to "the **decisive** check" twelve lines above the paragraph calling
+  the same test "an underpowered global-vs-local discriminator"; `ppdot` collapsed an appositive so
+  the sqrt(2) convention caveat modified a phantom list item rather than the field formula it is the
+  only caveat on.
+- **The em-dash-to-comma appositive collapse is now confirmed as this campaign's characteristic
+  defect**, appearing in five papers across two batches. A comma re-attaches an appositive to the
+  nearest noun: in `stacking` the ~2x excess acquired a generic plural subject instead of staying
+  tethered to two quoted bin values; in `pulsarspec` "squarely in the literature range" moved inside
+  the parenthetical series and so appeared to endorse the *scatter*, which the Discussion explicitly
+  declines to endorse.
+
+### Fixed
+- `vlbi` called OJ 287 "the most variable source" by ranking on eta --- the statistic the paper's own
+  thesis declares unusable as a discriminant. On V, the statistic it argues for, BL Lac leads (0.540)
+  and OJ 287 is second (0.480), so "the other archetypal blazars (BL Lac, ...) follow" was false on
+  the preferred measure. Also states that one of the 13 sources above the floor sits *at* it to the
+  quoted precision, so the count is twelve unambiguous plus one tie.
+- `rfitrend`'s abstract attributed the trend to the Starlink count three sentences before claiming no
+  Starlink attribution; `\rfRealNMonths` = 286 was attached to three stations but counts two (286 =
+  161 + 125; three would be 448); and the config-stability screen's attrition was invisible although
+  `n_months_raw` was in the committed metrics all along. It is uneven and it matters: HUMAIN keeps
+  161 of 174 and GLASGOW 162 of 163, but **ALMATY keeps 125 of 174 (28% dropped)**, and ALMATY is the
+  station whose falling slope carries the sign disagreement the null rests on. Now emitted as
+  `\rfReal<ST>NMonthsRaw` and stated.
+- `stacking`'s magnitude paragraph pointed at the wrong figure panel (the caption puts magnitude in
+  the middle; both paragraphs said "right"), and its "the monotonic ordering across the three bins is
+  clean" is now stated at its measured strength: adjacent steps are 1.00 and 0.60 sigma, end-to-end
+  1.60 sigma, so the ordering is monotonic in the central values only.
+
+### Documented
+- Two pre-existing MAJORs are recorded in the findings files rather than patched, because each needs
+  a real re-run (VizieR confirmed reachable, so both are tractable next):
+  **`pulsarspec`'s null has no sensitivity.** "Millisecond pulsars are not significantly flatter"
+  rests on two rounded means with no dispersion, no N for the normal sample, no SE and no test
+  statistic in the metrics --- the code computes the dispersions and discards them. Reconstructed, the
+  difference is 0.02 +/- 0.12 (**0.17 sigma**) and the smallest resolvable offset is **~0.24 in
+  alpha**, which is the paper's real result and is nowhere stated. The offline fixture injects
+  **+0.2**, *smaller than the real sample's 2-sigma threshold*: the analysis could not have detected
+  the offset its own validation builds in.
+  **`ppdot`'s Crab validation never touches the real data path.** Both quoted numbers are hand-typed
+  and in no committed artifact, and `fetch_atnf_ppdot` requests `PSRJ` and then discards it, so the
+  run cannot identify the Crab at all. Its "Of the ~3500 entries" is also wrong: the table returns
+  **2536** rows, the number `pulsarspec` records for the same call.
+
 ### Fixed
 - **`triangulate` cited the wrong one of two same-year Krupar companions.** The entry was
   internally consistent --- DOI `10.1007/s11207-014-0522-x` matched its own volume 289, issue 8,

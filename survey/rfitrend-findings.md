@@ -141,3 +141,47 @@ Offline (metric + synthetic recover-a-known + tests): `uv run python -m jansky_r
 --offline --out .`
 Real (streamed, in memory): `uv run python scripts/rfitrend_real.py --stations HUMAIN ALMATY
 GLASGOW --start 2012 --end 2026` (writes `results/rfitrend_metrics.json`, `is_real=True`).
+
+## Referee round on the style conversion (2026-08-24)
+
+The null, the HUMAIN/ALMATY sign disagreement, the underpowered-discriminator caveat and the "we flag
+it, and claim nothing more" close all survived at full strength, and the abstract trim (340 -> 316
+words) removed only rhetoric. Fixed:
+
+1. **MAJOR.** The bold signpost "The cross-station coherence test is the verdict" had become "**the
+   decisive check**" --- an evaluative claim about the test's evidential power that the paper
+   withdraws twelve lines later ("with only two line-sampling stations the test is an underpowered
+   global-vs-local discriminator", "it does not prove the absence of any Starlink contribution").
+   A test cannot be both decisive and underpowered. Now "the paper's primary discriminator".
+2. The abstract's "A genuine global megaconstellation signal **would** raise every station's UEM
+   lines together" (body keeps "should"): the abstract carries no version of the caveat that the
+   implication can fail, so "would" presented as deductive a premise the paper shows is
+   probabilistic. Restored.
+3. A sentence split left "This is the gain-contaminated raw level at a different station" with
+   *Perez's campaign* as its nearest antecedent, i.e. saying their result was contaminated.
+
+## Three pre-existing defects, fixed here
+
+**1. The abstract attributed the trend three sentences before disclaiming attribution.** "We
+attribute the trend to the public Starlink on-orbit count" vs "We therefore claim no Starlink
+attribution". Now "We test the trend against".
+
+**2. `\rfRealNMonths` = 286 was attached to three stations but counts two.** 286 = 161 (HUMAIN) +
+125 (ALMATY); the three-station total is 448, since GLASGOW's 162 months sample no UEM line. Scoped
+to the line analysis.
+
+**3. The selection function read as a screen, and its attrition was unreported.** The three stations
+are a hard-coded list (`ECALLISTO_STATIONS`), not the survivors of an archive-wide stability screen
+over ~150 stations, and "configuration-stable" described them post hoc. The screen's attrition is
+also badly uneven and was invisible: HUMAIN 174 -> 161 (7%), GLASGOW 163 -> 162 (1%), **ALMATY
+174 -> 125 (28%)** --- and ALMATY is the station whose falling slope carries the sign disagreement the
+null rests on. `n_months_raw` was in the committed metrics all along; it is now emitted as
+`\rfReal<ST>NMonthsRaw` and stated in the paper, so the attrition is macro-backed rather than absent.
+
+**Still open:** the synthetic recover-a-known injects only common-mode gain drift and broadband
+bursts, both of which the line-vs-adjacent difference cancels **algebraically** --- hence `\rfSynCorr`
+= 1.0 and `\rfSynLineCorr` = 1.0. The systematic the paper itself calls decisive, differential local
+contamination of a line's *flanking* channels, is never injected: ask what would make this test fail,
+and the answer is nothing in the regime that matters. The paper now says what the validation does and
+does not cover; adding a flank-contamination arm and reporting the recovered slope bias is the real
+fix.
