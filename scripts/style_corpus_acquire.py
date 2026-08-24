@@ -54,14 +54,16 @@ def phase_select(seed: int) -> list[dict]:
         records = sc.read_jsonl_gz(meta_dir / f"{era.label}.jsonl.gz")
         picked = sc.stratified_pick(records, era.fulltext_target, seed=seed + era.lo)
         for rec in picked:
-            selection.append({
-                "bibcode": rec["bibcode"],
-                "era": era.label,
-                "year": rec.get("year"),
-                "bibstem": (rec.get("bibstem") or ["?"])[0],
-                "doctype": rec.get("doctype"),
-                "arxiv_id": sc.arxiv_id_from_identifiers(rec.get("identifier", [])),
-            })
+            selection.append(
+                {
+                    "bibcode": rec["bibcode"],
+                    "era": era.label,
+                    "year": rec.get("year"),
+                    "bibstem": (rec.get("bibstem") or ["?"])[0],
+                    "doctype": rec.get("doctype"),
+                    "arxiv_id": sc.arxiv_id_from_identifiers(rec.get("identifier", [])),
+                }
+            )
         print(f"select {era.label:>9}: {len(picked)} of {len(records)}")
     tmp = sel_path.with_suffix(".json.part")
     tmp.write_text(json.dumps(selection, indent=1) + "\n")
@@ -111,15 +113,17 @@ def phase_topup(selection: list[dict], seed: int) -> list[dict]:
         if have >= era.fulltext_target:
             continue
         pool = [
-            r for r in sc.read_jsonl_gz(meta_dir / f"{era.label}.jsonl.gz")
+            r
+            for r in sc.read_jsonl_gz(meta_dir / f"{era.label}.jsonl.gz")
             if r["bibcode"] not in chosen and bool(core & set(r.get("bibstem") or []))
         ]
         round_no = 0
         while have < era.fulltext_target and pool:
             round_no += 1
             want = era.fulltext_target - have
-            batch = sc.stratified_pick(pool, min(2 * want, len(pool)),
-                                       seed=seed + era.lo + 1000 * round_no)
+            batch = sc.stratified_pick(
+                pool, min(2 * want, len(pool)), seed=seed + era.lo + 1000 * round_no
+            )
             batch_codes = {r["bibcode"] for r in batch}
             pool = [r for r in pool if r["bibcode"] not in batch_codes]
             for rec in batch:
@@ -135,15 +139,18 @@ def phase_topup(selection: list[dict], seed: int) -> list[dict]:
                     "topup": True,
                 }
                 ok = (
-                    sc.fetch_arxiv_source(item["arxiv_id"]) if item["arxiv_id"]
+                    sc.fetch_arxiv_source(item["arxiv_id"])
+                    if item["arxiv_id"]
                     else sc.fetch_ads_pdf(item["bibcode"])
                 )
                 selection.append(item)
                 chosen.add(item["bibcode"])
                 if ok is not None:
                     have += 1
-        print(f"topup {era.label:>9}: fulltext {have}/{era.fulltext_target} "
-              f"(pool left {len(pool)})", flush=True)
+        print(
+            f"topup {era.label:>9}: fulltext {have}/{era.fulltext_target} (pool left {len(pool)})",
+            flush=True,
+        )
     sel_path = sc.corpus_dir() / "selection.json"
     tmp = sel_path.with_suffix(".json.part")
     tmp.write_text(json.dumps(selection, indent=1) + "\n")
@@ -171,9 +178,7 @@ def phase_manifest(selection: list[dict], seed: int) -> None:
             "selected_with_arxiv_id": sum(
                 1 for s in selection if s["era"] == era.label and s["arxiv_id"]
             ),
-            "topup_draws": sum(
-                1 for s in selection if s["era"] == era.label and s.get("topup")
-            ),
+            "topup_draws": sum(1 for s in selection if s["era"] == era.label and s.get("topup")),
             "with_fulltext": sum(
                 1 for s in selection if s["era"] == era.label and _has_fulltext(s)
             ),
@@ -181,7 +186,8 @@ def phase_manifest(selection: list[dict], seed: int) -> None:
     have_src = {p.stem for p in (root / "arxiv_src").glob("*.eprint")}
     have_pdf = {p.stem for p in (root / "ads_pdf").glob("*.pdf")}
     missing = [
-        s["bibcode"] for s in selection
+        s["bibcode"]
+        for s in selection
         if not (
             (s["arxiv_id"] and s["arxiv_id"].replace("/", "_") in have_src)
             or s["bibcode"].replace("/", "_").replace("&", "+") in have_pdf
@@ -211,9 +217,11 @@ def phase_manifest(selection: list[dict], seed: int) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--phase",
-                    choices=["harvest", "select", "download", "topup", "manifest", "all"],
-                    default="all")
+    ap.add_argument(
+        "--phase",
+        choices=["harvest", "select", "download", "topup", "manifest", "all"],
+        default="all",
+    )
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args(argv)
 

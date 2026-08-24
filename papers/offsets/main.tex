@@ -19,22 +19,22 @@ Jet: ICRF3 $\times$ Gaia DR3 $\times$ MOJAVE}
 \begin{abstract}
 The VLBI radio position of an active galactic nucleus marks the synchrotron self-absorbed jet base,
 while its Gaia optical position can be pulled toward optical jet or host structure; the two do not
-coincide. Across the population the \emph{normalised} radio--optical offset
+coincide. Across the population the normalised radio--optical offset
 $\xnorm=\sqrt{(\Delta\alpha^*/\sigma_\alpha)^2+(\Delta\delta/\sigma_\delta)^2}$ shows a heavy tail far
-beyond the Rayleigh expectation for pure Gaussian astrometric noise --- a well-established result
-\citep{mignard2016,petrovkovalev2017,kovalev2017,lindegren2018,plavin2019}. We reproduce it with a
+beyond the Rayleigh expectation for pure Gaussian astrometric noise; the heavy tail is a
+well-established result \citep{mignard2016,petrovkovalev2017,kovalev2017,lindegren2018,plavin2019}. We reproduce it with a
 small, tested, CPU-only tool: ICRF3 \citep{icrf3} cross-matched to Gaia DR3 \citep{gaiadr3} via the CDS
 X-Match service \citep{cdsxmatch} (\offN\ matched AGN). The median raw offset is \offMedian~mas, and
-\offFracTail\% of sources have $\xnorm>3$ --- against a Rayleigh expectation of just \offRayleigh\%, a
-\offExcess$\times$ excess. We then test the offset \emph{direction}: cross-matching the \offJetN\ AGN
+\offFracTail\% of sources have $\xnorm>3$, against a Rayleigh expectation of just \offRayleigh\% (a
+\offExcess$\times$ excess). We then test the offset direction: cross-matching the \offJetN\ AGN
 that also have a MOJAVE \citep{lister2021} parsec-scale jet position angle, the radio--optical offset
 aligns with the jet axis (median jet-axis angle \offJetMedAxis$^\circ$ versus $45^\circ$ for random
 orientation; \offJetFracAxis\% within $30^\circ$ of the axis versus $33\%$; Kolmogorov--Smirnov
-$p=\offJetKsP$ against uniform), predominantly \emph{downstream} (\offJetFracDown\% within $45^\circ$ of
+$p=\offJetKsP$ against uniform), predominantly downstream (\offJetFracDown\% within $45^\circ$ of
 the jet direction versus $25\%$), and the alignment tightens for the significant offsets. This
-reproduces \citet{kovalev2017} and \citet{plavin2019}. A reproducibility and tooling contribution --- a
-validated offset statistic, the jet-alignment test, and a reproducible matched catalogue --- not a new
-discovery.
+reproduces \citet{kovalev2017} and \citet{plavin2019}. The contribution is reproducibility and
+tooling (a validated offset statistic, the jet-alignment test, and a reproducible matched catalogue),
+not a new discovery.
 \end{abstract}
 
 \keywords{Active galactic nuclei (16) --- Astrometry (80) --- Reference systems (1366) ---
@@ -70,42 +70,45 @@ jet position angle'' gives the parsec-scale jet direction; it is positionally ma
 the same AGN, yielding \offJetN\ with a jet PA.
 
 \section{Results}
-The median raw radio--optical separation is \offMedian~mas. Crucially, \offFracTail\% of the matched
+The median raw radio--optical separation is \offMedian~mas. \offFracTail\% of the matched
 AGN have a normalised offset $\xnorm>3$, against the Rayleigh expectation of \offRayleigh\% for pure
-Gaussian errors --- a factor of \offExcess\ excess (Figure~\ref{fig:xnorm}). The $\xnorm$ distribution
+Gaussian errors, a factor of \offExcess\ more sources than that expectation predicts
+(Figure~\ref{fig:xnorm}). The $\xnorm$ distribution
 tracks the Rayleigh curve at small $\xnorm$ and departs from it sharply in the tail, exactly the
 behaviour reported by \citet{mignard2016} and \citet{lindegren2018}: a population of AGN whose optical
 photocentre is displaced from the VLBI core by milliarcsecond-scale structure, well beyond the formal
-astrometric errors. The exact $\xnorm>3$ fraction depends on the error model --- Gaia and VLBI formal
+astrometric errors. The exact $\xnorm>3$ fraction depends on the error model. Gaia and VLBI formal
 errors are mildly underestimated, which inflates $\xnorm$, so \offFracTail\% is an upper bound on the
-structurally-offset fraction (structure-only estimates are nearer $\sim$9\%; \citealt{petrovkovalev2017})
---- but the excess over Rayleigh is robust to any plausible error inflation.
+structurally-offset fraction (structure-only estimates are nearer $\sim$9\%; \citealt{petrovkovalev2017}).
+The existence of the excess over Rayleigh, though not its size, is robust to any plausible
+error inflation.
 
 \begin{figure*}
 \plotone{figures/xnorm.pdf}
-\caption{\emph{Left:} distribution of the normalised radio--optical offset \xnorm\ for
+\caption{Left: distribution of the normalised radio--optical offset \xnorm\ for
 ICRF3$\times$Gaia~DR3 AGN (grey), with the Rayleigh expectation for pure Gaussian astrometric noise
 (red); the heavy excess tail beyond $\xnorm=3$ (dotted) is the structural-offset signature.
-\emph{Right:} the jet-axis angle between the offset direction and the MOJAVE parsec-scale jet for the
+Right: the jet-axis angle between the offset direction and the MOJAVE parsec-scale jet for the
 \offJetN\ matched AGN; the distribution peaks toward $0^\circ$ (aligned) rather than the flat uniform
 expectation (red), the signature that the offsets trace the jet.}
 \label{fig:xnorm}
 \end{figure*}
 
-\section{The offset direction aligns with the jet}
-The magnitude excess shows the offsets are real; their \emph{direction} shows what they trace. Of the
+\section{Alignment of the offset with the jet axis}
+The magnitude excess shows the offsets are real; their direction shows what they trace. Of the
 matched AGN, \offJetN\ also appear in MOJAVE \citep{lister2021}, which gives the flux-weighted innermost
 jet position angle (measured from the core toward the approaching, downstream side). Comparing the
-radio--optical offset PA to the jet PA (Figure~\ref{fig:xnorm}, right), the jet-axis angle ---
-$\min(\Delta,180^\circ-\Delta)$, which is $0^\circ$ when the offset lies along the jet axis and would
-have a median of $45^\circ$ and a within-$30^\circ$ fraction of $1/3$ if offsets were randomly oriented
---- has median \offJetMedAxis$^\circ$, with \offJetFracAxis\% within $30^\circ$ of the axis; a
-Kolmogorov--Smirnov test against the uniform distribution gives $p=\offJetKsP$. The alignment is also
-\emph{directional}: \offJetFracDown\% of offsets fall within $45^\circ$ of the downstream jet direction
+radio--optical offset PA to the jet PA (Figure~\ref{fig:xnorm}, right), the jet-axis angle
+($\min(\Delta,180^\circ-\Delta)$, which is $0^\circ$ when the offset lies along the jet axis and would
+have a median of $45^\circ$ and a within-$30^\circ$ fraction of $1/3$ if offsets were randomly oriented)
+has median \offJetMedAxis$^\circ$, with \offJetFracAxis\% within $30^\circ$ of the axis; a
+Kolmogorov--Smirnov test against the uniform distribution gives $p=\offJetKsP$. The offsets therefore lie
+preferentially along the jet axis rather than at random position angles. The alignment is also
+directional: \offJetFracDown\% of offsets fall within $45^\circ$ of the downstream jet direction
 (random $25\%$), as expected if the VLBI core sits upstream of the optical centroid through opacity
 (core-shift) while extended optical jet emission lies downstream. As a consistency check the signal
 tightens for the more significant offsets ($X>2$: \offJetNsig\ sources, median \offJetMedAxisSig$^\circ$,
-\offJetFracAxisSig\% within $30^\circ$) --- expected, since weak offsets are dominated by astrometric
+\offJetFracAxisSig\% within $30^\circ$), which is expected because weak offsets are dominated by astrometric
 noise with random PA. The result is unchanged when jets with a poorly defined direction are removed.
 This reproduces \citet{kovalev2017} and \citet{plavin2019}.
 
@@ -119,19 +122,19 @@ confirmations).
 
 \section{Discussion and reproducibility}
 Both literature results are recovered cleanly from public catalogues with a small tested tool: the
-radio--optical offset \emph{excess} (AGN optical positions are displaced from their VLBI cores by real
-milliarcsecond structure) and the offset \emph{alignment} with the parsec-scale jet (the displacement
+radio--optical offset excess (AGN optical positions are displaced from their VLBI cores by real
+milliarcsecond structure) and the offset alignment with the parsec-scale jet (the displacement
 is predominantly downstream along the jet, the disk--jet signature of \citealt{kovalev2017} and
-\citealt{plavin2019}). The contribution is reproducibility and tooling --- validated offset and
+\citealt{plavin2019}). The contribution is reproducibility and tooling (validated offset and
 jet-alignment statistics, a reproducible ICRF3$\times$Gaia$\times$MOJAVE matched catalogue, and the
-two-panel figure --- not a new astrophysical claim; the value added over the source papers is a fully
+two-panel figure), not a new astrophysical claim; the value added over the source papers is a fully
 open, end-to-end-reproducible pipeline. The remaining literature extension is to model the disk versus
 jet contributions to the optical centroid quantitatively \citep{plavin2019}. Every number above is
-written by the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis
+written by the pipeline into the macros \code{\textbackslash input}ted here, and the analysis
 regenerates from a clean checkout on public data.
 
 \section*{AI use disclosure}
-This paper was developed collaboratively by the author with Anthropic's Claude
+The manuscript was developed collaboratively by the author with Anthropic's Claude
 \citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
 implementation, and testing of the \code{offsets} tool, the ICRF3$\times$Gaia cross-match and the
 offset statistics, and the drafting of this manuscript. The author directed the work, independently

@@ -56,3 +56,40 @@ coverage-limited lower bound.
   confirmed; the confirmed rate is a lower bound set by how many stations observed the event.
 - **Reproducible:** `make ecallisto-day DATE=...` runs a day's scan + coincidence without Airflow; the
   DAG's `reduce_day` writes both the per-day candidate CSV and the confirmed-events CSV idempotently.
+
+## The paper's only result was drawn from the wrong run (found + fixed 2026-08-23)
+
+Found by the referee round on the traditional-style conversion, not by the conversion itself.
+This is the un-namespaced mode-dependent macro failure in its purest form.
+
+`_write_macros` emitted seven names (`\ecNevents`, `\ecMaxEventStations`, `\ecNbursts`,
+`\ecNscanned`, `\ecMedDrift`, `\ecBurstFrac`, `\ecNrfiRejected`) from **both** legs, and `run()`
+wrote both legs' metrics to one `results/ecallisto_metrics.json`. The real 2011-09-14 archive day
+ran last, so the committed macros held real values --- while **all twelve macro uses in the paper
+describe the synthetic day**. The abstract typeset as:
+
+> On a synthetic day (a real burst at **0** stations plus single-station interference), the
+> coincidence step confirms exactly **0** event and rejects **8** single-station candidates.
+
+and the Method attributed the real day's `8 of 1512` and `-5.941 MHz/s` to a synthetic run of ten
+stations. `preserve_live_macros` could not help: both legs wrote real values under one name, so
+there was nothing to arbitrate. Correct synthetic values are 4 stations, 1 event, 3 rejected,
+7 of 10 flagged, -6.911 MHz/s.
+
+**Fixed:** macros namespaced `\ecSyn*`/`\ecReal*`; each leg writes its own results file
+(`ecallisto_synthetic_metrics.json` + `_catalog.csv`, allowlisted like `vgpra_synthetic_*`); the
+paper repointed to the synthetic namespace.
+
+Two things this taught that are not in CLAUDE.md yet:
+
+1. **`preserve_live_macros` does not accumulate names, only values.** It rewrites the lines the new
+   run emits and silently drops any existing macro the new text never mentions. The two-namespace
+   design works only because each writer emits *both* namespaces, filling its own and leaving the
+   other as `--`. A writer that emits only its own namespace **deletes** the other leg's numbers.
+2. **The un-namespaced test was the lock.** `test_run_offline_writes_artifacts` asserted
+   `\ecNbursts in macros` --- it passed precisely because the defect was present, and would have
+   failed on the fix. Third instance of this pattern in the repo.
+
+**Still open:** the real archive day is now cited once (it flagged `\ecRealNbursts` candidates among
+`\ecRealNscanned` station-days and confirmed `\ecRealNevents`), but it remains a single day and does
+not characterise the coincidence step's real-data performance.

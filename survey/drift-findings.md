@@ -62,3 +62,34 @@ completeness at S/N $\approx 1.3$, false-positive rate $<0.9\%$), plus an **hone
 real-data check**: the same detector is fooled by the band-centre DC spike and does not recover the
 true Voyager-1 carrier. A tooling/benchmark contribution with its limits stated plainly — no
 overclaimed validation.
+
+## Referee round on the style conversion (2026-08-23)
+
+Verdict *minor revision*. All three limitation paragraphs survived the dissolution of
+`\section{Limitations}` intact (none carried a magnitude). Two MAJORs, both fixed:
+
+1. **A one-detector, one-file result had been restated as a class-level claim.** Dropping the
+   inferential "So" left the indefinite subject `A detector validated on injected tones in clean
+   synthetic noise fails on the real Voyager-1 data` --- i.e. *any* such detector. Made definite
+   ("This detector, validated on ..., fails ...").
+2. **A limitation softened in the direction the evidence does not support.** `does not generalize
+   ... as-is` had become `as configured`, implying a settings choice might succeed --- which the
+   same paragraph rules out (the drift grid *was* widened for the -0.69 Hz/s carrier, and the
+   conclusion is that purpose-built SETI software is required). Restored, and the clause order
+   restored so the failure leads rather than trailing a scope note.
+
+Also fixed: the abstract's Voyager test had become additive ("We also point ...") rather than a
+test of whether the benchmark transfers, with the non-detection demoted to a participle; the
+"relative, not absolute" caveat no longer sat next to any number, so the Discussion's headline S/N
+now says "in the model's internal units"; the section stated no reason a null is worth reporting.
+
+**Title:** "Honest" dropped. The conversion removed all six body instances, leaving it an orphan
+the paper no longer sustained; in journal register it is a claim about the authors, not the result,
+and `\shorttitle` already omitted it. `arxiv-submission/metadata.yaml` is gitignored and
+regenerates from the .tex, so nothing needed syncing.
+
+**Pre-existing, still open:** the Voyager numbers (4.85, 4.59, 8420.216 MHz, -0.69 Hz/s) and the
+95% Clopper-Pearson limit ~0.9% are typed into `main.tex` despite the file's own comment that no
+number is hand-typed. The 0.9% needs N = 400, which lives only in the `fpr_trials=400` default in
+`src/jansky_research/driftsearch.py`, not in `results/drift_metrics.json`. Rule-of-three on 0/400
+gives 0.75%, so 0.9% is conservative rather than wrong.

@@ -11,6 +11,49 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`ecallisto_pipeline`'s only quantitative result was drawn from the wrong run.** Found by the
+  referee round on the style conversion. `_write_macros` emitted seven un-namespaced names from both
+  legs and `run()` wrote both legs to one results file, so the real 2011-09-14 archive day (which
+  ran last) owned the macros while **all twelve macro uses in the paper describe the synthetic
+  day**. The abstract typeset as *"a real burst at **0** stations ... confirms exactly **0** event
+  and rejects 8"*, and the Method attributed the real day's `8 of 1512` and `-5.941 MHz/s` to a
+  synthetic run over ten stations. `preserve_live_macros` was powerless: both legs wrote real values
+  under one name. Macros are now `\ecSyn*`/`\ecReal*`, each leg writes its own results file
+  (`ecallisto_synthetic_metrics.json`, allowlisted like `vgpra_synthetic_*`), and the paper cites
+  the synthetic namespace. Correct values: 4 stations, 1 event, 3 rejected, 7 of 10 flagged.
+  The committed real day is now cited once instead of sitting unread in `results/`.
+- Two lessons worth keeping from that fix. **`preserve_live_macros` accumulates values, not names**
+  --- it rewrites the lines the new run emits and drops any existing macro the new text never
+  mentions, so a writer emitting only its own namespace *deletes* the other leg's numbers; each leg
+  must emit both namespaces, filling its own and leaving the other as `--`. And **the un-namespaced
+  test was the lock**: `test_run_offline_writes_artifacts` asserted `\ecNbursts` existed, so it
+  passed because the defect was present and would have failed on the fix. Third instance in this
+  repo of a test encoding "X must not exist" where X was the fix.
+
+### Changed
+- Papers restyled to traditional pre-LLM register (batch 7: `driftsearch`, `ecallisto_census`,
+  `ecallisto_pipeline`, `frbperiod`, `offsets`) --- 35 of 45 papers converted. Gates clean on every
+  file before review; **all five referee rounds returned revisions** (seven batches for seven).
+  The MAJORs were all scope and claim-strength drift that no linter can see: `ecallisto_census`
+  narrowed *"all event counts in **this paper** are synthetic"* to "in this validation" and turned
+  *"This paper ... does not report a measured solar-cycle correlation"* into agentless passive,
+  which reads as a claim about the literature and is false on the paper's own citation;
+  `driftsearch` lost an inferential connective, so one detector on one file became *"A detector
+  validated on injected tones ... fails on the real Voyager-1 data"* (any such detector), and
+  softened "does not generalize **as-is**" to "as configured", offering an escape hatch the same
+  paragraph rules out; `frbperiod` retitled *"A null, as expected"* to a declarative heading, in a
+  paper that quotes no sensitivity whatsoever for that source; `ecallisto_pipeline` lost its
+  limitations head sentence, so limitation (i) read as a description of the method, and promoted a
+  LaTeX comment ("none typed by hand") into a body claim the paper falsifies one paragraph up.
+- `driftsearch`'s title drops "Honest". The conversion removed all six body instances, leaving it an
+  orphan; in journal register it is a claim about the authors, not the result, and `\shorttitle`
+  already omitted it.
+- Recurring mechanical signature this batch: **collapsing an em-dash appositive to a comma
+  re-attaches it to the nearest noun.** In `offsets` it made the 24.0x excess a property of the
+  Rayleigh expectation rather than the ratio of the two fractions; in `frbperiod` it let "on 19
+  bursts" qualify the agreement claim rather than the periodogram. Grep for it in future batches.
+
+### Fixed
 - **Three wrong span claims in the solar-burst papers, two of them in abstracts.** Each was a
   round-number restatement of a macro pair that nobody re-derived after the runs settled.
   `triangulate` called its 0.125--1.975 MHz band "two decades of frequency" in four places; it is
