@@ -30,17 +30,18 @@ makes the DM sweep invisible; the sigpyproc3 test-tree Parkes file (832 chan, 70
 
 ## Benchmark (RX 7600 XT / gfx1102, ROCm; 8192×1024, 1009 DM trials)
 
-| engine | CPU | GPU |
-|---|---|---|
-| brute roll-and-sum | 36.1 s | 1.50 s (**24×**) |
-| **FDMT** | **0.41 s** | 0.41 s (~1×) |
+**[Superseded twice — the numbers of record are in `results/singlepulse_metrics.json`, all four
+columns from a single invocation (2026-08-25). Earlier versions of this section carried a
+36.1 s / 24x table from a run that was never committed, and then a spliced row combining an
+Aug-4 CPU invocation with an Aug-10 GPU one; see the referee round below.]**
 
 **The algorithm beats the hardware:** O(N log N) FDMT on a CPU outruns the GPU-accelerated brute
-force by 3.6×. Our FDMT's own GPU gain is ~1× — the per-delay host loop dominates; a
-batched-gather vectorisation of the merge is stated future work. We do NOT compare against tuned
-CUDA dedispersers on datacentre GPUs (different hardware class). Reproduce:
-`uv run python -m jansky_research.singlepulse --benchmark --out .` (CPU); add `--device cuda`
-from a ROCm venv for the GPU column.
+force. Our FDMT's own GPU gain is ~1× — the per-delay host loop dominates; a batched-gather
+vectorisation of the merge is stated future work. We do NOT compare against tuned CUDA
+dedispersers on datacentre GPUs (different hardware class). Reproduce (one invocation, all
+columns, hardware string emitted by torch introspection):
+`PYTHONPATH=src:../jansky/src ~/.venvs/rocm-test/bin/python -m jansky_research.singlepulse
+--out . --device cpu --benchmark --bench-devices cpu,cuda`
 
 ## Honest caveats
 
@@ -79,10 +80,11 @@ and used nowhere despite being the number that says how well the peak can be loc
 CPU-only run (`bench_*_gpu_s: null`, `device: "cpu"`) with GPU values patched in later while
 `device` stayed `"cpu"`. The code's own `devs = ("cpu", "cuda") if device != "cpu" else ("cpu",)`
 means a `--device cuda` run writes **both** columns *and* sets `device: "cuda"` — so no single
-invocation can produce the committed combination. The conclusion survives on same-run numbers
-(0.45 vs 1.50 = 3.3x), so this is provenance rather than correctness. The paper now says the
-columns come from separate invocations and that the ratios should be read to a significant
-figure; `bench_devices` is recorded going forward so it cannot recur silently.
+invocation can produce the committed combination. [Correction, 2026-08-25: the "same-run" claim
+that followed here was itself wrong — 0.45 s was the Aug-4 CPU invocation and 1.50 s the Aug-10
+GPU one. The genuinely same-run pair (37.9 s CPU brute vs 1.5 s GPU, from the Aug-10 run's
+commit message) gives 25.3x, not the 29x the spliced row implied; the committed row now comes
+from one invocation with `--bench-devices` decoupled from the science device.]
 
 **The evidence file labelled its synthetic block with the real file's name.** `source` was set
 in the real block to the Parkes file and sat directly above `recovered_dm: 56.63` — a
@@ -145,3 +147,40 @@ all verified correct); the untracked arxiv-submission still carries the retracte
 
 **Status: fixes pending** (one fdmt.benchmark re-run on the ROCm venv; one replot; one null run
 into a tmpdir).
+
+**Status: RESOLVED (2026-08-25).** All 15 findings addressed; the referee's estimates were
+confirmed by measurement on both blockers.
+
+**Blocker 1 (figure):** `search` now computes the per-row z-scored peak -- the same statistic
+`best()` maximises -- and the figure plots it (the raw track sum is committed as a diagnostic
+key only). A test pins curve-argmax == best_dm and curve-max == best_snr.
+
+**Blocker 2 (trials):** a 200-rep per-channel circular-shift null is code
+(`shift_null`) and committed: median 5.23, p99 6.03, max 6.26 -- the referee's Gumbel estimate
+(~5.2) to the decimal. The observed butterfly 6.0 has p = 0.030 against it; the paper now leads
+with the positional coincidence (2.9 of 1,903 trials, p = 0.0035) and the boxcar S/N 14, and
+quotes the peak height only against the committed null.
+
+**The benchmark, re-measured in one invocation** (`--bench-devices` decoupled from the science
+device; hardware string emitted by torch introspection, never typed): brute 36.5 s CPU ->
+1.49 s GPU (**24x**, not the spliced 29x -- the splice had retained the older, slower CPU
+number exactly as the referee suspected), FDMT 0.41 s CPU / 0.44 s GPU (~1x), NumPy oracle
+19.9 s committed. The FDMT-CPU-beats-brute-GPU headline is 3.6x. The ~15% CPU run-to-run
+spread is stated in the paper as the honest wall-clock systematic.
+
+**A guard bug found en route:** `preserve_live_macros`' synthetic-source check used the naive
+"synthetic in source" rule, so torchfdmt's MIXED source string ("synthetic injection ... +
+Parkes ... real") made every real rerun look like a synthetic downgrade and its macro updates
+were silently discarded -- the fresh benchmark left \spBruteSpeedup at 29 until caught. The
+rule now matches `preserve_live_results` (mixed counts as real), with tests for both
+directions. This is the same marker-mismatch lesson as the results-guard fix of 2026-08,
+arriving in the macro guard.
+
+**The rest:** sp_pos/sp_width/n_time committed with the boundary condition stated (~46% of the
+best-DM series integrates truncated tracks); \spCatDm sourced from CRAB_DM and cited at the
+catalogue sentence; \spSnr (synthetic 113.5) now used as the contrast to the real 6.0; the
+universal "every production GPU dedisperser ships CUDA" claim narrowed and Sclocco et al. 2016
+(OpenCL, AMBER/ARTS) cited as the existing portable route; the gather-bound baseline stated;
+the uncited giant-pulse rate dropped; the stale findings table and the wrong "same-run 3.3x"
+claim corrected in place; provenance comment scoped to result numbers; arXiv package rebuilt
+clean under the abstract limit.

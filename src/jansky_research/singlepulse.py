@@ -32,6 +32,7 @@ __all__ = [
     "read_sigproc",
     "synthetic_observation",
     "search",
+    "shift_null",
     "run",
 ]
 
@@ -132,25 +133,78 @@ def search(
     Channels with wildly non-stationary variance are clipped (a light RFI guard) before the
     transform; the fold searches around the best single-pulse spacing.
     """
-    dyn = np.asarray(dynspec, np.float32)
-    # per-channel robust normalisation (bandpass + crude RFI guard)
-    med = np.median(dyn, axis=0)
-    mad = np.median(np.abs(dyn - med), axis=0) * 1.4826 + 1e-6
-    dyn = np.clip((dyn - med) / mad, -6.0, 12.0)
-
+    dyn = _normalise(dynspec)
     r = F.fdmt(dyn, freqs_mhz, dt, max_dm, device=device)
     best_dm, best_snr = r.best()
     series = r.plane[int(np.argmin(np.abs(r.dms - best_dm)))].cpu().numpy()
     sp_snr, sp_width, sp_pos = transients.boxcar_snr(series, np.array([1, 2, 4, 8, 16, 32]))
+    # The per-row z-scored peak — the SAME statistic best() maximises. An earlier figure
+    # plotted the raw track sum, which grows with delay row (more samples integrated), so its
+    # maximum sat ~60 pc/cm^3 from the value the caption quoted.
+    plane = r.plane
+    med = plane.median(dim=1, keepdim=True).values
+    mad = (plane - med).abs().median(dim=1, keepdim=True).values * 1.4826 + 1e-12
+    snr_curve = ((plane - med) / mad).max(dim=1).values.cpu().numpy()
     return {
         "best_dm": float(best_dm),
         "best_snr": float(best_snr),
         "sp_snr": float(sp_snr),
         "sp_width_samples": int(sp_width),
         "sp_pos": int(sp_pos),
+        "n_time": int(dyn.shape[0]),
         "series": series,
         "dms": r.dms,
-        "dm_curve": r.plane.max(dim=1).values.cpu().numpy(),
+        "dm_curve": snr_curve,
+        "dm_curve_raw": plane.max(dim=1).values.cpu().numpy(),
+    }
+
+
+def _normalise(dynspec: np.ndarray) -> np.ndarray:
+    """Per-channel robust normalisation (bandpass + crude RFI guard), shared by search and null."""
+    dyn = np.asarray(dynspec, np.float32)
+    med = np.median(dyn, axis=0)
+    mad = np.median(np.abs(dyn - med), axis=0) * 1.4826 + 1e-6
+    return np.clip((dyn - med) / mad, -6.0, 12.0)
+
+
+def shift_null(
+    dynspec: np.ndarray,
+    freqs_mhz: np.ndarray,
+    dt: float,
+    *,
+    max_dm: float = 120.0,
+    n_reps: int = 200,
+    device: str = "cpu",
+    seed: int = 0,
+) -> dict:
+    """Null distribution of the butterfly peak under per-channel circular time shifts.
+
+    Each repetition rolls every channel by an independent uniform offset, destroying any
+    dispersed track while preserving each channel's own statistics and RFI, then records the
+    maximum of the same per-row z-scored statistic :func:`search` reports. This is the trials
+    accounting a bare "S/N = 6.0" lacks: the butterfly plane holds millions of cells, so its
+    noise maximum is itself several sigma, and only this distribution says where a measured
+    peak height sits against it.
+    """
+    rng = np.random.default_rng(seed)
+    dyn = _normalise(dynspec)
+    n_t, n_c = dyn.shape
+    vals = []
+    for _ in range(n_reps):
+        shifted = np.empty_like(dyn)
+        offs = [int(x) for x in rng.integers(0, n_t, size=(n_c,))]
+        for c in range(n_c):
+            shifted[:, c] = np.roll(dyn[:, c], offs[c])
+        r = F.fdmt(shifted, freqs_mhz, dt, max_dm, device=device)
+        vals.append(r.best()[1])
+    arr = np.asarray(vals)
+    return {
+        "n_reps": int(n_reps),
+        "mean": float(arr.mean()),
+        "p50": float(np.percentile(arr, 50)),
+        "p99": float(np.percentile(arr, 99)),
+        "max": float(arr.max()),
+        "best_snrs": arr,
     }
 
 
@@ -174,8 +228,22 @@ def _fold_period(series: np.ndarray, dt: float, p0: float) -> float:
     return float(res.best_period)
 
 
-def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
-    """Full slice: synthetic recover-a-known, plus the real Crab leg when online."""
+def run(
+    out: str = ".",
+    *,
+    offline: bool = True,
+    device: str = "cpu",
+    bench: bool = False,
+    bench_devices: tuple[str, ...] | None = None,
+    null_reps: int = 200,
+) -> dict:
+    """Full slice: synthetic recover-a-known, plus the real Crab leg when online.
+
+    ``bench_devices`` decouples the benchmark's device set from the science leg's ``device``:
+    previously ``devs`` was derived from ``device``, so the combination the paper reports
+    (CPU science + both benchmark columns) was unreachable by any single invocation — which is
+    exactly how the committed row came to be assembled by hand from two runs.
+    """
 
     dyn, freqs, dt = synthetic_observation()
     s = search(dyn, freqs, dt, max_dm=120.0, device=device)
@@ -183,6 +251,7 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
     metrics = {
         "source": "synthetic pulse train (Crab-like)",
         "true_dm": CRAB_DM,
+        "catalogue_dm": CRAB_DM,
         "recovered_dm": round(s["best_dm"], 2),
         "butterfly_snr": round(s["best_snr"], 1),
         "true_period_ms": round(CRAB_P_S * 1e3, 3),
@@ -193,8 +262,20 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
     if bench:  # pragma: no cover - timing-dependent; reproduced via --benchmark
         from . import fdmt as _F
 
-        devs = ("cpu", "cuda") if device != "cpu" else ("cpu",)
+        devs = bench_devices or (("cpu", "cuda") if device != "cpu" else ("cpu",))
         b = _F.benchmark(n_time=8192, n_chan=1024, max_dm=800.0, devices=devs, repeats=3)
+        hw = "unknown"
+        try:
+            import platform
+
+            import torch
+
+            if "cuda" in devs and torch.cuda.is_available():
+                hw = f"{torch.cuda.get_device_name(0)}, torch {torch.__version__}"
+            else:
+                hw = f"{platform.processor() or platform.machine()}, torch {torch.__version__}"
+        except Exception:
+            pass
         metrics.update(
             {
                 "bench_brute_cpu_s": round(b["brute_cpu_s"], 2),
@@ -205,12 +286,18 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
                 "bench_fdmt_gpu_s": round(b.get("fdmt_cuda_s", float("nan")), 2)
                 if "fdmt_cuda_s" in b
                 else None,
+                "bench_numpy_oracle_s": round(b["numpy_oracle_reduced_s"], 2),
                 "bench_n_dm": int(b["n_dm_trials"]),
                 # Which invocation produced this row. A CPU-only run leaves the GPU
                 # columns null; patching GPU numbers into that JSON later yields a row no
                 # single run could produce, which is how the committed row came to pair
                 # device="cpu" with both columns filled.
                 "bench_devices": list(devs),
+                # Emitted by torch introspection, never typed: a hand-entered hardware string
+                # would be inherited by future runs through the results merge and misattribute
+                # them (the referee-caught failure).
+                "benchmark_device": "cuda" if "cuda" in devs else "cpu",
+                "benchmark_hardware": hw,
             }
         )
 
@@ -222,7 +309,14 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
         if not fil.exists():
             urllib.request.urlretrieve(CRAB_FIL_URL, fil)
         rdyn, rfreqs, hdr = read_sigproc(fil)
-        rs = search(rdyn, rfreqs, float(hdr["tsamp"]), max_dm=120.0, device=device)
+        rdt = float(hdr["tsamp"])
+        rs = search(rdyn, rfreqs, rdt, max_dm=120.0, device=device)
+        dm_step = _dm_step(rfreqs, rdt)
+        n_trials = int(rs["dms"].size)
+        offset_trials = abs(rs["best_dm"] - CRAB_DM) / dm_step
+        # The trials accounting for the butterfly height: per-channel circular-shift null.
+        null = shift_null(rdyn, rfreqs, rdt, max_dm=120.0, n_reps=null_reps, device=device)
+        n_ge = int(np.sum(null["best_snrs"] >= rs["best_snr"]))
         metrics.update(
             {
                 # Name BOTH legs. The unprefixed keys (recovered_dm, butterfly_snr,
@@ -237,10 +331,24 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
                 "real_recovered_dm": round(rs["best_dm"], 2),
                 "real_butterfly_snr": round(rs["best_snr"], 1),
                 "real_sp_snr": round(rs["sp_snr"], 1),
+                "real_sp_pos": int(rs["sp_pos"]),
+                "real_sp_width_samples": int(rs["sp_width_samples"]),
+                "real_n_time": int(rs["n_time"]),
                 "real_dm_error_pc": round(100 * abs(rs["best_dm"] - CRAB_DM) / CRAB_DM, 1),
                 # One FDMT row is one delay sample, so this is the DM quantisation of the
                 # recovery: without it a "0.3%" offset cannot be read as few-trial agreement.
-                "real_dm_step_pc": round(_dm_step(rfreqs, float(hdr["tsamp"])), 4),
+                "real_dm_step_pc": round(dm_step, 4),
+                "real_n_dm_trials": n_trials,
+                "real_dm_offset_trials": round(float(offset_trials), 1),
+                # p for a uniformly placed noise maximum to land this close to the catalogue
+                # DM: the honest positional statement behind "recovers the Crab DM".
+                "real_p_positional": round((2.0 * offset_trials + 1.0) / n_trials, 5),
+                "real_null_reps": null["n_reps"],
+                "real_null_p50": round(null["p50"], 2),
+                "real_null_p99": round(null["p99"], 2),
+                "real_null_max": round(null["max"], 2),
+                # (k+1)/(n+1): the butterfly peak height against the shift null.
+                "real_p_null": round((n_ge + 1) / (null["n_reps"] + 1), 4),
             }
         )
         s = rs  # figure shows the real butterfly when available
@@ -262,12 +370,19 @@ def _figure(s: dict, out_dir) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.2, 3.8))
-    ax1.plot(s["dms"], s["dm_curve"], "-", color="C0", lw=1.2)
+    # Plot the statistic best() maximises (per-row z-scored peak). The raw track sum rises
+    # with delay row and put the displayed maximum ~60 pc/cm^3 from the quoted DM.
+    ax1.plot(s["dms"], s["dm_curve"], "-", color="C0", lw=1.2, label="row-normalised peak")
     ax1.axvline(CRAB_DM, color="C3", ls="--", lw=1, label=f"catalogue DM {CRAB_DM}")
-    ax1.set(xlabel="DM (pc cm$^{-3}$)", ylabel="peak track sum", title="FDMT butterfly peak")
+    ax1.set(
+        xlabel="DM (pc cm$^{-3}$)",
+        ylabel="peak of z-scored series",
+        title="FDMT butterfly peak",
+    )
     ax1.legend(fontsize=8)
     ax2.plot(np.arange(s["series"].size), s["series"], "-", color="C0", lw=0.7)
-    ax2.axvline(s["sp_pos"], color="C3", ls=":", lw=1)
+    ax2.axvline(s["sp_pos"], color="C3", ls=":", lw=1, label="best boxcar detection")
+    ax2.legend(fontsize=8)
     ax2.set(xlabel="sample", ylabel="dedispersed power", title="Best-DM time series")
     fig.tight_layout()
     fig.savefig(out / "singlepulse.pdf")
@@ -291,11 +406,23 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\spRealSnr}}{{{_fmt('real_butterfly_snr')}}}",
         rf"\newcommand{{\spRealSpSnr}}{{{_fmt('real_sp_snr')}}}",
         rf"\newcommand{{\spRealDmErr}}{{{_fmt('real_dm_error_pc')}}}",
+        rf"\newcommand{{\spCatDm}}{{{_fmt('catalogue_dm')}}}",
+        rf"\newcommand{{\spRealDmStep}}{{{_fmt('real_dm_step_pc')}}}",
+        rf"\newcommand{{\spRealTrials}}{{{_fmt('real_n_dm_trials')}}}",
+        rf"\newcommand{{\spRealOffTrials}}{{{_fmt('real_dm_offset_trials')}}}",
+        rf"\newcommand{{\spRealPpos}}{{{_fmt('real_p_positional')}}}",
+        rf"\newcommand{{\spRealNullReps}}{{{_fmt('real_null_reps')}}}",
+        rf"\newcommand{{\spRealNullMedian}}{{{_fmt('real_null_p50')}}}",
+        rf"\newcommand{{\spRealNullNinetyNine}}{{{_fmt('real_null_p99')}}}",
+        rf"\newcommand{{\spRealNullMax}}{{{_fmt('real_null_max')}}}",
+        rf"\newcommand{{\spRealPnull}}{{{_fmt('real_p_null')}}}",
         rf"\newcommand{{\spBruteCpu}}{{{_fmt('bench_brute_cpu_s')}}}",
         rf"\newcommand{{\spBruteGpu}}{{{_fmt('bench_brute_gpu_s')}}}",
         rf"\newcommand{{\spFdmtCpu}}{{{_fmt('bench_fdmt_cpu_s')}}}",
         rf"\newcommand{{\spFdmtGpu}}{{{_fmt('bench_fdmt_gpu_s')}}}",
+        rf"\newcommand{{\spOracle}}{{{_fmt('bench_numpy_oracle_s')}}}",
         rf"\newcommand{{\spBenchNdm}}{{{_fmt('bench_n_dm')}}}",
+        rf"\newcommand{{\spBenchHw}}{{{_fmt('benchmark_hardware')}}}",
     ]
     # Ratios are DERIVED, never typed. A hand-written "~24x" survived in the paper next to
     # the two macros it is computed from, long after a re-benchmark made it 29x.
@@ -326,10 +453,24 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--offline", action="store_true")
     p.add_argument("--device", default="cpu")
     p.add_argument("--benchmark", action="store_true")
+    p.add_argument(
+        "--bench-devices",
+        default=None,
+        help="comma-separated benchmark device set, decoupled from --device (e.g. cpu,cuda)",
+    )
+    p.add_argument("--null-reps", type=int, default=200)
     args = p.parse_args(argv)
+    bdevs = tuple(args.bench_devices.split(",")) if args.bench_devices else None
     print(
         json.dumps(
-            run(args.out, offline=args.offline, device=args.device, bench=args.benchmark),
+            run(
+                args.out,
+                offline=args.offline,
+                device=args.device,
+                bench=args.benchmark,
+                bench_devices=bdevs,
+                null_reps=args.null_reps,
+            ),
             indent=2,
         )
     )

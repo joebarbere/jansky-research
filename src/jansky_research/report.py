@@ -219,7 +219,13 @@ def _macros_are_synthetic(text: str, pattern: re.Pattern[str]) -> bool:
     for line in text.splitlines():
         m = pattern.match(line.strip())
         if m and m.group(1).lower().endswith("source"):
-            return "synthetic" in m.group(2).lower()
+            low = m.group(2).lower()
+            # Match _results_are_real's rule: a MIXED source that names both legs (torchfdmt's
+            # is "synthetic injection (unprefixed keys) + Parkes/UWL ... (real ...)") counts as
+            # REAL. The naive `"synthetic" in low` treated every real torchfdmt rerun as a
+            # synthetic downgrade and silently discarded its macro updates -- caught 2026-08-25
+            # when a fresh single-invocation benchmark left \spBruteSpeedup at the spliced 29.
+            return "synthetic" in low and "real" not in low
     return False
 
 

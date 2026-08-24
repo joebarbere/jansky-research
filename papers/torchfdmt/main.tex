@@ -1,6 +1,7 @@
 \documentclass[twocolumn]{aastex631}
 
-% Every number is \input from the pipeline --- none typed by hand.
+% Every result number is \input from the pipeline; instrument constants are transcribed
+% from the file header and stated as such.
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -16,27 +17,29 @@ Public Crab-Pulsar Data}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-Every production GPU dedisperser, namely Heimdall/\code{dedisp} \citep{barsdell2012},
-astro-accelerate, FREDDA) ships CUDA kernels, which excludes the growing population of
-non-NVIDIA hardware. We present a Fast Dispersion Measure Transform \citep[FDMT;][]{zackayofek2017}
-implemented entirely in PyTorch tensor operations \citep{pytorch}: no custom kernels, so one
-\code{device=} argument runs the same code on CPU, CUDA, or ROCm. The benchmark below was run
-on a consumer AMD RX~7600~XT; the science legs described here ran on CPU. Correctness is
-anchored against an independently tested brute-force oracle: the zero-delay row equals the
-plain channel sum exactly, and on synthetic dispersed pulses the transform recovers the
-injected dispersion measure within delay quantisation (DM $\spRecDm$ for $\spTrueDm$ injected;
-folded period $\spRecP$\,ms for $\spTrueP$ injected). On a small public Parkes/UWL observation
-of the Crab pulsar the same pipeline recovers $\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$
-($\spRealDmErr\%$ from the ATNF catalogue value \citep{manchester2005}, at butterfly
-$S/N=\spRealSnr$) and detects a bright pulse at boxcar $S/N=\spRealSpSnr$, consistent with a
-Crab giant pulse. The benchmark headline is algorithmic, not hardware: comparing
-wall time for equal-size DM-trial output planes (conservatively for the FDMT, whose
-track-integral output is the more sensitive of the two on smeared pulses), the FDMT on a CPU
-(\spFdmtCpu~s) outruns even the GPU-accelerated brute force (\spBruteGpu~s) over \spBenchNdm\
-DM trials, while the GPU accelerates the brute force itself by $\sim$\spBruteSpeedup$\times$
-(\spBruteCpu\ $\rightarrow$ \spBruteGpu~s). Our FDMT's own GPU gain is currently only
-$\sim$\spFdmtSpeedup$\times$, limited by a per-delay host loop. This is a tooling-and-validation contribution: a
-device-portable dedispersion path for hardware the CUDA ecosystem does not serve.
+The dominant production GPU dedispersers (Heimdall/\code{dedisp}, \citealt{barsdell2012};
+astro-accelerate; FREDDA) ship CUDA kernels, which excludes non-NVIDIA hardware; the OpenCL
+route of \citet{sclocco2016} is the existing portable alternative, and to our knowledge no
+maintained PyTorch or JAX FDMT exists. We present a Fast Dispersion Measure Transform
+\citep[FDMT;][]{zackayofek2017} implemented entirely in PyTorch tensor operations
+\citep{pytorch}: no custom kernels, so one \code{device=} argument runs the same code on CPU,
+CUDA, or ROCm. The benchmark ran on a consumer AMD RX~7600~XT; the science legs ran on CPU. Correctness is anchored against an independently tested brute-force
+oracle: the zero-delay row equals the plain channel sum exactly, and on synthetic dispersed
+pulses the transform recovers the injected dispersion measure within delay quantisation (DM
+$\spRecDm$ for $\spTrueDm$ injected at butterfly $S/N=\spSnr$; folded period $\spRecP$\,ms for
+$\spTrueP$ injected). On a small public Parkes/UWL observation of the Crab pulsar the butterfly
+maximum lands \spRealOffTrials\ DM trials from the ATNF catalogue value \citep{manchester2005}
+out of \spRealTrials\ ($p=\spRealPpos$ for a uniformly placed noise maximum), and a boxcar
+matched filter detects a bright pulse at $S/N=\spRealSpSnr$, consistent with a Crab giant
+pulse; the butterfly peak height itself (\spRealSnr) is modest against the plane's committed
+shift-null maximum statistics. The benchmark, all four columns from a single invocation with the device
+set recorded, is algorithmic, not hardware: comparing wall time for equal-size DM-trial output
+planes, the FDMT on a CPU (\spFdmtCpu~s) outruns even the GPU-accelerated brute force
+(\spBruteGpu~s) over \spBenchNdm\ DM trials, while the GPU accelerates the brute force itself
+by $\sim$\spBruteSpeedup$\times$. Our FDMT's own GPU gain is currently
+$\sim$\spFdmtSpeedup$\times$, limited by a per-delay host loop. This is a tooling-and-validation
+contribution: a device-portable dedispersion path for hardware the CUDA ecosystem does not
+serve.
 \end{abstract}
 
 \keywords{Radio transient sources (2008) --- Pulsars (1306) --- Astronomy data analysis (1858) ---
@@ -50,8 +53,10 @@ brute-force approach costs $O(N_f N_t N_\mathrm{DM})$; the Fast DM Transform of
 \citet{zackayofek2017} reduces this to $O(N_t(N_f + N_\Delta \log N_f))$ for $N_\Delta$ DM trials (comparable to $N_f$ here) by recursively merging sub-band
 transforms, exploiting the additivity of the dispersion curve across sub-bands. In production, GPU
 dedispersion is dominated by CUDA implementations \citep[e.g.\ \code{dedisp};][]{barsdell2012},
-none of which run on AMD (ROCm) hardware; to our knowledge no maintained PyTorch or JAX FDMT
-exists. Expressing the FDMT in a tensor framework closes that gap for free: PyTorch dispatches the
+which do not run on AMD (ROCm) hardware; the auto-tuned OpenCL dedisperser of
+\citet{sclocco2016}, deployed in the AMBER/ARTS pipeline, is the existing vendor-portable
+route, and to our knowledge no maintained PyTorch or JAX FDMT exists. A tensor-framework
+implementation trades kernel-level performance for ecosystem integration against it. Expressing the FDMT in a tensor framework closes that gap for free: PyTorch dispatches the
 same gather/add graph to CPU, CUDA, or ROCm backends. We describe the implementation, its
 validation against a tested oracle and against real public data of a known pulsar, and a
 benchmark on consumer AMD hardware.
@@ -81,45 +86,58 @@ smear, so its $S/N$ on a smeared pulse exceeds the one-sample-per-channel oracle
 The real-data validation uses a small (3.25~MB) public SIGPROC filterbank from the
 \code{sigpyproc3} repository \citep{sigpyproc}: a Parkes/UWL observation of the Crab pulsar
 (PSR~B0531+21), 832 channels over 702--4030~MHz, 0.512~ms sampling, 2.1~s. The catalogued
-dispersion measure is \spTrueDm~pc\,cm$^{-3}$ \citep{manchester2005}, and the full 463~ms band sweep
+dispersion measure is \spCatDm~pc\,cm$^{-3}$ \citep{manchester2005}, and the full 463~ms band sweep
 is visible within the file. After per-channel robust normalisation (median/MAD bandpass removal
-with clipping as a light RFI guard), the FDMT butterfly peaks at
-$\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$ ($\spRealDmErr\%$ from the catalogue) at $S/N=\spRealSnr$.
-The butterfly indexes rows by whole samples of dispersive delay, so this DM is quantised by the
-grid rather than fitted, and at this modest significance the offset is a small number of DM
-trials. A boxcar matched
-filter on the best-DM series detects a single bright pulse at $S/N=\spRealSpSnr$, consistent
-with a Crab giant pulse, tens of which are expected per minute at Jy level. This is a validation
-on real telescope data, not a discovery claim.
+with clipping as a light RFI guard), the FDMT butterfly maximum lands at
+$\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$. The butterfly indexes rows by whole samples of dispersive
+delay (\spRealDmStep~pc\,cm$^{-3}$ per trial here), so the honest statement is positional: the
+maximum falls \spRealOffTrials\ trials from the catalogue value out of \spRealTrials, a
+coincidence with $p=\spRealPpos$ if the maximum were uniformly placed. The peak's
+\emph{height}, $S/N=\spRealSnr$, is quoted against a committed trials accounting rather than as
+a bare significance: the DM--time plane holds $\sim$$8\times10^6$ cells, so its noise maximum is
+itself several sigma, and a per-channel circular-shift null (\spRealNullReps\ repetitions, which
+destroys any dispersed track while preserving each channel's statistics and RFI) has median
+\spRealNullMedian, 99th percentile \spRealNullNinetyNine, and maximum \spRealNullMax\ — the
+observed peak's tail probability against it is $p=\spRealPnull$. The decisive detection is the
+boxcar matched filter on the best-DM series: a single bright pulse at $S/N=\spRealSpSnr$,
+consistent with a Crab giant pulse. The synthetic leg's butterfly $S/N$ of \spSnr\ against the
+real leg's \spRealSnr\ shows how much of the pulse energy a 2.1~s single file leaves on the
+table. Roughly the last half of the best-DM series integrates tracks that run off the end of
+the observation (the maximum band delay is $\sim$900~ms against 2.1~s); the detected pulse
+position and width are committed with the results so the boundary condition is checkable. This
+is a validation on real telescope data, not a discovery claim.
 
 \begin{figure}
 \plotone{figures/singlepulse.pdf}
-\caption{Left: the FDMT butterfly (peak track sum versus trial DM); the dashed line marks
-the ATNF catalogue DM of the Crab pulsar. Right: the dedispersed time series at the best
-DM, with the brightest single pulse marked. The offline CI build shows the synthetic fixture; the
-real Parkes/UWL panels are produced by \code{make reproduce}.}
+\caption{Left: the FDMT butterfly — the peak of the per-row z-scored series versus trial DM,
+the same statistic the quoted peak maximises (the raw track sum rises with delay row and is not
+shown); the dashed line marks the ATNF catalogue DM of the Crab pulsar. Right: the dedispersed
+time series at the best DM, with the highest-S/N boxcar detection marked. The offline CI build
+shows the synthetic fixture; the real Parkes/UWL panels are produced by \code{make reproduce}.}
 \label{fig:sp}
 \end{figure}
 
 \section{Benchmark and limits}
-On a consumer AMD RX~7600~XT (gfx1102, 16~GiB, ROCm; PyTorch dispatches unmodified), a
-$8192\times1024$ spectrum over \spBenchNdm\ DM trials gives the timings below. The CPU and
-GPU columns in the committed metrics were recorded by separate invocations of the
-benchmark rather than by one run, so they are wall-clock measurements on the same machine
-and code but not a single controlled comparison; the ratios should be read to a
-significant figure, not to the digit. The timings are: brute force \spBruteCpu~s (CPU)
-$\rightarrow$ \spBruteGpu~s (GPU); FDMT \spFdmtCpu~s (CPU) $\rightarrow$ \spFdmtGpu~s (GPU). Two
-conclusions follow. First, the algorithm beats the hardware: the $O(N\log N)$ FDMT
-on a CPU outruns the $O(N\,N_\mathrm{DM})$ brute force even after the GPU accelerates the latter
-$\sim$\spBruteSpeedup$\times$. Second, our FDMT's GPU gain is currently
-$\sim$\spFdmtSpeedup$\times$: the recursion's
-per-delay host loop dominates over arithmetic at these sizes, so the GPU path awaits a
-batched-gather vectorisation of the merge step (future work, not claimed). We explicitly do
-not compare against tuned CUDA dedispersers (Heimdall, FREDDA) on datacentre GPUs (a
-different hardware class and engineering budget); the claim is portability plus a validated
-algorithmic speed-up over in-framework baselines. Further limits: the 2.1~s validation file
-constrains period-recovery precision; the power scale is uncalibrated; and the RFI guard is a
-clip, not an excision pipeline.
+On \spBenchHw\ (PyTorch dispatches unmodified), an $8192\times1024$ spectrum over \spBenchNdm\
+DM trials gives: brute force \spBruteCpu~s (CPU) $\rightarrow$ \spBruteGpu~s (GPU); FDMT
+\spFdmtCpu~s (CPU) $\rightarrow$ \spFdmtGpu~s (GPU); the reduced-grid NumPy oracle takes
+\spOracle~s. All four columns come from a single invocation, with the device set and the
+hardware string written into the committed metrics by the run itself; an earlier version of
+this table spliced a CPU column from one invocation with a GPU column from another, and the two
+invocations' CPU timings differed by $\sim$15\%, which is the honest run-to-run systematic on
+these wall-clock numbers — the ratios should be read to a significant figure. Two conclusions
+follow. First, the algorithm beats the hardware: the $O(N\log N)$ FDMT on a CPU outruns the
+$O(N\,N_\mathrm{DM})$ brute force even after the GPU accelerates the latter
+$\sim$\spBruteSpeedup$\times$ — a ratio consistent with the complexity estimate, though the
+baseline is the naive in-framework gather (an index tensor of $\sim$8 bytes per data float), not
+a tuned roll-and-sum, so part of the gap is memory traffic rather than arithmetic. Second, our
+FDMT's GPU gain is currently $\sim$\spFdmtSpeedup$\times$: the recursion's per-delay host loop
+dominates over arithmetic at these sizes, so the GPU path awaits a batched-gather vectorisation
+of the merge step (future work, not claimed). We explicitly do not compare against tuned CUDA
+dedispersers (Heimdall, FREDDA) on datacentre GPUs (a different hardware class and engineering
+budget); the claim is portability plus a validated algorithmic speed-up over in-framework
+baselines. Further limits: the 2.1~s validation file constrains period-recovery precision; the
+power scale is uncalibrated; and the RFI guard is a clip, not an excision pipeline.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

@@ -233,3 +233,32 @@ def test_a_file_with_no_source_macro_keeps_the_old_behaviour(tmp_path):
     out = preserve_live_macros(new + "\n", existing)
     assert r"\newcommand{\xVal}{6}" in out
     assert r"\newcommand{\xOther}{7}" in out
+
+
+def test_preserve_live_macros_mixed_source_counts_as_real(tmp_path):
+    # torchfdmt's source names BOTH legs ("synthetic injection ... + Parkes ... real ...").
+    # A rerun carrying that mixed marker is a real rerun and must be allowed to update its own
+    # real values; the naive "synthetic in source" rule silently discarded a fresh benchmark.
+    from jansky_research.report import preserve_live_macros
+
+    p = tmp_path / "m.tex"
+    p.write_text(
+        "\\newcommand{\\xSource}{synthetic injection + Parkes (real)}\n"
+        "\\newcommand{\\xBruteCpu}{44.12}\n"
+    )
+    new = (
+        "\\newcommand{\\xSource}{synthetic injection + Parkes (real)}\n"
+        "\\newcommand{\\xBruteCpu}{36.5}\n"
+    )
+    out = preserve_live_macros(new, p)
+    assert "\\newcommand{\\xBruteCpu}{36.5}" in out  # the real rerun wins
+
+
+def test_preserve_live_macros_pure_synthetic_still_downgrades(tmp_path):
+    from jansky_research.report import preserve_live_macros
+
+    p = tmp_path / "m.tex"
+    p.write_text("\\newcommand{\\xSource}{Parkes observation}\n\\newcommand{\\xBruteCpu}{44.12}\n")
+    new = "\\newcommand{\\xSource}{synthetic}\n\\newcommand{\\xBruteCpu}{1.0}\n"
+    out = preserve_live_macros(new, p)
+    assert "\\newcommand{\\xBruteCpu}{44.12}" in out  # synthetic cannot overwrite real

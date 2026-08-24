@@ -1,14 +1,14 @@
 {
-  "source": "Parkes/UWL J0534+2200 (real, GATE-0 file)",
+  "source": "synthetic injection (unprefixed keys) + Parkes/UWL J0534+2200 (real, GATE-0 file; real_* keys)",
   "true_dm": 56.77,
   "recovered_dm": 56.63,
   "butterfly_snr": 113.5,
   "true_period_ms": 33.392,
   "recovered_period_ms": 33.379,
   "device": "cpu",
-  "bench_brute_cpu_s": 44.12,
-  "bench_fdmt_cpu_s": 0.45,
-  "bench_brute_gpu_s": 1.5,
+  "bench_brute_cpu_s": 36.5,
+  "bench_fdmt_cpu_s": 0.41,
+  "bench_brute_gpu_s": 1.49,
   "bench_fdmt_gpu_s": 0.44,
   "bench_n_dm": 1009,
   "real_recovered_dm": 56.59,
@@ -16,5 +16,23 @@
   "real_sp_snr": 14.0,
   "real_dm_error_pc": 0.3,
   "benchmark_device": "cuda",
-  "benchmark_hardware": "AMD Radeon RX 7600 XT (gfx1102), torch 2.12.1+rocm7.1"
+  "benchmark_hardware": "AMD Radeon RX 7600 XT, torch 2.12.1+rocm7.1",
+  "catalogue_dm": 56.77,
+  "bench_numpy_oracle_s": 19.9,
+  "bench_devices": [
+    "cpu",
+    "cuda"
+  ],
+  "real_sp_pos": 3501,
+  "real_sp_width_samples": 32,
+  "real_n_time": 4096,
+  "real_dm_step_pc": 0.0635,
+  "real_n_dm_trials": 1903,
+  "real_dm_offset_trials": 2.9,
+  "real_p_positional": 0.00353,
+  "real_null_reps": 200,
+  "real_null_p50": 5.23,
+  "real_null_p99": 6.03,
+  "real_null_max": 6.26,
+  "real_p_null": 0.0299
 }
