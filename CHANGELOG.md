@@ -11,6 +11,24 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **`vlass` revision (referee round of 2026-08-24, one blocker): the completeness curve
+  measured its own error model, and the archival rejection is now committed evidence.**
+  `injection_recovery` scaled the whole per-epoch error with the injected flare
+  (`e[k] *= fac`), capping the flare epoch's chi^2 and manufacturing an apparent 52%
+  saturation attributed to a "three-epoch ceiling" the committed thresholds refute; it now
+  rescales only the flux-proportional systematic term, injects from the census's own usable
+  population (including two-epoch light curves) against the census's committed thresholds,
+  extends the factor grid to 50x, and repeats over ten seeds so the 50% factor carries a
+  Monte-Carlo error. The prose-only archival rejection of the second image-confirmed
+  candidate is replaced by a coded stage (`archival_vet`/`run_archival`: Epoch-4 forced
+  photometry + NVSS/FIRST/TGSS/AllWISE counterparts, committed to
+  `results/vlass_archival.json` and an `archival_survives` CSV column); per-epoch forced
+  rms/offsets are committed so every confirmation and rejection is auditable; the census
+  count closure (3,722 Epoch-1-only sources) and Epoch-1 anchoring are stated; the stale
+  "few x 10^-4" fraction is replaced by pipeline-derived floor/corrected fractions; and the
+  paper drops "necessary and sufficient", fixes the gordon2021 title (right DOI, wrong
+  title), and quotes the candidates' catalogue-vs-forced amplitude collapse from committed
+  numbers.
 - **`glitchpop` revision (all 19 referee findings): the title flip was Monte-Carlo noise, and
   the census is pinned.** At 2x10^5 bootstrap draws with per-pulsar seeds and valid
   (k+1)/(B+1) p-values, the headline flip (J2229+6114) dissolves along with a second marginal

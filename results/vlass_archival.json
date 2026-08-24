@@ -1,0 +1,103 @@
+{
+  "source": "VLASS Quick-Look epochs 1,2,3 @ (190.0, 20.0) r=15.0deg + archival vet (epoch 4, NVSS/FIRST/TGSS/AllWISE)",
+  "n_archival_attempted": 2,
+  "n_archival_survivors": 1,
+  "vet": [
+    {
+      "ra": 202.694743,
+      "dec": 24.232618,
+      "epochs": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "forced_flux": [
+        7.198,
+        2.688,
+        1.03,
+        4.997
+      ],
+      "forced_fixed": [
+        7.198,
+        2.688,
+        1.03,
+        4.997
+      ],
+      "forced_rms": [
+        0.1288,
+        0.1398,
+        0.1293,
+        0.134
+      ],
+      "forced_offsets": [
+        0.34,
+        0.67,
+        0.46,
+        0.52
+      ],
+      "detected": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "n_epochs_detected": 4,
+      "survives": true,
+      "counterpart_sep_arcsec": {
+        "NVSS": null,
+        "FIRST": 1.56,
+        "TGSS": null,
+        "AllWISE": 0.3
+      }
+    },
+    {
+      "ra": 184.667844,
+      "dec": 21.817318,
+      "epochs": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "forced_flux": [
+        2.924,
+        0.716,
+        0.62,
+        0.553
+      ],
+      "forced_fixed": [
+        2.924,
+        0.066,
+        0.368,
+        -0.205
+      ],
+      "forced_rms": [
+        0.2297,
+        0.1647,
+        0.128,
+        0.1511
+      ],
+      "forced_offsets": [
+        0.37,
+        1.65,
+        3.85,
+        3.81
+      ],
+      "detected": [
+        true,
+        false,
+        false,
+        false
+      ],
+      "n_epochs_detected": 1,
+      "survives": false,
+      "counterpart_sep_arcsec": {
+        "NVSS": 8.28,
+        "FIRST": 8.24,
+        "TGSS": 8.16,
+        "AllWISE": 8.36
+      }
+    }
+  ]
+}

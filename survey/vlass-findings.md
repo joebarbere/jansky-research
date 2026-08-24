@@ -107,6 +107,10 @@ correctly *not* over-claimed as strong variables.
 
 ### Completeness (data-driven)
 
+**[Superseded 2026-08-24: this table measured the injection's own error model, not the
+selection — see the referee round and its resolution at the bottom of this file. The corrected
+curve reaches 99.5% at 10x.]**
+
 `injection_recovery` (inject a single-epoch flare of known factor into the real steady light curves,
 re-run the cut) bounds the result honestly:
 
@@ -206,5 +210,43 @@ linked; gordon2021 has the right DOI under a title belonging to a different pape
 title, not the DOI); Figure 2's caption calls both tracks "variables"; prose says ~15% QL
 correction where the code applies 1.13; archival counterpart lists drift between files.
 
-**Status: fixes pending** (catalogues cached; the completeness re-derivation needs the real
-light curves -- cached; the archival vet needs network).
+**Status: RESOLVED (2026-08-24).** Every finding addressed; the census re-ran end-to-end and
+reproduced its counts exactly (42,721 / 3,722 epoch-1-only / 2,043 crowded / 36,956 usable /
+40 candidates / 2 image-confirmed), which is itself evidence the pipeline is deterministic.
+
+**The blocker, measured.** With the error model fixed (only the flux-proportional 7% systematic
+term rescales with the injected flare; the catalogue error keeps its quiescent value) and the
+injection drawn from the census's own usable population against the census's committed
+thresholds, the completeness curve transforms: 10x flares are recovered at **99.5%** (was
+"52% saturation"), 50% completeness at **4.4 +/- 0.1x** (Monte-Carlo error over ten seeds; was
+"~9x" with no error), >99% out to the largest factor tested (50x). The referee's diagnosis was
+exactly right: the old number measured `e[k] *= fac`, not the selection, and the "three-epoch
+ceiling" story built on it is gone from the paper.
+
+**The archival vet is code now** (`archival_vet`/`run_archival`, committed to
+`results/vlass_archival.json` + an `archival_survives` column in the candidates CSV). Running it
+produced one methodological lesson en route: the first version judged detection on the 4"
+box-searched peak (>4x rms, centred 2.5"), and the retracted candidate *passed* -- its Epoch-2
+box peak (0.72 mJy at 1.65" offset) is the neighbour's wings plus the blank-sky positive bias of
+any peak search (the stokesv lesson, again). Detection is now judged at the **fixed position**
+(peak within 0.75", essentially the propagated pixel), and the evidence became unambiguous:
+FK Com is detected in all four epochs (7.2 / 2.7 / 1.0 / **5.0** mJy -- it rebrightened in
+Epoch 4) while the second candidate reads 2.92 then 0.07 / 0.37 / **-0.21** mJy -- negative,
+exactly as genuine forced photometry on blank sky should sometimes be -- with every archival
+counterpart (NVSS 8.28", FIRST 8.24", TGSS 8.16", AllWISE 8.36") at the persistent neighbour,
+not the candidate. `n_archival_survivors = 1`; the CSV row now carries
+`archival_survives=False` next to its (correct, but insufficient) `image_confirmed=True`.
+
+**The rest:** per-epoch forced rms and offsets committed for all 40 candidates (the p<0.01
+confirmations and the rejection are auditable); count closure and Epoch-1 anchoring stated in
+the paper (3,722 epoch-match failures named; transients turning on after Epoch 1 have
+completeness zero by construction); the stale "few x 10^-4" replaced by pipeline-derived
+fractions (floor 2.7x10^-5 of the usable census; ~2.7x10^-5 for >=10x flares after the
+completeness correction -- the correction is now nearly a no-op because completeness at 10x is
+99.5%); "necessary and sufficient" replaced by the four-stage ladder with the explicit statement
+that no prefix of it is sufficient; the AGN sentence now quotes the committed collapse
+(catalogue V 0.88--1.32 vs forced median 0.099, max 0.92); the operating-point qualifier added
+in the abstract and discussion; gordon2021's title corrected against Crossref ("A Quick Look at
+the 3 GHz Radio Sky. I. ..."); Figure 2's caption says "candidates" and names the rejected
+track; the ~15% prose now states the applied 13% campaign-mean correction; counterpart lists
+match the committed JSON everywhere.

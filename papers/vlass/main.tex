@@ -21,20 +21,25 @@ $\delta=-40\arcdeg$ at 2--4~GHz in three epochs (2017--2024), making it a natura
 radio variability. We ask how much of that variability is accessible from the public Quick-Look (QL)
 component catalogues alone, with a small, tested, CPU-only tool. Cross-matching the three QL epochs
 and selecting outliers in the standard variability metrics $\eta$ (significance) and $V$ (amplitude)
-is dominated by source-extraction artefacts: component deblending, cross-match
-incompleteness, and bright-neighbour confusion. We show that three mitigations are necessary
-and sufficient to obtain a believable candidate list: a per-epoch QL flux-scale correction
-\citep{vlassmemo13, vlassmemo22}, a deblending isolation cut, and automatic forced-photometry
-confirmation against the actual images with a peak-centring gate. Over a \vlassRealArea~deg$^2$ census
-(\vlassRealNsources\ sources, \vlassRealNusable\ usable), the $\vlassSigma\sigma$ selection yields
-\vlassRealNcand\ candidates, of which \vlassRealNconfirmed\ survive image confirmation. Archival follow-up
-(the independent VLASS Epoch~4 release plus NVSS/FIRST/optical cross-matches) then leaves
-one genuine variable, the known rapidly rotating active giant FK~Comae~Berenices,
-recovered with a clean $\sim$7$\to$1~mJy decline at a $0.9\arcsec$ match; the other image-confirmed
-candidate is a single-epoch imaging artefact. Injection--recovery shows the three-epoch selection
-saturates near \vlassRealComplMax\% completeness even for extreme flares (50\% at $\sim\vlassRealComplFifty\times$),
-so the confirmed sources are a floor, not a rate. The result is a tooling and methodology
-contribution, a validation (FK~Com) plus a completeness-bounded limit, not a discovery.
+is, at the $\vlassSigma\sigma$ operating point tested here, dominated by source-extraction
+artefacts: component deblending, cross-match incompleteness, and bright-neighbour confusion. A
+believable candidate list requires a ladder of four stages, each of which removed false positives
+the previous stages passed: a per-epoch QL flux-scale correction \citep{vlassmemo13, vlassmemo22},
+a deblending isolation cut, automatic forced-photometry confirmation against the actual images with
+a peak-centring gate, and archival plus next-epoch follow-up. Over a \vlassRealArea~deg$^2$ census
+(\vlassRealNsources\ Epoch-1 sources, \vlassRealNusable\ usable), the $\vlassSigma\sigma$ selection
+yields \vlassRealNcand\ candidates, \vlassRealNconfirmed\ survive image confirmation, and archival
+follow-up (forced photometry through the independent VLASS Epoch~4 release plus
+NVSS/FIRST/TGSS/AllWISE cross-matches) leaves \vlassRealNarchival: the known rapidly rotating
+active giant FK~Comae~Berenices, recovered with a clean $\sim$7$\to$1~mJy decline at a
+$0.9\arcsec$ match; the other image-confirmed candidate is a single-epoch imaging artefact.
+Injection--recovery on the census's own selection shows completeness is set by the quiescent
+signal-to-noise entering $\eta$: \vlassRealComplTen\% of $10\times$ single-epoch flares are
+recovered, 50\% at $\vlassRealComplFifty\pm\vlassRealComplFiftyErr\times$, and faint flares are
+mostly missed, so the surviving variable is a floor ($\ge\vlassRealFracFloor$ of the usable census,
+$\sim\vlassRealFracTenCorr$ after the $10\times$ completeness correction). The result is a tooling
+and methodology contribution, a validation (FK~Com) plus a completeness-bounded limit, not a
+discovery.
 \end{abstract}
 
 \keywords{Radio transient sources (2008) --- Radio continuum surveys (1340) --- Variable stars (1761) --- Active galactic nuclei (16) --- Open source software (1866)}
@@ -58,9 +63,10 @@ $\log\eta$ and $\log V$ at $\vlassSigma\sigma$ are candidates. Three mitigations
 trustworthy:
 
 \paragraph{Per-epoch flux scale.} The QL images underestimate peak flux, epoch-dependently
-(Epoch~1 $\sim$15\%, Epoch~2 $\sim$7\%, Epoch~3 $\sim$3\%; \citealt{vlassmemo13, vlassmemo22}). We
-correct each epoch to the Perley--Butler scale and fold the $\sim$7\% residual scatter into the
-errors; without this the epoch-to-epoch offset alone flags every source.
+\citep{vlassmemo13, vlassmemo22}. We correct each epoch to the Perley--Butler scale (Epoch~1 by
+the mean of its two campaigns' corrections, 13\%; Epoch~2 by 7.5\%; Epoch~3 by 3.1\%) and fold the
+$\sim$7\% residual scatter into the errors; without this the epoch-to-epoch offset alone flags
+every source.
 
 \paragraph{Deblending isolation.} A slightly extended source is fit with a different number of
 Gaussian components in each epoch, so a secondary component's flux jumps around. We drop sources with
@@ -72,11 +78,29 @@ per source), recompute $\eta$/$V$ on the image light curve, and confirm a candid
 is significantly variable (p$<0.01$) with real amplitude ($V>0.3$) and the forced peak in the
 brightest epoch is centred within $2.5\arcsec$. The centring gate is essential: a bright source just
 outside the locked position otherwise pins the forced peak at the search-box edge and fakes a
-variable as its wings shift between epochs.
+variable as its wings shift between epochs. The photometry does search a $4\arcsec$ box rather than
+read one fixed pixel, so the per-epoch forced fluxes, local rms values, and peak offsets are all
+committed with the verdicts (\code{results/vlass\_candidates.csv}), making each confirmation and
+rejection auditable.
 
-Selection completeness is measured by injection--recovery on the real data: a single-epoch flare of
-known factor is injected into the steady light curves and the field's own cut is re-run. Every
-function is tested against a synthetic three-epoch population, so the suite runs offline.
+\paragraph{Archival follow-up.} Image confirmation is necessary but not sufficient (\S\ref{sec:results}),
+so every image-confirmed candidate passes a final stage: forced photometry through all available
+epochs including the independent Epoch~4 release, counting epochs with a $>4\times$rms detection
+at the \emph{fixed} position — the pixel at the propagated coordinates, because a peak searched
+over a beam-sized box is biased high on blank sky and can read a bright neighbour's wings (a
+genuinely forced measurement goes negative about half the time on empty sky, and ours does).
+Fewer than two fixed detections means a single-epoch artefact. Nearest-counterpart separations in
+NVSS, FIRST, TGSS, and AllWISE are recorded alongside; the per-epoch measurements and verdicts are
+committed (\code{results/vlass\_archival.json}).
+
+Selection completeness is measured by injection--recovery on the census's own selection: a
+single-epoch flare of known factor is injected into light curves drawn from the usable population
+(every source with $\ge$2 epochs) and judged against the census's committed $\eta$/$V$ thresholds.
+The per-epoch error is $\sigma^2=\sigma_{\rm cat}^2+(0.07\,S)^2$; a flare changes the flux, so only
+the flux-proportional systematic term is rescaled with it, and the catalogue error keeps its
+quiescent value. The grid is repeated over ten independent seeds, so the completeness curve and the
+50\% factor carry Monte-Carlo errors. Every function is tested against a synthetic three-epoch
+population, so the suite runs offline.
 
 \section{Data}
 We use the CIRADA Epoch~1--2 and NRAO Epoch~3 QL component catalogues \citep{gordon2021,vlassmemo22}
@@ -86,9 +110,17 @@ is recorded in $\mu$Jy while mislabelled ``mJy/beam'', a factor of $10^3$ that, 
 every source appear variable; we detect it from the catalogue flux floor (the $\sim$0.7~mJy detection
 threshold) and rescale.
 
+The census is anchored on Epoch-1 detection: light curves are built by matching the later epochs
+onto the Epoch-1 component list, so a transient that turns on after Epoch~1 never enters the
+selection and has completeness identically zero. Every statement about variables below is therefore
+about sources detected in Epoch~1.
+
 \section{Results}
-Over a \vlassRealArea~deg$^2$ cone (\vlassRealNsources\ sources; \vlassRealNexcluded\ dropped as crowded;
-\vlassRealNusable\ usable), the selection flags \vlassRealNcand\ candidates and image confirmation keeps
+\label{sec:results}
+Over a \vlassRealArea~deg$^2$ cone, the Epoch-1 anchor list holds \vlassRealNsources\ sources;
+\vlassRealNsingleEpoch\ of them have no cross-epoch match within $2.5\arcsec$ (no light curve, so
+they are excluded) and \vlassRealNexcluded\ more are dropped as crowded, leaving \vlassRealNusable\
+usable. The selection flags \vlassRealNcand\ candidates and image confirmation keeps
 \vlassRealNconfirmed.
 
 \paragraph{A real recovery.} One confirmed source matches FK~Comae~Berenices at $0.9\arcsec$,
@@ -99,24 +131,35 @@ confirmed in both the catalogue and the images. Recovering it purely from public
 validation that the pipeline surfaces genuine variables, not only rejects artefacts.
 
 \paragraph{Image confirmation is not the final word.} The second image-confirmed survivor is a
-single-epoch detection ($\sim$3~mJy in Epoch~1). Forced photometry through the independent
-VLASS Epoch~4 release finds only noise in Epochs~2--4; its Epoch-1 Quick-Look entry is a blended
-component with a low peak-to-ring ratio (a sidelobe signature); and every archival counterpart
-(NVSS, FIRST, WISE, PanSTARRS) lies $8\arcsec$ away at a persistent source rather than at the
-candidate position. It is therefore an Epoch-1 imaging artefact, not a transient. Only the next-epoch and
-archival follow-up separated it from the real variable. The confirmation ladder is thus
-catalogue selection $\to$ image confirmation $\to$ archival/next-epoch vetting, each stage necessary.
-Several other candidates carry blazar/QSO/BL-Lac identifications but fall below the $V>0.3$
-bar, i.e.\ real AGN varying at the few-tens-of-percent level the cadence expects, correctly not
-over-claimed.
+single-epoch detection ($\sim$3~mJy in Epoch~1). The archival stage
+(\code{results/vlass\_archival.json}) rejects it: forced photometry through the independent
+VLASS Epoch~4 release finds no fixed-position $>4\times$rms detection in Epochs~2--4 (the
+fixed-position flux is negative in Epoch~4, exactly as forced photometry on blank sky should
+sometimes be, while the box-searched peak drifts outward toward the neighbour); its Epoch-1
+Quick-Look entry is a blended component with a low peak-to-ring ratio (a sidelobe signature); and
+the nearest archival counterparts (NVSS, FIRST, TGSS, AllWISE) sit $\sim$$8\arcsec$ away at a
+persistent source rather than at the candidate position, which has no counterpart of its own. It is
+therefore an Epoch-1 imaging artefact, not a transient. Only the next-epoch and archival follow-up
+separated it from the real variable: each of the four stages removed false positives that passed
+every earlier one, so no prefix of the ladder is sufficient. Several other candidates carry
+blazar/QSO/BL-Lac identifications but fall below the $V>0.3$ bar: their catalogue amplitudes
+($V=$ \vlassRealCandVmin--\vlassRealCandVmax) collapse to forced-photometry amplitudes an order of
+magnitude smaller (median \vlassRealForcedVmed, maximum \vlassRealForcedVmax), which is this
+paper's thesis in miniature — the catalogue amplitude of a QL candidate is not a measurement of the
+source.
 
-\paragraph{Completeness and the three-epoch ceiling.} Injection--recovery (Figure~\ref{fig:compl})
-shows the selection recovers $<$5\% of $\le$3$\times$ single-epoch flares and saturates near
-\vlassRealComplMax\% even at $10\times$ (50\% at $\sim\vlassRealComplFifty\times$). This is intrinsic to
-three epochs: a single-epoch flare's coefficient of variation tops out at $1/\sqrt{3}/(1/3)=1.73$ as
-the amplitude $\to\infty$, just above the noisy three-epoch $V$ threshold. The \vlassRealNconfirmed\
-confirmed sources are therefore a floor; the strong-single-epoch-variable fraction is of order a few
-$\times10^{-4}$.
+\paragraph{Completeness.} Injection--recovery on the census's own selection
+(Figure~\ref{fig:compl}) shows the recovery of a single-epoch flare is set by the source's
+quiescent signal-to-noise entering $\eta$, not by the three-epoch $V$ ceiling (the committed $V$
+threshold sits well below a strong flare's $V$). The selection recovers almost nothing below
+$3\times$, half at $\vlassRealComplFifty\pm\vlassRealComplFiftyErr\times$ (Monte-Carlo error over
+ten injection seeds), and \vlassRealComplTen\% at $10\times$; recovery stays above 99\% out to the
+largest factor tested, $\vlassRealComplMaxFactor\times$. An earlier version of this analysis scaled the whole per-epoch error with the injected
+flare, which suppressed the flare epoch's $\chi^2$ and produced an apparent 52\% saturation; that
+number measured the error model, not the selection. The \vlassRealNarchival\ surviving variable is
+a floor: $\ge\vlassRealFracFloor$ of the usable census, or $\sim\vlassRealFracTenCorr$ for
+$\ge$$10\times$ flares after the completeness correction — with the caveat that both numbers are
+conditional on an Epoch-1 detection.
 
 \begin{figure}
 \plotone{figures/eta_v.pdf}
@@ -127,27 +170,30 @@ candidates (outliers in both, dotted thresholds) are highlighted.}
 
 \begin{figure}
 \plotone{figures/confirmed.pdf}
-\caption{Forced light curves of the \vlassRealNconfirmed\ image-confirmed variables. The upper track is
+\caption{Forced light curves of the \vlassRealNconfirmed\ image-confirmed candidates. The upper track is
 FK~Comae~Berenices, a clean monotonic $\sim$7$\to$1~mJy/beam decline across the three VLASS epochs;
-the lower is the faint centred fader.}
+the lower is the faint fader that the archival stage subsequently rejects as an Epoch-1 artefact.}
 \label{fig:fkcom}
 \end{figure}
 
 \begin{figure}
 \plotone{figures/completeness.pdf}
 \caption{Data-driven completeness: recovered fraction of injected single-epoch flares versus flare
-factor. The selection saturates near \vlassRealComplMax\%, the three-epoch ceiling.}
+factor, measured on the usable census against its committed thresholds, with the catalogue error
+held at its quiescent value.}
 \label{fig:compl}
 \end{figure}
 
 \section{Discussion and reproducibility}
-Catalogue-only VLASS QL multi-epoch variability selection is dominated by source-extraction artefacts,
-and every statistical candidate must be confirmed against the images before it is believed, the
-cautionary thread shared with much survey transient work. But over enough sky the same method
-also does its positive job: it recovers a genuine variable (FK~Com) and sets an honest,
-completeness-bounded floor on the rest. The contribution is the reproducible, QL-systematic-aware
-tool (flux-scale correction, deblending isolation, centred forced-photometry confirmation, and
-data-driven completeness), not a discovery. Every census number above is written by the pipeline
+At the $\vlassSigma\sigma$ operating point tested here — the only one this paper runs, and one
+whose purity and completeness are two faces of the same cut — catalogue-only VLASS QL multi-epoch
+variability selection is dominated by source-extraction artefacts, and every statistical candidate
+must be confirmed against the images before it is believed, the cautionary thread shared with much
+survey transient work. But over enough sky the same method also does its positive job: it recovers
+a genuine variable (FK~Com) and sets an honest, completeness-bounded floor on the rest. The
+contribution is the reproducible, QL-systematic-aware tool (flux-scale correction, deblending
+isolation, centred forced-photometry confirmation, archival follow-up, and data-driven
+completeness), not a discovery. Every census number above is written by the pipeline
 into the macros that the manuscript \code{\textbackslash input}s, and the analysis regenerates from a clean
 checkout. A looser catalogue cut (viable because forced photometry removes false positives), more
 sky, or per-epoch forced photometry of every source would tighten the limit.

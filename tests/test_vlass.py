@@ -127,13 +127,60 @@ def test_measure_image_flux_forced_photometry():
 
 def test_injection_recovery_completeness_rises_with_amplitude():
     _, _, flux, err, _ = vlass.synthetic_epochs(n_sources=1500, var_fraction=0.0, seed=3)
-    factors, recovered = vlass.injection_recovery(
-        flux, err, factors=(1.25, 2.0, 5.0, 10.0), n_per_factor=300, seed=0
+    inj = vlass.injection_recovery(
+        flux, err, factors=(1.25, 2.0, 5.0, 10.0), n_per_factor=300, seed=0, n_seeds=3
     )
+    factors, recovered = inj["factors"], inj["recovered"]
     assert factors.shape == recovered.shape == (4,)
     assert np.all(np.diff(recovered) >= -0.05)  # completeness increases with flare amplitude
     assert recovered[0] < 0.3  # a weak 1.25x flare is mostly missed
     assert recovered[-1] > 0.8  # a strong 10x flare is almost always recovered
+    assert inj["recovered_se"].shape == (4,) and np.all(inj["recovered_se"] >= 0.0)
+    assert np.isfinite(inj["c50"])  # the curve crosses 50%, so c50 exists with an MC error
+    assert np.isfinite(inj["c50_se"]) and inj["c50_se"] >= 0.0
+
+
+def test_injection_recovery_uses_supplied_census_thresholds():
+    # The completeness must be measured against the census's own cut, not a recomputed one:
+    # with an absurdly high threshold nothing is recovered, whatever the flare amplitude.
+    _, _, flux, err, _ = vlass.synthetic_epochs(n_sources=500, var_fraction=0.0, seed=1)
+    inj = vlass.injection_recovery(
+        flux, err, factors=(10.0,), eta_thr=1e9, v_thr=1e9, n_per_factor=100, n_seeds=2
+    )
+    assert inj["recovered"].max() == 0.0
+
+
+def test_injection_recovery_scales_only_the_systematic_error_term():
+    # The referee-caught blocker: scaling the whole error with the flare (e[k] *= fac) capped
+    # eta at a finite asymptote and manufactured a "52% saturation". With the fixed model the
+    # catalogue error stays at its quiescent value, so a 10x flare on a catalogue-error-dominated
+    # source is essentially always recovered against the real census thresholds.
+    rng = np.random.default_rng(0)
+    n = 200
+    quiescent = np.full((n, 3), 1.0) + rng.normal(0.0, 0.02, (n, 3))
+    # apply_flux_scale error model: sigma_cat ~ 0.15 mJy dominates the 7% systematic at 1 mJy
+    err = np.hypot(0.15, vlass.VLASS_SYS_FRAC * quiescent)
+    inj = vlass.injection_recovery(
+        quiescent,
+        err,
+        factors=(10.0,),
+        eta_thr=58.2,  # the committed census thresholds
+        v_thr=0.881,
+        n_per_factor=200,
+        n_seeds=2,
+    )
+    # old model: flare-epoch error inflated ~10x -> chi^2 suppressed ~100x -> never recovered
+    assert inj["recovered"][0] > 0.9
+
+
+def test_injection_recovery_accepts_two_epoch_lightcurves():
+    # The census selects on every source with >=2 epochs; the injection population must match.
+    flux = np.tile([5.0, 5.0, np.nan], (60, 1))
+    err = np.tile([0.4, 0.4, np.nan], (60, 1))
+    inj = vlass.injection_recovery(
+        flux, err, factors=(50.0,), eta_thr=10.0, v_thr=0.5, n_per_factor=100, n_seeds=1
+    )
+    assert inj["recovered"][0] > 0.9  # two-epoch sources are injected and recovered
 
 
 def test_run_offline(tmp_path):
@@ -154,3 +201,9 @@ def test_run_offline(tmp_path):
     assert r"\vlassSynNsources" in macros and r"\vlassSynNconfirmed" in macros
     assert r"\newcommand{\vlassRealNconfirmed}{--}" in macros
     assert r"\vlassSource" in macros, "provenance marker missing; the merge guard is blind"
+    # The archival macros exist in every run's output (as placeholders when the stage has not
+    # run), otherwise the merge guard would drop the real values on the next rebuild.
+    assert r"\newcommand{\vlassSynNarchival}{--}" in macros
+    assert r"\vlassSynComplFifty" in macros and r"\vlassSynComplTen" in macros
+    assert m["completeness_50_factor_se"] >= 0.0 or np.isnan(m["completeness_50_factor_se"])
+    assert m["n_single_epoch_only"] == 0  # synthetic field: every source in every epoch
