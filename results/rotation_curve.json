@@ -34,5 +34,42 @@
   "V_flat_std_kms": 6.3791575613304,
   "flat_radius_min_kpc": 4.0,
   "R0_kpc": 8.15,
-  "V0_kms": 236.0
+  "V0_kms": 236.0,
+  "V_kms_edge": [
+    223.73983430774422,
+    210.92554168696594,
+    231.75943398838768,
+    235.65350133461254,
+    251.7029797965094,
+    246.29002088930432,
+    241.44725320154063,
+    250.35493138586364
+  ],
+  "V_flat_scatter_kms": 6.98801698844061,
+  "V_flat_sem_kms": 2.852845989263312,
+  "n_flat": 6,
+  "V_flat_edge_mean_kms": 242.8680200993697,
+  "V_flat_edge_scatter_kms": 8.041007248328144,
+  "V_flat_edge_sem_kms": 3.2827274627374963,
+  "threshold_minus_edge_kms": 13.769901736227837,
+  "slope_kms_per_kpc": 2.785239658527039,
+  "slope_se_kms_per_kpc": 1.8431024341437887,
+  "slope_edge_kms_per_kpc": 3.9742947762129894,
+  "slope_edge_se_kms_per_kpc": 1.7655219678614003,
+  "keplerian_at_rmax_kms": 175.87019826100277,
+  "threshold_sweep_vflat": {
+    "1.5": 258.0,
+    "2": 256.6,
+    "3": 254.2,
+    "5": 251.8
+  },
+  "vflat_drop_innermost": 258.60120697771697,
+  "vflat_drop_outermost_two": 256.2104241565574,
+  "threshold_k": 2.0,
+  "_merge": {
+    "retained_from_previous_run": [
+      "V_flat_std_kms"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  }
 }

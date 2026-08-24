@@ -20,17 +20,21 @@ The flat rotation curve of the Milky Way is a foundational piece of evidence for
 classical way to measure its inner part is the HI~21\,cm tangent-point method. We ask whether that
 textbook result can be recovered from public survey data with a small, tested, CPU-only tool. We read
 \hiNlong\ Galactic-longitude $(b,v)$ slices from the Leiden/Argentine/Bonn (LAB) HI survey
-\citep{kalberla2005}, extract the terminal velocity of the $b=0$ profile, and apply
-$R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with the modern constants
+\citep{kalberla2005}, extract the terminal velocity of each $b=0$ profile with two estimators run on
+the same spectra --- a fixed 2~K brightness-temperature threshold and an error-function fit to the
+profile edge --- and apply $R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with
 $R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$ \citep{reid2019}. Beyond the bar-dominated inner
-region, from $R\approx\hiRmin$ to $\hiRmax$~kpc the rotation speed stays at
-$V\approx\hiVflat\pm\hiVflatErr$~km\,s$^{-1}$; it does not fall off in the Keplerian
-$V\propto R^{-1/2}$ way the visible mass alone would give. Recovering this approximately flat,
-non-Keplerian curve is the validation. We are explicit about the limits: the absolute level is
-$\sim\hiExcessPct$\% high because a fixed brightness-temperature threshold systematically
-overestimates the terminal velocity \citep{mccluregriffiths2016}; the shape is robust but the
-normalization is soft, and an inner-Galaxy flat curve is not, by itself, a standalone
-dark-matter detection. This is a tooling and reproducibility contribution.
+region, over the \hiRealNflat\ points from $R\approx\hiRealRmin$ to $\hiRealRmax$~kpc, the rotation
+speed holds at $V=\hiRealVflat$~km\,s$^{-1}$ (point-to-point scatter \hiRealVflatScatter, standard
+error of the mean \hiRealVflatSem) with a fitted slope of
+$\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$ --- consistent with flat, and far from the
+Keplerian decline that would reach \hiRealKepler~km\,s$^{-1}$ at the outermost point. The two
+estimators differ by a \emph{measured} \hiRealThrMinusEdge~km\,s$^{-1}$: the threshold crossing sits
+on the profile wing, and the edge fit brings the level to \hiRealVflatEdge~km\,s$^{-1}$, within
+$\hiRealExcessPctEdge$\% of the \citet{reid2019} $V_0$, so the threshold estimator's
+$\hiRealExcessPct$\% excess is an estimator systematic measured on this data, not a cited one. An
+inner-Galaxy flat curve is not, by itself, a standalone dark-matter detection. This is a tooling and
+reproducibility contribution.
 \end{abstract}
 
 \keywords{Milky Way rotation (1059) --- Milky Way dynamics (1051) --- Neutral hydrogen clouds (1099) --- Dark matter (353) --- Open source software (1866)}
@@ -41,21 +45,33 @@ mass, is one of the cornerstones of the dark-matter case. For our own Galaxy the
 is measured from the HI~21\,cm line by the tangent-point (terminal-velocity) method
 \citep{mccluregriffiths2007}: along an inner sightline the gas at the subcentral point moves fastest
 along the line of sight, marking the high-velocity edge of the profile. We test whether this classic
-measurement is reproducible from a public, sub-megabyte survey with a $\sim$30-line tool. This is a
+measurement is reproducible from public survey data (each $(b,v)$ slice is a sub-megabyte file) with
+a small, tested tool whose core estimator and geometry fit in a few dozen lines. This is a
 validation, not a new measurement.
 
 \section{Method}
 \code{hi} is a pure-NumPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}). For each
 longitude $\ell$ it reads the LAB $(b,v)$ slice, takes the $b=0$ spectrum, and estimates the terminal
-velocity as the most positive LSR velocity with brightness temperature above a fixed threshold. The
-tangent point then gives
+velocity two ways on the same spectrum: (i) the \emph{threshold} estimator, the most positive LSR
+velocity with brightness temperature above 2~K (a conventional choice; sweeping the threshold over
+1.5--5~K moves the flat mean only \hiRealSweepLoThr\ to \hiRealSweepHiThr~km\,s$^{-1}$, small
+against the estimator systematic below); and (ii) the \emph{edge} estimator, an error-function fit
+$T(v)=\frac{A}{2}\,\mathrm{erfc}\!\big((v-v_0)/\sqrt{2}w\big)+c$ to the profile's falling edge,
+whose half-height velocity $v_0$ sits inside the edge rather than out on its wing, in the spirit of
+the edge fitting of \citet{mccluregriffiths2016}. In every LAB spectrum used here the emission above
+2~K is a single contiguous velocity run, so the threshold crossing is the top edge of the main
+emission, not an isolated wing. The tangent point then gives
 \begin{equation}
 R = R_0\sin\ell, \qquad V(R) = v_\mathrm{term} + V_0\sin\ell,
 \end{equation}
 with $R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$ from \citet{reid2019} (their best-fit solar
-circular speed, not the older IAU 220~km\,s$^{-1}$). LAB velocities are already in the LSR frame, so
-no solar-motion correction is applied. A synthetic $(\ell,v)$ slice with a known injected flat curve
-lets the tests run offline and recover the input.
+circular speed, not the older IAU 220~km\,s$^{-1}$). LAB velocities are tabulated in the kinematic
+LSR frame, which uses the standard solar motion; the \citet{reid2019} constants are tied to their
+fitted solar motion, and the residual frame mismatch injects a few km\,s$^{-1}$ at $\sim\sin\ell$,
+small against the estimator terms tracked below. A synthetic $(\ell,v)$ slice with a known injected
+flat curve and a realistic ($\sim$5~km\,s$^{-1}$) edge width drives the offline tests: the fixture
+reproduces the threshold estimator's wing overshoot (\hiSynThrMinusEdge~km\,s$^{-1}$ against
+\hiRealThrMinusEdge\ measured on LAB) while the edge estimator recovers the injected curve.
 
 \section{Data}
 We use the LAB survey \citep{kalberla2005}, the all-sky combination of the Leiden/Dwingeloo and
@@ -64,32 +80,58 @@ per-longitude $(b,v)$ FITS slices from VizieR. We sample \hiNlong\ longitudes fr
 $80\arcdeg$ in the first quadrant and read the mid-plane ($b=0$) spectrum of each.
 
 \section{Results}
-Table-style, the recovered curve rises gently across the inner disk and then flattens. Beyond the
-bar-dominated region ($R\lesssim\hiRmin$~kpc, dropped), from $R\approx\hiRmin$ to $\hiRmax$~kpc the
-rotation speed holds at $V\approx\hiVflat\pm\hiVflatErr$~km\,s$^{-1}$ (Figure~\ref{fig:rc}). It does
-not decline as the Keplerian $V\propto R^{-1/2}$ expected from the visible mass alone. Recovering this
-approximately flat, non-Keplerian curve from public HI data with a tiny tool is the validation,
-a known, foundational result.
+Table~\ref{tab:curve} lists every point under both estimators; the recovered curve rises gently
+across the inner disk and then flattens. Beyond the bar-dominated region ($R\lesssim\hiRealRmin$~kpc,
+dropped), the \hiRealNflat\ points from $R\approx\hiRealRmin$ to $\hiRealRmax$~kpc give
+$V=\hiRealVflat$~km\,s$^{-1}$ on the threshold estimator, where the point-to-point scatter is
+\hiRealVflatScatter~km\,s$^{-1}$ and the standard error of the mean \hiRealVflatSem\
+(Figure~\ref{fig:rc}). Flatness is quantified, not eyeballed: a least-squares slope over the flat
+sample gives $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$, consistent with zero, while
+a Keplerian $V\propto R^{-1/2}$ normalised at the innermost flat point would fall to
+\hiRealKepler~km\,s$^{-1}$ at the outermost --- the measured value stays $\sim$90~km\,s$^{-1}$
+above it. The level is insensitive to the hand-chosen analysis parameters: sweeping the threshold
+1.5--5~K moves the mean from \hiRealSweepLoThr\ to \hiRealSweepHiThr, dropping the innermost flat
+point (which sits 0.07~kpc above the $R>\hiRealRmin$~kpc cut) gives \hiRealDropInner, and dropping
+the two outermost points (the longitudes where local emission blends most with the terminal edge)
+gives \hiRealDropOuterTwo~km\,s$^{-1}$. All variants are committed with the results.
+
+\begin{deluxetable}{cccc}
+\tablecaption{Tangent-point rotation curve, both estimators.\label{tab:curve}}
+\tablehead{\colhead{$\ell$ (deg)} & \colhead{$R$ (kpc)} & \colhead{$V_\mathrm{thr}$ (km/s)} &
+\colhead{$V_\mathrm{edge}$ (km/s)}}
+\startdata
+\input{generated/curve_table}
+\enddata
+\end{deluxetable}
 
 \begin{figure}
 \plotone{figures/rotation_curve.pdf}
-\caption{Inner Milky Way rotation curve from LAB HI tangent-point velocities. The curve is
-approximately flat from $R\approx\hiRmin$ to $\hiRmax$~kpc at
-$V\approx\hiVflat$~km\,s$^{-1}$ (dashed), well above a declining Keplerian expectation; the dotted
-line marks $V_0=\hiVzero$~km\,s$^{-1}$.}
+\caption{Inner Milky Way rotation curve from LAB HI tangent-point velocities, under the threshold
+(circles; open where bar-excluded) and edge-fit (squares) estimators. The dashed line is the
+flat-sample mean of the threshold curve, drawn only over the flat range; the dash-dotted curve is
+the Keplerian decline normalised at the innermost flat point; the dotted line marks
+$V_0=\hiVzero$~km\,s$^{-1}$.}
 \label{fig:rc}
 \end{figure}
 
 \section{Limitations}
-\paragraph{Absolute level is $\sim\hiExcessPct$\% high.} At $\hiVflat$ versus $V_0=\hiVzero$, the main
-cause is the terminal-velocity estimator: a fixed brightness-temperature threshold
-overestimates $v_\mathrm{term}$ relative to inflection-point / error-function fitting
-\citep[$\sim$7~km\,s$^{-1}$ higher;][]{mccluregriffiths2016}, which inflates $V$. The shape (flat,
-non-Keplerian) is robust; the normalization is the soft part.
+\paragraph{The normalization is an estimator statement, measured here.} The threshold curve sits
+$\hiRealExcessPct$\% above $V_0=\hiVzero$; the edge fit, run on the same spectra, sits at
+\hiRealVflatEdge~km\,s$^{-1}$ ($\hiRealExcessPctEdge$\%). The difference,
+\hiRealThrMinusEdge~km\,s$^{-1}$ on the flat sample, is the wing overshoot of a threshold crossing
+on a finite-width edge, reproduced quantitatively by the synthetic fixture
+(\hiSynThrMinusEdge~km\,s$^{-1}$ at a 5~km\,s$^{-1}$ edge width). Note this is measured
+in-house rather than imported: the $\sim$7~km\,s$^{-1}$ offset in \citet{mccluregriffiths2016} is
+between the \citet{clemens1985} CO terminal curve and their fitted HI curve --- a cross-tracer,
+cross-survey comparison they attribute only partly to the threshold method --- and is not a
+substitute for the comparison done here. The residual $\sim$$\hiRealExcessPctEdge$\% under the edge
+estimator is within the streaming-motion and frame-convention terms below. The quoted
+\hiRealVflatScatter~km\,s$^{-1}$ is point-to-point scatter, orthogonal to this shared systematic:
+an estimator bias moves all \hiRealNflat\ points together and leaves the scatter unchanged.
 \paragraph{Circular orbits assumed.} $V = v_\mathrm{term} + V_0\sin\ell$ assumes the tangent-point gas
 is on a circular orbit; spiral-arm and bar-driven streaming biases individual points and cannot be
 removed without a model.
-\paragraph{Bar region excluded.} Points at $R\lesssim\hiRmin$~kpc are dominated by the bar's
+\paragraph{Bar region excluded.} Points at $R\lesssim\hiRealRmin$~kpc are dominated by the bar's
 non-circular motions and are dropped from the mean.
 \paragraph{Not, by itself, a dark-matter detection.} An inner flat curve is consistent with a
 dark halo but can also arise from the disk's own mass; the unambiguous case needs the curve beyond
@@ -99,11 +141,11 @@ applies solely for $R<R_0$.
 
 \section{Discussion and reproducibility}
 This is a validation: a small, tested, offline-capable tool recovers the approximately flat
-inner Milky Way rotation curve
-from public LAB HI data: the non-Keplerian shape is robust, and the absolute normalization is
-$\sim\hiExcessPct$\% high for a known, cited reason. The analysis regenerates from a clean checkout,
-and every number traces to the pipeline-written macros \code{\textbackslash input}ted at the top of
-the source.
+inner Milky Way rotation curve from public LAB HI data, with the flatness quantified by a slope
+fit, the Keplerian alternative excluded by $\sim$90~km\,s$^{-1}$ at the outermost point, and the
+normalization traced to a measured estimator systematic rather than a citation. The analysis
+regenerates from a clean checkout, and every number traces to the pipeline-written macros and
+table \code{\textbackslash input}ted at the top of the source.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

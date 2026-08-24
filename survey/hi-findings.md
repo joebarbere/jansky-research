@@ -90,3 +90,23 @@ today only by the source-marker rule.
 
 **Status: fixes pending** (LAB slices cached; findings 2, 4, 5 fixable from the committed JSON
 plus one edge-fit re-run).
+
+**Status: RESOLVED (2026-08-25).** The misread citation is replaced by an in-house measurement
+that strengthens the paper. An error-function edge estimator (`terminal_velocity_edge`) now runs
+on the same spectra as the threshold estimator: the measured threshold-vs-edge offset is
+**13.8 km/s** on the flat sample -- twice the misattributed ~7 -- and the edge-fit flat mean is
+**242.9 +/- 8.0 km/s, within 2.9% of the Reid 2019 V0**, so the 9% excess is demonstrated to be
+almost entirely the estimator, on this data, with MG&D 2016 now cited only for the edge-fit
+method and the Clemens-CO provenance of their ~7 km/s stated. Flatness is quantified (slope
+2.8 +/- 1.8 km/s/kpc; Keplerian at the outermost point 176 vs 263 measured). The synthetic
+fixture's edge is widened to a realistic 5 km/s, so it now reproduces the wing overshoot
+offline (13.6 km/s) instead of hiding it behind a 0.6 km/s edge. Sensitivities committed:
+threshold sweep 1.5-5 K moves the mean 258 -> 252; drop-innermost 259; drop-outermost-two 256.
+The +/-6 is relabelled as point-to-point scatter (ddof=1: 7 km/s) with the SEM (2.9) quoted and
+its orthogonality to the shared estimator systematic stated. A per-longitude (l, R, V_thr,
+V_edge) table is pipeline-written into the paper; both bar-excluded points are marked. Every
+spectrum used is verified to be a single contiguous run above 2 K (the l=70/80 wing worry is
+addressed by the edge fit, and the drop-outer-two variant is committed). Macros are namespaced
+(\hiSyn*/\hiReal*), the figure draws both estimators + the Keplerian curve with bar points open,
+the frame-mismatch sentence is honest, the size claims are scoped, the "Table-style," artifact
+is gone, and the arXiv package is rebuilt clean.
