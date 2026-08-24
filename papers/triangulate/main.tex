@@ -65,7 +65,9 @@ burst window on each spacecraft, the correct circular mean, immune to the azimut
 scalar angle averaging; (ii) triangulates the two rays (spacecraft position $+$ direction) as their
 least-squares closest point, the midpoint of the shortest connecting segment; and (iii) keeps the
 channel only when both rays point forward (the source lies in front of both spacecraft), the
-miss distance (the connecting segment's length) is below a threshold, and each spacecraft
+miss distance (the connecting segment's length) is below a threshold (60~$R_\odot$, which
+exceeds the smallest distance inferred below, so the cut is permissive rather than selective
+at the high-frequency end), and each spacecraft
 contributed enough good samples. The kept geometric radii are compared against
 \code{windwaves.emission\_radius}, the Leblanc plasma-frequency radius at the same harmonic, reusing
 the heliospheric density model of the interplanetary-type-III slices. Every function is tested against
@@ -94,7 +96,8 @@ frequency already correlates with the Leblanc curve at $r\approx0.75$, but the \
 sits well above that floor and specifically tests whether the geometric points follow the correct log--log curvature of the
 density model, not merely a shared downward trend. The absolute geometric scale, by contrast,
 runs a factor \triRatio\ above the average-Leblanc distance. Direction-finding on a type III, whose
-apparent source size is $\sim$$60^\circ$ FWHM \citep{krupar2014}, scatters the per-sample directions
+apparent source size reaches $\sim$$60^\circ$ at the lowest frequencies of this band and shrinks
+toward higher frequency \citep{krupar2014}, scatters the per-sample directions
 by tens of degrees, and noisy near-grazing rays bias the closest point outward, so we do not read that
 factor as a calibrated distance measurement. At the actual \triSep$^\circ$ baseline our zero-model-error
 synthetic reproduces a ratio of $\approx1.1$ for $9^\circ$ of injected scatter and $\approx1.6$ for the

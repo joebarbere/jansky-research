@@ -78,3 +78,44 @@ both honest, push the same way and we do **not** claim to separate them:
   data. The tool runs on any A+B day.
 - **Reproducible:** `python -m jansky_research.triangulate --date 20130515` regenerates the metrics,
   the (geometric-vs-plasma distance + HEEQ geometry) figure, and the macros from the public SPDF CDFs.
+
+## A citation can pass a coordinate check and still be the wrong paper (2026-08-23)
+
+`krupar2014` was **internally consistent**: DOI `10.1007/s11207-014-0522-x` matched its recorded
+volume 289, issue 8, pages 3121--3135 exactly. The Crossref adjudication procedure that catches
+constructed identifiers would have passed it. But the claim it was cited for is not in that paper.
+
+Krupar et al. published two same-year Solar Physics companions sharing a title stem:
+
+| | 0522-x (was cited) | 0601-z (correct) |
+|---|---|---|
+| subtitle | Radio Flux Density Variations with Frequency | Goniopolarimetric Properties and Radio Source Locations |
+| vol/iss/pages | 289 / 8 / 3121--3135 | 289 / 12 / 4633--4652 |
+| band | 125 kHz -- 16 MHz | **125 kHz -- 2 MHz** |
+| source size | not measured | "apparent source size gamma is very extended (~60 deg) for the lowest analyzed frequencies" |
+
+The paper cites it for "apparent source size is ~60 deg FWHM". That is 0601-z's result, and its
+band is *exactly* this paper's `\triFlo`--`\triFhi` (0.125--1.975 MHz), so the correct citation is
+also the better-matched one. **When two same-year companions share a title stem, the discriminator
+is the subtitle and the claim, not the identifier** --- coordinates alone cannot separate them.
+
+Second defect in the same sentence: 0601-z reports ~60 deg **at the lowest analyzed frequencies**,
+with gamma expanding linearly with radial distance below 1 MHz. The paper stated it as a constant
+across the band. Now qualified.
+
+## The miss-distance cut was never stated (2026-08-23)
+
+The Method said a channel is kept when the miss distance "is below a threshold" and never gave it.
+It is `max_miss_rsun = 60.0` R_sun, a bare default in `triangulate.py`. That matters here because
+the distances being measured are 15.3--106.1 R_sun: at the high-frequency end the cut admits
+channels whose two rays miss by four times the inferred distance, and the committed `\triMiss`
+= 17.1 R_sun is the *median* miss, larger than the closest source distance. The value is now stated,
+with the note that it is permissive rather than selective.
+
+**Outstanding:** sweeping `max_miss_rsun` (15/30/60/100) to see how `\triCorr` and `\triRatio` move
+requires re-running the real leg. It cannot be done from committed evidence, because
+`results/triangulate_metrics.json` keeps only summary scalars, not the per-channel `miss`, `lon`,
+`lat` and `r_geom` arrays `triangulate_track` returns --- the `innerrc` lesson (a results file
+omitting the numbers its own headline is computed from). No STEREO/WAVES cache exists locally, so
+the sweep means re-fetching the 2013-05-15 L3 DF data. **Commit the per-channel arrays on that run**
+so the cut becomes auditable and any future sweep is offline.
