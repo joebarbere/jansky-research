@@ -10,6 +10,25 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- Papers restyled to traditional pre-LLM register (batch 6: `solarbursts`, `swaves`, `windwaves`,
+  `triangulate`, `type3synthesis`, `rmsky`, `sourcecounts`). Gates clean on every file before
+  review; **all three referee rounds still returned revisions** (six batches for six), and all
+  twenty-seven conversion defects are fixed here.
+  The MAJORs: `sourcecounts`'s abstract stopped predicating "not a new measurement" on *this work*
+  and attached it to the published counts it agrees with; `windwaves` turned "a recover-a-known"
+  (the class of exercise) into "recovering a known result" two lines after saying its speed came
+  out **below** published values, collapsed an appositive so the fitted speed attached to the
+  *outer point* rather than the whole track, and downgraded "The honest limitations are
+  substantial" to "Several limitations apply" in the paper whose dominant systematic exceeds a
+  factor of two; `solarbursts`'s limitations list lost its head sentence, so a factor-of-3
+  systematic now elaborates a positive clause.
+  **One mechanical transformation had a signature**: `--- but they ---` promoted to a full stop in
+  both `rmsky` and `sourcecounts`, leaving "They" pointing at the positive clause in each. A
+  referee flagged the *transformation* rather than the instance, which made it greppable; it was
+  confined to those two.
+
+
 ### Fixed
 - **The two slices no guard could protect are now namespaced.** The audit's own output pointed
   at them: of the eight slices emitting no `*Source` macro, `vlass` and `type3synthesis` were the
