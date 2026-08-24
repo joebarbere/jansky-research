@@ -18,7 +18,7 @@ abstract: |
   bursts, 0.917 at SNR 3, falling to 0.333 near the detection threshold (SNR 2). We then
   stream the full 332-candidate real census: every observing day over 2024--2026 read straight
   from AWS Open Data (Stokes-I plane only, range-read and downsampled in memory, nothing to
-  disk; 48 days, zero failures). The result is a null. The 332 candidates (0.432/day, 4x the
+  disk; 768 days, zero failures). The result is a null. The 332 candidates (0.432/day, above the
   literature type II rate) are false-positive dominated: their matched-CME median speed 472.5
   km/s is the background CME population (median 378.0 km/s), not the fast, wide drivers real
   type II require; the burst drift is uncorrelated with the matched CME speed (Pearson

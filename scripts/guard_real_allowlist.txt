@@ -22,3 +22,8 @@ vgpra_synthetic_metrics.json
 # legs wrote one file and one macro set, and the real day's values reached the synthetic
 # sentences -- the abstract typeset as "a real burst at 0 stations ... confirms exactly 0 event".
 ecallisto_synthetic_metrics.json
+# The typeii SYNTHETIC leg, split out 2026-08-24 (round-4 referee): the paper's purity and
+# SNR-curve numbers had NO committed results file, because preserve_live_results correctly
+# refuses to let the offline leg write into the real census file. Same pattern as
+# vgpra_synthetic_* / ecallisto_synthetic_*.
+typeii_synthetic_metrics.json

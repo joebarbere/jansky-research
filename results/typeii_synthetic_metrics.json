@@ -1,0 +1,45 @@
+{
+  "source": "synthetic mixed census (type II + III + RFI + slow-drift bg; Gopalswamy CME bias)",
+  "is_real": false,
+  "n_events": 48,
+  "n_typeii_detected": 22,
+  "completeness": 0.917,
+  "purity": 1.0,
+  "n_injected_typeii": 24,
+  "n_negatives_typeiii": 16,
+  "n_negatives_rfi": 8,
+  "completeness_vs_snr": {
+    "snr2": 0.333,
+    "snr2.5": 0.625,
+    "snr3": 0.917,
+    "snr4": 1.0
+  },
+  "median_rfi_masked_frac": 0.0,
+  "ensemble": {
+    "n_seeds": 30,
+    "purity_mean": 0.883,
+    "purity_sd": 0.054,
+    "completeness_mean": 0.929,
+    "completeness_sd": 0.056,
+    "fp_by_class": {
+      "type_III": 0,
+      "rfi": 0,
+      "slow_bg": 91
+    },
+    "n_by_class": {
+      "type_III": 480,
+      "rfi": 240,
+      "slow_bg": 240
+    },
+    "fp_rate_upper95_by_class": {
+      "type_III": 0.0079,
+      "rfi": 0.0158,
+      "slow_bg": 0.442
+    }
+  },
+  "assoc_n_matched": 22,
+  "assoc_frac_fast": 0.818,
+  "assoc_frac_wide": 0.864,
+  "assoc_frac_fast_and_wide": 0.682,
+  "assoc_median_speed_kms": 1116.3
+}

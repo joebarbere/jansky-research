@@ -120,7 +120,7 @@ null is correct** (not a missed real sub-population). Required fixes, all applie
 
 ## Reproduce
 
-Offline (detector + synthetic + tests): `uv run python -m jansky_research.typeii --offline --out .`
+Offline (detector + synthetic + tests): `uv run python -m jansky_research.typeii --offline --out "$(mktemp -d)"` (never `--out .` — that is the invocation that once gutted the real metrics)
 Real (streamed, in memory, no disk): `uv run --extra typeii python scripts/typeii_real.py --dates
 2024-05-14 2024-05-15 --cme data/typeii/lasco_cme.csv`.
 
@@ -175,3 +175,49 @@ to run --out . (the gutting command).
 
 **Status: fixes pending** (all recomputations possible from the committed event list; purity
 ensemble offline).
+
+### Resolved 2026-08-24 (revision): the contaminant that can fail was injected, and it failed
+
+All 15 findings addressed. The centrepiece: `synthetic_slow_background` injects the class the
+real band actually contains (coherent, slowly drifting, window-filling ridges with |df/dt| drawn
+from the real candidates' 0.01-0.07 MHz/s range), and a 30-seed ensemble measures the detector
+against every class:
+
+| class | trials | false positives | 95% upper bound |
+|---|---|---|---|
+| fast type III | 480 | 0 | 0.8% |
+| narrowband RFI | 240 | 0 | 1.6% |
+| **slow-drift background** | 240 | **91** | **44%** |
+
+The old "this is not a detector defect" is retracted in the paper: the detector is clean against
+contaminants that cannot enter the acceptance band and false-positives at ~38% against the one
+that can, so the unusable census is a JOINT property of the band and the detector -- which is the
+stronger, mechanistic form of the paper's null (the census's 83% window saturation and the
+ensemble's failure mode now corroborate each other).
+
+**The match-rate deficit is retracted as a coverage artifact.** purity_diagnostics is now
+coverage-aware: with a fresh CDAW fetch (through 2026-05; 4407 CMEs), 303 of 332 detections fall
+inside coverage and the covered match rate is **0.68, above the 0.612 chance rate** -- the old
+deficit came from counting post-coverage candidates as unmatched. The committed
+`association_is_background_like` now keys on the speed comparison and window saturation, not the
+match rate. The speed test itself is sharpened: matched median 476.5 vs background 372.0, matched
+fast-fraction 0.184 vs 0.057 (KS p ~ 0) -- a real but modest enrichment, exactly the flare-CME
+confound's signature, nowhere near the >=900 km/s driver population; the previously-uncited
+`\tiiRealMatchFracFast` is now in the same sentence as the background value.
+
+Also fixed: the arxiv.yaml BLOCKER ("48 days, zero failures" -> 768 -- the original clobber's
+number surviving outside the macro system); the synthetic leg now writes its own
+`results/typeii_synthetic_metrics.json` (allowlisted; the Reproducibility sentence had claimed a
+provenance that was false for every synthetic number); the harmonic-cut sweep is committed with
+its denominators (8 matched CMEs at >=0.5, trend reversing at >=0.7 -- "confirming" -> "consistent
+with, on counts too small for the word confirm"); adjacent-window duplicates counted (332
+detections = 320 distinct structures, stated); the "4x RSTN" comparison scoped as cycle-phase
+inflated (whole-cycle average vs solar-max-only census); the +/-2 h symmetric match window stated
+correctly in the Method; r = 0.044 quoted with its pair count; the committed figure's inverted
+frequency axis fixed and null-as-zero bars removed; lawrance2024's article number moved out of
+pages; and this file's own reproduce command no longer tells the reader to run `--out .`.
+
+Values that moved with the fresh CME catalogue (three more months of coverage): matched median
+472.5 -> 476.5, background 378.0 -> 372.0, r 0.058 -> 0.044, chance 0.619 -> 0.612. The verdict is
+unchanged; every diagnostic is now recomputable from the committed event list plus the stated
+CDAW months.

@@ -303,7 +303,8 @@ def test_run_offline_completeness_purity_and_bias(tmp_path):
     assert m["n_typeii_detected"] > 0
     # the recovered CME association ECHOES the injected fast-and-wide bias (a wiring check)
     assert m["assoc_frac_fast"] >= 0.6 and m["assoc_frac_wide"] >= 0.6
-    saved = json.loads((tmp_path / "results" / "typeii_metrics.json").read_text())
+    # the offline leg writes its OWN evidence file (the guard rightly blocks the real one)
+    saved = json.loads((tmp_path / "results" / "typeii_synthetic_metrics.json").read_text())
     assert saved["completeness"] == m["completeness"]
     assert (tmp_path / "papers" / "typeii" / "figures" / "typeii.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "typeii" / "generated" / "macros.tex").read_text()
@@ -327,3 +328,46 @@ def test_write_macros_dual_namespace(tmp_path):
     txt = p.read_text()
     assert r"\newcommand{\tiiRealFracFast}{0.8}" in txt
     assert r"\newcommand{\tiiSynFracFast}{--}" in txt
+
+
+def test_slow_background_contaminant_can_enter_the_acceptance_band():
+    """The contaminant class the old purity test lacked: drift INSIDE 0.01-2 MHz/s."""
+    hits = 0
+    for s in range(12):
+        bg = t2.synthetic_slow_background(seed=s)
+        r = t2.detect_typeii(bg["data"], bg["freqs"], bg["times"])
+        hits += bool(r["detected"])
+    # the measured ensemble rate is ~0.38; assert the class is genuinely confusable
+    # (a detector this test cannot fool would make the census's verdict detector-independent)
+    assert hits >= 1
+
+
+def test_purity_diagnostics_is_coverage_aware():
+    """Detections beyond the CME catalogue's last onset must not count as unmatched."""
+    cme = [{"onset_hr": h, "speed_kms": 400.0, "width_deg": 60.0} for h in (10.0, 20.0, 30.0)]
+    dets = [
+        {"burst_hr": 10.5, "drift_mhz_s": -0.03, "duration_s": 880.0},  # covered, matched
+        {"burst_hr": 29.5, "drift_mhz_s": -0.04, "duration_s": 880.0},  # covered, matched
+        {"burst_hr": 500.0, "drift_mhz_s": -0.05, "duration_s": 880.0},  # beyond coverage
+    ]
+    d = t2.purity_diagnostics(dets, cme, 10)
+    assert d["n_detections_in_cme_coverage"] == 2
+    assert d["observed_cme_match_rate"] == 1.0  # 2/2 covered, not 2/3
+    assert d["cme_covered_flags"] == [True, True, False]
+
+
+def test_dedup_adjacent_windows_merges_sweep_steps():
+    step_hr = t2.SWEEP_STEP_S / 3600.0
+    dets = [{"burst_hr": 1.0}, {"burst_hr": 1.0 + step_hr}, {"burst_hr": 5.0}]
+    assert t2.dedup_adjacent_windows(dets) == 2
+
+
+def test_harmonic_cut_sweep_reports_denominators():
+    cme = [{"onset_hr": 1.0, "speed_kms": 500.0, "width_deg": 60.0}]
+    dets = [
+        {"burst_hr": 1.2, "harmonic_score": 0.9},
+        {"burst_hr": 1.3, "harmonic_score": 0.1},
+    ]
+    sw = t2.harmonic_cut_sweep(dets, cme, cuts=(0.0, 0.5))
+    assert sw[0]["n_candidates"] == 2 and sw[1]["n_candidates"] == 1
+    assert all("n_matched" in r for r in sw)
