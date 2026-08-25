@@ -11,6 +11,28 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **sourcecounts round-8 revision: the agreement is a closed budget on a fixed grid.** The
+  bins are a fixed 0.2-dex grid anchored at the cut (a test proves an appended 10-Jy source
+  leaves the compared bins byte-identical -- previously every statistic hung on the single
+  brightest object), and the headline becomes 1.01 +/- 0.021 (Poisson bootstrap), consistent
+  with unity. The agreement claim is computed, term by term, where each term acts: bin-to-bin
+  scatter 0.054 dex vs the computed 0.034 Poisson (+) 0.040 Hopkins-residual = 0.052; chi2
+  33.7/12 errors-only -> 8.4/12 with the reference's own quoted residual; cosmic variance
+  moved to the NORMALISATION (1.65-2.09% Monte-Carlo from the published NVSS w(theta), Blake &
+  Wall 2002, + 1.16% Poisson, vs a measured ~1% offset). The completeness statement is
+  measured (fine-bin threshold profile committed: 2.1-2.5 mJy at 0.59 of reference, the
+  ~10-15% residual in the first used bin STATED; cut sweep 3.5->20 mJy stable to ~1%; annuli
+  uniform to +/-1.2%); the component-vs-source systematic is bounded by a committed
+  friends-of-friends sweep (<=3%) with both sides of the comparison identified as component
+  counts (Hopkins is FIRST-anchored over the whole range); the per-bin table ships in the
+  JSON; a closed-form power-law test covers the solid-angle/S^2.5/bin-width chain the old
+  fixture could never fail on; the slope carries an error and its own comparand
+  (-1.90 +/- 0.023 vs -1.86 for Hopkins through the identical bins); the figure separates
+  compared from excluded bins and dashes the extrapolated reference; "first measured by
+  Condon (1984)" corrected; the findings doc's stale 0.073-dex/wrong-physics bullet fixed in
+  place.
+
+### Changed
 - **type3synthesis round-8 revision: the ladder is current, guarded, and says what its own
   channels say.** One real re-run of the four-slice pipeline refreshed every per-leg value to
   the revised sibling vintages (corona 0.1173 over the FITTED band 1.757-2.285 R_sun; helio
