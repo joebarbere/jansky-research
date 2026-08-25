@@ -19,12 +19,15 @@ import numpy as np
 
 __all__ = [
     "CRAB_PSRJ",
+    "ANCHOR_PSRJS",
     "B_COEFF",
     "MAGNETAR_B_GAUSS",
     "characteristic_age",
     "classify",
     "death_line",
+    "death_line_sweep",
     "fetch_atnf_ppdot",
+    "magnetar_threshold_sweep",
     "magnetic_field",
     "population_stats",
     "run",
@@ -46,6 +49,20 @@ _MOMENT_OF_INERTIA = 1.0e45  # g cm^2
 
 
 CRAB_PSRJ = "J0534+2200"
+
+#: One named anchor per class, plus the below-death-line archetype: the Crab (normal),
+#: B1937+21 (the first millisecond pulsar), J1550-5418 (a radio-loud magnetar), and
+#: J2144-3933 (the 8.5-s pulsar well below most death lines). Each is read out of the
+#: fetched table by name, and ``run()`` asserts its derived field lands in a loose
+#: literature window -- so a units or parsing regression fails the run instead of
+#: silently rewriting the paper's validation numbers.
+#: name -> (class role, log10 B window in Gauss)
+ANCHOR_PSRJS: dict[str, tuple[str, tuple[float, float]]] = {
+    CRAB_PSRJ: ("normal", (12.0, 13.0)),
+    "J1939+2134": ("msp", (8.0, 9.0)),
+    "J1550-5418": ("magnetar", (13.5, 15.0)),
+    "J2144-3933": ("below_death", (11.5, 12.8)),
+}
 
 
 def magnetic_field(period_s: np.ndarray, pdot: np.ndarray) -> np.ndarray:
@@ -120,6 +137,89 @@ def population_stats(period_s: np.ndarray, pdot: np.ndarray) -> dict:
     return out
 
 
+def death_line_sweep(
+    period_s: np.ndarray,
+    pdot: np.ndarray,
+    *,
+    b12_over_p2: tuple[float, ...] = (0.05, 0.1, 0.2, 0.4, 1.0),
+) -> dict:
+    """Fraction above the death line as the criterion constant sweeps the "death valley".
+
+    The committed line (:data:`DEATH_B_OVER_P2`, i.e. :math:`B_{12}/P^2=0.2`) is one
+    representative model; the literature spans a valley (Chen & Ruderman 1993). This sweep is
+    the committed evidence for how much of "almost all above the line" is the sample and how
+    much is the chosen constant. Keys are the :math:`B_{12}/P^2` values as strings.
+    """
+    p = np.asarray(period_s, float)
+    pd = np.asarray(pdot, float)
+    good = np.isfinite(p) & np.isfinite(pd) & (p > 0) & (pd > 0)
+    p, pd = p[good], pd[good]
+    out = {}
+    for c in b12_over_p2:
+        alive = pd > death_line(p, b_over_p2=c * 1.0e12)
+        out[str(c)] = round(float(np.mean(alive)), 4)
+    return out
+
+
+def magnetar_threshold_sweep(
+    period_s: np.ndarray,
+    pdot: np.ndarray,
+    *,
+    thresholds_gauss: tuple[float, ...] = (3.0e12, 5.0e12, 1.0e13, 2.0e13, 3.0e13),
+) -> dict:
+    """N and median log B of the high-B class as its defining threshold sweeps.
+
+    Unlike the MSP and normal classes, the "magnetar" class is selected on the very quantity
+    whose median is reported, so that median is guaranteed above the cut and tracks it. This
+    sweep is the committed statement of how much: the paper's headline separation must not be
+    read as a population property without it. Keys are the thresholds as strings.
+    """
+    p = np.asarray(period_s, float)
+    pd = np.asarray(pdot, float)
+    good = np.isfinite(p) & np.isfinite(pd) & (p > 0) & (pd > 0)
+    b = magnetic_field(p[good], pd[good])
+    out = {}
+    for t in thresholds_gauss:
+        m = b > t
+        out[str(t)] = {
+            "n": int(m.sum()),
+            "median_log_b": round(float(np.median(np.log10(b[m]))), 2) if m.any() else None,
+        }
+    return out
+
+
+def msp_period_sweep(
+    period_s: np.ndarray,
+    pdot: np.ndarray,
+    *,
+    cuts_s: tuple[float, ...] = (0.02, 0.03, 0.05),
+) -> dict:
+    """MSP and normal median log B as the millisecond period cut sweeps.
+
+    The companion to :func:`magnetar_threshold_sweep`: the period-selected classes' medians
+    are measurements only if they are stable to the one constant that defines them. Classes
+    keep the classifier's priority (magnetar first). Keys are the cuts in seconds as strings.
+    """
+    p = np.asarray(period_s, float)
+    pd = np.asarray(pdot, float)
+    good = np.isfinite(p) & np.isfinite(pd) & (p > 0) & (pd > 0)
+    p, pd = p[good], pd[good]
+    b = magnetic_field(p, pd)
+    logb = np.log10(b)
+    out = {}
+    for cut in cuts_s:
+        msp = (b <= MAGNETAR_B_GAUSS) & (p < cut)
+        normal = (b <= MAGNETAR_B_GAUSS) & ~msp
+        out[str(cut)] = {
+            "n_msp": int(msp.sum()),
+            "median_log_b_msp": round(float(np.median(logb[msp])), 2) if msp.any() else None,
+            "median_log_b_normal": (
+                round(float(np.median(logb[normal])), 2) if normal.any() else None
+            ),
+        }
+    return out
+
+
 def synthetic_population(n_each: int = 400, *, seed: int = 0) -> dict:
     """Three injected pulsar populations (normal / millisecond / magnetar) with known truth labels.
 
@@ -172,6 +272,8 @@ def named_pulsar_derived(pop: dict, name: str) -> dict:
     idx = [i for i, n in enumerate(names) if _key(n) == want]
     if not idx:
         return {"found": False, "name": name}
+    if len(idx) > 1:
+        raise ValueError(f"ambiguous pulsar name {name!r}: matches {len(idx)} rows")
     i = idx[0]
     p_s = float(np.asarray(pop["period_s"], float)[i])
     pd_v = float(np.asarray(pop["pdot"], float)[i])
@@ -188,22 +290,35 @@ def named_pulsar_derived(pop: dict, name: str) -> dict:
 
 
 def fetch_atnf_ppdot() -> dict:  # pragma: no cover - network
-    """Fetch ATNF P0 (s) and P1 (Pdot) from VizieR ``B/psr``; return period and positive spin-down."""
+    """Fetch ATNF P0 (s), P1 (Pdot), and S1400 from VizieR ``B/psr``.
+
+    ``B/psr`` is a frozen VizieR snapshot (published 2017-07-18), well behind the live ATNF
+    psrcat: its longest period is ~11.8 s, so the post-2018 ultra-long-period pulsars are
+    absent by construction. The vintage is recorded in the returned dict (and committed) so
+    the paper can disclose it. S1400 rides along for the flux-cut robustness check.
+    """
+    from datetime import datetime, timezone
+
     import numpy as _np
     from astroquery.vizier import Vizier
 
-    v = Vizier(columns=["PSRJ", "P0", "P1"])
+    v = Vizier(columns=["PSRJ", "P0", "P1", "S1400"])
     v.ROW_LIMIT = -1
     t = v.get_catalogs("B/psr/psr")[0]
     p = _np.asarray(t["P0"], float)
     pd = _np.asarray(t["P1"], float)
-    # PSRJ was requested and then thrown away, which is why the run could not identify any named
-    # pulsar and the paper's Crab "validation" had to be hand-typed from the literature.
+    s1400 = _np.asarray(t["S1400"], float)
+    if hasattr(t["S1400"], "mask"):
+        s1400 = _np.where(_np.asarray(t["S1400"].mask), _np.nan, s1400)
     return {
         "period_s": p,
         "pdot": pd,
+        "s1400_mjy": s1400,
         "name": _np.asarray([str(x).strip() for x in t["PSRJ"]], dtype=object),
         "n_catalogue": len(t),
+        "catalogue_version": "B/psr (VizieR snapshot, published 2017-07-18)",
+        "fetched_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "catalogue_max_p0_s": float(_np.nanmax(p)),
     }
 
 
@@ -233,11 +348,97 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "median_log_b_magnetar": round(stats["magnetar"]["median_log_b"], 2),
     }
     metrics["n_catalogue"] = pop.get("n_catalogue")
-    span = metrics["median_log_b_magnetar"] - metrics["median_log_b_msp"]
+    for key in ("catalogue_version", "fetched_utc", "catalogue_max_p0_s"):
+        if key in pop:
+            metrics[key] = pop[key]
+    # The unrounded medians carry the span; rounding first put three noise digits in the
+    # published factor (78000 vs the unrounded 77278). Two significant figures is what the
+    # medians' own precision supports.
+    span = stats["magnetar"]["median_log_b"] - stats["msp"]["median_log_b"]
     metrics["b_span_dex"] = round(span, 2)
-    metrics["b_span_factor"] = int(round(10.0**span, -3))
+    metrics["b_span_factor"] = int(float(f"{10.0**span:.2g}"))
+    # The MSP<->normal separation is the class-definition-free version of the span: both
+    # medians are measured over classes selected on period, not on B itself.
+    metrics["msp_normal_span_dex"] = round(
+        stats["normal"]["median_log_b"] - stats["msp"]["median_log_b"], 2
+    )
+    metrics["frac_above_death_pct"] = round(100.0 * metrics["frac_above_death"], 1)
     metrics["frac_below_death_pct"] = round(100.0 * (1.0 - metrics["frac_above_death"]), 1)
-    # The Crab, read out of the analysed sample. Committed so the abstract's "validates" is
+    # How much of "almost all above the death line" is the chosen constant, and how much of
+    # the magnetar median is its own defining threshold: both committed as sweeps.
+    dsweep = death_line_sweep(pop["period_s"], pop["pdot"])
+    metrics["death_line_sweep_b12_over_p2"] = dsweep
+    metrics["frac_above_death_pct_lo"] = round(100.0 * dsweep["0.4"], 1)
+    metrics["frac_above_death_pct_hi"] = round(100.0 * dsweep["0.1"], 1)
+    msweep = magnetar_threshold_sweep(pop["period_s"], pop["pdot"])
+    metrics["magnetar_threshold_sweep_gauss"] = msweep
+    med_lo = msweep["3000000000000.0"]["median_log_b"]
+    med_hi = msweep["30000000000000.0"]["median_log_b"]
+    metrics["magnetar_median_lo_cut"] = med_lo
+    metrics["magnetar_median_hi_cut"] = med_hi
+    psweep = msp_period_sweep(pop["period_s"], pop["pdot"])
+    metrics["msp_period_sweep_s"] = psweep
+    metrics["msp_median_20ms"] = psweep["0.02"]["median_log_b_msp"]
+    metrics["msp_median_50ms"] = psweep["0.05"]["median_log_b_msp"]
+    metrics["normal_median_20ms"] = psweep["0.02"]["median_log_b_normal"]
+    metrics["normal_median_50ms"] = psweep["0.05"]["median_log_b_normal"]
+    # Discard breakdown: the paper's Data section gives the reasons; these give the sizes.
+    _p_all = np.asarray(pop["period_s"], float)
+    _pd_all = np.asarray(pop["pdot"], float)
+    has_p = np.isfinite(_p_all) & (_p_all > 0)
+    metrics["n_pdot_null"] = int(np.sum(has_p & ~np.isfinite(_pd_all)))
+    metrics["n_pdot_negative"] = int(np.sum(has_p & np.isfinite(_pd_all) & (_pd_all < 0)))
+    metrics["n_pdot_zero"] = int(np.sum(has_p & np.isfinite(_pd_all) & (_pd_all == 0.0)))
+    metrics["n_p0_missing"] = int(np.sum(~has_p))
+    # Flux-cut robustness of the per-class medians (real leg only: needs S1400). B/psr has no
+    # survey-provenance column, so this bounds sensitivity to a flux cut, not survey selection.
+    if pop.get("s1400_mjy") is not None:
+        s = np.asarray(pop["s1400_mjy"], float)
+        flux = {}
+        for label, m in (
+            ("s1400_present", np.isfinite(s)),
+            ("s1400_ge_0.5", np.isfinite(s) & (s >= 0.5)),
+            ("s1400_ge_2", np.isfinite(s) & (s >= 2.0)),
+        ):
+            st = population_stats(_p_all[m], _pd_all[m])
+            flux[label] = {
+                "n": st["n"],
+                "median_log_b_msp": round(st["msp"]["median_log_b"], 2),
+                "median_log_b_normal": round(st["normal"]["median_log_b"], 2),
+                "median_log_b_magnetar": round(st["magnetar"]["median_log_b"], 2),
+                "n_magnetar": st["magnetar"]["n"],
+            }
+        metrics["flux_cut_medians"] = flux
+        metrics["flux_cut_max_excursion_dex"] = round(
+            max(
+                abs(flux[label][f"median_log_b_{cls}"] - stats[cls]["median_log_b"])
+                for label in flux
+                for cls in ("msp", "normal", "magnetar")
+            ),
+            2,
+        )
+    # Named anchors, one per class plus the below-death-line archetype, each read out of the
+    # fetched table and gated by a loose literature window so a units or parsing regression
+    # fails the run rather than silently rewriting the validation numbers.
+    if pop.get("name") is not None:
+        anchors = {}
+        for psrj, (role, (lo, hi)) in ANCHOR_PSRJS.items():
+            a = named_pulsar_derived(pop, psrj)
+            if not a["found"]:
+                raise RuntimeError(f"anchor pulsar {psrj} not found in the fetched catalogue")
+            logb = float(np.log10(a["b_gauss"]))
+            if not (lo <= logb <= hi):
+                raise RuntimeError(
+                    f"anchor {psrj} ({role}): log B = {logb:.2f} outside literature "
+                    f"window [{lo}, {hi}] -- units or parsing regression"
+                )
+            anchors[psrj] = {
+                "role": role,
+                "b_gauss": float(f"{a['b_gauss']:.3g}"),
+                "age_yr": float(f"{a['age_yr']:.3g}"),
+            }
+        metrics["anchors"] = anchors
+    # The Crab, read out of the analysed sample. Committed so the abstract's "checks" is
     # checkable evidence rather than two numbers typed from a textbook.
     crab = named_pulsar_derived(pop, CRAB_PSRJ)
     if crab["found"]:
@@ -255,9 +456,49 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     from .report import write_results
 
     write_results(metrics, op / "results" / "ppdot_metrics.json")
+    if pop.get("name") is not None:
+        _write_catalogue(pop, op / "results" / "ppdot_pulsars.csv")
     _figure(pop["period_s"], pop["pdot"], op / "papers" / "ppdot" / "figures")
     _write_macros(metrics, op / "papers" / "ppdot" / "generated" / "macros.tex")
     return metrics
+
+
+def _write_catalogue(pop: dict, path) -> None:
+    """The per-pulsar table behind every median: a census committed as 17 scalars is not
+    auditable, so the analysed rows (and their derived quantities and dispositions) are the
+    committed evidence. Real leg only (the synthetic population has no names)."""
+    import csv
+    from pathlib import Path
+
+    p = np.asarray(pop["period_s"], float)
+    pd = np.asarray(pop["pdot"], float)
+    names = pop["name"]
+    good = np.isfinite(p) & np.isfinite(pd) & (p > 0) & (pd > 0)
+    b = magnetic_field(p, pd)
+    tau = characteristic_age(p, pd)
+    edot = spindown_luminosity(p, pd)
+    cls = np.full(p.size, "dropped", dtype=object)
+    cls[good] = classify(p[good], pd[good])
+    alive = np.zeros(p.size, bool)
+    alive[good] = pd[good] > death_line(p[good])
+    pt = Path(path)
+    pt.parent.mkdir(parents=True, exist_ok=True)
+    with pt.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["psrj", "p0_s", "p1", "b_gauss", "tau_yr", "edot_erg_s", "cls", "above_death"])
+        for i in np.flatnonzero(good):
+            w.writerow(
+                [
+                    names[i],
+                    f"{p[i]:.10g}",
+                    f"{pd[i]:.6g}",
+                    f"{b[i]:.4g}",
+                    f"{tau[i]:.4g}",
+                    f"{edot[i]:.4g}",
+                    cls[i],
+                    int(alive[i]),
+                ]
+            )
 
 
 def _figure(period_s, pdot, out_dir) -> None:
@@ -329,8 +570,39 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\ppBSpanFactor}}{{{_fmt('b_span_factor')}}}",
         rf"\newcommand{{\ppFracDead}}{{{_fmt('frac_below_death_pct')}}}",
         rf"\newcommand{{\ppLogBmagnetar}}{{{m['median_log_b_magnetar']}}}",
-        rf"\newcommand{{\ppAccuracy}}{{{_fmt('classify_accuracy')}}}",
+        # The class-definition-free separation (both classes selected on period, not B), and
+        # the sweeps: what the death-line fraction and the high-B median do when the constants
+        # that define them move. These carry the paper's robustness sentences.
+        rf"\newcommand{{\ppMspNormalSpanDex}}{{{_fmt('msp_normal_span_dex')}}}",
+        rf"\newcommand{{\ppFracAlivePct}}{{{_fmt('frac_above_death_pct')}}}",
+        rf"\newcommand{{\ppFracAlivePctLo}}{{{_fmt('frac_above_death_pct_lo')}}}",
+        rf"\newcommand{{\ppFracAlivePctHi}}{{{_fmt('frac_above_death_pct_hi')}}}",
+        rf"\newcommand{{\ppLogBmagnetarLoCut}}{{{_fmt('magnetar_median_lo_cut')}}}",
+        rf"\newcommand{{\ppLogBmagnetarHiCut}}{{{_fmt('magnetar_median_hi_cut')}}}",
+        rf"\newcommand{{\ppLogBmspTwentyMs}}{{{_fmt('msp_median_20ms')}}}",
+        rf"\newcommand{{\ppLogBmspFiftyMs}}{{{_fmt('msp_median_50ms')}}}",
+        rf"\newcommand{{\ppLogBnormalTwentyMs}}{{{_fmt('normal_median_20ms')}}}",
+        rf"\newcommand{{\ppLogBnormalFiftyMs}}{{{_fmt('normal_median_50ms')}}}",
+        # Discard breakdown for the Data section.
+        rf"\newcommand{{\ppNpdotNull}}{{{_fmt('n_pdot_null')}}}",
+        rf"\newcommand{{\ppNpdotNeg}}{{{_fmt('n_pdot_negative')}}}",
+        rf"\newcommand{{\ppNpdotZero}}{{{_fmt('n_pdot_zero')}}}",
+        rf"\newcommand{{\ppNpMissing}}{{{_fmt('n_p0_missing')}}}",
+        rf"\newcommand{{\ppFluxCutMaxDex}}{{{_fmt('flux_cut_max_excursion_dex')}}}",
     ]
+    # Anchor pulsars (real leg only; the offline population has no names).
+    anchors = m.get("anchors") or {}
+    for psrj, macro in (
+        ("J1939+2134", "MspAnchor"),
+        ("J1550-5418", "MagnetarAnchor"),
+        ("J2144-3933", "DeathAnchor"),
+    ):
+        a = anchors.get(psrj)
+        if a is None:
+            lines.append(rf"\newcommand{{\pp{macro}B}}{{--}}")
+        else:
+            mant, exp = f"{float(a['b_gauss']):.1e}".split("e")
+            lines.append(rf"\newcommand{{\pp{macro}B}}{{{mant}\times10^{{{int(exp)}}}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and

@@ -11,6 +11,23 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **ppdot round-7 revision: the claims now sit on committed sweeps, and the census is a
+  table, not seventeen scalars.** The "magnetar" median is presented as what it is -- a
+  property of its own defining threshold (committed sweep: 12.71 at B>3e12 G to 14.12 at
+  >3e13) -- and the measured headline is the MSP<->normal separation (3.64 dex, stable
+  8.37-8.48 / 12.04-12.06 under a committed 20-50 ms period-cut sweep). The death-valley
+  sweep (98.2% above the line at the paper's constant; 92.5% at twice, 99.6% at half) and a
+  flux-cut robustness sweep (max class-median excursion 0.11 dex, the high-B median moving
+  most) are committed with macros. The 2017-vintage VizieR snapshot is disclosed (max P0
+  11.79 s; no ultra-long-period class; `catalogue_version`/`fetched_utc` in the JSON). Four
+  named anchors (Crab, B1937+21, J1550-5418, J2144-3933) are read from the fetched table and
+  gated against literature windows so a units regression fails the run. The discard breakdown
+  is measured (435 null Pdot + 35 negative + 5 zero + 9 no period = 484) and the full
+  2052-row per-pulsar table ships as `results/ppdot_pulsars.csv`. `\ppBSpanFactor` now
+  derives from unrounded medians (77000, was 78000); `\ppAccuracy` (offline-only, uncited)
+  is dropped; ambiguous name lookups raise. Headline values unchanged.
+
+### Changed
 - **Review round 7 verdicts recorded: `rmsky`, `pulsarspec`, `ppdot`, `torchdsp` -- three major
   revisions (one light), one minor, two blockers.** The batch was chosen by inherited-defect
   risk and the inheritances paid out again. rmsky (major): every quoted error is the
