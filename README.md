@@ -55,7 +55,7 @@ Forty-five slices, one line each; the long version of every row is `survey/<slic
 | Slice | Tool | Outcome |
 |-------|------|---------|
 | FRB burst-statistics | `jansky_research.frbstats` | ✅ reproduced the CHIME repeater **width** result |
-| Ultra-steep-spectrum hunt | `jansky_research.spectra` | ➖ USS candidates **failed** the de Gasperin cross-check (negative) |
+| Ultra-steep-spectrum hunt | `jansky_research.spectra` | ➖ a raw TGSS×NVSS USS cut is 17% pure / 14% complete (selection on the noisy index + matched-sensitivity truncation, both measured) |
 | FRB repeater periodicity | `jansky_research.frbperiod` | ✅ recovered FRB 20180916B's **16.35-day** period |
 | SETI drift-search benchmark | `jansky_research.driftsearch` | ➖ benchmark built; the apparent "Voyager detection" was a **DC-spike artifact** caught in development; the tool reports a null |
 | HI rotation curve | `jansky_research.hi` | ✅ recovered the **flat** (non-Keplerian) inner Milky Way curve |
@@ -101,7 +101,7 @@ Forty-five slices, one line each; the long version of every row is `survey/<slic
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 Most of these are recover-a-known validations and method work. Several are negatives, written up
-as negatives: the USS candidates evaporated against the authoritative catalog, the SETI "Voyager
+as negatives: the USS candidates dissolved into selection bias on a noisy index, the SETI "Voyager
 detection" was a DC-spike artifact, the blind type II census is false-positive dominated, and the
 megaconstellation RFI trend is systematics-limited. The review gate has caught at least one real
 physics, citation, or statistics error in every slice before write-up, which is the argument for
@@ -152,7 +152,7 @@ against its committed evidence, which is where several of the fixes below came f
 | Recovering FRB 20180916B's 16.35-day period | `frbperiod/` | validation | 100% | — | ✅ 2026-08-23 — expected-null heading restored (no sensitivity exists for that source) |
 | The flat inner Milky Way rotation curve from LAB HI | `hi/` | validation | 99% | **major revision** ([referee 2026-08-24](survey/hi-findings.md)) | ✅ 2026-08-25 — the citation became a measurement: an edge-fit estimator on the same spectra gives 243±8 (2.9% above V₀) vs 257 threshold, a measured 13.8 km/s offset; flatness quantified (slope 2.8±1.8) |
 | A SETI drift-search benchmark + Voyager-1 null | `driftsearch/` | benchmark + negative result | 100% | — | ✅ 2026-08-23 — one-detector claim de-generalised; "Honest" dropped from the title |
-| TGSS×NVSS USS selection is dominated by the flux scale | `spectra/` | cautionary negative | 99% | **major revision** ([referee 2026-08-25](survey/uss-findings.md)) | 🔄 in revision — the "corrected" reference is not flux-scale corrected (its authors say so); the population offset is +0.004 ± 0.005 (the −0.15 is tail selection); the honest result is stronger: the cut is 17% pure / 9% complete because the surveys are equally sensitive at exactly α = −1.3 |
+| A TGSS×NVSS USS cut is neither pure nor complete | `spectra/` | cautionary negative | 99% | **major revision** ([referee 2026-08-25](survey/uss-findings.md)) | ✅ 2026-08-25 — whole-field reference comparison committed (456 rows): population offset +0.002 ± 0.005 (no flux-scale effect; dec-edge refuted); candidate offset −0.11 vs −0.05 ± 0.03 from the committed selection-on-noisy-α model; cut scored 17% pure / 14% complete with the matched-sensitivity truncation quantified (α* ≈ −1.01; S₁₅₀ ≥ 102 mJy at −1.65); the limit-row disagreement flagged; both papers rewritten around the measured mechanisms |
 | VLASS multi-epoch variability: a 703 deg² census + FK Com | `vlass/` | methodology + validation (recovers FK Com) | 92% | **major revision** ([referee 2026-08-24](survey/vlass-findings.md)) | ✅ 2026-08-24 — completeness re-derived with the fixed error model (99.5% at 10×, was "52% saturation"); the archival rejection is committed evidence (fixed-position photometry goes negative on the artifact) |
 | Three-frequency curvature selection of peaked-spectrum sources | `peaked/` | methodology + two recover-a-known validations | 98% | **major revision** ([referee 2026-08-25](survey/peaked-findings.md)) | ✅ 2026-08-25 — HFP validation re-measured with real TGSS fluxes (53% rising, 32% falling; the 100% was a flux cut); field-local limit makes the count 1+1 with the 8/6/1/0 sweep committed; candidates published with errors + in-pipeline SIMBAD/NED vetting |
 | Measuring the turnover: southern peaked sources from GLEAM-X + RACS | `southern/` | methodology + measured-turnover candidate list | 97% | **major revision** ([referee 2026-08-24](survey/southern-findings.md)) | ✅ 2026-08-25 — re-run with the catalogue's own errors + a significance-tested gate: 41 candidates (was 90), density ratio vs RadioSED II 1.21 (was ~2.5×, an error-model artifact), Callingham accuracy improved to 0.091 dex, full catalogue committed |
