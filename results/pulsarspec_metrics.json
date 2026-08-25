@@ -14,5 +14,53 @@
   "alpha_diff": 0.018,
   "alpha_diff_se": 0.122,
   "alpha_diff_sigma": 0.15,
-  "alpha_resolvable_2sigma": 0.24
+  "alpha_resolvable_2sigma": 0.24,
+  "catalogue_version": "B/psr (VizieR snapshot, published 2017-07-18)",
+  "fetched_utc": "2026-08-25T13:04:43Z",
+  "n_s400_tabulated": 764,
+  "n_s1400_tabulated": 1676,
+  "n_rejected_nonpositive_flux": 1,
+  "n_msp_catalogue": 337,
+  "n_normal_catalogue": 2190,
+  "mean_alpha_se": 0.0344,
+  "alpha_diff_ci95_lo": -0.221,
+  "alpha_diff_ci95_hi": 0.258,
+  "alpha_resolvable_90power": 0.4,
+  "alpha_median_diff": 0.094,
+  "permutation_p_two_sided": 0.882,
+  "completeness": {
+    "s1400_floor_mjy": 0.107,
+    "alpha_min": -3.0,
+    "s400_cut_mjy": 4.59,
+    "n": 401,
+    "mean": -1.882,
+    "median": -1.917
+  },
+  "msp_cut_sweep_s": {
+    "0.01": {
+      "n_msp": 36,
+      "diff": -0.027,
+      "two_se": 0.275
+    },
+    "0.02": {
+      "n_msp": 42,
+      "diff": -0.004,
+      "two_se": 0.246
+    },
+    "0.03": {
+      "n_msp": 43,
+      "diff": 0.018,
+      "two_se": 0.244
+    },
+    "0.05": {
+      "n_msp": 47,
+      "diff": 0.004,
+      "two_se": 0.253
+    },
+    "0.1": {
+      "n_msp": 50,
+      "diff": 0.037,
+      "two_se": 0.241
+    }
+  }
 }

@@ -11,6 +11,22 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **pulsarspec round-7 revision: the selection function is quantified, and the exclusion is
+  an interval, not a threshold.** The selection is restated as coverage-dominated (764 of
+  2536 pulsars have any S400 vs 1676 with any S1400 -- an absent flux is no published
+  measurement, not a non-detection) and its flux-limit component is measured: above the
+  committed completeness limit (S400 >= 4.59 mJy, from the sample's own S1400 1st percentile)
+  the mean steepens from -1.77 to -1.882, so the abstract quotes both. The MSP-normal bound is
+  now the 95% CI on the difference ([-0.221, +0.258]) with the old "offsets > 0.24 excluded"
+  relabelled as the 50%-power detection threshold (90% power: 0.40) -- the conflation is also
+  fixed in the `compare_subsamples` docstring that seeded it. The headline mean carries its
+  statistical SE (0.0344) with a stated flux-scale floor (ln(1+f)/ln 3.5), the 10-100 ms cut
+  sweep (sign flips, never significant), permutation p = 0.882, and median difference 0.094
+  are committed, and `results/pulsarspec_sources.csv` ships all 473 rows plus the counted
+  J0540-6919 S400=0 rejection and per-arm denominators (43/337 vs 430/2190). Snapshot vintage
+  (2017-07-18) disclosed. Headline values unchanged.
+
+### Changed
 - **ppdot round-7 revision: the claims now sit on committed sweeps, and the census is a
   table, not seventeen scalars.** The "magnetar" median is presented as what it is -- a
   property of its own defining threshold (committed sweep: 12.71 at B>3e12 G to 14.12 at
