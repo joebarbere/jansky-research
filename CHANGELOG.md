@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **vlbi round-9 revision: the floor carries its uncertainty, the count carries the floor's,
+  and the load-bearing citation names its real authors.** The calibrator paper is Fassnacht &
+  Taylor 2001 (AJ 122, 1661, DOI-verified) -- Peck was never an author -- and its 0.7% is
+  scoped to year timescales. `floor_diagnostics` commits the drop-one control jackknife
+  (0.186--0.201, count 13->12), the control span with the count at the control maximum (10),
+  and the median-threshold selection function (2 of 4 controls above their own floor by
+  construction; stated in the abstract). The CSV carries V at five decimals, resolving the
+  CTA 102 tie honestly (above the floor by 7e-5, z = 0.0 against its committed bootstrap
+  sigma_V; only 5 of 13 clear the floor by >3 sigma_V). The epoch confound is measured
+  (Spearman rho = 0.747, permutation p = 8e-4; OLS V = 0.074 + 0.170 log10 N) with an
+  epoch-matched floor variant (12/14) in the limitations. The cannot-fail amplitude
+  comparison (median of above-floor sources vs the floor that selected them) is retired for
+  the unselected non-control median (0.305 vs 0.193). The fixture gains known-steady controls
+  and `floor_fixture_metrics` measures the floor selector itself: completeness 1.0 (0.971 at
+  quarter amplitude, committed ladder), blind purity 0.157 -- the "high completeness and
+  purity" sentence now cites measured, namespaced macros. OJ 287's amplitude gets its
+  literature comparand (Komossa et al. 2023), all four controls verified in Kiehlmann et
+  al. 2024's bona-fide table, m_d committed (control median 0.186 = the unmodelled scatter),
+  an 18-row generated source table ships, every hand-typed number became a macro (including
+  the epoch span, now 1994--2026 from the grown archive), and synthetic runs can no longer
+  clobber the real figure.
 - **frbstats round-9 revision: the source is the unit of analysis, the figures show what
   they claim, and the split-brain path is closed.** Figure 1 now plots the within-source
   waits the Weibull was fitted to (the pooled/fitted mismatch displayed a passing fit,
