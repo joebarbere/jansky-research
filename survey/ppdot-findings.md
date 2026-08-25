@@ -128,3 +128,51 @@ said the same false thing and was corrected too.
 
 Both re-runs were **purely additive**: every previously published value (n_pulsars 2052,
 frac_above_death 0.982, the three median fields) is unchanged, and no macro changed value.
+
+## Full referee round (2026-08-25): MINOR REVISION (upper end), 12 findings
+
+Every catalogue-derived number reproduces: the referee independently re-derived the census
+from VizieR `B/psr` TAP (n=2052, 182/1787/83, medians 8.42/12.05/13.31, 36 below the death
+line, Crab B=3.794e12 / τ=1256.8 from the fetched row) and the committed figure contains
+exactly 2052 marker draws. All five DOIs clean. What holds it up: three claims that outrun
+their committed evidence, one undisclosed data property, and the missing per-object table.
+All fixes are additive to one real re-run.
+
+**MAJORs:**
+1. The "magnetar" median is a property of the cut, not a population: the class is defined by
+   the quantity being reported, so 13.31 tracks the threshold directly (12.71 at B>3e12 →
+   14.12 at >3e13), and the 4.89-dex "span" moves 4.29–5.70 with it. The measured claim is
+   the MSP↔normal separation (3.63 dex, stable to both cuts: 8.37–8.48 / 12.04–12.06).
+   Keep the number, change the claim strength, commit the sweep.
+2. The catalogue snapshot is ~2017 vintage (publication_date 2017-07-18; no J0901−4046, max
+   P0 = 11.79 s) and the paper never says so — which bites the death-line caveat hardest,
+   since the sample excludes the entire ultra-long-period class. One sentence in Data +
+   `catalogue_version`/`access_date` in the JSON.
+3. 98.25% above the death line has no committed threshold sweep though the paper's own caveat
+   says the line is "one representative model": measured, "almost all" survives a factor of 2
+   in the constant (92.4%) and not a factor of 5 (75.6%). Emit `\ppFracAliveLo/Hi`.
+4. "The per-class median fields are robust to this" is asserted with no committed check — and
+   is true (S1400-cut excursions ≤ 0.11 dex, the magnetar median moving most because a radio
+   flux requirement removes radio-quiet high-B objects, 53/83 survive). Commit it, scoped as
+   "robust to a flux cut" (B/psr has no survey-provenance column, so per-survey jackknife is
+   unavailable).
+5. A 2052-object census committed as 17 scalars — no reader can recompute a single median or
+   see which 36 objects are below the line. Commit `results/ppdot_pulsars.csv` (PSRJ, P0, P1,
+   B, tau, Edot, class, above_death).
+
+**MINOR/NIT:** "validates" for N=1 with no assertion that can fail on a re-run — widen to
+J1939+2134 (B=4.1e8), J1550−5418 (2.2e14), J2144−3933 (2.1e12) with a tolerance assert; the
+discard breakdown is asserted not measured (444 null Ṗ / 35 negative / 5 exactly zero, the
+last silently dropped by `pd > 0` and mentioned nowhere; 31 of 35 negatives are in globular
+clusters); `ppdot.py:200` comment and this file's own "~3 500 entries"/"~37 pulsars" still
+assert defects recorded as fixed; `\ppAccuracy` is a dead `--` macro written un-namespaced by
+the offline leg only (a placeholder is not defended by `preserve_live_macros` — the
+`\tiiNEvents` shape; rename `\ppSynAccuracy` or drop); 0.982-fraction vs 1.8%-percent in one
+paper, and `\ppBSpanFactor` = 78000 carries three noise digits (unrounded medians give 77278
+— quote 8×10⁴); silent `idx[0]` on name lookup (no ambiguity today, one-line guard); the
+gitignored arxiv-submission tarball is stale (2026-06-29, would publish the retracted
+values) — regenerate before submission.
+
+**Status: fixes pending.** The single change: commit the per-pulsar table and the two sweeps
+— the sweeps mostly *support* the paper; the one claim they do not support is the magnetar
+median, which should be described as threshold-set.
