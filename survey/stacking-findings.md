@@ -126,3 +126,57 @@ All 11 macros re-verified against `results/stacking_metrics.json`; no number mov
 **Also fixed (pre-existing):** the magnitude paragraph pointed the reader at
 "(Figure~\ref{fig:stack}, **right**)" where the caption puts the magnitude panel in the **middle**,
 and the redshift paragraph points at "right" too. Both pointed at the same panel.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 15 findings, two BLOCKERs
+
+The measurement is probably real (the annulus RMS scales as N^-1/2 across a factor of 3 in N to
+1.4% — a genuine internal check that passes), but the title claim and every quoted number rest
+on two defects the referee proved rather than suspected.
+
+**BLOCKER 1: the injection-recovery ratio is an algebraic identity, not a measurement.**
+`injection_recovery` adds the same PSF plane to every cutout and differences two sigma-clipped
+medians: sigma_clip's cenfunc/stdfunc are shift-equivariant, so the clip mask is unchanged and
+the recovered value ≡ the injected value — ratio ≡ 1.0 for ANY input (verified analytically and
+numerically on a hostile cube: heteroscedastic gains, interlopers, NaN edges — 1.0 exactly at
+every amplitude and FWHM). The title's "Injection-Recovery Calibration", the abstract's
+"de-biases the result", "the SE flux scale is unbiased (unlike Quick-Look would be)", and "the
+same stack without the step would quote a biased flux" are all unsupported — the identical code
+returns 1.0 on Quick-Look or pure noise; \stPeak and \stDebiased are the same number; and two
+unit tests assert conditions the identity makes unfailable (the "test can lock a defect in"
+pattern).
+
+**BLOCKER 2: every flux and SNR is a 3-pixel SEARCHED peak** — the exact stokesv lesson written
+in vlass.py's own line-1022 docstring. Monte Carlo of the code's own geometry: the searched
+peak on pure beam-correlated noise reads +1.57×RMS (positive 99% of the time), so the headline
+4.5σ is ~3.6σ honest, 43.5 µJy is ~28–32, and the faintest bin's 2.6σ is ~1.4σ. The committed
+JSON carries the fingerprint twice: the count-weighted bin means (61.6/59.9 µJy) exceed the
+full-sample 43.5 by the 1.42× a pedestal predicts (bins have 1.75× the RMS). And the
+calibration leg measures the CENTRE pixel while the science leg searches — the two legs don't
+even measure the same statistic.
+
+**MAJORs:** no off-source control stack exists anywhere (an annulus is blind to a
+centre-common pedestal — the control leg would turn the referee's simulation into the paper's
+own measured null); "quasars that lack an individual VLASS detection" is not implemented (no
+flux cut, no catalogue cross-match — the sample is every DR16Q row with a cutout); no
+denominator/footprint/target list committed (n_queried, radius — code default 3.0° vs the
+findings doc's "2.5° cone" — max_sources=300 row-limit truncation: the effective sky area is
+undefined and "regenerates from a clean checkout" is not true); the magnitude bins are
+APPARENT magnitude over z 0.9–2.6 (the "expected radio–optical luminosity correlation ...
+recovered" is inseparable from a luminosity–distance effect, end-to-end 1.6σ, and the "~2×"
+becomes 3.2× under the pedestal correction); the findings doc's main narrative documents a
+DIFFERENT earlier run (N=279/SNR 4.9/45.4 µJy vs committed 236/4.5/43.5) including the only
+stated denominator ("of 300 tried, 279"); the paper says "mean" throughout while the estimator
+is a 3σ-clipped MEDIAN (for a skewed radio-loudness distribution these differ by a large
+factor — illustration: true mean 158, clipped-median stack 38 — and the offline fixture gives
+every source identical flux, so mean ≡ median by construction and no test can see it).
+
+**MINOR/NIT:** White/Karim/Lindroos are cited as plain text and missing from the reference
+list (main.bbl has 7 entries); √N noise sentence wrong for a median (1.25σ/√N); 4.44-vs-4.5
+rounding inconsistency; mixed mJy/µJy units hide the bins-above-full-sample smoking gun;
+\stSource generated but unused (field coordinates never reach the reader); macros
+mode-dependent and un-namespaced (guards wired, defence-in-depth holds); the local
+arxiv-submission tarball predates the honesty edits.
+
+**Status: fixes pending.** The single change: replace the searched peak with a forced
+central-pixel measurement, re-derive all seven fluxes/SNRs, and add the off-source control
+stack — then either retract the calibration claim or build an injection test that can fail.

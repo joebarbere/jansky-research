@@ -103,3 +103,67 @@ open, tested, CPU-only tool **plus this honest cross-check** — emphatically no
   *uncorrected* TGSS ADR1 fluxes inflate $\alpha$ by $\sim0.15$ and manufacture spurious USS
   candidates — which is exactly why a cross-check against the corrected de Gasperin catalogue is
   mandatory. Reported as a negative/cautionary result, honestly, rather than dressed up as a find.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 16 findings, four BLOCKERs
+
+The tool is sound, the committed evidence is internally consistent, and the six-source manual
+lookup reproduces to the digit on a fresh VizieR query. But the paper's causal claim is
+refuted by its own field, and the honest paper hiding underneath is stronger.
+
+**BLOCKER 1: the reference catalogue is not flux-scale corrected, and its authors say so.**
+main.tex/rnaas.tex call de Gasperin (2018) "the authoritative, flux-scale-CORRECTED TGSS×NVSS
+catalogue"; §4 of their own paper says the Hurley-Walker 15% TGSS systematic "can
+systematically bias our spectral index values by ~0.06" — the catalogue is built from the same
+uncorrected ADR1, so a raw-minus-de-Gasperin difference is structurally incapable of measuring
+the TGSS flux scale (which is common to both), and the quoted 0.15 would require a 41% flux
+inflation nothing claims.
+
+**BLOCKER 2: the claimed systematic offset is absent from the population.** Referee-side
+cross-match of all 456 committed positions against the non-limit de Gasperin entries (387
+pairs): mean Δα = +0.004 ± 0.005 — no offset; per-source scatter 0.093 = 1.2× the combined
+formal errors. The −0.15 exists only in the six sources selected on the noisy variable (a
+no-free-parameter selection model predicts −0.05 ± 0.035 of the observed −0.11) — the
+rmstructure lesson in a new costume: the number measures selection on the extreme.
+
+**BLOCKER 3: the declination-edge mechanism is refuted by the same 387 pairs** (Dec ≤ +30:
++0.006 ± 0.006; Dec > +30: +0.002 ± 0.007 — indistinguishable; the largest of the six offsets
+is INSIDE the rescaled coverage; and there is no mechanism — only the correction's
+availability changes at +30°, and neither side applies it).
+
+**BLOCKER 4: the two headline numbers (Δα ≈ −0.15; "only 1 of 6 survives") are hand-typed**
+under "no number is typed by hand": no macro, no JSON key, no query log; reference_spindex()
+is pragma-no-cover and called from NOWHERE — the cross-check was a one-time manual lookup.
+(To the author's credit: the referee re-ran it and all six values are correct. The provenance
+is what is broken.)
+
+**MAJORs:** one of the six "reference" indices is a NON-DETECTION LIMIT (Scode=L, e=0.000 —
+"±0.00 should have stopped the analysis"), supplying the largest term (−0.392; drop it: −0.11)
+and breaking "all 6 already appear in it" (that entry is a TGSS non-detection DISAGREEING with
+our 9.2σ ADR1 detection); the selection function is reported at half strength — the reference
+catalogue holds 11 USS sources in the same cone and the naive cut recovers 1, so the method is
+17% PURE and 9% COMPLETE, and "manufactures spurious candidates" is wrong at the population
+level (6 found where the reference has 11); the citable mechanism is in de Gasperin's own
+Fig. 3: NVSS and TGSS are equally sensitive at exactly α = −1.3, so the joint sample is
+truncated for everything steeper (to be flagged at −1.65 needs S₁₅₀ ≥ 102 mJy — 51% of the
+sample); the published reproduction command (`python -m jansky_research.spectra`, no
+coordinates) runs the SYNTHETIC leg into the repo root and clobbers the unguarded
+uss_candidates.csv + both paper figures; the field centre/radius appear in neither manuscript
+(\usSource unused and would mis-render); "validates the method" via the median is a test that
+cannot fail (dG cone median −0.749 vs ours −0.73 — real but powerless; the same run is 9%
+complete); the offline fixture injects USS 3σ from the cut.
+
+**MINOR/NIT:** "all six already catalogued so none is new" is a tautology (the real check —
+SIMBAD/NED, no redshifts — holds on re-query but rests on another uncommitted manual lookup,
+annotate_known also having zero callers); limitation (i) mis-states Hurley-Walker (a zero-mean
+15–17% SCATTER → 0.06–0.07 in α, not an inflation of 0.1–0.2; the docstring's "40–50%" not
+found in the source); the RNAAS's only figure does not display the note's own conclusion (the
+corrected values are not plotted); the ~1–2 chance matches are right but computed nowhere
+(1.48); survey/ and results/ carry duplicate candidate CSVs, only one guarded; the printed
+equation says 150 MHz where the code uses 147.5; this file's own "flatter" sign error
+(inflating S₁₅₀ makes α STEEPER); stale arXiv package.
+
+**Status: fixes pending.** The single change: run reference_spindex() over all 456 sources,
+commit the confusion matrix, and let the paper say what it is entitled to: a TGSS×NVSS
+catalogue USS cut is ~17% pure and ~9% complete because the two surveys are equally sensitive
+at exactly the threshold — a stronger cautionary result than the one currently claimed, one
+function call away.
