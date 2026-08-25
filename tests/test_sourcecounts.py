@@ -81,9 +81,7 @@ def test_fixed_bin_grid_is_independent_of_the_brightest_source():
     byte-identical when a 10 Jy source is appended."""
     sky = sc.synthetic_sky(seed=3)
     base = sc.compute_counts(sky["fluxes_jy"], sky["area_sr"], s_min_jy=0.0035)
-    plus = sc.compute_counts(
-        np.append(sky["fluxes_jy"], 10.0), sky["area_sr"], s_min_jy=0.0035
-    )
+    plus = sc.compute_counts(np.append(sky["fluxes_jy"], 10.0), sky["area_sr"], s_min_jy=0.0035)
     n = base["good"].sum()
     assert plus["good"].sum() == n  # the same sub-Jy bins are used
     np.testing.assert_allclose(base["en"][base["good"]], plus["en"][plus["good"]])
