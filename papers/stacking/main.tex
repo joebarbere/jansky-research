@@ -4,133 +4,165 @@
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{Sub-threshold radio stacking with injection-recovery}
+\shorttitle{Forced-photometry stacking of quasars in VLASS}
 \shortauthors{Barbere}
 
 \begin{document}
 
-\title{A Reproducible Image-Plane Stacking Tool with Injection-Recovery Calibration, Applied to
-SDSS Quasars in VLASS Single-Epoch Imaging}
+\title{A Reproducible Image-Plane Stacking Tool with Forced Photometry and an Off-Source Control,
+Applied to SDSS Quasars in VLASS Single-Epoch Imaging}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
 Most members of an optically-selected quasar sample are fainter than the single-source detection limit
-of a radio survey, but their average radio flux is measurable by image-plane stacking: at $N$
-known positions thermal noise averages down as $N^{-1/2}$ while a coherent signal adds (White et al.\
-2007; Karim et al.\ 2011). A stacked flux is only believable once the bias is calibrated (snapshot,
-CLEAN, and residual-versus-restored effects corrupt raw stacks), so we pair a robust sigma-clipped
-median stack with an injection-recovery step that measures the recovered/injected ratio and
-de-biases the result. We apply the tool to \stN\ SDSS DR16 quasars \citep{lyke2020} that lack an
-individual VLASS detection, using VLASS Single-Epoch \citep{lacy2020} 3~GHz cutouts from the CADC.
-The median stack reaches a central peak of \stPeak~mJy/beam at signal-to-noise \stSNR; the
-injection-recovery ratio is \stRatio, giving a calibrated mean flux of \stDebiased~mJy/beam. Binning
-the sample into \stNbins\ optical-magnitude bins turns the single number into a trend: the
-optically-brightest third ($i\simeq\stBrightMag$) has a calibrated mean radio flux of \stBrightFlux~$\mu$Jy/beam
-versus \stFaintFlux~$\mu$Jy/beam for the faintest ($i\simeq\stFaintMag$). Re-binning the same cutouts
-by redshift gives a non-monotonic run of observed mean flux that peaks at \stPeakzFlux~$\mu$Jy/beam near
-$z\simeq\stPeakzZ$. The contribution is reproducibility and
-tooling: a tested stacking-plus-injection-recovery pipeline, a calibrated population-mean
-measurement, and magnitude- and redshift-resolved trends. None of this is a new astrophysical
-claim.
+of a radio survey, but their population-level radio flux is measurable by image-plane stacking: at $N$
+known positions thermal noise averages down as $N^{-1/2}$ while a coherent signal adds
+\citep{white2007,karim2011}. Because the positions are known, the stacked flux must be a \emph{forced}
+measurement at the target pixel --- a peak searched even within a small aperture is positive almost
+always on beam-correlated noise and biases every stack high. We apply a tested, CPU-only tool to
+SDSS DR16 quasars \citep{lyke2020} in VLASS Single-Epoch \citep{lacy2020} 3~GHz cutouts: of
+\stNqueried\ queried, \stNwithCutout\ have an SE image, \stNdetExcl\ individually-detected sources
+are excluded by a per-cutout $5\sigma$ test, and \stN\ enter the sigma-clipped median stack. The
+forced central flux is \stFlux~$\mu$Jy\,beam$^{-1}$ at signal-to-noise \stSNR. Two controls
+accompany it: an off-source stack at $30\arcsec$-offset positions through the identical pipeline
+(forced flux $\stCtlFlux\pm\stCtlRms$~$\mu$Jy\,beam$^{-1}$ --- no positive centre-common pedestal),
+and an injection test that can fail --- point sources injected at the measured amplitude with
+per-cutout sub-pixel astrometric jitter recover $\stInjRatio\pm\stInjRatioSD$ of the injected flux.
+Binned by apparent $i$ magnitude, the optically-brightest third is detected
+(\stBrightFlux~$\mu$Jy\,beam$^{-1}$, \stBrightSNR$\sigma$) while the faintest third is not
+(\stFaintFlux~$\mu$Jy\,beam$^{-1}$, \stFaintSNR$\sigma$). The estimator is a clipped median, and we
+report it as one; for a skewed radio-loudness distribution the population mean is larger. This is a
+tooling and reproducibility contribution, not a new astrophysical claim.
 \end{abstract}
 
 \keywords{Quasars (1319) --- Radio continuum surveys (1340) --- Active galactic nuclei (16) ---
 Astronomy data analysis (1858) --- Open source software (1866)}
 
 \section{Introduction}
-Stacking turns a non-detection into a measurement of the population mean, and has long been used to
-probe the sub-microjansky radio sky behind optically/IR-selected samples (White et al.\ 2007; Karim
-et al.\ 2011; Lindroos et al.\ 2015). The principal weakness of the method is calibration: the flux a stack returns for
-genuinely sub-threshold sources is biased by the snapshot/CLEAN deconvolution and, in Quick-Look
-imaging, by the residual-versus-restored flux scale, so a raw stacked flux is not trustworthy
-without an injection-recovery test, and the deeper, self-calibrated VLASS Single-Epoch images are the
-right substrate \citep{lacy2020,gordon2021}. We aim for the most reproducible version of this
-measurement: with the public catalogues, the public images, and a small tested tool, can one measure
-a population's mean radio flux with the bias calibrated?
+Stacking turns a non-detection into a measurement of a population's central radio flux, and has long
+been used to probe the sub-millijansky sky behind optically/IR-selected samples
+\citep{white2007,karim2011,lindroos2015}. The method's weaknesses are procedural, and this revision
+of the tool is built around two of them. First, photometry on a stack made at \emph{known} positions
+must be forced: the maximum within even a 3-pixel search radius on beam-correlated noise reads
+$+1.57\sigma$ and is positive $\sim$99\% of the time, so a searched peak converts noise into
+signal.\footnote{An earlier version of this work quoted searched peaks throughout; every flux and
+signal-to-noise here is a forced central-pixel measurement, and the searched maximum is committed
+only as a labelled diagnostic.} Second, a stack needs controls that can fail: an off-source stack
+through the identical pipeline, and an injection test whose construction does not guarantee its own
+answer. We ask the most reproducible version of the question: with public catalogues, public images,
+and a small tested tool, what does a forced-photometry stack of optical quasars in VLASS Single-Epoch
+imaging measure, and what do its controls say?
 
 \section{Methods}
 \code{stacking} is a pure-NumPy module (on the \code{jansky} helpers; \citealt{jansky}). It
-(i) median-stacks $N$ centred cutout stamps with a per-pixel sigma-clip, which rejects the rare bright
-neighbour or imaging artefact (White et al.\ preferred the median over the mean for this reason) and
-averages the thermal noise down by $\sqrt{N}$; (ii) measures the stacked central peak, an annulus RMS,
-and the signal-to-noise; and (iii) runs injection-recovery: it injects a point source of
-known flux at the centre of every (background) cutout, re-stacks, and measures the recovered central
-excess, returning the recovered/injected ratio that the measured stacked flux is divided by. Every
-function is tested against a synthetic population whose individually-undetectable sources are recovered
-at high stacked SNR with the injection-recovery ratio near unity, so the suite runs offline.
+(i) median-stacks $N$ centred cutout stamps with a per-pixel sigma-clip, which rejects the rare
+bright neighbour or imaging artefact (\citealt{white2007} preferred the median over the mean for
+this reason); (ii) measures the stacked \emph{forced} central-pixel flux against an annulus RMS ---
+on pure noise this measurement goes negative about half the time, and a committed test asserts
+exactly that; and (iii) runs two independent checks.
+
+\paragraph{The off-source control.} For every science position we fetch a second cutout $30\arcsec$
+north and push the control cube through the identical stack-and-measure pipeline. A centred annulus
+cannot detect a bias common to the cutout centres (a pedestal, a CLEAN-residual level); an
+off-source stack can.
+
+\paragraph{An injection test that can fail.} The previous version injected the same PSF plane into
+every cutout and differenced two clipped medians. Sigma-clipping is shift-equivariant, so the clip
+mask never changes and the recovered flux equals the injected flux \emph{identically} --- a ratio of
+1.0 for any input whatsoever, including pure noise; it measured nothing, and we retract the
+``injection-recovery calibration'' framing of the earlier version. The replacement injects each
+cutout's point source at an independent random sub-pixel offset (Gaussian, $\sigma=\stInjJitter$
+pixels --- a documented assumption standing in for catalogue-to-image astrometric scatter), at the
+\emph{measured} stacked amplitude, and reads the forced central pixel above the no-injection
+baseline over eight independent jitter draws. Centring and pixelization losses now register, and the
+result carries a spread.
+
+\paragraph{Sample cut, implemented.} A stack of ``individually undetected'' sources must exclude the
+detected ones by measurement, not by a sentence: per cutout, a searched $5\sigma$ test against that
+cutout's own annulus RMS (searching is correct for a detection test) flags and removes
+individually-detected sources.
+
+Every function is tested offline, including: forced photometry going negative about half the time
+on noise; the injection test failing (ratio $<0.8$) when the population is badly centred; and a
+log-normal population fixture for which the clipped-median stack recovers the \emph{median} while
+the mean is $\sim$2.6$\times$ larger --- the estimator's meaning is a tested property, not a word
+choice.
 
 \section{Data}
-The target list is SDSS DR16 quasars \citep{lyke2020} (VizieR) over a VLASS-covered field. For each we
-fetch a VLASS Single-Epoch \citep{lacy2020} 3~GHz Stokes-I cutout from the CADC SODA service (the same
-access path used elsewhere in this project), trimmed to a common-grid stamp; \stN\ have an SE image and
-enter the stack. A robust median makes an explicit bright-source mask unnecessary for this sample size.
+The target list is SDSS DR16 quasars \citep{lyke2020} (VizieR) in a \stRadius$^\circ$ cone at
+$(\alpha,\delta)=(\stFieldRa^\circ,+\stFieldDec^\circ)$, capped at the \stMaxSources\ VizieR rows
+the query returns; the full queried list, with per-target cutout/control/excluded flags, is
+committed (\code{results/stacking\_targets.csv}) so the denominator is auditable. For each target we
+fetch a VLASS Single-Epoch \citep{lacy2020,gordon2021} 3~GHz Stokes-I cutout from the CADC SODA
+service, trimmed to a common-grid stamp. Of \stNqueried\ queried, \stNwithCutout\ have an SE image
+and \stNdetExcl\ are individually detected and excluded, leaving \stN\ in the stack.
 
 \section{Results}
-The median stack of the \stN\ cutouts has a central peak of \stPeak~mJy/beam at signal-to-noise \stSNR,
-a marginal-to-solid stacked detection of a population far below the VLASS single-source limit. The
-injection-recovery calibration returns a recovered/injected ratio of \stRatio\ (consistent with unity:
-the Single-Epoch flux scale is unbiased for these centred sub-threshold sources, unlike Quick-Look
-would be), so the de-biased population-mean flux is \stDebiased~mJy/beam (Figure~\ref{fig:stack}). The
-calibrated flux, not the raw stacked flux, is the quantity of interest: the same stack without the
-injection-recovery step would quote a biased flux, and on Quick-Look imaging the bias would be larger
-and harder to model, which is why the Single-Epoch images and the injection-recovery test are both
-necessary.
+The forced central flux of the median stack is \stFlux~$\mu$Jy\,beam$^{-1}$ against an annulus RMS
+of \stRms\ (signal-to-noise \stSNR; Figure~\ref{fig:stack}) --- a stacked detection of a population
+far below the VLASS single-source limit. The searched maximum within 3 pixels equals the forced
+value (\stPeakSearched~$\mu$Jy\,beam$^{-1}$), as it should when a real source sits at the stack
+centre. The off-source control stack (\stCtlN\ positions) gives a forced flux of
+$\stCtlFlux\pm\stCtlRms$~$\mu$Jy\,beam$^{-1}$ ($\stCtlSNR\sigma$): there is no positive
+centre-common pedestal, so the science signal is not a pipeline artefact. The mildly negative
+control is consistent with zero at the $\sim$2$\sigma$ level; to the extent it is real, positions
+$30\arcsec$ from real sources sample the negative CLEAN-residual environment of their neighbours,
+which would make the science flux conservative rather than inflated. The jittered injection test
+recovers $\stInjRatio\pm\stInjRatioSD$ of the injected flux: under the assumed
+$\stInjJitter$-pixel astrometric scatter, the forced measurement underestimates a true centred
+median by $\sim$8\%. We quote the uncorrected measurement and this ratio separately rather than
+folding an assumption into the headline.
 
-\paragraph{A magnitude-resolved trend.} Splitting the sample into \stNbins\ equal-count bins of SDSS
-$i$-band magnitude and stacking each (with its own injection-recovery) turns the single number into the
-radio--optical relation (Figure~\ref{fig:stack}, middle). The calibrated mean radio flux rises
-monotonically with optical brightness, from \stFaintFlux~$\mu$Jy/beam in the faintest third
-($i\simeq\stFaintMag$) to \stBrightFlux~$\mu$Jy/beam in the brightest ($i\simeq\stBrightMag$). In these bins the
-optically-brightest quasars are $\sim$2$\times$ radio-brighter on average, the expected radio--optical
-luminosity correlation, here recovered entirely from individually-undetected sources. The
-faintest bin is only marginally significant, so the trend's faint end is tentative. The ordering is
-monotonic in the central values, but neither adjacent pair of bins is separated by more than
-about one combined standard error, so the ordering is consistent with the trend rather than
-evidence for it on its own.
+\paragraph{Binned by apparent magnitude.} Splitting into \stNbins\ equal-count bins of SDSS
+$i$-band magnitude (Figure~\ref{fig:stack}, middle): the optically-brightest third is clearly
+detected (\stBrightFlux~$\mu$Jy\,beam$^{-1}$ at \stBrightSNR$\sigma$, median $i\simeq\stBrightMag$),
+the middle third marginally, and the faintest third is a non-detection
+(\stFaintFlux~$\mu$Jy\,beam$^{-1}$ at \stFaintSNR$\sigma$, $i\simeq\stFaintMag$). We do not quote a
+bright-to-faint flux ratio: the denominator is consistent with zero. Nor do we read the run as the
+radio--optical \emph{luminosity} correlation: these are apparent magnitudes over a wide redshift
+range ($z\sim0.9$--$2.6$ across the bins), so distance and luminosity are entangled, and the binned
+run is reported as a demonstration of the machinery on observed-frame quantities.
 
-\paragraph{A redshift-resolved trend.} Re-binning the same fetched cutouts by SDSS redshift
-into \stNzbins\ equal-count bins (each separately injection-recovered) gives the run of observed mean
-flux with redshift at no extra data cost (Figure~\ref{fig:stack}, right). Unlike the magnitude trend it
-is not monotonic: the observed mean flux is \stLowzFlux~$\mu$Jy/beam at $z\simeq\stLowzZ$, peaks
-at \stPeakzFlux~$\mu$Jy/beam near $z\simeq\stPeakzZ$, and falls to \stHighzFlux~$\mu$Jy/beam by
-$z\simeq\stHighzZ$ (where the bin is only marginally significant). We do not over-read this. An
-observed-frame flux folds the
-luminosity distance, the $K$-correction, and any intrinsic luminosity evolution together, and the bins
-are wide, so we report this trend as a demonstration that the binning machinery generalises to any
-catalogue property, not as an evolutionary measurement.
+\paragraph{Binned by redshift.} Re-binning the same cutouts by redshift (Figure~\ref{fig:stack},
+right): the observed-frame median flux is comparable in the two lower-$z$ bins
+(\stLowzFlux~$\mu$Jy\,beam$^{-1}$ at $z\simeq\stLowzZ$) and undetected in the highest
+(\stHighzFlux~$\mu$Jy\,beam$^{-1}$ at $z\simeq\stHighzZ$, $0.9\sigma$). An observed-frame flux
+folds luminosity distance, $K$-correction, and evolution together; this is machinery, not an
+evolutionary measurement.
 
 \begin{figure*}
 \plotone{figures/stack.pdf}
-\caption{Left: median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars; the central
-source is the population mean, de-biased by the injection-recovery ratio \stRatio. Middle: the
-calibrated mean radio flux in \stNbins\ bins of optical ($i$-band) magnitude (brighter to the right).
-Right: the same cutouts re-binned by redshift into \stNzbins\ bins (the radio--redshift
-relation for this sample).}
+\caption{Left: median-stacked VLASS Single-Epoch image of the \stN\ SDSS quasars; the forced
+central-pixel flux is \stFlux~$\mu$Jy\,beam$^{-1}$ at signal-to-noise \stSNR. Middle: forced median
+flux in \stNbins\ bins of apparent $i$-band magnitude with annulus-RMS error bars (brighter to the
+right); the faintest bin is consistent with zero. Right: the same cutouts re-binned by redshift.}
 \label{fig:stack}
 \end{figure*}
 
 \section{Discussion and reproducibility}
-The contribution is reproducibility and tooling: a tested image-plane stacking pipeline whose stacked
-flux is calibrated by injection-recovery, demonstrated end-to-end on public VLASS Single-Epoch images
-of a public quasar catalogue. The limitations of this measurement are those of any catalogue-and-cutout stacking:
-the result depends on the Single-Epoch coverage at the target positions (sources without an SE image
-are dropped), the clean-PSF injection-recovery calibrates the flux-scale/snapshot bias but not every
-deconvolution subtlety, confusion and bright-neighbour contamination are mitigated by the median but
-not eliminated, and the magnitude- and redshift-binned trends here are demonstrations of the binning
-machinery rather than evolutionary measurements. A larger sample would tighten the marginal bins and
-sharpen both relations. Every number above is written by the pipeline into the
-macros this paper \code{\textbackslash input}s, and the analysis regenerates from a clean checkout on
-public data.
+The contribution is tooling and reproducibility: a stacking pipeline whose photometry is forced,
+whose sample cut is implemented rather than asserted, and whose two controls --- an off-source
+stack and a jittered injection --- are each capable of returning a failing answer. The estimator is
+a sigma-clipped \emph{median}: for a skewed radio-loudness distribution the population mean is
+larger (in the committed log-normal fixture, $\sim$2.6$\times$), so this number is the population's
+central flux, not its mean, and the noise on a median is $\approx1.25\sigma/\sqrt{N}$ rather than
+$\sigma/\sqrt{N}$. Remaining limitations: the result depends on SE coverage at the target
+positions; the injection ratio is conditional on an assumed astrometric scatter; the control offset
+samples the environment $30\arcsec$ from quasars, not arbitrary blank sky; and the binned runs are
+observed-frame demonstrations. Every number above is written by the pipeline into the macros this
+paper \code{\textbackslash input}s, and the analysis regenerates from a clean checkout
+(\code{python -m jansky\_research.stacking --ra \stFieldRa\ --dec \stFieldDec\ --radius \stRadius}).
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude
 \citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
-implementation, and testing of the \code{stacking} tool (the median stack, the injection-recovery
-calibration, and the VLASS-SE cutout fetch), the analysis, and the drafting of this manuscript. The
-author directed the work, independently reviewed and verified all code, results, figures, and
-citations, and takes full responsibility for the content. An AI/LLM is not an author.
+implementation, and testing of the \code{stacking} tool (the median stack, the forced photometry,
+the off-source control, the jittered injection test, and the VLASS-SE cutout fetch), the analysis,
+and the drafting of this manuscript. The author directed the work, independently reviewed and
+verified all code, results, figures, and citations, and takes full responsibility for the content.
+An AI/LLM is not an author.
 
 \begin{acknowledgments}
 The author acknowledges the collaborative contribution of Anthropic's Claude and the \code{jansky}

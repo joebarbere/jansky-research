@@ -17,6 +17,13 @@ credibility-critical step of **injection-recovery** bias calibration (White et a
 
 ## Real run: the mean radio flux of optical quasars
 
+> **SUPERSEDED (2026-08-25).** The narrative below (and the two binned tables after it) documents
+> an *earlier* run — N=279, "2.5° cone", searched-peak photometry, the identity injection ratio —
+> that does not match the committed evidence (N=236, radius 3°), and its estimator carries both
+> round-9 blockers (searched peak; identity calibration). It is kept as the historical record;
+> the current numbers are in the RESOLVED section at the end of this file and in
+> `results/stacking_metrics.json`.
+
 Target: **SDSS DR16 quasars** (Lyke et al. 2020; VizieR `VII/289/dr16q`) over a 2.5° cone at RA 180°,
 Dec +25° (SDSS × VLASS overlap). Of 300 tried, **279** had a VLASS-SE 3 GHz Stokes-I image (93%) and
 entered the median stack:
@@ -180,3 +187,44 @@ arxiv-submission tarball predates the honesty edits.
 **Status: fixes pending.** The single change: replace the searched peak with a forced
 central-pixel measurement, re-derive all seven fluxes/SNRs, and add the off-source control
 stack — then either retract the calibration claim or build an injection test that can fail.
+
+**Status: RESOLVED (2026-08-25).** One real re-run (`--ra 180 --dec 25 --radius 3`), fetching
+science AND 30″-offset control cutouts (598 stamps total). SE coverage has grown since the
+committed run: 300/300 queried targets now have an SE image (was 236), so every number moved
+with the sample as well as the estimator; the committed denominator chain is
+300 queried → 300 with cutout → 19 individually detected (5σ per-cutout test, now implemented,
+not asserted) → **281 stacked**, all in `results/stacking_targets.csv`.
+
+1. **BLOCKER 2 (searched peak) fixed**: `measure_stacked_flux` reads the FORCED central pixel;
+   the searched max survives only as a labelled diagnostic, and a committed test asserts forced
+   photometry goes negative ~half the time on pure noise while the searched peak is positive
+   >90% of the time. Re-derived headline: **40.8 µJy/beam at 4.9σ** (annulus RMS 8.3). The
+   searched max equals the forced value on the science stack — a real centred source. The
+   referee's predicted "28–32 µJy at ~3.6σ" was computed for the old N=236 stack; on the
+   current 281-source stack the forced value stands at 40.8.
+2. **BLOCKER 1 (identity calibration) fixed by retraction + replacement**: the paper now states
+   the shift-equivariance identity outright and retracts the "injection-recovery calibration"
+   framing (title changed). The replacement injects per-cutout sub-pixel offsets (σ = 0.3 px,
+   a documented assumption) at the MEASURED amplitude over 8 draws: ratio **0.923 ± 0.024** —
+   a number that can differ from 1 and does. A test proves the new version fails (ratio < 0.8)
+   for a badly-centred population. The ratio is reported as a conditional systematic, not
+   folded into the headline.
+3. **The off-source control exists**: 298 control stamps through the identical pipeline give a
+   forced flux of **−17.5 ± 8.2 µJy/beam (−2.1σ)** — no positive centre-common pedestal; the
+   paper notes the mildly negative level is consistent with zero at ~2σ and, if real, samples
+   the CLEAN-residual environment 30″ from real sources (conservative direction).
+4. **The sample cut is implemented** (`individually_detected`): 19 sources flagged ≥5σ in their
+   own cutout are excluded and counted.
+5. **The magnitude trend is restated honestly**: bright third 72.0 ± 14.0 (5.1σ), middle 41.5
+   (2.8σ), faintest **9.1 ± 14.5 (0.6σ — a non-detection)**. No bright/faint ratio is quoted
+   (the denominator is consistent with zero), and the run is framed as observed-frame machinery
+   (apparent magnitude over z ≈ 0.9–2.6), not the radio–optical luminosity correlation. Same
+   for redshift: 47.3 / 45.5 / 12.2 (0.9σ) µJy/beam.
+6. **"Mean" → clipped median throughout**, with a log-normal fixture (`flux_scatter_dex`) whose
+   committed test shows the stack recovers the median while the mean is ~2.6× larger; the noise
+   sentence uses 1.25σ/√N.
+7. White/Karim/Lindroos are real `\citep` entries (Crossref-verified; main.bbl resolves them);
+   `\stSource` and the field/radius/max_sources reach the reader as macros; units are µJy/beam
+   throughout; synthetic runs can no longer clobber the real figure (guarded + tested); the
+   stale earlier-run narrative above is banner-marked SUPERSEDED; arXiv package regenerated
+   (0 errors).

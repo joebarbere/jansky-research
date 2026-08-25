@@ -1,51 +1,76 @@
 {
-  "source": "SDSS DR16Q x VLASS-SE @ (180.0,25.0)",
-  "n_stacked": 236,
-  "stacked_peak": 0.0435,
-  "stacked_rms": 0.0098,
-  "stacked_snr": 4.5,
-  "recovery_ratio": 1.0,
-  "debiased_flux": 0.0435,
+  "source": "SDSS DR16Q x VLASS-SE @ (180.0,25.0) r=3 deg",
+  "n_stacked": 281,
+  "stacked_rms": 0.0083,
+  "stacked_snr": 4.9,
   "n_bins": 3,
   "bins": [
     {
-      "imag_med": 18.79,
-      "n": 79,
-      "debiased_uJy": 82.8,
-      "snr": 4.7
+      "imag_med": 18.82,
+      "n": 94,
+      "flux_uJy": 72.0,
+      "rms_uJy": 14.0,
+      "snr": 5.1
     },
     {
-      "imag_med": 19.94,
-      "n": 78,
-      "debiased_uJy": 58.3,
-      "snr": 3.4
+      "imag_med": 19.88,
+      "n": 93,
+      "flux_uJy": 41.5,
+      "rms_uJy": 14.8,
+      "snr": 2.8
     },
     {
-      "imag_med": 20.92,
-      "n": 79,
-      "debiased_uJy": 43.8,
-      "snr": 2.6
+      "imag_med": 20.96,
+      "n": 94,
+      "flux_uJy": 9.1,
+      "rms_uJy": 14.5,
+      "snr": 0.6
     }
   ],
   "n_zbins": 3,
   "zbins": [
     {
-      "z_med": 0.933,
-      "n": 79,
-      "debiased_uJy": 56.5,
-      "snr": 3.5
+      "z_med": 0.865,
+      "n": 94,
+      "flux_uJy": 47.3,
+      "rms_uJy": 14.5,
+      "snr": 3.3
     },
     {
-      "z_med": 1.977,
-      "n": 78,
-      "debiased_uJy": 72.0,
-      "snr": 4.7
-    },
-    {
-      "z_med": 2.609,
-      "n": 79,
-      "debiased_uJy": 51.4,
+      "z_med": 1.942,
+      "n": 93,
+      "flux_uJy": 45.5,
+      "rms_uJy": 14.9,
       "snr": 3.1
+    },
+    {
+      "z_med": 2.692,
+      "n": 94,
+      "flux_uJy": 12.2,
+      "rms_uJy": 14.3,
+      "snr": 0.9
     }
-  ]
+  ],
+  "n_queried": 300,
+  "radius_deg": 3.0,
+  "max_sources": 300,
+  "n_with_cutout": 300,
+  "n_detected_excluded": 19,
+  "stacked_flux": 0.0408,
+  "stacked_peak_searched": 0.0408,
+  "injection": {
+    "amp": 0.0408,
+    "jitter_pix": 0.3,
+    "ratio": 0.923,
+    "ratio_sd": 0.024,
+    "n_trials": 8
+  },
+  "control": {
+    "n": 298,
+    "flux": -0.0175,
+    "rms": 0.0082,
+    "snr": -2.1
+  },
+  "field_ra": 180.0,
+  "field_dec": 25.0
 }
