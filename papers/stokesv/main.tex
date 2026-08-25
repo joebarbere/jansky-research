@@ -24,13 +24,18 @@ tested, CPU-only pipeline for the ASKAP Rapid ASKAP Continuum Survey \citep{mcco
 per-region leakage-floor + $V$-SNR + proper-motion selection, and forced photometry of a target
 list in RACS-low Stokes-V images. The selection machinery is validated on a synthetic field (it
 recovers \svNrecovered\ of \svNinjected\ injected emitters above a \svLeakFloorPct\% leakage floor at
-purity \svPurity). The forced-photometry leg, long blocked and unblocked only when the CASDA
-\citep{casda} cutout service recovered, forced-measures \svNmeasured\ catalogued RACS-low emitters
-\citep{driessen2024} in single-epoch RACS-low DR1 \citep{hale2021} cutouts: Stokes $I$ is recovered at
-the known positions (median image/catalogue ratio \svIrec), while significant circular polarization is
-present for only \svFracVcirc\ of them, the honest, variability-limited signature of transient
-coherent emission that a single snapshot catches only when the star is flaring. This is a reproducibility, tooling, and
-honest-limits contribution, not a blind survey.
+purity \svPurity). The forced-photometry leg measures \svNmeasured\ of the \svNparent\ catalogued RACS-low
+emitters \citep{driessen2024} in RACS-low \citep{hale2021} Stokes I$+$V cutout pairs pinned to
+a single observation each (the \code{obs\_id} is committed per target). \svNvalid\ targets
+yield physically valid measurements; the other \svNinvalid\ are undetected in Stokes~$I$
+($<3\sigma$) in that observation, and are reported as such rather than measured. The image
+Stokes~$I$ matches the catalogue only in the median (ratio \svIrec, spanning
+\svIrecMin--\svIrecMax), so single-epoch $I$ variability and beam-scale differences are live
+and unquantified. Significant circular polarization ($|V|/\sigma_V\ge5$ and $|V|/I\ge6\%$) is
+present in \svNVcirc\ of the \svNvalid\ valid targets (\svFracVcircPct\%; Wilson $1\sigma$
+interval \svFracVcircLo--\svFracVcircHi\%), a fraction unchanged from a 5\% to a 10\%
+threshold. This is a reproducibility, tooling, and honest-limits contribution, not a blind
+survey.
 \end{abstract}
 
 \keywords{Stellar radio emission (1621) --- Radio stars (1358) --- Circular polarization (1795) ---
@@ -57,12 +62,28 @@ $7\times$ that median (the RACS convention), not merely the image noise.
 \item \textbf{$V$-SNR gate + proper-motion confirmation.} A candidate must be a real $V$ detection, and
 a genuine radio star sits at its catalogue position propagated to the radio epoch, a
 discriminant a chance background match fails.
-\item \textbf{Forced photometry.} At a locked target position we find the Stokes-$I$ peak and read $V$
-at that same pixel (either sign), the physically correct forced measurement for a point source.
+\item \textbf{Forced photometry.} At each target we take the brightest Stokes-$I$ pixel within
+12\arcsec\ of the propagated position and read $V$ at that same pixel (either sign). This is a
+peak search, not a fixed-pixel measurement — acceptable for catalogued $I$-detections, and the
+per-target offsets are committed so a reader can check the search stayed on-source (median
+\svMedOffset\arcsec, maximum \svMaxOffset\arcsec\ across the sample).
 \end{itemize}
-On a synthetic field of \svNtargets\ targets (a noise population plus injected emitters), the pipeline
-recovers \svNrecovered\ of \svNinjected\ injected emitters at purity \svPurity, with \svNpmrejected\
-proper-motion rejections, confirming the leakage floor and gates behave.
+Each target's Stokes $I$ and $V$ cutouts are staged from the \emph{same observation}: an
+ObsCore query constrains the collection to RACS, the band to RACS-low, and requires an I and a
+V product under one \code{obs\_id}, whose identifiers are committed per target. An earlier
+version staged the two Stokes through independent unordered queries with no such constraint —
+at a southern position that pattern can pair images from different bands or epochs, and it
+produced physically impossible ratios ($|V|/I>1$) that counted as detections. A physicality
+gate ($0\le|V|/I\le1$ and $I>3\sigma_I$) now excludes failed measurements from every
+statistic, and ``significant'' circular polarization requires the $V$-SNR gate
+($|V|/\sigma_V\ge5$) the pipeline always implemented but previously never applied to real
+data.
+On a synthetic field of \svNtargets\ targets (a noise population plus injected emitters), the
+pipeline recovers \svNrecovered\ of \svNinjected\ injected emitters at purity \svPurity. We
+state this validation's scope plainly: the injected fractions sit far above the leakage floor,
+so the recovery exercises the machinery, not the decision boundary, and the proper-motion gate
+rejected \svNpmrejected\ cases on this field — a gate is only demonstrated by cases it
+rejects.
 
 \section{Data}
 Targets are the Sydney Radio Star Catalogue \citep{driessen2024} of V-detected radio stars; images are
@@ -74,40 +95,52 @@ $\sim$0.2~mJy field and manufactures a null. CASDA is the sole public source of 
 and Data Central mirrors carry RACS Stokes~I only).
 
 \section{Results}
-\paragraph{The forced-photometry leg (real RACS-low DR1).} We forced-measured \svNmeasured\ of the
-brightest-$I$ RACS-low emitters. Stokes $I$ is recovered at the known positions with a median
-image/catalogue ratio of \svIrec, consistent with the CASDA cutout $+$ forced-photometry pipeline working on
-the real Stokes-V survey images (Figure~\ref{fig:sv}, left). Circular polarization, however, is present in only
-\svNVcirc\ of them (\svFracVcirc; median image $|V|/I=\svMedImgFrac\%$; Figure~\ref{fig:sv}, right).
-The low recovered fraction is expected: coherent stellar emission is bursting, and the catalogued $V$ detections
-come from whichever epoch (often the VAST monitoring) caught each star flaring. A single RACS-low DR1
-snapshot frequently observes the star when it is not in a $V$-bright state, so the recovered $V$ fraction is
-a lower bound set by the coherent-emission duty cycle, not a pipeline failure; the $I$ recovery
-confirms the source and the measurement are correct.
+\paragraph{The forced-photometry leg (same-observation RACS-low pairs).} The parent selection
+(every SRSC row with \code{Survey=RACS-LOW}, $I>3$~mJy, on the RACS-low sky) holds
+\svNparent\ targets; we measured \svNmeasured\ of them, each in an I$+$V pair from one
+committed \code{obs\_id} (\code{results/stokesv\_targets.csv} carries every row: fluxes,
+local rms values, $V$ signal-to-noise, offsets, product identifiers). \svNvalid\ pass the
+physicality gate; the \svNinvalid\ that fail are Stokes-$I$ non-detections in that
+observation — single-epoch states, not pipeline failures, and they enter no statistic. Among
+the valid targets the image-to-catalogue $I$ ratio has median \svIrec\ but spans
+\svIrecMin--\svIrecMax\ (Figure~\ref{fig:sv}, left): the median is consistent with the
+pipeline reading the right sources, while the spread says single-epoch stellar variability
+and catalogue-vs-image flux conventions are unresolved, and we do not claim recovery beyond
+the median. Significant circular polarization is present in \svNVcirc\ of \svNvalid\
+(\svFracVcircPct\%, Wilson \svFracVcircLo--\svFracVcircHi\%; the four detections carry
+$|V|/\sigma_V$ of 12--47, so the count is identical at a 5\% or 10\% fraction threshold;
+Figure~\ref{fig:sv}, right). Whether each catalogue $V$ detection and this cutout share an
+epoch is not established here — the committed \code{t\_min} per target enables that
+comparison — so we state the fraction as a single-observation occurrence rate among
+catalogued emitters, not as a duty cycle.
 
 \begin{figure*}
 \plotone{figures/circular_pol.pdf}
-\caption{Left: forced-photometry Stokes $I$ at the known emitter positions versus the catalogue
-$I$ (with the 1:1 line); the flux is recovered from the real RACS-low DR1 images. Right: the
-image $|V|/I$ per target (sorted); circular detections (red) appear only for the subset caught in a
-polarized state, with the rest (grey) sitting below the circular threshold, the variability-limited
-single-epoch signature. (Offline, the panels show the synthetic selection-machinery validation.)}
+\caption{Left: forced-photometry Stokes $I$ at the known emitter positions versus the
+catalogue $I$ (with the 1:1 line), from same-observation cutout pairs; the scatter about the
+median ratio is real and unexplained. Right: the image $|V|/I$ per valid target (sorted);
+circular detections (red) require both the fraction threshold and $|V|/\sigma_V\ge5$.
+Invalid (Stokes-$I$-undetected) targets are excluded from both panels. (Offline, the figure
+shows the synthetic selection-machinery validation.)}
 \label{fig:sv}
 \end{figure*}
 
 \section{Discussion and reproducibility}
 We build a tested, reproducible Stokes-V coherent-emitter pipeline: the leakage-floor,
 $V$-SNR, and proper-motion selection validated on synthetic data, and the forced-photometry leg now
-working on real RACS-low DR1 images via CASDA. The honest limitations: (i) a single RACS-low epoch
-recovers circular polarization only for the flaring subset, so the leg measures a variability lower
-bound, not a complete emitter census; a multi-epoch campaign (RACS-low1/low2 $+$ VAST) is what the
-tooling is built for and the natural next step; (ii) the forced photometry locks on the Stokes-$I$ peak,
-appropriate for these $I$-detected stars but noise-sensitive for the faintest; (iii) the absolute $V$
-sign convention varies between ASKAP pipeline epochs, so handedness is recorded but not physically
-interpreted; (iv) the blind-survey leakage floor requires the field $V$ population, exercised here on
-synthetic data and ready for a real wide-field run. None of these undermine what is shown (a working,
-reproducible pipeline that recovers $I$ and the variability-limited $V$ from public RACS Stokes-V images),
-but they bound what one epoch can claim. Every number above is written by the pipeline into the
+working on real RACS-low DR1 images via CASDA. The honest limitations: (i) the occurrence fraction is a single-observation statement over
+\svNvalid\ valid targets with a wide interval; a multi-epoch campaign (RACS-low1/low2 $+$
+VAST) with the committed per-target \code{obs\_id}/\code{t\_min} bookkeeping is what turns
+it into a duty cycle; (ii) the photometry searches a 12\arcsec\ box around the propagated
+position rather than reading a fixed pixel — the committed offsets (median
+\svMedOffset\arcsec) support the search staying on-source for this catalogued sample, but a
+blank-sky census must use the fixed-pixel mode; (iii) the 6\% circular threshold is the
+synthetic model's constant, not a per-field leakage measurement, mitigated here by the
+$V$-SNR gate and by the count's insensitivity from 5\% to 10\%; (iv) the absolute $V$ sign
+convention varies between ASKAP pipeline epochs, so handedness is recorded but not physically
+interpreted; (v) the $I$ ratio spread (\svIrecMin--\svIrecMax) is unexplained and bounds any
+claim that the catalogue and image describe the same emission state. These bound what one
+observation per target can claim. Every number above is written by the pipeline into the
 \code{generated/macros} file, which is \code{\textbackslash input} at the top of this document;
 \code{python -m jansky\_research.stokesv --offline --out <tmpdir>} regenerates the synthetic
 validation, and \code{CASDA\_USERNAME=... python -m jansky\_research.stokesv --out <tmpdir>}

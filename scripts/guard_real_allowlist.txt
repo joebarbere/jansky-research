@@ -37,3 +37,9 @@ rmstructure_synthetic.json
 # quotes the synthetic leg explicitly as an injection (\spRecDm/\spSnr "injected") and the real
 # leg through real_* macros only. Same pattern as stokesv_discovery above.
 singlepulse_metrics.json
+# stokesv's evidence file names BOTH legs by design ("synthetic selection validation + real
+# RACS-low forced photometry (CASDA)") -- the round-6 referee required the previous source
+# ("RACS-low DR1 (CASDA)") to stop claiming real provenance for a half-synthetic file. The
+# paper's synthetic macros are labelled as the selection-machinery validation and the real leg
+# ships in results/stokesv_targets.csv. Same pattern as singlepulse/stokesv_discovery above.
+stokesv_metrics.json
