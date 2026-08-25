@@ -4,13 +4,13 @@
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{A type III beam from the corona to 0.4 AU, geometrically validated}
+\shorttitle{A type III drift-to-distance framework, corona to 0.4 AU}
 \shortauthors{Barbere}
 
 \begin{document}
 
-\title{A Solar Type III Electron Beam from the Corona to 0.4 AU Across Four Public Instruments,
-with an Independent Geometric Check on the Density-Model Distance}
+\title{A Reproducible Type III Drift-to-Distance Framework from the Corona to 0.4 AU,
+with a Same-Event Geometric Check on the Density-Model Distance}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
@@ -19,18 +19,24 @@ with an Independent Geometric Check on the Density-Model Distance}
 A type III radio burst radiates near the local plasma frequency, so its high-to-low frequency drift,
 inverted through a coronal/heliospheric density model, traces an electron beam outward through the
 solar atmosphere. We unify four small, separately-validated tools into one reproducible
-drift-to-distance framework that tracks the beam across nearly three decades in frequency:
-ground-based e-Callisto \citep{benz2009} in the corona (Newkirk model; \citealt{newkirk1961}),
-Wind/WAVES \citep{bougeret1995} to the Alfv\'en-surface region, and STEREO/WAVES \citep{bougeret2008}
-to $\synRealIpRhiAU$~AU (both via the Leblanc heliospheric model; \citealt{leblanc1998}). The whole ladder
-rests on an assumed density model, which we check independently. STEREO/WAVES and a
-STEREO-A$+$B direction-finding triangulation \citep{cecconi2008,krupar2012} analyse the
-same 2013-05-15 event, so the plasma-frequency distance can be compared to a purely
-geometric one. The two track each other in shape (Pearson $r=\synRealGeomCorr$ over the triangulated
-channels, with a factor $\synRealGeomRatio$ offset in absolute scale), validating by geometry the
-shape of the Leblanc heliospheric distances the interplanetary leg depends on. The unified ladder reaches
-$\synRealOverallRhiAU$~AU. This is a synthesis and reproducibility contribution: each leg is a
-recover-a-known, and the same-event, open-pipeline cross-check is the new element, not a discovery.
+drift-to-distance framework, validated on three separate events across nearly three decades in
+frequency: ground-based e-Callisto \citep{benz2009} in the corona (Newkirk model;
+\citealt{newkirk1961}), Wind/WAVES \citep{bougeret1995} in the inner heliosphere, and
+STEREO/WAVES \citep{bougeret2008} to $\synRealIpRhiAU$~AU (both via the Leblanc model;
+\citealt{leblanc1998}) --- with each leg's speed carried with the (emission-harmonic
+$\times$ density-scale) systematic its own slice propagates, since $f_p^2\propto n_e$ makes the
+two exactly degenerate. The ladder's reach is the low-frequency band edge through the assumed
+model, not an event property. The whole ladder rests on that density model, which we check where
+it can be checked: STEREO/WAVES and a STEREO-A$+$B direction-finding triangulation
+\citep{cecconi2008,krupar2012} analyse the same 2013-05-15 event, so the model's distances can
+be compared with purely geometric ones. The comparison's honest summary is additive: the
+triangulated distances sit a nearly constant $\synRealGeomDiff\pm\synRealGeomDiffStd$~R$_\odot$
+outside the Leblanc plasma level (regression slope $\synRealGeomSlope$) --- the signature of a
+constant direction-finding pointing bias, after which the model reproduces the geometry to
+$\synRealGeomRmsAdd$~R$_\odot$ rms; the comparison does not validate the model's log--log shape
+over the triangulated band (slopes $\synRealGeomLogSlope$ vs 1). This is a synthesis and
+reproducibility contribution: each leg is a recover-a-known, and the same-event, open-pipeline
+cross-check is the new element, not a discovery.
 \end{abstract}
 
 \keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
@@ -44,7 +50,9 @@ heliocentric distance and speed. The method is classic, but its reach is set by 
 ground spectrometer stops at the ionospheric cutoff (a few R$_\odot$), Wind/WAVES reaches the
 Alfv\'en surface, and only a low-frequency space receiver like STEREO/WAVES follows the beam into
 genuinely interplanetary space, where multi-spacecraft observations of type III bursts have a long
-history \citep{reiner2009}. We have built and validated four such tools separately; here we unify them
+history \citep{reiner2009}, and statistical surveys support predominantly harmonic emission
+near the flux peak \citep{krupar2015}, the convention the ladder adopts inside its committed
+(harmonic $\times$ density) grids. We have built and validated four such tools separately; here we unify them
 into one framework and confront its central assumption.
 
 That assumption is the density model. Every drift-to-distance result is only as good as the assumed
@@ -59,33 +67,59 @@ exploit a case where this is possible.
 \code{type3synthesis} is a thin orchestration module (no new physics) over four tested slices, each a
 recover-a-known on public data:
 \begin{itemize}
-\item \textbf{Corona}: e-Callisto dynamic spectra, inverted with the Newkirk model, reach
-$\synRealCoronaRlo$--$\synRealCoronaRhi$~R$_\odot$ (mean radial speed $\synRealCoronaSpeed\,c$).
+\item \textbf{Corona}: e-Callisto dynamic spectra, inverted with the Newkirk model over the
+fitted ridge band ($\synRealCoronaFitFlo$--$\synRealCoronaFitFhi$~MHz of the
+$\synRealFhi$-MHz-topped detection band), reach
+$\synRealCoronaRlo$--$\synRealCoronaRhi$~R$_\odot$ (radial speed $\synRealCoronaSpeed\,c$,
+analysis spread $\synRealCoronaSpeedMin$--$\synRealCoronaSpeedMax$, model bracket
+$\synRealCoronaGridSpeedLo$--$\synRealCoronaGridSpeedHi$).
 \item \textbf{Inner heliosphere}: Wind/WAVES (RAD2), Leblanc model, to $\synRealHelioRhi$~R$_\odot$
-(the Alfv\'en-surface region; $\synRealHelioSpeed\,c$).
+under harmonic emission at the quiet-Sun profile ($\synRealHelioSpeed\pm\synRealHelioSpeedErr\,c$;
+across the committed harmonic$\times$density grid the speed spans
+$\synRealHelioGridSpeedLo$--$\synRealHelioGridSpeedHi\,c$ and the reach
+$\synRealHelioGridReachLo$--$\synRealHelioGridReachHi$~AU, so its own slice declines to name the
+Alfv\'en region exclusively, and so do we).
 \item \textbf{Interplanetary}: STEREO/WAVES HFR, Leblanc model, to $\synRealIpRhi$~R$_\odot$
-$=\synRealIpRhiAU$~AU ($\synRealIpSpeed\,c$, a mean over a decelerating track).
-\item \textbf{Geometric}: a STEREO-A$+$B direction-finding triangulation of the same interplanetary
-event, reaching $\synRealGeomRhi$~R$_\odot$ with no density model.
+$=\synRealIpRhiAU$~AU --- the HFR band edge through the model, not an event property
+($\synRealIpSpeed\pm\synRealIpSpeedErr\,c$; grid
+$\synRealIpGridSpeedLo$--$\synRealIpGridSpeedHi\,c$, reach
+$\synRealIpGridReachLo$--$\synRealIpGridReachHi$~AU).
+\item \textbf{Geometric}: a STEREO-A$+$B direction-finding triangulation of the same
+interplanetary event, whose farthest point ($\synRealGeomRhi$~R$_\odot$) carries the constant
+direction-finding offset measured below and is therefore reported separately, never as the
+ladder's reach.
 \end{itemize}
 The same module emits the unified distance ladder (Figure~\ref{fig:synth}, left): heliocentric distance
 versus emission frequency for all four, over the Newkirk and Leblanc model curves, spanning
-$\synRealFhi$~MHz in the corona down to $\synRealFlo$~MHz at $\synRealOverallRhiAU$~AU.
+$\synRealFhi$~MHz in the corona down to $\synRealFlo$~MHz at $\synRealOverallRhiAU$~AU (the
+plasma-frequency reach).
 
 \section{The geometric cross-check}
-The interplanetary leg and the triangulation are the same burst (2013-05-15), so the
-STEREO/WAVES plasma-frequency distance $r_{\rm plasma}(f)$ and the STEREO-A$+$B geometric distance
-$r_{\rm geom}$ are two independent measurements (Figure~\ref{fig:synth}, right). Across the triangulated
-channels they correlate at $r=\synRealGeomCorr$. Both estimators decrease with frequency by construction,
-so a nonzero correlation is expected; what the measured value adds is agreement in the log--log
-curvature of the density-model track across the triangulated range, not merely a shared monotone
-trend. The absolute geometric scale runs a factor $\synRealGeomRatio$ high, which we do not over-interpret.
-Direction-finding on a degrees-wide source biases the closest-point of two noisy rays outward, an
-active-region density enhancement pushes the same way, and radio-wave scattering shifts the apparent
-interplanetary source outward of the plasma level \citep{krupar2015}, all in the same direction. The
-comparison shows only that the two independent estimators track each other in shape, not
-that they agree in absolute calibration. This is the element this reproducible framework adds: a
-same-event, model-free check on the distances the method assumes, from public data and open code.
+The triangulation analyses the same burst (2013-05-15) the interplanetary leg fits, and compares
+the triangulated distance $r_{\rm geom}$ per channel with the Leblanc curve evaluated at the
+same frequencies, $r_{\rm plasma}(f)$ --- a model-free measurement against the model itself
+(Figure~\ref{fig:synth}, right; note $r_{\rm plasma}$ is a deterministic function of frequency,
+not a second measurement, and the drift fit itself does not enter). The companion paper
+(\code{papers/triangulate}) derives the honest summary, and this synthesis inherits it: all
+triangulated channels sit \emph{outside} the plasma level by a nearly constant
+$\synRealGeomDiff\pm\synRealGeomDiffStd$~R$_\odot$ while $r_{\rm plasma}$ varies by a factor
+of 13; the regression slope is $\synRealGeomSlope$ (an enhancement of the density itself would
+multiply, i.e.\ slope well above 1), so the offset is the signature of a constant few-degree
+direction-finding pointing bias --- of the size the triangulation slice's committed noise
+calibration produces from apparent-source scatter alone --- and after that one constant offset
+the Leblanc model reproduces the geometry to $\synRealGeomRmsAdd$~R$_\odot$ rms ($\sim$12\%).
+What the comparison does \emph{not} do is validate the model's log--log shape over the
+triangulated band: the log--log regression slope of $r_{\rm geom}$ on $r_{\rm plasma}$ is
+$\synRealGeomLogSlope$ against 1 for a pure scale factor, so the fractional discrepancy grows
+from tens of percent at the low-frequency end to a factor $\sim$3 at the high end (the
+frequency-dependent ratio $\synRealGeomRatio$ is quoted only as the median of that trend). The
+Pearson correlation ($r=\synRealGeomCorr$) is reported for continuity but carries little
+information here --- any monotone power law in frequency correlates with the Leblanc curve at
+$r>0.95$. This is the element the framework adds: a same-event, model-free check that
+\emph{bounds} the model --- confirming the Leblanc level to $\sim$12\% after one measured
+instrumental offset, while showing that the check cannot separate a pointing bias from a shape
+error at the tens-of-percent level. It also tests the Leblanc model only over the triangulated
+band; the Newkirk coronal leg is unchecked by it.
 
 \begin{figure*}
 \plotone{figures/type3synthesis.pdf}
@@ -98,23 +132,28 @@ STEREO-A$+$B geometric (triangulated) distance for the same burst, with the 1:1 
 \end{figure*}
 
 \section{Discussion and reproducibility}
-The contribution is a synthesis: one reproducible drift-to-distance framework that tracks a type III
-beam from the corona to $\synRealOverallRhiAU$~AU across four public instruments, and (the new part)
-an independent geometric validation of the density-model distance the framework rests on. The
-honest limitations are as follows. (i) The corona, inner-heliosphere, and interplanetary legs are
-different events, so this is one method validated across three regimes, not one beam tracked end to
-end: a single event caught simultaneously by all three receivers would be the stronger demonstration
-and is the natural next step. (ii) The geometric cross-check is therefore event-specific (2013-05-15),
-and its absolute scale is direction-finding--biased, so it validates the distance shape, not the
-calibration. It also tests the Leblanc heliospheric model only: the triangulated band is entirely
-interplanetary, so the Newkirk coronal leg is unchecked by it. (iii) The per-leg systematics (harmonic vs fundamental emission, peak-time vs onset speed
-bias, and the coarse-cadence fit statistics) are inherited from the component slices and bound each leg
-there. (iv) The Newkirk and Leblanc models are not designed to join continuously: at the
-$\sim$15--20~MHz handoff they differ in heliocentric radius by $\sim$50\%, reflecting their different
-observational bases (white-light active corona vs Wind type III drifts), so the ladder is two
-stitched regimes, not one calibrated model. None of these undermine the synthesis: a type III beam is
-tracked corona-to-interplanetary and its model distance is geometrically checked, but they bound what
-three single events can claim. Every number above is written by the pipeline into the macros this document
+The contribution is a synthesis: one reproducible drift-to-distance framework validated from the
+corona to $\synRealOverallRhiAU$~AU across four public datasets (three instrument suites:
+e-Callisto, Wind/WAVES, and STEREO/WAVES in two roles --- its HFR spectra and its two-spacecraft
+L3 direction-finding product), and (the new part) a same-event geometric check that bounds the
+density-model distance the framework rests on. The honest limitations are as follows. (i) The
+corona, inner-heliosphere, and interplanetary legs are different events, twelve years apart, so
+this is one method validated across three regimes, not one beam tracked end to end: a single
+event caught simultaneously by all three receivers would be the stronger demonstration and is
+the natural next step. (ii) The geometric cross-check is event-specific (2013-05-15) and its
+verdict is bounded: it reproduces the Leblanc \emph{level} to $\sim$12\% after one constant
+measured pointing offset, but it does not confirm the model's log--log shape over the band, and
+it tests the Leblanc model only --- the Newkirk coronal leg is unchecked by it. (iii) The
+per-leg (harmonic $\times$ density) systematic is carried in the ladder itself (the grid
+brackets above), not merely referenced; the remaining per-leg systematics (peak-time vs onset
+speed bias, coarse-cadence fit statistics) are bounded in the component slices. (iv) The
+Newkirk and Leblanc models are not designed to join continuously: over the two legs' actual
+overlap band ($\synRealHandoffFlo$--$\synRealHandoffFhi$~MHz) they differ in heliocentric
+radius by $\synRealHandoffPctLo$--$\synRealHandoffPctHi$\% (computed and committed),
+reflecting their different observational bases (white-light active corona vs Wind type III
+drifts), so the ladder is two stitched regimes, not one calibrated model. None of these
+undermine the synthesis: the method is validated in each regime and its model distance is
+geometrically bounded, but they limit what three single events can claim. Every number above is written by the pipeline into the macros this document
 \code{\textbackslash input}s, and \code{python -m jansky\_research.type3synthesis} regenerates them;
 \code{make reproduce} runs the four recover-a-known events on the public archives.
 

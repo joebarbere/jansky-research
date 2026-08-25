@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from jansky_research import type3synthesis as syn
 
@@ -43,3 +44,57 @@ def test_model_curves_monotone():
     # both density models give radius decreasing with frequency (higher freq -> deeper -> smaller r)
     assert c["r_corona"][0] > c["r_corona"][-1]  # f_corona ascending -> r descending
     assert c["r_helio"][0] > c["r_helio"][-1]
+
+
+def test_committed_ladder_matches_the_committed_siblings():
+    """The round-8 blocker: the synthesis shipped pre-revision sibling vintages for five
+    per-leg values, and no guard could see a stale-but-real file. This one can: every per-leg
+    value in the committed synthesis JSON must equal the corresponding key in the sibling's
+    own committed JSON. Runs only on the committed real artifacts."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    syn_path = root / "results" / "type3synthesis_metrics.json"
+    if not syn_path.exists():
+        pytest.skip("no committed synthesis metrics")
+    syn = json.loads(syn_path.read_text())
+    if str(syn.get("source", "")).lower().startswith("synthetic"):
+        pytest.skip("committed synthesis metrics are synthetic")
+    pairs = [
+        ("corona_speed_c", "solarbursts", "speed_c"),
+        ("corona_r_lo", "solarbursts", "r_lo_rsun"),
+        ("corona_r_hi", "solarbursts", "r_hi_rsun"),
+        ("helio_speed_c", "windwaves", "speed_c"),
+        ("helio_r_hi", "windwaves", "r_hi_rsun"),
+        ("ip_speed_c", "swaves", "speed_c"),
+        ("ip_r_hi_rsun", "swaves", "r_hi_rsun"),
+        ("geom_r_hi_rsun", "triangulate", "r_hi_rsun"),
+        ("geom_ratio", "triangulate", "ratio_geom_plasma"),
+    ]
+    for syn_key, sibling, sib_key in pairs:
+        sib_path = root / "results" / f"{sibling}_metrics.json"
+        if not sib_path.exists():
+            continue
+        sib = json.loads(sib_path.read_text())
+        if str(sib.get("source", "")).lower().startswith("synthetic"):
+            continue
+        assert syn.get(syn_key) == sib.get(sib_key), (
+            f"{syn_key} = {syn.get(syn_key)} is stale: {sibling}.{sib_key} = {sib.get(sib_key)}"
+        )
+
+
+def test_offline_crosscheck_loglog_slope_can_fail():
+    """The corr > 0.8 assertion clears for any monotone curve; the log-log slope of r_geom on
+    r_plasma is the statistic that can fail (it IS ~0.65 on the real data, the additive-offset
+    signature). On a low-noise zero-bias fixture it must be near 1 — and direction noise alone
+    must flatten it below 1, the mechanism behind the real value."""
+    from jansky_research import triangulate
+
+    quiet = triangulate.synthetic_event(noise_deg=2.0, seed=3)
+    tq = triangulate.triangulate_track(quiet["spec_a"], quiet["spec_b"])
+    slope_q = float(np.polyfit(np.log10(tq["r_plasma"]), np.log10(tq["r_geom"]), 1)[0])
+    assert 0.9 < slope_q < 1.1
+    noisy = syn.crosscheck_track(offline=True)  # default 9-degree scatter
+    slope_n = float(np.polyfit(np.log10(noisy["r_plasma"]), np.log10(noisy["r_geom"]), 1)[0])
+    assert slope_n < slope_q  # noise flattens the slope (the outward additive bias)
