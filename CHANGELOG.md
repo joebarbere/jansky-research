@@ -43,6 +43,20 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`peaked` revision (round-6 referee, three blockers): the validation became real, the limit
+  became local, and the candidate list became evidence.** `validate_hfp` now uses each Dallacasa
+  source's measured TGSS flux (83/100 detected) with the VLASS QL correction: 53% rising / 32%
+  falling / 38% still rising at 3 GHz -- the old 100% was a flux cut the sample could not fail,
+  and the paper says so. The TGSS limit is the field's own 7-sigma floor (29.4 mJy from the ADR1
+  local-rms column) with the count sweep committed (8/6/1/0 at 20/25/29.4/39.9 mJy); the
+  headline is 1 peaked + 1 GHz-peaked (the latter appearing exactly as predicted once the VLASS
+  flux-scale correction was applied), and the old six-candidate list is described as a statement
+  about the assumed limit. results/peaked_candidates.csv publishes every rising candidate with
+  index errors and in-pipeline SIMBAD/NED vetting; all three Callingham bins are committed
+  (0/81, 3/26, 1/6); macros are namespaced with '--' validation defaults (closing the
+  zero-overwrite hazard); the fixture gains extended fakes; the hand-authored arxiv.yaml is
+  rewritten from the committed metrics.
+
 - **`windwaves` + `swaves` revision (round-6 referees, one blocker each): the estimator is
   rebuilt on the independent unit, and the dominant systematic is propagated.** The shared
   `beam_speed` now fits ONE point per distinct time sample (column median) with a

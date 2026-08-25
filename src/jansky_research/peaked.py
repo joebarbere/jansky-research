@@ -134,17 +134,26 @@ def find_peaked(
     s_v = np.asarray(vlass["flux"], float)[iv]
     e_n = np.asarray(nvss["eflux"], float)[iN_v]
     e_v = np.asarray(vlass["eflux"], float)[iv]
-    alpha_high, _ = spectral_index(s_n, NU_GHZ["nvss"], s_v, NU_GHZ["vlass"], e_n, e_v)
+    # the propagated index error is RECORDED, not discarded (round-6 referee): the gate still
+    # thresholds point estimates, but every candidate ships with its error so a reader can see
+    # how close to the boundary it sits
+    alpha_high, alpha_high_err = spectral_index(s_n, NU_GHZ["nvss"], s_v, NU_GHZ["vlass"], e_n, e_v)
 
     lnr = np.log(NU_GHZ["nvss"] / NU_GHZ["tgss"])
     s_t = np.full(iN_v.size, np.nan)
     alpha_low = np.empty(iN_v.size)
+    alpha_low_err = np.full(iN_v.size, np.nan)  # NaN where alpha_low is a limit (a bound has
+    # no Gaussian error; the systematic there is the assumed TGSS limit itself)
     tgss_det = np.zeros(iN_v.size, dtype=bool)
     tflux = np.asarray(tgss["flux"], float)
+    teflux = np.asarray(tgss.get("eflux", np.full(tflux.size, np.nan)), float)
     for k, nidx in enumerate(iN_v.tolist()):
         if nidx in t_of:  # TGSS-detected -> measured alpha_low
             s_t[k] = tflux[t_of[nidx]]
             alpha_low[k] = np.log(s_n[k] / s_t[k]) / lnr
+            e_t = teflux[t_of[nidx]]
+            if np.isfinite(e_t) and e_t > 0 and s_t[k] > 0 and s_n[k] > 0:
+                alpha_low_err[k] = np.sqrt((e_t / s_t[k]) ** 2 + (e_n[k] / s_n[k]) ** 2) / lnr
             tgss_det[k] = True
         else:  # TGSS non-detection -> S_150 < limit -> lower bound on alpha_low
             alpha_low[k] = np.log(s_n[k] / tgss_limit_mjy) / lnr
@@ -168,13 +177,15 @@ def find_peaked(
         "s_nvss": s_n,
         "s_vlass": s_v,
         "alpha_low": alpha_low,
+        "alpha_low_err": alpha_low_err,
         "alpha_high": alpha_high,
+        "alpha_high_err": np.asarray(alpha_high_err, float),
         "alpha_low_is_limit": ~tgss_det,
         "tgss_detected": tgss_det,
         "cls": cls.astype(str),
         "is_peaked": is_peaked,
         "is_ghz_peaked": is_ghz_peaked,
-        "is_rising": rising,  # peaked OR ghz_peaked: the full optically-thick-rising candidate set
+        "is_rising": rising,  # alpha_low > up: every optically-thick-rising source, whatever alpha_high
     }
 
 
@@ -212,6 +223,9 @@ def validate_known(*, max_sources: int = 120) -> dict:  # pragma: no cover - net
             if vr.size == 0:
                 continue
             sv = vf[int(_np.argmin((vr - ra[i]) ** 2 + (vd - dec[i]) ** 2))]
+            # Epoch-1 Quick-Look peak fluxes underestimate by ~13% (VLASS Memo 13); the same
+            # correction the vlass slice applies, previously omitted here (round-6 referee)
+            sv = sv * _vlass.VLASS_PEAK_CORRECTION[1]
         except Exception:
             continue
         st = stgss[i] if _np.isfinite(stgss[i]) else TGSS_LIMIT_MJY
@@ -268,32 +282,55 @@ def validate_hfp(*, max_sources: int = 120) -> dict:  # pragma: no cover - netwo
 
     a_low_l: list[float] = []
     a_high_l: list[float] = []
+    tgss_det_l: list[bool] = []
     for i in sel:
         try:
             vr, vd, vf, _ = _vlass._fetch_e1_tap((ra[i], dec[i]), 0.02)  # ~70" cone
             if vr.size == 0:
                 continue
             sv = vf[int(_np.argmin((vr - ra[i]) ** 2 + (vd - dec[i]) ** 2))]
+            sv = sv * _vlass.VLASS_PEAK_CORRECTION[1]  # QL Epoch-1 flux-scale correction
+            # The measured TGSS flux, when it exists. An earlier version substituted the
+            # 25 mJy limit for EVERY source, which turned alpha_low > 0.1 into a pure NVSS
+            # flux cut the sample could not fail (its faintest member is 60.6 mJy) and
+            # contradicted the sky: most of the sample IS TGSS-detected, some at Jy level.
+            tq = Vizier(columns=["Stotal"])
+            tq.ROW_LIMIT = 5
+            tr = tq.query_region(
+                _SkyCoord(ra[i], dec[i], unit="deg"),
+                radius=20 * _u.arcsec,
+                catalog="J/A+A/598/A78/table3",
+            )
+            st = float(_np.asarray(tr[0]["Stotal"], float)[0]) if tr else TGSS_LIMIT_MJY
+            tgss_det_l.append(bool(tr))
         except Exception:
             continue
-        a_low_l.append(float(_np.log(snvss[i] / TGSS_LIMIT_MJY) / _np.log(1.4 / 0.1475)))
+        a_low_l.append(float(_np.log(snvss[i] / st) / _np.log(1.4 / 0.1475)))
         a_high_l.append(float(_np.log(sv / snvss[i]) / _np.log(3.0 / 1.4)))
     a_low = _np.asarray(a_low_l)
     a_high = _np.asarray(a_high_l)
+    tgss_det = _np.asarray(tgss_det_l, bool)
     n = int(a_low.size)
     rising = (a_low > 0.1).sum() if n else 0
     ghz_peaked = ((a_low > 0.1) & (a_high > 0.1)).sum() if n else 0
     return {
         "n_validated": n,
+        "n_tgss_detected": int(tgss_det.sum()),
         "median_alpha_low": float(_np.median(a_low)) if n else float("nan"),
         "median_alpha_high": float(_np.median(a_high)) if n else float("nan"),
         "frac_rising": float(rising) / n if n else 0.0,
+        "frac_falling_low": float((a_low < 0).sum()) / n if n else 0.0,
         "frac_ghz_peaked": float(ghz_peaked) / n if n else 0.0,
     }
 
 
 def synthetic_field(
-    n_sources: int = 1500, *, peaked_fraction: float = 0.05, rel_err: float = 0.1, seed: int = 0
+    n_sources: int = 1500,
+    *,
+    peaked_fraction: float = 0.05,
+    extended_fraction: float = 0.05,
+    rel_err: float = 0.1,
+    seed: int = 0,
 ) -> tuple[dict, dict, dict, np.ndarray]:
     """Synthetic TGSS/NVSS/VLASS catalogues with injected peaked + steep + flat SEDs (offline fixture).
 
@@ -317,6 +354,11 @@ def synthetic_field(
             flux[i] = 10.0**lp
         else:
             flux[i] = s_nvss[i] * (nu / NU_GHZ["nvss"]) ** alpha[i]
+    # injected extended sources: NVSS integrated flux mostly resolved out at VLASS resolution,
+    # so alpha_high plunges below the floor -- previously the resolution cut had no positive
+    # case to catch offline (round-6 referee)
+    is_ext = (~is_peaked) & (rng.random(n_sources) < extended_fraction)
+    flux[is_ext, 2] *= 0.02
     flux *= rng.normal(1.0, rel_err, flux.shape)
     flux = np.clip(flux, 1e-3, None)
     jit = lambda: rng.normal(0.0, 1.0 / 3600.0, n_sources)  # noqa: E731  (~1" position jitter)
@@ -362,14 +404,35 @@ def run(
         tgss = fetch_survey(center, radius_deg, "tgss")
         nvss = fetch_survey(center, radius_deg, "nvss")
         vra, vdec, vflux, veflux = _fetch_e1_tap((center.ra.deg, center.dec.deg), radius_deg)
+        from .vlass import apply_flux_scale
+
+        # Epoch-1 QL peak fluxes underestimate by ~13% (VLASS Memo 13) and carry a ~7%
+        # cross-epoch scale scatter; the same correction the vlass slice applies, previously
+        # omitted here so every alpha_high was low by 0.16 (round-6 referee).
+        vflux, veflux = apply_flux_scale(1, vflux, veflux)
         vlass = {"ra": vra, "dec": vdec, "flux": vflux, "eflux": veflux}
         truth = None
         source = f"TGSSxNVSSxVLASS @ ({center.ra.deg:.1f}, {center.dec.deg:.1f}) r={radius_deg}deg"
 
-    res = find_peaked(tgss, nvss, vlass)
+    # The TGSS limit is field-local, not the survey-wide median: ADR1's per-source local rms in
+    # this cone sets the 7-sigma floor, and the candidate count is limit-dominated (the count
+    # ran 6 -> 1-3 across defensible limits under the old global 25 mJy; round-6 blocker).
+    noise = np.asarray(tgss.get("noise", []), float)
+    field_limit = round(7.0 * float(np.median(noise)), 1) if noise.size else TGSS_LIMIT_MJY
+    res = find_peaked(tgss, nvss, vlass, tgss_limit_mjy=field_limit)
     cls = res.get("cls", np.array([]))
     peaked = res.get("is_peaked", cls == "peaked")
     ghz_peaked = res.get("is_ghz_peaked", cls == "ghz_peaked")
+    # limit sweep, committed with the headline: how the candidate count moves across
+    # defensible TGSS limits (the field's own 7-sigma floor is the headline)
+    sweep = {}
+    sweep_limits = sorted(
+        {20.0, 25.0, field_limit}
+        | ({round(7.0 * float(np.max(noise)), 1)} if noise.size else set())
+    )
+    for lim in sweep_limits:
+        r_ = find_peaked(tgss, nvss, vlass, tgss_limit_mjy=lim)
+        sweep[f"{lim:g}"] = int(np.sum(r_.get("is_peaked", np.zeros(0, bool))))
     metrics = {
         "source": source,
         "n_nvss_vlass": int(cls.size),
@@ -378,6 +441,10 @@ def run(
         "n_rising": int(np.sum(res.get("is_rising", peaked | ghz_peaked))),
         "n_extended_artefact": int(np.sum(cls == "extended")),
         "n_tgss_detected": int(np.sum(res.get("tgss_detected", np.zeros(cls.size, bool)))),
+        "tgss_limit_mjy_used": float(field_limit),
+        "tgss_field_noise_median_mjy": round(float(np.median(noise)), 2) if noise.size else None,
+        "tgss_field_noise_max_mjy": round(float(np.max(noise)), 2) if noise.size else None,
+        "n_peaked_by_limit": sweep,
     }
     if truth is not None:  # synthetic: recovery + purity of the injected peaked sources
         from .spectra import crossmatch
@@ -392,22 +459,96 @@ def run(
     if validate and not offline and center is not None:  # pragma: no cover - network
         hfp = validate_hfp()
         metrics["hfp_n"] = int(hfp["n_validated"])
+        metrics["hfp_tgss_detected"] = int(hfp["n_tgss_detected"])
         metrics["hfp_rising_pct"] = round(100.0 * hfp["frac_rising"])
+        metrics["hfp_falling_low_pct"] = round(100.0 * hfp["frac_falling_low"])
         metrics["hfp_ghz_pct"] = round(100.0 * hfp["frac_ghz_peaked"])
         cal = validate_known()
-        lo_flag, lo_tot = cal["recovery_by_nupk"].get("72-250MHz", (0, 0))
         metrics["call_n"] = int(cal["n_validated"])
-        metrics["call_low_flagged"] = int(lo_flag)
-        metrics["call_low_total"] = int(lo_tot)
+        # ALL bins, committed: the previous run kept only the 72-250 MHz bin -- the one that
+        # cannot produce a positive -- and dropped the in-window recovery (round-6 referee)
+        for name, key in (("low", "72-250MHz"), ("mid", "250-500MHz"), ("hi", "500-1000MHz")):
+            flag, tot = cal["recovery_by_nupk"].get(key, (0, 0))
+            metrics[f"call_{name}_flagged"] = int(flag)
+            metrics[f"call_{name}_total"] = int(tot)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
     write_results(metrics, op / "results" / "peaked_metrics.json")
+    if not offline:  # pragma: no cover - the candidate table is committed evidence
+        _write_candidates(res, source, op / "results" / "peaked_candidates.csv")
     _figure(res, op / "papers" / "peaked" / "figures")
     _write_macros(metrics, op / "papers" / "peaked" / "generated" / "macros.tex")
     return metrics
+
+
+def _write_candidates(res: dict, source: str, path) -> None:
+    """Commit every rising candidate with fluxes, indices AND their errors, plus SIMBAD/NED ids.
+
+    The paper's deliverable previously existed only as a hand-written findings-file table, and
+    the advertised SIMBAD/NED vetting ran in no committed code path (round-6 blocker).
+    """
+    import csv as _csv
+    from pathlib import Path
+
+    from .vlass import vet_candidates
+
+    sel = np.flatnonzero(np.asarray(res.get("is_rising", []), bool))
+    vet = vet_candidates(res["ra"][sel], res["dec"][sel]) if sel.size else []
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("w", newline="") as fh:
+        fh.write(f"# {source}; rising candidates (peaked + ghz_peaked + rising)\n")
+        w = _csv.writer(fh)
+        w.writerow(
+            [
+                "ra",
+                "dec",
+                "cls",
+                "s_tgss_mjy",
+                "alpha_low_is_limit",
+                "s_nvss_mjy",
+                "s_vlass_mjy",
+                "alpha_low",
+                "alpha_low_err",
+                "alpha_high",
+                "alpha_high_err",
+                "simbad_name",
+                "simbad_type",
+                "simbad_sep",
+                "ned_name",
+                "ned_type",
+                "ned_sep",
+            ]
+        )
+        for j, i in enumerate(sel.tolist()):
+            m = vet[j] if j < len(vet) else {}
+            st = res["s_tgss"][i]
+            ale = res["alpha_low_err"][i]
+            ahe = res["alpha_high_err"][i]
+            w.writerow(
+                [
+                    f"{res['ra'][i]:.5f}",
+                    f"{res['dec'][i]:.5f}",
+                    res["cls"][i],
+                    f"{st:.1f}" if np.isfinite(st) else "",
+                    bool(res["alpha_low_is_limit"][i]),
+                    f"{res['s_nvss'][i]:.1f}",
+                    f"{res['s_vlass'][i]:.1f}",
+                    f"{res['alpha_low'][i]:.3f}",
+                    f"{ale:.3f}" if np.isfinite(ale) else "",
+                    f"{res['alpha_high'][i]:.3f}",
+                    f"{ahe:.3f}" if np.isfinite(ahe) else "",
+                    m.get("simbad_name", ""),
+                    m.get("simbad_type", ""),
+                    m.get("simbad_sep", ""),
+                    m.get("ned_name", ""),
+                    m.get("ned_type", ""),
+                    m.get("ned_sep", ""),
+                ]
+            )
 
 
 def _figure(res: dict, out_dir) -> None:
@@ -448,25 +589,56 @@ def _figure(res: dict, out_dir) -> None:
 
 
 def _write_macros(m: dict, path) -> None:
+    """Namespaced pkSyn*/pkReal* macros; validation macros default to '--', never to 0.
+
+    A real run without --validate previously wrote literal 0s over the abstract's validation
+    numbers -- real-over-real, so no guard fired, and the abstract would have read "recovers
+    0% as optically-thick-rising" (round-6 referee). '--' is caught by the arXiv assembler.
+    """
     from pathlib import Path
 
+    real = not str(m.get("source", "")).lower().startswith("synthetic")
+    ns, other = ("pkReal", "pkSyn") if real else ("pkSyn", "pkReal")
+
+    def g(key):
+        v = m.get(key)
+        return "--" if v is None else str(v)
+
+    sweep = m.get("n_peaked_by_limit") or {}
+    sweep_txt = "; ".join(f"{k} mJy: {v}" for k, v in sweep.items()) or "--"
+    values = (
+        ("Nnvssvlass", g("n_nvss_vlass")),
+        ("Npeaked", g("n_peaked")),
+        ("Nghzpeaked", g("n_ghz_peaked")),
+        ("Nrising", g("n_rising")),
+        ("Nextended", g("n_extended_artefact")),
+        ("Ntgssdet", g("n_tgss_detected")),
+        ("LimitUsed", g("tgss_limit_mjy_used")),
+        ("NoiseMed", g("tgss_field_noise_median_mjy")),
+        ("NoiseMax", g("tgss_field_noise_max_mjy")),
+        ("LimitSweep", sweep_txt),
+        ("HfpN", g("hfp_n")),
+        ("HfpTgssDet", g("hfp_tgss_detected")),
+        ("HfpRising", g("hfp_rising_pct")),
+        ("HfpFallingLow", g("hfp_falling_low_pct")),
+        ("HfpGhz", g("hfp_ghz_pct")),
+        ("CallN", g("call_n")),
+        ("CallLowFlagged", g("call_low_flagged")),
+        ("CallLowTotal", g("call_low_total")),
+        ("CallMidFlagged", g("call_mid_flagged")),
+        ("CallMidTotal", g("call_mid_total")),
+        ("CallHiFlagged", g("call_hi_flagged")),
+        ("CallHiTotal", g("call_hi_total")),
+    )
     lines = [
         "% Auto-generated by jansky_research.peaked._write_macros — do not edit by hand.",
+        "% Mode-dependent values are namespaced (pkSyn*/pkReal*); validation macros default",
+        "% to '--' (the arXiv assembler blocks on it), never to a wrong 0.",
         rf"\newcommand{{\pkSource}}{{{m['source']}}}",
-        rf"\newcommand{{\pkNnvssvlass}}{{{m['n_nvss_vlass']}}}",
-        rf"\newcommand{{\pkNpeaked}}{{{m['n_peaked']}}}",
-        rf"\newcommand{{\pkNghzpeaked}}{{{m.get('n_ghz_peaked', 0)}}}",
-        rf"\newcommand{{\pkNrising}}{{{m.get('n_rising', 0)}}}",
-        rf"\newcommand{{\pkNextended}}{{{m['n_extended_artefact']}}}",
-        rf"\newcommand{{\pkNtgssdet}}{{{m['n_tgss_detected']}}}",
-        # Validation macros (populated by run(validate=True) on real data; 0 placeholders offline).
-        rf"\newcommand{{\pkHfpN}}{{{m.get('hfp_n', 0)}}}",
-        rf"\newcommand{{\pkHfpRising}}{{{m.get('hfp_rising_pct', 0)}}}",
-        rf"\newcommand{{\pkHfpGhz}}{{{m.get('hfp_ghz_pct', 0)}}}",
-        rf"\newcommand{{\pkCallN}}{{{m.get('call_n', 0)}}}",
-        rf"\newcommand{{\pkCallLowFlagged}}{{{m.get('call_low_flagged', 0)}}}",
-        rf"\newcommand{{\pkCallLowTotal}}{{{m.get('call_low_total', 0)}}}",
     ]
+    for suffix, value in values:
+        lines.append(rf"\newcommand{{\{ns}{suffix}}}{{{value}}}")
+        lines.append(rf"\newcommand{{\{other}{suffix}}}{{--}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: a run may only ADD information, so an

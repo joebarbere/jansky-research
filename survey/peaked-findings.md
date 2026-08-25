@@ -182,3 +182,33 @@ offline fixture cannot fail either cut (limit true by construction; no extended/
 injections).
 
 **Status: fixes pending** (all catalogues public and already fetched by the pipeline).
+
+**Status: RESOLVED (2026-08-25).** All three blockers closed by measurement, and every headline
+number moved the way the referee computed.
+
+**Blocker 1:** `validate_hfp` now fetches each Dallacasa source's measured TGSS flux (83/100 are
+detected, some at Jy level; the limit is a fallback only) and applies the VLASS QL flux-scale
+correction. The honest numbers: **53% rising** (the referee's X-match gave ~53%), 32% falling
+from 150 MHz to 1.4 GHz, 38% still rising at 3 GHz. The paper states outright that the old 100%
+was a flux cut the sample could not fail, and calls the sample the VLA candidate list it is.
+
+**Blocker 2:** `run()` writes results/peaked_candidates.csv -- every rising candidate with
+fluxes, both indices AND their propagated errors, and SIMBAD/NED identifications from the
+in-pipeline vetting (vlass.vet_candidates). The old prose-only vetting claim is gone.
+
+**Blocker 3:** the TGSS limit is field-local -- 7 x the ADR1 per-source rms median in the cone
+(29.4 mJy here; max-noise 39.9) -- and the count sweep is committed: **8 / 6 / 1 / 0 candidates
+at 20 / 25 / 29.4 / 39.9 mJy**. The headline is 1 peaked + 1 GHz-peaked (the latter appearing
+exactly as the referee predicted once the VLASS correction moved its alpha_high from +0.07 to
++0.23). The old six-candidate list -- including the Fermi BL Lac punchline -- is described as
+what it was: mostly a statement about the assumed limit.
+
+**The rest:** all three Callingham bins committed (0/81, 3/26, 1/6 -- the in-window recovery is
+now evidence); index errors recorded per candidate (NaN for limits, which are bounds);
+the VLASS correction applied to the field census and both validators; macros namespaced
+pkSyn*/pkReal* with validation macros defaulting to '--' (closing the real-over-real
+zero-overwrite hazard); the fixture injects extended fakes so the resolution floor has an
+offline positive case, with tests; "compact" removed where unmeasured; the misleading is_rising
+comment fixed; dallacasa2000 gains its ADS pointer and "candidates" wording; the hand-authored
+arxiv.yaml abstract rewritten from the committed metrics with its mangled numbers fixed;
+"confirms"/"robust to" verbs retired.

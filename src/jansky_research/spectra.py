@@ -155,7 +155,12 @@ def fetch_survey(
 
         sc = SkyCoord(t["RAJ2000"], t["DEJ2000"], unit=(u.hourangle, u.deg))
         ra, dec = sc.ra.deg, sc.dec.deg
-    return {"ra": ra, "dec": dec, "flux": flux, "eflux": eflux}
+    out = {"ra": ra, "dec": dec, "flux": flux, "eflux": eflux}
+    # TGSS ADR1 carries a per-source local-rms column; expose it so callers can derive a
+    # field-local detection limit instead of assuming the survey-wide median (round-6 referee).
+    if "Noise" in t.colnames:
+        out["noise"] = np.asarray(t["Noise"], float)
+    return out
 
 
 def find_uss(
