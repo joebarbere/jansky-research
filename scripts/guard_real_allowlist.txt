@@ -31,3 +31,9 @@ typeii_synthetic_metrics.json
 # "3.15 +/- 1.11 over 30 realizations" and the 30 per-seed ratios had never been committed.
 # Synthetic by design -- it is the recover-a-known ensemble, not a real-data result.
 rmstructure_synthetic.json
+# torchfdmt's evidence file names BOTH legs by design ("synthetic injection (unprefixed keys) +
+# Parkes/UWL ... real_* keys") -- the 2026-08-24 referee required the synthetic block to stop
+# masquerading under the real file's name, so the mixed marker is the fix, not a leak. The paper
+# quotes the synthetic leg explicitly as an injection (\spRecDm/\spSnr "injected") and the real
+# leg through real_* macros only. Same pattern as stokesv_discovery above.
+singlepulse_metrics.json

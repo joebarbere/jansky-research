@@ -28,22 +28,85 @@ __all__ = [
     "fit_drift_rate",
     "run",
     "synthetic_burst",
+    "run_candidates",
 ]
 
 C_KMS = 299792.458  # speed of light (km/s)
 
 # The recover-a-known: a clean, isolated type III from the Monstein/e-Callisto SGD burst list
 # (110914 1150.1-1151.3 III B quality-1, 21-78 MHz), recorded at Birr (BIR). Chosen because its
-# height-time track is coherent (fit R^2 ~ 0.9), unlike the flare-storm intervals. Harmonic emission
-# and quiet (1x) Newkirk are the default knobs; the paper reports the full systematic grid.
+# height-time track is coherent (converged clipped fit R^2 ~ 0.8), unlike the flare-storm
+# intervals. Harmonic emission and quiet (1x) Newkirk are the default knobs; the paper reports
+# the full systematic grid. pad_s here matches the committed evidence (the run() default);
+# an earlier 5.0 disagreed with --recover's pinned 10.0, the stale-grid incident's root cause.
 RECOVER_EVENT = {
     "station": "BIR",
     "date": "20110914",
     "hhmm": "1150",
     "harmonic": 2,
     "fold": 1.0,
-    "pad_s": 5.0,
+    "pad_s": 10.0,
 }
+
+# The full candidate list behind the event selection, plus the flare-storm negative control:
+# the paper's crux is that R^2 separates one clean drift from the rest, so the rejected
+# candidates' numbers must be committed evidence at the SAME parameterization as the headline,
+# not a prose table from a superseded run (referee finding).
+CANDIDATE_EVENTS = (
+    {"station": "BIR", "date": "20110914", "hhmm": "1150", "role": "accepted"},
+    {"station": "BIR", "date": "20110705", "hhmm": "1054", "role": "candidate"},
+    {"station": "BIR", "date": "20110716", "hhmm": "1310", "role": "candidate"},
+    {"station": "BIR", "date": "20110919", "hhmm": "0743", "role": "candidate"},
+    {"station": "BIR", "date": "20110809", "hhmm": "0805", "role": "storm control (X6.9 flare)"},
+)
+
+
+def run_candidates(out: str = ".") -> dict:  # pragma: no cover - network
+    """Run every candidate (and the storm control) at the headline parameterization; commit it.
+
+    Writes ``results/solarbursts_candidates.json`` with the same fields for each event, so the
+    event-selection function -- the paper's stated crux -- is auditable from evidence.
+    """
+    from pathlib import Path
+
+    from .report import write_results
+
+    rows = []
+    for ev in CANDIDATE_EVENTS:
+        burst = fetch_ecallisto(ev["station"], ev["date"], ev["hhmm"])
+        window = find_burst_window(burst["data"], burst["times"], pad_s=10.0)
+        rf, rt = detect_burst_ridge(burst["data"], burst["freqs"], burst["times"], window=window)
+        spd = exciter_speed(rf, rt, harmonic=2, fold=1.0)
+        spd.pop("_keep", None)
+        rows.append(
+            {
+                "event": f"{ev['station']} {ev['date']} {ev['hhmm']}",
+                "role": ev["role"],
+                "n_ridge": int(rf.size),
+                "n_used": spd["n_used"],
+                "r2": round(spd["r2"], 3) if np.isfinite(spd["r2"]) else None,
+                "drift_mhz_per_s": round(fit_drift_rate(rf, rt), 3),
+                "speed_c": round(spd["speed_c"], 4) if np.isfinite(spd["speed_c"]) else None,
+            }
+        )
+    payload = {
+        "source": "e-Callisto candidate selection at the headline parameterization "
+        "(pad_s=10, snr=5, converged clip)",
+        "candidates": rows,
+    }
+    write_results(payload, Path(out) / "results" / "solarbursts_candidates.json")
+    # Fold the selection numbers into the main metrics and regenerate the macros through the
+    # normal writer: _write_macros always emits the candidate names (placeholders when the
+    # stage has not run), otherwise the merge guard would drop them on the next run() rebuild
+    # -- the same accumulate-names-not-just-values trap the vlass archival stage hit.
+    import json as _json
+
+    mpath = Path(out) / "results" / "solarbursts_metrics.json"
+    metrics = _json.loads(mpath.read_text()) if mpath.is_file() else {"source": "?"}
+    metrics["candidate_selection"] = rows
+    write_results(metrics, mpath)
+    _write_macros(metrics, Path(out) / "papers" / "solarbursts" / "generated" / "macros.tex")
+    return payload
 
 
 def synthetic_burst(
@@ -149,18 +212,26 @@ def detect_burst_ridge(
 
 
 def _robust_linfit(
-    x: np.ndarray, y: np.ndarray, *, n_iter: int = 3, sigma: float = 3.0
+    x: np.ndarray, y: np.ndarray, *, n_iter: int = 3, sigma: float = 3.0, converge: bool = False
 ) -> tuple[float, float, np.ndarray]:
     """Iterative sigma-clipped linear fit ``y = m x + b``; returns ``(m, b, keep_mask)``.
 
     Re-fits after rejecting points more than ``sigma`` residual-standard-deviations from the line,
     so a few RFI-corrupted ridge points (or a second overlapping burst) do not bias the slope.
+
+    ``converge=True`` iterates to a fixed point (the mask stops changing) and guarantees the
+    returned slope was fitted on exactly the returned mask. A referee traced the solarbursts
+    headline moving 0.111--0.147 c purely over the legacy hard-coded ``n_iter=3``, whose returned
+    slope and mask additionally came from *different* iterations. The legacy fixed-count mode is
+    kept as the default because four other slices' committed evidence was produced with it; each
+    should migrate when its own evidence is re-run.
     """
     x = np.asarray(x, float)
     y = np.asarray(y, float)
     keep = np.ones(x.size, dtype=bool)
     m = b = float("nan")
-    for _ in range(n_iter):
+    limit = 100 if converge else n_iter
+    for _ in range(limit):
         if keep.sum() < 3:
             break
         m, b = np.polyfit(x[keep], y[keep], 1)
@@ -168,7 +239,12 @@ def _robust_linfit(
         s = np.std(resid[keep])
         if s == 0:
             break
-        keep = np.abs(resid) < sigma * s
+        new = np.abs(resid) < sigma * s
+        if converge and bool(np.all(new == keep)):
+            break
+        keep = new
+    if converge and keep.sum() >= 3:
+        m, b = np.polyfit(x[keep], y[keep], 1)  # slope and mask from the same, final fit
     return float(m), float(b), keep
 
 
@@ -192,6 +268,7 @@ def exciter_speed(
     *,
     harmonic: int = 2,
     fold: float = 1.0,
+    clip_sigma: float = 3.0,
 ) -> dict:
     """Exciter (beam) speed from the drift ridge, via the Newkirk coronal density model.
 
@@ -220,7 +297,8 @@ def exciter_speed(
             "n_used": 0,
             "r2": nan,
         }
-    dr_dt, icpt, keep = _robust_linfit(t, r)  # R_sun per second, with RFI/outlier rejection
+    # converged clipped fit: the slope, mask and R^2 all come from the same, final iteration
+    dr_dt, icpt, keep = _robust_linfit(t, r, sigma=clip_sigma, converge=True)
     speed_kms = abs(dr_dt) * solar.R_SUN_KM
     # coefficient of determination on the kept (coherent) ridge: ~1 for one clean burst, low for a storm
     rk, tk = r[keep], t[keep]
@@ -235,7 +313,34 @@ def exciter_speed(
         "n_points": int(r.size),
         "n_used": int(keep.sum()),
         "r2": float(r2),
+        "clip_sigma": float(clip_sigma),
+        "_keep": keep,  # the final fit's mask (stripped before any JSON write)
+        "_slope": float(dr_dt),
+        "_icpt": float(icpt),
     }
+
+
+def _isolated_channels(ridge_freqs: np.ndarray, *, gap_mhz: float = 10.0) -> np.ndarray:
+    """True for ridge channels more than ``gap_mhz`` from their nearest ridge neighbour.
+
+    Both of the committed ridge's quoted band extremes rest on single isolated channels (78.94
+    MHz sits 16.5 MHz above the next detection and drifts the wrong way for a type III; 10.0
+    MHz is the clipped low outlier), so the drop-isolated sensitivity variant is committed with
+    the headline.
+    """
+    f = np.sort(np.asarray(ridge_freqs, float))
+    order = np.argsort(np.asarray(ridge_freqs, float))
+    gaps = np.full(f.size, np.inf)
+    if f.size >= 2:
+        d = np.diff(f)
+        gaps[:-1] = d
+        gaps2 = np.full(f.size, np.inf)
+        gaps2[1:] = d
+        gaps = np.minimum(gaps, gaps2)
+    iso_sorted = gaps > gap_mhz
+    iso = np.zeros(f.size, dtype=bool)
+    iso[order] = iso_sorted
+    return iso
 
 
 #: The systematics grid the paper quotes: emission interpretation x Newkirk fold factor. The three
@@ -263,6 +368,9 @@ def speed_grid(ridge_freqs: np.ndarray, ridge_times: np.ndarray) -> list[dict]:
                 "speed_c": round(spd["speed_c"], 4) if np.isfinite(spd["speed_c"]) else None,
                 "r_lo_rsun": round(spd["r_lo"], 3) if np.isfinite(spd["r_lo"]) else None,
                 "r_hi_rsun": round(spd["r_hi"], 3) if np.isfinite(spd["r_hi"]) else None,
+                # per-point fit accounting: the grid rows differ in n_used and R^2 too
+                "n_used": spd["n_used"],
+                "r2": round(spd["r2"], 3) if np.isfinite(spd["r2"]) else None,
             }
         )
     return out
@@ -339,6 +447,31 @@ def run(
     rf, rt = detect_burst_ridge(burst["data"], burst["freqs"], burst["times"], window=window)
     drift = fit_drift_rate(rf, rt)
     spd = exciter_speed(rf, rt, harmonic=harmonic, fold=fold)
+    used = spd.pop("_keep", np.ones(rf.size, bool))
+    fit_slope, fit_icpt = spd.pop("_slope", float("nan")), spd.pop("_icpt", float("nan"))
+    # The band and drift of the USED (clip-surviving) channels — the set the headline speed and
+    # R^2 describe. The full-ridge drift is kept separately: quoting the full detection band and
+    # the unclipped drift next to "n_used channels, R^2" bound numbers to the wrong point set.
+    drift_used = fit_drift_rate(rf[used], rt[used]) if used.sum() >= 2 else float("nan")
+
+    def _spdc(rf_, rt_, **kw) -> float | None:
+        v = exciter_speed(rf_, rt_, harmonic=harmonic, fold=fold, **kw)["speed_c"]
+        return round(float(v), 4) if np.isfinite(v) else None
+
+    # Analysis-choice sensitivity, committed with the headline: window half-width, clip sigma,
+    # and the isolated band-edge channels. The headline is quoted with the min-max spread.
+    sens: dict[str, float | None] = {}
+    for p in (5.0, 10.0):
+        wv = find_burst_window(burst["data"], burst["times"], pad_s=p)
+        rfp, rtp = detect_burst_ridge(burst["data"], burst["freqs"], burst["times"], window=wv)
+        sens[f"pad_{p:g}s"] = _spdc(rfp, rtp)
+    for sg in (2.5, 3.5):
+        sens[f"clip_sigma_{sg:g}"] = _spdc(rf, rt, clip_sigma=sg)
+    iso = _isolated_channels(rf)
+    sens["drop_isolated"] = _spdc(rf[~iso], rt[~iso]) if (~iso).sum() >= 3 else None
+    spread = [v for v in sens.values() if v is not None]
+    if np.isfinite(spd["speed_c"]):
+        spread.append(round(float(spd["speed_c"]), 4))
 
     metrics: dict = {
         "source": source,
@@ -347,13 +480,25 @@ def run(
         "r2": round(spd["r2"], 3) if np.isfinite(spd.get("r2", float("nan"))) else None,
         "f_lo_mhz": round(float(np.min(rf)), 2) if rf.size else None,
         "f_hi_mhz": round(float(np.max(rf)), 2) if rf.size else None,
+        "fit_f_lo_mhz": round(float(np.min(rf[used])), 2) if used.any() else None,
+        "fit_f_hi_mhz": round(float(np.max(rf[used])), 2) if used.any() else None,
         "drift_mhz_per_s": round(drift, 3) if np.isfinite(drift) else None,
+        "drift_used_mhz_per_s": round(drift_used, 3) if np.isfinite(drift_used) else None,
         "harmonic": harmonic,
         "fold": fold,
+        "pad_s": float(pad_s),
+        "snr_threshold": 5.0,
+        "clip_sigma": spd.get("clip_sigma"),
+        "fit_converged": True,
         "r_lo_rsun": round(spd["r_lo"], 3) if np.isfinite(spd["r_lo"]) else None,
         "r_hi_rsun": round(spd["r_hi"], 3) if np.isfinite(spd["r_hi"]) else None,
-        "speed_kms": round(spd["speed_kms"], 1) if np.isfinite(spd["speed_kms"]) else None,
+        # rounded to the hundreds: six significant figures on a value with a percent-level
+        # analysis spread was false precision (referee finding)
+        "speed_kms": int(round(spd["speed_kms"], -2)) if np.isfinite(spd["speed_kms"]) else None,
         "speed_c": round(spd["speed_c"], 4) if np.isfinite(spd["speed_c"]) else None,
+        "speed_sensitivity": sens,
+        "speed_c_min": round(min(spread), 4) if spread else None,
+        "speed_c_max": round(max(spread), 4) if spread else None,
     }
     metrics["speed_grid"] = speed_grid(rf, rt)
     if truth is not None:
@@ -372,15 +517,29 @@ def run(
     import csv as _csv
 
     with (op / "results" / "solarbursts_ridge.csv").open("w", newline="") as fh:
+        fh.write(
+            f"# {source}; pad_s={pad_s:g}; snr_threshold=5; used=1 marks channels surviving "
+            "the converged clip\n"
+        )
         w = _csv.writer(fh)
-        w.writerow(["freq_mhz", "time_s"])
-        w.writerows(zip(np.round(rf, 4), np.round(rt, 4), strict=True))
-    _figure(burst, rf, rt, harmonic, fold, op / "papers" / "solarbursts" / "figures")
+        w.writerow(["freq_mhz", "time_s", "used"])
+        w.writerows(zip(np.round(rf, 4), np.round(rt, 4), used.astype(int), strict=True))
+    _figure(
+        burst,
+        rf,
+        rt,
+        used,
+        fit_slope,
+        fit_icpt,
+        harmonic,
+        fold,
+        op / "papers" / "solarbursts" / "figures",
+    )
     _write_macros(metrics, op / "papers" / "solarbursts" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(burst, rf, rt, harmonic, fold, out_dir) -> None:
+def _figure(burst, rf, rt, used, fit_slope, fit_icpt, harmonic, fold, out_dir) -> None:
     from pathlib import Path
 
     from jansky import solar
@@ -404,10 +563,19 @@ def _figure(burst, rf, rt, harmonic, fold, out_dir) -> None:
     ax1.set(xlabel="time (s)", ylabel="frequency (MHz)", title="Type III dynamic spectrum")
     ax1.legend(loc="upper right", fontsize=8)
     if rf.size >= 2:
+        # Draw the line the caption quotes: the converged clipped fit over the kept points.
+        # An earlier figure drew an unweighted fit over all points (including the clipped
+        # outliers, unmarked), so the plotted slope was 14% below the reported one and the
+        # caption's R^2 belonged to a different line.
         r = solar.newkirk_radius(solar.density_from_plasma_frequency(rf / harmonic), fold)
-        ax2.plot(rt, r, "o", color="C0", ms=3)
-        slope, icpt = np.polyfit(rt, r, 1)
-        ax2.plot(rt, slope * rt + icpt, "-", color="C3", lw=1)
+        ax2.plot(rt[used], r[used], "o", color="C0", ms=3, label="kept")
+        if (~used).any():
+            ax2.plot(rt[~used], r[~used], "x", color="0.5", ms=5, label="clipped")
+        if np.isfinite(fit_slope):
+            tk = rt[used]
+            tt = np.linspace(tk.min(), tk.max(), 20)
+            ax2.plot(tt, fit_slope * tt + fit_icpt, "-", color="C3", lw=1, label="clipped fit")
+        ax2.legend(fontsize=7)
         ax2.set(
             xlabel="time (s)", ylabel=r"heliocentric radius ($R_\odot$)", title="Height--time track"
         )
@@ -438,9 +606,33 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\sbRhi}}{{{_fmt('r_hi_rsun')}}}",
         rf"\newcommand{{\sbSpeedKms}}{{{_fmt('speed_kms')}}}",
         rf"\newcommand{{\sbSpeedC}}{{{_fmt('speed_c')}}}",
-        rf"\newcommand{{\sbTruth}}{{{_fmt('truth_speed_c')}}}",
-        rf"\newcommand{{\sbRatio}}{{{_fmt('recovery_ratio')}}}",
+        rf"\newcommand{{\sbSpeedCMin}}{{{_fmt('speed_c_min')}}}",
+        rf"\newcommand{{\sbSpeedCMax}}{{{_fmt('speed_c_max')}}}",
+        rf"\newcommand{{\sbFitFlo}}{{{_fmt('fit_f_lo_mhz')}}}",
+        rf"\newcommand{{\sbFitFhi}}{{{_fmt('fit_f_hi_mhz')}}}",
+        rf"\newcommand{{\sbDriftUsed}}{{{_fmt('drift_used_mhz_per_s')}}}",
+        rf"\newcommand{{\sbPad}}{{{_fmt('pad_s')}}}",
+        rf"\newcommand{{\sbClipSigma}}{{{_fmt('clip_sigma')}}}",
+        # synthetic-leg-only quantities carry the Syn namespace so a real run's '--' cannot be
+        # mistaken for a blanked value (they were \sbTruth/\sbRatio, unused and rendering as --)
+        rf"\newcommand{{\sbSynTruth}}{{{_fmt('truth_speed_c')}}}",
+        rf"\newcommand{{\sbSynRatio}}{{{_fmt('recovery_ratio')}}}",
     ]
+    # Candidate-selection macros: always emitted (placeholders until run_candidates has run),
+    # so the merge guard never drops them on a plain run() rebuild.
+    cand_rows = m.get("candidate_selection") or []
+    rejects = [r for r in cand_rows if r.get("role") == "candidate"]
+    slots = {
+        "CandAccepted": next((r for r in cand_rows if r.get("role") == "accepted"), None),
+        "CandOne": rejects[0] if len(rejects) > 0 else None,
+        "CandTwo": rejects[1] if len(rejects) > 1 else None,
+        "CandThree": rejects[2] if len(rejects) > 2 else None,
+        "CandStorm": next((r for r in cand_rows if "storm" in r.get("role", "")), None),
+    }
+    for name, row in slots.items():
+        for suffix, key in (("Rsq", "r2"), ("Drift", "drift_mhz_per_s"), ("SpeedC", "speed_c")):
+            val = "--" if row is None or row.get(key) is None else str(row[key])
+            lines.append(rf"\newcommand{{\sb{name}{suffix}}}{{{val}}}")
     # The systematics grid, one macro per point, so the Results paragraph cannot hand-type them.
     grid = {(g["harmonic"], g["fold"]): g for g in m.get("speed_grid", [])}
     for (h, f), name in (((1, 1.0), "FundOne"), ((2, 1.0), "HarmOne"), ((2, 4.0), "HarmFour")):
@@ -477,7 +669,15 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--fold", type=float, default=1.0)
     p.add_argument("--pad", type=float, default=10.0, help="burst-window half-width (s)")
     p.add_argument("--recover", action="store_true", help="run the canonical recover-a-known event")
+    p.add_argument(
+        "--candidates",
+        action="store_true",
+        help="run all candidate events + the storm control; commit the selection evidence",
+    )
     args = p.parse_args(argv)
+    if args.candidates:
+        print(json.dumps(run_candidates(args.out), indent=2))
+        return 0
     if args.recover:  # the canonical event in RECOVER_EVENT, spelled out for the type checker
         metrics = run(
             args.out,

@@ -98,7 +98,7 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "results" / "solarbursts_metrics.json").exists()
     assert (tmp_path / "papers" / "solarbursts" / "figures" / "burst.pdf").exists()
     macros = (tmp_path / "papers" / "solarbursts" / "generated" / "macros.tex").read_text()
-    assert r"\sbSpeedC" in macros and r"\sbRatio" in macros
+    assert r"\sbSpeedC" in macros and r"\sbSynRatio" in macros
 
 
 def test_speed_grid_from_one_ridge():
@@ -128,4 +128,43 @@ def test_run_offline_emits_grid_macros_and_ridge(tmp_path):
     for name in (r"\sbGridFundOne", r"\sbGridHarmOne", r"\sbGridHarmFour"):
         assert name in macros, name
     ridge = (tmp_path / "results" / "solarbursts_ridge.csv").read_text().splitlines()
-    assert ridge[0] == "freq_mhz,time_s" and len(ridge) > 10
+    assert ridge[0].startswith("#") and ridge[1] == "freq_mhz,time_s,used" and len(ridge) > 10
+
+
+def test_robust_linfit_converges_to_a_fixed_point():
+    # The referee traced the headline moving 0.111-0.147 c over the legacy hard-coded n_iter=3,
+    # with the returned slope and mask from different iterations. converge=True must reach a
+    # mask fixed point and return the slope fitted on exactly that mask.
+    rng = np.random.default_rng(2)
+    x = np.linspace(0.0, 10.0, 80)
+    y = 2.0 * x + 1.0 + rng.normal(0.0, 0.3, x.size)
+    y[::7] += rng.normal(0.0, 6.0, x[::7].size)  # heavy outlier tail -> multiple clip rounds
+    m, b, keep = solarbursts._robust_linfit(x, y, converge=True)
+    # fixed point: one more clip round changes nothing
+    resid = y - (m * x + b)
+    s = np.std(resid[keep])
+    assert np.array_equal(np.abs(resid) < 3.0 * s, keep)
+    # slope was fitted on exactly the returned mask
+    m2, b2 = np.polyfit(x[keep], y[keep], 1)
+    assert np.isclose(m, m2) and np.isclose(b, b2)
+    assert abs(m - 2.0) < 0.1
+
+
+def test_isolated_channels_flags_band_edge_singletons():
+    rf = np.array([10.0, 25.5, 26.0, 26.5, 27.0, 62.4, 78.9])
+    iso = solarbursts._isolated_channels(rf, gap_mhz=10.0)
+    assert iso[0] and iso[-1]  # 10 MHz and 78.9 MHz are isolated
+    assert not iso[1] and not iso[2]
+
+
+def test_run_offline_commits_sensitivity_and_provenance(tmp_path):
+    m = solarbursts.run(out=str(tmp_path), offline=True)
+    assert m["pad_s"] == 10.0 and m["clip_sigma"] == 3.0 and m["fit_converged"]
+    assert set(m["speed_sensitivity"]) >= {"pad_5s", "pad_10s", "clip_sigma_2.5", "clip_sigma_3.5"}
+    assert m["speed_c_min"] <= m["speed_c"] <= m["speed_c_max"]
+    assert m["fit_f_lo_mhz"] >= m["f_lo_mhz"] and m["fit_f_hi_mhz"] <= m["f_hi_mhz"]
+    for row in m["speed_grid"]:
+        assert "n_used" in row and "r2" in row
+    ridge = (tmp_path / "results" / "solarbursts_ridge.csv").read_text().splitlines()
+    assert ridge[0].startswith("#") and "pad_s=10" in ridge[0]
+    assert ridge[1] == "freq_mhz,time_s,used"

@@ -1,38 +1,107 @@
 {
   "source": "e-Callisto BIR 20110914 1150",
   "n_ridge": 66,
-  "n_used": 62,
-  "r2": 0.811,
+  "n_used": 55,
+  "r2": 0.935,
   "f_lo_mhz": 10.0,
   "f_hi_mhz": 78.94,
   "drift_mhz_per_s": -2.55,
   "harmonic": 2,
   "fold": 1.0,
-  "r_lo_rsun": 1.622,
-  "r_hi_rsun": 2.572,
-  "speed_kms": 40377.5,
-  "speed_c": 0.1347,
+  "r_lo_rsun": 1.757,
+  "r_hi_rsun": 2.285,
+  "speed_kms": 35200,
+  "speed_c": 0.1173,
   "speed_grid": [
     {
       "harmonic": 1,
       "fold": 1.0,
-      "speed_c": 0.0813,
+      "speed_c": 0.0808,
       "r_lo_rsun": 1.411,
-      "r_hi_rsun": 1.894
+      "r_hi_rsun": 1.805,
+      "n_used": 59,
+      "r2": 0.897
     },
     {
       "harmonic": 2,
       "fold": 1.0,
-      "speed_c": 0.1347,
-      "r_lo_rsun": 1.622,
-      "r_hi_rsun": 2.572
+      "speed_c": 0.1173,
+      "r_lo_rsun": 1.757,
+      "r_hi_rsun": 2.285,
+      "n_used": 55,
+      "r2": 0.935
     },
     {
       "harmonic": 2,
       "fold": 4.0,
-      "speed_c": 0.2448,
-      "r_lo_rsun": 2.096,
-      "r_hi_rsun": 4.01
+      "speed_c": 0.2257,
+      "r_lo_rsun": 2.326,
+      "r_hi_rsun": 3.353,
+      "n_used": 55,
+      "r2": 0.941
+    }
+  ],
+  "fit_f_lo_mhz": 32.44,
+  "fit_f_hi_mhz": 62.44,
+  "drift_used_mhz_per_s": -2.902,
+  "pad_s": 10.0,
+  "snr_threshold": 5.0,
+  "clip_sigma": 3.0,
+  "fit_converged": true,
+  "speed_sensitivity": {
+    "pad_5s": 0.118,
+    "pad_10s": 0.1173,
+    "clip_sigma_2.5": 0.1173,
+    "clip_sigma_3.5": 0.1332,
+    "drop_isolated": 0.1173
+  },
+  "speed_c_min": 0.1173,
+  "speed_c_max": 0.1332,
+  "candidate_selection": [
+    {
+      "event": "BIR 20110914 1150",
+      "role": "accepted",
+      "n_ridge": 66,
+      "n_used": 55,
+      "r2": 0.935,
+      "drift_mhz_per_s": -2.55,
+      "speed_c": 0.1173
+    },
+    {
+      "event": "BIR 20110705 1054",
+      "role": "candidate",
+      "n_ridge": 122,
+      "n_used": 118,
+      "r2": 0.48,
+      "drift_mhz_per_s": -9.824,
+      "speed_c": 0.269
+    },
+    {
+      "event": "BIR 20110716 1310",
+      "role": "candidate",
+      "n_ridge": 106,
+      "n_used": 106,
+      "r2": 0.054,
+      "drift_mhz_per_s": 0.962,
+      "speed_c": 0.0612
+    },
+    {
+      "event": "BIR 20110919 0743",
+      "role": "candidate",
+      "n_ridge": 123,
+      "n_used": 121,
+      "r2": 0.342,
+      "drift_mhz_per_s": -2.088,
+      "speed_c": 0.0883
+    },
+    {
+      "event": "BIR 20110809 0805",
+      "role": "storm control (X6.9 flare)",
+      "n_ridge": 147,
+      "n_used": 145,
+      "r2": 0.178,
+      "drift_mhz_per_s": -1.653,
+      "speed_c": 0.0363
     }
   ]
 }
