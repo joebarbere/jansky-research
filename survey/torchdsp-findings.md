@@ -31,9 +31,9 @@ on CPU (`results/torchdsp_metrics.json`: `device: cpu`, `benchmark_device: cuda`
 - **Crab period re-find: honest null.** The vendored 2.1-s Parkes file cannot support it — the
   brute fold at the published 33.7 ms gives S/N 2.2 (nothing to find; the file was vendored
   for giant-pulse work, and the regular pulse is too weak at this length). The FFA's formal
-  peak (32.7 ms, S/N 5.2) is below our own synthetic noise threshold and is reported as not
-  significant. The algorithm's validation is carried by the synthetics (injected 233.7-sample
-  period found exactly, S/N 60.5 vs fold-oracle 93.4) — stated plainly in the paper.
+  peak (32.7 ms, S/N 5.2) sits at the measured same-search-volume noise level (5.0, committed
+  2026-08-25) and is reported as not significant. The algorithm's validation is carried by the synthetics (injected 233.7-sample
+  period found to the nearest drift-grid point, S/N 60.5 vs fold-oracle 93.4) — stated plainly in the paper.
 
 ## Recover-a-knowns (run on CPU; `benchmark_device` is `cuda`, the science `device` is `cpu`)
 
@@ -46,7 +46,9 @@ on CPU (`results/torchdsp_metrics.json`: `device: cpu`, `benchmark_device: cuda`
   sequential on synthetic RFI — the evaluation-order difference is documented, not hidden.
   Injected CW line + broadband burst both fully caught. NOTE: float64 medians must come from
   numpy (torch's even-length median takes the lower element — bit us once).
-- **FFA**: injected 233.7-sample period found at 233.70 (err 0.0); flat-noise control quiet.
+- **FFA**: injected 233.7-sample period found at 233.70 — the nearest drift-grid point (grid
+  0.0039 samples; the injected value is not on the grid, so "err 0.0" is rounding, not
+  exactness); flat-noise control quiet.
 
 ## Real legs (run on CPU)
 
@@ -77,23 +79,35 @@ on CPU (`results/torchdsp_metrics.json`: `device: cpu`, `benchmark_device: cuda`
   power-of-two row truncation); figure now shows the run's own periodogram (provenance);
   macros never mislabel GPU timings as CPU.
 
-## Benchmarks (same code, same venv, torch 2.12.1+rocm7.1, RX 7600 XT vs Ryzen CPU)
+## Benchmarks (single session 2026-08-25, one invocation, both columns; hardware introspected)
+
+Superseding note: the table this section carried before 2026-08-25 (chirp 1.57/1.97, ST
+2.96/7.85, FFA 6.82/0.65) was one of THREE mutually inconsistent number sets the round-7
+referee found (see below); none matched the committed JSON. The table below is from the
+single `--benchmark-only` session on the ROCm venv, whose numbers ARE the committed JSON, with
+hardware strings from torch/platform introspection (`AMD Radeon RX 7600 XT, torch
+2.12.1+rocm7.1` vs `x86_64` CPU, same interpreter, same venv).
 
 | kernel | CPU | GPU | verdict |
 |---|---|---|---|
-| chirp (64 ch × 1M samples) | 1.57 s | 1.97 s | ~parity: transfer/plan-bound at this size; f64-phase→wrapped-f32 trick made CPU 2.4× faster too |
-| SumThreshold2d (8192×256) | 2.96 s | 7.85 s | **GPU slower** — per-series host loop (the torch-fdmt wall); batched variant is stated future work |
-| FFA (2²² samples, 64 periods) | 6.82 s | 0.65 s | **10.5× GPU** — the gather merges vectorise fully |
+| chirp (64 ch × 1M samples) | 1.73 s | 2.12 s | ~parity (GPU 0.8×): transfer/plan-bound at this size |
+| SumThreshold2d (8192×256) | 3.01 s | 7.49 s | **GPU slower** — per-series host loop (the torch-fdmt wall); batched variant is stated future work |
+| FFA (2²² samples, 64 periods) | 6.88 s | 0.65 s | **10.6× GPU** (derived macro `\tdRealSpeedupFfa`) — the gather merges vectorise fully |
 
-The suite's honest headline mirrors torch-fdmt's: portability is delivered (identical results
-on ROCm with zero code changes); speed is kernel-shape-dependent, and we say which shapes win.
+Portability is now measured, not asserted: the same session re-ran the full offline kernel
+suite on the ROCm device and committed it as `cross_device_check` — SK max diff 1.5e-14,
+ST sequential byte-equal to the oracle, parallel Jaccard 0.949, FFA 233.7, dedisp round trips
+0.995 — identical to the CPU values.
 
 ## Reproduce
 
-CPU: `uv run --extra fdmt --extra voyager python -m jansky_research.torchdsp --benchmark --out .`
-GPU: `PYTHONPATH=src:../jansky/src ~/.venvs/rocm-test/bin/python -m jansky_research.torchdsp
---device cuda --benchmark --out .` (pinned torch 2.12.1+rocm7.1; h5py+matplotlib in the venv).
-Offline CI leg: `--offline`.
+CPU science legs: `uv run --extra fdmt --extra voyager python -m jansky_research.torchdsp --out .`
+Benchmark (single session, both columns + cross-device check, merged via
+`preserve_live_results`): `PYTHONPATH=src:../jansky/src ~/.venvs/rocm-test/bin/python -m
+jansky_research.torchdsp --benchmark-only --device cuda --out .`
+(pinned torch 2.12.1+rocm7.1; h5py+matplotlib in the venv). Offline CI leg: `--offline`.
+Note the old GPU reproduce command (`--device cuda --benchmark --out .`, no `--benchmark-only`)
+would re-run the science legs on the GPU and relabel them — the trap that invited the splice.
 
 ## Full referee round (2026-08-25): MAJOR REVISION, 17 findings, two BLOCKERs
 
@@ -156,3 +170,53 @@ the 10×; dm_fitb 556.1104 ✓; file sizes ✓; `\software{}` cites both toolkit
 columns, derived speedup macros), run it once in a single ROCm session — that alone closes
 both blockers, names the CPU, and reconciles this file and the README. The ROCm offline run
 and the conjugate-sign trial in the same session turn both central claims into measurements.
+
+**Status: RESOLVED (2026-08-25).** Both blockers closed by making the benchmark producible and
+producing it; every "control arm never recorded" MAJOR got its arm in the same two runs.
+
+**Blocker 1 (spliced benchmark):** a `--benchmark-only` mode now computes both timing columns
+in one interpreter session, introspects the hardware strings for BOTH devices (the fields no
+code wrote are now written only by code), and merges through `preserve_live_results` so the
+`_merge` record documents any cross-run composition. Run once on the ROCm venv: chirp
+1.73/2.12 s, ST 3.01/7.49 s, FFA 6.88/0.65 s. The three inconsistent CPU sets are reconciled:
+this file and the README now carry the committed numbers, with the old table marked superseded.
+
+**Blocker 2 (hand-typed 10x):** `\tdRealSpeedup{Ffa,St,Chirp}` are derived in `_write_macros`
+from the two committed timings and used in the abstract and §5 (FFA 10.6x). No ratio is typed.
+
+**MAJORs:**
+- Conjugate-sign trial run: S/N 1.4 with the conjugate kernel vs 4.0 with the shipped sign at
+  the catalogue DM — "anchored empirically" is now a measurement (`chime_snr_conjugate_sign`).
+- The chirp is checked against the cold-plasma law itself (`chirp_group_delay_residual`: max
+  1.2e-8 samples across the channel — fails loudly for a wrong constant/exponent), and the
+  round trip now also runs through `dedisperse_channelized`, the shipped wrapped-complex64
+  path (0.995 energy re-concentration on both paths). The abstract scopes the 99.5% as a
+  numerical-precision bound.
+- The Crab null has a selection function: the same search volume on pure noise gives S/N 5.0
+  (so the 5.2 "peak" is the measured noise level, as the referee estimated), and an injected
+  pulse train at the published period into the real dedispersed series is recovered only from
+  2.0 sigma per pulse (`crab_injection_ladder_sigma`). "The data length is the limit" is now
+  a statement with evidence. Duration/tsamp/counts emitted (2.097 s, 512 us, 4096 samples).
+- ST agreement swept (thr 3.0/3.5/4.0 x iter 1/2): Jaccard 0.88-0.97, degrading with
+  occupancy and iterations as the mechanism predicts; the symmetric difference split by
+  direction (synthetic: 54/51 balanced; Parkes: 4537 par-only vs 2569 cpu-only — the parallel
+  mode over-flags, data loss not missed RFI).
+- Portability measured: the same ROCm session re-ran the offline kernel suite on the GPU and
+  committed `cross_device_check` (identical to CPU). §3 now cites it; the old "not measured
+  here" concession and this file's unsupported "identical results" claim are both replaced by
+  the measurement.
+- CHIME argmax committed per trial DM (`chime_peak_sample_vs_dm`): off-catalogue maxima fall
+  at unrelated positions (noise excursions in trials whose ~7 ms residual smear buries the
+  burst); the paper says so and adds the referee's undersold point — at DM 556 the
+  intra-channel smear (~3-28 ms) is 1-2 orders above the 0.256 ms boxcar, so any detection at
+  all requires the coherent chirp and its sign to be right.
+
+**MINOR/NIT:** "recovers exactly (0.0 samples)" reworded to nearest-drift-grid-point with the
+grid spacing emitted (`\tdRealFfaDriftRes` = 0.0039); the S/N-gap explanation is now a check
+(predicted 0.67 vs measured 0.65, both committed); `gaffa` is a real citation
+(github.com/lintian233/gaffa, created 2026-06-12 — found and verified via the GitHub API);
+`cat2` completed (ApJS 283, 34) and `kania2026` given its published DOI (10.3847/1538-3881/
+ae0d86); the macro header now says the tdReal/tdSyn prefix labels the RUN MODE, not the
+quantity's provenance, and no longer claims a rebuild resets tdReal*; SK cited via the
+formatted `\tdRealSkMaxDiffSci`; the phase figure is "10^3-10^4 rad (band bottom to top)";
+benchmark shapes and real-leg descriptors (97 ch / 37.9 MHz / 2.097 s) all emitted from code.

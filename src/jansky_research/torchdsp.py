@@ -34,6 +34,7 @@ import numpy as np
 from jansky.constants import DM_CONST  # s MHz^2 (pc cm^-3)^-1
 
 __all__ = [
+    "chirp_group_delay_residual",
     "coherent_dedisperse",
     "dedisperse_channelized",
     "synthetic_dispersed_voltage",
@@ -42,8 +43,10 @@ __all__ = [
     "sumthreshold2d",
     "ffa_search",
     "fold_snr",
+    "hardware_string",
     "load_chime_baseband",
     "run",
+    "run_benchmark_only",
 ]
 
 CHIME_BASEBAND_LOCAL = Path("data/FRB20181231C_24366209_beamformed.h5")
@@ -105,6 +108,32 @@ def coherent_dedisperse(
     return torch.fft.ifft(spec * kernel, dim=-1).to(torch.complex64)
 
 
+def chirp_group_delay_residual(
+    dm: float = 556.0, f0_mhz: float = 400.0, *, chan_bw_mhz: float = CHIME_CHAN_BW_MHZ
+) -> dict:
+    r"""Check the chirp against the cold-plasma dispersion law it claims to implement.
+
+    The round-trip validation composes :func:`_chirp_phase` with its own negation, so it can
+    never detect a wrong dispersion constant, frequency exponent, or band convention. This
+    can: the chirp's numerical group delay :math:`\tau(f)=(1/2\pi)\,d\phi/df` must equal the
+    relative cold-plasma delay :math:`k_\mathrm{DM}\,\mathrm{DM}\,(\nu^{-2}-f_0^{-2})` at
+    every offset across the channel. Returns the max absolute residual in microseconds and
+    in complex samples at ``chan_bw_mhz``.
+    """
+    f = np.linspace(-chan_bw_mhz / 2, chan_bw_mhz / 2, 4097)
+    df = f[1] - f[0]
+    phi = _chirp_phase(dm, f, f0_mhz)
+    tau_num_us = np.gradient(phi, df) / (2.0 * np.pi)  # rad/MHz -> us
+    tau_law_us = -1.0e6 * DM_CONST * dm * ((f0_mhz + f) ** -2 - f0_mhz**-2.0)
+    resid_us = float(np.max(np.abs(tau_num_us - tau_law_us)[1:-1]))  # gradient edges excluded
+    return {
+        "max_resid_us": resid_us,
+        "max_resid_samples": resid_us * chan_bw_mhz,  # 1/chan_bw us per complex sample
+        "dm": dm,
+        "f0_mhz": f0_mhz,
+    }
+
+
 def dedisperse_channelized(
     voltages: Any,
     dm: float,
@@ -112,6 +141,7 @@ def dedisperse_channelized(
     *,
     chan_bw_mhz: float,
     ref_freq_mhz: float | None = None,
+    conjugate: bool = False,
     device: str = "cpu",
 ) -> Any:
     """Coherent (intra-channel) + integer-sample (inter-channel) dedispersion of (nchan, ntime).
@@ -123,7 +153,9 @@ def dedisperse_channelized(
     discard region) and the inter-channel gather are CIRCULAR --- energy within a dispersion
     sweep of the buffer edge wraps around, unlike dspsr's discard-region handling. Fine for
     a burst captured mid-buffer (the shipped legs); a wideband streaming pipeline would need
-    overlap-save on top.
+    overlap-save on top. ``conjugate=True`` applies the opposite chirp sign (the other
+    backend sideband convention) -- used by the real leg to measure, not assert, which sign
+    dedisperses CHIME baseband.
     """
     torch = _require_torch()
     freqs = np.asarray(freqs_mhz, dtype=np.float64)
@@ -152,6 +184,8 @@ def dedisperse_channelized(
         # run in complex64, where consumer GPUs (1/32-rate f64) actually shine, at < 1e-6 rad
         # phase error
         phase = 2.0 * np.pi * 1.0e6 * DM_CONST * dm * fb[None, :] ** 2 / (f0**2 * (f0 + fb))
+        if conjugate:
+            phase = -phase
         phase32 = torch.remainder(phase, 2.0 * np.pi).to(torch.float32)
         kernel = torch.polar(torch.ones_like(phase32), phase32)  # complex64
         spec = torch.fft.fft(v[a:b].to(torch.complex64), dim=-1)
@@ -483,9 +517,73 @@ def benchmark(device: str = "cpu", *, n_chan: int = 64, n_time: int = 1 << 20) -
         "device": device,
         "chirp_s": round(t_chirp, 2),
         "chirp_msamples": round(n_chan * n_time / 1e6, 1),
+        "chirp_n_chan": n_chan,
+        "chirp_n_time": n_time,
         "sumthreshold_s": round(t_st, 2),
+        "st_shape": [8192, 256],
         "ffa_s": round(t_ffa, 2),
+        "ffa_n_samples": 1 << 22,
+        "ffa_n_base_periods": 64,
     }
+
+
+def hardware_string(device: str = "cpu") -> str:
+    """Hardware + torch build for one device, from torch introspection -- never typed by hand.
+
+    A hand-entered hardware string is inherited by future runs through the results merge and
+    misattributes them (the referee-caught failure on both this slice and ``torchfdmt``).
+    """
+    try:
+        import platform
+
+        torch = _require_torch()
+
+        if device != "cpu" and torch.cuda.is_available():
+            return f"{torch.cuda.get_device_name(0)}, torch {torch.__version__}"
+        return f"{platform.processor() or platform.machine()}, torch {torch.__version__}"
+    except Exception:  # pragma: no cover - introspection is best-effort
+        return "unknown"
+
+
+def run_benchmark_only(out: str = ".", *, device: str = "cpu") -> dict:  # pragma: no cover
+    """One single-session benchmark producing BOTH timing columns, merged into the real file.
+
+    This is the command that makes the committed benchmark table producible: the GPU and CPU
+    legs run back-to-back in the same interpreter, the hardware strings for both come from
+    introspection, and `preserve_live_results` merges the block into the science metrics with
+    a ``_merge`` record instead of a hand-edit. On a GPU device it also re-runs the offline
+    kernel checks on that device and commits the cross-device comparison -- the portability
+    claim measured. Touches no science key.
+    """
+    torch = _require_torch()
+
+    if device != "cpu":
+        benchmark(device, n_chan=4, n_time=1 << 16)  # warm-up: first call pays GPU init
+    bench_dev = benchmark(device)
+    bench_cpu = benchmark("cpu") if device != "cpu" else bench_dev
+    payload: dict = {
+        "is_real": True,  # merges as real without touching the science `source` string
+        "benchmark": bench_dev,
+        "benchmark_cpu": bench_cpu,
+        "benchmark_device": device,
+        "benchmark_hardware": hardware_string(device),
+        "benchmark_hardware_cpu": hardware_string("cpu"),
+        "benchmark_torch": str(torch.__version__),
+        "benchmark_single_session": True,
+    }
+    if device != "cpu":
+        gpu_checks = {
+            k: v for k, v in _kernel_checks(device).items() if k not in ("ffa_curve", "device")
+        }
+        payload["cross_device_check"] = {"device": device, **gpu_checks}
+
+    op = Path(out)
+    (op / "results").mkdir(parents=True, exist_ok=True)
+    from .report import write_results
+
+    merged = write_results(payload, op / "results" / "torchdsp_metrics.json")
+    _write_macros(merged, op / "papers" / "torchdsp" / "generated" / "macros.tex")
+    return merged
 
 
 # --------------------------------------------------------------------------------------------
@@ -532,17 +630,39 @@ def _dedisp_recovery_metrics(device: str) -> dict:
     syn = synthetic_dispersed_voltage()
     n = syn["voltage"].size
     power_before = np.abs(syn["voltage"]) ** 2
+
+    def _peak_and_frac(power_after: np.ndarray) -> tuple[int, float]:
+        peak = int(np.argmax(power_after))
+        w = 4  # energy within +-4 samples of the impulse, as a fraction of total
+        frac = float(
+            power_after[max(0, peak - w) : peak + w + 1].sum() / max(power_after.sum(), 1e-12)
+        )
+        return peak, frac
+
     v_fixed = coherent_dedisperse(
         syn["voltage"], syn["dm"], syn["f0_mhz"], chan_bw_mhz=syn["chan_bw_mhz"], device=device
     )
-    power_after = (v_fixed.abs() ** 2).cpu().numpy()
-    peak = int(np.argmax(power_after))
-    # energy within +-4 samples of the impulse, as a fraction of total (impulse fraction)
-    w = 4
-    frac = float(power_after[max(0, peak - w) : peak + w + 1].sum() / max(power_after.sum(), 1e-12))
+    peak, frac = _peak_and_frac((v_fixed.abs() ** 2).cpu().numpy())
+    # The same round trip through the SHIPPED path: every science and benchmark result uses
+    # dedisperse_channelized (phase wrapped mod 2pi, complex64), not coherent_dedisperse
+    # (complex128), so the validated path must be the shipped one.
+    v_chan = dedisperse_channelized(
+        syn["voltage"][None, :],
+        syn["dm"],
+        np.array([syn["f0_mhz"]]),
+        chan_bw_mhz=syn["chan_bw_mhz"],
+        device=device,
+    )
+    peak_c, frac_c = _peak_and_frac((v_chan[0].abs() ** 2).cpu().numpy())
+    gd = chirp_group_delay_residual(dm=syn["dm"], f0_mhz=syn["f0_mhz"])
     return {
         "peak_offset_samples": abs(peak - syn["impulse_index"]),
         "reconcentrated_energy_frac": round(frac, 3),
+        "peak_offset_samples_channelized": abs(peak_c - syn["impulse_index"]),
+        "reconcentrated_energy_frac_channelized": round(frac_c, 3),
+        # The chirp vs the cold-plasma law itself -- the check the self-composing round trip
+        # cannot perform (it would pass with a wrong dispersion constant).
+        "group_delay_max_resid_samples": float(f"{gd['max_resid_samples']:.2e}"),
         "dispersed_peak_frac": round(
             float(np.sort(power_before)[-9:].sum() / max(power_before.sum(), 1e-12)),
             3,
@@ -551,14 +671,47 @@ def _dedisp_recovery_metrics(device: str) -> dict:
     }
 
 
-def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
-    """Offline: per-kernel recover-a-knowns + oracle matches; real: CHIME + Crab legs."""
+def _mask_agreement(mask_par: np.ndarray, mask_cpu: np.ndarray) -> dict:
+    """Jaccard plus its DIRECTION: Jaccard is symmetric, but over-flagging (harmless data
+    loss) and under-flagging (missed RFI) are operationally different for a user."""
+    inter = int(np.logical_and(mask_par, mask_cpu).sum())
+    union = int(np.logical_or(mask_par, mask_cpu).sum())
+    return {
+        "jaccard": round(float(inter / union) if union else 1.0, 4),
+        "n_par_only": int(np.logical_and(mask_par, ~mask_cpu).sum()),  # over-flagged
+        "n_cpu_only": int(np.logical_and(~mask_par, mask_cpu).sum()),  # under-flagged
+    }
 
+
+def _st_agreement_sweep(dyn: np.ndarray, device: str) -> dict:
+    """Parallel-vs-sequential SumThreshold agreement across the settings that grow divergence.
+
+    The divergence is generated by flags taking effect mid-pass, so it must grow with flag
+    occupancy and with ``n_iter``; the shipped default (threshold 3.5, n_iter 1) is the
+    configuration in which it is smallest. This sweep bounds it elsewhere.
+    """
+    from jansky import rfi as rfi_cpu
+
+    out = {}
+    for thr in (3.0, 3.5, 4.0):
+        for n_iter in (1, 2):
+            mask_cpu = rfi_cpu.sumthreshold2d(dyn, threshold=thr, n_iter=n_iter)
+            mask_par = sumthreshold2d(dyn, threshold=thr, n_iter=n_iter, device=device)
+            out[f"thr{thr}_iter{n_iter}"] = _mask_agreement(mask_par, mask_cpu)
+    return out
+
+
+def _kernel_checks(device: str) -> dict:
+    """The three per-kernel recover-a-knowns + oracle matches (device-parameterised).
+
+    Factored out of :func:`run` so a GPU session can run the identical checks and commit a
+    cross-device comparison -- the paper's portability claim measured, not asserted.
+    """
     from jansky import rfi as rfi_cpu
 
     rng = np.random.default_rng(0)
 
-    # Kernel A: dispersed-impulse round trip
+    # Kernel A: dispersed-impulse round trip (both code paths) + group-delay law check
     dedisp = _dedisp_recovery_metrics(device)
 
     # Kernel B: torch SK + SumThreshold vs the jansky.rfi CPU oracles on synthetic RFI
@@ -575,11 +728,10 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
     mask_cpu = rfi_cpu.sumthreshold2d(dyn)
     mask_par = sumthreshold2d(dyn, device=device)
     seq_equal = bool(np.array_equal(mask_seq, mask_cpu))
-    inter = np.logical_and(mask_par, mask_cpu).sum()
-    union = np.logical_or(mask_par, mask_cpu).sum()
-    jaccard = float(inter / union) if union else 1.0
+    agree = _mask_agreement(mask_par, mask_cpu)
     line_caught = bool(mask_par[:, 17].mean() > 0.9)
     burst_caught = bool(mask_par[300:308, :].mean() > 0.9)
+    st_sweep = _st_agreement_sweep(dyn, device)
 
     # Kernel C: FFA recovers an injected period; brute-fold oracle agrees
     p_true = 233.7  # samples
@@ -590,25 +742,43 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
     ffa = ffa_search(ts, pmin_samples=200, pmax_samples=270, device=device)
     oracle_snr = fold_snr(ts, p_true, device=device)
     ffa_err = abs(ffa["period_samples"] - p_true)
-    ffa_curve = ffa["curve"]  # handed to the figure so it shows THIS run's periodogram
-
-    metrics: dict = {
-        "source": "synthetic per-kernel recover-a-knowns",
-        "is_real": not offline,
+    m2 = int(ffa.get("n_rows", 2))
+    m_full = n // int(p_true)
+    return {
         "device": device,
         "dedisp": dedisp,
         "sk_max_diff": sk_max_diff,
         "sumthreshold_sequential_equals_oracle": seq_equal,
-        "sumthreshold_parallel_jaccard": round(jaccard, 4),
+        "sumthreshold_parallel_jaccard": agree["jaccard"],
+        "sumthreshold_par_only_flags": agree["n_par_only"],
+        "sumthreshold_cpu_only_flags": agree["n_cpu_only"],
+        "sumthreshold_agreement_sweep": st_sweep,
         "rfi_line_caught": line_caught,
         "rfi_burst_caught": burst_caught,
         "ffa_period_true": p_true,
         "ffa_period_found": round(ffa["period_samples"], 2),
         "ffa_period_err_samples": round(ffa_err, 2),
+        # the injected 233.7 is NOT on the drift grid: candidates are p + k/(m2-1), so the
+        # honest statement is "to the nearest grid point", never "exactly"
+        "ffa_drift_resolution_samples": round(1.0 / max(m2 - 1, 1), 4),
         "ffa_snr": round(ffa["snr"], 1),
         "fold_oracle_snr": round(oracle_snr, 1),
-        "ffa_curve": ffa_curve,  # array; stays out of the JSON (json-safe drops it)
+        # the FFA/oracle S/N gap, predicted (power-of-two row truncation sqrt(m2/m) times
+        # ~2-bin smearing 1/sqrt(2)) vs measured -- an assertion in the paper becomes a check
+        "ffa_snr_ratio_predicted": round(float(np.sqrt(m2 / m_full) / np.sqrt(2.0)), 2),
+        "ffa_snr_ratio_measured": round(float(ffa["snr"] / max(oracle_snr, 1e-9)), 2),
+        "ffa_curve": ffa["curve"],  # array; stays out of the JSON (json-safe drops it)
     }
+
+
+def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: bool = False) -> dict:
+    """Offline: per-kernel recover-a-knowns + oracle matches; real: CHIME + Crab legs."""
+
+    metrics: dict = {
+        "source": "synthetic per-kernel recover-a-knowns",
+        "is_real": not offline,
+    }
+    metrics.update(_kernel_checks(device))
 
     if not offline:  # pragma: no cover - needs the local CANFAR file + network Crab fetch
         metrics.update(_real_legs(device))
@@ -619,6 +789,10 @@ def run(out: str = ".", *, offline: bool = True, device: str = "cpu", bench: boo
         metrics["benchmark"] = benchmark(device)
         if device != "cpu":
             metrics["benchmark_cpu"] = benchmark("cpu")  # same venv, same code, CPU reference
+            metrics["benchmark_hardware_cpu"] = hardware_string("cpu")
+        metrics["benchmark_device"] = device
+        metrics["benchmark_hardware"] = hardware_string(device)
+        metrics["benchmark_single_session"] = True
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -647,24 +821,45 @@ def _real_legs(device: str) -> dict:  # pragma: no cover - real data + network
     v1 = bb["voltages"][:, 1, :]
     freqs = bb["freqs_mhz"]
 
-    def burst_snr(dm: float) -> float:
+    def burst_snr(dm: float, *, conjugate: bool = False) -> tuple[float, int]:
         # dedisperse each polarization coherently, sum the powers (total intensity)
-        d0 = dedisperse_channelized(v0, dm, freqs, chan_bw_mhz=CHIME_CHAN_BW_MHZ, device=device)
-        d1 = dedisperse_channelized(v1, dm, freqs, chan_bw_mhz=CHIME_CHAN_BW_MHZ, device=device)
+        d0 = dedisperse_channelized(
+            v0, dm, freqs, chan_bw_mhz=CHIME_CHAN_BW_MHZ, conjugate=conjugate, device=device
+        )
+        d1 = dedisperse_channelized(
+            v1, dm, freqs, chan_bw_mhz=CHIME_CHAN_BW_MHZ, conjugate=conjugate, device=device
+        )
         power = (d0.abs() ** 2 + d1.abs() ** 2).sum(dim=0)
-        # 100-sample (0.256 ms) boxcar S/N
+        # 100-sample (0.256 ms) boxcar S/N; the argmax is recorded so the committed evidence
+        # can distinguish "the burst sharpens at the catalogue DM" from "the largest noise
+        # excursion happened to be biggest at that trial" (the boxcar max is a search)
         box = torch.nn.functional.avg_pool1d(power[None, None, :], 100, stride=1)[0, 0]
         med = box.median()
         mad = (box - med).abs().median() * 1.4826
-        return float((box.max() - med) / torch.clamp(mad, min=1e-12))
+        snr = float((box.max() - med) / torch.clamp(mad, min=1e-12))
+        return snr, int(torch.argmax(box))
 
     dms = [0.0, dm_cat - 20.0, dm_cat - 5.0, dm_cat, dm_cat + 5.0, dm_cat + 20.0]
-    snrs = {f"{d:.1f}": round(burst_snr(d), 1) for d in dms}
+    snrs: dict[str, float] = {}
+    peaks: dict[str, int] = {}
+    for d in dms:
+        s_val, arg = burst_snr(d)
+        snrs[f"{d:.1f}"] = round(s_val, 1)
+        peaks[f"{d:.1f}"] = arg
     out["chime_dm_catalogue"] = round(dm_cat, 2)
     out["chime_snr_vs_dm"] = snrs
+    out["chime_peak_sample_vs_dm"] = peaks
     out["chime_peaks_at_catalogue_dm"] = bool(
         snrs[f"{dm_cat:.1f}"] >= max(v2 for k2, v2 in snrs.items())
     )
+    # The chirp-sign anchor, measured rather than asserted: the conjugate kernel at the same
+    # DM must NOT sharpen the burst, or the "anchored empirically" sentence has no arm.
+    s_conj, _ = burst_snr(dm_cat, conjugate=True)
+    out["chime_snr_conjugate_sign"] = round(s_conj, 1)
+    # descriptors, emitted rather than hand-typed in prose
+    out["chime_n_chan_good"] = int(len(freqs))
+    out["chime_bandwidth_mhz"] = round(float(len(freqs) * CHIME_CHAN_BW_MHZ), 1)
+    out["chime_n_time"] = int(v0.shape[-1])
 
     # --- Crab filterbank: real-RFI masks + FFA period re-find (dedispersed at the Crab DM)
     import urllib.request
@@ -679,11 +874,17 @@ def _real_legs(device: str) -> dict:  # pragma: no cover - real data + network
         urllib.request.urlretrieve(CRAB_FIL_URL, fil)
     dyn, rfreqs, hdr = read_sigproc(fil)  # (n_time, n_chan), MHz, header
     dt = float(hdr["tsamp"])
+    # descriptors: the paper's "2.1 s" was hand-typed; emit what the file actually holds
+    out["crab_tsamp_us"] = round(dt * 1e6, 3)
+    out["crab_n_samples"] = int(dyn.shape[0])
+    out["crab_n_chan"] = int(dyn.shape[1])
+    out["crab_duration_s"] = round(dyn.shape[0] * dt, 3)
     mask_cpu = rfi_cpu.sumthreshold2d(dyn[:2048])
     mask_par = sumthreshold2d(dyn[:2048], device=device)
-    inter = np.logical_and(mask_par, mask_cpu).sum()
-    union = np.logical_or(mask_par, mask_cpu).sum()
-    out["crab_mask_jaccard"] = round(float(inter / union) if union else 1.0, 4)
+    agree = _mask_agreement(mask_par, mask_cpu)
+    out["crab_mask_jaccard"] = agree["jaccard"]
+    out["crab_mask_par_only_flags"] = agree["n_par_only"]
+    out["crab_mask_cpu_only_flags"] = agree["n_cpu_only"]
     f_top = float(np.max(rfreqs))
     ded = np.zeros(dyn.shape[0], dtype=np.float32)
     for c, fc in enumerate(rfreqs):  # incoherent dedispersion at the Crab DM, then sum
@@ -695,12 +896,46 @@ def _real_legs(device: str) -> dict:  # pragma: no cover - real data + network
     out["crab_period_found_ms"] = round(ffa["period_samples"] * dt * 1e3, 3)
     out["crab_ffa_snr"] = round(ffa["snr"], 1)
     out["crab_period_published_ms"] = 33.7
-    # honesty diagnostics: the FFA's period resolution at this (2.1 s) data length, and the
+    # honesty diagnostics: the FFA's period resolution at this data length, and the
     # brute-fold oracle at the published period -- if that too is marginal, the file supports
     # only a marginal periodicity detection and the synthetics carry the algorithm validation
     m2 = ffa.get("n_rows", 2)
     out["crab_ffa_resolution_ms"] = round((p_crab / dt) / max(m2 - 1, 1) * dt * 1e3, 2)
     out["crab_fold_snr_at_published"] = round(fold_snr(ded, p_crab / dt, device=device), 1)
+    # The null's threshold, measured: the same search volume on pure noise. Without this,
+    # "reported as not significant" rests on a threshold that exists nowhere in the evidence.
+    rng = np.random.default_rng(1)
+    noise = rng.standard_normal(ded.shape[0]).astype(np.float32)
+    ffa_noise = ffa_search(noise, pmin_samples=pmin, pmax_samples=pmax, device=device)
+    out["crab_noise_ffa_snr"] = round(ffa_noise["snr"], 1)
+    # The null's selection function, measured: inject a pulse train at the published period
+    # into the REAL dedispersed series at a ladder of amplitudes (units of the series' robust
+    # sigma) and record the weakest the FFA recovers -- that is what the 2.1-s file could
+    # and could not have seen.
+    sigma = float(1.4826 * np.median(np.abs(ded - np.median(ded))))
+    p_samples = p_crab / dt
+    res_ms = out["crab_ffa_resolution_ms"]
+    ladder: dict[str, dict] = {}
+    min_amp = None
+    for amp in (0.1, 0.2, 0.5, 1.0, 2.0, 5.0):
+        inj = ded.copy()
+        idx = np.arange(0, inj.shape[0], p_samples).astype(int)
+        inj[idx[idx < inj.shape[0]]] += amp * sigma
+        f_inj = ffa_search(inj, pmin_samples=pmin, pmax_samples=pmax, device=device)
+        period_ms = f_inj["period_samples"] * dt * 1e3
+        recovered = bool(
+            abs(period_ms - out["crab_period_published_ms"]) < 2.0 * res_ms
+            and f_inj["snr"] > out["crab_noise_ffa_snr"] + 2.0
+        )
+        ladder[str(amp)] = {
+            "period_ms": round(period_ms, 3),
+            "snr": round(f_inj["snr"], 1),
+            "recovered": recovered,
+        }
+        if recovered and min_amp is None:
+            min_amp = amp
+    out["crab_injection_ladder_sigma"] = ladder
+    out["crab_injection_min_amp_sigma"] = min_amp
     return out
 
 
@@ -740,51 +975,108 @@ def _write_macros(m: dict, path: str | Path) -> None:
             return "--"
         return "--" if isinstance(v, float) and not np.isfinite(v) else str(v)
 
+    def g_sci(key: str, src: dict | None = None) -> str:
+        """A small float as a LaTeX math body, e.g. 1.5e-14 -> ``1.5\\times10^{-14}``."""
+        v = (src if src is not None else m).get(key)
+        if v is None or (isinstance(v, float) and not np.isfinite(v)):
+            return "--"
+        mant, exp = f"{float(v):.1e}".split("e")
+        return rf"{mant}\times10^{{{int(exp)}}}"
+
     pref = "tdReal" if m.get("is_real") else "tdSyn"
+    dedisp = m.get("dedisp") or {}
+    sweep = m.get("sumthreshold_agreement_sweep") or {}
+    sweep_j = [v.get("jaccard") for v in sweep.values() if v.get("jaccard") is not None]
+    m = dict(m)
+    if sweep_j:
+        m["st_sweep_jaccard_lo"] = min(sweep_j)
+        m["st_sweep_jaccard_hi"] = max(sweep_j)
+    snrs = m.get("chime_snr_vs_dm") or {}
+    cat = m.get("chime_dm_catalogue")
+    off = [v for k, v in snrs.items() if k != "0.0" and (cat is None or k != f"{cat:.1f}")]
+    if off:
+        m["chime_off_dm_max_snr"] = max(off)
     lines = [
         "% Auto-generated by jansky_research.torchdsp._write_macros -- do not edit.",
-        "% Synthetic (tdSyn*) and real (tdReal*) namespaces are BOTH always emitted; the",
-        "% inactive namespace holds placeholders, so synthetic numbers can never masquerade",
-        "% under tdReal* (an offline rebuild resets tdReal* to placeholders by design).",
-        rf"\newcommand{{\tdSource}}{{{m['source']}}}",
-        rf"\newcommand{{\tdDevice}}{{{m['device']}}}",
+        "% Synthetic (tdSyn*) and real (tdReal*) namespaces are both always emitted. The",
+        "% prefix labels the RUN MODE that produced the value, not the quantity's own",
+        "% provenance: kernel-oracle checks are synthetic measurements in either mode, and",
+        "% the prose must say so where it cites them. The inactive namespace is emitted as",
+        "% placeholders; preserve_live_macros then keeps any real value already on disk and",
+        "% refuses synthetic-over-real downgrades (it does NOT reset tdReal* on a rebuild).",
+        rf"\newcommand{{\tdSource}}{{{m.get('source', '--')}}}",
+        rf"\newcommand{{\tdDevice}}{{{m.get('device', '--')}}}",
+        # benchmark provenance: introspected, never typed (underscores TeX-escaped)
+        rf"\newcommand{{\tdBenchHwGpu}}{{{g('benchmark_hardware').replace('_', chr(92) + '_')}}}",
+        rf"\newcommand{{\tdBenchHwCpu}}{{{g('benchmark_hardware_cpu').replace('_', chr(92) + '_')}}}",
     ]
     keys = (
         ("SkMaxDiff", "sk_max_diff"),
         ("StJaccard", "sumthreshold_parallel_jaccard"),
+        ("StJaccardLo", "st_sweep_jaccard_lo"),
+        ("StJaccardHi", "st_sweep_jaccard_hi"),
+        ("StParOnly", "sumthreshold_par_only_flags"),
+        ("StCpuOnly", "sumthreshold_cpu_only_flags"),
         ("FfaFound", "ffa_period_found"),
         ("FfaErr", "ffa_period_err_samples"),
+        ("FfaDriftRes", "ffa_drift_resolution_samples"),
         ("FfaSnr", "ffa_snr"),
         ("OracleSnr", "fold_oracle_snr"),
+        ("FfaRatioPred", "ffa_snr_ratio_predicted"),
+        ("FfaRatioMeas", "ffa_snr_ratio_measured"),
         ("CrabPeriodMs", "crab_period_found_ms"),
         ("CrabFoldPub", "crab_fold_snr_at_published"),
         ("CrabJaccard", "crab_mask_jaccard"),
+        ("CrabParOnly", "crab_mask_par_only_flags"),
+        ("CrabCpuOnly", "crab_mask_cpu_only_flags"),
+        ("CrabNoiseSnr", "crab_noise_ffa_snr"),
+        ("CrabInjMin", "crab_injection_min_amp_sigma"),
+        ("CrabDur", "crab_duration_s"),
         ("ChimeDm", "chime_dm_catalogue"),
+        ("ChimeOffMax", "chime_off_dm_max_snr"),
+        ("ChimeConjSnr", "chime_snr_conjugate_sign"),
+        ("ChimeNchan", "chime_n_chan_good"),
+        ("ChimeBw", "chime_bandwidth_mhz"),
     )
     bench_keys = (("Chirp", "chirp_s"), ("St", "sumthreshold_s"), ("Ffa", "ffa_s"))
     for ns in ("tdSyn", "tdReal"):
         live = ns == pref
         for macro, key in keys:
             lines.append(rf"\newcommand{{\{ns}{macro}}}{{{g(key) if live else '--'}}}")
+        lines.append(
+            rf"\newcommand{{\{ns}SkMaxDiffSci}}{{{g_sci('sk_max_diff') if live else '--'}}}"
+        )
+        lines.append(
+            rf"\newcommand{{\{ns}GroupDelayResid}}"
+            rf"{{{g_sci('group_delay_max_resid_samples', dedisp) if live else '--'}}}"
+        )
+        # `device` labels the SCIENCE leg; `benchmark_device` labels the timing run.
+        # They differ legitimately: the real CHIME leg ran on CPU while the benchmark was
+        # measured on the RX 7600 XT. Overloading one field for both would either mislabel
+        # CPU science as GPU or discard a real GPU measurement.
+        bench_dev = m.get("benchmark_device") or m.get("device")
+        gpu_src = m.get("benchmark") if bench_dev != "cpu" else None
+        # the CPU column comes from benchmark_cpu, or from `benchmark` ONLY when the run
+        # itself was on CPU -- never silently label GPU timings as CPU
+        cpu_src = m.get("benchmark_cpu") or (
+            m.get("benchmark") if m.get("device") == "cpu" else None
+        )
         for macro, key in bench_keys:
-            # `device` labels the SCIENCE leg; `benchmark_device` labels the timing run.
-            # They differ legitimately: the real CHIME leg ran on CPU while the benchmark was
-            # measured on the RX 7600 XT. Overloading one field for both would either mislabel
-            # CPU science as GPU or discard a real GPU measurement.
-            bench_dev = m.get("benchmark_device") or m.get("device")
-            gpu_src = m.get("benchmark") if bench_dev != "cpu" else None
             gpu = (gpu_src or {}).get(key) if live else None
-            # the CPU column comes from benchmark_cpu, or from `benchmark` ONLY when the run
-            # itself was on CPU -- never silently label GPU timings as CPU
-            cpu_src = m.get("benchmark_cpu") or (
-                m.get("benchmark") if m.get("device") == "cpu" else None
-            )
             cpu = (cpu_src or {}).get(key) if live else None
             lines.append(
                 rf"\newcommand{{\{ns}Bench{macro}Gpu}}{{{gpu if gpu is not None else '--'}}}"
             )
             lines.append(
                 rf"\newcommand{{\{ns}Bench{macro}Cpu}}{{{cpu if cpu is not None else '--'}}}"
+            )
+            # the speedup DERIVED from the two committed timings, so the abstract can never
+            # again carry a hand-typed ratio that contradicts its own parenthetical
+            speedup = None
+            if gpu is not None and cpu is not None and float(gpu) > 0:
+                speedup = round(float(cpu) / float(gpu), 1)
+            lines.append(
+                rf"\newcommand{{\{ns}Speedup{macro}}}{{{speedup if speedup is not None else '--'}}}"
             )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -804,8 +1096,17 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--offline", action="store_true")
     p.add_argument("--device", default="cpu")
     p.add_argument("--benchmark", action="store_true")
+    p.add_argument(
+        "--benchmark-only",
+        action="store_true",
+        help="single-session GPU+CPU benchmark (and, on GPU, the cross-device kernel checks) "
+        "merged into the existing results file; touches no science leg",
+    )
     args = p.parse_args(argv)
-    m = run(args.out, offline=args.offline, device=args.device, bench=args.benchmark)
+    if args.benchmark_only:
+        m = run_benchmark_only(args.out, device=args.device)
+    else:
+        m = run(args.out, offline=args.offline, device=args.device, bench=args.benchmark)
     m.pop("ffa_curve", None)  # array; the JSON artifact already excludes it
     print(json.dumps(m, indent=2))
     return 0

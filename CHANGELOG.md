@@ -11,6 +11,30 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **torchdsp round-7 revision: the benchmark is producible by one command, and both central
+  claims became measurements.** A `--benchmark-only` mode computes both timing columns in one
+  interpreter session with hardware strings from torch/platform introspection, merged through
+  `preserve_live_results` -- run once on the ROCm venv: chirp 1.73/2.12 s, SumThreshold
+  3.01/7.49 s, FFA 6.88/0.65 s, with speedup macros DERIVED from the committed timings (FFA
+  10.6x; the abstract's hand-typed "10x" contradicting its own 8.42/0.65 parenthetical is
+  gone, as are the three mutually inconsistent CPU sets). Portability: the same session
+  re-ran the offline kernel suite on the GPU and committed `cross_device_check` (identical to
+  CPU) -- "device-agnostic" is now cited to a measurement. The chirp: checked against the
+  cold-plasma law directly (group-delay residual 1.2e-8 samples; the self-composing round
+  trip is scoped as a precision bound and now also runs through the shipped
+  `dedisperse_channelized` path), and the sign anchored by a conjugate-kernel trial on the
+  CHIME burst (S/N 1.4 vs 4.0). The Crab null has a selection function: same-search-volume
+  noise S/N 5.0 (the 5.2 "peak" is the noise level) and an injection ladder recovering the
+  published period only from 2.0 sigma per pulse. SumThreshold divergence swept (Jaccard
+  0.88-0.97 across thresholds/iterations) and split by direction (Parkes: the parallel mode
+  over-flags). CHIME per-trial argmax, real-leg descriptors, benchmark shapes, and the
+  intra-channel-smear argument (the leg is MORE discriminating than its S/N suggests) added;
+  FFA "exactly (0.0 samples)" restated as nearest-drift-grid-point (grid 0.0039) with the
+  S/N-gap prediction committed (0.67 vs 0.65); `gaffa` cited to its real repository; `cat2` /
+  `kania2026` bib entries completed; the tdReal/tdSyn header now says what the prefix
+  actually labels.
+
+### Changed
 - **pulsarspec round-7 revision: the selection function is quantified, and the exclusion is
   an interval, not a threshold.** The selection is restated as coverage-dominated (764 of
   2536 pulsars have any S400 vs 1676 with any S1400 -- an absent flux is no published
