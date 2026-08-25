@@ -45,8 +45,10 @@ binning/normalisation is unbiased.
   not measure new counts. The contribution is a tested, reproducible Euclidean-count pipeline plus a
   recover-a-known.
 - **Single field → cosmic variance.** One 0.06 sr cone; large-scale clustering makes the counts vary
-  field-to-field, so the 0.073 dex scatter folds in cosmic variance on top of Poisson — a wider-area or
-  multi-field run would tighten it.
+  field-to-field. (This bullet originally said "the 0.073 dex scatter folds in cosmic variance" —
+  a stale number AND the wrong physics: clustering is coherent across flux bins, so it moves the
+  NORMALISATION, measured 2026-08-25 at 1.7–2.1% from the published w(θ), while the bin-to-bin
+  scatter is Poisson ⊕ the reference fit's own 0.04-dex residual.)
 - **Faint-end systematics near the NVSS limit.** NVSS is ~50% complete near ~2.5 mJy and its 45″ beam
   resolves some extended sources into multiple catalogue components, both of which bias the lowest
   flux bins; we cut at 3.5 mJy to stay above the worst of it, but the faintest bin still carries
@@ -120,3 +122,39 @@ the computed budget — bin scatter 0.038 Poisson ⊕ 0.040 Hopkins residual = 0
 measured; cosmic variance moved to the median (2.1% ≈ 1σ); χ²/dof 2.80 → ~1.2 with the
 reference error — which forces the per-bin table, the uncertainties, and the fixed grid in on
 the way through.
+
+**Status: RESOLVED (2026-08-25).** One real re-run on the fixed grid; the agreement claim went
+from an impression to a closed budget, and every referee-side number reproduced.
+
+1. **The per-bin table is committed** (`bins` in the JSON: centre, N, normalised count, error,
+   reference, ratio, used-flag — 16 bins, 12 compared).
+2. **The binning is a fixed 0.2-dex grid anchored at the cut** (a test proves a 10-Jy appended
+   source leaves the compared bins byte-identical); with it the headline becomes
+   **1.01 ± 0.021** (Poisson bootstrap) — consistent with unity, quoted with an error at the
+   precision it has.
+3. **The scatter budget is computed and it closes**: measured 0.054 dex vs 0.034 Poisson ⊕
+   0.040 Hopkins-residual = 0.052 expected. χ² = 33.7/12 against errors alone → **8.4/12** with
+   the reference's own quoted residual folded in — "match" is now a statistic. Cosmic variance
+   moved to the normalisation where it acts: 1.65–2.09% (Monte-Carlo over this cone from the
+   published NVSS w(θ), Blake & Wall 2002 — new bib entry, Crossref-verified) + 1.16% Poisson,
+   against a measured ~1% offset from unity.
+4. **The completeness statement is measured**: the fine-bin threshold profile is committed
+   (2.1–2.5 mJy at 0.59 of reference — the referee's exact values — with the ~10–15% residual
+   into the first used bin stated in Data, not hidden), plus the cut sweep (3.5→20 mJy: ratio
+   1.008–1.012) and the annulus uniformity (±1.2%).
+5. **Component-vs-source is a bounded headline systematic**: positions now fetched, and the
+   committed FoF sweep (60/80/100″: ratio 1.006/0.994/0.979, with the blind merge over-merging
+   by construction) bounds it at ≤3%; the paper states the sample is components AND that the
+   Hopkins reference is FIRST-anchored above 2.5 mJy — both sides count components.
+6. **The fixture can fail**: a closed-form power-law test (deterministic k·S^-2.5 fluxes over a
+   known area must return k in absolute units) covers the solid-angle/S^2.5/bin-width chain —
+   the one piece of new code that previously had no coverage; the Hopkins round-trip is scoped
+   in Methods as constraining the chain, not the reference.
+7. **The slope carries an error and a comparand**: −1.90 ± 0.023 vs −1.86 for Hopkins through
+   the identical estimator/bins, with the interval dependence noted from the committed sweep.
+
+MINOR/NIT: the figure separates compared from excluded bins and dashes the reference beyond its
+1-Jy validity; "first measured by Condon (1984)" became "synthesised into evolutionary models";
+this file's 0.073-dex/cosmic-variance bullet corrected in place; the packaged arXiv abstract
+now resolves its reference attribution (\citet, not the stripped \citealt); the ~14% hand-typed
+percent dropped; the N≥5 clause states that only the 1-Jy rule binds in this field.

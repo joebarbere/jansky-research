@@ -21,23 +21,30 @@ flux per unit sky) is one of the oldest cosmological tests in radio astronomy: a
 universe gives $\mathrm{d}N/\mathrm{d}S\propto S^{-5/2}$, and the departures of the real counts from
 that law trace the cosmological evolution of the radio-source population. We build a small tested tool
 that forms the Euclidean-normalised count $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$ from a public NVSS
-\citep{condon1998} region and compares it, bin by bin, to the canonical 1.4~GHz counts (the
-\citealt{hopkins2003} polynomial fit). Applied to an \scArea~sr cone at high Galactic latitude
-(\scNsrc\ NVSS sources above \scSmin~mJy), the measured counts reproduce the Hopkins fit over
-$\sim$2.5 decades in flux (\scSmin~mJy--1~Jy, \scNbins\ bins) at a median ratio of \scRatio\ with
-\scScatter~dex of scatter. The differential slope over that range, \scSlope, is shallower than the
-Euclidean $-2.5$, the well-known sub-Euclidean behaviour of the 1.4~GHz counts first measured by
-\citet{condon1984}. This is a reproducibility/method contribution and a recover-a-known, not a new measurement:
-the pipeline and the NVSS data agree with the published counts.
+\citep{condon1998} region and compares it, bin by bin, to the polynomial fit of
+\citet{hopkins2003}. Applied to an \scArea~sr cone at high Galactic latitude (\scNsrc\ NVSS
+catalogue components above \scSmin~mJy), the measured counts match the Hopkins fit over
+$\sim$2.5 decades in flux (\scSmin~mJy--1~Jy, \scNbins\ fixed 0.2-dex bins, all committed) at a
+median ratio of $\scRatio\pm\scRatioErr$ --- consistent with unity, with the $\pm$
+carrying Poisson resampling and the normalisation further subject to
+\scCvLo--\scCvHi\% cosmic variance for a field this size. The agreement is a statistic, not an
+impression: weighting by the per-bin Poisson errors and the Hopkins fit's own quoted 0.04-dex
+residual gives $\chi^2=\scChiRef$ for \scNbins\ bins, and the bin-to-bin scatter
+(\scScatter~dex) matches its computed budget (\scPoissonDex\ Poisson $\oplus$ 0.04 reference
+$=\scExpectedDex$). The differential slope, $\scSlope\pm\scSlopeErr$, is shallower than the
+Euclidean $-2.5$ and matches the reference put through the identical estimator (\scSlopeRef) ---
+the sub-Euclidean behaviour \citet{condon1984} modelled. This is a reproducibility/method
+contribution and a recover-a-known, not a new measurement.
 \end{abstract}
 
 \keywords{Radio source counts (1358) --- Extragalactic radio sources (508) --- Surveys (1671)
 --- Observational cosmology (1146) --- Astronomy data analysis (1858) --- Open source software (1866)}
 
 \section{Introduction}
-Source counts were the first radio evidence for cosmological evolution: \citet{condon1984} showed that
-the 1.4~GHz differential counts are sub-Euclidean (a log--log slope shallower than $-5/2$) over
-the sub-Jy range, requiring a population of radio galaxies and quasars more numerous or luminous in the
+Source counts were the first radio evidence for cosmological evolution, established over the
+1950s--70s; \citet{condon1984} synthesised the 1.4~GHz differential counts into evolutionary
+models of the sub-Euclidean behaviour (a log--log slope shallower than $-5/2$) over the sub-Jy
+range, requiring a population of radio galaxies and quasars more numerous or luminous in the
 past. The modern compilation \citep{dezotti2010} traces the counts from microjansky star-forming
 galaxies to the bright radio-loud AGN. The standard way to display them is the
 Euclidean-normalised count $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$, which divides out the steep
@@ -50,54 +57,91 @@ statistics handled honestly?
 \code{sourcecounts} is a pure-NumPy/astropy module that reuses the \code{jansky.sourcecounts} helpers
 (\code{differential\_counts}, \code{euclidean\_normalised\_counts}, \code{count\_slope}) wholesale; the
 new code is the NVSS region fetch, the solid-angle normalisation, and the published reference curve. It
-cuts the sample at a completeness limit, bins it logarithmically, forms $\mathrm{d}N/\mathrm{d}S$ with
-Poisson errors, divides by the cone solid angle $2\pi(1-\cos\theta)$ to get a count per steradian, and
-Euclidean-normalises. The differential slope and the ratio to the \citet{hopkins2003} polynomial are
-computed only over bins that contain at least five sources and whose centre lies below 1~Jy (the published validity
-limit of that fit), so neither is contaminated by the Poisson-starved, extrapolated bright end. A
-slope shallower than $-2.5$ is equivalent to a Euclidean-normalised count that rises with $S$,
-so the sub-Euclidean counts climb from faint fluxes toward the $\sim$1~Jy bright-end peak. Every
-function is tested against a synthetic sky whose fluxes are drawn from the Hopkins differential count,
-so the pipeline round-trips to a ratio of unity.
+cuts the sample at a completeness cut, bins it on a fixed 0.2-dex logarithmic grid anchored at
+the cut (fixed, because binning out to the brightest source made every reported statistic a
+function of one Poisson-random object), forms $\mathrm{d}N/\mathrm{d}S$ with Poisson errors,
+divides by the cone solid angle $2\pi(1-\cos\theta)$ to get a count per steradian, and
+Euclidean-normalises. The differential slope and the ratio to the \citet{hopkins2003} polynomial
+are computed only over bins that contain at least five sources and whose centre lies below 1~Jy
+(the published validity limit of that fit); in this field only the 1-Jy rule binds --- every
+sub-Jy bin holds well over five sources. The per-bin errors are used, not just drawn: the
+agreement is quantified as a $\chi^2$, both against the errors alone and with the reference
+fit's own 0.04-dex residual folded in. A slope shallower than $-2.5$ is equivalent to a
+Euclidean-normalised count that rises with $S$, so the sub-Euclidean counts climb from faint
+fluxes toward the $\sim$1~Jy bright-end peak. Two tests pin the estimator: a closed-form
+power-law sky ($\mathrm{d}N/\mathrm{d}S = k\,S^{-5/2}$ over a known area) must return the
+normalisation $k$ in absolute units --- the test that fails if the solid angle, the $S^{5/2}$
+factor, or the bin-width division is wrong --- and a synthetic sky drawn from the Hopkins count
+round-trips the binning chain (that second check shares the reference with the comparison, so it
+constrains the chain, not the reference).
 
 \section{Data}
 We use the NRAO VLA Sky Survey \citep{condon1998} via VizieR (VIII/65): 1.4~GHz integrated flux
-densities for the radio sources north of Dec~$-40^\circ$, complete to $\sim$2.5~mJy at $45''$
-resolution. We query a cone at $(180^\circ, +30^\circ)$, $b\approx+80^\circ$ (high Galactic latitude,
-so the sample is extragalactic), and cut at \scSmin~mJy to stay above the worst of the completeness
-roll-off.
+densities for the radio sources north of Dec~$-40^\circ$ at $45''$ resolution. Two properties of
+the sample are stated rather than assumed. First, an NVSS catalogue row is a \emph{component},
+not a source: the beam splits extended sources, and the committed friends-of-friends merging
+sweep bounds the effect (linking at $60''$/$80''$/$100''$ and summing fluxes moves the median
+ratio to \scFofSixtyRatio/\scFofEightyRatio/\scFofHundredRatio\ --- at most $\sim$3\%, with the blind merge
+over-merging by construction); this is also a convention match, since above 2.5~mJy the Hopkins
+curve is anchored to FIRST counts, i.e.\ both sides of the comparison count components. Second,
+the survey's nominal 2.5~mJy is a $\sim$50\%-completeness point, not a completeness limit: the
+committed fine-bin profile of this cone shows the 2.1--2.5~mJy bin at 0.59 of the reference,
+and a near-threshold residual (flux boosting and resolution effects) persisting at the
+$\sim$10--15\% level into the \scSmin--5~mJy range before dying away by $\sim$6~mJy. We therefore
+cut at \scSmin~mJy \emph{knowing the first bin still carries part of that residual}
+(the fine-bin value there is \scFirstBinResid), and commit a cut sweep showing the headline
+ratio stable to $\sim$1\% for cuts from \scSmin\ to 20~mJy. The surface density above the cut is
+uniform to $\pm$\scAnnulusSpreadPct\% across four equal-area annuli, so there is no sensitivity
+gradient across the $8^\circ$ footprint. The query cone sits at $(180^\circ, +30^\circ)$,
+$b\approx+80^\circ$ (high Galactic latitude, so the sample is extragalactic).
 
 \section{Results}
-The cone holds \scNsrc\ NVSS sources above \scSmin~mJy over \scArea~sr (Figure~\ref{fig:counts}). The
-Euclidean-normalised counts reproduce the canonical Hopkins fit over \scNbins\ bins spanning
-\scSmin~mJy to 1~Jy at a median ratio of \scRatio\ with only \scScatter~dex (${\sim}14\%$) of bin-to-bin
-scatter: the pipeline and NVSS agree with the published 1.4~GHz counts to within the field-to-field
-scatter expected from cosmic variance and Poisson noise. The differential slope over that range is
-\scSlope, shallower than the Euclidean $-2.5$: this sub-Euclidean slope (equivalently, the
-normalised counts rising toward the $\sim$1~Jy peak) is the cosmological-evolution signature
-\citet{condon1984} first measured, recovered here from a single public catalogue.
+The cone holds \scNsrc\ NVSS components above \scSmin~mJy over \scArea~sr
+(Figure~\ref{fig:counts}; every bin --- centre, count, normalised count, error, reference,
+ratio --- is committed with the results). The Euclidean-normalised counts match the canonical
+Hopkins fit over \scNbins\ bins spanning \scSmin~mJy to 1~Jy at a median ratio of
+$\scRatio\pm\scRatioErr$, consistent with unity. The agreement budget is computed, and each
+term lands where it acts. On the \emph{normalisation}: Poisson contributes
+\scPoissonNormPct\% and large-scale clustering \scCvLo--\scCvHi\% (from the published NVSS
+$w(\theta)$, Monte-Carlo integrated over this cone; \citealt{blake2002}), so the measured
+$\sim$1\% offset from unity is unremarkable --- cosmic variance moves every flux bin together
+and belongs here, not in the bin-to-bin scatter. On the \emph{scatter}: the observed
+\scScatter~dex matches the computed budget of \scPoissonDex\ (Poisson, from the committed bin
+counts) in quadrature with the Hopkins fit's own quoted 0.04-dex residual, $=\scExpectedDex$.
+Weighted by errors alone, $\chi^2=\scChiUnity$ for \scNbins\ bins (the counts are better than
+the reference fit's nominal errors); with the reference residual folded in,
+$\chi^2=\scChiRef$ --- the word ``match'' is earned by that number. The differential slope is
+$\scSlope\pm\scSlopeErr$ (Poisson bootstrap), against \scSlopeRef\ for the Hopkins curve put
+through the identical estimator on the identical bins --- so the slope, too, is a
+recover-a-known, not just ``shallower than $-2.5$'' (the slope is interval-dependent, steepening
+to $-2.07$ above a 20-mJy cut, per the committed sweep); this sub-Euclidean behaviour
+(equivalently, the normalised counts rising toward the $\sim$1~Jy peak) is the
+cosmological-evolution signature the classic literature established \citep{condon1984}.
 
 \begin{figure}
 \plotone{figures/sourcecounts.pdf}
 \caption{The 1.4~GHz Euclidean-normalised differential source counts $S^{5/2}\,\mathrm{d}N/\mathrm{d}S$
-from the NVSS cone (points, with Poisson errors) against the \citet{hopkins2003} polynomial fit (line).
-The rising trend toward $\sim$1~Jy is the sub-Euclidean behaviour of the counts; the brightest sample
-sources lie above the 1~Jy validity limit of the fit and are excluded from the comparison.}
+from the NVSS cone (filled points enter the comparison; open points are excluded, $N<5$ or above
+1~Jy) against the \citet{hopkins2003} polynomial fit (solid within its published validity;
+dashed where it is an extrapolation, drawn only for context and never assessed). The rising
+trend toward $\sim$1~Jy is the sub-Euclidean behaviour of the counts.}
 \label{fig:counts}
 \end{figure}
 
 \section{Discussion and reproducibility}
 The contribution is method and reproducibility: a tested tool that recovers the canonical 1.4~GHz
-Euclidean-normalised source counts from the public NVSS catalogue, with the statistics handled
-honestly. The honest limitations: (i) the Hopkins polynomial is itself a fit to a deeper multi-survey
-compilation, so the agreement validates the pipeline and the NVSS data, not new physics;
-(ii) a single \scArea~sr field carries cosmic variance from large-scale clustering on top of Poisson
-noise, so the \scScatter~dex scatter is a field-specific figure, not a global error; (iii) near the
-NVSS limit the $45''$ beam resolves some extended sources into multiple catalogue components and
-Eddington bias inflates the faintest bins, which is why we cut at \scSmin~mJy; (iv) above 1~Jy the
-cone is Poisson-starved and outside the Hopkins fit, so those bins are plotted but excluded from the
-comparison. None of these undermine the recover-a-known: the canonical counts come straight back out
-of a public catalogue. These limitations do, however, bound what a single NVSS cone can claim. Every number above is
+Euclidean-normalised source counts from the public NVSS catalogue, with the statistics computed
+rather than asserted. The honest limitations: (i) the Hopkins polynomial is itself a fit to a
+multi-survey compilation --- FIRST-anchored over this paper's entire comparison range --- so the
+agreement validates the pipeline and the NVSS data against that compilation, not new physics;
+(ii) a single \scArea~sr field carries \scCvLo--\scCvHi\% cosmic variance on the
+normalisation, so the median ratio is a field-specific figure at the percent level; (iii) the
+sample is unmerged catalogue components with a measured near-threshold residual in the first
+bin (both bounded by the committed sweeps in \S3, at the few-percent level on the headline);
+(iv) above 1~Jy the cone is Poisson-starved and outside the Hopkins fit, so those bins are
+plotted but excluded from the comparison. None of these undermine the recover-a-known: the
+canonical counts come back out of a public catalogue with a closed error budget. These
+limitations do, however, bound what a single NVSS cone can claim. Every number above is
 written by the pipeline into the macros this paper \code{\textbackslash input}s, and
 \code{python -m jansky\_research.sourcecounts -\,-ra 180 -\,-dec 30 -\,-radius 8} regenerates them from
 VizieR.
