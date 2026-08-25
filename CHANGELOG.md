@@ -26,6 +26,22 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`torchfdmt` revision (round-5 referee, 15 findings, two blockers): the figure now plots the
+  statistic that produced its own caption's number, and the significance carries a trials
+  accounting.** The butterfly panel plotted the raw track sum (maximum at DM ~118); it now
+  plots the per-row z-scored peak that `best()` maximises, with a test pinning figure == quoted
+  value. A 200-rep per-channel circular-shift null is committed (median 5.23, p99 6.03, max
+  6.26 -- the referee's Gumbel estimate to the decimal): the observed 6.0 has p = 0.030
+  against it, so the paper now leads with the positional coincidence (2.9 of 1,903 DM trials,
+  p = 0.0035) and the boxcar S/N 14. The benchmark was re-measured in a single invocation with
+  `--bench-devices` decoupled from the science device and the hardware string emitted by torch
+  introspection: brute speedup is 24x (the spliced row's 29x had retained the older, slower CPU
+  time). En route, a guard bug: `preserve_live_macros` treated torchfdmt's mixed source string
+  as synthetic and silently discarded real reruns' macro updates; its rule now matches
+  `preserve_live_results` (mixed counts as real), with tests. Sclocco et al. 2016 cited and the
+  universal CUDA claim narrowed; boundary condition, oracle timing, and pulse position/width
+  committed; stale findings table corrected in place; arXiv package rebuilt.
+
 - **`hi` revision (round-5 referee, 13 findings): the citation became a measurement.** The paper
   attributed its 9% normalization excess to a ~7 km/s threshold-vs-fit offset cited from
   McClure-Griffiths & Dickey 2016 -- whose number is actually a Clemens-1985-CO-vs-HI

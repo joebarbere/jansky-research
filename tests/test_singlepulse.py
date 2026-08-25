@@ -126,3 +126,30 @@ def test_dm_step_is_one_delay_sample():
     assert step == pytest.approx(0.0627, abs=5e-4)
     # and the committed real offset is a few trials, not a fitted precision
     assert abs(56.59 - 56.77) / step == pytest.approx(2.9, abs=0.3)
+
+
+def test_dm_curve_is_the_normalised_statistic():
+    # The figure must plot the statistic best() maximises: the curve's maximum sits at the
+    # recovered DM with the reported height, not at the highest delay row (the raw-sum trend).
+    dyn, freqs, dt = sp.synthetic_observation(n_time=2048)
+    s = sp.search(dyn, freqs, dt, max_dm=120.0)
+    i = int(np.argmax(s["dm_curve"]))
+    assert abs(float(s["dms"][i]) - s["best_dm"]) < 1e-9
+    assert abs(float(s["dm_curve"][i]) - s["best_snr"]) < 1e-6
+    # the raw curve is monotone-trending upward with row count and peaks elsewhere; it is
+    # committed only as the diagnostic
+    assert "dm_curve_raw" in s and s["dm_curve_raw"].shape == s["dm_curve"].shape
+    assert s["n_time"] == 2048
+
+
+def test_shift_null_bounds_the_noise_maximum():
+    rng = np.random.default_rng(1)
+    dyn = rng.normal(0.0, 1.0, (1024, 64)).astype(np.float32)
+    freqs = np.linspace(1200.0, 1600.0, 64)
+    null = sp.shift_null(dyn, freqs, 1e-3, max_dm=60.0, n_reps=15, seed=0)
+    assert null["n_reps"] == 15 and null["best_snrs"].shape == (15,)
+    assert 3.0 < null["p50"] < 9.0  # a noise plane's maximum is itself several sigma
+    assert null["max"] >= null["p99"] >= null["p50"] >= null["mean"] - 2.0
+    # an injected strong pulse beats the null decisively
+    s = sp.search(*sp.synthetic_observation(n_time=1024), max_dm=120.0)
+    assert s["best_snr"] > null["max"]
