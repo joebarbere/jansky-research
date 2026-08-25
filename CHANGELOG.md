@@ -11,6 +11,23 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Review round 6 verdicts recorded: `peaked`, `stokesv`, `swaves`, `windwaves` -- four major
+  revisions, eight blockers.** The batch was chosen by inherited-defect risk and every
+  inheritance hypothesis paid out. peaked (3 blockers): the "100% rising" validation is a flux
+  cut that cannot fail (measured against the sample's real TGSS fluxes: ~53%, a third FALLS);
+  the candidate list exists in no committed file and its vetting step in no code; the global
+  25 mJy TGSS limit vs the field's own local noise moves the count 6 -> 1-3. stokesv (3
+  blockers): two of nine "circular detections" have |V|/I of 568% and 135% (the I and V cutouts
+  are paired by independent unordered CASDA queries with no same-observation constraint); the
+  fifteen rows exist only inside a PDF. swaves (1): the headline speed has no uncertainty and
+  came from the live non-converged fit (slope/mask/R^2 from different iterations); the
+  "fundamental" number is hand-halved; the title distance is the band edge. windwaves (1): the
+  self-declared dominant systematic (CME density) is never propagated and both abstract
+  framings flip inside its stated range (0.08-0.17 c, 10-20 R_sun; harmonic and density are
+  exactly degenerate). Verdicts and full finding lists in each survey/<slice>-findings.md;
+  fixes to follow per slice.
+
+### Changed
 - **Review round 5 verdicts recorded (presenter + referee): `southern`, `hi`, `torchfdmt`,
   `solarbursts` -- four major revisions, five blockers.** southern: GLEAM-X DR2 *does* publish
   per-band errors (the assumed 10% proportional error is ~10x too small for the faint majority)

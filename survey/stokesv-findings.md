@@ -131,3 +131,50 @@ next step the tooling is ready for. Paper at `papers/stokesv/`.
   applied in the validation (the $|V|/I$ and classification are robust regardless).
 - ASKAP's absolute $V$ sign convention varies by pipeline/epoch — handedness is recorded but not
   physically interpreted without the per-epoch convention.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 14 findings, three BLOCKERs
+
+The referee reconstructed the fifteen uncommitted rows from the committed figure's vector
+coordinates (calibration verified against the committed medians) -- and the reconstruction is
+what exposed the blockers.
+
+**BLOCKER 1: two of the nine "circular detections" have image |V|/I of 568% and 135%** --
+physically impossible for a single source -- and `classify_emitter` has no upper bound, so both
+count as `highly_circular`. Excluding them: 7/15, not 9/15. The claim "the I recovery confirms
+the source and the measurement are correct" is falsified for at least two targets.
+
+**BLOCKER 2: the I and V cutouts are selected by two INDEPENDENT unordered CASDA queries** --
+no obs_collection/band/obs_id constraint, first row of whatever matches
+`image.<stokes>.*restored*conv` (RACS-low/mid/high all match) -- and V is then indexed with I's
+WCS with no grid check. The "single-epoch RACS-low DR1" provenance is enforced by no line of
+code; a cross-band/epoch pairing economically explains both |V|/I>1 and the I scatter. The
+correct pattern already exists in scripts/stokesv_discovery_real.py (obs_id-grouped TAP, same
+observation required).
+
+**BLOCKER 3: the entire real result exists only inside a PDF.** No per-target CSV;
+forced_photometry_recover's rows (cat/img fluxes, offsets) are reduced to five scalars and
+discarded -- the innerrc lesson verbatim.
+
+**MAJORs:** the 0.92 median I ratio hides min 0.068 / max 2.75 (0.48 dex scatter, 8/15 outside
+2x) -- "confirms the pipeline works" cannot be carried; the variability interpretation ("often
+the VAST monitoring caught each star flaring") is FALSE as written -- every target is selected
+`Survey == RACS-LOW`, and if catalogue row and image are the same observation the variability
+explanation is unavailable (epochs never recorded); none of the three advertised gates
+(leakage floor, V-SNR, proper motion) runs on the real leg -- "significant" means |V|/I >= 0.06,
+a constant that appears only in a figure label; the synthetic validation cannot fail (injected
+at 0.2-0.8 vs a 0.006 leakage population; PM gate "confirmed" by zero exercised cases; all 500
+targets bright); the results file claims real provenance ("RACS-low DR1 (CASDA)") for a
+half-synthetic file, against the repo's own mixed-marker rules; 9/15 quoted with no interval
+and \svFracVcirc typesets as "0.6 of them".
+
+**MINOR/NIT:** the 12" peak-search mode is used while the prose says "the physically correct
+forced measurement" (the sibling's flagged phrasing) and the per-row offsets that would test
+the mitigation are computed and thrown away; the 15-target cap is code, not data, and the
+parent population count is unrecorded; the 6% threshold is duplicated as magic numbers in
+classifier and figure and is uncalibrated against off-axis leakage (4 of 9 "detections" sit at
+9-23%, inside the documented near-edge leakage range); ~/.casda_pw undocumented and the query
+non-deterministic; pritchard2021 title wording; caption says "panels" for one panel; the 7x
+convention uncited.
+
+**Status: fixes pending** (needs one CASDA re-run with obs_id-pinned pairs; credentials:
+CASDA_USERNAME explicit + ~/.casda_pw).

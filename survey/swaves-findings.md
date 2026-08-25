@@ -63,3 +63,42 @@ to deceleration.
   correction (it *was* negligible at the inner-heliosphere radii of the Wind/WAVES slice).
 - **Reproducible:** `python -m jansky_research.swaves --date 20130515 --spacecraft a` regenerates the
   metrics, the dynamic-spectrum + beam-track (in AU) figure, and the macros from the public SPDF ASCII.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 12 findings, one BLOCKER
+
+The referee reproduced the Leblanc inversion to the digit and forward-modelled the
+fundamental-mode value independently; nothing is numerically fabricated. The revision is about
+uncertainty, provenance, and claim strength.
+
+**BLOCKER: the headline 0.1503 c has no uncertainty of any kind and was produced by the
+non-converged legacy fit** -- and here the exposure is LIVE (n_used 310 < n_ridge 319: the mask
+changed, so slope, mask and R^2 come from two different iterations). The paper also asserts
+"the much wider baseline substantially reduces the slope uncertainty" without computing one.
+Fix: converge=True; jackknife over the 11 INDEPENDENT time bins (not the 310 points -- the
+rmstructure wrong-unit trap); quote 0.150 +/- sigma.
+
+**MAJORs:** "0.075 c / 0.19 AU (fundamental)" is hand-typed halving with no committed
+harmonic=1 run, in a paper whose prose claims every number is pipeline-written -- the referee
+verified it is numerically right to 2% here, but the sibling's committed grid shows the halving
+assumption CAN fail badly (solarbursts ratio 0.689), so commit a speed_grid and macro it; the
+title's "to 0.4 AU" is a deterministic function of the band edge + harmonic + density model --
+any burst reaching the bottom HFR channel returns 82.6 R_sun -- so qualify the title and state
+that only the SPEED is event-specific; 18 of 319 channels carry 92.5% of the fit variance
+(3 channels carry 2/3) and a 3-sigma clip cannot reject a high-leverage point -- report the
+leverage and jackknife the low-frequency channels; the evidence block is 13 keys vs the
+refereed sibling's full set (no ridge CSV, no snr/clip/pad/converged, pad_s=2400 undocumented);
+the findings file's self-declared main uncertainty (storm-period burst confusion) never reached
+the paper and the 9/319-clip evidence offered for it cannot do that work; the offline fixture
+runs at 7.5 s cadence vs the real 60 s -- quantisation is a measured -3.9% BIAS at the real
+cadence, outside the fixture's reach -- and the recovery ratio reaches no committed evidence
+(unnamespaced macros structurally unfillable).
+
+**MINOR/NIT:** the Parker-spiral correction is wrong twice (4-9% not 6-9%; and the
+path-weighted track mean is 1.3-2.8%, ~3x smaller than the endpoint value applied);
+krupar2015's author list is wrong (Kontar is 2nd, per Crossref); "spans all 319 channels" is
+unverifiable (n_channels_total unrecorded) and 100% retention at 5 sigma over an 80-minute
+argmax window is the stokesv_discovery searching-measurement shape -- commit per-channel peak
+SNR; "None of these undermine..." contradicts its own list item (ii); \swHarmonic unused;
+astropy cited but not imported; hardcoded 16 in the band prose; stale arxiv-submission.
+
+**Status: fixes pending.**
