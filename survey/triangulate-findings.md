@@ -141,3 +141,68 @@ the paper with the sweep macro-backed (`\triSweep*`).
 The per-channel arrays (freq, r_geom, r_plasma, miss, lon, lat, cut open) are committed as
 `results/triangulate_channels.csv` (38 channels), so the 60 R_sun choice is auditable and any
 future sweep is offline.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 15 findings, two BLOCKERs
+
+The evidence discipline is better than average (all 38 channels committed, a real miss sweep,
+correct merge wiring on JSON+macros) — but the two numbers the interpretation is built on are
+respectively wrong and the wrong summary of the data. Both are recoverable from the committed
+CSV alone, and the corrected version is a STRONGER paper.
+
+**BLOCKER 1: `\triLon` = 168.9 is a scalar median taken across the ±180° wrap.** 16 of 38
+committed longitudes are negative (−179.8…−169.2), 22 positive (159.5…+179.8); the scalar
+median lands at the 7.9th percentile of its own unwrapped sample. Wrap-safe values: unwrapped
+median 179.5°, circular mean 178.7° (R = 0.993) — the published longitude is ~10° wrong. The
+module's own docstring states the principle ("scalar angle averaging is wrong near the azimuth
+wrap") and then the output summary violates it. The fixture longitude (35°) is 145° from the
+cut, so no test can see it.
+
+**BLOCKER 2: the discrepancy is additive and nearly constant, not the multiplicative "factor
+2.18".** From the committed CSV: r_geom − r_plasma = 14.2 ± 3.3 R⊙ (constant while r_plasma
+varies 13×); OLS r_geom = 1.118·r_plasma + 12.3 (slope ≈ 1 → NO room for a density
+enhancement, which multiplies); additive model rms 3.4 R⊙ vs 17.9 for "2.18×" — 5.3× better
+with one parameter each. The ratio runs 1.29→3.65 monotonically with frequency (Spearman
+0.90), so 2.18 (a median, never labelled one) describes no channel. The paper's own DF-bias
+mechanism predicts the OPPOSITE trend (largest fractional bias at low frequency; measured:
+smallest). The implied cause of 13–14 R⊙ at a 205 R⊙ lever arm is a ~3.7° constant DF error; a
+(−2.3°, +2.8°) constant azimuthal bias pair reproduces the whole r_geom track to 0.055 dex
+with ZERO density enhancement. The "denser-than-average corona" inference describes the
+residual of a model the data reject (and even at face value needs density_scale ≈ 20,
+unstated).
+
+**MAJORs:** r = 0.989 cannot fail (any monotone power law scores 0.95–0.9999; bare 1/f
+correlates with r_geom at 0.9894, i.e. BETTER than Leblanc; the log-log slopes are −0.60 vs
+−0.93 — the data fail the "correct log-log curvature" property the statistic is advertised to
+test, and the computed space is never stated: linear 0.989, log-log 0.975); no uncertainty on
+r or the ratio (channel jackknife 0.010; block bootstrap on the ratio ±0.15; harmonic 1 →
+3.89; a 2–3° DF bias → ~1.0 — the systematics dwarf the statistics); the harmonic × density
+degeneracy footnoted, never gridded (h=1,scale=4 ≡ h=2,scale=1 verified numerically), though
+the tool supports it; the A/B burst windows are never aligned in absolute time
+(`times = ep − ep[0]` per file; a few-minute offset produces exactly the constant few-degree
+bias of Blocker 2, the fixture gives both spacecraft identical time arrays, and no committed
+epoch exists to check — a human must run the provided CDF-epoch check); the triangulation is
+unauditable (pos_a/pos_b and per-channel ua/ub not committed — no reader can reproduce one
+r_geom); the channels CSV and figure have NO clobber guard and the bare CLI default
+(`python -m jansky_research.triangulate`) overwrites the real CSV with synthetic channels
+while the JSON keeps saying "STEREO-A+B" — a marker that lies; the committed arXiv package
+still says "two decades" (retracted in-paper: 1.20 decades) and leaks the raw key
+"leblanc1998" into the abstract.
+
+**MINOR/NIT:** the miss-based uncertainty proxy is never compared to the effect it bounds
+(median miss/r_geom = 0.60; 31/38 channels individually consistent with ratio 1 — though all
+38 offsets are one-signed, so the offset is real); the offline validation cannot fail
+(fixture built AT the Leblanc radii → r→1 by construction; sep_deg=135 locked in by a test
+the findings file itself says is not a control for the real 82°); four hand-typed calibration
+numbers (r≈0.75, ≈1.1, 9°, ≈1.6, ~25°) under a "none typed by hand" header; figure caption
+"track in shape" is what the panel disproves; krupar2012 authors 2/3 wrong (same wrong triple
+as type3synthesis); the sweep quotes its endpoints and skips its largest excursion (30 R⊙
+row), and the 60/100 rows are vacuous (max miss 31.65).
+
+**Checked and clean:** all committed scalars reproduce from the CSV; krupar2014 companion fix
+correct and its band matches \triFlo–\triFhi exactly; leverage check PASSES (drop the largest
+point: 0.979; drop ten: 0.896 — not the swaves shape); five other citations exact vs Crossref.
+
+**Status: fixes pending.** The single change: replace the multiplicative framing with the
+additive one — r_geom − r_plasma = 14.2 ± 3.3 R⊙, slope 1.12, one ~3.7° instrumental offset —
+which retires the density enhancement, demotes r = 0.989, and turns the result into "Leblanc
+confirmed by pure two-spacecraft geometry to ~12% in radius from 0.07 to 0.5 AU."
