@@ -10,10 +10,119 @@
   "median_log_b_magnetar": 13.31,
   "n_catalogue": 2536,
   "b_span_dex": 4.89,
-  "b_span_factor": 78000,
+  "b_span_factor": 77000,
   "frac_below_death_pct": 1.8,
   "crab_b_gauss": 3790000000000.0,
   "crab_age_yr": 1257,
   "crab_period_s": 0.0333924,
-  "crab_pdot": 4.21e-13
+  "crab_pdot": 4.21e-13,
+  "catalogue_version": "B/psr (VizieR snapshot, published 2017-07-18)",
+  "fetched_utc": "2026-08-25T12:52:24Z",
+  "catalogue_max_p0_s": 11.7889784,
+  "msp_normal_span_dex": 3.64,
+  "frac_above_death_pct": 98.2,
+  "death_line_sweep_b12_over_p2": {
+    "0.05": 0.999,
+    "0.1": 0.9961,
+    "0.2": 0.9825,
+    "0.4": 0.9245,
+    "1.0": 0.7558
+  },
+  "frac_above_death_pct_lo": 92.5,
+  "frac_above_death_pct_hi": 99.6,
+  "magnetar_threshold_sweep_gauss": {
+    "3000000000000.0": {
+      "n": 380,
+      "median_log_b": 12.71
+    },
+    "5000000000000.0": {
+      "n": 197,
+      "median_log_b": 12.93
+    },
+    "10000000000000.0": {
+      "n": 83,
+      "median_log_b": 13.31
+    },
+    "20000000000000.0": {
+      "n": 42,
+      "median_log_b": 13.73
+    },
+    "30000000000000.0": {
+      "n": 31,
+      "median_log_b": 14.12
+    }
+  },
+  "magnetar_median_lo_cut": 12.71,
+  "magnetar_median_hi_cut": 14.12,
+  "msp_period_sweep_s": {
+    "0.02": {
+      "n_msp": 166,
+      "median_log_b_msp": 8.37,
+      "median_log_b_normal": 12.04
+    },
+    "0.03": {
+      "n_msp": 182,
+      "median_log_b_msp": 8.42,
+      "median_log_b_normal": 12.05
+    },
+    "0.05": {
+      "n_msp": 207,
+      "median_log_b_msp": 8.48,
+      "median_log_b_normal": 12.06
+    }
+  },
+  "msp_median_20ms": 8.37,
+  "msp_median_50ms": 8.48,
+  "normal_median_20ms": 12.04,
+  "normal_median_50ms": 12.06,
+  "n_pdot_null": 435,
+  "n_pdot_negative": 35,
+  "n_pdot_zero": 5,
+  "flux_cut_medians": {
+    "s1400_present": {
+      "n": 1568,
+      "median_log_b_msp": 8.39,
+      "median_log_b_normal": 12.1,
+      "median_log_b_magnetar": 13.23,
+      "n_magnetar": 53
+    },
+    "s1400_ge_0.5": {
+      "n": 759,
+      "median_log_b_msp": 8.46,
+      "median_log_b_normal": 12.11,
+      "median_log_b_magnetar": 13.22,
+      "n_magnetar": 24
+    },
+    "s1400_ge_2": {
+      "n": 261,
+      "median_log_b_msp": 8.48,
+      "median_log_b_normal": 12.1,
+      "median_log_b_magnetar": 13.2,
+      "n_magnetar": 8
+    }
+  },
+  "flux_cut_max_excursion_dex": 0.11,
+  "anchors": {
+    "J0534+2200": {
+      "role": "normal",
+      "b_gauss": 3790000000000.0,
+      "age_yr": 1260.0
+    },
+    "J1939+2134": {
+      "role": "msp",
+      "b_gauss": 409000000.0,
+      "age_yr": 235000000.0
+    },
+    "J1550-5418": {
+      "role": "magnetar",
+      "b_gauss": 222000000000000.0,
+      "age_yr": 1410.0
+    },
+    "J2144-3933": {
+      "role": "below_death",
+      "b_gauss": 2080000000000.0,
+      "age_yr": 272000000.0
+    }
+  },
+  "n_p0_missing": 9
 }

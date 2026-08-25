@@ -32,7 +32,7 @@ of $\sim$6.4$\times10^{19}$, i.e. all our fields scale up by $\sqrt2$.
 1975; Bhattacharya & van den Heuvel 1991), **98.2%** of the catalogue lies *above* the death line — i.e.
 almost every catalogued radio pulsar is on the radio-loud side, as expected for a radio-selected sample.
 This is **model-dependent** (the line spans a "death valley", Chen & Ruderman 1993), and the $\sim$1.8%
-($\sim$37 pulsars) below the line are not noise — they are real long-period pulsars (e.g. PSR
+(36 pulsars; this line originally said "~37") below the line are not noise — they are real long-period pulsars (e.g. PSR
 J2144$-$3933) that pushed the death-line literature. The Crab pulsar validates the derivations:
 $B = 3.8\times10^{12}$ G and $\tau = P/2\dot P \approx 1.26\times10^3$ yr, both textbook.
 
@@ -46,10 +46,12 @@ $B = 3.8\times10^{12}$ G and $\tau = P/2\dot P \approx 1.26\times10^3$ yr, both 
 - **The death line is one model.** The constant-$B/P^2$ line is a representative criterion; published
   death lines span a "death valley" (Chen & Ruderman 1993) and depend on the gap model, so 98.2% should
   be read as "almost all, for a standard line," not a precise number.
-- **Only pulsars with a positive measured $\dot P$ enter the diagram.** Of the $\sim$3 500 ATNF entries,
-  $\sim$1 400 are excluded: many have no measured $\dot P$, and globular-cluster pulsars often show a
-  *negative* apparent $\dot P$ from cluster acceleration (not real spin-down). An acceleration-corrected
-  treatment would return some of those; here they are correctly dropped.
+- **Only pulsars with a positive measured $\dot P$ enter the diagram.** Of the 2536 ATNF entries
+  (this bullet originally said "~3 500", a recollection corrected below on 2026-08-24), 484 are
+  excluded: 435 have a period but no measured $\dot P$, 35 (mostly globular-cluster pulsars) show a
+  *negative* apparent $\dot P$ from cluster acceleration (not real spin-down), 5 record exactly
+  zero, and 9 lack a period. An acceleration-corrected treatment would return some of those; here
+  they are correctly dropped.
 - **Selection, not volume-limited.** The ATNF catalogue is the union of many flux- and
   period-limited surveys (MSPs and faint/long-period pulsars are under-represented), so the *relative*
   population sizes are survey-shaped, not intrinsic; the per-class B-fields are robust to this.
@@ -176,3 +178,38 @@ values) — regenerate before submission.
 **Status: fixes pending.** The single change: commit the per-pulsar table and the two sweeps
 — the sweeps mostly *support* the paper; the one claim they do not support is the magnetar
 median, which should be described as threshold-set.
+
+**Status: RESOLVED (2026-08-25).** All five MAJORs closed by one real re-run, and every sweep the
+referee computed server-side reproduces in the committed pipeline.
+
+1. **Magnetar median reframed as threshold-set.** `magnetar_threshold_sweep` commits the
+   referee's table exactly (12.71 at B>3e12 -> 14.12 at >3e13); the abstract and Results now
+   present the MSP<->normal separation (`\ppMspNormalSpanDex` = 3.64 dex) as the measured claim
+   -- backed by its own committed period-cut sweep (`msp_period_sweep`: MSP median 8.37-8.48
+   over 20-50 ms, normal 12.04-12.06) -- and label 13.31 as tracking its own defining cut.
+2. **Vintage disclosed.** Data names the frozen snapshot (published 2017-07-18), its 11.8-s
+   maximum period, and the absent ultra-long-period class; `catalogue_version` /
+   `fetched_utc` / `catalogue_max_p0_s` are in the JSON; the death-line caveat states the
+   below-line census is a floor.
+3. **Death-valley sweep committed.** `death_line_sweep` over B12/P^2 = 0.05-1.0:
+   98.2% at the paper's constant, 92.5% at 2x, 99.6% at half (`\ppFracAlivePctLo/Hi`); the
+   Discussion now says "survives a factor of two and not a factor of five" with the numbers.
+4. **Flux-cut robustness measured, scoped, committed.** `flux_cut_medians` (S1400 fetched):
+   max excursion 0.11 dex, the high-B median moving most (radio-quiet high-B objects removed);
+   stated as "under a flux cut", not survey selection, since B/psr has no provenance column.
+5. **Per-pulsar table committed.** `results/ppdot_pulsars.csv`: all 2052 analysed rows with
+   B, tau, Edot, class, death-line disposition.
+
+MINORs: four named anchors (Crab, B1937+21, J1550-5418, J2144-3933) are read from the fetched
+table and *gated* -- `run()` raises if any derived log B leaves its literature window, so a
+units regression fails the run (tested with a deliberate 1e6 pdot error); the discard
+breakdown is measured (435 null Pdot + 35 negative + 5 exactly zero + 9 lacking P0 = 484,
+closing the census arithmetic in Data); the stale `fetch_atnf_ppdot` comment is gone with the
+rewrite and this file's "~3 500"/"~37" recollections now carry their corrections inline;
+`\ppAccuracy` is dropped from the macro file (offline-only, nothing cited it); the abstract
+and Discussion both quote percent (98.2%/1.8%); `\ppBSpanFactor` derives from unrounded
+medians at two significant figures (77000, was 78000); `named_pulsar_derived` raises on an
+ambiguous name. The stale gitignored arXiv package was regenerated.
+
+Both prior published headline values are unchanged (n 2052, medians 8.42/12.05/13.31,
+frac 0.982); the revision added evidence and moved claim strength onto it.
