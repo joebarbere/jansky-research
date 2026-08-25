@@ -22,13 +22,20 @@ $\mathrm{RM}=0.81\int n_e B_\parallel\,\mathrm{d}l$ (rad m$^{-2}$). The RMs of t
 extragalactic sources thus sample the Galactic Faraday sky (the line-of-sight integral of the
 field weighted by electron density) along every sightline. We build a small tested tool that
 reproduces two textbook signatures from the Taylor, Stil \& Sunstrum \citeyearpar{taylor2009} NVSS RM
-catalogue (\rmN\ sources; VizieR, public, no auth), reusing the \code{jansky} course's polarisation
-helpers for the underlying $\lambda^2$ fit. The median $|\mathrm{RM}|$ is enhanced toward the Galactic
-plane by a factor of $\rmRatio\pm\rmRatioErr$ ($\rmPlane$ rad m$^{-2}$ at $|b|<10^\circ$ versus
-$\rmPole$ at $|b|>60^\circ$), the expected disk path-length signature; and the mean RM is sign-organised
-across the plane (inner-Galaxy mean $\rmInnerNorth\pm\rmInnerNorthErr$ rad m$^{-2}$ north of the plane,
-$\rmInnerSouth\pm\rmInnerSouthErr$ south), consistent with the large-scale Galactic field. We are careful about what this does not show:
-RM constrains only $\int n_e B_\parallel\,\mathrm{d}l$, not $B_\parallel$ itself; the coarse quadrant mask conflates regions of opposing sign; and the north/south
+catalogue (\rmN\ sources; VizieR, public, no auth; the analysed table is committed with the
+results). Because the RM sky is correlated on degree scales, every quoted uncertainty is a
+$10^\circ$ sky-block jackknife (\rmJkBlocks\ blocks) --- the i.i.d.\ source bootstrap, which
+resamples within correlated patches, understates the headline error here by a factor of four.
+The median $|\mathrm{RM}|$ is enhanced toward the Galactic plane by a factor of
+$\rmRatio\pm\rmRatioJkErr$ ($\rmPlane$ rad m$^{-2}$ at $|b|<10^\circ$ versus $\rmPole$ at
+$|b|>60^\circ$), the expected disk path-length signature; and the mean RM is sign-organised
+across the plane (inner-Galaxy mean $\rmInnerNorth\pm\rmInnerNorthJkErr$ rad m$^{-2}$ north of
+the plane, $\rmInnerSouth\pm\rmInnerSouthJkErr$ south), supported by an alias-immune statistic:
+the fraction of positive RMs is $\rmInnerNorthFrac\pm\rmInnerNorthFracErr$ north versus
+$\rmInnerSouthFrac\pm\rmInnerSouthFracErr$ south, against 0.5 under no organisation. Both are
+consistent in sign and order of magnitude with the published maps. We are careful about what
+this does not show: RM constrains only $\int n_e B_\parallel\,\mathrm{d}l$, not $B_\parallel$
+itself; the coarse quadrant mask conflates regions of opposing sign; and the north/south
 source-count imbalance is largely an NVSS coverage artefact. This is a reproducibility/method
 contribution and a recover-a-known, not a discovery.
 \end{abstract}
@@ -47,52 +54,83 @@ disk/halo field \citep{taylor2009,sun2008}. We test whether both can be recovere
 catalogue by a small tested tool, quoting honest uncertainties and caveats throughout.
 
 \section{Methods}
-\code{rmsky} is a pure-NumPy module built on the \code{jansky} helpers \citep{jansky}. Its foundational
-step reuses \code{jansky.polarization.rotation\_measure\_fit}, a least-squares fit of
-$\chi=\chi_0+\mathrm{RM}\,\lambda^2$ (the way every catalogue RM is measured), verified by a round-trip
-against the forward \code{faraday\_rotate}. From the catalogue it then computes (i) the median
-$|\mathrm{RM}|$ in bins of Galactic latitude $|b|$ (the plane enhancement), with a bootstrap error on the
-plane/pole ratio, and (ii) the mean RM in four regions split by hemisphere and by inner
-($l<90^\circ$ or $l>270^\circ$) versus outer Galaxy, with standard errors. The median, which is robust to the rare $n\pi$-aliased outliers, is used for
-the latitude profile, and the mean is used for the
-sign analysis, since the median would null the net-sign signal being sought. Every function is tested
-against a synthetic sky built from a $\csc|b|$ disk plus a sign-of-$b$ field. This is a round-trip code
-check, not a physical validation; the physical validation is the real-data run below.
+\code{rmsky} is a pure-NumPy module built on the \code{jansky} helpers \citep{jansky}. It exposes
+(and round-trip verifies) \code{jansky.polarization.rotation\_measure\_fit}, the least-squares fit
+of $\chi=\chi_0+\mathrm{RM}\,\lambda^2$ by which catalogue RMs are measured --- but the catalogue
+values arrive pre-fitted from VizieR, so the helper anchors the slice to the polarisation stack
+without being applied to the data. From the catalogue the module computes (i) the median
+$|\mathrm{RM}|$ in bins of Galactic latitude $|b|$ (the plane enhancement) and the plane/pole
+ratio, and (ii) the mean RM and the fraction of positive RMs in four regions split by hemisphere
+and by inner ($l<90^\circ$ or $l>270^\circ$) versus outer Galaxy. Every quoted uncertainty is a
+leave-one-block-out jackknife over $10^\circ$ sky blocks (\code{rmstructure}'s estimator, built
+for exactly this failure mode): the RM sky is correlated on degree scales, so the exchangeable
+unit is a sky patch, not a source, and an i.i.d.\ resample of sources measures shot noise. The
+i.i.d.\ bootstrap is retained only as the contrast. The median, which the rare
+$n\pi$-aliased outliers cannot move, is used for the latitude profile; the mean is used for the sign
+analysis, since the median would null the net-sign signal being sought, and the mean's alias
+exposure is handled by the committed $|\mathrm{RM}|<300$ rad m$^{-2}$ variant and the
+sign-fraction statistic, which a $\pm$\,652.9 rad m$^{-2}$ wrap can move by at most the wrapped
+count. Every analysis function is tested against two synthetic skies: a $\csc|b|$ disk plus
+sign-of-$b$ field (the recover-a-known round trip), and a correlated Gaussian-blob field with a
+known coherence scale, on which the test suite asserts the block jackknife exceeds the i.i.d.\
+bootstrap --- the failure the deterministic fixture is structurally unable to expose. These are
+code checks, not physical validations; the physical validation is the real-data run below.
 
 \section{Data}
 We query the Taylor, Stil \& Sunstrum \citeyearpar{taylor2009} NVSS RM catalogue from VizieR
-(\code{J/ApJ/702/1230}): \rmN\ polarised extragalactic sources at 1.4~GHz, each with an RM derived from
-the two NVSS IF bands. We retrieve $(\alpha,\delta,\mathrm{RM})$ and transform to Galactic
-$(l,b)$. The catalogue covers $\delta>-40^\circ$, so the southern Galactic sky is incomplete.
+(\code{J/ApJ/702/1230}): \rmN\ polarised extragalactic sources at 1.4~GHz, each with an RM derived
+from the two NVSS IF bands. We retrieve $(\alpha,\delta,\mathrm{RM},\sigma_\mathrm{RM})$ and
+transform to Galactic $(l,b)$; the analysed table is committed as
+\code{data/rmsky\_taylor2009.csv.gz} with the fetch date and VizieR table id in the results
+JSON, so every number here is auditable without a network re-fetch. A nearest-neighbour
+self-match finds \rmDupCount\ pairs within $5''$, so duplication is negligible rather than
+assumed. The catalogue covers $\delta>-40^\circ$, so the southern Galactic sky is incomplete.
 
 \section{Results}
 \paragraph{Plane enhancement.} The median $|\mathrm{RM}|$ falls monotonically from $\rmPlane$ rad
-m$^{-2}$ at $|b|<10^\circ$ to $\rmPole$ rad m$^{-2}$ at $|b|>60^\circ$ (Figure~\ref{fig:rmsky}), a
-plane/pole ratio of $\rmRatio\pm\rmRatioErr$ (bootstrap). This is the expected disk signature, but
-softer than the bare $\csc|b|$ limit ($\sim$11 for these bin centres) for two physical reasons: a
-flat $\sim$10 rad m$^{-2}$ floor set by intrinsic extragalactic RM (\citealt{schnitzeler2010};
-\citealt{mao2010}) that does not scale with $|b|$, and Faraday depolarisation in the thick disk, which
-suppresses the detectable near-plane source count and so biases the detected near-plane sample low. The
+m$^{-2}$ at $|b|<10^\circ$ to $\rmPole$ rad m$^{-2}$ at $|b|>60^\circ$ (Figure~\ref{fig:rmsky},
+with per-bin jackknife errors), a plane/pole ratio of $\rmRatio\pm\rmRatioJkErr$ (sky-block
+jackknife; the i.i.d.\ bootstrap gives $\pm\rmRatioErr$, and the factor-four gap between the two
+is itself a measurement of the sky's correlation). The ratio is bin-definition-dependent through
+the $\csc|b|$ geometry, so the committed variants move it as that predicts rather than testing a
+fixed truth: $\rmRatioAltBins$ for $5^\circ/70^\circ$ edges, $\rmRatioCutThree$ under
+$|\mathrm{RM}|<300$ rad m$^{-2}$, and $\rmRatioErmCut$ for the better-measured half
+($\sigma_\mathrm{RM}$ below its median) --- each is a plane enhancement of the same order, and
+none is ``the'' ratio without its definition attached. The value is softer than the bare
+$\csc|b|$ limit ($\sim$11 for these bin centres) for two physical reasons: a flat $\sim$10 rad
+m$^{-2}$ floor set by intrinsic extragalactic RM (\citealt{schnitzeler2010}; \citealt{mao2010})
+that does not scale with $|b|$, and Faraday depolarisation in the thick disk, which suppresses
+the detectable near-plane source count and so biases the detected near-plane sample low. The
 ratio is therefore a lower bound on the path-length effect.
 
-\paragraph{Sign organisation.} The mean RM is sign-organised across the plane: in the inner Galaxy it is
-$\rmInnerNorth\pm\rmInnerNorthErr$ rad m$^{-2}$ north of the plane and $\rmInnerSouth\pm\rmInnerSouthErr$
-south, each many standard errors from zero, with the outer Galaxy ($\rmOuterNorth$ / $\rmOuterSouth$)
-showing the same, weaker sense. The net positive-above / negative-below pattern is consistent with the
-ordered Galactic field \citep{taylor2009,sun2008}. We do not over-read the precise amplitudes: the
-true structure is a quadrupole, and our
-``inner'' mask combines the $l<90^\circ$ and $l>270^\circ$ halves, which carry opposite sign at a given
-$b$, so the recovered means are partial cancellations, a net-sign indicator rather than a field
-measurement. Moreover the inner north/south source counts
-($\rmInnerNorthN$ vs $\rmInnerSouthN$) are imbalanced largely because the $\delta>-40^\circ$ cut removes
-inner-south sightlines, so the larger southern amplitude must not be read as a physical north/south
-asymmetry.
+\paragraph{Sign organisation.} The mean RM is sign-organised across the plane: in the inner
+Galaxy it is $\rmInnerNorth\pm\rmInnerNorthJkErr$ rad m$^{-2}$ north of the plane
+($\rmInnerNorthN$ sources) and $\rmInnerSouth\pm\rmInnerSouthJkErr$ south ($\rmInnerSouthN$) ---
+significantly non-zero and of opposite sign under the block jackknife, though at a few standard
+errors, not the tens the per-source errors ($\pm\rmInnerNorthErr$, $\pm\rmInnerSouthErr$) would
+claim. The alias-immune sign fractions agree: $\rmInnerNorthFrac\pm\rmInnerNorthFracErr$ of
+inner-north RMs are positive versus $\rmInnerSouthFrac\pm\rmInnerSouthFracErr$ inner-south
+(0.5 = no organisation), and the means are essentially unchanged under the $|\mathrm{RM}|<300$
+cut ($\rmInnerNorthCutThree$ / $\rmInnerSouthCutThree$), so the pattern is not carried by
+$n\pi$-aliased outliers. The outer Galaxy shows the same, weaker sense
+($\rmOuterNorth\pm\rmOuterNorthJkErr$ / $\rmOuterSouth\pm\rmOuterSouthJkErr$ over
+$\rmOuterNorthN$ / $\rmOuterSouthN$ sources), where the southern mean is not individually
+significant. The net positive-above / negative-below pattern is consistent in sign with the
+published maps \citep{taylor2009,sun2008}. We do not over-read the precise amplitudes: the true
+structure is a quadrupole, and our ``inner'' mask combines the $l<90^\circ$ and $l>270^\circ$
+halves, which carry opposite sign at a given $b$, so the recovered means are partial
+cancellations, a net-sign indicator rather than a field measurement. Moreover the inner
+north/south source counts ($\rmInnerNorthN$ vs $\rmInnerSouthN$) are imbalanced largely because
+the $\delta>-40^\circ$ cut removes inner-south sightlines, so the larger southern amplitude must
+not be read as a physical north/south asymmetry.
 
 \begin{figure}
 \plotone{figures/rmsky.pdf}
 \caption{Left: the Taylor+2009 RM sky in Galactic coordinates (Aitoff), coloured by RM
-(red positive, blue negative; clipped at $\pm150$ rad m$^{-2}$). Right: the median
-$|\mathrm{RM}|$ versus $|b|$, the plane enhancement (ratio $\rmRatio\pm\rmRatioErr$).}
+(red positive, blue negative; clipped at $\pm150$ rad m$^{-2}$; longitude increases to the
+left and the tick labels give the true $l$). Right: the median $|\mathrm{RM}|$ versus $|b|$
+with per-bin sky-block jackknife errors, the plane enhancement (ratio
+$\rmRatio\pm\rmRatioJkErr$).}
 \label{fig:rmsky}
 \end{figure}
 
@@ -100,14 +138,19 @@ $|\mathrm{RM}|$ versus $|b|$, the plane enhancement (ratio $\rmRatio\pm\rmRatioE
 The contribution is method and reproducibility: a tested pipeline that recovers two established
 Galactic-Faraday-sky signatures from a public catalogue, with uncertainties and the right caveats. The
 honest limitations bound the interpretation. (i) RM measures $\int n_e B_\parallel\,\mathrm{d}l$;
-disentangling $B_\parallel$ needs an electron-density model (e.g.\ NE2001/YMW16) not applied here. (ii)
-The two-band NVSS RMs alias by $\pm652$ rad m$^{-2}$ \citep{brentjens2005}, but the $\sim$0.13\% affected
-are immaterial to medians and means over thousands. (iii) The quadrant split is a coarse net-sign probe,
-not a harmonic/multipole decomposition, and is degraded by the southern coverage gap. (iv) A single
-1.4~GHz band gives one RM per source with no in-band Faraday-complexity information. None of these
-undermine the recover-a-known: the plane enhancement and the sign organisation are both significant
-and match the literature. These limitations are, however, why this is a reproduction and not a
-measurement of the field.
+disentangling $B_\parallel$ needs an electron-density model (e.g.\ NE2001/YMW16) not applied here.
+(ii) The two-band NVSS RMs alias by $\pm652.9$ rad m$^{-2}$ \citep{taylor2009}. Medians are
+insensitive to the rare wraps, but a region \emph{mean} is not automatically so: wraps are not
+sign-random and concentrate at low latitude, where the sign signal lives. We therefore do not
+argue the effect away; we bound it, with the $|\mathrm{RM}|<300$ variant and the sign-fraction
+statistic, both of which reproduce the pattern. (iii) The quadrant split is a coarse net-sign
+probe, not a harmonic/multipole decomposition, and is degraded by the southern coverage gap.
+(iv) A single 1.4~GHz band gives one RM per source with no in-band Faraday-complexity
+information. None of these undermine the recover-a-known: under block-jackknife errors the
+plane enhancement is highly significant and the inner-Galaxy sign organisation significant at a
+few sigma, both consistent in sign and order of magnitude with the published maps --- no
+published value of this exact binned ratio exists to match more precisely. These limitations
+are, however, why this is a reproduction and not a measurement of the field.
 Every number above is written by the pipeline into the macros this paper \code{\textbackslash input}s,
 and \code{python -m jansky\_research.rmsky} regenerates them from the public VizieR catalogue.
 

@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **rmsky round-7 revision: the definer got the fix the importer got, and the paper can now
+  say which world it is in.** Every quoted uncertainty is a 10-degree sky-block jackknife
+  (571 blocks, via `rmstructure.spatial_block_jackknife`): the headline plane/pole ratio is
+  5.4 +/- 0.6 against the i.i.d. bootstrap's +/-0.15 (a factor-3.9 understatement, quoted in
+  the paper as a measurement of the sky's correlation), and the inner-Galaxy sign pattern
+  lands at 2.8/5.0 sigma -- "each many standard errors from zero" is gone, and outer-south
+  (1.5 sigma) is stated as not individually significant. The n-pi exposure is bounded rather
+  than argued away: +/-652.9 correctly attributed to Taylor+2009, an |RM|<300 variant (means
+  move <=0.2), and a new alias-immune sign-fraction statistic (0.589/0.348, 3.2/4.9 sigma
+  from 0.5) that reproduces the pattern. "Match the literature" downgraded to sign-and-order
+  consistency (no published value of this binned ratio exists). The analysed catalogue is
+  committed (`data/rmsky_taylor2009.csv.gz` + fetch metadata; e_RM now fetched), dedup
+  measured (2 pairs < 5 arcsec), the outer-region SEs and counts are no longer discarded at
+  the write step, the latitude profile carries per-bin jackknife errors, three robustness
+  variants ship (5/70-degree edges 7.5, |RM|<300 5.2, e_RM cut 6.3 -- bin-definition
+  dependence through the csc geometry, stated), the mirrored Aitoff longitude labels are
+  fixed, the lambda^2-fit framing is scoped to what run() actually does, and the test suite
+  gains the correlated-fixture check (block jackknife must exceed the bootstrap) that the
+  deterministic fixture could never perform.
+
+### Changed
 - **torchdsp round-7 revision: the benchmark is producible by one command, and both central
   claims became measurements.** A `--benchmark-only` mode computes both timing columns in one
   interpreter session with hardware strings from torch/platform introspection, merged through
