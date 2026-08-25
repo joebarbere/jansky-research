@@ -12,6 +12,59 @@
   "frac_down_lt45": 0.502,
   "ks_p": 3.2030113555113244e-22,
   "n_jet_signif": 252,
-  "median_axis_signif_deg": 18.9,
-  "frac_axis_signif": 0.659
+  "median_axis_signif_deg": 18.8,
+  "frac_axis_signif": 0.667,
+  "x_statistic": "mahalanobis (per-source RA/Dec correlations from both catalogues)",
+  "x_cut": 3.0,
+  "frac_x_gt3_pct_naive": 26.7,
+  "frac_x_gt3_binom_se_pct": 0.75,
+  "frac_x_gt3_dec_jackknife_se_pct": 1.12,
+  "frac_x_gt3_dec_bands_pct": [
+    27.1,
+    27.3,
+    27.0,
+    26.5,
+    25.7
+  ],
+  "noise_core_scale": 1.096,
+  "noise_core_n": 1432,
+  "noise_core_x_max": 1.5,
+  "inflation_sweep": {
+    "1.2": {
+      "frac_pct": 21.47,
+      "excess": 19.3
+    },
+    "1.5": {
+      "frac_pct": 16.9,
+      "excess": 15.2
+    },
+    "2.0": {
+      "frac_pct": 12.68,
+      "excess": 11.4
+    },
+    "3.0": {
+      "frac_pct": 8.68,
+      "excess": 7.8
+    }
+  },
+  "frac_x_gt3_by_err_quartile": [
+    0.381,
+    0.222,
+    0.24,
+    0.225
+  ],
+  "n_offset_gt50mas": 46,
+  "n_offset_gt100mas": 25,
+  "frac_x_gt3_pct_le50mas": 25.87,
+  "frac_axis_lt45": 0.703,
+  "n_axis_aligned": 291,
+  "n_downstream": 208,
+  "n_upstream": 83,
+  "downstream_binom_p": 1.527777123440086e-13,
+  "n_chance": 8,
+  "n_icrf3": 4536,
+  "goodjet_n": 318,
+  "goodjet_median_axis_deg": 22.3,
+  "goodjet_frac_axis_lt30": 0.604,
+  "goodjet_ks_p": 1.0905274641008576e-22
 }

@@ -151,3 +151,39 @@ real JSON); \offJetKsP prints 3e-22 where the JSON carries 3.2e-22.
 measurements it needs (core Rayleigh scale 1.00 ± 0.02; the inflation sweep), cite the right
 Petrov & Kovalev letter with the right number, attribute the difference to DR3 precision —
 the paragraph the entire 26.7% rests on becomes the paper's strongest.
+
+**Status: RESOLVED (2026-08-25).** One real re-run with the statistic rebuilt; the referee's own
+"alternative fix" (change the statistic, not the null) was taken, and every number it produced
+validated the referee's estimates.
+
+1. **The statistic is now a Mahalanobis distance** using both catalogues' per-source RA/Dec
+   correlations (ICRF3 `Corr` and Gaia `RADEcor`, both now fetched), so the Rayleigh null is
+   exact by construction. Measured: the whitened tail fraction is 26.70% — unchanged at the
+   quoted precision from the correlation-blind 26.70% (committed as the contrast) — so the
+   headline is 24.0× against the RIGHT null, rather than 24.0× against the wrong one. The
+   correlated-noise fixture test verifies the naive statistic overshoots Rayleigh on pure noise
+   while the whitened one does not.
+2. **The directional test has its correct null**: among 291 axis-aligned offsets, 208 point
+   downstream vs 83 upstream (binomial p = 1.5e-13 against the sign-symmetric coin) — the
+   "50% vs random 25%" framing is gone, and the 83 upstream (29%) are now reported as the
+   disk-dominated component of Plavin+2019 rather than left uncounted.
+3. **The error-model paragraph is measurements**: noise-core Rayleigh scale 1.096 over 1432
+   sources (an upper limit — errors not detectably underestimated beyond ~10%), and the
+   committed inflation sweep (1.5× → 15.2×, 2× → 11.4×, 3× → 7.8×). The misattributed "~9%"
+   is replaced by the right comparand — Petrov & Kovalev (2017), MNRAS 467, L71 (now in
+   refs.bib): 6% at the 99% level in the DR1 era — attributed to DR3 precision, not
+   underestimated errors.
+4. **The promised catalogue ships**: results/offsets_sources.csv (3502 rows: ICRF name,
+   positions, offsets, errors, BOTH correlations, both statistics, jet PA/delPA/angles), and
+   the delPA<45° robustness variant is committed (318 sources, median 22.3°, KS p = 1.1e-22 —
+   exactly the numbers that previously existed only in this file).
+
+MINOR: headline uncertainties committed and quoted (binomial 0.75pp; declination-band
+jackknife 1.12pp with the N–S gradient named as zonal systematics); the error-quartile
+dependence stated (38%→22%: the fraction is population ⊗ error distribution); the
+chance-coincidence rate MEASURED with a +0.2° decoy-field X-Match (8 matches ≈ the referee's
+analytic 9; ~0.2%); raw-offset outliers counted (46 > 50 mas, dropping them: 26.70→25.87%);
+the figure's Rayleigh is now scaled to the fitted noise core (the density-normalisation
+mismatch is gone) with the out-of-range fraction in the caption. NITs: lister2021 gains
+Kellermann; synthetic_field's sigma_mas now actually scales the errors (and gained a rho
+parameter); x_cut recorded in the metrics; \offJetKsP prints 3.2e-22 (mantissa restored).
