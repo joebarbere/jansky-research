@@ -11,6 +11,29 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **triangulate round-8 revision: the longitude survives the wrap, and the comparison says
+  what the channels say.** Both blockers closed by one real re-run. The summary longitude is
+  a circular median: 179.5 +/- 7.6 deg (the published 168.9 was a scalar median taken across
+  the +-180 branch cut, at the 8th percentile of its own sample); a fixture ON the cut at the
+  real 82-degree separation now fails under the old code. The headline comparison is additive:
+  the triangulated distances sit a constant 13.4 +/- 3.3 R_sun outside the Leblanc level
+  (block-jackknife +/-1.1; OLS slope 1.119 -- no room for a density enhancement, which would
+  multiply; additive rms 3.37 vs multiplicative 17.83), i.e. one ~4-degree pointing bias at
+  the 194 R_sun lever -- and the new noise-bias calibration at the real baseline (source at
+  the unmodified Leblanc radii) shows 18-25 degrees of documented apparent-source scatter
+  alone produces offsets of 10.5-16.9 R_sun, so the observed offset needs no new physics.
+  Reframed, the geometry is a recover-a-known for the Leblanc shape: one constant offset,
+  then 3.4 R_sun rms (~12%) over 0.07-0.5 AU. r = 0.989 is demoted with its nulls stated
+  (any monotone power law > 0.95) and the falsifiable statistic committed (log-log slope
+  0.653 vs 1.0); the (harmonic x density) grid ships with the exact h1_s4 == h2_s1 identity
+  tested; time is carried as seconds since UTC midnight on both spacecraft (the committed
+  epochs show the per-file origins differed by 25 s -- the alignment hazard measured and
+  closed); pos_a/pos_b and per-channel direction vectors are committed so every r_geom is
+  reproducible offline; a synthetic run can no longer overwrite the real channels CSV or
+  figure (tested); the stale arXiv package is regenerated with the \citeyearpar leak fixed;
+  krupar2012's author list corrected; the findings file's superseded claims marked in place.
+
+### Changed
 - **offsets round-8 revision: the statistic carries its own null, and the promised catalogue
   ships.** X is rebuilt as a Mahalanobis distance using both catalogues' per-source RA/Dec
   error correlations (ICRF3 `Corr` and Gaia `RADEcor`, now fetched), so the Rayleigh null is

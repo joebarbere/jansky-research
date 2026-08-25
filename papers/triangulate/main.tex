@@ -18,22 +18,28 @@ and Cross-Checking the Geometric Distance Against the Plasma-Frequency Distance}
 \begin{abstract}
 A type III electron beam radiates near the local plasma frequency, so its emission frequency encodes
 its heliocentric distance, but only through a density model. Two spacecraft give the distance
-a completely independent way: each measures the direction of arrival of the emission, and the
-two lines of sight intersect at the source, with no density model at all. We build a small tested tool
+independently: each measures the direction of arrival of the emission, and the two lines of
+sight intersect at the source, with no density model at all. We build a small tested tool
 that triangulates a type III in 3D from the public STEREO/WAVES \citep{bougeret2008} Level-3
 direction-finding product \citep{cecconi2008,krupar2012}, intensity-weighted vector-averaging the
 per-frequency direction on each spacecraft and then taking the least-squares intersection of the two
-rays, and cross-checks the geometric heliocentric distance against the Leblanc, Dulk \& Bougeret
-\citeyearpar{leblanc1998} plasma-frequency distance. Applied to a 2013-05-15 burst
+rays, and cross-checks the geometric heliocentric distance against the plasma-frequency distance of
+the \citet{leblanc1998} model. Applied to a 2013-05-15 burst
 (\code{\triSource}; STEREO-A and STEREO-B \triSep$^\circ$ apart), \triNtri\ frequency channels
-(\triFlo--\triFhi~MHz) triangulate to a source at HEEQ longitude \triLon$^\circ$, latitude
-\triLat$^\circ$ (near the ecliptic), spanning \triRlo--\triRhi~$R_\odot$ (\triRloAU--\triRhiAU~AU). The
-geometric and plasma-frequency distances correlate at $r=\triCorr$ across more than a decade in frequency
-(a cross-validation of two fully independent estimators), while the absolute geometric
-scale runs a factor \triRatio\ high, which we trace to the known outward bias of direction-finding on a
-source of large apparent size (median ray miss \triMiss~$R_\odot$) plus a likely active-region density
-enhancement. This is a method and reproducibility contribution, recovering a known result rather than
-reporting a discovery.
+(\triFlo--\triFhi~MHz) triangulate to a source at HEEQ longitude \triLon$^\circ\pm$\triLonScatter,
+latitude \triLat$^\circ\pm$\triLatScatter\ (near the ecliptic), spanning
+\triRlo--\triRhi~$R_\odot$ (\triRloAU--\triRhiAU~AU). The comparison's honest summary is
+additive, not multiplicative: the triangulated distances sit a nearly constant
+$\triDiffMed\pm\triDiffStd~R_\odot$ \emph{outside} the Leblanc plasma level while the plasma
+distance varies by a factor of 13, with a regression slope of \triOlsSlope\ --- the signature
+of a constant $\sim$\triBiasDeg$^\circ$ direction-finding bias at the lever arm, not of a
+density enhancement, and a zero-model-error synthetic at this exact baseline reproduces an
+offset of this size from the documented $18$--$25^\circ$ apparent-source scatter alone. After
+that one constant offset the model reproduces the triangulated distances to
+\triRmsAdd~$R_\odot$ rms ($\sim$12\% in radius) over 0.07--0.5~AU; the
+frequency-dependent ratio (\triRatioMin--\triRatioMax, median \triRatio) is reported as the
+contrast, since a single ``scale factor'' describes no channel. This is a method and
+reproducibility contribution, recovering a known result rather than reporting a discovery.
 \end{abstract}
 
 \keywords{Solar radio bursts (1998) --- Solar corona (1483) --- Solar wind (1534) --- Heliosphere (711)
@@ -70,10 +76,21 @@ exceeds the smallest distance inferred below, so the cut is permissive rather th
 at the high-frequency end; a sweep of the threshold is reported with the results), and each spacecraft
 contributed enough good samples. The kept geometric radii are compared against
 \code{windwaves.emission\_radius}, the Leblanc plasma-frequency radius at the same harmonic, reusing
-the heliospheric density model of the interplanetary-type-III slices. Every function is tested against
-a synthetic two-spacecraft event built by placing a radially outflowing source at a known longitude and
-latitude and giving each spacecraft the true arrival direction plus injected Gaussian angular scatter,
-so the tool recovers the injected source position and the noise budget can be dialled.
+the heliospheric density model of the interplanetary-type-III slices; the committed
+(harmonic\,$\times$\,density-scale) grid propagates the $f_p^2\propto n_e$ degeneracy those
+slices share (fundamental at $4\times$ density is exactly harmonic at $1\times$), rather than
+footnoting it. Time is carried as seconds since the file date's UTC midnight on both spacecraft
+--- the daily Level-3 CDFs are sparse, so a per-file origin could silently misalign the two
+burst windows by exactly the constant angular bias this analysis measures; the committed
+per-file epochs show the two origins differ by 25~s here, negligible inside the $\pm$900~s
+window. The summary longitude is a circular median (centred on the circular mean before the
+median is taken): this event sits on the $\pm180^\circ$ branch cut, where a scalar median
+lands at the edge of one longitude cluster rather than between them. Every analysis function is
+tested against a synthetic two-spacecraft event built by placing a radially outflowing source at
+a known longitude and latitude --- including one \emph{on} the branch cut at the real event's
+separation --- and giving each spacecraft the true arrival direction plus injected Gaussian
+angular scatter, a dialled constant bias, or a shifted time origin, so the estimator's failure
+modes are exercised, not just its successes.
 
 \section{Data}
 We use the STEREO/WAVES High Frequency Receiver Level-3 direction-finding CDFs (one per day per
@@ -84,61 +101,93 @@ only for the 2007--2014 two-spacecraft era (STEREO-B was lost in 2014); the tool
 \section{Results}
 In the 2013-05-15 event (active region AR~11748, an X-class-flare period), with STEREO-A and STEREO-B
 \triSep$^\circ$ apart as seen from the Sun, \triNtri\ frequency channels (\triFlo--\triFhi~MHz)
-triangulate to a forward intersection with a median ray miss of \triMiss~$R_\odot$. The source sits at
-HEEQ longitude \triLon$^\circ$, latitude \triLat$^\circ$ (near the ecliptic), and the geometric
-heliocentric distance runs from \triRlo\ to \triRhi~$R_\odot$ (\triRloAU\ to \triRhiAU~AU), genuinely
-interplanetary (Figure~\ref{fig:tri}).
+triangulate to a forward intersection with a median ray miss of \triMiss~$R_\odot$. The source sits
+at HEEQ longitude \triLon$^\circ\pm$\triLonScatter\ (circular median; the channels straddle the
+$\pm180^\circ$ cut), latitude \triLat$^\circ\pm$\triLatScatter\ (near the ecliptic), and the
+geometric heliocentric distance runs from \triRlo\ to \triRhi~$R_\odot$ (\triRloAU\ to
+\triRhiAU~AU), genuinely interplanetary (Figure~\ref{fig:tri}). Every per-channel solution ---
+including both spacecraft's mean direction vectors and sample counts, with the spacecraft
+positions in the results JSON --- is committed, so each triangulation is reproducible offline.
 
-The geometric distance and the independent Leblanc plasma-frequency distance correlate at
-$r=\triCorr$ across the \triFlo--\triFhi~MHz span. Part of any such correlation is expected by
-construction, since both estimators decrease monotonically with frequency; even a linear ramp in
-frequency already correlates with the Leblanc curve at $r\approx0.75$, but the \triCorr\ value
-sits well above that floor and specifically tests whether the geometric points follow the correct log--log curvature of the
-density model, not merely a shared downward trend. Neither headline depends on the miss-distance
-cut: tightening it from 60 to 15~$R_\odot$, which keeps only \triSweepFifteenN\ of the
-\triSweepSixtyN\ channels, moves the correlation only from \triSweepSixtyCorr\ to
-\triSweepFifteenCorr\ and the ratio from \triSweepSixtyRatio\ to \triSweepFifteenRatio, and no
-kept channel misses by more than 60 (the 100-$R_\odot$ row is identical). The cut is permissive,
-but it is not what makes the numbers. The absolute geometric scale, by contrast,
-runs a factor \triRatio\ above the average-Leblanc distance. Direction-finding on a type III, whose
-apparent source size reaches $\sim$$60^\circ$ at the lowest frequencies of this band and shrinks
-toward higher frequency \citep{krupar2014}, scatters the per-sample directions
-by tens of degrees, and noisy near-grazing rays bias the closest point outward, so we do not read that
-factor as a calibrated distance measurement. At the actual \triSep$^\circ$ baseline our zero-model-error
-synthetic reproduces a ratio of $\approx1.1$ for $9^\circ$ of injected scatter and $\approx1.6$ for the
-physically motivated $\sim$$25^\circ$, so much of the factor \triRatio\ is this bias; the residual is
-consistent with a denser-than-average corona during the active period (which pushes a given plasma
-level farther out). The robust outputs are therefore the shape cross-check ($r=\triCorr$) and
-the direction (longitude, latitude); the absolute radial scale is upper-biased and we report it
-with that caveat, with the median miss \triMiss~$R_\odot$ setting its uncertainty.
+\paragraph{The comparison is additive, and that is the result.} All \triNtri\ triangulated
+distances lie \emph{outside} the Leblanc plasma level, by a nearly constant
+$\triDiffMed\pm\triDiffStd~R_\odot$ (jackknife error on the median $\pm$\triDiffJkSe) while
+$r_\mathrm{plasma}$ itself varies by a factor of 13 across the band; the regression of
+$r_\mathrm{geom}$ on $r_\mathrm{plasma}$ has slope \triOlsSlope\ and intercept
+\triOlsIntercept~$R_\odot$. A one-parameter additive model ($r_\mathrm{geom}=r_\mathrm{plasma}
++\triDiffMed$) leaves an rms residual of \triRmsAdd~$R_\odot$; the one-parameter multiplicative
+alternative ($r_\mathrm{geom}=\triRatio\,r_\mathrm{plasma}$) leaves \triRmsMul~$R_\odot$ ---
+five times worse. The ratio is correspondingly not a constant: it runs from \triRatioMin\ at the
+lowest frequency to \triRatioMax\ at the highest (median \triRatio$\pm$\triRatioJkSe), so a
+single ``factor'' describes no channel, and the log--log slopes differ
+(\triSlopeGeom\ geometric versus \triSlopePlasma\ for Leblanc). Two consequences follow. First,
+the near-unity regression slope leaves no room for a density enhancement, which would
+\emph{multiply} the radii; the additive offset is instead the signature of a constant
+$\sim$\triBiasDeg$^\circ$ pointing bias at the $\sim$\triLever~$R_\odot$ lever arm. Second, that
+bias needs no new physics: a zero-model-error synthetic at this exact \triSep$^\circ$ baseline,
+with the source placed at the unmodified Leblanc radii, produces additive offsets of
+\triCalibNineDiff, \triCalibEighteenDiff, and \triCalibTwentyFiveDiff~$R_\odot$ for $9^\circ$,
+$18^\circ$, and $25^\circ$ of injected direction scatter (committed as the calibration grid) ---
+and the apparent source size of a type III reaches tens of degrees at these frequencies
+\citep{krupar2014}, so the observed \triDiffMed~$R_\odot$ is fully consistent with
+direction-finding scatter alone. Framed this way the additive comparison is a
+\emph{recover-a-known for the Leblanc shape}: after one constant instrumental offset, the model
+tracks the triangulated distances to
+\triRmsAdd~$R_\odot$ rms ($\sim$12\% of the median radius) from 0.07 to 0.5~AU.
+
+For continuity with correlation-based practice we also report Pearson $r=\triCorr$
+(channel-block jackknife $\pm$\triCorrJkSe; $r=\triCorrLog$ in log--log space, the space the
+curvature lives in) --- but we no longer present it as the cross-check, because it cannot fail:
+any monotone power law in frequency correlates with the Leblanc curve at $r>0.95$, and a bare
+$1/f$ matches the geometric points as well as the model does. The statistic that can fail is the
+log--log slope: \triSlopeGvsP\ for $r_\mathrm{geom}$ against $r_\mathrm{plasma}$, against 1.0
+for a pure scale offset --- and it does fail, which is how the additive framing above was
+forced. The committed (harmonic\,$\times$\,density) grid bounds the assumption the comparison
+rests on: under fundamental emission the offset becomes \triGridHOneDiff~$R_\odot$ (ratio
+\triGridHOneRatio), and fundamental at $4\times$ density is identically harmonic at $1\times$
+(\triGridHOneSFourRatio) --- the degeneracy is exact, so the harmonic choice is a convention
+here, not a measurement. Neither headline depends on the miss-distance cut: the committed sweep
+moves the correlation at most to \triSweepThirtyCorr\ (at 30~$R_\odot$, its largest excursion)
+and tightening to 15~$R_\odot$ keeps \triSweepFifteenN\ of \triSweepSixtyN\ channels at ratio
+\triSweepFifteenRatio; no kept channel misses by more than 32~$R_\odot$, so the 60 and
+100-$R_\odot$ rows are identical --- the analysis cut never actually binds.
 
 \begin{figure}
 \plotone{figures/triangulate.pdf}
 \caption{Left: the geometric heliocentric distance per frequency (points, with the ray miss as
-the error bar) against the independent Leblanc plasma-frequency distance (line); the two track in shape
-across the triangulated band. Right: the top-down HEEQ ecliptic geometry: the Sun, STEREO-A and
-STEREO-B, the two lines of sight, and the triangulated source track.}
+the error bar) against the Leblanc plasma-frequency distance (line); the points run a nearly
+constant \triDiffMed~$R_\odot$ outside the model curve --- converging fractionally at low
+frequency and diverging at high, the additive-offset signature. Right: the top-down HEEQ
+ecliptic geometry: the Sun, STEREO-A and STEREO-B, the two lines of sight, and the triangulated
+source track.}
 \label{fig:tri}
 \end{figure}
 
 \section{Discussion and reproducibility}
 This tool is a tested method and reproducibility contribution, locating a type III source in 3D
 from two public STEREO/WAVES direction-finding spectra and using the geometry to independently
-check the density-model distance that the drift-to-distance slices rely on, with the direction-finding
-noise surfaced rather than hidden. The honest limitations: (i) The robust results are the distance
-correlation and the source direction; the absolute geometric distance is upper-biased by
-direction-finding scatter (and possibly density enhancement) by the factor \triRatio, so we do not read
-it as a calibrated measurement. (ii) Only the low band (\triFlo--\triFhi~MHz) yields direction-finding
-solutions for this event, so this reaches the interplanetary source, not the coronal one. (iii) With
-two spacecraft there is one closest-point solution per frequency, and the miss distance, not a fitted
-error ellipsoid, is its consistency check. (iv) The comparison assumes harmonic emission, the
-favourable case (fundamental would worsen the ratio). (v) The two-view geometry needs STEREO-B and so
-is reproducible only on 2007--2014 data. None of these undermine the recover-a-known result (a type III
-is located in 3D and its geometric distance tracks the plasma-frequency distance across the triangulated band),
-but they bound what two lines of sight to a large, fuzzy source can claim. Every number above is written by
-the pipeline into the macros this paper \code{\textbackslash input}s, and
-\code{python -m jansky\_research.triangulate -\,-date 20130515} regenerates them from the public SPDF
-CDFs.
+check the density-model distance that the drift-to-distance slices rely on, with the
+direction-finding noise surfaced rather than hidden. The honest limitations: (i) The robust
+results are the source direction and the additive comparison; the constant
+$\sim$\triBiasDeg$^\circ$ offset the comparison reveals is at the size the measured calibration
+grid produces from apparent-source scatter alone, but a genuine pointing calibration error in
+the Level-3 inversion would look identical, and two rays cannot distinguish them --- either way
+the absolute radial scale carries the offset and we do not read it as calibrated. (ii) Only the
+low band (\triFlo--\triFhi~MHz) yields direction-finding solutions for this event, so this
+reaches the interplanetary source, not the coronal one. (iii) With two spacecraft there is one
+closest-point solution per frequency, and the miss distance, not a fitted error ellipsoid, is
+its consistency check --- and the median miss (\triMiss~$R_\odot$) is comparable to the additive
+offset itself, so individual channels are consistent with the model while the ensemble offset is
+one-signed on all \triNtri\ channels. (iv) The harmonic assumption is a convention within the
+committed (harmonic\,$\times$\,density) grid, exactly degenerate with the density scale.
+(v) The two-view geometry needs STEREO-B and so is reproducible only on 2007--2014 data. None of
+these undermine the recover-a-known result (a type III is located in 3D and, after one constant
+offset, its geometric distances confirm the Leblanc profile to $\sim$12\% over the triangulated
+band), but they bound what two lines of sight to a large, fuzzy source can claim. Every number
+above is written by the pipeline into the macros this paper \code{\textbackslash input}s
+(including the calibration and degeneracy grids), and
+\code{python -m jansky\_research.triangulate -\,-date 20130515} regenerates them from the public
+SPDF CDFs.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

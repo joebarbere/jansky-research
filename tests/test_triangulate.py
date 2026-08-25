@@ -107,8 +107,95 @@ def test_miss_sweep_is_pure_filtering_and_matches_the_analysis_cut():
 def test_run_offline_commits_channels_and_sweep(tmp_path):
     triangulate.run(out=str(tmp_path), offline=True)
     rows = (tmp_path / "results" / "triangulate_channels.csv").read_text().splitlines()
-    assert rows[0] == "freq_mhz,r_geom_rsun,r_plasma_rsun,miss_rsun,lon_deg,lat_deg"
+    assert rows[0].startswith("freq_mhz,r_geom_rsun,r_plasma_rsun,miss_rsun,lon_deg,lat_deg")
+    assert rows[0].endswith("ua_x,ua_y,ua_z,ub_x,ub_y,ub_z,n_a,n_b")  # auditability columns
     assert len(rows) > 3
     macros = (tmp_path / "papers" / "triangulate" / "generated" / "macros.tex").read_text()
     for name in (r"\triSweepFifteenCorr", r"\triSweepSixtyRatio", r"\triSweepHundredN"):
         assert name in macros, name
+
+
+def test_circular_median_survives_the_branch_cut():
+    """The published longitude was a scalar median across +-180: 16 negative values near
+    -175 and 22 positive near +175 medianed to the edge of one cluster. The circular median
+    must land near 180 for such a sample, and agree with np.median away from the cut."""
+    rng = np.random.default_rng(0)
+    a = np.concatenate([rng.normal(176.0, 3.0, 22), rng.normal(-176.0, 3.0, 16)])
+    a = ((a + 180.0) % 360.0) - 180.0
+    med, scatter = triangulate.circular_median_deg(a)
+    assert abs(abs(med) - 180.0) < 4.0  # near the cut, not at the 8th percentile
+    assert scatter < 10.0
+    # away from the wrap it reduces to the ordinary median
+    b = rng.normal(35.0, 5.0, 50)
+    med_b, _ = triangulate.circular_median_deg(b)
+    assert med_b == pytest.approx(float(np.median(b)), abs=1e-9)
+
+
+def test_run_offline_recovers_a_far_side_longitude():
+    """The old fixture longitude (35 deg) was 145 deg from the branch cut, so the wrap bug
+    was invisible to every test. This fixture sits ON the cut at the real event's geometry."""
+    ev = triangulate.synthetic_event(lon_deg=179.0, sep_deg=82.0, seed=8)
+    track = triangulate.triangulate_track(ev["spec_a"], ev["spec_b"])
+    m = triangulate._metrics(track, "synthetic", 2, ev["truth"])
+    assert m["lon_err_deg"] < 10.0  # fails under the scalar median
+
+
+def test_constant_df_bias_produces_a_constant_additive_offset():
+    """A few-degree constant azimuth bias on one spacecraft — the systematic the noise
+    budget cannot represent — must show up as an ADDITIVE radial offset with OLS slope
+    near 1, not as a multiplicative density-like scaling."""
+    clean = triangulate.synthetic_event(lon_deg=179.0, sep_deg=82.0, noise_deg=3.0, seed=9)
+    biased = triangulate.synthetic_event(
+        lon_deg=179.0, sep_deg=82.0, noise_deg=3.0, bias_deg_a=3.0, seed=9
+    )
+    t_clean = triangulate.triangulate_track(
+        clean["spec_a"], clean["spec_b"], max_miss_rsun=float("inf")
+    )
+    t_bias = triangulate.triangulate_track(
+        biased["spec_a"], biased["spec_b"], max_miss_rsun=float("inf")
+    )
+    s_clean = triangulate.additive_vs_multiplicative(t_clean["r_geom"], t_clean["r_plasma"])
+    s_bias = triangulate.additive_vs_multiplicative(t_bias["r_geom"], t_bias["r_plasma"])
+    assert abs(s_bias["diff_med_rsun"]) > abs(s_clean["diff_med_rsun"]) + 3.0
+    assert 0.7 < s_bias["ols_slope"] < 1.4  # additive, not multiplicative
+    assert s_bias["rms_additive_rsun"] < s_bias["rms_multiplicative_rsun"]
+
+
+def test_spacecraft_time_offset_degrades_the_track():
+    """A per-file epoch-origin mismatch shifts B's burst window off A's — the failure mode
+    the absolute time base in fetch_stereo_df now prevents. The synthetic knob demonstrates
+    the sensitivity the old per-file origin was exposed to."""
+    aligned = triangulate.synthetic_event(seed=10)
+    shifted = triangulate.synthetic_event(t0_offset_b_s=2400.0, seed=10)
+    t_ok = triangulate.triangulate_track(aligned["spec_a"], aligned["spec_b"])
+    t_bad = triangulate.triangulate_track(shifted["spec_a"], shifted["spec_b"])
+    assert t_bad["freq_mhz"].size < t_ok["freq_mhz"].size  # window misses most of B's burst
+
+
+def test_harmonic_density_grid_shows_the_degeneracy():
+    ev = triangulate.synthetic_event(seed=11)
+    track = triangulate.triangulate_track(ev["spec_a"], ev["spec_b"])
+    grid = triangulate.harmonic_density_grid(track["freq_mhz"], track["r_geom"])
+    # f_p^2 prop n_e: harmonic=1 at 4x density is exactly harmonic=2 at 1x
+    assert grid["h1_s4"]["ratio_med"] == pytest.approx(grid["h2_s1"]["ratio_med"], rel=1e-6)
+    # fundamental emission means a higher plasma frequency, hence a smaller Leblanc
+    # radius, hence a LARGER geometric/plasma ratio (the referee's 2.18 -> 3.89 direction)
+    assert grid["h1_s1"]["ratio_med"] > grid["h2_s1"]["ratio_med"]
+
+
+def test_synthetic_run_does_not_clobber_real_artifacts(tmp_path):
+    """A bare offline run must not overwrite a real channels CSV/figure while the JSON
+    marker keeps saying STEREO — the marker-that-lies failure."""
+    import json
+
+    res = tmp_path / "results"
+    res.mkdir(parents=True)
+    (res / "triangulate_metrics.json").write_text(
+        json.dumps({"source": "STEREO-A+B L3 DF 20130515", "n_tri": 38})
+    )
+    (res / "triangulate_channels.csv").write_text("real,evidence\n")
+    triangulate.run(out=str(tmp_path), offline=True)
+    assert (res / "triangulate_channels.csv").read_text() == "real,evidence\n"  # untouched
+    # and with no real file on disk, the synthetic artifacts ARE written (fresh checkout)
+    triangulate.run(out=str(tmp_path / "fresh"), offline=True)
+    assert (tmp_path / "fresh" / "results" / "triangulate_channels.csv").exists()

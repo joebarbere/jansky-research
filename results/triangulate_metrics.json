@@ -6,11 +6,11 @@
   "f_lo_mhz": 0.125,
   "f_hi_mhz": 1.975,
   "r_lo_rsun": 15.3,
-  "r_hi_rsun": 106.1,
+  "r_hi_rsun": 106.2,
   "r_lo_au": 0.071,
   "r_hi_au": 0.494,
   "miss_med_rsun": 17.1,
-  "lon_med_deg": 168.9,
+  "lon_med_deg": 179.5,
   "lat_med_deg": 4.7,
   "corr_geom_plasma": 0.989,
   "ratio_geom_plasma": 2.18,
@@ -47,5 +47,79 @@
       "f_lo_mhz": 0.125,
       "f_hi_mhz": 1.975
     }
-  ]
+  ],
+  "pos_a_km_heeq": [
+    -103297594.8,
+    98229428.7,
+    16546330.8
+  ],
+  "pos_b_km_heeq": [
+    -118091078.1,
+    -92984781.1,
+    -4867299.5
+  ],
+  "lon_scatter_deg": 7.6,
+  "lat_scatter_deg": 4.6,
+  "diff_med_rsun": 13.4,
+  "diff_mean_rsun": 14.2,
+  "diff_std_rsun": 3.3,
+  "ratio_med": 2.18,
+  "ratio_min": 1.24,
+  "ratio_max": 3.66,
+  "ols_slope": 1.119,
+  "ols_intercept_rsun": 12.25,
+  "rms_additive_rsun": 3.37,
+  "rms_multiplicative_rsun": 17.83,
+  "loglog_corr": 0.974,
+  "loglog_slope_geom": -0.604,
+  "loglog_slope_plasma": -0.927,
+  "loglog_slope_geom_vs_plasma": 0.653,
+  "corr_jk_se": 0.034,
+  "diff_med_jk_se_rsun": 1.08,
+  "ratio_med_jk_se": 0.192,
+  "lever_med_rsun": 194.1,
+  "implied_df_bias_deg": 4.0,
+  "harmonic_density_grid": {
+    "h1_s1": {
+      "diff_med_rsun": 17.8,
+      "ratio_med": 3.89,
+      "ols_slope": 2.304
+    },
+    "h2_s1": {
+      "diff_med_rsun": 13.4,
+      "ratio_med": 2.18,
+      "ols_slope": 1.119
+    },
+    "h1_s4": {
+      "diff_med_rsun": 13.4,
+      "ratio_med": 2.18,
+      "ols_slope": 1.119
+    },
+    "h2_s4": {
+      "diff_med_rsun": 3.0,
+      "ratio_med": 1.15,
+      "ols_slope": 0.553
+    }
+  },
+  "epoch0_utc_a": "2013-05-15T00:00:59.040033817",
+  "t0_offset_s_a": 59.0,
+  "epoch0_utc_b": "2013-05-15T00:00:34.134033322",
+  "t0_offset_s_b": 34.1,
+  "noise_bias_calibration": {
+    "9": {
+      "ratio_med": 1.11,
+      "diff_med_rsun": 3.1,
+      "n": 40
+    },
+    "18": {
+      "ratio_med": 1.45,
+      "diff_med_rsun": 10.5,
+      "n": 40
+    },
+    "25": {
+      "ratio_med": 1.68,
+      "diff_med_rsun": 16.9,
+      "n": 40
+    }
+  }
 }

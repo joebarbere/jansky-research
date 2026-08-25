@@ -34,9 +34,13 @@ from . import windwaves
 
 __all__ = [
     "RSUN_KM",
+    "additive_vs_multiplicative",
+    "circular_median_deg",
     "direction_unit",
     "fetch_stereo_df",
+    "harmonic_density_grid",
     "mean_direction",
+    "noise_bias_calibration",
     "run",
     "synthetic_event",
     "triangulate_rays",
@@ -163,6 +167,7 @@ def triangulate_track(
     pb = np.asarray(spec_b["pos"], float)[wb].mean(axis=0)
 
     freqs, rg, miss, lon, lat, src = [], [], [], [], [], []
+    uas, ubs, nas, nbs = [], [], [], []
     for jf, f in enumerate(fa):
         kb = int(np.argmin(np.abs(fb - f)))
         if abs(fb[kb] - f) > 1e-6:
@@ -185,6 +190,10 @@ def triangulate_track(
         lon.append(float(np.degrees(np.arctan2(s[1], s[0]))))
         lat.append(float(np.degrees(np.arcsin(s[2] / np.linalg.norm(s)))))
         src.append(s)
+        uas.append(ua)
+        ubs.append(ub)
+        nas.append(na)
+        nbs.append(nb)
 
     farr = np.asarray(freqs, float)
     order = np.argsort(farr)
@@ -199,9 +208,149 @@ def triangulate_track(
         "lon": np.asarray(lon)[order],
         "lat": np.asarray(lat)[order],
         "source_xyz": (np.asarray(src)[order] if len(src) else np.zeros((0, 3))),
+        "u_a": (np.asarray(uas)[order] if len(uas) else np.zeros((0, 3))),
+        "u_b": (np.asarray(ubs)[order] if len(ubs) else np.zeros((0, 3))),
+        "n_a": np.asarray(nas, int)[order] if len(nas) else np.zeros(0, int),
+        "n_b": np.asarray(nbs, int)[order] if len(nbs) else np.zeros(0, int),
         "pos_a": pa,
         "pos_b": pb,
     }
+
+
+def circular_median_deg(angles_deg: np.ndarray) -> tuple[float, float]:
+    """Wrap-safe median (and MAD-based scatter) of angles in degrees.
+
+    A scalar ``np.median`` on angles straddling the +-180 branch cut returns a value at the
+    edge of one cluster, not a centre -- the exact failure that put the published longitude
+    ~10 deg off (168.9 vs ~179). Centre on the circular mean, take the median of the wrapped
+    deviations, and add it back. Returns ``(median, scatter)``, median in (-180, 180].
+    """
+    a = np.radians(np.asarray(angles_deg, float))
+    a = a[np.isfinite(a)]
+    if a.size == 0:
+        return float("nan"), float("nan")
+    centre = np.arctan2(np.mean(np.sin(a)), np.mean(np.cos(a)))
+    dev = np.degrees(np.angle(np.exp(1j * (a - centre))))
+    med = np.degrees(centre) + float(np.median(dev))
+    med = ((med + 180.0) % 360.0) - 180.0
+    if med == -180.0:
+        med = 180.0
+    scatter = float(1.4826 * np.median(np.abs(dev - np.median(dev))))
+    return med, scatter
+
+
+def additive_vs_multiplicative(r_geom: np.ndarray, r_plasma: np.ndarray) -> dict:
+    """Which one-parameter model describes the geometric-vs-plasma discrepancy: a constant
+    additive offset or a constant ratio?
+
+    The published 'factor 2.18' was a median over a ratio that runs monotonically with
+    frequency (1.3 to 3.7); the committed channels are far better described by a constant
+    additive offset of order the ray-miss distance -- the signature of a constant
+    direction-finding bias, not of a density enhancement (which would multiply, i.e. give an
+    OLS slope well above 1). Returns both models' parameters and rms residuals, plus the OLS
+    slope/intercept of r_geom on r_plasma.
+    """
+    rg = np.asarray(r_geom, float)
+    rp = np.asarray(r_plasma, float)
+    ok = np.isfinite(rg) & np.isfinite(rp)
+    rg, rp = rg[ok], rp[ok]
+    if rg.size < 3:
+        return {}
+    diff = rg - rp
+    ratio = rg / rp
+    med_diff = float(np.median(diff))
+    med_ratio = float(np.median(ratio))
+    slope, intercept = np.polyfit(rp, rg, 1)
+    rms_add = float(np.sqrt(np.mean((rg - (rp + med_diff)) ** 2)))
+    rms_mul = float(np.sqrt(np.mean((rg - med_ratio * rp) ** 2)))
+    return {
+        "diff_med_rsun": round(med_diff, 1),
+        "diff_mean_rsun": round(float(np.mean(diff)), 1),
+        "diff_std_rsun": round(float(np.std(diff, ddof=1)), 1),
+        "ratio_med": round(med_ratio, 2),
+        "ratio_min": round(float(ratio.min()), 2),
+        "ratio_max": round(float(ratio.max()), 2),
+        "ols_slope": round(float(slope), 3),
+        "ols_intercept_rsun": round(float(intercept), 2),
+        "rms_additive_rsun": round(rms_add, 2),
+        "rms_multiplicative_rsun": round(rms_mul, 2),
+    }
+
+
+def _block_jackknife_se(values, stat_fn, *, block: int = 6) -> float:
+    """Leave-one-contiguous-block-out jackknife SE for channel statistics: adjacent
+    frequency channels share a burst window and a source, so single-channel resampling
+    understates the error (the rmstructure lesson, along-track)."""
+    n = int(np.asarray(values[0]).size) if isinstance(values, tuple) else int(values.size)
+    arrs = values if isinstance(values, tuple) else (values,)
+    n_blocks = max(int(np.ceil(n / block)), 2)
+    vals = []
+    for b in range(n_blocks):
+        keep = np.ones(n, bool)
+        keep[b * block : (b + 1) * block] = False
+        if keep.sum() < 3:
+            continue
+        vals.append(stat_fn(*[a[keep] for a in arrs]))
+    v = np.asarray([x for x in vals if np.isfinite(x)], float)
+    k = v.size
+    if k < 2:
+        return float("nan")
+    return float(np.sqrt((k - 1) / k * np.sum((v - v.mean()) ** 2)))
+
+
+def harmonic_density_grid(
+    freq_mhz: np.ndarray,
+    r_geom: np.ndarray,
+    *,
+    grid: tuple = ((1, 1.0), (2, 1.0), (1, 4.0), (2, 4.0)),
+) -> dict:
+    """The (emission harmonic x density scale) systematic grid for the geometric comparison.
+
+    f_p^2 is proportional to n_e, so harmonic=1 at 4x density is EXACTLY harmonic=2 at 1x --
+    the same degeneracy the sibling slices commit. Each cell maps the triangulated channels
+    through the Leblanc inverse under that assumption and reports the additive offset and
+    median ratio. Keys are ``h<harmonic>_s<scale>``.
+    """
+    f = np.asarray(freq_mhz, float)
+    rg = np.asarray(r_geom, float)
+    out = {}
+    for h, s in grid:
+        rp = windwaves.emission_radius(f, harmonic=h, density_scale=s)
+        stats = additive_vs_multiplicative(rg, rp)
+        out[f"h{h}_s{s:g}"] = {
+            "diff_med_rsun": stats.get("diff_med_rsun"),
+            "ratio_med": stats.get("ratio_med"),
+            "ols_slope": stats.get("ols_slope"),
+        }
+    return out
+
+
+def noise_bias_calibration(
+    *,
+    sep_deg: float,
+    lon_deg: float = 179.0,
+    noise_degs: tuple = (9.0, 18.0, 25.0),
+    seed: int = 5,
+) -> dict:
+    """Measured (not hand-typed) triangulation bias of the pipeline at the REAL baseline.
+
+    Synthetic events at the real spacecraft separation and near-far-side longitude, with the
+    source placed at the unmodified Leblanc radii, quantify how much outward bias pure
+    direction-finding scatter produces at each noise level. Keys are the noise levels.
+    """
+    out = {}
+    for nd in noise_degs:
+        ev = synthetic_event(
+            lon_deg=lon_deg, sep_deg=sep_deg, noise_deg=nd, f_hi_mhz=2.0, seed=seed
+        )
+        track = triangulate_track(ev["spec_a"], ev["spec_b"], max_miss_rsun=float("inf"))
+        stats = additive_vs_multiplicative(track["r_geom"], track["r_plasma"])
+        out[f"{nd:g}"] = {
+            "ratio_med": stats.get("ratio_med"),
+            "diff_med_rsun": stats.get("diff_med_rsun"),
+            "n": int(track["freq_mhz"].size),
+        }
+    return out
 
 
 #: The miss-distance thresholds the robustness sweep reports (R_sun). 60 is the analysis cut.
@@ -266,6 +415,8 @@ def synthetic_event(
     cadence_s: float = 60.0,
     noise_deg: float = 9.0,
     sep_deg: float = 135.0,
+    bias_deg_a: float = 0.0,
+    t0_offset_b_s: float = 0.0,
     seed: int = 0,
 ) -> dict:
     """Synthetic two-spacecraft direction-finding event for a radially outflowing type III.
@@ -274,9 +425,12 @@ def synthetic_event(
     ``lat_deg``); the Leblanc density sets the (harmonic) emission frequency at each radius. Two
     spacecraft sit at 1 AU, separated by ``sep_deg`` in longitude and straddling the source, each
     "observing" the true direction to the beam with ``noise_deg`` of Gaussian angular scatter (mimicking
-    the wide apparent source size). Returns ``spec_a``/``spec_b`` dicts in the same schema as
-    :func:`fetch_stereo_df`, plus ``truth`` (the injected longitude/latitude and the radius--frequency
-    mapping).
+    the wide apparent source size). ``bias_deg_a`` adds a CONSTANT azimuth bias to spacecraft A
+    (a direction-finding calibration error the noise budget cannot represent) and
+    ``t0_offset_b_s`` shifts spacecraft B's time axis (a per-file epoch origin mismatch) --- the
+    two systematic failure modes the round-8 referee found untestable. Returns
+    ``spec_a``/``spec_b`` dicts in the same schema as :func:`fetch_stereo_df`, plus ``truth``
+    (the injected longitude/latitude and the radius--frequency mapping).
     """
     rng = np.random.default_rng(seed)
     from jansky import solar
@@ -323,9 +477,15 @@ def synthetic_event(
         }
 
     _ = solar  # density model used via windwaves.emission_radius
+    spec_a = _spec(pos_a)
+    spec_b = _spec(pos_b)
+    if bias_deg_a:
+        spec_a["az"] = spec_a["az"] + bias_deg_a
+    if t0_offset_b_s:
+        spec_b["times"] = spec_b["times"] + t0_offset_b_s
     return {
-        "spec_a": _spec(pos_a),
-        "spec_b": _spec(pos_b),
+        "spec_a": spec_a,
+        "spec_b": spec_b,
         "truth": {
             "lon_deg": lon_deg,
             "lat_deg": lat_deg,
@@ -368,7 +528,15 @@ def fetch_stereo_df(
         c = cdflib.CDF(fh.name)
         freqs = np.asarray(c.varget("FREQUENCY"), float) / 1e6  # Hz -> MHz
         ep = cdflib.cdfepoch.to_datetime(c.varget("Epoch"))
-        times = (ep - ep[0]) / np.timedelta64(1, "s")
+        # ABSOLUTE time base: seconds since the file date's UTC midnight, NOT since the
+        # file's own first record. The daily L3 CDFs are sparse (only records with DF
+        # solutions), so ep[0] need not agree between spacecraft, and a per-file origin
+        # would silently misalign the two burst windows -- exactly the constant few-degree
+        # direction bias this slice is trying to measure.
+        day0 = np.datetime64(
+            f"{date_yyyymmdd[:4]}-{date_yyyymmdd[4:6]}-{date_yyyymmdd[6:8]}T00:00:00"
+        )
+        times = (ep - day0) / np.timedelta64(1, "s")
         az = np.asarray(c.varget("WAVE_AZIMUTH_HEEQ"), float)
         col = np.asarray(c.varget("WAVE_COLATITUDE_HEEQ"), float)
         sfu = np.asarray(c.varget("PSD_SFU"), float)
@@ -382,6 +550,8 @@ def fetch_stereo_df(
         "col": col,
         "sfu": sfu,
         "pos": pos,
+        "epoch0_utc": str(ep[0]),
+        "t0_offset_s": round(float((ep[0] - day0) / np.timedelta64(1, "s")), 1),
     }
 
 
@@ -395,11 +565,14 @@ def _metrics(track: dict, source: str, harmonic: int, truth: dict | None) -> dic
         float(np.corrcoef(rg, rp)[0, 1]) if n >= 3 and np.ptp(rg) > 0 and np.ptp(rp) > 0 else None
     )
     ratio = float(np.median(rg / rp)) if n and np.all(rp > 0) else None
+    lon_med, lon_scatter = circular_median_deg(track["lon"]) if n else (float("nan"), float("nan"))
     m: dict = {
         "source": source,
         "n_tri": n,
         "harmonic": harmonic,
         "sep_deg": round(sep, 1),
+        "pos_a_km_heeq": [round(float(v), 1) for v in track["pos_a"]],
+        "pos_b_km_heeq": [round(float(v), 1) for v in track["pos_b"]],
         "f_lo_mhz": round(float(f.min()), 4) if n else None,
         "f_hi_mhz": round(float(f.max()), 3) if n else None,
         "r_lo_rsun": round(float(rg.min()), 1) if n else None,
@@ -407,16 +580,52 @@ def _metrics(track: dict, source: str, harmonic: int, truth: dict | None) -> dic
         "r_lo_au": round(float(rg.min()) / windwaves.R_AU_RSUN, 3) if n else None,
         "r_hi_au": round(float(rg.max()) / windwaves.R_AU_RSUN, 3) if n else None,
         "miss_med_rsun": round(float(np.median(track["miss"])), 1) if n else None,
-        "lon_med_deg": round(float(np.median(track["lon"])), 1) if n else None,
+        # circular statistics: a scalar median across the +-180 wrap put the published
+        # longitude at the 8th percentile of its own sample
+        "lon_med_deg": round(lon_med, 1) if np.isfinite(lon_med) else None,
+        "lon_scatter_deg": round(lon_scatter, 1) if np.isfinite(lon_scatter) else None,
         "lat_med_deg": round(float(np.median(track["lat"])), 1) if n else None,
+        "lat_scatter_deg": (
+            round(float(1.4826 * np.median(np.abs(track["lat"] - np.median(track["lat"])))), 1)
+            if n
+            else None
+        ),
         "corr_geom_plasma": round(corr, 3) if corr is not None else None,
         "ratio_geom_plasma": round(ratio, 2) if ratio is not None else None,
     }
+    if n >= 6:
+        # the honest comparison: additive vs multiplicative, log-log shape, block-jackknifed
+        m.update(additive_vs_multiplicative(rg, rp))
+        lf, lg, lp = np.log10(f), np.log10(rg), np.log10(rp)
+        m["loglog_corr"] = round(float(np.corrcoef(lg, lp)[0, 1]), 3)
+        m["loglog_slope_geom"] = round(float(np.polyfit(lf, lg, 1)[0]), 3)
+        m["loglog_slope_plasma"] = round(float(np.polyfit(lf, lp, 1)[0]), 3)
+        m["loglog_slope_geom_vs_plasma"] = round(float(np.polyfit(lp, lg, 1)[0]), 3)
+        m["corr_jk_se"] = round(
+            _block_jackknife_se(
+                (rg, rp), lambda a, b: float(np.corrcoef(a, b)[0, 1]) if a.size >= 3 else np.nan
+            ),
+            3,
+        )
+        m["diff_med_jk_se_rsun"] = round(
+            _block_jackknife_se((rg, rp), lambda a, b: float(np.median(a - b))), 2
+        )
+        m["ratio_med_jk_se"] = round(
+            _block_jackknife_se((rg, rp), lambda a, b: float(np.median(a / b))), 3
+        )
+        # the implied constant pointing bias: the additive offset over the mean lever arm
+        lever_a = np.linalg.norm(track["source_xyz"] - track["pos_a"], axis=1) / RSUN_KM
+        lever_b = np.linalg.norm(track["source_xyz"] - track["pos_b"], axis=1) / RSUN_KM
+        lever = float(np.median(0.5 * (lever_a + lever_b)))
+        m["lever_med_rsun"] = round(lever, 1)
+        m["implied_df_bias_deg"] = round(float(np.degrees(m["diff_med_rsun"] / lever)), 1)
+        m["harmonic_density_grid"] = harmonic_density_grid(f, rg)
     if truth is not None:
         m["truth_lon_deg"] = truth["lon_deg"]
         m["truth_lat_deg"] = truth["lat_deg"]
         if n:
-            m["lon_err_deg"] = round(abs(m["lon_med_deg"] - truth["lon_deg"]), 1)
+            lon_err = abs(((m["lon_med_deg"] - truth["lon_deg"] + 180.0) % 360.0) - 180.0)
+            m["lon_err_deg"] = round(lon_err, 1)
             m["lat_err_deg"] = round(abs(m["lat_med_deg"] - truth["lat_deg"]), 1)
     return m
 
@@ -455,6 +664,13 @@ def run(
         max_miss_rsun=max_miss_rsun,
     )
     metrics = _metrics(track, source, harmonic, truth)
+    for spec, tag in ((spec_a, "a"), (spec_b, "b")):
+        if "epoch0_utc" in spec:  # pragma: no cover - real leg only
+            metrics[f"epoch0_utc_{tag}"] = spec["epoch0_utc"]
+            metrics[f"t0_offset_s_{tag}"] = spec["t0_offset_s"]
+    # The pipeline's own triangulation bias, measured at the real baseline instead of
+    # hand-typed in prose: synthetic events at this separation, source AT the Leblanc radii.
+    metrics["noise_bias_calibration"] = noise_bias_calibration(sep_deg=metrics["sep_deg"])
     # The sweep runs on a track with the miss cut OPEN, so every threshold filters the same
     # channel set; the analysis cut (60) is one row of it rather than a separate universe.
     open_track = triangulate_track(
@@ -471,23 +687,61 @@ def run(
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
-    write_results(metrics, op / "results" / "triangulate_metrics.json")
-    # Per-channel arrays with the cut open, so the 60 R_sun choice is auditable and any future
-    # sweep is offline -- the innerrc lesson: a committed results file must carry the numbers
-    # its own headline is computed from.
-    import csv as _csv
+    # CSV and figure are committed evidence with no merge machinery of their own: refuse to
+    # let a synthetic run overwrite them when the results JSON on disk is real (previously a
+    # bare `python -m jansky_research.triangulate` replaced the real 38-channel CSV with
+    # synthetic channels while the JSON kept saying "STEREO-A+B" -- a marker that lies).
+    json_path = op / "results" / "triangulate_metrics.json"
+    write_artifacts = source != "synthetic"
+    if not write_artifacts:
+        try:
+            import json as _json
 
-    with (op / "results" / "triangulate_channels.csv").open("w", newline="") as fh:
-        w = _csv.writer(fh)
-        w.writerow(["freq_mhz", "r_geom_rsun", "r_plasma_rsun", "miss_rsun", "lon_deg", "lat_deg"])
-        for i in range(open_track["freq_mhz"].size):
+            from .report import _results_are_real
+
+            write_artifacts = not (
+                json_path.is_file() and _results_are_real(_json.loads(json_path.read_text()))
+            )
+        except Exception:
+            write_artifacts = True
+
+    write_results(metrics, json_path)
+    if write_artifacts:
+        # Per-channel arrays with the cut open, so the 60 R_sun choice is auditable and any
+        # future sweep is offline -- plus the mean directions and sample counts, so a reader
+        # can reproduce every r_geom from committed evidence (with pos_a/pos_b in the JSON).
+        import csv as _csv
+
+        with (op / "results" / "triangulate_channels.csv").open("w", newline="") as fh:
+            w = _csv.writer(fh)
             w.writerow(
                 [
+                    "freq_mhz",
+                    "r_geom_rsun",
+                    "r_plasma_rsun",
+                    "miss_rsun",
+                    "lon_deg",
+                    "lat_deg",
+                    "ua_x",
+                    "ua_y",
+                    "ua_z",
+                    "ub_x",
+                    "ub_y",
+                    "ub_z",
+                    "n_a",
+                    "n_b",
+                ]
+            )
+            for i in range(open_track["freq_mhz"].size):
+                row = [
                     round(float(open_track[key][i]), 4)
                     for key in ("freq_mhz", "r_geom", "r_plasma", "miss", "lon", "lat")
                 ]
-            )
-    _figure(track, op / "papers" / "triangulate" / "figures")
+                row += [round(float(v), 6) for v in open_track["u_a"][i]]
+                row += [round(float(v), 6) for v in open_track["u_b"][i]]
+                row += [int(open_track["n_a"][i]), int(open_track["n_b"][i])]
+                w.writerow(row)
+        _figure(track, op / "papers" / "triangulate" / "figures")
     _write_macros(metrics, op / "papers" / "triangulate" / "generated" / "macros.tex")
     return metrics
 
@@ -564,10 +818,54 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\triRhiAU}}{{{_fmt('r_hi_au')}}}",
         rf"\newcommand{{\triMiss}}{{{_fmt('miss_med_rsun')}}}",
         rf"\newcommand{{\triLon}}{{{_fmt('lon_med_deg')}}}",
+        rf"\newcommand{{\triLonScatter}}{{{_fmt('lon_scatter_deg')}}}",
         rf"\newcommand{{\triLat}}{{{_fmt('lat_med_deg')}}}",
+        rf"\newcommand{{\triLatScatter}}{{{_fmt('lat_scatter_deg')}}}",
         rf"\newcommand{{\triCorr}}{{{_fmt('corr_geom_plasma')}}}",
+        rf"\newcommand{{\triCorrJkSe}}{{{_fmt('corr_jk_se')}}}",
+        rf"\newcommand{{\triCorrLog}}{{{_fmt('loglog_corr')}}}",
         rf"\newcommand{{\triRatio}}{{{_fmt('ratio_geom_plasma')}}}",
+        rf"\newcommand{{\triRatioJkSe}}{{{_fmt('ratio_med_jk_se')}}}",
+        rf"\newcommand{{\triRatioMin}}{{{_fmt('ratio_min')}}}",
+        rf"\newcommand{{\triRatioMax}}{{{_fmt('ratio_max')}}}",
+        # the additive description the committed channels actually support
+        rf"\newcommand{{\triDiffMed}}{{{_fmt('diff_med_rsun')}}}",
+        rf"\newcommand{{\triDiffMean}}{{{_fmt('diff_mean_rsun')}}}",
+        rf"\newcommand{{\triDiffStd}}{{{_fmt('diff_std_rsun')}}}",
+        rf"\newcommand{{\triDiffJkSe}}{{{_fmt('diff_med_jk_se_rsun')}}}",
+        rf"\newcommand{{\triOlsSlope}}{{{_fmt('ols_slope')}}}",
+        rf"\newcommand{{\triOlsIntercept}}{{{_fmt('ols_intercept_rsun')}}}",
+        rf"\newcommand{{\triRmsAdd}}{{{_fmt('rms_additive_rsun')}}}",
+        rf"\newcommand{{\triRmsMul}}{{{_fmt('rms_multiplicative_rsun')}}}",
+        rf"\newcommand{{\triSlopeGeom}}{{{_fmt('loglog_slope_geom')}}}",
+        rf"\newcommand{{\triSlopePlasma}}{{{_fmt('loglog_slope_plasma')}}}",
+        rf"\newcommand{{\triSlopeGvsP}}{{{_fmt('loglog_slope_geom_vs_plasma')}}}",
+        rf"\newcommand{{\triLever}}{{{_fmt('lever_med_rsun')}}}",
+        rf"\newcommand{{\triBiasDeg}}{{{_fmt('implied_df_bias_deg')}}}",
     ]
+    # the (harmonic x density) grid and the measured noise-bias calibration
+    grid = m.get("harmonic_density_grid") or {}
+    for key, name in (("h1_s1", "HOne"), ("h2_s1", "HTwo"), ("h1_s4", "HOneSFour")):
+        cell = grid.get(key) or {}
+        lines.append(
+            rf"\newcommand{{\triGrid{name}Ratio}}"
+            rf"{{{'--' if cell.get('ratio_med') is None else cell['ratio_med']}}}"
+        )
+        lines.append(
+            rf"\newcommand{{\triGrid{name}Diff}}"
+            rf"{{{'--' if cell.get('diff_med_rsun') is None else cell['diff_med_rsun']}}}"
+        )
+    calib = m.get("noise_bias_calibration") or {}
+    for nd, name in (("9", "Nine"), ("18", "Eighteen"), ("25", "TwentyFive")):
+        cell = calib.get(nd) or {}
+        lines.append(
+            rf"\newcommand{{\triCalib{name}Ratio}}"
+            rf"{{{'--' if cell.get('ratio_med') is None else cell['ratio_med']}}}"
+        )
+        lines.append(
+            rf"\newcommand{{\triCalib{name}Diff}}"
+            rf"{{{'--' if cell.get('diff_med_rsun') is None else cell['diff_med_rsun']}}}"
+        )
     # The miss-cut sweep, one macro triple per threshold, so the paper's robustness sentence is
     # regenerable rather than hand-typed.
     sweep = {s["max_miss_rsun"]: s for s in m.get("miss_sweep", [])}
