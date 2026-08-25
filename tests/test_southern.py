@@ -135,3 +135,58 @@ def test_callingham_macros_placeholder_rather_than_zero():
             mac,
         )
         assert r"\newcommand{\soRealCallTried}{--}" in mac.read_text()
+
+
+def test_fitted_index_downweights_noise_floor():
+    # A faint steep source whose 76 MHz point is a positive noise excursion: the two-point
+    # index says "rising" (the old gate), the weighted fitted index with real errors does not.
+    nu = southern.GLEAMX_NU_GHZ
+    rng = np.random.default_rng(3)
+    true = 20.0 * (nu / 0.2) ** -0.8
+    floor = 6.0 * (0.076 / nu)
+    flux = true + rng.normal(0.0, floor)
+    flux[0] = 2.0  # a low-significance positive excursion at 76 MHz, well below true ~40
+    eflux = np.hypot(floor, 0.08 * np.abs(flux))
+    alpha, err = southern.fitted_index(nu, flux, eflux)
+    assert np.isfinite(alpha) and np.isfinite(err)
+    assert alpha - err < -0.1  # significantly falling: the gate rejects it
+
+
+def test_flattening_contaminant_is_rejected_by_significant_rising_gate():
+    # The below-band-peak contaminant fits a concave parabola but must not pass the gate.
+    gleamx, racs, truth_pk, _ = southern.synthetic_field(n_sources=1500, seed=5)
+    res = southern.find_peaked_south(gleamx, racs)
+    from jansky_research.spectra import crossmatch
+
+    sel = res["is_peaked"]
+    # false-positive rate among selected: match selected against injected-peaked positions
+    rt = np.flatnonzero(truth_pk)
+    if sel.any() and rt.size:
+        i, _, _ = crossmatch(
+            np.asarray(gleamx["ra"])[rt],
+            np.asarray(gleamx["dec"])[rt],
+            res["ra"][sel],
+            res["dec"][sel],
+            5.0,
+        )
+        purity = i.size / sel.sum()
+        assert purity > 0.7  # the selected list is mostly genuinely-injected peaked sources
+    assert res["n_peaked_naive"] >= res["n_peaked_after_rising"] >= res["is_peaked"].sum()
+
+
+def test_compactness_cut_relabels_extended_fakes():
+    gleamx, racs, truth_pk, _ = southern.synthetic_field(
+        n_sources=1500, extended_fraction=0.15, seed=7
+    )
+    res = southern.find_peaked_south(gleamx, racs)
+    assert int(np.sum(res["cls"] == "extended")) > 0  # the cut catches injected extended fakes
+    # no extended-flagged source survives as peaked
+    assert not np.any(res["is_peaked"] & (res["cls"] == "extended"))
+
+
+def test_fit_requires_detections_with_real_errors():
+    nu = np.concatenate([southern.GLEAMX_NU_GHZ, southern.RACS_NU_GHZ])
+    flux = np.full(nu.size, 1.0)  # 1 mJy everywhere
+    eflux = np.full(nu.size, 5.0)  # 5 mJy errors: nothing is a detection
+    fit = southern.fit_log_parabola(nu, flux, eflux)
+    assert fit["n_points"] == 0 and not fit["is_peaked"]

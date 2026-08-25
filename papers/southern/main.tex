@@ -23,22 +23,25 @@ whose spectra rise then fall \citep{odea1998,odea2021}, best found where many fr
 turnover. A companion northern selection was limited by shallow 150~MHz data, which forced the
 low-frequency point to be an upper limit and so could only bound the spectral index, never measure the
 turnover frequency \nupk. We remove that limitation in the southern sky. GLEAM-X DR2 \citep{rossdr2}
-measures each source in 20 in-band sub-bands across 76--227~MHz, so the low-frequency shape is measured
-directly; combined with the three RACS bands (887.5, 1367.5, 1655.5~MHz;
-\citealt{racs2020,racshale2021,racsmid2024,racshigh2025}) a source has up to $\sim$23 flux points over
-a factor of $\sim$23 in frequency. We fit a weighted log-parabola to each SED and measure \nupk. Over a $3\arcdeg$ cone (\soRealNmatched\ GLEAM-X$\cap$RACS sources) a naive parabola-peak cut is
-dominated by two selection effects, each with a fix: the GLEAM ($2\arcmin$)$\to$RACS
-($\sim$15--25\arcsec) resolution mismatch, which makes extended sources lose flux at RACS resolution
-and fake a turnover (rejected by a compactness cut), and ordinary steep sources whose mild
-low-frequency flattening fits a shallow edge-peak (rejected by requiring the optically-thick rising
-side, $\alo>-0.1$). After both cuts, the field yields \soRealNpeaked\ peaked candidates with a measured
-median $\nupk\approx\soRealMedianNupk$~MHz, plus \soRealNuss\ ultra-steep-spectrum (candidate high-$z$ radio
-galaxy) sources and \soRealNextended\ rejected resolution artefacts. As a check against a known sample, we
-re-derive the turnover of the Callingham et al.\ (2017) peaked sources: of \soRealCallTried\ tested,
-\soRealCallRecovered\ are recovered as peaked and our measured \nupk\ agrees with the published value to a
-median $\soRealCallDlog$~dex, with \soRealCallWithin\% within a factor of two. This is a reproducible,
-measured-turnover scout catalogue and methodology, not a discovery catalogue, and it over-selects
-relative to careful Bayesian work \citep{kerrison2025}.
+measures each source in 19 sub-bands across 76--227~MHz; combined with the three RACS bands (0.89--1.66~GHz;
+\citealt{racs2020,racshale2021,racsmid2024,racshigh2025}) a source has up to 22 flux points over
+a factor of $\sim$22 in frequency, with the catalogue's own per-sub-band uncertainties setting
+the fit weights and a $3\sigma$ per-point detection requirement. We fit a weighted log-parabola
+to each SED. Over a $3\arcdeg$ cone (\soRealNmatched\ GLEAM-X$\cap$RACS sources) the selection
+cascade is committed at every stage: \soRealNpeakedNaive\ concave in-band fits, cut to
+\soRealNpeakedRising\ by requiring a significantly rising or flat optically-thick side, and to
+\soRealNpeaked\ peaked candidates by a compactness cut against the GLEAM$\to$RACS resolution
+mismatch (median $\nupk\approx\soRealMedianNupk$~MHz, median reduced
+$\chi^2=\soRealMedianChisq$; \soRealGapFrac\ of the turnovers are interpolations across the
+unsampled 0.23--0.89~GHz gap), plus \soRealNuss\ ultra-steep-spectrum sources, all published as
+a machine-readable table. The candidate density, \soRealDensity~deg$^{-2}$, sits within
+$\sim$20\% of the Bayesian RadioSED~II Stripe-82 density \citep{kerrison2025} — an indication,
+not a controlled comparison. Against the Callingham et al.\ (2017) sample:
+\soRealCallRecovered\ of \soRealCallTried\ covered sources are recovered as peaked, with the
+measured \nupk\ matching the published value to a median $\soRealCallDlog$~dex
+(\soRealCallWithin\% within a factor of two; unconditionally,
+\soRealCallWithinTwoOfTested\% of all tested land within a factor of two). This is a
+reproducible, measured-turnover scout catalogue and methodology, not a discovery catalogue.
 \end{abstract}
 
 \keywords{Active galactic nuclei (16) --- Radio active galactic nuclei (2134) --- Radio continuum
@@ -51,7 +54,7 @@ turnover frequency \nupk, which encodes the absorbing column and source size, ne
 coverage on both sides of the peak. In the north, a three-frequency method (150~MHz, 1.4~GHz, 3~GHz)
 had to use the shallow 150~MHz survey as an upper limit and so could only bound the low-frequency
 index, ``rising then falling'', but with no measured \nupk. The southern sky removes that limitation:
-GLEAM-X DR2 \citep{rossdr2}, the deep extension of GLEAM \citep{gleam2017}, samples 76--227~MHz in 20
+GLEAM-X DR2 \citep{rossdr2}, the deep extension of GLEAM \citep{gleam2017}, samples 76--227~MHz in 19 clean
 sub-bands, and RACS \citep{racs2020} adds three bands up to 1.66~GHz. We ask the weakest, most
 reproducible version of the question: with these public catalogues and a small tool, how cleanly can
 one select peaked-spectrum candidates and measure their turnovers?
@@ -59,11 +62,16 @@ one select peaked-spectrum candidates and measure their turnovers?
 \section{Methods}
 \code{southern} is a pure-NumPy module that composes earlier tools (the \code{jansky} helpers;
 \citealt{jansky}): the two-point spectral index, positional cross-matching, and the classification of
-a companion peaked-spectrum slice. Its one new capability is \code{fit\_log\_parabola}, a weighted
-least-squares fit of $\log_{10}S = a\,x^2+b\,x+c$ with $x=\log_{10}\nu$ to the full multi-band SED.
-The turnover is $\nupk=10^{-b/2a}$ and is a genuine (concave) peak when $a<0$; we require it to lie
-within the sampled band, giving a measured turnover rather than an extrapolation. Two systematics,
-exposed by the real data, require the fixes that make the result trustworthy.
+a companion peaked-spectrum slice. Its new capability is \code{fit\_log\_parabola}, a weighted
+least-squares fit of $\log_{10}S = a\,x^2+b\,x+c$ with $x=\log_{10}\nu$ to the full multi-band SED,
+using the catalogues' own per-point uncertainties and admitting only $\ge3\sigma$ detections
+(a sub-threshold point is not a detection, and keeping only its positive noise excursions — the
+log fit cannot take negatives — would censor the noise asymmetrically and manufacture a rising
+low-frequency side). We note GLEAM-X DR2 itself publishes a per-source curved-SED fit to
+227~MHz; the new lever arm here is the extension through the three RACS bands to 1.66~GHz. The
+turnover is $\nupk=10^{-b/2a}$ and is a genuine (concave) peak when $a<0$; we require it to lie
+within the fitted band. Two systematics, exposed by the real data, require the fixes that make
+the result trustworthy.
 
 \paragraph{Units.} GLEAM-X DR2 integrated fluxes are in Jy while RACS fluxes are in mJy; we convert
 GLEAM-X to mJy ($\times10^3$) before building the SED. Uncaught, this $10^3$ offset fakes a steeply
@@ -71,66 +79,97 @@ rising spectrum into RACS for every source.
 
 \paragraph{Resolution mismatch.} GLEAM's $2\arcmin$ beam recovers extended emission that RACS
 ($\sim$15--25\arcsec) resolves out, so the flux drops from GLEAM to RACS and fakes a high-frequency
-turnover. A compactness cut (the GLEAM-X integrated-to-peak ratio $<1.2$) flags these as extended, the
+turnover. A compactness cut (the GLEAM-X integrated-to-peak ratio $<\soCompactMax$) flags these as extended, the
 southern analogue of the northern method's resolution floor.
 
 \paragraph{Optically-thick rising side.} An ordinary steep source with mild low-frequency flattening
-fits a shallow parabola peaking spuriously at the GLEAM band edge. A genuine peaked source is optically
-thick below the turnover, so we require the measured GLEAM in-band index $\alo>-0.1$ (rising or flat),
-the GPS/SSA signature.
+fits a shallow parabola peaking spuriously at the GLEAM band edge. A genuine peaked source is
+optically thick below the turnover, so we require the \emph{fitted} GLEAM in-band index — a
+weighted fit over all $\ge3\sigma$ sub-bands, not a two-point ratio anchored on the noisy 76~MHz
+band — to be significantly rising or flat: $\alo-\sigma_{\alo}>-0.1$, the GPS/SSA signature. An
+earlier version used the two-point 76-vs-227~MHz ratio with an assumed 10\% error; since the
+76~MHz noise floor in this field is $\sim$7--8~mJy regardless of source brightness, that gate
+selected on noise for the faint majority, and moving its anchor by one sub-band flipped half the
+displayed candidates.
 
-Every function is tested against a synthetic 19-sub-band GLEAM-X $+$ 3-band RACS field with injected
-peaked / steep / USS SEDs, so the suite runs offline; the real run fetches GLEAM-X DR2 (VizieR) and the
-three RACS catalogues.
+Every function is tested against a synthetic 19-sub-band GLEAM-X $+$ 3-band RACS field with
+injected peaked / steep / USS SEDs \emph{plus} the contaminants each cut exists to reject — a
+below-band-peak flattening class for the rising-side gate, an extended class with
+resolution-suppressed RACS fluxes for the compactness cut, and per-band noise floors shaped like
+the real catalogue's — so the suite can fail on either cut, and runs offline; the real run
+fetches GLEAM-X DR2 (VizieR) and the three RACS catalogues.
 
 \section{Data}
-We use GLEAM-X DR2 \citep{rossdr2} (the 19 clean \code{Fint} sub-bands; the 92~MHz column is mislabelled
-in VizieR and dropped) and the RACS-low/mid/high integrated fluxes \citep{racshale2021,racsmid2024,
-racshigh2025}, cross-matched within 25\arcsec\ on a $3\arcdeg$ cone at high Galactic latitude. GLEAM-X
-DR2 exposes no per-band uncertainties via VizieR, so a nominal 10\% per-band error sets the fit weights.
+We use GLEAM-X DR2 \citep{rossdr2} (the 19 clean \code{Fint} sub-bands with their
+\code{e\_Fint} uncertainties; the 92~MHz column is mislabelled in VizieR and dropped) and the
+RACS-low/mid/high integrated fluxes \citep{racshale2021,racsmid2024,racshigh2025}, cross-matched
+within 25\arcsec\ on a $3\arcdeg$ cone at high Galactic latitude. The cross-match is
+nearest-neighbour and therefore not bijective in principle; in this field no RACS source is
+claimed by more than one GLEAM-X source (\soRealNracsMulti\ multiple matches, committed with the
+results), though a GLEAM-scale source resolved into several RACS components remains handled only
+by the compactness cut.
 
 \section{Results}
-Over the field (\soRealNmatched\ GLEAM-X$\cap$RACS sources) the two cuts above reduce a naive
-$\sim$16\% ``peaked'' fraction (piled spuriously at the GLEAM band edge) to \soRealNpeaked\
-peaked-spectrum candidates with a measured median $\nupk\approx\soRealMedianNupk$~MHz (turnovers in
-the few-hundred-MHz range, the intermediate population this method targets). The selection also returns
-\soRealNuss\ ultra-steep-spectrum sources ($\alpha<-1.2$ throughout; candidate high-$z$ radio galaxies) and
-flags \soRealNextended\ extended resolution artefacts (Figure~\ref{fig:seds}).
+Over the field (\soRealNmatched\ GLEAM-X$\cap$RACS sources) the selection cascade, committed at
+every stage in the results, runs \soRealNpeakedNaive\ (concave in-band fit) $\to$
+\soRealNpeakedRising\ (significantly rising or flat optically-thick side) $\to$ \soRealNpeaked\
+peaked-spectrum candidates after the compactness cut, with a measured median
+$\nupk\approx\soRealMedianNupk$~MHz and median reduced $\chi^2=\soRealMedianChisq$.
+\soRealGapFrac\ of the turnovers fall between the GLEAM band top and RACS-low, where \nupk\ is an
+interpolation across the unsampled 0.23--0.89~GHz gap rather than a sampled peak; the
+machine-readable table (\code{results/southern\_candidates.csv}: positions, classes, \nupk,
+$\alo\pm\sigma$, $\chi^2$, point counts for all \soRealNmatched\ sources) records which. The
+selection also returns \soRealNuss\ ultra-steep-spectrum sources ($\alpha<\soUssThresh$ throughout;
+candidate high-$z$ radio galaxies) and flags \soRealNextended\ extended resolution artefacts
+(Figure~\ref{fig:seds}).
 
-RadioSED II \citep{kerrison2025}, a careful Bayesian SSA/FFA fit over Stripe~82 ($\sim$1.2 peaked
-sources~deg$^{-2}$), provides the relevant comparison: our least-squares parabola is more permissive,
-so our candidate density is $\sim$2.5$\times$ higher, a real over-selection, expected for a fast
-scout method without per-band errors. Our selection is therefore a measured-turnover candidate list and a
-reproducible method, not a clean discovery sample.
+RadioSED II \citep{kerrison2025}, a Bayesian SSA/FFA fit over Stripe~82
+(\soRealKerrisonDensity\ peaked sources~deg$^{-2}$), provides the nearest literature comparison:
+over our \soRealArea~deg$^2$ our density is \soRealDensity~deg$^{-2}$, a ratio of
+\soRealDensityRatio. The two samples differ in survey depth, frequency coverage, and selection
+method, so this is an indication of comparable candidate density, not a controlled purity
+measurement. An earlier version of this selection, run with an assumed 10\% per-band error in
+place of the catalogue uncertainties, returned more than twice as many candidates at a
+$\sim$2.5$\times$ over-density — that excess was the error model, not the sky.
 
 \paragraph{Recovery of known sources.} As a validation, we re-derive the turnover of the Callingham
 et al.\ (2017) peaked sources \citep{callingham2017}. This is the catalogue against which the northern
 slice could previously demonstrate only purity, because it bounded \nupk\ but never measured it. Of
-\soRealCallTried\ Callingham sources with GLEAM-X$+$RACS coverage, \soRealCallRecovered\ are recovered as
-peaked, and our measured \nupk\ agrees with the published value to a median $\soRealCallDlog$~dex
-(\soRealCallWithin\% within a factor of two). The recovery climbs with published \nupk, as
-expected for a rising-side-gated method: sources peaking well below the GLEAM band fall outside the
-window, while those peaking in or above it are both recovered and have their turnover measured. This is
-the literature turnover, measured rather than bounded, using the southern data.
+\soRealCallTried\ Callingham sources tested, all with usable coverage
+(\soRealCallCovered; fetch failures are counted separately and there were none),
+\soRealCallRecovered\ are recovered as peaked, and the measured \nupk\ of the recovered agrees
+with the published value to a median $\soRealCallDlog$~dex (\soRealCallWithin\% within a factor
+of two). That statistic is conditional on passing the selection gate; unconditionally, every
+covered source with a finite fitted peak (\soRealCallNuncond\ of \soRealCallTried) gives a median
+of \soRealCallDlogUncond~dex, and \soRealCallWithinTwoOfTested\% of \emph{all} tested sources
+land within a factor of two. The per-bin tested/recovered counts are committed: recovery climbs from
+\soRealCallBinLowRecovered/\soRealCallBinLowTested\ below 250~MHz through
+\soRealCallBinMidRecovered/\soRealCallBinMidTested\ at 250--500~MHz to
+\soRealCallBinHiRecovered/\soRealCallBinHiTested\ above, as expected for a
+rising-side-gated method whose window opens with \nupk. This is the literature turnover, measured
+rather than bounded, using the southern data.
 
 \begin{figure}
 \plotone{figures/seds.pdf}
-\caption{Measured SEDs of peaked-spectrum candidates (GLEAM-X 76--227~MHz $+$ RACS 0.9--1.7~GHz): each
-rises through the GLEAM band and turns over, with the turnover frequency measured from the
-log-parabola fit rather than bounded.}
+\caption{SEDs of the first six catalogue-order peaked-spectrum candidates (GLEAM-X 76--227~MHz
+$+$ RACS 0.9--1.7~GHz) under the catalogue-error selection. The turnover frequency comes from the
+weighted log-parabola fit over the $\ge3\sigma$ points.}
 \label{fig:seds}
 \end{figure}
 
 \section{Discussion and reproducibility}
 Multi-band curvature in the south converts the northern slice's unmeasurable turnover into a measured
-one: GLEAM-X's 20 sub-bands fix \nupk\ on the optically-thick side and RACS pins the optically-thin
-fall. We provide a reproducible, systematics-aware tool (unit conversion, compactness cut, rising-side
-requirement) and a measured-turnover candidate list, not a discovery catalogue, validated by recovering
-the Callingham \citep{callingham2017} turnovers above. The clear
-next steps are a proper per-band-error (Bayesian) fit to tighten purity toward \citet{kerrison2025} and
-a sampled point in the 0.23--0.89~GHz gap to constrain interpolated turnovers. Every selection number above is written
-by the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis regenerates
-from a clean checkout on public data.
+one: GLEAM-X's 19 sub-bands fix \nupk\ on the optically-thick side and RACS pins the optically-thin
+fall. We provide a reproducible, systematics-aware tool (catalogue errors and detection
+thresholds, unit conversion, compactness cut, significant-rising-side requirement), a published
+per-source table, and a candidate list validated by recovering the Callingham
+\citep{callingham2017} turnovers above. The remaining limits are stated in place: half the
+turnovers are interpolations across the 0.23--0.89~GHz gap (a sampled point there — e.g.\ SUMSS
+at 843~MHz — would convert them), the density comparison to \citet{kerrison2025} is uncontrolled
+across survey depths, and this is a single 28~deg$^2$ field, so the density carries
+field-to-field variance no single cone can estimate. Every selection number above is written by
+the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis
+regenerates from a clean checkout on public data.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude
