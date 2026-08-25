@@ -69,3 +69,54 @@ north/south amplitude asymmetry. Both signatures reproduce the established Galac
   the quadrant split is a coarse probe of the field geometry, not a full harmonic decomposition.
 - **Reproducible:** `python -m jansky_research.rmsky` regenerates the metrics, the Aitoff RM-sky +
   $|b|$-profile figure, and the macros from the public VizieR catalogue.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 15 findings
+
+The traceability is intact (every macro resolves, the figure matches the committed profile
+point for point, the quadrant-conflation caveat is at the right strength) — but the paper's
+stated contribution is "honest uncertainties", and every error bar in it is an i.i.d.-source
+estimator applied to a manifestly correlated field. `rmsky` is where `_ratio_bootstrap_se` is
+*defined*; `rmstructure` imports that exact function and has already measured the same
+statistic's i.i.d. bootstrap understating the block jackknife by 11× (±0.10 vs ±1.1). The
+definer never got the fix the importer got.
+
+**MAJORs:**
+1. The headline **5.4 ± 0.15** is the i.i.d. bootstrap. If the SPICE-RACS inflation transfers
+   even partially, the honest figure is nearer ±1 and "highly significant" changes strength.
+   `rmstructure.spatial_block_jackknife` is public and takes exactly this interface.
+2. "Each many standard errors from zero" (region means at 15.5σ/26.6σ) assumes 10⁴ independent
+   sources where the exchangeable unit is a ~10² sky patch. A 5× inflation leaves 3σ; 11×
+   leaves 1.4σ — the paper cannot currently tell those worlds apart, and the verb must follow
+   the jackknife.
+3. The nπ dismissal is argued for medians and applied to a mean: k aliased sources shift a
+   region mean by k×652.9/n, so the paper's own k≈50 is 6.9 quoted SEs on inner-south — and
+   aliasing is not sign-random and concentrates at low |b| where the sign signal lives. The
+   sibling paper (`rmstructure`) treats the same effect as first-order. The "~50/0.13%" figure
+   is uncommitted and uncited; ±652.9 is a Taylor+2009 number, not Brentjens & de Bruyn. Fix:
+   |RM| < 300 variant + an alias-immune sign-fraction statistic.
+4. A recover-a-known with no known: "match the literature" has no comparand anywhere — no
+   published plane/pole ratio or quadrant mean is quoted. Quote Taylor+2009/Schnitzeler or
+   downgrade to "consistent in sign and order of magnitude".
+5. No per-source evidence committed: the whole result is 15 scalars + 4 bins; the catalogue is
+   <1 MB gzipped. Commit `data/rmsky_taylor2009.csv.gz` (l, b, RM, e_RM) + fetch metadata.
+6. The synthetic fixture is deterministic-signal + i.i.d. noise, so the i.i.d. bootstrap is
+   *correct on the fixture by construction* — no offline test can expose finding 1. Import
+   `rmstructure.synthetic_rm_screen` (correlated field) and assert jackknife > bootstrap.
+7. The Aitoff longitude tick labels are −l (the map negates l and never relabels): the region
+   printed 120° is l = 240°, and the paper's second result is a longitude-quadrant claim.
+
+**MINOR/NIT:** outer-region SEs computed then discarded at the write step (a significance
+claim with no error attached — the `innerrc` shape) and the outer counts exist only in this
+file; the latitude profile is plotted with no errors; zero robustness variants and `e_RM` is
+never even fetched; deduplication asserted by omission (self-match, one line); the λ²-fit
+framing overstates `rm_from_angles`, which `run()` never calls; `\rm*` macros mode-dependent
+and unnamespaced (CLAUDE.md's own recorded clobber, `\rmRatio` 5.4→8.4); `\rmTruth` ships as
+`--` in the real macro file; 5.4 ± 0.15 mixes display precisions.
+
+**Checked and clean:** all six DOIs vs Crossref; macro traceability; the internal arithmetic
+(62.1/11.5 = 5.400, counts sum, csc|b| ≈ 11.08); the quadrant-conflation caveat.
+
+**Status: fixes pending.** The single change that most improves the paper: block-jackknife
+every quoted uncertainty (ratio + four region means) and keep the bootstrap only as the
+contrast — whatever the jackknife returns, the paper stops being unable to say which world
+it is in.

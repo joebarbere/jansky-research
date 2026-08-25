@@ -123,3 +123,57 @@ the fixture's +0.2 offset was previously injected and never checked. At the fixt
 recovered at >2 sigma with `resolvable` < 0.2, which is precisely the contrast with the real
 catalogue, where 0.2 sits *below* the 0.24 resolution. The old `test_run_offline` window was ~28
 sigma wide on an exact algebraic transform and could not fail.
+
+## Full referee round (2026-08-25): MAJOR REVISION (light), 14 findings
+
+Nothing is wrong arithmetically: the referee re-derived the entire chain independently from
+VizieR `B/psr` TAP (2536 / 473 / −1.771 / 0.0184 ± 0.1220 / 0.2441) and every committed
+number reproduces exactly. All five DOIs check clean. The revision is for two abstract-level
+claims stronger than the numbers support and one missing check that moves the headline; every
+fix is computable from the columns the pipeline already fetches.
+
+**MAJORs:**
+1. The selection is stated as a flux limit and is mostly observational coverage: 764 of 2536
+   have any S400 vs 1676 with any S1400 — the binding constraint is that modern surveys don't
+   observe at 400 MHz, and an absent S400 is *no published measurement*, not a non-detection.
+   A coverage-driven selection plausibly biases steep — the opposite of the direction the
+   paper asserts. Restate as coverage-dominated with a flux-limit component; give both
+   single-band parent counts.
+2. The named bias is never quantified, and the `dr20radio`-style completeness cut moves the
+   mean −1.771 → −1.88 at α_min = −3 (2–5× the SE on the mean, comparable to the whole
+   literature spread the paper "reproduces"). The null survives every variant (|diff| ≤ 0.066
+   vs 2SE ≥ 0.22). Commit one completeness-limited subsample and quote "−1.77 raw, −1.88
+   above the completeness limit". (The S1400-floor mirror is NOT a clean bias estimate — it
+   conditions on the numerator of α — and must not be presented as one.)
+3. "Offsets larger than 0.24 are excluded" conflates 2×SE with exclusion: an offset of
+   exactly 2SE is detected with 50% probability; 90% power needs 0.40; what the data exclude
+   is the complement of the CI [−0.221, +0.257]. Quote the CI, or label 0.24 the 50%-power
+   threshold.
+4. No flux-scale systematic in the error budget: a 10/20/30% inter-survey scale offset
+   between the arms maps to Δα 0.076/0.146/0.209 — at 30% it is the size of the entire quoted
+   2σ resolution. State a systematic floor; note the Welch SE assumes per-source independence
+   ATNF's publication-clustered fluxes don't have.
+5. The headline mean has no uncertainty (SE = 0.0345) and "reproducing"/"sits squarely in the
+   literature range" is wrong at that precision — −1.77 is at the steep *edge* of the quoted
+   −1.4 to −1.8 range. The recorded "recovers vs responds to" failure mode; downgrade the verb.
+6. Sixteen rounded scalars are the whole evidence; `fetch_atnf` is untested and its choices
+   invisible — including that 474 rows have both fluxes and J0540−6919 (S400 = 0.0) is
+   silently dropped by `s400 > 0`. Commit `results/pulsarspec_sources.csv` (473 rows) +
+   `n_rejected_nonpositive_flux`.
+
+**MINOR/NIT:** per-arm joint-detection rates differ (43/337 = 12.8% MSP vs 430/~2199 = 19.6%
+normal) and are uncommitted — the exclusion applies to the observed subsets; the 30 ms cut is
+never varied (referee's sweep 10–100 ms: sign flips, null never close to breaking — commit
+it, plus permutation p = 0.877 or the median difference 0.09); `test_run_offline`'s ±28σ
+window cannot fail — assert within a few SE of the injected mean; "every function is tested"
+is false for `fetch_atnf` ("every analysis function"); ddof=0/1 mixed in one sentence; the
+sign of 0.018 (MSPs marginally *flatter*) never stated; README line 66 still carries the
+pre-revision "MSPs ≈ normal pulsars"; no catalogue version/access date (B/psr is a frozen
+2017-vintage snapshot well behind live psrcat).
+
+Declined from the attack map: the σ-uncertainty on `resolvable` (0.24 ± 0.03 at n=43) — not
+material, do not spend the revision on it.
+
+**Status: fixes pending.** The single change: commit the completeness-limited subsample —
+for a paper whose stated contribution is reproducibility, quantifying its own selection
+function is the contribution.

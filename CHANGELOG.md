@@ -11,6 +11,29 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Review round 7 verdicts recorded: `rmsky`, `pulsarspec`, `ppdot`, `torchdsp` -- three major
+  revisions (one light), one minor, two blockers.** The batch was chosen by inherited-defect
+  risk and the inheritances paid out again. rmsky (major): every quoted error is the
+  i.i.d.-source bootstrap -- defined in this very module and already measured by `rmstructure`
+  to understate this exact statistic 11x on a correlated sky; the n-pi dismissal is argued for
+  medians and applied to a mean; "match the literature" has no comparand; the Aitoff longitude
+  labels are -l; no per-source catalogue committed. pulsarspec (major, light): all numbers
+  reproduce exactly, but the selection is coverage-dominated (764/2536 have S400), not the
+  stated flux limit; the completeness cut the paper never runs moves the headline -1.77 ->
+  -1.88; "offsets > 0.24 excluded" conflates 2 SE with exclusion (it is the 50%-power
+  threshold; the CI is [-0.221, +0.257]). ppdot (minor): the census reproduces line-for-line,
+  but the "magnetar" median is set by its own defining threshold (12.7-14.1 across cuts vs the
+  robust 3.63-dex MSP-normal separation), the VizieR snapshot is 2017-vintage undisclosed (max
+  P0 11.79 s -- no ultra-long-period class), and three asserted robustness claims need their
+  sweeps committed. torchdsp (major, 2 blockers): the committed benchmark table is a
+  hand-assembled splice no single invocation could produce (`benchmark_cpu` is the 08-04 run
+  re-keyed; the fresh CPU numbers in the commit message appear nowhere; hardware strings
+  written by no code) and the abstract's "10x" contradicts its own parenthetical (8.42/0.65 =
+  12.95); the chirp's 99.5% round trip cannot fail and validates the unshipped code path.
+  Verdicts and full finding lists in each survey/<slice>-findings.md; fixes to follow per
+  slice.
+
+### Changed
 - **Review round 6 verdicts recorded: `peaked`, `stokesv`, `swaves`, `windwaves` -- four major
   revisions, eight blockers.** The batch was chosen by inherited-defect risk and every
   inheritance hypothesis paid out. peaked (3 blockers): the "100% rising" validation is a flux
