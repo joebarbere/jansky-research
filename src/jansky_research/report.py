@@ -51,8 +51,18 @@ def make_figures(catalog: dict, stats: frbstats.BurstStats, out_dir: str | Path)
     rep = np.asarray(catalog["repeater"], dtype=bool)
     paths: list[Path] = []
 
-    # 1. Wait-time CDF with the fitted Weibull overlay.
-    waits = np.sort(frbstats.wait_times(np.asarray(catalog["mjd"])[rep]))
+    # 1. Wait-time CDF with the fitted Weibull overlay. The empirical CDF must be the SAME
+    # quantity the Weibull was fitted to: within-source waits. The old call used the pooled
+    # wait_times, so 44 of the 61 plotted intervals crossed source boundaries -- the exact
+    # quantity Methods calls meaningless -- and the figure displayed a passing fit
+    # (p = 0.39 vs its own data) as a failing one (p = 1e-5 vs the wrong data).
+    mjd_rep = np.asarray(catalog["mjd"])[rep]
+    if "repeater_name" in catalog:
+        waits = np.sort(
+            frbstats.grouped_wait_times(mjd_rep, np.asarray(catalog["repeater_name"])[rep])
+        )
+    else:
+        waits = np.sort(frbstats.wait_times(mjd_rep))
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.step(waits, np.arange(1, waits.size + 1) / waits.size, where="post", label="empirical")
     from scipy import stats as _st
@@ -72,18 +82,31 @@ def make_figures(catalog: dict, stats: frbstats.BurstStats, out_dir: str | Path)
     plt.close(fig)
     paths.append(p)
 
-    # 2. Fluence cumulative distribution (CCDF) with the power-law slope.
+    # 2. Fluence cumulative distribution (CCDF) WITH the fitted power law drawn and F_min
+    # marked -- the caption promised a fit the old figure did not contain, removing from the
+    # evidence the one place a reader could judge whether a single power law is adequate.
     f = np.sort(np.asarray(catalog["fluence"], dtype=float))
     f = f[np.isfinite(f) & (f > 0)]
     ccdf = 1.0 - np.arange(f.size) / f.size
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.loglog(f, ccdf, ".", ms=3, label="bursts")
+    fmin = stats.energy.f_min
+    tail_frac = float(np.mean(f >= fmin))
+    grid_f = np.geomspace(fmin, f.max(), 100)
+    ax.loglog(
+        grid_f,
+        tail_frac * (grid_f / fmin) ** (-(stats.energy.gamma - 1.0)),
+        "r-",
+        lw=1.2,
+        label=f"ML power law (gamma={stats.energy.gamma:.2f})",
+    )
+    ax.axvline(fmin, color="k", ls=":", lw=0.8, label=f"F_min={fmin:.1f}")
     ax.set(
         xlabel="fluence (Jy ms)",
         ylabel="P(>F)",
-        title=f"Fluence distribution (gamma={stats.energy.gamma:.2f})",
+        title="Fluence distribution",
     )
-    ax.legend()
+    ax.legend(fontsize=8)
     p = out / "fluence_ccdf.pdf"
     fig.tight_layout()
     fig.savefig(p)
@@ -123,6 +146,41 @@ def write_macros(metrics: dict, path: str | Path) -> Path:
         rf"\newcommand{{\energyNtail}}{{{e['n_tail']}}}",
         rf"\newcommand{{\catalogSource}}{{{metrics['source']}}}",
     ]
+    # round-9 additions: the honest gamma error (joint bootstrap over gamma AND f_min), the
+    # Cat 1 comparand, the source-cluster Weibull CI, cadence structure, and disclosed cuts
+
+    def _opt(name: str, value) -> str:
+        return rf"\newcommand{{\{name}}}{{{'--' if value is None else value}}}"
+
+    eb = metrics.get("energy_bootstrap") or {}
+    kci = metrics.get("weibull_k_cluster_ci") or [None, None]
+    lines += [
+        _opt("energyGammaBootErr", eb.get("gamma_boot_sd")),
+        _opt("energyGammaCIlo", eb.get("gamma_ci_low")),
+        _opt("energyGammaCIhi", eb.get("gamma_ci_high")),
+        _opt("energyFminCIlo", eb.get("f_min_ci_low")),
+        _opt("energyFminCIhi", eb.get("f_min_ci_high")),
+        _opt("energyGammaRef", metrics.get("gamma_ref")),
+        _opt("energyGammaRefErr", metrics.get("gamma_ref_err")),
+        _opt("energyGammaAgree", metrics.get("gamma_agreement_sigma")),
+        _opt("energyGammaNoExcl", metrics.get("gamma_without_excluded")),
+        _opt("nExcludedFlag", metrics.get("n_excluded_flag")),
+        _opt("weibullKcluLo", kci[0]),
+        _opt("weibullKcluHi", kci[1]),
+        _opt("nWaitSources", metrics.get("n_wait_sources")),
+        _opt("nWaitsSameTransit", metrics.get("n_waits_same_transit")),
+        _opt("nWaitsSidereal", metrics.get("n_waits_sidereal_day")),
+        _opt("nWidthLimitsOne", metrics.get("n_width_limits_one")),
+        _opt("nWidthLimitsRep", metrics.get("n_width_limits_rep")),
+    ]
+    kss = metrics.get("ks_source_level") or {}
+    for key, cmd in (("width", "Width"), ("dm", "DM"), ("fluence", "Fluence")):
+        s = kss.get(key)
+        lines += [
+            _opt(f"ks{cmd}DSrc", None if s is None else f"{s['ks']:.2f}"),
+            _opt(f"ks{cmd}PSrc", None if s is None else _fmt_p(s["p"])),
+            _opt(f"ks{cmd}NSrc", None if s is None else int(s["n_rep_sources"])),
+        ]
     # KS results + class medians for each property (so the paper hard-codes no numbers).
     names = {"width": "Width", "dm": "DM", "fluence": "Fluence"}
     # CHIME widths are in seconds; report them in ms so the paper reads naturally.
@@ -140,7 +198,11 @@ def write_macros(metrics: dict, path: str | Path) -> Path:
         ]
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n")
+    # Merge rather than overwrite (the CLAUDE.md invariant this writer was missing): the
+    # \catalogSource marker lets preserve_live_macros refuse a synthetic run overwriting the
+    # real values -- previously a silent synthetic fallback could rewrite this file while
+    # results/metrics.json was correctly preserved and every guard stayed green.
+    out.write_text(preserve_live_macros("\n".join(lines) + "\n", out))
     return out
 
 

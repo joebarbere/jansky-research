@@ -11,6 +11,30 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **frbstats round-9 revision: the source is the unit of analysis, the figures show what
+  they claim, and the split-brain path is closed.** Figure 1 now plots the within-source
+  waits the Weibull was fitted to (the pooled/fitted mismatch displayed a passing fit,
+  p = 0.39, as a failing one, p = 1e-5); the synthetic fixture gains three staggered
+  repeater sources so the multi-source path is exercised, with tests asserting
+  figure == fit != pooled. Both abstracts quote the source-level KS (width D = 0.563,
+  p = 1.1e-5 over 18 sources -- stronger-reading than the burst-level number it replaces
+  as headline; DM restated at its honest marginal p = 0.044; fluence 0.005), with the
+  burst-level values kept as the literature convention and the two-sources-carry-half
+  caveat in Methods. Gamma carries the joint (gamma, F_min) bootstrap error (0.29, CI
+  [2.07, 3.19]; F_min CI [2.9, 15.7]) and is compared to Cat 1's own cumulative slope
+  transformed to differential (2.40 +/- 0.11): consistent at 0.46 sigma, with the
+  estimand caveats (excluded_flag 39 events -> gamma 2.58; repeat bursts +0.03) committed.
+  Figure 2 draws the ML power law with F_min marked. report.write_macros now merges
+  through preserve_live_macros (tested) and build_catalog raises on fetch failure instead
+  of silently substituting the synthetic fixture. The gap claim drops pip-installability
+  for the honest distribution statement, the FRBSTATS name collision is acknowledged, and
+  the landscape paragraph gains its citations (your/frbpoppy/PRESTO/FRBSTATS,
+  Crossref-verified). Disclosed: 26 non-repeater width upper limits (conservative
+  direction), 16 wait-contributing sources, cluster CI on k (0.33-0.70), the cadence
+  bimodality (7 same-transit + 8 sidereal of 44 waits), the width column definition, and
+  the mirror-URL provenance.
+
+### Changed
 - **Review round 9 verdicts recorded: `stacking`, `vlbi`, `spectra`, `frbstats` -- four major
   revisions, eight blockers.** The last never-deep-reviewed papers, and the referees earned
   their keep. stacking (2 blockers): the title's injection-recovery ratio is an ALGEBRAIC
