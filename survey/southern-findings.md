@@ -117,3 +117,38 @@ and report whatever comes out -- if the candidate list collapses, the honest pap
 paper plus a null on this field.
 
 **Status: fixes pending.**
+
+**Status: RESOLVED (2026-08-25).** The census re-ran with the catalogue's own errors and the
+method *survives* -- every criticized number moved exactly the way the referee predicted, and
+the result is stronger.
+
+**Both blockers, dissolved by the real errors.** `fetch_gleamx` now requests
+`e_Fint076..e_Fint227` (they exist and are populated -- the "no per-band errors via VizieR"
+sentence was false); fits and the in-band index admit only >=3-sigma detections (closing the
+asymmetric positivity-censoring); and the rising-side gate is a *fitted* in-band index with its
+standard error, required significantly rising/flat -- not a two-point ratio anchored on the
+noisiest sub-band. The committed cascade: 160 naive concave fits -> 49 significant-rising -> 41
+candidates (was 90 under the 10% error model), median nu_pk 253 MHz (off the band edge), median
+reduced chi^2 1.45 (chi2_red is now computed, committed per source, and sane).
+
+**The over-density was the error model, not the sky.** Density 1.45 deg^-2 over 28.27 deg^2 vs
+Kerrison's 1.2 -> ratio 1.21 (all committed), against the old ~2.5x. The paper states the
+comparison is an indication across different survey depths, and says outright that the earlier
+2.5x excess was the assumed-error artifact.
+
+**Callingham, with honest denominators:** 50 tried, 50 covered, 0 fetch errors (dispositions
+committed), 31 recovered at median 0.091 dex (better than the old 0.112), 90% of recovered
+within 2x; unconditionally (46 finite fitted peaks of 50) 0.095 dex and 76% of ALL tested within
+2x; per-bin tested/recovered committed (21/39, 8/9, 2/2) so "recovery climbs with nu_pk" is now
+macro-backed by rates, not a denominator-free count.
+
+**The rest:** the full 1,545-source catalogue is committed
+(results/southern_candidates.csv: positions, classes, nu_pk, alpha_lo +/- err, chi^2, point
+counts); crossmatch multiplicity measured (0 in this field) and stated; the gap fraction is one
+committed number (0.49 of turnovers are interpolations across 0.23-0.89 GHz, stated in the
+abstract); the synthetic field carries noise floors, a below-band-peak flattening contaminant,
+and injected extended fakes, so both cuts are tested and can fail; "Its one new capability"
+qualified with DR2's own curved-SED fits; 19-vs-20 band counts and the 22/21.8 arithmetic fixed
+everywhere; racsmid2024 authors+title and kerrison2025 DOI+authors+title corrected against
+Crossref; USS/compactness thresholds emitted as macros; figure caption describes the six
+catalogue-order SEDs without the refuted "each rises" claim; arXiv package rebuilt clean.

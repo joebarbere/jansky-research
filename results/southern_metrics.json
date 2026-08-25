@@ -1,12 +1,46 @@
 {
   "source": "GLEAM-X DR2 x RACS @ (30.0,-30.0) r=3.0deg",
   "n_matched": 1545,
-  "n_peaked": 90,
-  "n_uss": 59,
-  "n_extended": 28,
-  "median_nu_pk_mhz": 210.9,
+  "n_peaked": 41,
+  "n_uss": 47,
+  "n_extended": 15,
+  "median_nu_pk_mhz": 253.3,
   "call_tried": 50,
-  "call_recovered": 38,
-  "call_dlog": 0.112,
-  "call_within_pct": 92
+  "call_recovered": 31,
+  "call_dlog": 0.091,
+  "call_within_pct": 90,
+  "n_peaked_naive": 160,
+  "n_peaked_after_rising": 49,
+  "n_racs_matched_multiply": 0,
+  "median_chi2_red_peaked": 1.45,
+  "area_deg2": 28.27,
+  "peaked_density_per_deg2": 1.45,
+  "kerrison_density_per_deg2": 1.2,
+  "density_ratio_vs_kerrison": 1.21,
+  "call_with_coverage": 50,
+  "call_disposition": {
+    "no_gleamx_rows": 0,
+    "no_match": 0,
+    "fetch_error": 0,
+    "recovered_peaked": 31,
+    "not_recovered": 19
+  },
+  "call_by_published_nupk": {
+    "72-250MHz": {
+      "tested": 39,
+      "recovered": 21
+    },
+    "250-500MHz": {
+      "tested": 9,
+      "recovered": 8
+    },
+    "500-2000MHz": {
+      "tested": 2,
+      "recovered": 2
+    }
+  },
+  "call_n_unconditional": 46,
+  "call_dlog_unconditional": 0.095,
+  "call_within_factor_two_of_tested_pct": 76,
+  "peaked_in_gap_fraction": 0.49
 }

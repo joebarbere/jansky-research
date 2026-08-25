@@ -26,6 +26,22 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`southern` revision (round-5 referee, 18 findings, two blockers): re-run with the
+  catalogue's own errors, the method survives and the over-density vanishes.** GLEAM-X DR2
+  *does* publish per-sub-band uncertainties; `fetch_gleamx` now uses them, fits admit only
+  >=3-sigma detections (closing the positivity-censoring bias), and the rising-side gate is a
+  fitted in-band index required significantly rising/flat instead of a two-point ratio anchored
+  on the noisiest sub-band. The committed cascade runs 160 naive -> 49 -> 41 candidates
+  (was 90), median nu_pk 253 MHz, median reduced chi^2 1.45; the density ratio vs RadioSED II
+  is 1.21 (the old ~2.5x over-selection was the assumed-error artifact, and the paper says so).
+  Callingham validation with honest denominators: 31/50 covered recovered at 0.091 dex (90%
+  within 2x; unconditional 0.095 dex, 76% of all tested), per-bin tested/recovered committed so
+  "recovery climbs with nu_pk" is rate-backed. The full 1,545-source catalogue is committed
+  (positions, classes, nu_pk, alpha +/- err, chi^2), crossmatch multiplicity measured (0), the
+  gap fraction (0.49 interpolated turnovers) stated in the abstract, the synthetic field can
+  fail on both cuts (noise floors + flattening contaminant + extended fakes), band counts and
+  racsmid2024/kerrison2025 citations fixed, and the arXiv package rebuilt clean.
+
 - **`solarbursts` revision (round-5 referee, 18 findings, one blocker): the fit converges, the
   figure draws the fit it captions, and the event selection became falsifiable.**
   `_robust_linfit` gains a converge mode (mask fixed point; slope, mask and R^2 from the same
