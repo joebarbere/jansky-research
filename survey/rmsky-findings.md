@@ -120,3 +120,42 @@ and unnamespaced (CLAUDE.md's own recorded clobber, `\rmRatio` 5.4→8.4); `\rmT
 every quoted uncertainty (ratio + four region means) and keep the bootstrap only as the
 contrast — whatever the jackknife returns, the paper stops being unable to say which world
 it is in.
+
+**Status: RESOLVED (2026-08-25).** One real re-run; the jackknife settled which world the paper
+was in, and both signatures survive with honest errors.
+
+1. **Every quoted uncertainty is now a 10° sky-block jackknife** (571 blocks;
+   `rmstructure.spatial_block_jackknife`, the fix that had reached the importer but never the
+   definer). Measured: the headline ratio is **5.4 ± 0.6** against the bootstrap's ±0.15 — a
+   factor-3.9 understatement (not the SPICE-RACS 11×, and the paper quotes the gap as itself a
+   measurement of the sky's correlation). The i.i.d. bootstrap is retained only as the contrast.
+2. **"Many standard errors" is dead; the verbs now follow the jackknife.** Inner-north
+   9.3 ± 3.3 (2.8σ), inner-south −23.9 ± 4.8 (5.0σ) — "significantly non-zero and of opposite
+   sign ... at a few standard errors, not the tens the per-source errors would claim." The
+   outer regions ship their SEs and counts (previously computed and discarded): outer-north
+   5.1 ± 2.3 (2.2σ), outer-south −6.4 ± 4.4 (1.5σ, stated as not individually significant).
+3. **The nπ exposure is bounded, not argued away**: the ±652.9 is attributed to Taylor+2009
+   (not Brentjens & de Bruyn), the uncommitted "~50/0.13%" claim is gone, and the mean's alias
+   exposure is handled by two committed instruments — the |RM|<300 variant (means move ≤0.2)
+   and the alias-immune sign fractions (inner-north 0.589 ± 0.028, inner-south 0.348 ± 0.031;
+   3.2σ/4.9σ from 0.5) — both reproducing the pattern.
+4. **"Match the literature" downgraded** to "consistent in sign and order of magnitude with the
+   published maps — no published value of this exact binned ratio exists to match more
+   precisely." The csc|b| ~11 comparison stays as the only quantitative external anchor.
+5. **The catalogue is committed**: `data/rmsky_taylor2009.csv.gz` (l, b, RM, e_RM; 470 kB) with
+   `vizier_table`/`fetched_utc` in the JSON; e_RM is now fetched at all.
+6. **The correlated fixture exists and the test can fail**: the suite imports
+   `rmstructure.synthetic_rm_screen` and asserts the block jackknife exceeds the i.i.d.
+   bootstrap on a field with a known coherence scale — the failure the deterministic csc|b|
+   fixture is structurally unable to expose (stated in Methods).
+7. **The Aitoff longitude labels are fixed** (relabelled with (−x) mod 360, so the printed
+   number is the true l; the caption says which way l increases).
+
+MINORs: the latitude profile carries per-bin jackknife errors (JSON + error bars in the
+figure); robustness variants committed and each free to move the answer (5°/70° edges → 7.5,
+|RM|<300 → 5.2, e_RM-below-median → 6.3 — the ratio is bin-definition-dependent through the
+csc geometry and the paper says so); dedup measured (2 pairs within 5″); the λ² clause now
+says the helper anchors the stack but is not applied to the pre-fitted catalogue values;
+display precision matched (5.4 ± 0.6); `\rmTruth` no longer ships in the macro file. Macro
+namespacing (finding 13) deliberately deferred: both guards defend the file and the referee
+marked it low-urgency.
