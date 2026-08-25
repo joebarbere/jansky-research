@@ -60,3 +60,63 @@ binning/normalisation is unbiased.
 - **Reproducible:** `python -m jansky_research.sourcecounts --ra 180 --dec 30 --radius 8` regenerates
   the metrics, the Euclidean-normalised count figure with the Hopkins reference, and the macros from
   the public VizieR NVSS catalogue.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 14 findings
+
+No fabricated number and no macro hole: the referee re-fetched the cone from VizieR TAP and
+reproduced every committed value to the last digit, verified the Hopkins coefficients against
+the e-print itself (astro-ph/0211068 line 684), and confirmed the estimator is unbiased
+(Hopkins-through-the-estimator: 0.994, 0.0022 dex). What needs revision is claim strength and
+precision — and most fixes make the paper stronger.
+
+**MAJORs:**
+1. None of the per-bin numbers behind the headline are committed (nine scalars; the figure is
+   the only record of the bin-by-bin comparison). compute_counts already returns them; run()
+   drops them. The innerrc lesson.
+2. The headline 1.021 is quoted to a precision it lacks: the binning choice alone spans
+   0.983–1.022 (n_bins 8–20) and Poisson is ±0.024 — honest form: 1.02 ± 0.03, distance from
+   unity unresolved.
+3. The entire binning hangs on the single brightest source (bins = geomspace to s_max·1.001):
+   dropping the two brightest — both excluded from the comparison anyway — swings the quoted
+   scatter 0.037–0.078 dex. Fix: fixed 0.2-dex grid.
+4. The scatter is attributed to the wrong terms: cosmic variance is coherent across flux bins
+   (it moves the MEDIAN — where the measured 2.1% excess is ~1σ against the referee's computed
+   1.7–2.1% clustering + 1.2% Poisson) while the bin-to-bin 0.061 dex is Poisson (0.038) ⊕ the
+   Hopkins fit's own quoted 0.04-dex residual = 0.055. The per-bin errors are computed,
+   plotted, and never used: χ²/dof = 2.80 (p ≈ 0.002) against ratio 1 errors-only, falling to
+   ~1.2 with the reference residual folded in. The "expected scatter" is asserted, never
+   computed.
+5. "Complete to ~2.5 mJy" is measurably wrong in this footprint (2.1–2.5 mJy bin sits at
+   0.59 of Hopkins; the findings doc itself says ~50%), and the 3.5 mJy cut does NOT clear
+   the roll-off: a monotone 1.28→0.93 threshold artifact persists at 9–16% inside the first
+   used bin, which carries 32% of the sample — hidden by the 0.244-dex bin averaging its two
+   halves to 0.994. No cut sweep exists; the referee's sweep (3.5→20 mJy: 1.021→0.976) shows
+   stability the paper is entitled to claim only after running it. Bonus clean result: surface
+   density uniform to ±1.3% across four annuli.
+6. Component vs source is a headline systematic, not a faint-end caveat: pair counts show a
+   1.5–1.6× excess at 60–90″ (~2.4% of components are extra components of counted sources);
+   friends-of-friends merging moves the median 1.021→0.986 (60″) →0.949 (100″) — larger than
+   the departure from unity. And Hopkins is FIRST-anchored above 2.5 mJy (their §4), so the
+   whole comparison range is NVSS(45″) components vs FIRST(5″) counts — a convention match
+   the paper never states.
+7. The offline recover-a-known cannot fail: generator and comparator share the same reference
+   and the same solid-angle expression, so a 2×-wrong normalisation and even a FLAT Euclidean
+   reference pass every test; the 2π(1−cosθ) normalisation — the one new piece of code — has
+   no coverage (verified correct by hand, but untested). The "published anchors" test asserts
+   the polynomial against its own outputs. Fix: closed-form power-law test (analytic k S^-2.5
+   over a known area must return k).
+
+**MINOR/NIT:** slope −1.91 has no error (±0.03) and no comparand (Hopkins through the same
+bins gives −1.87; and the slope is interval-dependent: −1.91→−2.07 over cuts 3.5→20 mJy);
+the figure draws the fit 0.35 dex past its 1 Jy validity limit and does not distinguish used
+from excluded bins (the −2.5σ point at 0.417 Jy IS used); "first measured by Condon (1984)"
+overstates (an evolution-modelling synthesis, not the first sub-Euclidean measurement); the
+findings doc's 0.073-dex scatter is stale (0.061 everywhere else); the packaged arXiv
+abstract lost its \citealt (the curve attributed to nobody) and carries "TODO pages"; the
+~14% prose figure is hand-derived from \scScatter; the N≥5 cut never fires in this run.
+
+**Status: fixes pending.** The single change: replace the asserted agreement sentence with
+the computed budget — bin scatter 0.038 Poisson ⊕ 0.040 Hopkins residual = 0.055 vs 0.061
+measured; cosmic variance moved to the median (2.1% ≈ 1σ); χ²/dof 2.80 → ~1.2 with the
+reference error — which forces the per-bin table, the uncertainties, and the fixed grid in on
+the way through.

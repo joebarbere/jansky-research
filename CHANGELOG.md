@@ -11,6 +11,35 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Review round 8 verdicts recorded: `triangulate`, `type3synthesis`, `sourcecounts`,
+  `offsets` -- three major revisions, one minor, four blockers.** The batch was chosen by
+  inherited-defect risk and the inheritances paid out again, twice over on the heliospheric
+  pair. triangulate (2 blockers): the published longitude is a scalar median taken across the
+  +-180 wrap (168.9 vs the wrap-safe ~179 -- the module's own docstring states the principle
+  its output summary violates), and the "factor 2.18" is the wrong summary of its own
+  committed channels -- the discrepancy is a constant ADDITIVE 14.2 +/- 3.3 R_sun (OLS slope
+  1.12, i.e. a ~3.7-degree direction-finding bias), which retires the density-enhancement
+  narrative and turns the result into "Leblanc confirmed by pure geometry to ~12%".
+  type3synthesis (2 blockers): five committed per-leg values are pre-revision sibling
+  vintages verified exact by git show -- one (0.0831 c) is the estimator its own sibling's
+  revision explicitly rejected -- and the paper's one new claim ("shape agreement with a
+  2.18x scale offset") is inverted by the committed channels (ratio runs 1.29->3.65 with
+  frequency; log-log slopes -0.60 vs -0.93). sourcecounts (major): every number reproduces to
+  the last digit, but the headline 1.021 is 1.02 +/- 0.03 (the binning hangs on the single
+  brightest source), the scatter is attributed to the wrong physics (cosmic variance moves
+  the median, not the bin-to-bin scatter; the honest budget 0.038 Poisson (+) 0.040
+  Hopkins-residual = 0.055 vs 0.061 is never computed), the 3.5 mJy cut does not clear the
+  measured completeness roll-off, the sample is unmerged components against a FIRST-anchored
+  reference, and a FLAT reference passes every offline test. offsets (minor): every number
+  reproduces exactly, but the Rayleigh null ignores the RA/Dec correlation ICRF3 ships in the
+  same table (24.0x -> ~21x), the directional test uses a null the axis result already
+  excluded (the honest 208/83 split still passes at p = 1.5e-13), the error-model paragraph
+  is misattributed and hedges in the wrong direction (the noise core fits Rayleigh at scale
+  1.00), and the "reproducible matched catalogue" the abstract promises is not shipped.
+  Verdicts and full finding lists in each survey/<slice>-findings.md; fixes to follow per
+  slice.
+
+### Changed
 - **rmsky round-7 revision: the definer got the fix the importer got, and the paper can now
   say which world it is in.** Every quoted uncertainty is a 10-degree sky-block jackknife
   (571 blocks, via `rmstructure.spatial_block_jackknife`): the headline plane/pole ratio is
