@@ -22,7 +22,9 @@ variability significance rests on hangs on this number — see the central cavea
 18 well-known, well-observed compact AGN (`VALIDATION_SOURCES`): 14 Doppler-boosted blazars expected to
 vary strongly, plus **4 compact symmetric objects (CSOs)** — OQ 208, 2021+614, 0108+388, NGC 3894 —
 which lack a boosted core and serve as **steady negative controls**. CSOs are established radio flux
-calibrators (Taylor & Peck 2003 measured ~0.7% rms over 8 months for a clean sample), but two of ours
+calibrators (Fassnacht & Taylor 2001, AJ 122, 1661, measured ~0.7% rms over an 8-month campaign for a
+clean sample — a year-timescale result; this file previously misattributed it to "Taylor & Peck 2003",
+one of three wrong attributions of the same paper the 2026-08-25 referee caught), but two of ours
 are imperfect: **OQ 208 is documented as atypically variable** (40–60% in components; Wu et al. 2013)
 and **2021+614 shows long-term cm variability** (Taylor et al. 2000), so we treat the floor's
 sensitivity to them explicitly below; 0108+388 and NGC 3894 are the cleaner controls. X-band light
@@ -123,6 +125,8 @@ unambiguous plus one at the floor.
 **Still open (needs a decision, not a re-run):** `\viInjected`, `\viCompleteness` and `\viPurity` are
 `--` in the macro file but unused in `main.tex`, so the Methods sentence "recovered at high
 completeness and purity" is an unquantified claim. Either cite those macros or drop the adjectives.
+*(Resolved 2026-08-25: the sentence now cites the floor selector's own measured validation —
+completeness 1.0, blind purity 0.157 — see the round below.)*
 
 ## Full referee round (2026-08-25): MAJOR REVISION, 15 findings, one BLOCKER
 
@@ -177,3 +181,55 @@ the bona-fide catalogue was never checked; mode-dependent macros un-namespaced (
 (jackknife range 0.186–0.201, control span 0.183–0.250), the median-threshold selection
 function stated, and the headline count quoted as a range (13→10 across the span; 12 under an
 epoch-matched floor) — every input is already in the committed CSV.
+
+**Status: RESOLVED (2026-08-25).** One real re-run (the archive has grown since the last one:
+X-band epochs now span 1994–2026, and several sources gained sessions — 3C 120 47→48,
+PKS 0003−066 69→70, 2021+614 20→21). Every referee-side number reproduced in the committed
+pipeline before the prose was touched:
+
+1. **BLOCKER fixed**: `fassnachttaylor2001` is now the @article (Fassnacht & Taylor 2001,
+   AJ 122, 1661–1668, DOI 10.1086/322112, Crossref-verified); the paper scopes the 0.7% claim
+   to year timescales and states that multi-decade steadiness is probed, not assumed. This
+   file's own "Taylor & Peck 2003" corrected in place.
+2. **The floor carries its uncertainty and the count carries the floor's**: `floor_diagnostics`
+   commits the full drop-one jackknife (floors {0.18595, 0.20063}, count 13→12 — the referee's
+   exact values), the control span (0.18276–0.25045) with the count at the control maximum
+   (**10**), and the selection function (2 of 4 controls above their own floor; a median
+   threshold flags a steady source half the time by construction — stated in Methods, the
+   abstract, and measured on the fixture).
+3. **The tie is resolved, not rounded away**: the CSV now carries V at five decimals. CTA 102
+   is V = 0.19336 against floor 0.19329 — above by 7×10⁻⁵, z = 0.00 against its bootstrap
+   σ_V = 0.026. Quoted as "above at the committed precision, a tie for any practical purpose";
+   only 5 of the 13 clear the floor by >3σ_V (`v_sampling_scatter`, per-source, committed).
+4. **The epoch confound is measured and in the limitations**: Spearman ρ = 0.747 (permutation
+   p = 8×10⁻⁴), OLS V = 0.074 + 0.170·log₁₀N — the referee's coefficients exactly — and the
+   epoch-matched floor (controls' own trend at each source's N) gives **12**/14, labelled a
+   sensitivity variant since four controls cannot pin a two-parameter trend.
+5. **The cannot-fail amplitude comparison is gone**: `median_v_variable` (median of sources
+   selected by v > median-of-controls — guaranteed to exceed the control median for any input)
+   is retired from the metrics, macros, paper, and README; the honest unselected comparison is
+   median V over all 14 testable non-controls, **0.305** vs the controls' 0.193.
+6. **The floor selector now has a measured validation**: the fixture gained known-steady
+   controls (`n_controls=4`) and `floor_fixture_metrics` measures the floor discriminant
+   itself — completeness 1.0 at the default amplitude (0.971 at var_amp = 0.25, the committed
+   amplitude ladder), but **purity 0.157 on a steady-dominated blind population** — the
+   selection function measured, replacing the "high completeness and purity" sentence that
+   cited "--" macros with the honest statement that the floor is not a blind-survey classifier.
+7. **The known has a comparand**: komossa2023 (MOMO VI) is now cited as the literature anchor
+   for OJ 287's factor-of-several radio variability; all four controls verified present in
+   Kiehlmann et al. 2024's bona-fide CSO table (checked against the e-print's own table file).
+8. **m_d is reported**: the debiased modulation index is in the CSV and the control median
+   (0.186) is in the paper — on steady sources it *is* the unmodelled scatter, and it matches
+   the floor as it must.
+9. **Hand-typed numbers are macros now**: jackknife floors, ~19% (\viEffScatterPct, derived
+   from v_floor), "four times" (\viScatterRatio = 3.9), the epoch span (\viEpochYearMin–Max,
+   1994–2026 — the old "1995–2022" was in no committed artifact and was also stale), 3C 273's
+   p = 1.6×10⁻⁴ replacing "p ≈ 0", control span macros.
+10. **An 18-row generated source table** (`generated/sources.tex`, ranked by V, common names,
+    σ_V, m_d) ships in the paper; the CSV gains common_name/v_se/m_debiased columns.
+11. MINOR: figure x-label "vs.\" literal fixed; floor legend at 3 decimals; synthetic runs can
+    no longer clobber the real figure (guarded on the results JSON's provenance, with a test).
+
+Still open (repo-wide, deferred): full `\viSyn*`/`\viReal*` namespacing of the mode-dependent
+macros — the merge guards (`preserve_live_macros` + the new figure guard) carry the risk for
+now, and the new Syn macros are namespaced from birth.

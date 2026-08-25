@@ -23,12 +23,15 @@ from . import spectra, vlass
 __all__ = [
     "NU_S_GHZ",
     "NU_X_GHZ",
+    "epoch_confound",
     "fetch_astrogeo",
+    "floor_diagnostics",
     "lightcurve_metrics",
     "run",
     "select_variable",
     "sx_index",
     "synthetic_lightcurves",
+    "v_sampling_scatter",
     "variability_floor",
 ]
 
@@ -66,14 +69,16 @@ VALIDATION_SOURCES: dict[str, str] = {
 
 def lightcurve_metrics(
     fmat: np.ndarray, emat: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Per-source variability metrics from a ``(n_sources, n_epochs)`` flux/error matrix.
 
     Each row is one source's light curve with ``nan`` for sessions in which it was not measured. For
     every row with at least :data:`MIN_EPOCHS` finite points we compute, via the tested
     ``vlass.variability_metrics``, the significance $\\eta$ (weighted reduced $\\chi^2$), the amplitude
-    $V$ (coefficient of variation), the $\\chi^2$ p-value, the epoch count, and the mean flux. Rows with
-    too few epochs get ``nan`` metrics (and ``n_epochs`` counts the finite points regardless).
+    $V$ (coefficient of variation), the $\\chi^2$ p-value, the epoch count, the mean flux, and the
+    noise-debiased modulation index $m_d$ (on a genuinely steady source, $m_d>0$ directly measures how
+    much scatter the assumed error model fails to account for). Rows with too few epochs get ``nan``
+    metrics (and ``n_epochs`` counts the finite points regardless).
     """
     f = np.asarray(fmat, float)
     e = np.asarray(emat, float)
@@ -83,14 +88,15 @@ def lightcurve_metrics(
     pval = np.full(n, np.nan)
     nep = np.zeros(n, dtype=int)
     mean = np.full(n, np.nan)
+    md = np.full(n, np.nan)
     for i in range(n):
         ok = np.isfinite(f[i]) & np.isfinite(e[i]) & (e[i] > 0)
         nep[i] = int(ok.sum())
         if nep[i] < MIN_EPOCHS:
             continue
         m = vlass.variability_metrics(f[i, ok], e[i, ok])
-        eta[i], v[i], pval[i], mean[i] = m.eta, m.v, m.p_value, m.mean_flux
-    return eta, v, pval, nep, mean
+        eta[i], v[i], pval[i], mean[i], md[i] = m.eta, m.v, m.p_value, m.mean_flux, m.m_debiased
+    return eta, v, pval, nep, mean, md
 
 
 def sx_index(
@@ -165,6 +171,136 @@ def variability_floor(
     return floor, above
 
 
+def floor_diagnostics(
+    v: np.ndarray, n_epochs: np.ndarray, is_control: np.ndarray, *, min_epochs: int = MIN_EPOCHS
+) -> dict:
+    """Everything the median-of-controls floor implies but a point estimate hides.
+
+    A median threshold flags a *steady* source half the time by construction --- that is its
+    selection function, and it must be stated, not discovered by a referee. This computes: the
+    floor and the individual control $V$s; how many controls sit above their own floor; the full
+    drop-one jackknife (each control removed in turn, with the floor and the resulting above-floor
+    count per variant --- dropping only the highest controls is a check that can only ever add
+    sources); and the above-floor count at the control *maximum*, the most conservative threshold
+    the controls themselves can supply.
+    """
+    v = np.asarray(v, float)
+    nep = np.asarray(n_epochs)
+    ctrl = np.asarray(is_control, bool)
+    okc = ctrl & (nep >= min_epochs) & np.isfinite(v)
+    okn = ~ctrl & (nep >= min_epochs) & np.isfinite(v)
+    cvs = np.sort(v[okc])
+    floor = float(np.median(cvs))
+
+    def _n_above(f: float) -> int:
+        return int((v[okn] > f).sum())
+
+    jack = []
+    for i in range(cvs.size):
+        f_i = float(np.median(np.delete(cvs, i)))
+        jack.append({"floor": round(f_i, 5), "n_above": _n_above(f_i)})
+    jk_floors = [j["floor"] for j in jack]
+    jk_counts = [j["n_above"] for j in jack]
+    return {
+        "floor": round(floor, 5),
+        "control_vs": [round(float(x), 5) for x in cvs],
+        "n_above": _n_above(floor),
+        "n_controls_above_floor": int((v[okc] > floor).sum()),
+        "jackknife": jack,
+        "jk_floor_lo": min(jk_floors) if jk_floors else None,
+        "jk_floor_hi": max(jk_floors) if jk_floors else None,
+        "jk_n_above_lo": min(jk_counts) if jk_counts else None,
+        "jk_n_above_hi": max(jk_counts) if jk_counts else None,
+        "n_above_at_control_max": _n_above(float(cvs[-1])) if cvs.size else None,
+    }
+
+
+def epoch_confound(
+    v: np.ndarray,
+    n_epochs: np.ndarray,
+    is_control: np.ndarray,
+    *,
+    min_epochs: int = MIN_EPOCHS,
+    n_perm: int = 10000,
+    seed: int = 0,
+) -> dict:
+    """How strongly $V$ depends on the number of epochs, and an epoch-matched floor.
+
+    A light curve sampled at more sessions explores more of the source's variability (and more of
+    the $(u,v)$-coverage scatter), so $V$ grows with epoch count for both variables and controls.
+    Reports the Spearman correlation of $V$ with $\\log_{10} n$ over all testable sources (with a
+    permutation p-value), the OLS fit over the same sources (the confound's size), and an
+    **epoch-matched floor**: the controls' own OLS trend evaluated at each non-control's epoch
+    count, with the resulting above-floor count. Four controls cannot pin a two-parameter trend,
+    so the epoch-matched count is a sensitivity variant, not a replacement headline.
+    """
+    from scipy import stats
+
+    v = np.asarray(v, float)
+    nep = np.asarray(n_epochs)
+    ctrl = np.asarray(is_control, bool)
+    ok = (nep >= min_epochs) & np.isfinite(v)
+    x = np.log10(nep[ok].astype(float))
+    y = v[ok]
+    rho = float(stats.spearmanr(x, y).statistic)
+    rng = np.random.default_rng(seed)
+    k = 0
+    for _ in range(n_perm):
+        r = float(stats.spearmanr(x, rng.permutation(y)).statistic)
+        if abs(r) >= abs(rho):
+            k += 1
+    p_perm = (k + 1) / (n_perm + 1)
+    b_all, a_all = np.polyfit(x, y, 1)
+    okc = ok & ctrl
+    okn = ok & ~ctrl
+    out: dict = {
+        "spearman_rho": round(rho, 3),
+        "spearman_p_perm": float(f"{p_perm:.2e}"),
+        "ols_intercept": round(float(a_all), 3),
+        "ols_slope": round(float(b_all), 3),
+    }
+    if okc.sum() >= 2:
+        bc, ac = np.polyfit(np.log10(nep[okc].astype(float)), v[okc], 1)
+        floors = ac + bc * np.log10(nep[okn].astype(float))
+        out["ctrl_ols_intercept"] = round(float(ac), 3)
+        out["ctrl_ols_slope"] = round(float(bc), 3)
+        out["n_above_epoch_matched"] = int((v[okn] > floors).sum())
+    return out
+
+
+def v_sampling_scatter(
+    fmat: np.ndarray,
+    emat: np.ndarray,
+    *,
+    min_epochs: int = MIN_EPOCHS,
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> np.ndarray:
+    """Per-source bootstrap standard error of $V$ (epochs resampled with replacement).
+
+    $V$ from a handful of epochs carries sampling scatter of its own; a source "above the floor"
+    by less than that scatter is not securely above it. This is the per-source term the z-score
+    $(V-{\\rm floor})/\\sigma_V$ needs. Deterministic (fixed seed).
+    """
+    f = np.asarray(fmat, float)
+    e = np.asarray(emat, float)
+    n = f.shape[0]
+    rng = np.random.default_rng(seed)
+    se = np.full(n, np.nan)
+    for i in range(n):
+        ok = np.isfinite(f[i]) & np.isfinite(e[i]) & (e[i] > 0)
+        if int(ok.sum()) < min_epochs:
+            continue
+        fi = f[i, ok]
+        idx = rng.integers(0, fi.size, (n_boot, fi.size))
+        boots = fi[idx]
+        means = boots.mean(axis=1)
+        stds = boots.std(axis=1, ddof=1)
+        vs = np.where(means > 0, stds / means, np.nan)
+        se[i] = float(np.nanstd(vs))
+    return se
+
+
 def synthetic_lightcurves(
     n_sources: int = 400,
     n_epochs: int = 10,
@@ -173,6 +309,7 @@ def synthetic_lightcurves(
     var_amp: float = 2.0,
     err_frac: float = 0.07,
     miss_frac: float = 0.25,
+    n_controls: int = 0,
     seed: int = 0,
 ) -> dict:
     """Synthetic dual-band VLBI population: steady sources + an injected variable subset.
@@ -180,8 +317,11 @@ def synthetic_lightcurves(
     Steady sources have a constant mean flux per band (so $\\eta\\approx1$, $V\\approx$ the measurement
     error); the injected variable fraction gets a single-session flare of relative amplitude ``var_amp``
     (high $\\eta$ and $V$). Each source has a flat-ish S/X index, ``err_frac`` fractional errors, and a
-    fraction ``miss_frac`` of sessions randomly missing (``nan``) to mimic uneven VLBI sampling. Returns
-    a dict with ``flux_x/err_x/flux_s/err_s`` ``(N, M)`` matrices and the boolean ``is_variable`` truth.
+    fraction ``miss_frac`` of sessions randomly missing (``nan``) to mimic uneven VLBI sampling.
+    ``n_controls`` flags that many of the *steady* sources as known-steady controls (``is_control``),
+    so the control-floor selector --- the discriminant the real run actually uses --- can be exercised
+    and its completeness/purity measured offline. Returns a dict with ``flux_x/err_x/flux_s/err_s``
+    ``(N, M)`` matrices and the boolean ``is_variable`` / ``is_control`` truths.
     """
     rng = np.random.default_rng(seed)
     n = n_sources
@@ -190,6 +330,9 @@ def synthetic_lightcurves(
     mean_s = mean_x * (NU_S_GHZ / NU_X_GHZ) ** alpha
 
     is_variable = rng.random(n) < frac_variable
+    is_control = np.zeros(n, dtype=bool)
+    if n_controls:
+        is_control[np.where(~is_variable)[0][:n_controls]] = True
     flare_epoch = rng.integers(0, n_epochs, n)  # shared across bands: a real flare is broadband
 
     def _band(mean: np.ndarray, rs: np.random.Generator) -> tuple:
@@ -217,6 +360,34 @@ def synthetic_lightcurves(
         "flux_s": fs,
         "err_s": es,
         "is_variable": is_variable,
+        "is_control": is_control,
+    }
+
+
+def floor_fixture_metrics(
+    *, var_amp: float = 2.0, n_sources: int = 400, n_controls: int = 4, seed: int = 0
+) -> dict:
+    """Completeness/purity of the control-floor selector on the synthetic population.
+
+    This is the validation the real run's discriminant actually needs: the earlier fixture only
+    exercised the relative $\\log\\eta$--$\\log V$ outlier cut, which the real (curated,
+    everything-varies) sample cannot use. ``var_amp`` scales the injected flare, so sweeping it
+    measures how completeness degrades as the injected amplitude approaches the floor.
+    """
+    pop = synthetic_lightcurves(
+        n_sources=n_sources, var_amp=var_amp, n_controls=n_controls, seed=seed
+    )
+    _eta, v, _p, nep, _mean, _md = lightcurve_metrics(pop["flux_x"], pop["err_x"])
+    floor, above = variability_floor(v, nep, pop["is_control"])
+    truth = pop["is_variable"] & (nep >= MIN_EPOCHS)
+    tp = int((above & truth).sum())
+    return {
+        "var_amp": var_amp,
+        "floor": round(float(floor), 5),
+        "n_injected": int(truth.sum()),
+        "n_selected": int(above.sum()),
+        "completeness": round(tp / max(int(truth.sum()), 1), 3),
+        "purity": round(tp / max(int(above.sum()), 1), 3),
     }
 
 
@@ -265,6 +436,7 @@ def fetch_astrogeo(
     sess.headers["User-Agent"] = "jansky-research (amateur radio-astronomy research)"
     per: dict[str, list[tuple[np.ndarray, np.ndarray]]] = {b: [] for b in bands}
     max_ep: dict[str, int] = {b: 0 for b in bands}
+    years: dict[str, list[int]] = {b: [] for b in bands}
     for name in sources:
         try:
             idx = sess.get(f"{ASTROGEO_BASE}/{name}/", timeout=60).text
@@ -275,6 +447,7 @@ def fetch_astrogeo(
             flux: list[float] = []
             err: list[float] = []
             for fn in (f for f in files if f"_{b}_" in f):
+                ym = re.search(rf"_{b}_([12][0-9]{{3}})_", fn)
                 try:
                     parsed = _parse_cfd_tab(
                         sess.get(f"{ASTROGEO_BASE}/{name}/{fn}", timeout=60).text
@@ -285,12 +458,14 @@ def fetch_astrogeo(
                     fl, noi = parsed
                     flux.append(fl)
                     err.append(float(np.hypot(cal_frac * fl, noi)))
+                    if ym:
+                        years[b].append(int(ym.group(1)))
                 if pause:
                     time.sleep(pause)
             per[b].append((np.asarray(flux, float), np.asarray(err, float)))
             max_ep[b] = max(max_ep[b], len(flux))
     n = len(sources)
-    out: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    out: dict = {}
     for b in bands:
         fmat = np.full((n, max(max_ep[b], 1)), np.nan)
         emat = np.full((n, max(max_ep[b], 1)), np.nan)
@@ -298,6 +473,7 @@ def fetch_astrogeo(
             fmat[i, : farr.size] = farr
             emat[i, : earr.size] = earr
         out[b] = (fmat, emat)
+    out["epoch_years"] = {b: (min(y), max(y)) for b, y in years.items() if y}
     return out
 
 
@@ -317,8 +493,9 @@ def run(
     from pathlib import Path
 
     names: list[str] | None
+    epoch_years: tuple[int, int] | None = None
     if offline or sources is None:
-        pop = synthetic_lightcurves()
+        pop = synthetic_lightcurves(n_controls=4)
         source = "synthetic"
         truth: np.ndarray | None = pop["is_variable"]
         names = None
@@ -330,8 +507,9 @@ def run(
         source = f"Astrogeo VLBI ({len(sources)} sources)"
         truth = None
         names = list(sources)
+        epoch_years = data.get("epoch_years", {}).get("X")
 
-    eta, v, pval, nep, mean = lightcurve_metrics(pop["flux_x"], pop["err_x"])
+    eta, v, pval, nep, mean, md = lightcurve_metrics(pop["flux_x"], pop["err_x"])
     alpha, _aerr = sx_index(pop["flux_s"], pop["flux_x"], pop["err_s"], pop["err_x"])
     mask, eta_thr, v_thr = select_variable(eta, v, nep)
 
@@ -343,9 +521,10 @@ def run(
     is_control = (
         np.array([nm in ctrl_set for nm in names], dtype=bool)
         if names
-        else np.zeros(eta.shape, dtype=bool)
+        else np.asarray(pop.get("is_control", np.zeros(eta.shape, dtype=bool)), bool)
     )
     v_floor, above = variability_floor(v, nep, is_control)
+    v_se = v_sampling_scatter(pop["flux_x"], pop["err_x"])
     # the recover-a-known anchor: the single most significant source by eta among testable ones
     top = int(np.argmax(np.where(testable, eta, -np.inf))) if testable.any() else -1
     metrics: dict = {
@@ -359,14 +538,57 @@ def run(
         if np.isfinite(alpha).any()
         else None,
     }
-    if np.isfinite(v_floor):  # pragma: no cover - only with named controls (network run)
+    if np.isfinite(v_floor):
+        fd = floor_diagnostics(v, nep, is_control)
+        ec = epoch_confound(v, nep, is_control)
         metrics["n_controls"] = int(is_control.sum())
         metrics["n_noncontrol"] = int((testable & ~is_control).sum())
-        metrics["v_floor"] = round(v_floor, 3)
+        metrics["v_floor"] = round(v_floor, 5)
         metrics["n_above_floor"] = int(above.sum())
         metrics["median_v_control"] = round(float(np.median(v[is_control & testable])), 3)
-        var_v = v[above]
-        metrics["median_v_variable"] = round(float(np.median(var_v)), 3) if var_v.size else None
+        # the honest amplitude comparison: ALL testable non-controls, not the above-floor subset
+        # (the median of sources selected by v > median-of-controls exceeds the control median for
+        # any input whatsoever -- a comparison that cannot fail measures nothing)
+        nonc = v[testable & ~is_control]
+        metrics["median_v_noncontrol"] = round(float(np.median(nonc)), 3) if nonc.size else None
+        metrics["floor_diagnostics"] = fd
+        metrics["epoch_confound"] = ec
+        # z-scores against the floor with each source's own V sampling scatter
+        with np.errstate(invalid="ignore"):
+            z = (v - v_floor) / v_se
+        metrics["n_above_z3"] = int((above & (z > 3.0)).sum())
+        if above.any():
+            marg = int(np.argmin(np.where(above, z, np.inf)))
+            metrics["marginal_source"] = {
+                "name": names[marg] if names else f"row{marg}",
+                "v": round(float(v[marg]), 5),
+                "v_se": round(float(v_se[marg]), 5),
+                "z": round(float(z[marg]), 2),
+            }
+        # on genuinely steady controls the debiased modulation index is a direct measurement of
+        # the scatter the assumed error model fails to account for
+        mdc = md[is_control & testable]
+        metrics["median_md_control"] = round(float(np.median(mdc)), 3) if mdc.size else None
+        below = testable & ~is_control & ~above
+        if names and below.any():  # pragma: no cover - network run only
+            metrics["below_floor"] = [
+                {
+                    "name": names[i],
+                    "v": round(float(v[i]), 5),
+                    "n_epochs": int(nep[i]),
+                    "p_value": float(f"{pval[i]:.2e}"),
+                }
+                for i in np.where(below)[0]
+            ]
+    if epoch_years is not None:  # pragma: no cover - network run only
+        metrics["epoch_year_min"], metrics["epoch_year_max"] = epoch_years
+    # the control-floor selector's own validation, measured on the synthetic population at the
+    # default injected amplitude and down a ladder approaching the floor (deterministic; computed
+    # in BOTH modes so a real run emits the Syn macros the Methods section cites)
+    metrics["syn_floor_validation"] = floor_fixture_metrics()
+    metrics["syn_floor_amp_sweep"] = [
+        floor_fixture_metrics(var_amp=a) for a in (0.25, 0.5, 1.0, 2.0)
+    ]
     if top >= 0:
         metrics["top_variable"] = {
             "name": names[top] if names else f"row{top}",
@@ -387,31 +609,65 @@ def run(
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
-    from .report import write_results
+    from .report import _results_are_real, write_results
 
-    write_results(metrics, op / "results" / "vlbi_metrics.json")
+    # a synthetic run must not clobber the real figure/table (the metrics JSON and macros have
+    # their own merge guards; the binary artifacts do not, so check the provenance ourselves)
+    json_path = op / "results" / "vlbi_metrics.json"
+    write_artifacts = True
+    if source == "synthetic":
+        try:
+            import json as _json
+
+            write_artifacts = not (
+                json_path.is_file() and _results_are_real(_json.loads(json_path.read_text()))
+            )
+        except Exception:
+            write_artifacts = True
+
+    write_results(metrics, json_path)
     if names is not None:  # pragma: no cover - network
         _write_candidates(
             op / "results" / "vlbi_candidates.csv",
             names,
             eta,
             v,
+            v_se,
             pval,
             nep,
             mean,
             alpha,
+            md,
             above,
             is_control,
         )
-    _figure(eta, v, above, is_control, v_floor, op / "papers" / "vlbi" / "figures")
+        _write_table(
+            op / "papers" / "vlbi" / "generated" / "sources.tex",
+            names,
+            eta,
+            v,
+            v_se,
+            nep,
+            mean,
+            alpha,
+            md,
+            above,
+            is_control,
+        )
+    if write_artifacts:
+        _figure(eta, v, above, is_control, v_floor, op / "papers" / "vlbi" / "figures")
     _write_macros(metrics, op / "papers" / "vlbi" / "generated" / "macros.tex")
     return metrics
 
 
 def _write_candidates(
-    path, names, eta, v, pval, nep, mean, alpha, above, is_control
+    path, names, eta, v, v_se, pval, nep, mean, alpha, md, above, is_control
 ) -> None:  # pragma: no cover
-    """Write the full variability-ranked table (most significant first), tagging controls/variables."""
+    """Write the full variability-ranked table (most significant first), tagging controls/variables.
+
+    $V$ and its sampling error carry five decimals so a tie against the floor is resolvable from the
+    committed evidence rather than created by the file's own rounding.
+    """
     import csv
     from pathlib import Path
 
@@ -425,11 +681,14 @@ def _write_candidates(
         w.writerow(
             [
                 "name",
+                "common_name",
                 "control",
                 "above_floor",
                 "n_epochs",
                 "eta",
                 "v",
+                "v_se",
+                "m_debiased",
                 "p_value",
                 "mean_flux_jy",
                 "alpha_sx",
@@ -439,16 +698,61 @@ def _write_candidates(
             w.writerow(
                 [
                     names[i],
+                    VALIDATION_SOURCES.get(names[i], ""),
                     int(bool(is_control[i])),
                     int(bool(above[i])),
                     int(nep[i]),
                     f"{eta[i]:.2f}" if np.isfinite(eta[i]) else "",
-                    f"{v[i]:.3f}" if np.isfinite(v[i]) else "",
+                    f"{v[i]:.5f}" if np.isfinite(v[i]) else "",
+                    f"{v_se[i]:.5f}" if np.isfinite(v_se[i]) else "",
+                    f"{md[i]:.5f}" if np.isfinite(md[i]) else "",
                     f"{pval[i]:.2e}" if np.isfinite(pval[i]) else "",
                     f"{mean[i]:.3f}" if np.isfinite(mean[i]) else "",
                     f"{alpha[i]:.2f}" if np.isfinite(alpha[i]) else "",
                 ]
             )
+
+
+def _write_table(
+    path, names, eta, v, v_se, nep, mean, alpha, md, above, is_control
+) -> None:  # pragma: no cover - network run only
+    """Emit the per-source deluxetable body the paper \\inputs, ranked by V (the paper's statistic)."""
+    from pathlib import Path
+
+    rows = sorted(
+        range(len(names)), key=lambda i: v[i] if np.isfinite(v[i]) else -np.inf, reverse=True
+    )
+    lines = [
+        "% Auto-generated by jansky_research.vlbi._write_table -- do not edit by hand.",
+        r"\begin{deluxetable*}{llrrrrrrc}",
+        r"\tablecaption{The curated validation set, ranked by the amplitude $V$. $\sigma_V$ is the"
+        r" per-source bootstrap sampling error of $V$; $m_d$ is the noise-debiased modulation index"
+        r" under the assumed 5\% error model. \label{tab:sources}}",
+        r"\tablehead{\colhead{J2000} & \colhead{Common name} & \colhead{$N_{\rm ep}$} &"
+        r" \colhead{$\eta$} & \colhead{$V$} & \colhead{$\sigma_V$} & \colhead{$m_d$} &"
+        r" \colhead{$\langle S_X\rangle$ (Jy)} & \colhead{$\alpha_{SX}$}}",
+        r"\startdata",
+    ]
+    for i in rows:
+        tag = " (control)" if is_control[i] else ""
+        star = r"$^{\dagger}$" if above[i] else ""
+
+        def _f(x, fmt: str) -> str:
+            return format(x, fmt) if np.isfinite(x) else r"\nodata"
+
+        lines.append(
+            f"{names[i]}{star} & {VALIDATION_SOURCES.get(names[i], '')}{tag} & {int(nep[i])} & "
+            f"{_f(eta[i], '.1f')} & {_f(v[i], '.3f')} & {_f(v_se[i], '.3f')} & "
+            f"{_f(md[i], '.3f')} & {_f(mean[i], '.2f')} & {_f(alpha[i], '+.2f')} \\\\"
+        )
+    lines += [
+        r"\enddata",
+        r"\tablenotetext{\dagger}{Above the control floor (median control $V$).}",
+        r"\end{deluxetable*}",
+    ]
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(lines) + "\n")
 
 
 def _figure(eta, v, above, is_control, v_floor, out_dir) -> None:
@@ -465,7 +769,7 @@ def _figure(eta, v, above, is_control, v_floor, out_dir) -> None:
     rest = ok & ~ctrl & ~above
     ax.scatter(eta[rest], v[rest], s=10, c="0.6", label="below floor")
     ax.scatter(eta[ok & above], v[ok & above], s=26, c="C3", label="variable (above floor)")
-    if ctrl.any():  # pragma: no cover - only with named controls (network run)
+    if ctrl.any():
         ax.scatter(
             eta[ok & ctrl],
             v[ok & ctrl],
@@ -475,11 +779,11 @@ def _figure(eta, v, above, is_control, v_floor, out_dir) -> None:
             edgecolors="C0",
             label="steady control (CSO)",
         )
-    if np.isfinite(v_floor):  # pragma: no cover - only with named controls (network run)
-        ax.axhline(v_floor, ls="--", c="C0", lw=0.9, label=f"floor V={v_floor:.2f}")
+    if np.isfinite(v_floor):
+        ax.axhline(v_floor, ls="--", c="C0", lw=0.9, label=f"floor V={v_floor:.3f}")
     ax.set(
         xscale="log",
-        xlabel=r"$\eta$ (significance vs.\ constant)",
+        xlabel=r"$\eta$ (significance vs. constant)",
         ylabel=r"$V$ (fractional amplitude)",
         title="VLBI variability (X band)",
     )
@@ -504,6 +808,35 @@ def _write_macros(m: dict, path) -> None:
         val = tv.get(key)
         return "--" if val is None else str(val)
 
+    fd = m.get("floor_diagnostics") or {}
+    ec = m.get("epoch_confound") or {}
+    marg = m.get("marginal_source") or {}
+    syn = m.get("syn_floor_validation") or {}
+
+    def _d(dic: dict, key: str, fmt: str | None = None) -> str:
+        val = dic.get(key)
+        if val is None:
+            return "--"
+        return format(val, fmt) if fmt else str(val)
+
+    def _p3(key: str) -> str:
+        # a 3-decimal presentation of a 5-decimal metrics value, for prose
+        val = m.get(key)
+        return "--" if val is None else f"{float(val):.3f}"
+
+    floor = m.get("v_floor")
+    eff_pct = "--" if floor is None else f"{100 * float(floor):.0f}"
+    ratio = "--" if floor is None else f"{float(floor) / VLBI_CAL_FRAC:.1f}"
+    cvs = fd.get("control_vs") or []
+    cvs_lo = f"{cvs[0]:.3f}" if cvs else "--"
+    cvs_hi = f"{cvs[-1]:.3f}" if cvs else "--"
+    below = m.get("below_floor") or [{}]
+    below_p = below[0].get("p_value")
+    below_p_tex = (
+        "--"
+        if below_p is None
+        else rf"{float(f'{below_p:.1e}'.split('e')[0])}\times10^{{{int(f'{below_p:.1e}'.split('e')[1])}}}"
+    )
     lines = [
         "% Auto-generated by jansky_research.vlbi._write_macros — do not edit by hand.",
         rf"\newcommand{{\viSource}}{{{m['source']}}}",
@@ -515,10 +848,11 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\viMedAlpha}}{{{_fmt('median_alpha_sx')}}}",
         rf"\newcommand{{\viNctrl}}{{{_fmt('n_controls')}}}",
         rf"\newcommand{{\viNnoncontrol}}{{{_fmt('n_noncontrol')}}}",
-        rf"\newcommand{{\viFloor}}{{{_fmt('v_floor')}}}",
+        rf"\newcommand{{\viFloor}}{{{_p3('v_floor')}}}",
+        rf"\newcommand{{\viFloorFive}}{{{_fmt('v_floor')}}}",
         rf"\newcommand{{\viNabove}}{{{_fmt('n_above_floor')}}}",
         rf"\newcommand{{\viMedVctrl}}{{{_fmt('median_v_control')}}}",
-        rf"\newcommand{{\viMedVvar}}{{{_fmt('median_v_variable')}}}",
+        rf"\newcommand{{\viMedVnonctrl}}{{{_fmt('median_v_noncontrol')}}}",
         rf"\newcommand{{\viInjected}}{{{_fmt('n_injected_variable')}}}",
         rf"\newcommand{{\viCompleteness}}{{{_fmt('completeness')}}}",
         rf"\newcommand{{\viPurity}}{{{_fmt('purity')}}}",
@@ -527,6 +861,37 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\viTopEta}}{{{_tv('eta')}}}",
         rf"\newcommand{{\viTopV}}{{{_tv('v')}}}",
         rf"\newcommand{{\viTopFlux}}{{{_tv('mean_flux_jy')}}}",
+        # floor uncertainty / selection function
+        rf"\newcommand{{\viCtrlVmin}}{{{cvs_lo}}}",
+        rf"\newcommand{{\viCtrlVmax}}{{{cvs_hi}}}",
+        rf"\newcommand{{\viNctrlAbove}}{{{_d(fd, 'n_controls_above_floor')}}}",
+        rf"\newcommand{{\viFloorJkLo}}{{{_d(fd, 'jk_floor_lo', '.3f') if fd.get('jk_floor_lo') is not None else '--'}}}",
+        rf"\newcommand{{\viFloorJkHi}}{{{_d(fd, 'jk_floor_hi', '.3f') if fd.get('jk_floor_hi') is not None else '--'}}}",
+        rf"\newcommand{{\viNaboveJkLo}}{{{_d(fd, 'jk_n_above_lo')}}}",
+        rf"\newcommand{{\viNaboveJkHi}}{{{_d(fd, 'jk_n_above_hi')}}}",
+        rf"\newcommand{{\viNaboveCtrlMax}}{{{_d(fd, 'n_above_at_control_max')}}}",
+        # epoch-count confound
+        rf"\newcommand{{\viSpearmanRho}}{{{_d(ec, 'spearman_rho')}}}",
+        rf"\newcommand{{\viSpearmanP}}{{{_d(ec, 'spearman_p_perm')}}}",
+        rf"\newcommand{{\viOlsA}}{{{_d(ec, 'ols_intercept')}}}",
+        rf"\newcommand{{\viOlsB}}{{{_d(ec, 'ols_slope')}}}",
+        rf"\newcommand{{\viNaboveEpochMatched}}{{{_d(ec, 'n_above_epoch_matched')}}}",
+        # sampling scatter / the marginal source / debiased index
+        rf"\newcommand{{\viNaboveZthree}}{{{_fmt('n_above_z3')}}}",
+        rf"\newcommand{{\viMarginalName}}{{{_d(marg, 'name')}}}",
+        rf"\newcommand{{\viMarginalV}}{{{_d(marg, 'v')}}}",
+        rf"\newcommand{{\viMarginalZ}}{{{_d(marg, 'z')}}}",
+        rf"\newcommand{{\viMedMdCtrl}}{{{_fmt('median_md_control')}}}",
+        # derived presentation values (from v_floor; not hand-typed)
+        rf"\newcommand{{\viEffScatterPct}}{{{eff_pct}}}",
+        rf"\newcommand{{\viScatterRatio}}{{{ratio}}}",
+        rf"\newcommand{{\viEpochYearMin}}{{{_fmt('epoch_year_min')}}}",
+        rf"\newcommand{{\viEpochYearMax}}{{{_fmt('epoch_year_max')}}}",
+        rf"\newcommand{{\viBelowFloorP}}{{{below_p_tex}}}",
+        # the control-floor selector's synthetic validation (computed in both modes)
+        rf"\newcommand{{\viSynFloorCompleteness}}{{{_d(syn, 'completeness')}}}",
+        rf"\newcommand{{\viSynFloorPurity}}{{{_d(syn, 'purity')}}}",
+        rf"\newcommand{{\viSynFloorNinj}}{{{_d(syn, 'n_injected')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

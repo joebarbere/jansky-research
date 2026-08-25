@@ -26,13 +26,18 @@ dominated by amplitude calibration and by $(u,v)$-coverage / resolved-structure 
 much larger than a naive few-percent floor. Applied to a curated set of \viN\ well-studied AGN, the absolute $\eta$ test labels every source
 ``variable,'' including the steady compact symmetric object (CSO) controls, so $\eta$ is not a usable
 discriminant. We instead calibrate an empirical variability floor from the CSO controls (median
-$V=\viFloor$) and select sources above it. On this set the recover-a-known is clean: OJ~287
+$V=\viFloor$), stating its selection function: a median threshold sits above half of any steady
+population by construction, so ``above the floor'' means inconsistent with the controls' central
+amplitude, not individually significant. On this set the recover-a-known is clean: OJ~287
 (\viTopName) shows the most significant variability ($\eta=\viTopEta$, $V=\viTopV$ over
 \viTopEpochs\ epochs), the
-famous blazars are recovered as variable, and \viNabove\ of the \viNnoncontrol\ non-control AGN lie above
-the control floor. This is a reproducibility and method contribution: a tested light-curve/variability
-tool and a control-floor discriminant robust to the VLBI calibration systematic. It is not a
-discovery claim.
+famous blazars are recovered as variable, and \viNabove\ of the \viNnoncontrol\ non-control AGN lie
+above the median floor --- a count propagated through the floor's uncertainty: \viNaboveJkHi$\to$\viNaboveJkLo\
+across the drop-one control jackknife, \viNaboveCtrlMax\ at the most conservative (control-maximum)
+threshold, \viNaboveEpochMatched\ under an epoch-matched floor, and CTA~102 above the median floor
+by under $10^{-4}$ in $V$. This is a method and reproducibility contribution: a
+tested tool and a control-floor discriminant with its uncertainty carried to the headline count. It
+is not a discovery claim.
 \end{abstract}
 
 \keywords{Active galactic nuclei (16) --- Very long baseline interferometry (1769) --- Blazars (164)
@@ -70,44 +75,73 @@ these heterogeneous networks; the control-floor analysis below measures the effe
 \paragraph{The control-floor discriminant.} For an intrinsically steady source the per-session $V$ is
 not zero; it is set by amplitude calibration and by $(u,v)$/structure differences between sessions.
 Compact symmetric objects (CSOs), which lack a Doppler-boosted core, are the natural steady controls and
-are established flux calibrators (\citealt{pecktaylor2001} found $\sim$0.7\% rms over months for a clean
-sample; \citealt{kiehlmann2024} adopt a $\lesssim$10\% variability criterion in their bona-fide CSO
-catalog). We take the controls' median $V$ as the empirical floor and flag non-control sources above it.
-Every function is tested against a synthetic dual-band population whose injected variables are recovered
-at high completeness and purity, so the suite runs offline.
+are established flux calibrators (\citealt{fassnachttaylor2001} found $\sim$0.7\% rms over an 8-month
+campaign, which supports steadiness on year timescales; multi-decade steadiness is an extrapolation
+this data set probes rather than assumes. \citealt{kiehlmann2024} adopt a $\lesssim$10\% variability
+criterion in their bona-fide CSO catalog, which contains all four of our controls). We take the
+controls' median $V$ as the empirical floor and flag non-control sources above it. The floor's
+selection function must be stated: as a median it sits above half of any intrinsically steady
+population by construction (\viNctrlAbove\ of our \viNctrl\ controls lie above their own floor), so
+``above the floor'' means inconsistent with the steady controls' central amplitude, not individually
+significant at a stated false-positive rate.
+
+Every function is tested offline against a synthetic dual-band population, and the control-floor
+selector itself is validated on a fixture carrying both injected variables and known-steady controls:
+completeness \viSynFloorCompleteness\ for flare amplitudes well above the floor, degrading as the
+injected amplitude approaches it, but purity only \viSynFloorPurity\ on that steady-dominated blind
+population --- the measured form of the selection-function caveat above. On the curated set the low
+blind purity is immaterial (the non-controls are independently known variables), but it rules out
+using the floor as a blind-survey classifier.
 
 \section{Data}
 We apply the tool to a curated validation set of \viN\ well-studied compact AGN (not a blind
 survey): famous Doppler-boosted blazars expected to vary, plus four CSO controls (OQ~208, 2021+614,
 0108+388, NGC~3894). Variability is computed from the $X$-band light curves (denser and more precisely
 calibrated than $S$); $S$-band is used only for the spectral index. \viTestable\ sources have $\geq$4
-$X$-band epochs (1995--2022) and enter the analysis. Two controls are imperfect: OQ~208 is documented as
+$X$-band epochs (\viEpochYearMin--\viEpochYearMax) and enter the analysis. Two controls are imperfect: OQ~208 is documented as
 atypically variable for a CSO (40--60\% in components; \citealt{wu2013}) and 2021+614 shows long-term
 centimetre variability (\citealt{taylor2000}); we test the floor's sensitivity to both.
 
 \section{Results}
 \paragraph{Absolute $\eta$ fails; the controls show why.} Against the assumed 5\% error, every
-testable source has $\eta\gg1$ and $p\approx0$, including all four CSO controls. Since a genuinely
+testable source has $\eta\gg1$ and rejects constancy at $p\leq\viBelowFloorP$ (the least
+significant, 3C~273), including all four CSO controls. Since a genuinely
 steady CSO cannot be intrinsically variable at these levels, this is direct evidence that the per-session
-error is badly under-estimated: the controls imply an effective scatter of $\sim$19\%, four times the
-assumed floor. Absolute $\eta$/$\chi^2$ is therefore not a usable variability discriminant for VLBI
+error is badly under-estimated: the controls imply an effective scatter of $\sim$\viEffScatterPct\%,
+$\viScatterRatio\times$ the assumed floor. The noise-debiased modulation index makes the same
+measurement directly: under the assumed 5\% model the control median is $m_d=\viMedMdCtrl$, and on a
+genuinely steady source $m_d$ \emph{is} the scatter the error model fails to capture. Absolute $\eta$/$\chi^2$ is therefore not a usable variability discriminant for VLBI
 correlated flux, and the relative log\,$\eta$--log\,$V$ outlier cut used in blind transient surveys
 returns nothing here (\viNcand\ candidates) because the curated set has no steady background population.
 
-\paragraph{The control floor recovers the known variables.} Taking the CSO controls' median as the
-empirical floor, $V=\viFloor$ (\viNctrl\ controls), \viNabove\ of the non-control AGN lie above it
-(Figure~\ref{fig:etav}). The floor is robust to the imperfect controls: excluding OQ~208 lowers it only
-to $\simeq0.186$, and excluding 2021+614 as well to $\simeq0.185$, leaving the same set above the floor.
+\paragraph{The control floor recovers the known variables, with its uncertainty propagated.} Taking
+the CSO controls' median as the empirical floor, $V=\viFloorFive$ (\viNctrl\ controls,
+Table~\ref{tab:sources}), \viNabove\ of the non-control AGN lie above it (Figure~\ref{fig:etav}).
+The floor carries its own uncertainty and we carry it to the count. The full drop-one control
+jackknife spans \viFloorJkLo--\viFloorJkHi\ (count \viNaboveJkHi$\to$\viNaboveJkLo); the individual
+control amplitudes span \viCtrlVmin--\viCtrlVmax, and at the most conservative threshold the
+controls can supply --- the control maximum, set by OQ~208, itself documented as variable --- the
+count falls to \viNaboveCtrlMax. Each source's $V$ also carries sampling scatter (a per-source
+bootstrap over epochs, committed in the candidate table): \viNaboveZthree\ of the \viNabove\ exceed
+the median floor by more than $3\sigma_V$, and the marginal source, \viMarginalName\ (CTA~102), sits
+at $V=\viMarginalV$ against the floor's $\viFloorFive$ --- above at the committed five-decimal
+precision, a tie for any practical purpose ($z=\viMarginalZ$).
 The recover-a-known is clean: the most significantly variable source is the blazar OJ~287
 (\viTopName), with $\eta=\viTopEta$ and $V=\viTopV$ over \viTopEpochs\ epochs at a mean $X$-band flux
 of \viTopFlux~Jy, and the other archetypal blazars (BL~Lac, AO~0235+164, PKS~1510$-$089) follow.
 That ranking is by $\eta$; ranked instead by the amplitude $V$ this paper argues for, BL~Lac leads
-and OJ~287 is second (committed candidate table). The boosted blazars have a
-higher median amplitude ($V=\viMedVvar$) than the controls ($V=\viMedVctrl$); we report this as a
+and OJ~287 is second (Table~\ref{tab:sources}). The amplitude scale is anchored in the literature:
+OJ~287's strong, factor-of-several radio variability is documented in the long-term monitoring of
+\citet{komossa2023}, consistent with the large $V$ recovered here. Comparing amplitudes without
+selecting on them --- the median over \emph{all} \viNnoncontrol\ testable non-controls, not the
+above-floor subset, whose median exceeds the control median for any input by construction --- gives
+$V=\viMedVnonctrl$ against the controls' \viMedVctrl; we report this as a
 property of this curated sample, not of the blazar population. The population-median $S/X$ index is
 $\alpha=\viMedAlpha$ (flat), the expected signature of self-absorbed compact cores. However, because
 $S$ and $X$ sample angular scales differing by $\sim$3.6$\times$, $\alpha$ mixes spectrum and
 differential resolution and should be read cautiously for partially-resolved objects (3C~84, 3C~120).
+
+\input{generated/sources}
 
 \begin{figure}
 \plotone{figures/etav.pdf}
@@ -120,18 +154,26 @@ absolute $\eta$ is not a usable discriminant; $V$ relative to the control floor 
 
 \section{Discussion and reproducibility}
 The contribution is method and reproducibility: a tested tool that builds multi-decade VLBI light curves
-from public Astrogeo files and a control-floor variability discriminant that is robust to the
-dominant VLBI systematic. The limitations are real. (i) The sample is curated and small, chosen to
-contain known variables, so the \viNabove/\viNnoncontrol\ recovery validates the
-pipeline (a recover-a-known), not a blind detection rate. One of the \viNabove\ sits at the floor
-to the quoted precision and is counted as above it, so the count is twelve unambiguous plus one tie. (ii) The floor rests on only \viNctrl\
-controls (individual $V$ from 0.18 to 0.25), two of which are themselves mildly variable; we mitigate
-this with the sensitivity test above, but the floor is not tightly constrained. (iii) VLBI correlated flux
+from public Astrogeo files and a control-floor variability discriminant whose uncertainty and
+selection function are stated and propagated. The limitations are real. (i) The sample is curated and
+small, chosen to contain known variables, so the \viNabove/\viNnoncontrol\ recovery validates the
+pipeline (a recover-a-known), not a blind detection rate; the marginal source, CTA~102, is a tie
+with the floor for any practical purpose ($z=\viMarginalZ$). (ii) The floor rests on only \viNctrl\
+controls (individual $V$ from \viCtrlVmin\ to \viCtrlVmax), two of which are themselves mildly
+variable; the jackknife and control-maximum variants above carry that weakness to the count, and the
+floor is not tightly constrained. (iii) VLBI correlated flux
 is not intrinsic flux: $(u,v)$ coverage and resolved structure vary session to session, which is exactly
 the scatter the control floor absorbs, and which dilutes genuine variability for sparsely-sampled or
 extended sources (3C~273, with only four epochs, falls below the floor). (iv) $\eta$/$V$ use $X$-band
-only. A blind, magnitude-limited catalog with the floor calibrated per epoch-count and declination bin is
-the natural next step. Every number above is written by the pipeline into the macros this manuscript
+only. (v) $V$ is confounded with epoch count: over the whole sample, Spearman
+$\rho=\viSpearmanRho$ (permutation $p=\viSpearmanP$), with an OLS trend
+$V=\viOlsA+\viOlsB\,\log_{10}N_{\rm ep}$ that spans the sample's dynamic range --- more epochs
+sample more of both the variability and the $(u,v)$ scatter --- while the floor is calibrated on
+controls with 4--53 epochs and applied to sources with up to \viTopEpochs. An epoch-matched floor
+(the controls' own trend evaluated at each source's epoch count) gives \viNaboveEpochMatched\ of
+\viNnoncontrol; four controls cannot pin a two-parameter trend, so this is a sensitivity variant,
+not a replacement headline. A blind, magnitude-limited catalog with the floor calibrated per
+epoch-count and declination bin is the natural next step. Every number above is written by the pipeline into the macros this manuscript
 \code{\textbackslash input}s, and the analysis regenerates from a clean checkout on public data.
 
 \section*{AI use disclosure}
