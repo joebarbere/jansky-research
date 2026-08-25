@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from jansky_research import windwaves
 
 
@@ -50,4 +52,51 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "results" / "windwaves_metrics.json").exists()
     assert (tmp_path / "papers" / "windwaves" / "figures" / "ipburst.pdf").exists()
     macros = (tmp_path / "papers" / "windwaves" / "generated" / "macros.tex").read_text()
-    assert r"\wwSpeedC" in macros and r"\wwRhiAU" in macros
+    assert r"\wwSynSpeedC" in macros and r"\wwSynRhiAU" in macros
+    assert r"\newcommand{\wwRealSpeedC}{--}" in macros
+
+
+def test_emission_radius_density_scale_degeneracy():
+    # f_p^2 ~ n: harmonic=1 at density_scale=4 must equal harmonic=2 at scale=1 exactly —
+    # the emission-mode and density-enhancement systematics are one axis, not two.
+    f = np.array([0.5, 1.0, 5.0, 13.8])
+    a = windwaves.emission_radius(f, harmonic=1, density_scale=4.0)
+    b = windwaves.emission_radius(f, harmonic=2, density_scale=1.0)
+    assert np.allclose(a, b, rtol=1e-9)
+
+
+def test_beam_speed_reports_jackknife_and_estimator_bracket():
+    b = windwaves.synthetic_ip_burst(speed_c=0.12, n_time=41, duration_s=2400.0, seed=2)
+    from jansky_research import solarbursts
+
+    w = solarbursts.find_burst_window(b["data"], b["times"], pad_s=2400.0)
+    rf, rt = solarbursts.detect_burst_ridge(b["data"], b["freqs"], b["times"], window=w)
+    spd = windwaves.beam_speed(rf, rt)
+    assert np.isfinite(spd["speed_c_se"]) and spd["speed_c_se"] > 0
+    assert spd["n_time_cols"] >= 4
+    # estimator family brackets the truth on a clean constant-speed burst
+    assert 0.09 < spd["speed_c"] < 0.15
+    assert np.isfinite(spd["speed_c_inverse"]) and np.isfinite(spd["speed_c_points"])
+    grid = windwaves.speed_grid(rf, rt)
+    assert len(grid) == len(windwaves.SPEED_GRID)
+    # the degenerate pair: fundamental x4 density is not in the grid, but harmonic rows must
+    # order by density scale (higher scale -> larger radii -> faster)
+    h2 = {g["density_scale"]: g["speed_c"] for g in grid if g["harmonic"] == 2}
+    assert h2[1.0] < h2[2.0] < h2[4.0]
+
+
+def test_matched_cadence_fixture_measures_quantisation_bias():
+    # At the real one-minute cadence (n_time=41 over 2400 s) the recovered slope is biased low
+    # by a few percent relative to the fine-cadence fixture — a bias the old 3 s fixture could
+    # not see (round-6 referee). The estimator must stay within 10% of truth even so.
+    from jansky_research import solarbursts
+
+    ratios = []
+    for n_time, dur in ((41, 2400.0), (600, 1800.0)):
+        b = windwaves.synthetic_ip_burst(speed_c=0.15, n_time=n_time, duration_s=dur, seed=3)
+        w = solarbursts.find_burst_window(b["data"], b["times"], pad_s=dur)
+        rf, rt = solarbursts.detect_burst_ridge(b["data"], b["freqs"], b["times"], window=w)
+        spd = windwaves.beam_speed(rf, rt)
+        ratios.append(spd["speed_c"] / 0.15)
+    assert 0.90 < ratios[0] < 1.05  # coarse cadence: small negative bias tolerated
+    assert 0.95 < ratios[1] < 1.05  # fine cadence: unbiased

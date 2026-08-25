@@ -43,6 +43,22 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`windwaves` + `swaves` revision (round-6 referees, one blocker each): the estimator is
+  rebuilt on the independent unit, and the dominant systematic is propagated.** The shared
+  `beam_speed` now fits ONE point per distinct time sample (column median) with a
+  leave-one-sample-out jackknife -- en route, the converged per-point clip was measured to
+  COLLAPSE on the STEREO ridge (2 surviving samples, 0.031 c vs 0.160 c), the leverage
+  pathology both referees circled, seen live. windwaves: 0.102 +/- 0.011 c with the committed
+  (mode x density) grid spanning 0.054-0.215 c and 6-19.5 R_sun, the f_p^2 ~ n degeneracy
+  stated, and the abstract claiming neither distance regime exclusively; the residuals'
+  band-monotonic structure is reported as unexplained (the matched-cadence fixture disproves
+  the old band-compression story). swaves: 0.160 +/- 0.014 c at R^2 = 0.986 over 11 samples
+  with a tight estimator bracket -- the track is genuinely straight at sample level -- the
+  hand-halved fundamental replaced by grid macros (0.079 c / 41 R_sun), and the title carries
+  the 0.2-0.4 AU range. Both slices: ridge CSVs, burst epochs, pad/snr provenance, namespaced
+  macros, figures that draw the exact quoted fit, matched-cadence fixtures, and
+  krupar2015/reiner2015 fixed against Crossref.
+
 - **`southern` revision (round-5 referee, 18 findings, two blockers): re-run with the
   catalogue's own errors, the method survives and the over-density vanishes.** GLEAM-X DR2
   *does* publish per-sub-band uncertainties; `fetch_gleamx` now uses them, fits admit only

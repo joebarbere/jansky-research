@@ -1,15 +1,76 @@
 {
   "source": "STEREO-A/WAVES HFR 20130515",
   "n_ridge": 319,
-  "n_used": 310,
+  "n_used": 319,
   "n_time_bins": 11,
-  "r2": 0.906,
+  "r2": 0.986,
   "f_lo_mhz": 0.125,
   "f_hi_mhz": 16.025,
   "harmonic": 2,
   "r_lo_rsun": 2.27,
   "r_hi_rsun": 82.59,
   "r_hi_au": 0.384,
-  "speed_kms": 45073.7,
-  "speed_c": 0.1503
+  "speed_kms": 48100,
+  "speed_c": 0.1604,
+  "n_time_cols": 11,
+  "pad_s": 2400.0,
+  "snr_threshold": 5.0,
+  "clip_sigma": 3.0,
+  "fit_converged": true,
+  "speed_c_se": 0.014,
+  "speed_c_inverse": 0.1628,
+  "speed_c_colmeans": null,
+  "speed_grid": [
+    {
+      "harmonic": 1,
+      "density_scale": 1.0,
+      "speed_c": 0.0787,
+      "r_lo_rsun": 1.76,
+      "r_hi_rsun": 41.41,
+      "r_hi_au": 0.193,
+      "r2": 0.988,
+      "n_used": 319
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 1.0,
+      "speed_c": 0.1604,
+      "r_lo_rsun": 2.27,
+      "r_hi_rsun": 82.59,
+      "r_hi_au": 0.384,
+      "r2": 0.986,
+      "n_used": 319
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 2.0,
+      "speed_c": 0.2282,
+      "r_lo_rsun": 2.6,
+      "r_hi_rsun": 116.74,
+      "r_hi_au": 0.543,
+      "r2": 0.985,
+      "n_used": 319
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 4.0,
+      "speed_c": 0.3239,
+      "r_lo_rsun": 2.99,
+      "r_hi_rsun": 165.06,
+      "r_hi_au": 0.768,
+      "r2": 0.984,
+      "n_used": 319
+    }
+  ],
+  "fit_estimator": "column-median OLS with leave-one-column-out jackknife",
+  "speed_c_points": 0.1593,
+  "_merge": {
+    "retained_from_previous_run": [
+      "clip_sigma",
+      "fit_converged",
+      "speed_c_colmeans"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  },
+  "burst_peak_utc": "2013-05-15T03:48:00"
 }
