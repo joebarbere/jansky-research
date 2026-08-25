@@ -1,15 +1,30 @@
 {
   "source": "TGSSxNVSSxVLASS @ (180.0, 30.0) r=2.0deg",
   "n_nvss_vlass": 409,
-  "n_peaked": 6,
-  "n_ghz_peaked": 0,
-  "n_rising": 10,
-  "n_extended_artefact": 110,
+  "n_peaked": 1,
+  "n_ghz_peaked": 1,
+  "n_rising": 4,
+  "n_extended_artefact": 94,
   "n_tgss_detected": 148,
   "hfp_n": 100,
-  "hfp_rising_pct": 100,
-  "hfp_ghz_pct": 56,
+  "hfp_rising_pct": 53,
+  "hfp_ghz_pct": 38,
   "call_n": 113,
   "call_low_flagged": 0,
-  "call_low_total": 81
+  "call_low_total": 81,
+  "tgss_limit_mjy_used": 29.4,
+  "tgss_field_noise_median_mjy": 4.2,
+  "tgss_field_noise_max_mjy": 5.7,
+  "n_peaked_by_limit": {
+    "20": 8,
+    "25": 6,
+    "29.4": 1,
+    "39.9": 0
+  },
+  "hfp_tgss_detected": 83,
+  "hfp_falling_low_pct": 32,
+  "call_mid_flagged": 3,
+  "call_mid_total": 26,
+  "call_hi_flagged": 1,
+  "call_hi_total": 6
 }

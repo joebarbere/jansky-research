@@ -95,5 +95,27 @@ def test_run_offline(tmp_path):
     assert (tmp_path / "results" / "peaked_metrics.json").exists()
     assert (tmp_path / "papers" / "peaked" / "figures" / "curvature.pdf").exists()
     macros = (tmp_path / "papers" / "peaked" / "generated" / "macros.tex").read_text()
-    assert r"\pkNpeaked" in macros
-    assert r"\pkNghzpeaked" in macros
+    assert r"\pkSynNpeaked" in macros
+    assert r"\newcommand{\pkRealNpeaked}{--}" in macros
+    # validation macros default to '--' (never a wrong 0) so the arXiv assembler blocks on them
+    assert r"\newcommand{\pkSynHfpRising}{--}" in macros
+    assert r"\newcommand{\pkRealCallLowTotal}{--}" in macros
+
+
+def test_fixture_extended_fakes_are_caught():
+    # injected extended sources (VLASS flux resolved out) must land in the resolution-artefact
+    # class, not in peaked/ghz_peaked -- the cut previously had no offline positive case
+    tgss, nvss, vlass, truth = peaked.synthetic_field(extended_fraction=0.15, seed=4)
+    res = peaked.find_peaked(tgss, nvss, vlass)
+    assert int((res["cls"] == "extended").sum()) > 0
+    assert not any(res["is_peaked"] & (res["cls"] == "extended"))
+
+
+def test_find_peaked_records_index_errors():
+    tgss, nvss, vlass, truth = peaked.synthetic_field(seed=1)
+    res = peaked.find_peaked(tgss, nvss, vlass)
+    assert "alpha_low_err" in res and "alpha_high_err" in res
+    det = res["tgss_detected"]
+    assert np.all(np.isfinite(res["alpha_low_err"][det]))  # measured points carry errors
+    assert np.all(~np.isfinite(res["alpha_low_err"][~det]))  # limits carry none (a bound)
+    assert np.isfinite(res["alpha_high_err"]).all()

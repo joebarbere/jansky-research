@@ -1,0 +1,6 @@
+# TGSSxNVSSxVLASS @ (180.0, 30.0) r=2.0deg; rising candidates (peaked + ghz_peaked + rising)
+ra,dec,cls,s_tgss_mjy,alpha_low_is_limit,s_nvss_mjy,s_vlass_mjy,alpha_low,alpha_low_err,alpha_high,alpha_high_err,simbad_name,simbad_type,simbad_sep,ned_name,ned_type,ned_sep
+179.97787,30.45778,peaked,,True,41.6,23.2,0.154,,-0.767,0.101,LEDA 1904565,LIN,1.03,NVSS J115954+302728,RadioS,0.0
+180.24075,31.54803,extended,,True,611.4,3.2,1.349,,-6.892,0.113,,,,NVSS J120057+313252,RadioS,0.0
+180.24904,31.56608,extended,,True,690.2,7.2,1.402,,-5.986,0.108,,,,LRG J120059.77+313357.9,RadioS,1.26
+181.24154,30.39056,ghz_peaked,,True,72.2,85.9,0.399,,0.228,0.100,NVSS J120457+302326,Rad,0.0,MG2 J120456+3024,RadioS,0.72
