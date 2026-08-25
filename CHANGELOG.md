@@ -11,6 +11,26 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **spectra round-9 revision: the flux-scale story is retracted; the measured mechanisms are
+  selection bias and truncation.** The de Gasperin reference is built from the same
+  uncorrected TGSS ADR1 fluxes (its own SS4 bounds the flux-scale term at ~0.06), so both
+  papers now frame the comparison as measuring matching/selection, never the flux scale. The
+  whole-field comparison is committed (`fetch_reference_cone` + `reference_crossmatch`,
+  results/uss_reference_check.csv, 456 rows): population offset +0.002 +/- 0.005 over 333
+  detection pairs, identical across the +30 deg declination edge (the edge clause is
+  deleted). The candidate offset (-0.11 over detections) is compared to a committed
+  zero-free-parameter selection-on-the-noisy-index model (`selection_bias_mc`: -0.049 +/-
+  0.033). The cut is scored against the reference's own USS population: 17% pure, 14%
+  complete, with the matched-sensitivity truncation computed from documented survey floors
+  (`matched_sensitivity`: equal sensitivity at alpha* = -1.01; S150 >= 102.5 mJy to flag
+  -1.65 -- 51.5% of the sample). The Scode=L reference row (a non-detection limit disagreeing
+  with our 9-sigma detection) is flagged and excluded from every mean. The fixture injects
+  USS at the boundary and the offline leg scores the cut against truth; the network leg
+  raises instead of silently substituting synthetic data; synthetic runs can no longer
+  clobber the real CSV/figures; the field (180, +30, r=3 deg -- the radius was previously
+  recorded nowhere) is committed in metrics, macros, and both reproduction commands; the
+  chance-match arithmetic (1.48) is computed; the duplicate survey/ CSV is removed; the RNAAS
+  figure now shows the raw-vs-reference comparison its text concludes from.
 - **vlbi round-9 revision: the floor carries its uncertainty, the count carries the floor's,
   and the load-bearing citation names its real authors.** The calibrator paper is Fassnacht &
   Taylor 2001 (AJ 122, 1661, DOI-verified) -- Peck was never an author -- and its 0.7% is

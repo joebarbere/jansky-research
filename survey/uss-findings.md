@@ -4,15 +4,18 @@ Run of `jansky_research.spectra.run` over a high-latitude extragalactic field ne
 Galactic Pole (centre RA $180.0°$, Dec $+30.0°$; $3°$ cone), cross-matching **TGSS ADR1**
 (147.5 MHz; Intema et al. 2017) with **NVSS** (1.4 GHz; Condon et al. 1998) on VizieR, 15" match
 radius. This is the honest assessment, revised after the GATE-2 science review. The full matched
-catalogue is committed at [`survey/uss_candidates.csv`](uss_candidates.csv) (456 sources).
+catalogue is committed at [`results/uss_candidates.csv`](../results/uss_candidates.csv)
+(456 sources; a duplicate unguarded copy that lived in `survey/` was removed 2026-08-25).
 
 ## Sanity checks (the method works)
 
 - **456 matched sources**; **median $\alpha_{150}^{1400} = -0.73$** — consistent with the typical
   $-0.7$ to $-0.8$ range for flux-limited extragalactic radio samples. The closest comparator,
   de Gasperin, Intema & Frail (2018; the 1.4M-source TGSS×NVSS index catalogue), finds a weighted
-  mean $-0.79$; our median sitting slightly flatter is consistent with TGSS flux-scale inflation
-  making some steep sources look flatter. The distribution peaks near $-0.8$ as expected.
+  mean $-0.79$. (This bullet previously attributed our slightly flatter median to "TGSS flux-scale
+  inflation making steep sources look flatter" — a sign error: inflating $S_{150}$ makes $\alpha$
+  *steeper*. The 2026-08-25 population comparison finds no offset at all: $+0.002 \pm 0.005$ over
+  333 detection pairs.) The distribution peaks near $-0.8$ as expected.
 
 ## The finding: 6 ultra-steep-spectrum candidates, none a known high-$z$ radio galaxy
 
@@ -167,3 +170,49 @@ commit the confusion matrix, and let the paper say what it is entitled to: a TGS
 catalogue USS cut is ~17% pure and ~9% complete because the two surveys are equally sensitive
 at exactly the threshold — a stronger cautionary result than the one currently claimed, one
 function call away.
+
+**Status: RESOLVED (2026-08-25).** One real re-run (`--ra 180 --dec 30 --radius 3` — the radius,
+previously stated nowhere, turned out to be 3°, not the CLI default 2°; it is now committed in the
+metrics, the macros, and both papers' reproduction commands). Both papers rewritten around the
+measured mechanisms; the flux-scale story is retracted in print ("an earlier draft of this work
+attributed exactly this offset to the TGSS flux scale").
+
+1. **BLOCKER 1 fixed**: de Gasperin is described as built from the *same uncorrected ADR1
+   fluxes* (their §4 bounds the flux-scale term at ~0.06), so the comparison is framed as
+   measuring matching/selection, never the flux scale. "Corrected" is gone from both papers,
+   the module docstring, and `reference_spindex`'s docstring.
+2. **BLOCKERs 2+3 fixed by the committed whole-field comparison** (`fetch_reference_cone` +
+   `reference_crossmatch`, one cone query; `results/uss_reference_check.csv`, 456 rows):
+   population offset **+0.0022 ± 0.0048** over 333 detection pairs (referee: +0.004 ± 0.005
+   over 387 — they matched against non-limit entries, we take the nearest entry and require
+   Scode=S; same conclusion), scatter 0.088 vs 0.098 expected from the formal errors;
+   dec ≤ +30 vs > +30: **+0.004 ± 0.006 vs +0.000 ± 0.008** — the edge clause is deleted, and
+   the papers state there is no mechanism for one.
+3. **BLOCKER 4 fixed**: every headline number is a macro from the committed metrics. The
+   candidate offset is −0.11 (detections; −0.16 with the limit row), and `selection_bias_mc`
+   (reference as truth + each source's own noise, 2000 realizations) predicts
+   **−0.049 ± 0.033** — the offset is selection on the noisy index, stated as such.
+4. **The Scode=L row is handled**: flagged in the CSV and figure (open circle), excluded from
+   every mean, and described as what it is — a reference *non-detection limit* that disagrees
+   with our significant ADR1 detection, not a measurement.
+5. **The confusion matrix is the headline**: purity **1/6 = 17%**, completeness **1/7 = 14%**
+   against the reference's own genuine (Scode=S) USS population in the cone (referee counted
+   11 by including limit entries; limits are not measurements, and the committed criterion is
+   stated). The truncation mechanism is computed from documented survey floors
+   (`matched_sensitivity`): equally sensitive at α* = −1.014; flagging at −1.3 needs
+   S₁₅₀ ≥ 46.6 mJy and at −1.65 (our steepest) ≥ 102.5 mJy — a flux exceeded by 51.5% of the
+   matched sample. (The referee's "equally sensitive at exactly −1.3" does not follow from any
+   documented floor pair; the committed α* is what the floors give.)
+6. **The reproduction command can no longer destroy the evidence**: a synthetic run refuses to
+   overwrite the real CSV/figures (guarded on the results JSON's provenance, with a test), the
+   network leg raises instead of silently falling back to synthetic, and `\usSource` renders a
+   clean string instead of a multi-line SkyCoord repr.
+7. **"Validates the method" is downgraded** to consistency in both papers; the fixture now
+   injects USS at the boundary (−1.35 ± 0.05 alongside −1.6) and the offline leg scores the
+   cut against truth (purity 1.0, completeness 0.93 under fixture errors — cited in Methods as
+   the reason the real-sky failure is informative).
+8. MINORs: limitation (i) restated as the zero-mean 15–17% scatter (~0.06–0.07 in α); the
+   equation says 147.5 MHz; the chance-match expectation is computed and committed (1.48); the
+   `survey/` duplicate CSV removed; this file's "flatter" sign error corrected in place; the
+   RNAAS figure is now the raw-vs-reference panel that displays the note's conclusion; arXiv
+   package regenerated (0 errors).
