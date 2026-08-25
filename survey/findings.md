@@ -56,3 +56,60 @@ discussion, never in an abstract or summary table.
   CPU-only, offline-reproducible FRB burst-statistics tool, validated by recovering the CHIME
   Cat 1 width result" — **not** a discovery claim. Only **width** carries "reproduces the
   literature"; DM/fluence are "additional observed, selection-affected differences."
+
+## Full referee round (2026-08-25): MAJOR REVISION, 18 findings, one BLOCKER
+
+The headline validated result is real and survives everything the referee threw at it:
+repeaters are wider at burst level, at SOURCE level (per-source-median KS D = 0.563,
+p = 1.1e-5), under a source-cluster bootstrap, and after deleting the two dominant sources.
+All 25 macros reproduce exactly from data/chimefrbcat1.csv; all six DOIs clean; disowning k
+was the right call.
+
+**BLOCKER: Figure 1 plots pooled-across-source waits under a within-source caption.**
+report.py calls `wait_times` (not `grouped_wait_times`), so 44 of the 61 plotted intervals
+cross source boundaries — the quantity Methods itself calls "meaningless" — while the overlaid
+Weibull was fitted to the 44 within-source waits. The mismatch displays a good fit as a bad
+one: max |empirical − curve| = 0.307 (KS p = 1.3e-5) as plotted, vs 0.110 (p = 0.39) against
+the data actually fitted. It survived because the offline fixture's repeaters are a single
+source, so the multi-source path is never exercised.
+
+**MAJORs:**
+- Figure 2's caption promises "the maximum-likelihood power law" — no fit is drawn and F_min
+  is unmarked; the one place a reader could judge the fit has been removed from the evidence.
+- The γ error conditions on an x_min chosen from the same data: joint bootstrap gives
+  sd 0.29 (95% [2.07, 3.19]) vs the quoted ±0.13 — 2.2× too small — and F_min's own 95%
+  interval is [2.9, 15.7]; γ runs 2.09→3.08 across x_min 3→20.
+- "Matches the cumulative source-count slope" has no number, citation, or transform — and the
+  comparand sits in this repo's own survey/findings.md (Cat 1's α_cum = −1.40 ± 0.11 →
+  γ_diff = 2.40; the match is real at 0.84σ). Put it in the sentence.
+- 62 bursts from 18 sources treated as 62 independent draws: two sources supply 48% of the
+  bursts. Source-level restatement: width D = 0.563, p = 1.1e-5 (READS BETTER than the
+  burst-level 0.45); DM collapses from p = 1e-11 to p = 0.044 — the marginal value the paper
+  already believes.
+- report.write_macros never calls preserve_live_macros (the CLAUDE.md invariant), and
+  build_catalog silently falls back to synthetic on ANY fetch failure with out_dir=".": a
+  documented one-liner (make pipeline ARGS=--offline, or make reproduce offline) rewrites the
+  paper's macros to the synthetic values (\nBursts 600, D 0.08, p 0.4) while the JSON is
+  preserved and guard-real stays green — split-brain evidence with every gate passing.
+- The gap claim ("no pip-installable library") describes a property the artifact lacks (no
+  PyPI release; the dependency resolves from a git tag); the tool is named frbstats while the
+  paper contrasts it with the FRBSTATS web platform; the whole landscape paragraph carries
+  zero citations.
+
+**MINOR:** two undisclosed cuts (26 width upper limits, ALL non-repeaters, dropped — including
+them is conservative, D→0.456; six fluence=0.0 placeholders inside the KS and \medFluenceOne);
+the catalogue's own excluded_flag (39 events) ignored (γ 2.543→2.584 without them); "44 waits
+across 18 sources" is 16 (two single-burst sources contribute none); the Weibull CI resamples
+waits not sources (cluster CI 0.32–0.69; conclusion unchanged) and the asserted bimodality has
+a clean uncomputed number (7 same-transit + 8 sidereal-day waits of 44); the one hand-typed
+number (0.14, reproducible but uncommitted); "temporal width" never defined (width_fitb of the
+leading sub-burst; bc_width gives 8.85/3.93 ms — same sign, factor-4 different medians — and
+the validation passes under every implementation error tried: it needs Pleunis' own numbers as
+comparand); the selection function named three times, used zero; the 5 Jy ms threshold
+uncited; no data provenance in either manuscript (third-party mirror URL, no checksum,
+\catalogSource unused); stale arXiv package; RNAAS \software omits jansky-research and
+attributes the tool to the course.
+
+**Status: fixes pending.** The single change: make the SOURCE the unit of analysis for every
+repeater statistic — width quoted as D = 0.56, p = 1e-5 in both abstracts, DM restated at its
+source-level 0.044, and Methods stating that 62 bursts from 18 sources are not 62 draws.

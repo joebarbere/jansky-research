@@ -11,6 +11,36 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Review round 9 verdicts recorded: `stacking`, `vlbi`, `spectra`, `frbstats` -- four major
+  revisions, eight blockers.** The last never-deep-reviewed papers, and the referees earned
+  their keep. stacking (2 blockers): the title's injection-recovery ratio is an ALGEBRAIC
+  IDENTITY (sigma-clip is shift-equivariant, so the ratio is 1.0 for any input -- proved
+  analytically and on a hostile cube), and every flux/SNR is a 3-pixel searched peak biased
+  +1.6 RMS on blank sky (the stokesv lesson, written in vlass.py's own docstring), with the
+  fingerprint sitting in the committed JSON (binned means exceed the full-sample flux by the
+  1.42x a pedestal predicts); honest headline ~28-32 uJy at ~3.6 sigma -- still a detection.
+  vlbi (1 blocker): the load-bearing calibrator citation is by Fassnacht & Taylor -- Peck was
+  never an author -- and the control floor is the control MEDIAN (50% false-positive on steady
+  sources by construction; the full jackknife runs the headline 13/14 down to 10/14 with one
+  tie at committed precision; V confounded with epoch count at p = 0.004; the amplitude
+  comparison is guaranteed by its own selection rule). spectra (4 blockers): the "flux-scale
+  corrected" reference catalogue is not corrected (its authors say so, and quote 0.06 in alpha
+  for the 15% systematic the paper calls 0.15); the population offset over 387 pairs is
+  +0.004 +/- 0.005 -- the -0.15 exists only in the six tail-selected sources; the
+  declination-edge mechanism is refuted by the same pairs; the headline numbers are hand-typed
+  with reference_spindex() called from nowhere (the referee re-ran the lookup: the values are
+  right, the provenance is broken). The honest replacement is stronger: the cut is 17% pure and
+  9% complete because NVSS and TGSS are equally sensitive at exactly alpha = -1.3 (de
+  Gasperin's own Fig. 3). frbstats (1 blocker): Figure 1 plots pooled-across-source waits (44
+  of 61 intervals cross source boundaries -- the quantity Methods calls meaningless) under a
+  within-source caption, displaying a passing fit as a failing one; 62 bursts from 18 sources
+  are treated as 62 draws (width survives the source-level restatement at p = 1e-5 and reads
+  BETTER; DM collapses to 0.044); the gamma error is 2.2x too small (x_min chosen from the
+  same data); and report.write_macros has no preserve_live_macros guard, so a silent synthetic
+  fallback can rewrite the paper's macros while every gate stays green. Verdicts and full
+  finding lists in each survey findings file; fixes to follow per slice.
+
+### Changed
 - **sourcecounts round-8 revision: the agreement is a closed budget on a fixed grid.** The
   bins are a fixed 0.2-dex grid anchored at the cut (a test proves an appended 10-Jy source
   leaves the compared bins byte-identical -- previously every statistic hung on the single

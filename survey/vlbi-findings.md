@@ -123,3 +123,57 @@ unambiguous plus one at the floor.
 **Still open (needs a decision, not a re-run):** `\viInjected`, `\viCompleteness` and `\viPurity` are
 `--` in the macro file but unused in `main.tex`, so the Methods sentence "recovered at high
 completeness and purity" is an unquantified claim. Either cite those macros or drop the adjectives.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 15 findings, one BLOCKER
+
+The negative half (absolute η is unusable on Astrogeo fluxes) is correct and well-supported;
+the macro chain is clean and the figure matches the CSV row-for-row. The positive half — the
+control floor — is quoted as a point estimate whose every property the referee measured from
+the committed CSV.
+
+**BLOCKER: `pecktaylor2001` is by Fassnacht & Taylor** (astro-ph/0106001 → AJ 122, 1661, DOI
+10.1086/322112); Peck was never an author, the compiled .bbl renders "Taylor & Peck (2001)",
+and the findings file adds a third attribution ("Taylor & Peck 2003"). It is the ONLY support
+for the sentence that licenses the design (CSOs as ~0.7% calibrators) — and that figure is an
+8-month campaign, supporting "steady on ~year timescales", not decades.
+
+**MAJORs (all measured from results/vlbi_candidates.csv):**
+- The floor is the control MEDIAN, so it flags a steady source 50% of the time by
+  construction — two of the four controls sit above their own floor; at the control MAXIMUM
+  (0.250) the headline count is 10 of 14, and the paper never states the selection function.
+- The "robust to imperfect controls" check only ever dropped the two HIGHEST controls (both
+  perturbations can only add sources); the full drop-one jackknife spans floor 0.186–0.201 and
+  count 13→12; over the control range the count runs 13→10; with V's sampling scatter only 4
+  of the 13 are above the floor at z>3 (CTA 102 sits at z = −0.01).
+- V is confounded with epoch count: Spearman ρ = 0.74 (p = 0.004); OLS V = 0.074 +
+  0.170·log10(n) spans the sample's whole dynamic range; the floor is calibrated on n = 4–53
+  and applied to n = 4–123; an epoch-matched floor gives 12/14. Filed as future work, belongs
+  in the limitations.
+- The blazar-vs-control amplitude comparison cannot fail: median_v_variable is the median of
+  sources SELECTED by v > floor where floor IS median_v_control — guaranteed for any input;
+  the honest unselected non-control median is 0.308; \viFloor and \viMedVctrl are the same
+  quantity presented as two numbers; README's "~1.7×" repeats it uncaveated.
+- The offline fixture validates a DIFFERENT selector (the log η–log V outlier cut that returns
+  zero candidates); the control-floor block is pragma-no-cover, so the paper's method has no
+  measured completeness/purity — and Methods claims "recovered at high completeness and
+  purity" citing macros that are "--" in the committed real file (flagged in this file
+  previously, still unfixed).
+- There is no "known" in the recover-a-known: no published amplitude is compared for any
+  source; komossa2023 (MOMO VI: OJ 287 variability — the obvious anchor) sits UNCITED in
+  refs.bib.
+- \viNabove = 13 is not reproducible from the committed evidence: at the CSV's three-decimal
+  precision CTA 102 (V = 0.193) TIES the floor (0.1935) — the Discussion admits "twelve
+  unambiguous plus one tie" but the abstract states 13/14 flat.
+
+**MINOR/NIT:** "Every number is written by the pipeline" is false (≃0.186, ≃0.185, ~19%, "four
+times", 1995–2022 — the last in NO committed artifact); V is not noise-debiased though
+vlass.debiased_modulation_index is computed and discarded (on controls it directly measures
+how wrong f = 0.05 is); no source table mapping common names to J2000 rows (the tie source is
+never named); the Kiehlmann ≲10% criterion is unverified and whether the four controls are in
+the bona-fide catalogue was never checked; mode-dependent macros un-namespaced (\viN = 18 vs
+400); figure x-label carries a literal "vs.\"; "p ≈ 0" overstates 3C 273's 1.6e-4.
+
+**Status: fixes pending.** The single change: a floor that carries its own uncertainty
+(jackknife range 0.186–0.201, control span 0.183–0.250), the median-threshold selection
+function stated, and the headline count quoted as a range (13→10 across the span; 12 under an
+epoch-matched floor) — every input is already in the committed CSV.
