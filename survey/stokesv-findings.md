@@ -178,3 +178,35 @@ convention uncited.
 
 **Status: fixes pending** (needs one CASDA re-run with obs_id-pinned pairs; credentials:
 CASDA_USERNAME explicit + ~/.casda_pw).
+
+**Status: RESOLVED (2026-08-25).** The same-observation re-run replaced the paper's central
+claim with what the data actually say, and every blocker's mechanism was confirmed.
+
+**Blockers 1+2, closed together:** `fetch_racs_low_pair` pins each target's I and V cutouts to
+one ObsCore `obs_id` (RACS collection, RACS-low band, taylor.0 restored conv; identifiers and
+`t_min` committed per target) and asserts the grids match. Re-measured, the physically
+impossible ratios are gone from the statistics: 9 of 15 targets are valid, and the 6 invalid
+are Stokes-I non-detections (<3 sigma) in that observation -- single-epoch states, reported as
+such and excluded from every number. The decisive surprise: the I ratio scatter SURVIVES the
+pinned pairing (median 0.56, range 0.10-2.56), so it is real -- single-epoch stellar
+variability and flux-convention differences, not the query bug -- and the paper no longer
+claims "Stokes I is recovered" beyond the median.
+
+**Blocker 3:** results/stokesv_targets.csv commits every row: fluxes, both local rms values,
+V-SNR, offsets (median 1.85", max 7.9" -- the search stayed on-source), validity, obs_id,
+t_min, and both product filenames.
+
+**The headline:** significant V ( |V|/sigma_V >= 5 AND |V|/I >= 6% ) in **4 of 9 valid
+targets (44.4%, Wilson 29-61%)**, identical at a 5% or 10% threshold (the four detections
+carry V-SNR 12-47). The parent population (19) is committed, so 15 measured is nearly the
+whole sample. The "variability-limited duty cycle" interpretation is withdrawn to what the
+evidence supports: a single-observation occurrence rate, with the committed t_min enabling the
+epoch comparison a duty-cycle claim needs.
+
+**The rest:** the V-SNR gate now runs on real data ("significant" means something); the
+source string names both legs (allowlisted, per the singlepulse precedent); \svFracVcirc (the
+"0.6 of them" typo carrier) is retired for \svFracVcircPct with a Wilson interval; the figure
+excludes invalid targets and requires the same gates as the statistics, and was redrawn from
+the committed CSV; "the physically correct forced measurement" is replaced by a plain
+description of the 12" search with committed offsets; the synthetic validation's scope is
+stated (injections far from the floor; zero PM rejections exercised).

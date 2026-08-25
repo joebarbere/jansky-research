@@ -544,9 +544,110 @@ def fetch_racs_cutout(
     return None
 
 
+CASDA_TAP_URL = "https://casda.csiro.au/casda_vo_tools/tap"
+
+
+def fetch_racs_low_pair(
+    ra: float,
+    dec: float,
+    *,
+    casda=None,
+    username: str | None = None,
+    pw_path: str = "~/.casda_pw",
+    radius_deg: float = 0.03,
+    retries: int = 3,
+):  # pragma: no cover - network
+    """Same-OBSERVATION RACS-low Stokes I+V cutout pair, pinned by ``obs_id``.
+
+    An earlier version staged the I and V images through two independent, unordered
+    ``Casda.query_region`` calls with no collection, band, or observation constraint — at a
+    southern position that pattern matches RACS-low/mid/high products interchangeably, and V
+    was then indexed with I's WCS. Two of nine "circular detections" carried |V|/I of 568% and
+    135%, which no single-source Stokes measurement can produce (round-6 blocker). This
+    function queries ObsCore for The Rapid ASKAP Continuum Survey, RACS-low band
+    (0.32 < em < 0.36 m), taylor.0 restored conv products whose footprint contains the
+    position, requires an I and a V product in the SAME ``obs_id``, stages both from that one
+    observation, and asserts the two cutouts share a grid. Returns
+    ``(image_i_mJy, image_v_mJy, wcs, meta, casda)`` with ``meta`` carrying
+    ``obs_id``/``t_min``/filenames, or ``None``.
+    """
+    import os
+    import tempfile
+
+    import astropy.units as _u
+    import numpy as _np
+    import pyvo
+    import requests
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.table import Table
+    from astropy.wcs import WCS
+
+    username = username or os.environ.get("CASDA_USERNAME")
+    if not username:
+        raise RuntimeError("set CASDA_USERNAME (OPAL email) for the real Stokes-V cutout fetch")
+    q = f"""
+    SELECT obs_id, filename, t_min, access_url
+    FROM ivoa.obscore
+    WHERE obs_collection = 'The Rapid ASKAP Continuum Survey'
+    AND (filename LIKE 'image.i.%.restored.%' OR filename LIKE 'image.v.%.restored.%')
+    AND filename LIKE '%.taylor.0.restored.conv.fits'
+    AND em_min > 0.32 AND em_max < 0.36
+    AND 1 = CONTAINS(POINT('ICRS', {ra:.8f}, {dec:.8f}), s_region)
+    """
+    tab = pyvo.dal.TAPService(CASDA_TAP_URL).search(q).to_table()
+    if len(tab) == 0:
+        return None
+    groups: dict[str, dict[str, int]] = {}
+    for k, row in enumerate(tab):
+        stokes = str(row["filename"]).split(".")[1]
+        groups.setdefault(str(row["obs_id"]), {})[stokes] = k
+    complete = {o: g for o, g in groups.items() if "i" in g and "v" in g}
+    if not complete:
+        return None
+    key = min(complete, key=lambda o: float(tab["t_min"][complete[o]["i"]]))
+    irow, vrow = tab[complete[key]["i"]], tab[complete[key]["v"]]
+    coord = SkyCoord(ra * _u.deg, dec * _u.deg)
+
+    def _stage(casda_, row):
+        one = Table(rows=[(str(row["access_url"]),)], names=("access_url",))
+        urls = casda_.cutout(one, coordinates=coord, radius=radius_deg * _u.deg)
+        furl = next(u_ for u_ in urls if u_.endswith(".fits"))
+        raw = requests.get(furl, timeout=200).content
+        with tempfile.NamedTemporaryFile(suffix=".fits", delete=False) as fh:
+            fh.write(raw)
+            path = fh.name
+        try:
+            with fits.open(path) as hd:
+                data = _np.squeeze(_np.asarray(hd[0].data, float))
+                wcs = WCS(hd[0].header).celestial
+        finally:
+            os.unlink(path)
+        return data * 1000.0, wcs
+
+    for _ in range(retries):
+        try:
+            if casda is None:
+                casda = _casda_session(username, pw_path)
+            img_i, wcs_i = _stage(casda, irow)
+            img_v, wcs_v = _stage(casda, vrow)
+            if img_i.shape != img_v.shape:
+                raise RuntimeError(f"I/V cutout grids differ: {img_i.shape} vs {img_v.shape}")
+            meta = {
+                "obs_id": str(irow["obs_id"]),
+                "t_min": float(irow["t_min"]),
+                "filename_i": str(irow["filename"]),
+                "filename_v": str(vrow["filename"]),
+            }
+            return img_i, img_v, wcs_i, meta, casda
+        except Exception:
+            casda = None  # fresh login on retry (intermittent CASDA 401)
+    return None
+
+
 def forced_photometry_recover(
     *, max_targets: int = 15, min_i_mjy: float = 3.0, search_arcsec: float = 12.0, username=None
-) -> list[dict]:  # pragma: no cover - network
+) -> tuple[list[dict], int]:  # pragma: no cover - network
     """Forced photometry of catalogued RACS-LOW Stokes-V emitters in real RACS-low DR1 cutouts.
 
     Selects the brightest-``I`` SRSC RACS-LOW V-detections (``I>min_i_mjy``, RACS-low sky), stages each
@@ -577,32 +678,54 @@ def forced_photometry_recover(
         & (m["dec"] > -85.0)
     )
     idx = _np.where(sel)[0]
+    n_parent = int(idx.size)  # the selection's parent population, committed (round-6 referee)
     idx = idx[_np.argsort(-m["i_flux"][idx])][:max_targets]
     casda = None
     rows: list[dict] = []
     for i in idx:
         ra, dec = float(m["ra"][i]), float(m["dec"][i])
-        gi = fetch_racs_cutout(ra, dec, stokes="i", casda=casda, username=username)
-        if gi is None:
+        pair = fetch_racs_low_pair(ra, dec, casda=casda, username=username)
+        if pair is None:
             continue
-        casda = gi[2]
-        gv = fetch_racs_cutout(ra, dec, stokes="v", casda=casda, username=username)
-        if gv is None:
-            continue
-        casda = gv[2]
-        meas = measure_circular_pol(gi[0], gv[0], gi[1], ra, dec, search_arcsec=search_arcsec)
+        img_i, img_v, wcs, meta, casda = pair
+        meas = measure_circular_pol(img_i, img_v, wcs, ra, dec, search_arcsec=search_arcsec)
         cat_i = float(m["i_flux"][i])
+        i_det = (
+            _np.isfinite(meas["i_rms"])
+            and meas["i_rms"] > 0
+            and meas["i_peak"] > 3.0 * meas["i_rms"]
+        )
+        frac = meas["frac_pol"]
+        # physicality: a single source has 0 <= |V|/I <= 1; a ratio outside that range (or a
+        # sub-3-sigma I) is a measurement failure, not a detection -- previously two rows with
+        # |V|/I of 568% and 135% counted as `highly_circular` (round-6 blocker)
+        valid = bool(i_det and _np.isfinite(frac) and 0.0 <= frac <= 1.0)
+        v_snr = (
+            abs(meas["v_peak"]) / meas["v_rms"]
+            if _np.isfinite(meas["v_rms"]) and meas["v_rms"] > 0
+            else float("nan")
+        )
         rows.append(
             {
+                "ra": ra,
+                "dec": dec,
                 "cat_i": cat_i,
                 "cat_frac": abs(float(m["v_flux"][i])) / cat_i,
                 "img_i": meas["i_peak"],
                 "img_v": meas["v_peak"],
-                "img_frac": meas["frac_pol"],
+                "img_i_rms": meas["i_rms"],
+                "img_v_rms": meas["v_rms"],
+                "v_snr": v_snr,
+                "img_frac": frac,
                 "offset_arcsec": meas["offset_arcsec"],
+                "valid": valid,
+                "obs_id": meta["obs_id"],
+                "t_min_mjd": round(meta["t_min"], 4),
+                "filename_i": meta["filename_i"],
+                "filename_v": meta["filename_v"],
             }
         )
-    return rows
+    return rows, n_parent
 
 
 def run(
@@ -681,29 +804,105 @@ def _run_offline(op, *, v_snr_min: float, i_snr_ref: float, write_figure: bool =
 
 
 def _run_real(op) -> dict:
-    """Real path: forced photometry of RACS-LOW emitters in single-epoch RACS-low DR1 CASDA cutouts."""
+    """Real path: same-observation forced photometry of RACS-LOW emitters (CASDA cutout pairs)."""
     import numpy as _np
 
-    rows = forced_photometry_recover()
+    rows, n_parent = forced_photometry_recover()
     n = len(rows)
+    valid = _np.array([bool(r["valid"]) for r in rows])
     img_i = _np.array([r["img_i"] for r in rows])
     cat_i = _np.array([r["cat_i"] for r in rows])
     img_frac = _np.array([r["img_frac"] for r in rows])
-    good_i = _np.isfinite(img_i) & (img_i > 0) & _np.isfinite(cat_i) & (cat_i > 0)
-    i_ratio = float(_np.median(img_i[good_i] / cat_i[good_i])) if good_i.any() else float("nan")
-    cls = [classify_emitter(r["img_v"], r["img_i"]) for r in rows]
-    n_circ = sum(c in ("circular", "highly_circular") for c in cls)
-    _real_figure(rows, cls, op / "papers" / "stokesv" / "figures")
+    v_snr = _np.array([r["v_snr"] for r in rows])
+    offs = _np.array([r["offset_arcsec"] for r in rows])
+    good_i = valid & _np.isfinite(img_i) & (img_i > 0) & _np.isfinite(cat_i) & (cat_i > 0)
+    ratios = img_i[good_i] / cat_i[good_i]
+    i_ratio = float(_np.median(ratios)) if good_i.any() else float("nan")
+
+    # "circular" now requires a VALID row, a significant V (the V-SNR gate the pipeline always
+    # implemented but never applied to real data), and the fraction threshold
+    def _n_circ(weak: float) -> int:
+        return int(_np.sum(valid & (v_snr >= 5.0) & _np.isfinite(img_frac) & (img_frac >= weak)))
+
+    n_circ = _n_circ(0.06)
+    n_valid = int(valid.sum())
+    # Wilson 1-sigma interval on the fraction over the valid sample
+    lo = hi = float("nan")
+    if n_valid:
+        import math
+
+        z, ph = 1.0, n_circ / n_valid
+        d = 1 + z**2 / n_valid
+        c = ph + z**2 / (2 * n_valid)
+        w = z * math.sqrt(ph * (1 - ph) / n_valid + z**2 / (4 * n_valid**2))
+        lo, hi = (c - w) / d, (c + w) / d
+    _write_targets(rows, op / "results" / "stokesv_targets.csv")
+    _real_figure(
+        [r for r in rows],
+        [classify_emitter(r["img_v"], r["img_i"]) for r in rows],
+        op / "papers" / "stokesv" / "figures",
+    )
     return {
-        "source": "RACS-low DR1 (CASDA)",  # overrides the synthetic source in the merged real run
+        # a MIXED marker naming both legs, per the repo's guard rules: half this file's keys
+        # come from the synthetic selection validation
+        "source": "synthetic selection validation + real RACS-low forced photometry (CASDA)",
+        "n_parent_racs_low": n_parent,
         "n_measured": n,
+        "n_valid": n_valid,
+        "n_invalid_ratio": int(n - n_valid),
         "i_recovery_ratio": round(i_ratio, 2),
-        "n_v_circular": int(n_circ),
-        "frac_v_circular": round(n_circ / n, 3) if n else 0.0,
-        "median_img_frac_pct": round(100.0 * float(_np.median(img_frac[_np.isfinite(img_frac)])), 2)
-        if _np.isfinite(img_frac).any()
+        "i_ratio_min": round(float(ratios.min()), 2) if good_i.any() else None,
+        "i_ratio_max": round(float(ratios.max()), 2) if good_i.any() else None,
+        "n_v_circular": n_circ,
+        "n_v_circular_at_five_pct": _n_circ(0.05),
+        "n_v_circular_at_ten_pct": _n_circ(0.10),
+        "frac_v_circular_pct": round(100.0 * n_circ / n_valid, 1) if n_valid else None,
+        "frac_v_circular_lo_pct": round(100.0 * lo, 1) if n_valid else None,
+        "frac_v_circular_hi_pct": round(100.0 * hi, 1) if n_valid else None,
+        "median_offset_arcsec": round(float(_np.median(offs[_np.isfinite(offs)])), 2)
+        if _np.isfinite(offs).any()
+        else None,
+        "max_offset_arcsec": round(float(_np.max(offs[_np.isfinite(offs)])), 2)
+        if _np.isfinite(offs).any()
+        else None,
+        "median_img_frac_pct": round(
+            100.0 * float(_np.median(img_frac[valid & _np.isfinite(img_frac)])), 2
+        )
+        if (valid & _np.isfinite(img_frac)).any()
         else None,
     }
+
+
+def _write_targets(rows: list[dict], path) -> None:
+    """Commit the per-target rows: the previous real result existed only inside a PDF."""
+    import csv as _csv
+    from pathlib import Path
+
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fields = [
+        "ra",
+        "dec",
+        "cat_i",
+        "cat_frac",
+        "img_i",
+        "img_v",
+        "img_i_rms",
+        "img_v_rms",
+        "v_snr",
+        "img_frac",
+        "offset_arcsec",
+        "valid",
+        "obs_id",
+        "t_min_mjd",
+        "filename_i",
+        "filename_v",
+    ]
+    with p.open("w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k) for k in fields})
 
 
 def _figure(
@@ -747,10 +946,18 @@ def _real_figure(rows: list[dict], cls: list[str], out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    # invalid (Stokes-I-undetected) targets are excluded from both panels, matching the
+    # statistics: they are single-epoch non-detections, not measurements
+    valid = [bool(r.get("valid", True)) for r in rows]
+    rows = [r for r, v in zip(rows, valid, strict=True) if v]
+    cls = [c for c, v in zip(cls, valid, strict=True) if v]
     cat_i = _np.array([r["cat_i"] for r in rows])
     img_i = _np.array([r["img_i"] for r in rows])
     img_frac = _np.array([r["img_frac"] for r in rows])
-    circ = _np.array([c in ("circular", "highly_circular") for c in cls])
+    vsnr = _np.array([r.get("v_snr", _np.inf) for r in rows])
+    circ = _np.array(
+        [c in ("circular", "highly_circular") and s >= 5.0 for c, s in zip(cls, vsnr, strict=True)]
+    )
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.0, 4.0))
     # Left: forced-photometry I recovered at the known positions (validates the CASDA image pipeline)
     lim = [0.5, max(cat_i.max(), img_i.max(), 1) * 1.3]
@@ -761,7 +968,7 @@ def _real_figure(rows: list[dict], cls: list[str], out_dir) -> None:
         yscale="log",
         xlabel="catalogue $I$ (mJy)",
         ylabel="forced image $I$ (mJy)",
-        title="Stokes $I$ recovered",
+        title="Image vs catalogue $I$ (same observation)",
         xlim=lim,
         ylim=lim,
     )
@@ -774,7 +981,7 @@ def _real_figure(rows: list[dict], cls: list[str], out_dir) -> None:
     ax2.set(
         xlabel="target (sorted)",
         ylabel=r"image $|V|/I$ (%)",
-        title="Single-epoch $V$ (variability-limited)",
+        title="Single-observation $V$ occurrence",
     )
     ax2.legend(fontsize=8)
     fig.tight_layout()
@@ -783,6 +990,9 @@ def _real_figure(rows: list[dict], cls: list[str], out_dir) -> None:
 
 
 def _write_macros(m: dict, path) -> None:
+    """Macros for both legs: synthetic keys carry an sv Syn-style prefix in meaning already
+    (disjoint names), and the real-leg macros default to '--' so a synthetic-only rebuild can
+    never write a wrong 0 over them."""
     from pathlib import Path
 
     def _f(key: str, default: str = "--") -> str:
@@ -800,11 +1010,22 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\svNrecovered}}{{{_f('n_recovered')}}}",
         rf"\newcommand{{\svNpmrejected}}{{{_f('n_pm_rejected')}}}",
         rf"\newcommand{{\svPurity}}{{{_f('purity')}}}",
-        # real forced-photometry macros (RACS-low DR1)
+        # real forced-photometry macros (same-obs RACS-low pairs)
+        rf"\newcommand{{\svNparent}}{{{_f('n_parent_racs_low')}}}",
         rf"\newcommand{{\svNmeasured}}{{{_f('n_measured')}}}",
+        rf"\newcommand{{\svNvalid}}{{{_f('n_valid')}}}",
+        rf"\newcommand{{\svNinvalid}}{{{_f('n_invalid_ratio')}}}",
         rf"\newcommand{{\svIrec}}{{{_f('i_recovery_ratio')}}}",
+        rf"\newcommand{{\svIrecMin}}{{{_f('i_ratio_min')}}}",
+        rf"\newcommand{{\svIrecMax}}{{{_f('i_ratio_max')}}}",
         rf"\newcommand{{\svNVcirc}}{{{_f('n_v_circular')}}}",
-        rf"\newcommand{{\svFracVcirc}}{{{_f('frac_v_circular')}}}",
+        rf"\newcommand{{\svNVcircFive}}{{{_f('n_v_circular_at_five_pct')}}}",
+        rf"\newcommand{{\svNVcircTen}}{{{_f('n_v_circular_at_ten_pct')}}}",
+        rf"\newcommand{{\svFracVcircPct}}{{{_f('frac_v_circular_pct')}}}",
+        rf"\newcommand{{\svFracVcircLo}}{{{_f('frac_v_circular_lo_pct')}}}",
+        rf"\newcommand{{\svFracVcircHi}}{{{_f('frac_v_circular_hi_pct')}}}",
+        rf"\newcommand{{\svMedOffset}}{{{_f('median_offset_arcsec')}}}",
+        rf"\newcommand{{\svMaxOffset}}{{{_f('max_offset_arcsec')}}}",
         rf"\newcommand{{\svMedImgFrac}}{{{_f('median_img_frac_pct')}}}",
     ]
     p = Path(path)

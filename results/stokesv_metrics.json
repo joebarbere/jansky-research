@@ -1,5 +1,5 @@
 {
-  "source": "RACS-low DR1 (CASDA)",
+  "source": "synthetic selection validation + real RACS-low forced photometry (CASDA)",
   "n_targets": 500,
   "n_bright_ref": 500,
   "leakage_floor_pct": 6.053,
@@ -10,8 +10,26 @@
   "n_pm_rejected": 0,
   "purity": 1.0,
   "n_measured": 15,
-  "i_recovery_ratio": 0.92,
-  "n_v_circular": 9,
+  "i_recovery_ratio": 0.56,
+  "n_v_circular": 4,
   "frac_v_circular": 0.6,
-  "median_img_frac_pct": 14.59
+  "median_img_frac_pct": 11.69,
+  "n_parent_racs_low": 19,
+  "n_valid": 9,
+  "n_invalid_ratio": 6,
+  "i_ratio_min": 0.1,
+  "i_ratio_max": 2.56,
+  "n_v_circular_at_five_pct": 4,
+  "n_v_circular_at_ten_pct": 4,
+  "frac_v_circular_pct": 44.4,
+  "frac_v_circular_lo_pct": 29.3,
+  "frac_v_circular_hi_pct": 60.7,
+  "median_offset_arcsec": 1.85,
+  "max_offset_arcsec": 7.89,
+  "_merge": {
+    "retained_from_previous_run": [
+      "frac_v_circular"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  }
 }

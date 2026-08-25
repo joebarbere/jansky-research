@@ -43,6 +43,22 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`stokesv` revision (round-6 referee, three blockers): the I and V cutouts are pinned to one
+  observation, and the paper's central claim is replaced by what the data say.**
+  `fetch_racs_low_pair` requires an I and a V product under one ObsCore `obs_id` (RACS-low
+  band, identifiers and t_min committed per target) with a grid assertion; a physicality gate
+  (0 <= |V|/I <= 1, I > 3 sigma) and the V-SNR gate now govern the real leg. Re-measured: 9 of
+  15 targets valid, the 6 invalid being Stokes-I non-detections in that observation; the
+  impossible 568%/135% ratios are gone. The I-ratio scatter SURVIVES the pinned pairing
+  (median 0.56, range 0.10-2.56) -- real, unexplained, and stated -- so "Stokes I is
+  recovered" is withdrawn beyond the median. Headline: significant V in 4/9 valid (44.4%,
+  Wilson 29-61%), identical at 5% and 10% thresholds (V-SNR 12-47). The parent population
+  (19) is committed; every row ships in results/stokesv_targets.csv; the "variability-limited
+  duty cycle" interpretation is downgraded to a single-observation occurrence rate with the
+  epoch bookkeeping committed for the future comparison; the figure excludes invalid targets
+  and applies the same gates as the statistics; the mixed source string is allowlisted per the
+  singlepulse precedent.
+
 - **`peaked` revision (round-6 referee, three blockers): the validation became real, the limit
   became local, and the candidate list became evidence.** `validate_hfp` now uses each Dallacasa
   source's measured TGSS flux (83/100 detected) with the VLASS QL correction: 53% rising / 32%

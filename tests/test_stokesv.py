@@ -163,51 +163,51 @@ def test_racs_science_mask_excludes_noisemap():
 
 
 def test_run_real_merges_forced_photometry(monkeypatch, tmp_path):
-    # mock the CASDA forced-photometry (network) with representative rows: I recovered, V variability-limited
+    # mock the CASDA forced-photometry (network) with representative same-obs rows, including
+    # one physically impossible ratio (|V|/I > 1) that must be excluded, not counted
+    def _row(cat_i, img_i, img_v, frac, off, valid=True, v_snr=8.0):
+        return {
+            "ra": 10.0,
+            "dec": -20.0,
+            "cat_i": cat_i,
+            "cat_frac": 0.5,
+            "img_i": img_i,
+            "img_v": img_v,
+            "img_i_rms": 0.3,
+            "img_v_rms": 0.25,
+            "v_snr": v_snr,
+            "img_frac": frac,
+            "offset_arcsec": off,
+            "valid": valid,
+            "obs_id": "ASKAP-1",
+            "t_min_mjd": 58800.0,
+            "filename_i": "image.i.x.taylor.0.restored.conv.fits",
+            "filename_v": "image.v.x.taylor.0.restored.conv.fits",
+        }
+
     rows = [
-        {
-            "cat_i": 19.2,
-            "cat_frac": 0.90,
-            "img_i": 10.5,
-            "img_v": 0.35,
-            "img_frac": 0.03,
-            "offset_arcsec": 8,
-        },
-        {
-            "cat_i": 16.7,
-            "cat_frac": 0.59,
-            "img_i": 9.1,
-            "img_v": 4.2,
-            "img_frac": 0.46,
-            "offset_arcsec": 5,
-        },
-        {
-            "cat_i": 14.2,
-            "cat_frac": 0.42,
-            "img_i": 11.0,
-            "img_v": 0.2,
-            "img_frac": 0.02,
-            "offset_arcsec": 6,
-        },
-        {
-            "cat_i": 12.4,
-            "cat_frac": 0.77,
-            "img_i": 7.0,
-            "img_v": 2.4,
-            "img_frac": 0.34,
-            "offset_arcsec": 4,
-        },
+        _row(19.2, 10.5, 0.35, 0.03, 8),
+        _row(16.7, 9.1, 4.2, 0.46, 5),
+        _row(14.2, 11.0, 0.2, 0.02, 6),
+        _row(12.4, 7.0, 2.4, 0.34, 4),
+        _row(9.9, 0.5, 2.9, 5.68, 3, valid=False),  # |V|/I > 1: measurement failure
     ]
-    monkeypatch.setattr(stokesv, "forced_photometry_recover", lambda **k: rows)
+    monkeypatch.setattr(stokesv, "forced_photometry_recover", lambda **k: (rows, 42))
     m = stokesv.run(out=str(tmp_path), offline=False)
     # merged metrics carry BOTH the synthetic-validation and the real forced-photometry results
-    assert m["source"] == "RACS-low DR1 (CASDA)"
+    assert "synthetic selection validation + real" in m["source"]  # mixed marker, per guards
     assert m["purity"] > 0.8  # synthetic selection machinery still ran
-    assert m["n_measured"] == 4
+    assert m["n_measured"] == 5 and m["n_valid"] == 4 and m["n_invalid_ratio"] == 1
+    assert m["n_parent_racs_low"] == 42
     assert 0.3 < m["i_recovery_ratio"] < 1.0  # Stokes I recovered at the known positions
-    assert m["n_v_circular"] == 2 and m["frac_v_circular"] == 0.5  # variability-limited V
+    # the invalid row is excluded; the two >=6% valid rows with significant V count
+    assert m["n_v_circular"] == 2 and m["frac_v_circular_pct"] == 50.0
+    assert m["frac_v_circular_lo_pct"] < 50.0 < m["frac_v_circular_hi_pct"]
+    csv_path = tmp_path / "results" / "stokesv_targets.csv"
+    assert csv_path.exists() and "obs_id" in csv_path.read_text().splitlines()[0]
     macros = (tmp_path / "papers" / "stokesv" / "generated" / "macros.tex").read_text()
-    assert r"\svNmeasured}{4}" in macros and r"\svIrec" in macros
+    assert r"\svNmeasured}{5}" in macros and r"\svNinvalid}{1}" in macros
+    assert r"\svFracVcircLo" in macros
 
 
 def test_forced_mode_is_signed_on_blank_sky_while_the_peak_search_is_not():
