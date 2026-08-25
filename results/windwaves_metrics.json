@@ -2,13 +2,74 @@
   "source": "Wind/WAVES RAD2 20031028",
   "n_ridge": 256,
   "n_used": 256,
-  "r2": 0.651,
+  "r2": 0.835,
   "f_lo_mhz": 1.075,
   "f_hi_mhz": 13.825,
   "harmonic": 2,
   "r_lo_rsun": 2.41,
   "r_hi_rsun": 10.25,
   "r_hi_au": 0.048,
-  "speed_kms": 24912.1,
-  "speed_c": 0.0831
+  "speed_kms": 30500,
+  "speed_c": 0.1017,
+  "n_time_cols": 10,
+  "pad_s": 1200.0,
+  "snr_threshold": 5.0,
+  "clip_sigma": 3.0,
+  "fit_converged": true,
+  "speed_c_se": 0.0111,
+  "speed_c_inverse": 0.1217,
+  "speed_c_colmeans": 0.0996,
+  "speed_grid": [
+    {
+      "harmonic": 1,
+      "density_scale": 1.0,
+      "speed_c": 0.0537,
+      "r_lo_rsun": 1.86,
+      "r_hi_rsun": 5.96,
+      "r_hi_au": 0.028,
+      "r2": 0.833,
+      "n_used": 256
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 1.0,
+      "speed_c": 0.1017,
+      "r_lo_rsun": 2.41,
+      "r_hi_rsun": 10.25,
+      "r_hi_au": 0.048,
+      "r2": 0.835,
+      "n_used": 256
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 2.0,
+      "speed_c": 0.1471,
+      "r_lo_rsun": 2.76,
+      "r_hi_rsun": 14.03,
+      "r_hi_au": 0.065,
+      "r2": 0.834,
+      "n_used": 256
+    },
+    {
+      "harmonic": 2,
+      "density_scale": 4.0,
+      "speed_c": 0.215,
+      "r_lo_rsun": 3.19,
+      "r_hi_rsun": 19.51,
+      "r_hi_au": 0.091,
+      "r2": 0.833,
+      "n_used": 256
+    }
+  ],
+  "burst_peak_utc": "2003-10-28T11:06:29",
+  "fit_estimator": "column-median OLS with leave-one-column-out jackknife",
+  "speed_c_points": 0.0831,
+  "_merge": {
+    "retained_from_previous_run": [
+      "clip_sigma",
+      "fit_converged",
+      "speed_c_colmeans"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  }
 }

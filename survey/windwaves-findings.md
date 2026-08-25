@@ -101,3 +101,26 @@ the count of other >5-sigma ridges.
 derived from the ridge; wind speed for the projection claim unstated.
 
 **Status: fixes pending** (all fixes run on the existing ridge; no new download needed).
+
+**Status: RESOLVED (2026-08-25).** The dominant systematic is propagated and the estimator is
+rebuilt on the independent unit.
+
+The (mode x density-scale) grid is committed: 0.054 c / 6.0 R_sun (fundamental, 1x) through
+0.102 c / 10.25 (harmonic, 1x) to 0.215 c / 19.5 R_sun (harmonic, 4x) -- matching the
+referee's own sweep, with the exact f_p^2~n degeneracy stated in code and paper, and the
+abstract now quotes the bracket and claims neither distance regime exclusively. The headline is
+a ONE-POINT-PER-TIME-SAMPLE (column median) fit -- the referee's estimator-family analysis made
+the per-point OLS the family minimum, and en route we measured its converged-clip variant
+collapse outright on the sibling STEREO ridge -- giving 0.102 +/- 0.011 c (leave-one-column-out
+jackknife over the 10 samples), with the all-points fit (0.083) and inverse regression (0.122)
+committed as the bracket. R^2 = 0.835 on the columns, and the paper now says the residuals'
+band-monotonic structure is unexplained (deceleration-like curvature or density mismatch)
+rather than blaming band compression, which the matched-cadence fixture disproves. The ridge is
+committed (results/windwaves_ridge.csv) with pad/snr provenance in the metrics; the burst peak
+epoch (2003-10-28T11:06:29) is committed and the flare association stated as location, not
+validation; the fundamental values come from the grid macros (no hand-typing); the reach is
+described as the band edge through the model, carried by one channel; the Parker correction is
+the path-weighted 1-3%; macros are namespaced wwSyn*/wwReal*; the figure draws the exact quoted
+fit with per-channel points, per-sample medians, and the fitted line distinguished; krupar2015's
+author list and reiner2015's title fixed against Crossref; the uncited "0.3 c historically"
+dropped; the fixture gained matched-cadence variants whose quantisation bias is asserted in CI.

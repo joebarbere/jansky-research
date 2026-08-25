@@ -41,4 +41,5 @@ def test_run_offline_recovers_speed_and_reaches_interplanetary(tmp_path):
     assert (tmp_path / "results" / "swaves_metrics.json").exists()
     assert (tmp_path / "papers" / "swaves" / "figures" / "swaves.pdf").exists()
     macros = (tmp_path / "papers" / "swaves" / "generated" / "macros.tex").read_text()
-    assert r"\swSpeedC" in macros and r"\swRhiAU" in macros
+    assert r"\swSynSpeedC" in macros and r"\swSynRhiAU" in macros
+    assert r"\newcommand{\swRealSpeedC}{--}" in macros

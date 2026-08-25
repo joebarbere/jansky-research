@@ -102,3 +102,26 @@ SNR; "None of these undermine..." contradicts its own list item (ii); \swHarmoni
 astropy cited but not imported; hardcoded 16 in the band prose; stale arxiv-submission.
 
 **Status: fixes pending.**
+
+**Status: RESOLVED (2026-08-25).** The blocker fix produced the round's best surprise: the
+per-point fit family was hiding a genuinely clean track.
+
+First, the live incoherent-fit exposure turned out worse than the referee suspected: running
+the CONVERGED per-point clip on this ridge collapsed onto the two crowded near-Sun minute
+samples (241 points, 2 columns, 0.031 c) -- iterated residual clipping rejects the sparse
+low-frequency samples that carry the drift. The estimator is therefore rebuilt on the
+independent unit: one point per one-minute sample (column median), leave-one-sample-out
+jackknife. Result: **0.160 +/- 0.014 c, R^2 = 0.986 over 11 samples, with a tight estimator
+bracket (all-points 0.159, inverse 0.163)** -- at sample level this track is genuinely straight,
+and the paper says so with the storm-confusion caveat now in the Discussion, supported by the
+committed ridge's monotonic low-frequency peak times and the jackknife as the sensitivity bound.
+
+The hand-halved fundamental number is gone: the committed grid gives fundamental 0.079 c to
+41.4 R_sun (the halving was ~right here, as the referee computed, but it is now evidence);
+harmonic 4x density reaches 0.324 c / 165 R_sun, and the title carries the range (0.2-0.4 AU).
+The reach is stated as the band edge through the model. The ridge is committed
+(results/swaves_ridge.csv) with pad/snr provenance; the burst epoch (2013-05-15T03:48) is
+committed; n_time_cols replaces the bare 310-points framing and the leverage statement is in
+the paper; the Parker correction is the path-weighted 1-3%; macros namespaced swSyn*/swReal*;
+the figure draws the exact quoted per-sample fit; krupar2015's authors fixed; astropy dropped
+from software; the fixture runs at the real one-minute cadence.
