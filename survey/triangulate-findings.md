@@ -31,21 +31,23 @@ frame, plus the spacecraft's HEEQ position. For each frequency we:
 | channels triangulated | **38** (0.125–1.975 MHz) |
 | geometric heliocentric range | **15.3 → 106.1 R⊙** (0.07 → 0.49 AU) |
 | median miss distance (ray consistency) | **17.1 R⊙** |
-| source longitude / latitude (HEEQ, median) | **169° / +4.7°** (near-ecliptic) |
+| source longitude / latitude (HEEQ, median) | **169° / +4.7°** — superseded: wrap-safe median is **179.5° ± 7.6** |
 | corr(r_geom, r_plasma) | **0.989** |
 | ratio r_geom / r_plasma (median) | **2.18** |
 
-**The headline is the correlation, not the absolute scale.** The geometric distance — built purely
-from two pointing directions — and the plasma-frequency distance — built purely from a density model —
-track each other in shape at r = **0.99** across the triangulated band (0.125-1.975 MHz, a factor
-of 16, i.e. 1.2 decades -- an earlier "two decades" here and in the paper was wrong). Part of any such correlation is trivially
-expected: both estimators decrease monotonically with frequency by construction, so even a *linear*
-ramp in frequency already correlates with the Leblanc curve at r ≈ 0.75. What the 0.989 value adds is
-that the geometric distances follow the **correct log–log curvature** of the density model across two
-decades — a real cross-check of two fully independent distance estimators, not merely a shared trend.
-The geometry additionally pins the source to HEEQ longitude ≈169°, latitude ≈+5° (near the ecliptic),
-which the 1-D drift method cannot do.
+**[SUPERSEDED 2026-08-25 by the round-8 referee — see below.]** This section originally
+presented r = 0.99 as the headline and claimed the geometric distances "follow the correct
+log-log curvature" across "two decades"; the round-8 review showed the correlation cannot fail
+(any monotone power law scores >0.95; a bare 1/f matches the geometric points as well as
+Leblanc), the log-log slopes actually DIFFER (−0.60 vs −0.93 — the curvature claim is falsified
+by the same data), the band is 1.2 decades, and the "≈169°" longitude was a scalar median taken
+across the ±180° wrap (wrap-safe: 179.5°). The honest headline is the ADDITIVE comparison: the
+triangulated distances sit a constant 13.4 ± 3.3 R⊙ outside the Leblanc level (slope 1.12),
+i.e. one ~4° pointing bias, after which the model reproduces the geometry to 3.4 R⊙ rms.
 
+[Superseded 2026-08-25: the block below reads the discrepancy as a ratio and invokes a density
+enhancement; the committed channels show a constant ADDITIVE offset with OLS slope ~1, which
+leaves no room for an enhancement — see the round-8 sections below.]
 The absolute geometric radii run **~2× the average-Leblanc plasma radii** (ratio 2.18). Two effects,
 both honest, push the same way and we do **not** claim to separate them:
 - **Outward triangulation bias from direction-finding noise.** A single type III has a large apparent
@@ -66,9 +68,10 @@ both honest, push the same way and we do **not** claim to separate them:
 - **A reproduction/method demo, not a survey.** One well-placed event on the public L3 DF product; the
   contribution is a tested, reproducible *geometric* localisation + a clean independent cross-check of
   the density-model distance, with the noise budget surfaced.
-- **The robust output is the correlation and the (longitude, latitude); the absolute radial scale is
-  upper-biased** by DF noise (and possibly density enhancement) by a factor ~2 — we report it but do not
-  interpret the factor as a measurement.
+- **The robust output is the source direction and the additive comparison** (superseded wording:
+  this bullet previously named the correlation, which the round-8 review showed cannot fail; the
+  absolute radial scale carries one constant ~4° pointing-bias offset, measured by the committed
+  calibration grid, and is not read as calibrated).
 - **Only the low band (0.125–~2 MHz) triangulates** for this event: higher HFR channels lack DF
   solutions in the window (below the goniopolarimetry SNR / flagged), so this reaches the *interplanetary*
   source, not the coronal one.
@@ -206,3 +209,50 @@ point: 0.979; drop ten: 0.896 — not the swaves shape); five other citations ex
 additive one — r_geom − r_plasma = 14.2 ± 3.3 R⊙, slope 1.12, one ~3.7° instrumental offset —
 which retires the density enhancement, demotes r = 0.989, and turns the result into "Leblanc
 confirmed by pure two-spacecraft geometry to ~12% in radius from 0.07 to 0.5 AU."
+
+**Status: RESOLVED (2026-08-25).** One real re-run; every referee-side number reproduced in the
+committed pipeline, and the two blockers closed the way the referee predicted.
+
+**Blocker 1 (wrap-broken longitude):** `circular_median_deg` (centre on the circular mean, take
+the median of wrapped deviations) replaces the scalar median everywhere: the published 168.9°
+becomes **179.5° ± 7.6** (the referee's unwrapped median was 179.5 exactly). A fixture ON the
+branch cut at the real 82° separation now exists and fails under the old code; the latitude
+gains its own scatter (4.7 ± 4.6).
+
+**Blocker 2 (multiplicative → additive):** the paper's headline comparison is now
+`additive_vs_multiplicative`, all committed: diff 13.4 ± 3.3 R⊙ (block-jackknife ±1.1 on the
+median), OLS slope 1.119 / intercept 12.3, additive rms 3.37 vs multiplicative 17.83 (5.3×),
+ratio range 1.24–3.66 with the median 2.18 demoted to "the contrast, since a single scale
+factor describes no channel". The regression slope ≈ 1 retires the density-enhancement
+narrative outright; the implied constant pointing bias is 4.0° at the 194 R⊙ median lever. The
+result is reframed as a recover-a-known for the Leblanc shape: one constant instrumental
+offset, then 3.4 R⊙ rms (~12%) over 0.07–0.5 AU.
+
+**MAJORs:**
+- r = 0.989 demoted with its nulls stated (any monotone power law > 0.95; 1/f ≈ Leblanc);
+  the statistic that can fail — the log-log slope of r_geom on r_plasma, 0.653 vs 1.0 — is
+  committed and quoted as what forced the additive framing. Block-jackknife errors on r
+  (±0.034) and the ratio (±0.19) committed.
+- The (harmonic × density) grid is committed (`harmonic_density_grid`): h=1 gives diff 17.8 /
+  ratio 3.89; h=1,scale=4 ≡ h=2,scale=1 exactly (verified in a test); the harmonic is stated
+  as a convention inside the grid.
+- The hand-typed calibration numbers are a committed measurement (`noise_bias_calibration` at
+  the real 82° baseline, source at the unmodified Leblanc radii): 9°/18°/25° scatter →
+  additive offsets 3.1/10.5/16.9 R⊙ — the observed 13.4 R⊙ needs no new physics, and the
+  calibration produces ADDITIVE offsets (ratio 1.11–1.68), confirming the framing.
+- Time is now carried as seconds since the file date's UTC midnight on both spacecraft; the
+  committed epochs show the two per-file origins differed by 25 s (harmless inside ±900 s) —
+  the hazard is closed and measured, and a shifted-origin fixture documents the sensitivity.
+- Auditability: pos_a/pos_b in the JSON; per-channel mean direction vectors and sample counts
+  in the CSV — every r_geom is now reproducible offline.
+- Clobber guard: a synthetic run refuses to overwrite the channels CSV / figure when the
+  results JSON on disk is real (tested) — the marker can no longer lie.
+- The stale arXiv package regenerated (1917/1920 chars); the \citeyearpar leak fixed by
+  switching the abstract to \citet, which the assembler resolves ("Leblanc et al. (1998)").
+
+**MINOR/NIT:** the miss-vs-effect comparison is stated (median miss ≈ the offset; channels
+individually consistent, ensemble one-signed on all 38); the sweep quotes its largest
+excursion (30 R⊙ row) and states that the 60/100 rows are vacuous (max miss 32 R⊙ — the
+analysis cut never binds); krupar2012's author list fixed (Santolik/Cecconi restored); the
+findings file's superseded claims marked in place. Headline values that were supposed to be
+stable stayed stable (n 38, sep 82.1, miss 17.1, corr 0.989).
