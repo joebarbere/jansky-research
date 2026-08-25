@@ -8,9 +8,9 @@ an **independent geometric check** on the density-model distance the whole metho
 
 | regime | slice | instrument | density model | reach (recover-a-known) | speed |
 |---|---|---|---|---|---|
-| corona | `solarbursts` | e-Callisto (ground) | Newkirk | ~1.5–3 R⊙ | 0.14 c |
-| inner heliosphere | `windwaves` | Wind/WAVES RAD2 | Leblanc | 2.4 → 10.2 R⊙ (Alfvén surface) | 0.083 c |
-| interplanetary | `swaves` | STEREO/WAVES HFR | Leblanc | 2.3 → 82.6 R⊙ = **0.38 AU** | 0.150 c |
+| corona | `solarbursts` | e-Callisto (ground) | Newkirk | 1.76–2.29 R⊙ (fitted band) | 0.117 c (spread 0.117–0.133) |
+| inner heliosphere | `windwaves` | Wind/WAVES RAD2 | Leblanc | 2.4 → 10.2 R⊙ (grid 6–19.5) | 0.102 ± 0.011 c (grid 0.054–0.215) |
+| interplanetary | `swaves` | STEREO/WAVES HFR | Leblanc | 2.3 → 82.6 R⊙ = **0.38 AU** (band edge; grid 0.19–0.77 AU) | 0.160 ± 0.014 c (grid 0.079–0.324) |
 | geometric | `triangulate` | STEREO-A+B direction-finding | **none** | 15 → 106 R⊙ | — |
 
 The same drift-to-distance method, with a Newkirk (corona) → Leblanc (heliosphere) density-model handoff,
@@ -39,7 +39,7 @@ not that they agree in absolute calibration.
 - **A synthesis/reproduction, not a discovery.** Each leg is an existing recover-a-known; the new element
   is the unified framework + the geometric validation of the model distance.
 - **Different events.** The corona (2011-09-14), inner-heliosphere (2003-10-28 X17), and interplanetary
-  (2013-05-15) legs are *different bursts*, so this is one method validated across four regimes, **not one
+  (2013-05-15) legs are *different bursts*, so this is one method validated across three regimes (this line originally said "four"), **not one
   beam tracked end to end**. The stronger demonstration — a single event caught simultaneously by
   e-Callisto + Wind + STEREO — is the natural next step (an optional GATE-0 event hunt).
 - **The cross-check is event-specific and shape-only.** It validates the 2013-05-15 interplanetary
@@ -114,3 +114,40 @@ offset" with what the channels show — a ~13 R⊙ additive offset at the scale 
 fractional discrepancy growing 30%→3× across the band, NOT a validation of the Leblanc shape
 — which forces "geometrically validated" out of the title and makes the bias paragraph a
 measurement instead of an excuse.
+
+**Status: RESOLVED (2026-08-25).** One real re-run of the full four-slice pipeline; both
+blockers closed and the durable guard the referee asked for exists.
+
+**Blocker 1 (stale sibling snapshot):** the re-run refreshed every per-leg value to the
+current sibling vintages — corona 0.1173 (r 1.757–2.285, the FITTED band), helio 0.1017 ±
+0.0111, ip 0.1604 ± 0.014 — and `test_committed_ladder_matches_the_committed_siblings` now
+asserts each per-leg value equals the corresponding key in the sibling's committed JSON
+(it failed on the stale file before the re-run, passed after). The sibling artifacts came
+back byte-stable except solarbursts' expected `_merge` note retaining `candidate_selection`
+(macro files reordered only — reverted as no-ops).
+
+**Blocker 2 (inverted shape/scale claim):** the abstract and the cross-check section now
+carry the additive framing inherited from papers/triangulate: 13.4 ± 3.3 R⊙ constant offset,
+slope 1.119, model reproduced to 3.37 R⊙ rms after one measured pointing bias — and state
+plainly that the comparison does NOT validate the log-log shape (committed slope 0.653 vs 1).
+"Geometrically validated" left the title (now "…with a Same-Event Geometric Check…"); r =
+0.989 is reported for continuity with its null stated (any monotone power law > 0.95).
+
+**MAJORs:** the ladder quotes the sibling (harmonic × density) grids inline (helio
+0.054–0.215 c / 0.028–0.091 AU; ip 0.079–0.324 c / 0.19–0.77 AU; corona spread + model
+bracket) and no longer asserts the Alfvén region windwaves declines to claim; the headline
+reach is the plasma band-edge 0.384 AU with the geometric 106 R⊙ reported separately as
+offset-bearing; the title/abstract singular beam became "validated on three separate events";
+the corona figure segment and prose use the fitted band (32.4–62.4 MHz — the
+figure-draws-the-fit fix propagated); the figure is regenerated from current values with the
+additive-offset line added to the cross-check panel; krupar2015 is now cited for what its
+abstract contains (harmonic emission near the peak) instead of a scattering claim it does not.
+
+**MINOR/NIT:** the Newkirk/Leblanc handoff is computed and committed at the legs' actual
+overlap (10.0–13.8 MHz: 56–82% — the referee's own 15–20 MHz figures reproduce, but their
+"36–45% at the overlap" was inconsistent with the monotone trend; the committed values are
+the measured ones); krupar2015 + krupar2012 author lists fixed; "four public instruments"
+restated as "four public datasets (three instrument suites)"; this file's stale table and
+"four regimes" line corrected in place; a log-log-slope fixture test that can fail replaces
+reliance on corr > 0.8; the offline crosscheck's noise-flattens-the-slope mechanism is
+asserted in the suite.

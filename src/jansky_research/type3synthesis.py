@@ -1,4 +1,4 @@
-"""Synthesis: a solar type III electron beam from the corona to 0.4 AU, geometrically validated.
+"""Synthesis: a reproducible type III drift-to-distance framework, corona to 0.4 AU.
 
 Four slices already track type III bursts with the same **drift-to-distance** idea --- the emission
 sits near the local plasma frequency, so the frequency drift, inverted through a density model, gives
@@ -7,8 +7,9 @@ the beam's heliocentric distance: ``solarbursts`` (e-Callisto, corona, Newkirk m
 and ``triangulate`` (STEREO-A+B direction-finding, an **independent geometric** distance). This module
 orchestrates the four into one figure and one macro set: a unified distance ladder from ~100 MHz
 (corona) to 0.125 MHz (0.4 AU) over the Newkirk and Leblanc density models, plus the key cross-check
---- ``swaves`` and ``triangulate`` analyse the **same 2013-05-15 event**, so the density-model distance
-the whole ladder rests on is independently confirmed by geometry (corr ~0.99).
+--- ``swaves`` and ``triangulate`` analyse the **same 2013-05-15 event**, so the density-model
+distance the ladder rests on is geometrically bounded: a constant ~13 R_sun additive offset (a
+few-degree direction-finding bias), after which the Leblanc level is reproduced to ~12%.
 
 No new physics: it calls each slice's tested ``run`` and reuses ``triangulate``'s track for the
 cross-check. Pure-NumPy/matplotlib; offline it composes the four synthetic fixtures (so CI builds with
@@ -94,10 +95,15 @@ def run(out: str = ".", *, offline: bool = True, harmonic: int = 2) -> dict:
     def _g(slice_name: str, key: str):
         return m[slice_name].get(key)
 
-    r_au = windwaves.R_AU_RSUN
-    # overall reach: smallest corona radius to the largest interplanetary radius
-    r_lo = _g("solarbursts", "r_lo_rsun")
-    r_hi = max(v for v in (_g("swaves", "r_hi_rsun"), _g("triangulate", "r_hi_rsun")) if v)
+    def _bracket(slice_name: str, key: str) -> tuple:
+        grid = m[slice_name].get("speed_grid") or []
+        vals = [g.get(key) for g in grid if g.get(key) is not None]
+        return (min(vals), max(vals)) if vals else (None, None)
+
+    # The ladder's reach is the PLASMA leg's band edge through the model (0.384 AU); the
+    # geometric point (106 R_sun) carries the constant direction-finding offset and is
+    # reported separately, never as the headline reach -- the paper cannot use a number as
+    # its reach and disown its calibration three paragraphs later.
     metrics: dict = {
         # Provenance, so both merge guards can tell the two run modes apart. Without it this
         # was the only slice a forced offline rebuild could still overwrite.
@@ -110,20 +116,68 @@ def run(out: str = ".", *, offline: bool = True, harmonic: int = 2) -> dict:
         "crosscheck_event": "2013-05-15 (STEREO/WAVES + STEREO-A+B triangulation)",
         "f_hi_mhz": _g("solarbursts", "f_hi_mhz"),  # corona, highest frequency
         "f_lo_mhz": _g("swaves", "f_lo_mhz"),  # interplanetary, lowest frequency
-        "corona_r_lo": r_lo,
+        "corona_r_lo": _g("solarbursts", "r_lo_rsun"),
         "corona_r_hi": _g("solarbursts", "r_hi_rsun"),
         "corona_speed_c": _g("solarbursts", "speed_c"),
+        "corona_speed_c_min": _g("solarbursts", "speed_c_min"),
+        "corona_speed_c_max": _g("solarbursts", "speed_c_max"),
+        # the corona radii come from the FITTED band, so the figure/prose must use it too
+        # (the "figure draws the fit it captions" fix, propagated here)
+        "corona_fit_f_lo_mhz": _g("solarbursts", "fit_f_lo_mhz") or _g("solarbursts", "f_lo_mhz"),
+        "corona_fit_f_hi_mhz": _g("solarbursts", "fit_f_hi_mhz") or _g("solarbursts", "f_hi_mhz"),
         "helio_r_hi": _g("windwaves", "r_hi_rsun"),
         "helio_speed_c": _g("windwaves", "speed_c"),
+        "helio_speed_c_se": _g("windwaves", "speed_c_se"),
         "ip_r_hi_rsun": _g("swaves", "r_hi_rsun"),
         "ip_r_hi_au": _g("swaves", "r_hi_au"),
         "ip_speed_c": _g("swaves", "speed_c"),
+        "ip_speed_c_se": _g("swaves", "speed_c_se"),
         "geom_r_hi_rsun": _g("triangulate", "r_hi_rsun"),
         "geom_r_hi_au": _g("triangulate", "r_hi_au"),
         "geom_corr": round(corr, 3) if corr is not None else _g("triangulate", "corr_geom_plasma"),
         "geom_ratio": _g("triangulate", "ratio_geom_plasma"),
-        "overall_r_hi_au": round(r_hi / r_au, 3) if r_hi else None,
+        "overall_r_hi_au": _g("swaves", "r_hi_au"),
     }
+    # the (harmonic x density) systematic brackets the siblings now propagate: the synthesis
+    # must not quote bare per-leg numbers its own sources refuse to quote bare
+    for leg, sl in (("helio", "windwaves"), ("ip", "swaves")):
+        lo, hi = _bracket(sl, "speed_c")
+        metrics[f"{leg}_grid_speed_lo"] = lo
+        metrics[f"{leg}_grid_speed_hi"] = hi
+        rlo, rhi = _bracket(sl, "r_hi_au")
+        metrics[f"{leg}_grid_reach_au_lo"] = rlo
+        metrics[f"{leg}_grid_reach_au_hi"] = rhi
+    lo, hi = _bracket("solarbursts", "speed_c")
+    metrics["corona_grid_speed_lo"] = lo
+    metrics["corona_grid_speed_hi"] = hi
+    # the geometric comparison in the additive framing (see papers/triangulate): a constant
+    # offset at the scale of the ray miss, not a scale factor
+    if rg.size >= 6:
+        add = triangulate.additive_vs_multiplicative(rg, rp)
+        metrics["geom_diff_med_rsun"] = add.get("diff_med_rsun")
+        metrics["geom_diff_std_rsun"] = add.get("diff_std_rsun")
+        metrics["geom_ols_slope"] = add.get("ols_slope")
+        metrics["geom_rms_additive_rsun"] = add.get("rms_additive_rsun")
+        lf, lg2, lp2 = np.log10(track["freq_mhz"]), np.log10(rg), np.log10(rp)
+        _ = lf
+        metrics["geom_loglog_slope"] = round(float(np.polyfit(lp2, lg2, 1)[0]), 3)
+    # the Newkirk/Leblanc handoff discontinuity, computed at the two legs' ACTUAL overlap
+    # band rather than hand-typed as "~50% at 15-20 MHz"
+    from jansky import solar
+
+    f_corona_lo = _g("solarbursts", "f_lo_mhz")
+    f_helio_hi = _g("windwaves", "f_hi_mhz")
+    if f_corona_lo and f_helio_hi:
+        lo_f, hi_f = sorted((float(f_corona_lo), float(f_helio_hi)))
+        ratios = []
+        for fq in (lo_f, hi_f):
+            r_new = float(solar.newkirk_radius(solar.density_from_plasma_frequency(fq / 2.0)))
+            r_leb = float(windwaves.emission_radius(np.array([fq]), harmonic=2)[0])
+            ratios.append(r_new / r_leb)
+        metrics["handoff_f_lo_mhz"] = round(lo_f, 2)
+        metrics["handoff_f_hi_mhz"] = round(hi_f, 2)
+        metrics["handoff_pct_lo"] = round(100.0 * (min(ratios) - 1.0), 0)
+        metrics["handoff_pct_hi"] = round(100.0 * (max(ratios) - 1.0), 0)
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
@@ -159,7 +213,11 @@ def _figure(m: dict, track: dict, harmonic: int, out_dir) -> None:
     ]
     for name, label, color in seg:
         d = m[name]
-        flo, fhi = d.get("f_lo_mhz"), d.get("f_hi_mhz")
+        # the radii come from the FITTED band where one exists (solarbursts sigma-clips its
+        # ridge), so the segment must span the fitted frequencies, not the full detection band
+        # -- otherwise the corona segment sits a factor ~2 off the Newkirk curve it overplots
+        flo = d.get("fit_f_lo_mhz") or d.get("f_lo_mhz")
+        fhi = d.get("fit_f_hi_mhz") or d.get("f_hi_mhz")
         rlo, rhi = d.get("r_lo_rsun"), d.get("r_hi_rsun")
         if None in (flo, fhi, rlo, rhi):
             continue
@@ -182,6 +240,10 @@ def _figure(m: dict, track: dict, harmonic: int, out_dir) -> None:
         ax2.plot(rp, rg, "o", color="C3", ms=4)
         lim = [min(rp.min(), rg.min()), max(rp.max(), rg.max())]
         ax2.plot(lim, lim, "k--", lw=0.8, label="1:1")
+        if rg.size >= 6:
+            off = float(np.median(rg - rp))
+            xs = np.linspace(lim[0], lim[1], 50)
+            ax2.plot(xs, xs + off, "-", color="C0", lw=0.9, label=f"1:1 + {off:.0f} $R_\\odot$")
     ax2.set(
         xscale="log",
         yscale="log",
@@ -250,6 +312,38 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\{ns}OverallRhiAU}}{{{_fmt('overall_r_hi_au')}}}",
         rf"\newcommand{{\{other}OverallRhiAU}}{{--}}",
     ]
+    # round-8 additions: per-leg errors, the (harmonic x density) brackets the siblings
+    # propagate, the additive geometric comparison, and the computed model handoff
+    extra = (
+        ("CoronaSpeedMin", "corona_speed_c_min"),
+        ("CoronaSpeedMax", "corona_speed_c_max"),
+        ("CoronaFitFlo", "corona_fit_f_lo_mhz"),
+        ("CoronaFitFhi", "corona_fit_f_hi_mhz"),
+        ("CoronaGridSpeedLo", "corona_grid_speed_lo"),
+        ("CoronaGridSpeedHi", "corona_grid_speed_hi"),
+        ("HelioSpeedErr", "helio_speed_c_se"),
+        ("HelioGridSpeedLo", "helio_grid_speed_lo"),
+        ("HelioGridSpeedHi", "helio_grid_speed_hi"),
+        ("HelioGridReachLo", "helio_grid_reach_au_lo"),
+        ("HelioGridReachHi", "helio_grid_reach_au_hi"),
+        ("IpSpeedErr", "ip_speed_c_se"),
+        ("IpGridSpeedLo", "ip_grid_speed_lo"),
+        ("IpGridSpeedHi", "ip_grid_speed_hi"),
+        ("IpGridReachLo", "ip_grid_reach_au_lo"),
+        ("IpGridReachHi", "ip_grid_reach_au_hi"),
+        ("GeomDiff", "geom_diff_med_rsun"),
+        ("GeomDiffStd", "geom_diff_std_rsun"),
+        ("GeomSlope", "geom_ols_slope"),
+        ("GeomRmsAdd", "geom_rms_additive_rsun"),
+        ("GeomLogSlope", "geom_loglog_slope"),
+        ("HandoffFlo", "handoff_f_lo_mhz"),
+        ("HandoffFhi", "handoff_f_hi_mhz"),
+        ("HandoffPctLo", "handoff_pct_lo"),
+        ("HandoffPctHi", "handoff_pct_hi"),
+    )
+    for macro, key in extra:
+        lines.append(rf"\newcommand{{\{ns}{macro}}}{{{_fmt(key)}}}")
+        lines.append(rf"\newcommand{{\{other}{macro}}}{{--}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
@@ -266,7 +360,7 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import json
 
     p = argparse.ArgumentParser(
-        description="Synthesis: a type III beam from the corona to 0.4 AU, geometrically validated."
+        description="Synthesis: a type III drift-to-distance framework, corona to 0.4 AU."
     )
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")

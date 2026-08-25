@@ -103,5 +103,11 @@
       "drift_mhz_per_s": -1.653,
       "speed_c": 0.0363
     }
-  ]
+  ],
+  "_merge": {
+    "retained_from_previous_run": [
+      "candidate_selection"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  }
 }

@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **type3synthesis round-8 revision: the ladder is current, guarded, and says what its own
+  channels say.** One real re-run of the four-slice pipeline refreshed every per-leg value to
+  the revised sibling vintages (corona 0.1173 over the FITTED band 1.757-2.285 R_sun; helio
+  0.1017 +/- 0.0111; ip 0.1604 +/- 0.014), and a new test asserts each committed per-leg value
+  equals the sibling's committed key -- the guard that makes a stale-but-real snapshot
+  impossible to miss (it failed on the old file, passes now). The cross-check inherits
+  triangulate's additive framing: 13.4 +/- 3.3 R_sun constant offset, slope 1.119, the Leblanc
+  level reproduced to 3.37 R_sun rms after one measured pointing bias, with the log-log shape
+  explicitly NOT validated (slope 0.653 vs 1) -- "geometrically validated" left the title, and
+  r = 0.989 is kept only with its null stated. The ladder quotes the sibling (harmonic x
+  density) grids inline instead of bare numbers its sources refuse to quote bare, drops the
+  Alfven-region claim windwaves declines, uses the plasma band-edge 0.384 AU as the reach
+  (the offset-bearing geometric 106 R_sun reported separately), draws the corona segment over
+  the fitted band, computes the Newkirk/Leblanc handoff at the legs' actual overlap
+  (10.0-13.8 MHz: 56-82%, committed), fixes the krupar2015 citation to the claim its abstract
+  contains (harmonic emission) plus both Krupar author lists, restates "four public
+  instruments" as four datasets / three suites, and corrects the findings file's stale table
+  in place. Sibling artifacts reproduced byte-stable (solarbursts gains only the expected
+  _merge retention note).
+
+### Changed
 - **triangulate round-8 revision: the longitude survives the wrap, and the comparison says
   what the channels say.** Both blockers closed by one real re-run. The summary longitude is
   a circular median: 179.5 +/- 7.6 deg (the published 168.9 was a scalar median taken across
