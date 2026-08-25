@@ -59,3 +59,45 @@ it is a round-trip code check, not evidence the real value is right.
   survey; combining RAD1 would extend the track toward 1 AU.
 - **Reproducible:** `python -m jansky_research.windwaves --date 20031028 --receiver rad2` regenerates
   the metrics, the dynamic-spectrum + beam-track figure, and the macros from the public SPDF CDF.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 12 findings, one BLOCKER
+
+The referee recovered the full 256-point ridge from the committed figure's marker coordinates
+and re-fit it, reproducing EVERY committed metric to the printed precision -- nothing is
+fabricated or stale. The problems are propagation and framing.
+
+**BLOCKER: the self-declared "dominant systematic" is never propagated, and both abstract
+framings flip inside it.** Scaling the Leblanc density by the "factor of several" the paper
+itself invokes: x2 gives 0.119 c / 14.0 R_sun; x4 gives 0.173 c / 19.5 R_sun -- INSIDE the
+reiner2015 range the paper says it falls below, and AT the >=20 R_sun "interplanetary regime"
+the abstract says RAD2 cannot reach. And harmonic=1 with x4 density is numerically IDENTICAL
+to harmonic=2 with x1 (f_p^2 ~ n), so the paper's two caveats are one axis. Fix: commit the
+(harmonic x density-scale) grid and quote speed and reach as brackets.
+
+**MAJORs:** no uncertainty anywhere while the honest error is ~2.5x the naive one -- the 256
+points occupy 10 time columns (197 in the first three); column jackknife SE = 0.0138 c,
+drop-last-column moves the speed -13% -- quote 0.083 +/- 0.014 c; the headline reach
+(10.25 R_sun, "near the Alfven surface", uncited) rests on ONE ridge point in an isolated time
+column and is really the band edge; the stated cause of R^2=0.651 ("band compression") is
+contradicted by the paper's own forward model (0.995 +/- 0.001 at the real band and cadence)
+-- the residuals have monotonic structure (apparent local speeds 0.034 -> 0.16 c across the
+band), i.e. deceleration-like curvature, not compression; the "low speed" is
+estimator-dependent (OLS r|t 0.083; t|r 0.128; TLS 0.103; column means 0.100) and the
+published choice is the minimum of the family; "0.045 c" (abstract+Results) and "11:06 UT"
+are in no committed evidence in a paper claiming pipeline provenance; no ridge CSV and no
+analysis parameters committed (pad_s=1200, snr=5, clip sigma).
+
+**MINOR:** the inherited unconverged _robust_linfit is DORMANT here (replayed: all-True mask
+at every iteration; converge=True identical) -- but only the referee's replay proves it, so
+pass converge=True and record clip provenance; the synthetic fixture runs at 3 s cadence over
+a band to ~50 R_sun (5.4x finer than real) and its 15% tolerance is trivially met -- a
+matched-sampling fixture shows cadence is NOT the R^2 story, which strengthens finding 4;
+krupar2015 author list wrong (Kontar 2nd per Crossref -- same defect as swaves);
+reiner2015 title drops "Solar"; "~0.3 c historically" uncited (Fainberg not in refs.bib); the
+flare association is day-max-near-flare, guaranteed on an X17 day -- state the GOES offset and
+the count of other >5-sigma ridges.
+
+**NIT:** \wwTruth/\wwRatio placeholders unused; \wwFlo/Fhi presented as RAD2 coverage but
+derived from the ridge; wind speed for the projection claim unstated.
+
+**Status: fixes pending** (all fixes run on the existing ridge; no new download needed).

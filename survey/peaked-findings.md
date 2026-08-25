@@ -133,3 +133,52 @@ honestly bounded, with three uncatalogued GPS/CSS candidates and a worked demons
 contamination needs catalogue cross-ID, not just variability. Validation against the Callingham (2017)
 catalogue confirms its purity against the MHz-peaked majority and characterises its $\sim$0.7–2 GHz
 sensitivity window — the result is a well-understood selection method, not a discovery.
+
+## Full referee round (2026-08-25): MAJOR REVISION, 15 findings, three BLOCKERs
+
+**BLOCKER 1: the headline "100% rising" recover-a-known measures a flux cut, not a spectrum,
+and is wrong by ~2x.** `validate_hfp` substitutes TGSS_LIMIT_MJY for EVERY Dallacasa source
+(unlike validate_known, which uses the real flux when finite), so `alpha_low > 0.1` reduces to
+`S_NVSS > 31.3 mJy` -- and the sample's faintest member is 60.6 mJy, so 100% was guaranteed
+before any data were touched. Factually: a CDS X-Match shows 85/102 ARE TGSS-detected (29 mJy
+to 7 Jy); using the measured fluxes under the method's own rule gives 37/85 = 44% rising (53%
+whole-sample with limits only where real), and 33/85 actually FALL from 150 MHz to 1.4 GHz.
+The abstract, Discussion and README all carry the artifact number.
+
+**BLOCKER 2: the paper's deliverable exists nowhere in committed evidence.** The six
+candidates' positions/fluxes/indices/SIMBAD ids/variability live only in a hand-written
+findings-file table; run() never calls SIMBAD/NED or the VLASS variability flag the paper says
+it runs ("the real run adds NED/SIMBAD vetting..."). The referee re-verified all six SIMBAD
+identifications independently (they hold), so this is a reproducibility blocker, not a factual
+one. Fix: results/peaked_candidates.csv + put the vetting in run().
+
+**BLOCKER 3: the global 25 mJy TGSS limit is wrong for this field and sets the count.** The
+ADR1 per-source Noise column (already fetched) gives local 7-sigma of 22.4-39.9 mJy (median
+29.4) in this cone; all six candidates sit at 1.01-1.33x the effective floor, and the count
+runs 6 -> 3 -> 1 -> 0 across defensible limits. The abstract's robustness claim is about
+alpha_high, the axis that cannot move the count -- the dr20radio vacuous-check shape.
+
+**MAJORs:** neither validation arm exercises the TGSS-non-detection-near-the-floor mechanism
+that produced 6/6 candidates (Callingham: 0 limit-fallbacks fired, median alpha_low -0.55 vs a
++0.1 cut -- "0/81" restates the sample); the two in-window validation bins (3/26, 1/6 -- i.e.
+12-17% recovery in the claimed 0.7-2 GHz sensitivity window) are computed and omitted from the
+committed metrics/paper while only the guaranteed bin ships; the VLASS Epoch-1 QL flux-scale
+correction (1.13, in this repo) is not applied -- alpha_high is low by 0.16, the field's
+GHz-peaked count flips 0 -> 1, and \pkHfpGhz is a lower bound; alpha_high mixes an index with
+a resolution/multiplicity term (integrated 45" NVSS vs one VLASS component's 2.5" peak;
+S3/S1.4 clustered near 0.5 = steep OR two components) and "compact" has no measurement behind
+it; a real run without --validate silently writes 0s over the abstract's validation macros
+(real-over-real, no guard fires) -- default them to "--" as southern does; index errors are
+computed and discarded with no per-candidate errors committed (faintest candidate is 0.3 sigma
+above the cut), though the limit systematic dominates.
+
+**MINOR/NIT:** V=0.02-0.08 is at/below the 7% flux-scale floor and the known BL Lac has the
+LARGEST V of the six -- "(GPS-like, not blazars)" must go; findings file disagrees with the
+committed JSON (98 vs 100); gordon2021 right DOI wrong title (again); dallacasa2000 lacks a
+bibcode and its table is the CANDIDATE list ("Candidates observed with the VLA"), pre-selected
+on a rising index -- nearly the quantity being measured; arxiv.yaml has mangled numbers
+("1501400 MHz"); three generated macros unused and the zero-GHz-peaked field never stated; the
+offline fixture cannot fail either cut (limit true by construction; no extended/multi-component
+injections).
+
+**Status: fixes pending** (all catalogues public and already fetched by the pipeline).
