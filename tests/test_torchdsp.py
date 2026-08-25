@@ -131,20 +131,96 @@ def test_ffa_flat_noise_finds_nothing_loud():
     assert out["snr"] < 8.0
 
 
+def test_chirp_group_delay_matches_cold_plasma_law():
+    """The check the self-composing round trip cannot perform: the chirp's numerical group
+    delay must equal the cold-plasma law. A wrong constant or exponent fails loudly."""
+    gd = td.chirp_group_delay_residual(dm=556.0, f0_mhz=400.0)
+    assert gd["max_resid_samples"] < 1e-6
+    # sanity that the check CAN fail: a chirp for a different DM is not the law for this one
+    f = np.linspace(-td.CHIME_CHAN_BW_MHZ / 2, td.CHIME_CHAN_BW_MHZ / 2, 101)
+    from jansky.constants import DM_CONST
+
+    tau_law = -1.0e6 * DM_CONST * 556.0 * ((400.0 + f) ** -2 - 400.0**-2)
+    tau_wrong = -1.0e6 * DM_CONST * 500.0 * ((400.0 + f) ** -2 - 400.0**-2)
+    assert np.max(np.abs(tau_wrong - tau_law)) * td.CHIME_CHAN_BW_MHZ > 1e-3
+
+
+def test_dedisperse_channelized_conjugate_flag_changes_the_kernel():
+    syn = td.synthetic_dispersed_voltage(dm=150.0, seed=11)
+    v = syn["voltage"][None, :]
+    freqs = np.array([syn["f0_mhz"]])
+    right = td.dedisperse_channelized(v, 150.0, freqs, chan_bw_mhz=syn["chan_bw_mhz"])
+    wrong = td.dedisperse_channelized(
+        v, 150.0, freqs, chan_bw_mhz=syn["chan_bw_mhz"], conjugate=True
+    )
+    p_right = np.asarray((right[0].abs() ** 2).cpu())
+    p_wrong = np.asarray((wrong[0].abs() ** 2).cpu())
+    w = 4
+    pk = int(np.argmax(p_right))
+    frac_right = p_right[pk - w : pk + w + 1].sum() / p_right.sum()
+    pk_w = int(np.argmax(p_wrong))
+    frac_wrong = p_wrong[max(0, pk_w - w) : pk_w + w + 1].sum() / p_wrong.sum()
+    assert frac_right > 0.85  # the correct sign re-collapses the impulse
+    assert frac_wrong < 0.5  # the conjugate doubles the smear instead
+
+
+def test_mask_agreement_reports_direction():
+    a = np.zeros((4, 4), bool)
+    b = np.zeros((4, 4), bool)
+    a[0, :2] = True  # parallel over-flags two
+    b[1, :3] = True  # oracle-only three
+    out = td._mask_agreement(a, b)
+    assert out["n_par_only"] == 2 and out["n_cpu_only"] == 3
+    assert out["jaccard"] == 0.0
+
+
 def test_run_offline_writes_artifacts(tmp_path):
     m = td.run(str(tmp_path), offline=True)
     assert m["dedisp"]["peak_offset_samples"] <= 1
     assert m["dedisp"]["reconcentrated_energy_frac"] > 0.85
+    # the validated path must be the shipped one: dedisperse_channelized round-trips too
+    assert m["dedisp"]["peak_offset_samples_channelized"] <= 1
+    assert m["dedisp"]["reconcentrated_energy_frac_channelized"] > 0.85
+    assert m["dedisp"]["group_delay_max_resid_samples"] < 1e-6
     assert m["sk_max_diff"] < 1e-9
     assert m["sumthreshold_sequential_equals_oracle"]
     assert m["sumthreshold_parallel_jaccard"] > 0.8
+    # the divergence direction is committed, and the sweep bounds it off the default config
+    assert m["sumthreshold_par_only_flags"] >= 0 and m["sumthreshold_cpu_only_flags"] >= 0
+    sweep = m["sumthreshold_agreement_sweep"]
+    assert "thr3.0_iter2" in sweep and all(0.0 <= v["jaccard"] <= 1.0 for v in sweep.values())
     assert m["rfi_line_caught"] and m["rfi_burst_caught"]
     assert m["ffa_period_err_samples"] < 1.0
+    # the injected period is not on the drift grid; the honest resolution is committed
+    assert 0 < m["ffa_drift_resolution_samples"] < 0.1
+    assert m["ffa_snr_ratio_predicted"] == pytest.approx(m["ffa_snr_ratio_measured"], abs=0.15)
     saved = json.loads((tmp_path / "results" / "torchdsp_metrics.json").read_text())
     assert saved["ffa_period_found"] == m["ffa_period_found"]
     assert (tmp_path / "papers" / "torchdsp" / "figures" / "torchdsp.pdf").stat().st_size > 0
     macros = (tmp_path / "papers" / "torchdsp" / "generated" / "macros.tex").read_text()
     assert r"\newcommand{\tdSynFfaErr}" in macros and r"\newcommand{\tdRealFfaErr}{--}" in macros
+    # derived speedups exist as macros (placeholders here: no benchmark in an offline run)
+    assert r"\newcommand{\tdRealSpeedupFfa}{--}" in macros
+
+
+def test_write_macros_derives_speedups_from_the_two_columns(tmp_path):
+    p = tmp_path / "m.tex"
+    td._write_macros(
+        {
+            "source": "x",
+            "device": "cpu",
+            "is_real": True,
+            "benchmark": {"chirp_s": 2.0, "sumthreshold_s": 8.0, "ffa_s": 0.65},
+            "benchmark_cpu": {"chirp_s": 2.0, "sumthreshold_s": 3.0, "ffa_s": 8.42},
+            "benchmark_device": "cuda",
+        },
+        p,
+    )
+    txt = p.read_text()
+    # 8.42 / 0.65 = 12.95... -> 13.0, derived, never hand-typed
+    assert r"\newcommand{\tdRealSpeedupFfa}{13.0}" in txt
+    assert r"\newcommand{\tdRealBenchFfaGpu}{0.65}" in txt
+    assert r"\newcommand{\tdRealBenchFfaCpu}{8.42}" in txt
 
 
 def test_write_macros_placeholder(tmp_path):

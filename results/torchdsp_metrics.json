@@ -5,6 +5,9 @@
   "dedisp": {
     "peak_offset_samples": 0,
     "reconcentrated_energy_frac": 0.995,
+    "peak_offset_samples_channelized": 0,
+    "reconcentrated_energy_frac_channelized": 0.995,
+    "group_delay_max_resid_samples": 1.15e-08,
     "dispersed_peak_frac": 0.021,
     "n_time": 4096
   },
@@ -36,18 +39,232 @@
   "crab_fold_snr_at_published": 2.2,
   "benchmark": {
     "device": "cuda",
-    "chirp_s": 2.11,
+    "chirp_s": 2.12,
     "chirp_msamples": 67.1,
-    "sumthreshold_s": 7.63,
-    "ffa_s": 0.65
+    "chirp_n_chan": 64,
+    "chirp_n_time": 1048576,
+    "sumthreshold_s": 7.49,
+    "st_shape": [
+      8192,
+      256
+    ],
+    "ffa_s": 0.65,
+    "ffa_n_samples": 4194304,
+    "ffa_n_base_periods": 64
   },
   "benchmark_cpu": {
     "device": "cpu",
-    "chirp_s": 1.92,
+    "chirp_s": 1.73,
     "chirp_msamples": 67.1,
-    "sumthreshold_s": 2.66,
-    "ffa_s": 8.42
+    "chirp_n_chan": 64,
+    "chirp_n_time": 1048576,
+    "sumthreshold_s": 3.01,
+    "st_shape": [
+      8192,
+      256
+    ],
+    "ffa_s": 6.88,
+    "ffa_n_samples": 4194304,
+    "ffa_n_base_periods": 64
   },
   "benchmark_device": "cuda",
-  "benchmark_hardware": "AMD Radeon RX 7600 XT (gfx1102), torch 2.12.1+rocm7.1"
+  "benchmark_hardware": "AMD Radeon RX 7600 XT, torch 2.12.1+rocm7.1",
+  "sumthreshold_par_only_flags": 54,
+  "sumthreshold_cpu_only_flags": 51,
+  "sumthreshold_agreement_sweep": {
+    "thr3.0_iter1": {
+      "jaccard": 0.9339,
+      "n_par_only": 144,
+      "n_cpu_only": 106
+    },
+    "thr3.0_iter2": {
+      "jaccard": 0.8814,
+      "n_par_only": 340,
+      "n_cpu_only": 392
+    },
+    "thr3.5_iter1": {
+      "jaccard": 0.949,
+      "n_par_only": 54,
+      "n_cpu_only": 51
+    },
+    "thr3.5_iter2": {
+      "jaccard": 0.9328,
+      "n_par_only": 112,
+      "n_cpu_only": 67
+    },
+    "thr4.0_iter1": {
+      "jaccard": 0.9707,
+      "n_par_only": 24,
+      "n_cpu_only": 16
+    },
+    "thr4.0_iter2": {
+      "jaccard": 0.9685,
+      "n_par_only": 38,
+      "n_cpu_only": 11
+    }
+  },
+  "ffa_drift_resolution_samples": 0.0039,
+  "ffa_snr_ratio_predicted": 0.67,
+  "ffa_snr_ratio_measured": 0.65,
+  "chime_peak_sample_vs_dm": {
+    "0.0": 52876,
+    "536.1": 37703,
+    "551.1": 38645,
+    "556.1": 13725,
+    "561.1": 7305,
+    "576.1": 45850
+  },
+  "chime_snr_conjugate_sign": 1.4,
+  "chime_n_chan_good": 97,
+  "chime_bandwidth_mhz": 37.9,
+  "chime_n_time": 57490,
+  "crab_tsamp_us": 512.0,
+  "crab_n_samples": 4096,
+  "crab_n_chan": 832,
+  "crab_duration_s": 2.097,
+  "crab_mask_par_only_flags": 4537,
+  "crab_mask_cpu_only_flags": 2569,
+  "crab_noise_ffa_snr": 5.0,
+  "crab_injection_ladder_sigma": {
+    "0.1": {
+      "period_ms": 37.343,
+      "snr": 5.0,
+      "recovered": false
+    },
+    "0.2": {
+      "period_ms": 32.703,
+      "snr": 5.0,
+      "recovered": false
+    },
+    "0.5": {
+      "period_ms": 32.703,
+      "snr": 5.3,
+      "recovered": false
+    },
+    "1.0": {
+      "period_ms": 32.248,
+      "snr": 5.2,
+      "recovered": false
+    },
+    "2.0": {
+      "period_ms": 33.709,
+      "snr": 9.5,
+      "recovered": true
+    },
+    "5.0": {
+      "period_ms": 33.709,
+      "snr": 24.7,
+      "recovered": true
+    }
+  },
+  "crab_injection_min_amp_sigma": 2.0,
+  "_merge": {
+    "retained_from_previous_run": [
+      "chime_bandwidth_mhz",
+      "chime_dm_catalogue",
+      "chime_n_chan_good",
+      "chime_n_time",
+      "chime_peak_sample_vs_dm",
+      "chime_peaks_at_catalogue_dm",
+      "chime_snr_conjugate_sign",
+      "chime_snr_vs_dm",
+      "crab_duration_s",
+      "crab_ffa_resolution_ms",
+      "crab_ffa_snr",
+      "crab_fold_snr_at_published",
+      "crab_injection_ladder_sigma",
+      "crab_injection_min_amp_sigma",
+      "crab_mask_cpu_only_flags",
+      "crab_mask_jaccard",
+      "crab_mask_par_only_flags",
+      "crab_n_chan",
+      "crab_n_samples",
+      "crab_noise_ffa_snr",
+      "crab_period_found_ms",
+      "crab_period_published_ms",
+      "crab_tsamp_us",
+      "dedisp",
+      "device",
+      "ffa_drift_resolution_samples",
+      "ffa_period_err_samples",
+      "ffa_period_found",
+      "ffa_period_true",
+      "ffa_snr",
+      "ffa_snr_ratio_measured",
+      "ffa_snr_ratio_predicted",
+      "fold_oracle_snr",
+      "rfi_burst_caught",
+      "rfi_line_caught",
+      "sk_max_diff",
+      "source",
+      "sumthreshold_agreement_sweep",
+      "sumthreshold_cpu_only_flags",
+      "sumthreshold_par_only_flags",
+      "sumthreshold_parallel_jaccard",
+      "sumthreshold_sequential_equals_oracle"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  },
+  "benchmark_hardware_cpu": "x86_64, torch 2.12.1+rocm7.1",
+  "benchmark_torch": "2.12.1+rocm7.1",
+  "benchmark_single_session": true,
+  "cross_device_check": {
+    "device": "cuda",
+    "dedisp": {
+      "peak_offset_samples": 0,
+      "reconcentrated_energy_frac": 0.995,
+      "peak_offset_samples_channelized": 0,
+      "reconcentrated_energy_frac_channelized": 0.995,
+      "group_delay_max_resid_samples": 1.15e-08,
+      "dispersed_peak_frac": 0.021,
+      "n_time": 4096
+    },
+    "sk_max_diff": 1.509903313490213e-14,
+    "sumthreshold_sequential_equals_oracle": true,
+    "sumthreshold_parallel_jaccard": 0.949,
+    "sumthreshold_par_only_flags": 54,
+    "sumthreshold_cpu_only_flags": 51,
+    "sumthreshold_agreement_sweep": {
+      "thr3.0_iter1": {
+        "jaccard": 0.9339,
+        "n_par_only": 144,
+        "n_cpu_only": 106
+      },
+      "thr3.0_iter2": {
+        "jaccard": 0.8814,
+        "n_par_only": 340,
+        "n_cpu_only": 392
+      },
+      "thr3.5_iter1": {
+        "jaccard": 0.949,
+        "n_par_only": 54,
+        "n_cpu_only": 51
+      },
+      "thr3.5_iter2": {
+        "jaccard": 0.9328,
+        "n_par_only": 112,
+        "n_cpu_only": 67
+      },
+      "thr4.0_iter1": {
+        "jaccard": 0.9707,
+        "n_par_only": 24,
+        "n_cpu_only": 16
+      },
+      "thr4.0_iter2": {
+        "jaccard": 0.9685,
+        "n_par_only": 38,
+        "n_cpu_only": 11
+      }
+    },
+    "rfi_line_caught": true,
+    "rfi_burst_caught": true,
+    "ffa_period_true": 233.7,
+    "ffa_period_found": 233.7,
+    "ffa_period_err_samples": 0.0,
+    "ffa_drift_resolution_samples": 0.0039,
+    "ffa_snr": 60.5,
+    "fold_oracle_snr": 93.4,
+    "ffa_snr_ratio_predicted": 0.67,
+    "ffa_snr_ratio_measured": 0.65
+  }
 }
