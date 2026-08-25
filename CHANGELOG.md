@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **offsets round-8 revision: the statistic carries its own null, and the promised catalogue
+  ships.** X is rebuilt as a Mahalanobis distance using both catalogues' per-source RA/Dec
+  error correlations (ICRF3 `Corr` and Gaia `RADEcor`, now fetched), so the Rayleigh null is
+  exact by construction -- measured, the whitened tail fraction is unchanged (26.70%) and the
+  24.0x headline survives against the RIGHT null (the correlation-blind fraction is committed
+  as the contrast, and a correlated-noise fixture test proves the naive statistic overshoots
+  Rayleigh on pure noise). The directional claim now uses the sign-symmetric null: 208 of 291
+  axis-aligned offsets point downstream vs 83 upstream (binomial p = 1.5e-13), with the
+  upstream 29% reported as Plavin+2019's disk-dominated component instead of left uncounted.
+  The error-model paragraph became measurements: noise-core Rayleigh scale 1.096 (upper
+  limit; no detectable underestimation) plus a committed inflation sweep (3x inflation still
+  leaves 7.8x), with the literature comparand corrected to Petrov & Kovalev (2017) MNRAS 467
+  L71's DR1-era 6% and the difference attributed to DR3 precision. Also committed: headline
+  uncertainties (binomial 0.75pp; declination-band jackknife 1.12pp with the zonal gradient
+  named), the error-quartile dependence (38%->22%), a measured chance-match rate from a
+  +0.2-degree decoy-field X-Match (8 of 3502), raw-offset outlier counts and the <=50 mas
+  variant, the delPA<45 robustness variant (318, 22.3 deg, p=1.1e-22), and
+  `results/offsets_sources.csv` (3502 rows). The figure's Rayleigh is scaled to the fitted
+  noise core; lister2021 regains its third author; \offJetKsP keeps its mantissa.
+
+### Changed
 - **Review round 8 verdicts recorded: `triangulate`, `type3synthesis`, `sourcecounts`,
   `offsets` -- three major revisions, one minor, four blockers.** The batch was chosen by
   inherited-defect risk and the inheritances paid out again, twice over on the heliospheric
