@@ -1,0 +1,50 @@
+{
+  "source": "e-Callisto candidate selection at the headline parameterization (pad_s=10, snr=5, converged clip)",
+  "candidates": [
+    {
+      "event": "BIR 20110914 1150",
+      "role": "accepted",
+      "n_ridge": 66,
+      "n_used": 55,
+      "r2": 0.935,
+      "drift_mhz_per_s": -2.55,
+      "speed_c": 0.1173
+    },
+    {
+      "event": "BIR 20110705 1054",
+      "role": "candidate",
+      "n_ridge": 122,
+      "n_used": 118,
+      "r2": 0.48,
+      "drift_mhz_per_s": -9.824,
+      "speed_c": 0.269
+    },
+    {
+      "event": "BIR 20110716 1310",
+      "role": "candidate",
+      "n_ridge": 106,
+      "n_used": 106,
+      "r2": 0.054,
+      "drift_mhz_per_s": 0.962,
+      "speed_c": 0.0612
+    },
+    {
+      "event": "BIR 20110919 0743",
+      "role": "candidate",
+      "n_ridge": 123,
+      "n_used": 121,
+      "r2": 0.342,
+      "drift_mhz_per_s": -2.088,
+      "speed_c": 0.0883
+    },
+    {
+      "event": "BIR 20110809 0805",
+      "role": "storm control (X6.9 flare)",
+      "n_ridge": 147,
+      "n_used": 145,
+      "r2": 0.178,
+      "drift_mhz_per_s": -1.653,
+      "speed_c": 0.0363
+    }
+  ]
+}

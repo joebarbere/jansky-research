@@ -23,17 +23,20 @@ build a small tested tool that fits the drift ridge in an e-Callisto \citep{benz
 and inverts it to an exciter speed, reusing the \code{jansky} course's coronal-physics helpers (the
 Newkirk \citeyearpar{newkirk1961} density model and the plasma-frequency relation). The pipeline
 background-subtracts, isolates the burst time window, builds the ridge from each channel's intensity
-peak time, maps frequency to heliocentric radius, and fits radius versus time with a robust
-(sigma-clipped) line whose $R^2$ flags a coherent single burst against a multi-burst storm. Applied to an
-isolated, catalogue-clean type III (\sbSource; \sbNused\ of \sbNridge\ ridge channels, $R^2=\sbRsq$,
-drift \sbDrift~MHz/s over \sbFlo--\sbFhi~MHz), the height--time fit gives an exciter speed of
-\sbSpeedC~$c$ (harmonic emission, quiet Newkirk corona), bracketed between \sbGridFundOne$\,c$
-(fundamental) and \sbGridHarmFour$\,c$ ($4\times$ Newkirk) by the two model knobs, at and within the
-lower half of the established type III range; as
-a peak-time speed it is consistent with peak-time {LOFAR} measurements \citep{reidkontar2018}. A
-synthetic fixture confirms the inversion is algebraically self-consistent (a code check, not an
-independent validation of the density model). This is a reproducibility/method contribution and a
-recover-a-known, not a discovery.
+peak time, maps frequency to heliocentric radius, and fits radius versus time with a sigma-clipped
+line iterated to convergence, whose $R^2$ flags a coherent single burst against a multi-burst
+storm. Applied to an isolated, catalogue-clean type III (\sbSource; the clip keeps \sbNused\ of
+\sbNridge\ ridge channels spanning \sbFitFlo--\sbFitFhi~MHz at $R^2=\sbRsq$), the height--time fit
+gives an exciter speed of \sbSpeedC~$c$ assuming harmonic emission and a quiet ($1\times$) Newkirk
+corona, with a committed analysis-choice spread of \sbSpeedCMin--\sbSpeedCMax~$c$ (window width,
+clip threshold, isolated band-edge channels) and a factor-$\sim$3 model bracket from
+\sbGridFundOne$\,c$ (fundamental) to \sbGridHarmFour$\,c$ ($4\times$ Newkirk). The harmonic
+interpretations sit inside the established $0.1$--$0.5\,c$ type III range; the fundamental one
+falls below it, so the in-range conclusion is conditional on the emission mode, which is not
+independently established for this event. A synthetic fixture confirms the inversion is
+algebraically self-consistent, and the storm-interval negative control plus the three rejected
+candidates are committed at the same parameterization. This is a reproducibility/method
+contribution and a recover-a-known, not a discovery.
 \end{abstract}
 
 \keywords{Solar radio emission (1522) --- Solar corona (1483) --- Solar coronal radio emission (1993)
@@ -61,43 +64,65 @@ per-channel noise taken from the full sweep so a brief burst does not inflate th
 each ridge frequency to a plasma frequency $f_p=f/\mathrm{harmonic}$, a Newkirk density, and a
 heliocentric radius; and (v) fits radius versus time with an iterative sigma-clipped line, reporting the
 slope $|dr/dt|$ as the speed and the fit $R^2$ as a coherence flag. We stress that the ridge uses
-intensity peaks, which trace the bulk of the beam, not its leading edge; peak-time speeds run
-$\sim$15--30\% below front-of-beam speeds \citep{reidkontar2018}. Every function is tested against a
-synthetic burst built from the same Newkirk mapping the analysis inverts, so a clean burst
-round-trips. This verifies algebraic self-consistency of the inversion, not the density model itself.
+intensity peaks, which trace the bulk of the beam, not its leading edge; in \citet{reidkontar2018}
+the mean peak-time speed ($0.17\,c$) runs 15\% below the front-of-beam mean ($0.2\,c$). The
+sigma-clipped fit iterates to a fixed point, so the reported slope, kept-channel mask, and $R^2$
+all describe the same final fit — an earlier version stopped after a hard-coded three iterations,
+under which the speed moved by $\sim$13\% and the mask and slope came from different iterations.
+Every function is tested against a synthetic burst built from the same Newkirk mapping the
+analysis inverts, so a clean burst round-trips. This verifies algebraic self-consistency of the
+inversion, not the density model itself.
 
 \section{Data}
-We use e-Callisto spectra from Birr, Ireland (BIR; 10--90~MHz), selecting isolated, quality-1 type III
-bursts from the Monstein Solar Geophysical Data burst lists. Event selection is the crux: a flare
-interval is a type III \emph{storm} of overlapping bursts with no single drift (an X6.9-flare interval we
-tried gives $R^2<0.3$ and an incoherent, artificially slow ridge), so we require an isolated burst whose
-height--time track is coherent. Four candidates were analysed; only one (\sbSource) is a clean fit
-($R^2=\sbRsq$), and it anchors the result. e-Callisto data carry no flux calibration, and only one
-station was used, so there is no second-station confirmation.
+We use e-Callisto spectra from Birr, Ireland (BIR; the detected ridge spans 10--79~MHz,
+the file band extends somewhat higher), selecting
+isolated, quality-1 type III bursts from the Monstein Solar Geophysical Data burst lists. Event
+selection is the crux, and its evidence is committed
+(\code{results/solarbursts\_candidates.json}): all four candidates plus the X6.9-flare storm
+control were run at the same parameterization as the headline. Only \sbSource\ is a clean fit
+($R^2=\sbRsq$); the three rejected candidates give $R^2$ of \sbCandOneRsq, \sbCandTwoRsq\ and
+\sbCandThreeRsq\ (the second with a wrong-direction, \emph{positive} drift of
+\sbCandTwoDrift~MHz/s), and the storm interval gives $R^2=\sbCandStormRsq$ with an incoherent,
+artificially slow ridge (nominal \sbCandStormSpeedC~$c$) — the negative control that shows the
+coherence gate can fail. Under this uniform parameterization the rejected events' nominal speeds
+(\sbCandOneSpeedC, \sbCandTwoSpeedC, \sbCandThreeSpeedC~$c$) do not all fall in the canonical
+band, so passing the gate is not guaranteed by construction. e-Callisto data carry no flux
+calibration, and only one station was used, so there is no second-station confirmation.
 
 \section{Results}
-The clean burst yields \sbNused\ ridge channels (after sigma-clipping \sbNridge\ detections) spanning
-\sbFlo--\sbFhi~MHz, a drift of \sbDrift~MHz/s, and a coherent height--time track ($R^2=\sbRsq$) over
-heliocentric radii \sbRlo--\sbRhi~$R_\odot$ (harmonic, $1\times$ Newkirk; Figure~\ref{fig:burst}). The
-implied exciter speed is \sbSpeedC~$c$ ($\sbSpeedKms$~km\,s$^{-1}$). The two model knobs bracket it:
-emission mode (fundamental $f_p=f$ vs harmonic $f_p=f/2$) and the Newkirk fold ($1\times$ quiet to
-$4\times$ active region) move the speed from \sbGridFundOne$\,c$ (fundamental, $1\times$) through
-\sbGridHarmOne$\,c$ (harmonic, $1\times$) to \sbGridHarmFour$\,c$ (harmonic, $4\times$), a factor of
-$\sim$3; we therefore report the
-grid, not a single number. The harmonic points lie within the canonical $0.1$--$0.5\,c$ band
-\citep{reidratcliffe2014}; the fundamental-emission point falls just below it,
-and the headline peak-time value is directly consistent with the $0.17\,c$ peak-time mean from {LOFAR}
-type III imaging \citep{reidkontar2018}. Two caveats temper the result: the measured drift (\sbDrift~MHz/s)
-is slower than typical (the \citet{alvarez1973} and \citet{zhang2018} relations give $\sim-6$ to
-$-9$~MHz/s at mid-band, placing this event near the 25th percentile), and the other three candidate
-events, while formally in-band, have marginal fits ($R^2<0.55$) and unreliable individual speeds.
+The detector finds \sbNridge\ ridge channels over \sbFlo--\sbFhi~MHz; the converged sigma clip
+keeps \sbNused\ of them, spanning \sbFitFlo--\sbFitFhi~MHz — the fit band, which is what the
+$R^2$ and the speed describe (the wider detection band includes the clipped outliers, among them
+an isolated 10~MHz channel and a 78.9~MHz channel whose timing runs the wrong way for a type
+III). The kept channels' drift is \sbDriftUsed~MHz/s (the unclipped 66-channel value is
+\sbDrift), and the height--time track is coherent ($R^2=\sbRsq$) over heliocentric radii
+\sbRlo--\sbRhi~$R_\odot$ (harmonic, $1\times$ Newkirk; Figure~\ref{fig:burst}). The implied
+exciter speed is \sbSpeedC~$c$ ($\approx\sbSpeedKms$~km\,s$^{-1}$), with a committed
+analysis-choice spread of \sbSpeedCMin--\sbSpeedCMax~$c$ over the burst-window width, the clip
+threshold, and the isolated band-edge channels
+(\code{speed\_sensitivity} in the results). The two model knobs bracket it more widely:
+emission mode (fundamental $f_p=f$ vs harmonic $f_p=f/2$) and the Newkirk fold ($1\times$ quiet
+to $4\times$ active region) move the speed from \sbGridFundOne$\,c$ (fundamental, $1\times$)
+through \sbGridHarmOne$\,c$ (harmonic, $1\times$) to \sbGridHarmFour$\,c$ (harmonic, $4\times$),
+a factor of $\sim$3; we therefore report the grid, not a single number. The harmonic points lie
+within the canonical $0.1$--$0.5\,c$ band \citep{reidratcliffe2014}; the fundamental point falls
+below its lower edge, so the in-band conclusion is conditional on harmonic emission — a common
+identification for ground-based metric bursts, but not independently established for this event
+(a fundamental--harmonic pair would appear as two ridges a factor of two apart in frequency;
+this spectrum shows one). As a peak-time speed, the headline lies within the range of published
+peak-time speeds (the 31-burst {LOFAR} sample of \citealt{reidkontar2018} has a $0.17\,c$
+peak-time mean, derived through their own density model — the model choice moves speeds by
+factors comparable to our grid, so this is a range comparison, not a point agreement). The
+measured drift is slower than typical: the \citet{alvarez1973} and \citet{zhang2018} relations
+give $\sim-6$ to $-9$~MHz/s at mid-band.
 
 \begin{figure}
 \plotone{figures/burst.pdf}
 \caption{Left: the background-subtracted e-Callisto dynamic spectrum of the isolated type III
 (\sbSource), with the detected drift ridge overplotted. Right: the ridge mapped through the
-Newkirk model to a heliocentric-radius--versus--time track; the robust linear fit (slope $=$ exciter
-speed) has $R^2=\sbRsq$.}
+Newkirk model to a heliocentric-radius--versus--time track; filled circles are the
+\sbNused\ channels kept by the converged sigma clip, crosses the clipped outliers, and the drawn
+line is the clipped fit itself (slope $=$ exciter speed, $R^2=\sbRsq$ on the kept points).}
 \label{fig:burst}
 \end{figure}
 
@@ -112,9 +137,12 @@ radio-wave scattering and projection further suppress apparent speeds at $<$50~M
 both biases act downward, so the true front speed is somewhat higher than our peak-time number. (iii)
 $R^2$ is a useful empirical flag for ``one burst vs.\ a storm'' but not a rigorous segmentation, and is
 sensitive to ridge-point spacing. (iv) The data are uncalibrated and single-station, and ridge channels
-near the $\sim$10~MHz ground-based cutoff may carry ionospheric refraction. None of these undermine the
-recover-a-known (a clean isolated burst gives a physical, in-range beam speed), but they bound what a
-single ground-based spectrum can claim. Every number above is written by the pipeline into the macros
+near the $\sim$10~MHz ground-based cutoff may carry ionospheric refraction. The recover-a-known's
+target band is wide (a factor of 5) against a model grid spanning a factor of 3, so landing
+in-band is weak evidence by itself; the committed candidate table is what makes the exercise
+falsifiable — the storm control and one rejected candidate produce out-of-band or wrong-direction
+answers under the same pipeline, so the gate does discriminate. These limits bound what a single
+ground-based spectrum can claim. Every number above is written by the pipeline into the macros
 \code{\textbackslash input}ted by this file, and
 \code{python -m jansky\_research.solarbursts -\,-recover} regenerates them from the public FITS.
 

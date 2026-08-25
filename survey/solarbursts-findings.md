@@ -29,7 +29,12 @@ The 2011-09-14 drift (−3.3 MHz/s) is *slower* than typical: the Alvarez & Hadd
 (2018, A&A 618, A165, median −6.94 MHz/s) relations give ~−6 to −9 MHz/s at mid-band, so this is a
 relatively slow event (≈25th percentile) — a fair test of the pipeline on a weak drift, not a typical burst.
 
-## Recover-a-known: the 2011-09-14 burst (the cleanest, R² = 0.90)
+## Recover-a-known: the 2011-09-14 burst
+
+**[Superseded: the numbers in this section and the candidate table above are the pad_s=5,
+unconverged-fit run. The numbers of record are the pad_s=10 converged-fit values in
+results/solarbursts_metrics.json and results/solarbursts_candidates.json; see the referee
+round at the bottom.]**
 
 A single isolated type III at BIR, ridge spanning **10–79 MHz**, 66 channels (61 after robust
 sigma-clipping), drift **−3.3 MHz/s**, coherent height–time track (**R² = 0.90**). Mapping the ridge
@@ -177,3 +182,36 @@ paper into its actual contribution.
 
 **Status: fixes pending** (all fixable from the committed ridge + one candidates re-run into a
 scratch dir).
+
+**Status: RESOLVED (2026-08-25).** All 18 findings addressed; the converged fit becomes the
+headline and the evidence got materially better.
+
+**The blocker (figure) and the convergence MAJOR, together:** `_robust_linfit` gains a
+`converge=True` mode that iterates to a mask fixed point and returns slope/mask/R^2 from the
+same final fit (the legacy 3-iteration mode is kept as the default because swaves, windwaves
+and ecallisto_catalog's committed evidence was produced with it). The converged headline is
+**0.1173 c** (R^2 = 0.935, 55 of 66 channels, fit band 32.4--62.4 MHz) with a committed
+analysis-choice spread of **0.1173--0.1332 c** (window width, clip threshold, isolated
+band-edge channels) -- the 0.111--0.147 iteration ambiguity is gone because there is no longer
+an iteration knob. The figure now draws the converged fit over the kept points with the clipped
+outliers marked; the caption describes exactly what is drawn.
+
+**The selection is committed and became falsifiable.** `run_candidates` runs all four
+candidates plus the X6.9 storm control at the headline parameterization
+(results/solarbursts_candidates.json + \sbCand* macros): rejects at R^2 0.48 / 0.054 / 0.342 --
+the second with a wrong-direction POSITIVE drift -- and the storm at 0.178 with a nominal
+0.036 c. Under the uniform parameterization the rejected events' speeds no longer all fall
+in-band, which dissolves the "recover-a-known cannot fail" finding more decisively than any
+rewording: the old prose table's in-band values were artifacts of the pad-5 unconverged runs.
+
+**The rest:** abstract/Results bind the band and drift to the used set (fit band 32.4--62.4;
+kept-channel drift -2.90 vs unclipped -2.55, both quoted with their populations); speed in km/s
+rounded to the hundreds; the results JSON records pad_s / snr_threshold / clip_sigma /
+fit_converged and the ridge CSV carries a provenance header plus a used column; grid rows carry
+n_used and R^2; harmonic=2 stated as an assumption with the F-H-pair check described and the
+fundamental point placed below the band explicitly; "directly consistent" replaced by a range
+comparison with the model-dependence of Reid & Kontar's own speeds noted; "25th percentile"
+dropped; "15--30%" corrected to the cited 15%; RECOVER_EVENT pinned to pad 10 with the stale
+docstring fixed; \sbTruth/\sbRatio renamed into the Syn namespace; the findings body's
+superseded pad-5 sections marked; kontar2017 pages -> eid; the arXiv package rebuilt clean
+under the abstract limit.

@@ -26,6 +26,21 @@ recommend the next version number.
   in each survey/<slice>-findings.md; fixes to follow per slice.
 
 ### Fixed
+- **`solarbursts` revision (round-5 referee, 18 findings, one blocker): the fit converges, the
+  figure draws the fit it captions, and the event selection became falsifiable.**
+  `_robust_linfit` gains a converge mode (mask fixed point; slope, mask and R^2 from the same
+  final fit; the legacy 3-iteration default is kept for the three other slices whose committed
+  evidence used it). The converged headline is 0.1173 c (R^2 0.935, 55/66 channels, fit band
+  32.4-62.4 MHz) with a committed analysis-choice spread 0.1173-0.1332 c, replacing a point
+  value whose undeclared iteration-count ambiguity spanned 0.111-0.147. `run_candidates` commits
+  all four candidates plus the X6.9 storm control at the headline parameterization (JSON +
+  macros): the rejects give R^2 0.48/0.054/0.342 -- one with a wrong-direction positive
+  drift -- and no longer all land in the canonical band, so the recover-a-known can fail.
+  Band/drift bound to the used channel set; provenance (pad_s, snr, clip sigma) in the results
+  and the ridge CSV; six-figure km/s rounded; harmonic assumption stated with the F-H check;
+  "directly consistent" downgraded to a range comparison; stale findings sections marked
+  superseded; arXiv package rebuilt.
+
 - **`torchfdmt` revision (round-5 referee, 15 findings, two blockers): the figure now plots the
   statistic that produced its own caption's number, and the significance carries a trials
   accounting.** The butterfly panel plotted the raw track sum (maximum at DM ~118); it now
