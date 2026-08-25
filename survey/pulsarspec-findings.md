@@ -177,3 +177,37 @@ material, do not spend the revision on it.
 **Status: fixes pending.** The single change: commit the completeness-limited subsample —
 for a paper whose stated contribution is reproducibility, quantifying its own selection
 function is the contribution.
+
+**Status: RESOLVED (2026-08-25).** One real re-run; every referee-side number reproduced in the
+committed pipeline, and both prior headline values are unchanged.
+
+1. **Selection restated as coverage-dominated.** Data now says an absent flux is *no published
+   measurement*, not a non-detection, and gives the denominators: 764 of 2536 have any S400
+   vs 1676 with any S1400 (committed as `n_s400_tabulated`/`n_s1400_tabulated`), so the binding
+   constraint is 400-MHz coverage. The Discussion states the coverage selection's direction is
+   not obvious while the flux-limit component is measured.
+2. **Completeness cut committed.** `completeness_limited` (the dr20radio geometry): above
+   S400 >= 4.59 mJy — where no source with alpha >= −3 can have been lost to the sample's own
+   S1400 1st-percentile floor (0.107 mJy) — the 401-source mean is **−1.882** (median −1.917).
+   The abstract quotes "−1.77 raw, −1.88 above the completeness limit". The S1400-floor mirror
+   is explicitly disclaimed as conditioning on the numerator.
+3. **2SE/exclusion conflation fixed everywhere** (abstract, Results, and the
+   `compare_subsamples` docstring that seeded it): the exclusion is the CI complement
+   ([−0.221, +0.258] committed), 0.24 is labelled the 50%-power threshold, and 90% power
+   (0.40) is quoted beside it.
+4. **Systematic floor stated**: Δα = ln(1+f)/ln 3.5 (0.076 at 10%, 0.146 at 20%); common-mode
+   cancels in the difference but shifts the mean; inter-arm scale offsets do not cancel; the
+   Welch independence assumption named as optimistic.
+5. **The headline mean now carries its SE** (−1.77 ± 0.0344 statistical) and "reproducing"/
+   "sits squarely" became "consistent with ... at the steep end of their −1.4 to −1.8 range".
+6. **Evidence committed**: `results/pulsarspec_sources.csv` (473 rows), the J0540−6919
+   rejection counted (`n_rejected_nonpositive_flux` = 1), per-arm denominators (43/337 MSP,
+   430/2190 normal, "the millisecond arm is the more heavily truncated"), the 10–100 ms cut
+   sweep (sign flips, never near 2σ), permutation p = 0.882, median difference 0.094, and
+   `catalogue_version`/`fetched_utc` (2017-07-18 snapshot disclosed in Data).
+
+MINOR/NIT: `test_run_offline`'s window tightened from ±28σ to ±0.06 around the injected
+transform (−1.78); "every function" → "every analysis function"; `spectral_distribution` now
+uses ddof=1 matching `compare_subsamples` (0.75 unchanged at display precision); the sign of
+0.018 stated (MSPs marginally *flatter*); README's "MSPs ≈ normal pulsars" row updated to the
+bound. The referee's declined item (σ-uncertainty on `resolvable`) was left alone as advised.

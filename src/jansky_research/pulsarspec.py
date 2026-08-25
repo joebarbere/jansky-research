@@ -19,9 +19,12 @@ from .spectra import spectral_index
 __all__ = [
     "MSP_PERIOD_MAX_S",
     "NU_GHZ",
+    "completeness_limited",
     "fetch_atnf",
     "find_spectra",
     "is_millisecond",
+    "msp_cut_sweep",
+    "permutation_pvalue",
     "pulsar_alpha",
     "run",
     "spectral_distribution",
@@ -50,15 +53,24 @@ def is_millisecond(period_s: np.ndarray, *, p_max: float = MSP_PERIOD_MAX_S) -> 
 
 
 def spectral_distribution(alpha: np.ndarray) -> dict:
-    """Summarise an $\\alpha$ distribution: ``n``, ``mean``, ``median``, ``std`` (finite values only)."""
+    """Summarise an $\\alpha$ distribution: ``n``, ``mean``, ``median``, ``std``, ``se_mean``.
+
+    ``std`` uses ddof=1 (a sample dispersion), matching :func:`compare_subsamples`, so the paper
+    does not present two dispersion conventions side by side as the same quantity. ``se_mean`` is
+    the statistical standard error on the mean -- the paper's headline previously carried a
+    scatter but no uncertainty at all.
+    """
     a = np.asarray(alpha, float)
     a = a[np.isfinite(a)]
     n = int(a.size)
+    nan = float("nan")
+    std = float(np.std(a, ddof=1)) if n > 1 else nan
     return {
         "n": n,
-        "mean": float(np.mean(a)) if n else float("nan"),
-        "median": float(np.median(a)) if n else float("nan"),
-        "std": float(np.std(a)) if n else float("nan"),
+        "mean": float(np.mean(a)) if n else nan,
+        "median": float(np.median(a)) if n else nan,
+        "std": std,
+        "se_mean": std / float(np.sqrt(n)) if n > 1 else nan,
     }
 
 
@@ -71,10 +83,16 @@ def compare_subsamples(alpha_a: np.ndarray, alpha_b: np.ndarray, *, n_sigma: flo
 
     Returns the two means and dispersions, their difference ``diff = mean_a - mean_b``, the standard
     error on that difference (Welch, i.e. no equal-variance assumption), the difference in units of
-    that error (``n_sigma_observed``), and ``resolvable`` -- the smallest offset this pair of
-    subsamples could have distinguished from zero at ``n_sigma``. ``resolvable`` is the number a
-    non-detection should quote: an offset larger than it is excluded, one smaller than it is not
-    constrained, whatever the means happen to do.
+    that error (``n_sigma_observed``), and three sensitivity numbers whose meanings must not be
+    conflated: ``ci95_lo``/``ci95_hi``, the 95% confidence interval on the difference -- the values
+    *outside* it are what the data exclude; ``resolvable`` = ``n_sigma * se``, the offset detected
+    at ``n_sigma`` with only 50% probability (a detection threshold, not an exclusion); and
+    ``resolvable_90power``, the offset detected at 2 sigma with 90% power. The earlier version of
+    this docstring called ``resolvable`` an exclusion, and the paper inherited the error: an offset
+    of exactly 2 SE yields a >=2 sigma result half the time.
+
+    The Welch SE assumes independent per-source flux measurements; ATNF fluxes cluster by source
+    publication, so the effective N in each arm is below the row count and the SE is a floor.
     """
     a = np.asarray(alpha_a, float)
     b = np.asarray(alpha_b, float)
@@ -93,6 +111,9 @@ def compare_subsamples(alpha_a: np.ndarray, alpha_b: np.ndarray, *, n_sigma: flo
             "se_diff": nan,
             "n_sigma_observed": nan,
             "resolvable": nan,
+            "ci95_lo": nan,
+            "ci95_hi": nan,
+            "resolvable_90power": nan,
         }
     # ddof=1: these are samples, and with n_a = 43 the difference between the two conventions is
     # not negligible in the standard error the null is quoted against.
@@ -110,21 +131,133 @@ def compare_subsamples(alpha_a: np.ndarray, alpha_b: np.ndarray, *, n_sigma: flo
         "se_diff": se,
         "n_sigma_observed": abs(diff) / se if se > 0 else nan,
         "resolvable": n_sigma * se if se > 0 else nan,
+        # What the data exclude is the complement of the CI on the observed difference --
+        # asymmetric because the observed difference is not zero.
+        "ci95_lo": diff - 1.96 * se if se > 0 else nan,
+        "ci95_hi": diff + 1.96 * se if se > 0 else nan,
+        # 90% power at 2 sigma: (1.96 + 1.2816) * se.
+        "resolvable_90power": 3.2416 * se if se > 0 else nan,
     }
 
 
-def find_spectra(psr: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
-    """Per-pulsar $\\alpha$ and MSP/normal class for pulsars with both S400 and S1400.
+def find_spectra(psr: dict) -> dict:
+    """Per-pulsar $\\alpha$ and MSP/normal class for pulsars with a tabulated S400 and S1400.
 
-    ``psr`` carries ``p0`` (s), ``s400`` and ``s1400`` (mJy). Returns ``alpha``, ``period_s``, and
-    ``is_msp`` for the subset detected at both frequencies (finite, positive fluxes).
+    ``psr`` carries ``p0`` (s), ``s400`` and ``s1400`` (mJy). Returns ``alpha``, ``period_s``,
+    ``s400``/``s1400``, and ``is_msp`` for the subset with finite, positive fluxes at both
+    frequencies (plus ``name`` when the input carries one). ``n_rejected_nonpositive_flux``
+    counts rows with both fluxes tabulated but one of them non-positive -- e.g. J0540-6919,
+    whose S400 is recorded as 0.0 -- which the positivity guard silently dropped before this
+    count made the cut visible.
     """
     s400 = np.asarray(psr["s400"], float)
     s1400 = np.asarray(psr["s1400"], float)
     p0 = np.asarray(psr["p0"], float)
-    good = np.isfinite(s400) & np.isfinite(s1400) & (s400 > 0) & (s1400 > 0) & np.isfinite(p0)
+    both = np.isfinite(s400) & np.isfinite(s1400) & np.isfinite(p0)
+    good = both & (s400 > 0) & (s1400 > 0)
     alpha, _ = pulsar_alpha(s400[good], s1400[good])
-    return {"alpha": alpha, "period_s": p0[good], "is_msp": is_millisecond(p0[good])}
+    out = {
+        "alpha": alpha,
+        "period_s": p0[good],
+        "s400": s400[good],
+        "s1400": s1400[good],
+        "is_msp": is_millisecond(p0[good]),
+        "n_rejected_nonpositive_flux": int(np.sum(both & ~((s400 > 0) & (s1400 > 0)))),
+    }
+    if psr.get("name") is not None:
+        out["name"] = np.asarray(psr["name"], dtype=object)[good]
+    return out
+
+
+def completeness_limited(
+    alpha: np.ndarray,
+    s400: np.ndarray,
+    *,
+    s1400_floor_mjy: float,
+    alpha_min: float = -3.0,
+) -> dict:
+    """The joint-detection sample above the flux where the S1400 requirement cannot lose sources.
+
+    Requiring a tabulated flux at *both* frequencies truncates asymmetrically: near the S400 end
+    of the sample a steep source has already dropped below the effective S1400 floor, so the
+    joint sample's mean index is biased flat. Above
+    ``s400 >= s1400_floor * (1400/400)**(-alpha_min)`` no source with ``alpha >= alpha_min``
+    can have been lost to the S1400 side, so the subsample's mean is free of that truncation
+    (this is ``dr20radio``'s ``alpha_complete_limit`` applied to the identical geometry).
+
+    Note the mirror check -- raising the *S1400* floor -- is **not** a clean bias estimate:
+    it conditions on the numerator of alpha and flattens the mean mechanically.
+    """
+    a = np.asarray(alpha, float)
+    s = np.asarray(s400, float)
+    ratio = NU_GHZ["s1400"] / NU_GHZ["s400"]
+    s400_cut = float(s1400_floor_mjy * ratio ** (-alpha_min))
+    m = np.isfinite(a) & (s >= s400_cut)
+    d = spectral_distribution(a[m])
+    return {
+        "s1400_floor_mjy": float(s1400_floor_mjy),
+        "alpha_min": float(alpha_min),
+        "s400_cut_mjy": round(s400_cut, 2),
+        "n": d["n"],
+        "mean": round(d["mean"], 3) if d["n"] else None,
+        "median": round(d["median"], 3) if d["n"] else None,
+    }
+
+
+def msp_cut_sweep(
+    alpha: np.ndarray,
+    period_s: np.ndarray,
+    *,
+    cuts_s: tuple[float, ...] = (0.01, 0.02, 0.03, 0.05, 0.1),
+) -> dict:
+    """The MSP-normal comparison as the one classification constant sweeps.
+
+    The 30 ms boundary is the only free choice the null depends on; unlike a vacuous variant,
+    moving it genuinely reassigns membership in both arms. Keys are the cuts in seconds.
+    """
+    a = np.asarray(alpha, float)
+    p = np.asarray(period_s, float)
+    out = {}
+    for cut in cuts_s:
+        msp = is_millisecond(p, p_max=cut)
+        c = compare_subsamples(a[msp], a[~msp])
+        out[str(cut)] = {
+            "n_msp": c["n_a"],
+            "diff": round(c["diff"], 3) if np.isfinite(c["diff"]) else None,
+            "two_se": (round(2.0 * c["se_diff"], 3) if np.isfinite(c["se_diff"]) else None),
+        }
+    return out
+
+
+def permutation_pvalue(
+    alpha: np.ndarray,
+    is_msp: np.ndarray,
+    *,
+    n_perm: int = 20000,
+    seed: int = 0,
+) -> float:
+    """Two-sided permutation p-value for the MSP-normal mean difference.
+
+    At n = 43 with a skewed alpha distribution the Welch z is optimistic about its own
+    calibration; the permutation test needs no distributional assumption. Uses the
+    (k+1)/(B+1) convention.
+    """
+    a = np.asarray(alpha, float)
+    m = np.asarray(is_msp, bool)
+    ok = np.isfinite(a)
+    a, m = a[ok], m[ok]
+    n_msp = int(m.sum())
+    if n_msp < 2 or (a.size - n_msp) < 2:
+        return float("nan")
+    obs = abs(float(np.mean(a[m]) - np.mean(a[~m])))
+    rng = np.random.default_rng(seed)
+    k = 0
+    for _ in range(n_perm):
+        perm = rng.permutation(a.size) < n_msp
+        d = abs(float(np.mean(a[perm]) - np.mean(a[~perm])))
+        if d >= obs:
+            k += 1
+    return float((k + 1) / (n_perm + 1))
 
 
 def synthetic_field(
@@ -166,8 +299,17 @@ def synthetic_field(
     }
 
 
-def fetch_atnf() -> dict[str, np.ndarray]:  # pragma: no cover - network
-    """Fetch the ATNF Pulsar Catalogue (VizieR ``B/psr``): P0 (s), S400, S1400 (mJy)."""
+def fetch_atnf() -> dict:  # pragma: no cover - network
+    """Fetch the ATNF Pulsar Catalogue (VizieR ``B/psr``): PSRJ, P0 (s), S400, S1400 (mJy).
+
+    ``B/psr`` is a frozen VizieR snapshot (published 2017-07-18), behind the live ATNF
+    ``psrcat``; the vintage is returned (and committed) so a reader querying psrcat directly
+    knows why the counts differ. An absent S400/S1400 is *no published measurement at that
+    frequency* -- overwhelmingly because the source's surveys did not observe there -- not a
+    non-detection.
+    """
+    from datetime import datetime, timezone
+
     import numpy as _np
     from astroquery.vizier import Vizier
 
@@ -178,10 +320,13 @@ def fetch_atnf() -> dict[str, np.ndarray]:  # pragma: no cover - network
         "p0": _np.asarray(t["P0"], float),
         "s400": _np.asarray(t["S400"], float),
         "s1400": _np.asarray(t["S1400"], float),
+        "name": _np.asarray([str(x).strip() for x in t["PSRJ"]], dtype=object),
         # The parent count, so the selection has a denominator. Without it the paper said
         # "over the whole catalogue" for what is really 473 of 2536, and this slice and `ppdot`
         # disagreed about the size of the same table (2536 vs a remembered "~3500").
         "n_catalogue": _np.asarray([len(t)], float),
+        "catalogue_version": "B/psr (VizieR snapshot, published 2017-07-18)",
+        "fetched_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
 
@@ -205,11 +350,25 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
     # paper's "indistinguishable" unquantifiable from the committed evidence.
     cmp = compare_subsamples(alpha[is_msp], alpha[~is_msp])
     n_cat = psr.get("n_catalogue")
+    # Single-band coverage: the binding constraint on the joint sample is which surveys
+    # observed at 400 MHz, not a flux limit -- these two counts are the evidence.
+    s400_all = np.asarray(psr["s400"], float)
+    s1400_all = np.asarray(psr["s1400"], float)
+    p0_all = np.asarray(psr["p0"], float)
+    valid_p = np.isfinite(p0_all) & (p0_all > 0)
     metrics = {
         "source": source,
         "n": dist["n"],
         "n_catalogue": int(n_cat[0]) if n_cat is not None and len(n_cat) else None,
+        "catalogue_version": psr.get("catalogue_version"),
+        "fetched_utc": psr.get("fetched_utc"),
+        "n_s400_tabulated": int(np.sum(np.isfinite(s400_all))),
+        "n_s1400_tabulated": int(np.sum(np.isfinite(s1400_all))),
+        "n_rejected_nonpositive_flux": res["n_rejected_nonpositive_flux"],
+        "n_msp_catalogue": int(np.sum(valid_p & is_millisecond(p0_all))),
+        "n_normal_catalogue": int(np.sum(valid_p & ~is_millisecond(p0_all))),
         "mean_alpha": round(dist["mean"], 2),
+        "mean_alpha_se": round(dist["se_mean"], 4),
         "median_alpha": round(dist["median"], 2),
         "std_alpha": round(dist["std"], 2),
         "n_msp": msp["n"],
@@ -222,16 +381,53 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
         "alpha_diff_se": round(cmp["se_diff"], 3),
         "alpha_diff_sigma": round(cmp["n_sigma_observed"], 2),
         "alpha_resolvable_2sigma": round(cmp["resolvable"], 2),
+        "alpha_diff_ci95_lo": round(cmp["ci95_lo"], 3),
+        "alpha_diff_ci95_hi": round(cmp["ci95_hi"], 3),
+        "alpha_resolvable_90power": round(cmp["resolvable_90power"], 2),
+        "alpha_median_diff": round(float(np.median(alpha[is_msp]) - np.median(alpha[~is_msp])), 3),
+        "permutation_p_two_sided": round(permutation_pvalue(alpha, is_msp), 3),
     }
+    # The completeness-limited subsample: the one number that sizes the joint-detection bias
+    # the Discussion names. The S1400 floor is the sample's own 1st percentile.
+    floor = float(np.percentile(res["s1400"], 1.0))
+    metrics["completeness"] = completeness_limited(
+        alpha, res["s400"], s1400_floor_mjy=round(floor, 3), alpha_min=-3.0
+    )
+    metrics["msp_cut_sweep_s"] = msp_cut_sweep(alpha, res["period_s"])
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
     write_results(metrics, op / "results" / "pulsarspec_metrics.json")
+    if res.get("name") is not None:
+        _write_sources(res, op / "results" / "pulsarspec_sources.csv")
     _figure(res, op / "papers" / "pulsarspec" / "figures")
     _write_macros(metrics, op / "papers" / "pulsarspec" / "generated" / "macros.tex")
     return metrics
+
+
+def _write_sources(res: dict, path) -> None:
+    """The per-pulsar table behind the summary scalars (real leg only: needs names)."""
+    import csv
+    from pathlib import Path
+
+    pt = Path(path)
+    pt.parent.mkdir(parents=True, exist_ok=True)
+    with pt.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["psrj", "p0_s", "s400_mjy", "s1400_mjy", "alpha", "is_msp"])
+        for i in range(len(res["alpha"])):
+            w.writerow(
+                [
+                    res["name"][i],
+                    f"{res['period_s'][i]:.10g}",
+                    f"{res['s400'][i]:.6g}",
+                    f"{res['s1400'][i]:.6g}",
+                    f"{res['alpha'][i]:.4f}",
+                    int(res["is_msp"][i]),
+                ]
+            )
 
 
 def _figure(res: dict, out_dir) -> None:
@@ -288,6 +484,32 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\psrAlphaDiffSE}}{{{_fmt('alpha_diff_se')}}}",
         rf"\newcommand{{\psrAlphaDiffSigma}}{{{_fmt('alpha_diff_sigma')}}}",
         rf"\newcommand{{\psrAlphaResolvable}}{{{_fmt('alpha_resolvable_2sigma')}}}",
+        # The exclusion is the CI's complement; `resolvable` is a 50%-power threshold.
+        rf"\newcommand{{\psrCIlo}}{{{_fmt('alpha_diff_ci95_lo')}}}",
+        rf"\newcommand{{\psrCIhi}}{{{_fmt('alpha_diff_ci95_hi')}}}",
+        rf"\newcommand{{\psrNinetyPower}}{{{_fmt('alpha_resolvable_90power')}}}",
+        rf"\newcommand{{\psrMeanAlphaSE}}{{{_fmt('mean_alpha_se')}}}",
+        rf"\newcommand{{\psrMedianDiff}}{{{_fmt('alpha_median_diff')}}}",
+        rf"\newcommand{{\psrPermP}}{{{_fmt('permutation_p_two_sided')}}}",
+        # Coverage and selection: the joint sample's denominators.
+        rf"\newcommand{{\psrNSfourHundred}}{{{_fmt('n_s400_tabulated')}}}",
+        rf"\newcommand{{\psrNSfourteenHundred}}{{{_fmt('n_s1400_tabulated')}}}",
+        rf"\newcommand{{\psrNmspCat}}{{{_fmt('n_msp_catalogue')}}}",
+        rf"\newcommand{{\psrNnormalCat}}{{{_fmt('n_normal_catalogue')}}}",
+        rf"\newcommand{{\psrNrejected}}{{{_fmt('n_rejected_nonpositive_flux')}}}",
+    ]
+    comp = m.get("completeness") or {}
+
+    def _cfmt(key: str) -> str:
+        v = comp.get(key)
+        return "--" if v is None else str(v)
+
+    lines += [
+        rf"\newcommand{{\psrCompleteN}}{{{_cfmt('n')}}}",
+        rf"\newcommand{{\psrCompleteMean}}{{{_cfmt('mean')}}}",
+        rf"\newcommand{{\psrCompleteMedian}}{{{_cfmt('median')}}}",
+        rf"\newcommand{{\psrCompleteCut}}{{{_cfmt('s400_cut_mjy')}}}",
+        rf"\newcommand{{\psrCompleteFloor}}{{{_cfmt('s1400_floor_mjy')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
