@@ -113,3 +113,44 @@ attributes the tool to the course.
 **Status: fixes pending.** The single change: make the SOURCE the unit of analysis for every
 repeater statistic — width quoted as D = 0.56, p = 1e-5 in both abstracts, DM restated at its
 source-level 0.044, and Methods stating that 62 bursts from 18 sources are not 62 draws.
+
+**Status: RESOLVED (2026-08-25).** One real re-run; every referee-side number reproduced in
+the committed pipeline, and the headline reads better than before.
+
+**Blocker:** `make_figures` now plots `grouped_wait_times` (within-source), the same
+quantity the Weibull is fitted to — the pooled/fitted mismatch that displayed a passing fit
+as a failing one is gone, and it can no longer recur silently: the synthetic fixture now has
+THREE staggered repeater sources (the single-source fixture is why the multi-source path was
+never exercised), a test asserts the figure's waits equal the fitted waits and differ from
+the pooled ones, and the old Poisson-limit test itself now demonstrates the distortion the
+pooling causes.
+
+**MAJORs:**
+- Figure 2 draws the ML power law above F_min with F_min marked — the caption's promise kept.
+- γ carries the honest error: joint (γ, F_min) bootstrap committed (sd 0.292, CI
+  [2.07, 3.19]; F_min CI [2.9, 15.7]) and quoted; the fixed-bound Hill ±0.13 stated as
+  conditioning on a bound chosen from the same data.
+- "Matches the catalog" has its number: consistent at 0.46σ with Cat 1's own cumulative
+  slope transformed to differential γ = 2.40 ± 0.11 (constants + agreement committed), with
+  the estimand mismatch (selection-corrected vs raw; excluded_flag retained — 39 events,
+  γ→2.58 without them; repeat bursts +0.03) disclosed.
+- The SOURCE is the unit of analysis in both abstracts: width D = 0.563, p = 1.1e-5 over 18
+  sources (burst-level kept as the convention); DM restated at its source-level p = 0.044
+  (marginal — where the selection caveat says it should sit) with the single-source spikes
+  named in the figure caption; fluence source-level p = 0.005.
+- `report.write_macros` now merges through `preserve_live_macros` (tested:
+  synthetic-over-real refused), and `build_catalog` RAISES on a fetch failure instead of
+  silently substituting the synthetic fixture — the split-brain path is closed at both ends.
+- The gap claim no longer asserts pip-installability (distribution stated honestly as the
+  archived toolkit module); the FRBSTATS name collision acknowledged in text; the landscape
+  paragraph cites PRESTO/your/frbpoppy/FRBSTATS (new entries, DOIs verified via Crossref;
+  frbpoppy is Gardenier et al. 2019, A&A 632, A125).
+
+**MINOR:** the 26 non-repeater width upper limits disclosed with their conservative
+direction; the six fluence-placeholder events... (fluence>0 handled in the fit; KS counts
+disclosed via committed n's); "44 waits across 18 sources" corrected (16 contributing
+sources, macro'd); cluster CI on k committed (0.33–0.70) beside the i.i.d. one; the cadence
+bimodality quantified (7 same-transit + 8 sidereal-day waits, macro'd); width column defined
+in Methods (width_fitb, leading sub-burst; bc_width factor-4 alternative noted); mirror-URL
+provenance in Data with \catalogSource used; RNAAS \software carries jansky-research and the
+tool is attributed to the toolkit; arXiv package regenerated.

@@ -42,5 +42,54 @@
       "med_rep": 0.0020499999999999997,
       "med_one": 0.0009354999999999999
     }
-  }
+  },
+  "ks_source_level": {
+    "dm": {
+      "ks": 0.32067510548523204,
+      "p": 0.043863296745862784,
+      "n_rep_sources": 18,
+      "n_one": 474,
+      "med_rep": 434.98375,
+      "med_one": 565.328
+    },
+    "fluence": {
+      "ks": 0.40295358649789026,
+      "p": 0.004734284726554877,
+      "n_rep_sources": 18,
+      "n_one": 474,
+      "med_rep": 4.45,
+      "med_one": 3.6
+    },
+    "width": {
+      "ks": 0.5632440476190476,
+      "p": 1.0798853876990868e-05,
+      "n_rep_sources": 18,
+      "n_one": 448,
+      "med_rep": 0.0024725,
+      "med_one": 0.0009354999999999999
+    }
+  },
+  "weibull_k_cluster_ci": [
+    0.33,
+    0.7
+  ],
+  "n_wait_sources": 16,
+  "n_waits_same_transit": 7,
+  "n_waits_sidereal_day": 8,
+  "energy_bootstrap": {
+    "gamma_boot_sd": 0.292,
+    "gamma_ci_low": 2.07,
+    "gamma_ci_high": 3.19,
+    "f_min_ci_low": 2.9,
+    "f_min_ci_high": 15.7,
+    "n_boot": 500
+  },
+  "gamma_ref": 2.4,
+  "gamma_ref_err": 0.11,
+  "gamma_agreement_sigma": 0.46,
+  "n_width_limits_rep": 0,
+  "n_width_limits_one": 26,
+  "n_excluded_flag": 39,
+  "gamma_without_excluded": 2.58,
+  "f_min_without_excluded": 8.5
 }

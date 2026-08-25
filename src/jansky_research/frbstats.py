@@ -29,7 +29,9 @@ __all__ = [
     "BurstStats",
     "PowerLawFit",
     "WeibullFit",
+    "bootstrap_power_law",
     "compare_populations",
+    "compare_populations_source_level",
     "fit_power_law",
     "fit_weibull_waits",
     "grouped_wait_times",
@@ -37,7 +39,15 @@ __all__ = [
     "summarise",
     "synthetic_catalog",
     "wait_times",
+    "weibull_cluster_ci",
 ]
+
+#: CHIME/FRB Catalog 1's own cumulative fluence source-count slope (their population
+#: analysis): alpha_cum = -1.40 +/- 0.11, i.e. a differential index gamma = 1 + |alpha| =
+#: 2.40 +/- 0.11 -- the comparand for our Hill fit ("matches within uncertainties" was
+#: previously a sentence with no number behind it).
+CHIME_CAT1_ALPHA_CUM = -1.40
+CHIME_CAT1_ALPHA_CUM_ERR = 0.11
 
 
 @dataclass(frozen=True)
@@ -185,6 +195,107 @@ def fit_power_law(
     )
 
 
+def bootstrap_power_law(fluences: np.ndarray, *, n_boot: int = 500, seed: int | None = 0) -> dict:
+    """Joint bootstrap of the power-law index AND its lower bound.
+
+    The Hill standard error ``(gamma-1)/sqrt(n)`` conditions on a fixed ``f_min``, but
+    ``select_xmin`` chooses ``f_min`` from the same data; Clauset et al. (2009) prescribe
+    resampling both jointly. Returns the bootstrap sd and 95% interval on gamma and the 95%
+    interval on ``f_min`` -- on CHIME Cat 1 the honest gamma error is ~2.2x the Hill one.
+    """
+    f = np.asarray(fluences, dtype=float)
+    f = f[np.isfinite(f) & (f > 0)]
+    rng = np.random.default_rng(seed)
+    gammas, fmins = [], []
+    for _ in range(n_boot):
+        sample = rng.choice(f, size=f.size, replace=True)
+        try:
+            fit = fit_power_law(sample, auto_xmin=True)
+        except ValueError:
+            continue
+        gammas.append(fit.gamma)
+        fmins.append(fit.f_min)
+    g = np.asarray(gammas)
+    m = np.asarray(fmins)
+    return {
+        "gamma_boot_sd": round(float(np.std(g)), 3),
+        "gamma_ci_low": round(float(np.percentile(g, 2.5)), 2),
+        "gamma_ci_high": round(float(np.percentile(g, 97.5)), 2),
+        "f_min_ci_low": round(float(np.percentile(m, 2.5)), 1),
+        "f_min_ci_high": round(float(np.percentile(m, 97.5)), 1),
+        "n_boot": int(g.size),
+    }
+
+
+def weibull_cluster_ci(
+    mjds: np.ndarray, groups: np.ndarray, *, n_boot: int = 1000, seed: int | None = 0
+) -> tuple[float, float]:
+    """Source-cluster bootstrap CI on the Weibull shape: resample SOURCES, not waits.
+
+    Waits from the same repeater share its cadence and activity state, so an i.i.d. wait
+    bootstrap understates the CI (on Cat 1: 0.32-0.56 i.i.d. vs 0.32-0.69 clustered).
+    """
+    mjds = np.asarray(mjds, dtype=float)
+    groups = np.asarray(groups)
+    uniq = np.unique(groups)
+    per_source = {g: wait_times(mjds[groups == g]) for g in uniq}
+    contributing = [g for g in uniq if per_source[g].size]
+    rng = np.random.default_rng(seed)
+    boot = []
+    for _ in range(n_boot):
+        pick = rng.choice(contributing, size=len(contributing), replace=True)
+        waits = np.concatenate([per_source[g] for g in pick])
+        if waits.size < 3:
+            continue
+        k, _, _ = stats.weibull_min.fit(waits, floc=0.0)
+        boot.append(k)
+    lo, hi = np.percentile(np.asarray(boot), [2.5, 97.5])
+    return float(lo), float(hi)
+
+
+def compare_populations_source_level(
+    repeater: dict[str, np.ndarray],
+    oneoff: dict[str, np.ndarray],
+    labels: np.ndarray,
+    keys=("dm", "fluence", "width"),
+) -> dict[str, dict[str, float]]:
+    """KS tests with the SOURCE as the unit of analysis on the repeater side.
+
+    62 repeater bursts from 18 sources are not 62 independent draws (two sources supply
+    48% of them). Each repeater contributes its per-source median; one-off bursts are one
+    source each by definition. On Cat 1 the width difference SURVIVES this restatement
+    (D = 0.56, p = 1e-5) while DM collapses from 1e-11 to the marginal 0.04 the selection
+    caveat already anticipated.
+    """
+    labels = np.asarray(labels)
+    out: dict[str, dict[str, float]] = {}
+    for key in keys:
+        if key not in repeater or key not in oneoff:
+            continue
+        a_all = np.asarray(repeater[key], dtype=float)
+        b = np.asarray(oneoff[key], dtype=float)
+        b = b[np.isfinite(b)]
+        med_per_source = []
+        for g in np.unique(labels):
+            vals = a_all[labels == g]
+            vals = vals[np.isfinite(vals)]
+            if vals.size:
+                med_per_source.append(float(np.median(vals)))
+        a = np.asarray(med_per_source)
+        if a.size < 2 or b.size < 2:
+            continue
+        d, p = stats.ks_2samp(a, b)
+        out[key] = {
+            "ks": float(d),
+            "p": float(p),
+            "n_rep_sources": int(a.size),
+            "n_one": int(b.size),
+            "med_rep": float(np.median(a)),
+            "med_one": float(np.median(b)),
+        }
+    return out
+
+
 def compare_populations(
     repeater: dict[str, np.ndarray], oneoff: dict[str, np.ndarray], keys=("dm", "fluence", "width")
 ) -> dict[str, dict[str, float]]:
@@ -262,6 +373,7 @@ def synthetic_catalog(
     scale_days: float = 0.05,
     gamma_true: float = 2.0,
     fluence_min: float = 0.4,
+    n_sources: int = 3,
     seed: int | None = 0,
 ) -> dict[str, np.ndarray]:
     """Generate a synthetic FRB catalogue with known ground truth (offline fixture).
@@ -272,9 +384,21 @@ def synthetic_catalog(
     fallback when the real CHIME catalogue cannot be downloaded.
     """
     rng = np.random.default_rng(seed)
-    # Repeater arrival times: cumulative Weibull waits.
-    waits = stats.weibull_min.rvs(k_true, scale=scale_days, size=n_repeater - 1, random_state=rng)
-    rep_mjd = np.concatenate([[58000.0], 58000.0 + np.cumsum(waits)])
+    # Repeater arrival times: independent cumulative-Weibull chains for n_sources synthetic
+    # repeaters. The old single-source fixture never exercised the multi-source path, which
+    # is how a figure plotting pooled-across-source waits under a within-source caption
+    # survived every test (the round-9 blocker).
+    n_sources = max(1, min(n_sources, n_repeater // 3))
+    per = np.full(n_sources, n_repeater // n_sources)
+    per[: n_repeater % n_sources] += 1
+    chains, chain_names = [], []
+    for si, n_i in enumerate(per):
+        w = stats.weibull_min.rvs(k_true, scale=scale_days, size=n_i - 1, random_state=rng)
+        start = 58000.0 + 40.0 * si  # staggered starts, so pooled diffs cross sources
+        chains.append(np.concatenate([[start], start + np.cumsum(w)]))
+        chain_names.append(np.full(n_i, f"SYN-R{si + 1}"))
+    rep_mjd = np.concatenate(chains)
+    rep_names = np.concatenate(chain_names)
     # Power-law fluences via inverse-CDF: F = f_min * (1-u)^(-1/(gamma-1)).
     u = rng.random(n_repeater)
     rep_fluence = fluence_min * (1.0 - u) ** (-1.0 / (gamma_true - 1.0))
@@ -287,8 +411,8 @@ def synthetic_catalog(
     one_dm = rng.normal(650.0, 150.0, n_oneoff)  # shifted DM -> KS has signal
     one_width = 10 ** rng.normal(0.1, 0.4, n_oneoff)
 
-    # The repeater bursts are one synthetic source; non-repeaters get the catalogue sentinel.
-    names = np.array(["SYN-R1"] * n_repeater + ["-9999"] * n_oneoff)
+    # Per-burst source labels; non-repeaters get the catalogue sentinel.
+    names = np.concatenate([rep_names, np.array(["-9999"] * n_oneoff)])
     return {
         "mjd": np.concatenate([rep_mjd, one_mjd]),
         "fluence": np.concatenate([rep_fluence, one_fluence]),

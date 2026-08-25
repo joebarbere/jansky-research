@@ -30,6 +30,7 @@ _COLUMN_ALIASES = {
     "width": ("width_fitb", "bc_width", "width", "width_ms"),
     "repeater_name": ("repeater_name", "repeater_of", "previous_name"),
     "sub_num": ("sub_num", "sub_burst"),
+    "excluded_flag": ("excluded_flag",),
 }
 
 
@@ -75,6 +76,15 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
         else np.array([""] * len(rows))
     )
     repeater = np.array([nm not in sentinels for nm in names])
+    # Width upper limits ("<0.0001" strings) parse to NaN and are silently dropped by the
+    # KS comparison; count them per class so the cut is disclosed (all 26 in Cat 1 are
+    # non-repeaters, so dropping them is conservative for the width claim).
+    wcol = cols["width"]
+    is_limit = (
+        np.array([str(r.get(wcol, "")).strip().startswith("<") for r in rows])
+        if wcol
+        else np.zeros(len(rows), bool)
+    )
     cat = {
         "mjd": _floats(cols["mjd"]),
         "fluence": _floats(cols["fluence"]),
@@ -82,6 +92,8 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
         "width": _floats(cols["width"]),
         "repeater": repeater,
         "repeater_name": names,
+        "width_is_limit": is_limit,
+        "excluded_flag": _floats(cols["excluded_flag"]),
     }
     # One row per *event*: the CHIME catalogue stores each multi-component burst as several
     # sub_num rows (600 rows = 536 events). Treating sub-bursts as independent would
@@ -94,13 +106,21 @@ def load_catalog_csv(path: str | Path) -> dict[str, np.ndarray]:
 
 
 def build_catalog(*, offline: bool = False) -> tuple[dict[str, np.ndarray], str]:
-    """Return ``(catalog, source)`` — the real CHIME catalogue, or the synthetic fixture offline."""
+    """Return ``(catalog, source)`` — the real CHIME catalogue, or the synthetic fixture offline.
+
+    A fetch failure RAISES rather than silently substituting the synthetic fixture: the old
+    fallback could rewrite the paper's macros with synthetic values on any network hiccup
+    while every guard stayed green (the round-9 referee's split-brain finding).
+    """
     if not offline:
         try:
             path = data.fetch("chime-frb-catalog")
-            return load_catalog_csv(path), "chime-frb-catalog"
-        except Exception:  # noqa: BLE001 - any failure falls back to the offline fixture
-            pass
+        except Exception as exc:
+            raise RuntimeError(
+                "could not fetch the CHIME/FRB catalogue; pass --offline explicitly to run "
+                "on the synthetic fixture"
+            ) from exc
+        return load_catalog_csv(path), "chime-frb-catalog"
     return frbstats.synthetic_catalog(), "synthetic"
 
 
@@ -119,8 +139,63 @@ def metrics_dict(stats: frbstats.BurstStats, source: str) -> dict:
 
 
 def analyze(catalog: dict[str, np.ndarray], source: str = "unknown") -> dict:
-    """Run the burst-statistics analysis and return the metrics dict."""
-    return metrics_dict(frbstats.summarise(catalog), source)
+    """Run the burst-statistics analysis and return the metrics dict.
+
+    Beyond the burst-level summary this commits the round-9 statistics: the source-level KS
+    restatement (the source, not the burst, is the unit of analysis), the joint
+    gamma/f_min bootstrap, the Cat 1 comparand, the source-cluster Weibull CI, the wait-time
+    cadence structure, and the disclosed sample cuts.
+    """
+    stats_ = frbstats.summarise(catalog)
+    metrics = metrics_dict(stats_, source)
+
+    rep_mask = np.asarray(catalog["repeater"], dtype=bool)
+    rep: dict[str, np.ndarray] = {
+        k: np.asarray(catalog[k])[rep_mask] for k in ("dm", "fluence", "width") if k in catalog
+    }
+    one: dict[str, np.ndarray] = {
+        k: np.asarray(catalog[k])[~rep_mask] for k in ("dm", "fluence", "width") if k in catalog
+    }
+    if "repeater_name" in catalog:
+        labels = np.asarray(catalog["repeater_name"])[rep_mask]
+        metrics["ks_source_level"] = frbstats.compare_populations_source_level(rep, one, labels)
+        rep_mjd = np.asarray(catalog["mjd"])[rep_mask]
+        lo, hi = frbstats.weibull_cluster_ci(rep_mjd, labels)
+        metrics["weibull_k_cluster_ci"] = [round(lo, 2), round(hi, 2)]
+        # cadence structure of the within-source waits, and the sources that contribute any
+        waits = frbstats.grouped_wait_times(rep_mjd, labels)
+        metrics["n_wait_sources"] = int(
+            sum(1 for g in np.unique(labels) if frbstats.wait_times(rep_mjd[labels == g]).size)
+        )
+        metrics["n_waits_same_transit"] = int(np.sum(waits <= 0.02))
+        metrics["n_waits_sidereal_day"] = int(np.sum((waits >= 0.95) & (waits <= 1.05)))
+
+    # honest gamma error: joint bootstrap over (gamma, f_min)
+    metrics["energy_bootstrap"] = frbstats.bootstrap_power_law(np.asarray(catalog["fluence"]))
+    # the comparand: Cat 1's own cumulative slope, transformed to a differential index
+    gamma_ref = 1.0 + abs(frbstats.CHIME_CAT1_ALPHA_CUM)
+    gamma_ref_err = frbstats.CHIME_CAT1_ALPHA_CUM_ERR
+    g = metrics["energy"]["gamma"]
+    g_sd = max(metrics["energy_bootstrap"]["gamma_boot_sd"], metrics["energy"]["gamma_err"])
+    metrics["gamma_ref"] = gamma_ref
+    metrics["gamma_ref_err"] = gamma_ref_err
+    metrics["gamma_agreement_sigma"] = round(
+        abs(g - gamma_ref) / float(np.hypot(g_sd, gamma_ref_err)), 2
+    )
+    # disclosed sample cuts and variants
+    if "width_is_limit" in catalog:
+        wl = np.asarray(catalog["width_is_limit"], bool)
+        metrics["n_width_limits_rep"] = int(np.sum(wl & rep_mask))
+        metrics["n_width_limits_one"] = int(np.sum(wl & ~rep_mask))
+    if "excluded_flag" in catalog:
+        ex = np.asarray(catalog["excluded_flag"], float)
+        ok = ~(ex == 1.0)
+        if (~ok).any():
+            fit_noexcl = frbstats.fit_power_law(np.asarray(catalog["fluence"])[ok], auto_xmin=True)
+            metrics["n_excluded_flag"] = int((~ok).sum())
+            metrics["gamma_without_excluded"] = round(fit_noexcl.gamma, 2)
+            metrics["f_min_without_excluded"] = round(fit_noexcl.f_min, 1)
+    return metrics
 
 
 def run(out_dir: str | Path = ".", *, offline: bool = False) -> dict:
@@ -132,7 +207,7 @@ def run(out_dir: str | Path = ".", *, offline: bool = False) -> dict:
     out = Path(out_dir)
     catalog, source = build_catalog(offline=offline)
     stats = frbstats.summarise(catalog)
-    metrics = metrics_dict(stats, source)
+    metrics = analyze(catalog, source)
 
     paper = out / "papers" / "frbstats"
     (out / "results").mkdir(parents=True, exist_ok=True)
