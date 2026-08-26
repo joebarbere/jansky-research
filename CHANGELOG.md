@@ -11,6 +11,26 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **rfitrend round-10 revision: HUMAIN is a staircase, the citation names its authors, and
+  the null carries its power curve.** All derived diagnostics rebuilt offline from the
+  committed per-station arrays (`scripts/rfitrend_real.py --recompute`, which now writes
+  through preserve_live_results -- the splice path the referee found is closed).
+  `step_analysis` commits HUMAIN's three single-month steps (+7.5 at 2017.2, -12.0 at
+  2018.9, +15.0 at 2022.2) and four regimes in which no slope rises; the paper reports
+  plateaus separated by reconfiguration-like discontinuities (the down-step spanning exactly
+  the 0->1900-satellite interval), retires "whose rise is real", and cites the shape
+  discriminant (Starlink-shape r 0.480 vs ramp 0.294 vs step 0.005). prieto2020 is the real
+  paper (Prieto, Bussons Gordo, et al., Sol. Phys. 295(2), 11, DOI-verified); "~2x" became
+  "increased interference levels". `coherence_power` commits the measured sensitivity
+  (90% power only at ~15 log-units -- larger than the data's largest excursion) and
+  "indicates ... dominate" became "is consistent with ... dominating". `equal_n_pooled`
+  replaces "sample-size artifact" with the measured reason (0.261 [0.224, 0.292] at equal n:
+  amplitude-dominated). Theil-Sen CIs everywhere; the ALMATY window truncation is disclosed
+  with its committed mirror check (+0.546 on the matched window); the recover-a-known states
+  its truth (ratio 1.009), burst immunity is measured (0.2382 vs 0.2406), and the flank
+  sweep ships with its ~0.8x crossover and the flank_rise=5.0 row that reproduces ALMATY's
+  measured pair. arxiv.yaml restores "long-running" and the no-attribution sentence; stale
+  137 MHz prose purged and the vacuous test assertion replaced.
 - **ecallisto_census round-10 revision: the real leg is an audited ingest failure, and the
   validation gained the arms that can fail.** The census table now carries listed-vs-fetched
   provenance per day; the audit (`--audit`, one index GET per committed date) confirms 45 of

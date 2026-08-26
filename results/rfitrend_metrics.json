@@ -967,5 +967,192 @@
   },
   "flank_line_slope_per_yr": -0.1907,
   "flank_slope_bias_per_yr": -0.4311,
-  "flank_sign_flipped": true
+  "flank_sign_flipped": true,
+  "derived": {
+    "stations": {
+      "HUMAIN": {
+        "slope_ci95": [
+          0.2667,
+          0.5689
+        ],
+        "steps": {
+          "steps": [
+            {
+              "at_year": 2017.208,
+              "delta": 7.5
+            },
+            {
+              "at_year": 2018.875,
+              "delta": -12.0
+            },
+            {
+              "at_year": 2022.208,
+              "delta": 15.0
+            }
+          ],
+          "segments": [
+            {
+              "start": 2013.125,
+              "end": 2017.125,
+              "n": 48,
+              "median": -0.5,
+              "slope": -0.375,
+              "p_value": 0.106
+            },
+            {
+              "start": 2017.208,
+              "end": 2018.792,
+              "n": 20,
+              "median": 4.75,
+              "slope": -0.0,
+              "p_value": 0.768
+            },
+            {
+              "start": 2018.875,
+              "end": 2022.125,
+              "n": 40,
+              "median": -8.5,
+              "slope": -0.445,
+              "p_value": 0.218
+            },
+            {
+              "start": 2022.208,
+              "end": 2026.542,
+              "n": 53,
+              "median": 5.0,
+              "slope": -0.0,
+              "p_value": 0.366
+            }
+          ]
+        },
+        "shapes": {
+          "corr_starlink_shape": 0.48,
+          "corr_linear_ramp": 0.294,
+          "corr_step_2019": 0.005
+        }
+      },
+      "ALMATY": {
+        "slope_ci95": [
+          -0.2152,
+          -0.023
+        ],
+        "steps": {
+          "steps": [
+            {
+              "at_year": 2025.875,
+              "delta": 9.75
+            },
+            {
+              "at_year": 2025.958,
+              "delta": -9.08
+            },
+            {
+              "at_year": 2026.125,
+              "delta": 14.5
+            }
+          ],
+          "segments": [
+            {
+              "start": 2015.458,
+              "end": 2025.792,
+              "n": 116,
+              "median": 0.33,
+              "slope": -0.195,
+              "p_value": 0.0
+            },
+            {
+              "start": 2025.875,
+              "end": 2025.875,
+              "n": 1,
+              "median": 9.42,
+              "slope": null,
+              "p_value": null
+            },
+            {
+              "start": 2025.958,
+              "end": 2026.042,
+              "n": 2,
+              "median": -0.08,
+              "slope": null,
+              "p_value": null
+            },
+            {
+              "start": 2026.125,
+              "end": 2026.542,
+              "n": 6,
+              "median": 5.92,
+              "slope": -23.81,
+              "p_value": 0.469
+            }
+          ]
+        },
+        "shapes": {
+          "corr_starlink_shape": 0.041,
+          "corr_linear_ramp": 0.0,
+          "corr_step_2019": -0.068
+        }
+      }
+    },
+    "coherence_power": [
+      {
+        "amp": 0.0,
+        "power": 0.005
+      },
+      {
+        "amp": 2.0,
+        "power": 0.3
+      },
+      {
+        "amp": 4.0,
+        "power": 0.555
+      },
+      {
+        "amp": 6.0,
+        "power": 0.64
+      },
+      {
+        "amp": 8.0,
+        "power": 0.71
+      },
+      {
+        "amp": 10.0,
+        "power": 0.77
+      },
+      {
+        "amp": 15.0,
+        "power": 0.9
+      },
+      {
+        "amp": 20.0,
+        "power": 1.0
+      }
+    ],
+    "equal_n_pooled": {
+      "n_min": 125,
+      "n_draws": 500,
+      "pooled_slope_median": 0.2608,
+      "pooled_slope_p05": 0.2243,
+      "pooled_slope_p95": 0.2915
+    },
+    "window_matched": {
+      "target": "HUMAIN",
+      "reference": "ALMATY",
+      "window": [
+        2015.458,
+        2026.542
+      ],
+      "n": 134,
+      "slope": 0.5455,
+      "p_value": 1e-05,
+      "corr_starlink": 0.505
+    }
+  },
+  "_merge": {
+    "retained_from_previous_run": [
+      "flank_line_slope_per_yr",
+      "flank_sign_flipped",
+      "flank_slope_bias_per_yr"
+    ],
+    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
+  }
 }

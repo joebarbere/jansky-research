@@ -1,31 +1,33 @@
 # Hand-authored arXiv metadata for papers/rfitrend — TRACKED IN GIT.
 #
 # arxiv-submission/ is a build artifact; this file is not. Only the abstract is overridden,
-# and only because the paper's own abstract is 2443 characters — over arXiv's ~1920-char
-# metadata limit. The paper itself is unchanged: this is the arXiv *metadata* abstract.
-# Trimming removed connective tissue and the closing "...are the contribution" summary; every
-# numeric result is preserved, checked mechanically against the source abstract.
+# and only because the paper's own abstract is over arXiv's ~1920-char metadata limit. The
+# paper itself is unchanged: this is the arXiv *metadata* abstract. Trimming removes
+# connective tissue only; numeric results AND claim-strength wording are preserved (the
+# round-10 referee found an earlier version of this file reinstating a retracted
+# "configuration-stable" description and dropping the no-attribution sentence — the check
+# must cover claim words, not only numbers).
 
 abstract: |
   The e-CALLISTO network has recorded 45--870 MHz dynamic spectra worldwide since 2002, an
   unintended long-baseline record of the radio-frequency-interference (RFI) environment. The
-  only published RFI-trend study on it is a two-epoch (2012 vs 2019) campaign finding a 2x
-  rise, stopping in 2019 -- the year Starlink deployment scaled. We mine the continuous
-  archive across the megaconstellation era. From the open FITS record we sample one spectrum
-  per station-month over 2012--2026 at 3 configuration-stable stations, reduced to a burst-
-  immune occupancy metric (a per-channel time median, so a solar burst or satellite pass does
-  not move it). Because e-CALLISTO log-power drifts with uncalibrated station gain -- a
-  common-mode systematic that would fake a trend -- the primary metric is self-normalizing:
-  the excess at the narrowband Starlink unintended-emission (UEM) lines (125/135/150/175 MHz)
-  over adjacent channels. That cancels common-mode gain and, unlike a fixed FM control,
-  survives the per-station RFI-avoidance notches that leave many instruments not observing the
-  FM band at all. Trends are compared to the public Starlink on-orbit count. The result is a
-  systematics-limited null with one single-station rise. Across 286 usable station-months the
-  two stations sampling UEM lines disagree in sign: HUMAIN's line excess (150, 175 MHz) rises
-  steeply and significantly (0.4482 per year, p=2x10^(-5), correlating with the Starlink count
-  at r=0.48), while ALMATY's (125, 135, 150 MHz) falls significantly (-0.1275 per year,
-  p=0.012). A genuine global megaconstellation signal should raise every station's UEM lines
-  together, so the sign disagreement (1\ rising, 1 falling; coherent=no) indicates per-station
-  and local-RFI effects dominate over any common Starlink signal, and the weakly positive
-  pooled slope (0.3055/yr, pooled Starlink correlation r=0.348) is a sample-size artifact of
-  whichever station dominates.
+  only published RFI-trend study on it is a two-epoch (2012 vs 2019) campaign finding
+  increased interference at the Spanish sites, stopping in 2019 -- the year Starlink
+  deployment scaled. We mine the continuous archive across the megaconstellation era: one
+  spectrum per station-month over 2012--2026 at 3 long-running stations, reduced to a
+  burst-immune occupancy metric (a per-channel time median). Because e-CALLISTO log-power
+  drifts with uncalibrated station gain, the primary metric is self-normalizing: the excess
+  at the narrowband Starlink unintended-emission (UEM) lines (125/135/150/175 MHz) over
+  adjacent channels, tested against the public Starlink on-orbit count. The result is a
+  systematics-limited null. The two stations sampling UEM lines disagree in sign, and
+  neither behaves like a constellation: HUMAIN's fitted rise (+0.45 [0.27, 0.57] per year)
+  is a staircase, not a trend -- single-month steps of -12 (2018.9) and +15 (2022.2)
+  separate plateaus within which no regime rises, and the downward step spans exactly the
+  0-to-1900-satellite deployment interval; ALMATY falls (-0.13 [-0.22, -0.02] per year), a
+  fall the committed flank-contamination arm reproduces quantitatively. The sign
+  disagreement (1 rising, 1 falling; coherent=no) is consistent with per-station and
+  local-RFI effects dominating, and the null carries its measured sensitivity: the
+  coherence criterion reaches 90% power only for a common rise of ~15 log-units, larger
+  than the largest excursion in the data. The positive pooled slope survives an equal-n
+  subsample (0.26/yr), so it is amplitude-dominated, not a count artifact. We therefore
+  claim no Starlink attribution.

@@ -273,3 +273,55 @@ but in no artifact.
 **Verdict: MAJOR REVISION.** The single change: report HUMAIN as a step function, not a trend
 — the null gets stronger, the systematics framing gets its sharpest example, and the flagged
 candidate is replaced by something the data support.
+
+**Status: RESOLVED (2026-08-26).** No network needed: every derived diagnostic was rebuilt from
+the committed per-station arrays (`scripts/rfitrend_real.py --recompute`, which now also routes
+ALL writes through `report.write_results` — the splice path is closed). Every referee number
+reproduced before the prose changed.
+
+1. **BLOCKER 1 — HUMAIN is reported as a staircase.** `step_analysis` (committed under
+   `derived`) finds the three single-month steps (+7.5 at 2017.208, −12.0 at 2018.875, +15.0
+   at 2022.208 — the referee's exact epochs) and four regimes in which NO slope rises (largest
+   within-regime slope −0.0, p = 0.77). The abstract, results, and the flagged-candidate
+   paragraph now describe plateaus separated by reconfiguration-like discontinuities, note the
+   downward step spans exactly the 0→1900-satellite interval, and retire "whose rise is real";
+   the follow-up recommendation now requires per-month file provenance first (the sampler
+   computes it; recording it is queued for the next real run).
+2. **BLOCKER 2 — prieto2020**: the bib entry is the real paper (Prieto, Bussons Gordo,
+   Rodríguez-Pacheco, Martínez, Sánchez, Russu, Monstein, Fernández; Sol. Phys. 295(2), 11;
+   DOI 10.1007/s11207-019-1577-5); the unverifiable "~2×" became "increased interference
+   levels"; module header and driver corrected; the in-text key renamed everywhere.
+3. **The null carries its measured sensitivity**: `coherence_power` (circular-shifted
+   residuals, the pipeline's own criterion, committed curve) gives power 0.005/0.30/0.56/0.64/
+   0.71/0.77/0.90/1.00 at A = 0…20; 90% power first at A = 15 log-units — larger than the
+   largest excursion in the data. The paper quotes the exclusion amplitude and "indicates …
+   dominate" became "is consistent with … dominating".
+4. **"Sample-size artifact" replaced by the measured reason**: `equal_n_pooled` (500 draws at
+   n=125) leaves the pooled slope at 0.261 [0.224, 0.292] — amplitude-dominated (HUMAIN ±13 vs
+   ALMATY ±2), stated as such in the abstract and results.
+5. **The splice is closed**: the driver writes through `preserve_live_results` (with `_merge`
+   bookkeeping), and the three flank keys are now legitimately part of every macro write's
+   deterministic synthetic block.
+6. **Intervals everywhere**: `trend_fit` carries the Theil–Sen 95% CI; HUMAIN +0.448 [0.267,
+   0.569], ALMATY −0.128 [−0.215, −0.023] quoted in table-adjacent prose.
+7. **The window confound is disclosed and closed**: ALMATY's retained window starts 2015.5 (vs
+   HUMAIN 2013.1); the committed mirror check (HUMAIN on ALMATY's window: +0.546, r = 0.505)
+   shows the truncation does not manufacture the disagreement.
+8. **The recover-a-known states the known**: truth slope 0.2382, recovery ratio 1.009; the
+   clean arms' r ≈ 1 is labelled by-construction; burst immunity is measured on the primary
+   metric (0.2382 vs 0.2406, macro'd); the flank sweep is committed with its crossover at
+   ≈0.8× the true rise and the flank_rise = 5.0 row reproducing ALMATY's measured pair
+   (−0.119/−0.036 vs −0.128/+0.041) — stated in the paper as the quantitative mechanism match.
+9. **The shape discriminant ships**: Starlink-shape r = 0.480 vs linear ramp 0.294 vs 2019.4
+   step 0.005, cited in the HUMAIN paragraph for what it is (the plateau ordering, not a
+   deployment curve).
+10. **arxiv.yaml**: "configuration-stable" → "long-running", the no-attribution sentence
+    restored, the stray backslash removed, and the file's own header now says the mechanical
+    check must cover claim words, not only numbers; the metadata abstract carries the staircase
+    result and the power statement.
+11. MINORs: the FM-notch claim is scoped to committed evidence (control_name = "low"); the
+    Starlink regressor's interpolation properties (nonzero from early 2019, clamped after
+    2026.0, hand-vendored rounded anchors) are stated in print; stale 137 MHz prose purged from
+    module + driver; the vacuous 137.05 test assertion replaced with one that can fail;
+    GLASGOW's retained-months line is unchanged but its empty line-set is already marked
+    "none" in the table.

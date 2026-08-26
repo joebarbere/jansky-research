@@ -64,10 +64,11 @@ def test_pick_control_band_prefers_fm_but_adapts_to_notches():
 
 
 def test_available_lines_drops_notched_lines():
-    # a grid that skips the 137 MHz region (like HUMAIN) keeps 150 + 175, drops 137
+    # a grid that skips the low-line region keeps 150 + 175, drops the low lines
     grid = np.concatenate([np.linspace(112, 123, 30), np.linspace(141, 200, 120)])
     lines = rf.available_lines(grid)
-    assert 137.05 not in lines and 150.0 in lines and 175.0 in lines
+    assert 125.0 not in lines and 135.0 not in lines  # the sparse grid genuinely drops them
+    assert 150.0 in lines and 175.0 in lines
     # a full grid keeps all three
     assert set(rf.available_lines(np.linspace(45, 870, 800))) == set(rf.UEM_LINES_MHZ)
 
@@ -238,3 +239,110 @@ def test_synthetic_metrics_report_the_flank_bias():
     assert m["flank_slope_bias_per_yr"] == pytest.approx(
         m["flank_line_slope_per_yr"] - m["line_excess_slope_per_yr"], abs=1e-3
     )
+
+
+def test_trend_fit_carries_its_interval():
+    rng = np.random.default_rng(0)
+    x = np.linspace(2013, 2026, 100)
+    y = 0.5 * x + rng.normal(0, 1.0, 100)
+    fit = rf.trend_fit(x, y)
+    assert fit["slope_lo"] < fit["slope"] < fit["slope_hi"]
+    assert fit["slope_lo"] < 0.5 < fit["slope_hi"]
+
+
+def test_step_analysis_tells_a_staircase_from_a_trend():
+    yr = 2013 + np.arange(160) / 12.0
+    stair = np.where(yr < 2018.9, 0.0, -12.0) + np.where(yr < 2022.2, 0.0, 15.0)
+    rng = np.random.default_rng(1)
+    stair = stair + rng.normal(0, 0.5, yr.size)
+    d = rf.step_analysis(yr, stair)
+    ats = sorted(s["at_year"] for s in d["steps"])
+    assert abs(ats[0] - 2018.9) < 0.15 and abs(ats[1] - 2022.2) < 0.15
+    # within regimes there is no significant rise
+    for seg in d["segments"]:
+        if seg["p_value"] is not None:
+            assert seg["p_value"] > 0.01 or seg["slope"] <= 0.2
+    # a genuine trend, by contrast, rises within its (arbitrary) segments
+    trend = 1.0 * (yr - yr.min()) + rng.normal(0, 0.3, yr.size)
+    dt = rf.step_analysis(yr, trend)
+    rising = [s for s in dt["segments"] if s["slope"] is not None and s["slope"] > 0.5]
+    assert len(rising) >= 2
+
+
+def _fake_per_station(slope_a=0.0, slope_b=0.0, n=150, seed=0):
+    rng = np.random.default_rng(seed)
+    yr = 2013 + np.arange(n) / 12.0
+    out = {}
+    for name, sl in (("A", slope_a), ("B", slope_b)):
+        lx = sl * (yr - yr.min()) + rng.normal(0, 1.0, n)
+        out[name] = {
+            "n_months": n,
+            "stable_lines": [150.0, 175.0],
+            "years": yr.tolist(),
+            "line_excess": lx.tolist(),
+            "line_excess_slope_per_yr": sl,
+            "line_excess_p": 0.5,
+        }
+    return out
+
+
+def test_coherence_power_rises_with_injected_amplitude():
+    ps = _fake_per_station()
+    curve = rf.coherence_power(ps, amps=(0.0, 20.0), n_trials=40)
+    p0 = next(r["power"] for r in curve if r["amp"] == 0.0)
+    p20 = next(r["power"] for r in curve if r["amp"] == 20.0)
+    assert p0 < 0.2  # near the criterion's false-positive rate on null series
+    assert p20 > 0.8  # a huge common signal is detected
+
+
+def test_equal_n_pooled_reports_quantiles():
+    ps = _fake_per_station(slope_a=1.0, slope_b=1.0)
+    ps["A"]["years"] = ps["A"]["years"][:100]
+    ps["A"]["line_excess"] = ps["A"]["line_excess"][:100]
+    eq = rf.equal_n_pooled(ps, n_draws=50)
+    assert eq["n_min"] == 100
+    assert eq["pooled_slope_p05"] <= eq["pooled_slope_median"] <= eq["pooled_slope_p95"]
+    assert eq["pooled_slope_median"] > 0.5  # a genuine common trend survives equal-n
+
+
+def test_regressor_shape_comparison_prefers_the_generating_shape():
+    yr = 2013 + np.arange(160) / 12.0
+    star_shaped = rf.starlink_count(yr) / rf.starlink_count(2026.5)
+    rng = np.random.default_rng(2)
+    v = 5.0 * star_shaped + rng.normal(0, 0.3, yr.size)
+    sh = rf.regressor_shape_comparison(yr, v)
+    assert sh["corr_starlink_shape"] > sh["corr_linear_ramp"]
+    assert sh["corr_starlink_shape"] > 0.9
+
+
+def test_window_matched_trend_restricts_the_span():
+    ps = _fake_per_station(slope_a=1.0, slope_b=0.0)
+    # B starts later: truncate its first 30 months
+    ps["B"]["years"] = ps["B"]["years"][30:]
+    ps["B"]["line_excess"] = ps["B"]["line_excess"][30:]
+    w = rf.window_matched_trend(ps, "A", "B")
+    assert w["n"] == 120
+    assert w["window"][0] > 2015.0
+    assert abs(w["slope"] - 1.0) < 0.3  # the trend survives the window restriction
+
+
+def test_synthetic_metrics_truths_and_sweep():
+    m = rf._synthetic_metrics()
+    # the recover-a-known now states the known and scores an amplitude ratio
+    assert abs(m["line_recovery_ratio"] - 1.0) < 0.1
+    assert abs(m["diff_recovery_ratio"] - 1.0) < 0.15
+    # burst immunity measured on the primary metric
+    assert abs(m["line_slope_burst_none"] - m["line_slope_burst_heavy"]) < 0.03
+    # the flank sweep crosses zero between 3 and 6, and flank_rise=5 is in it
+    sweep = {row["flank_rise"]: row["slope"] for row in m["flank_sweep"]}
+    assert sweep[0.0] > 0 and sweep[6.0] < 0
+    assert any(r["flank_rise"] == 5.0 for r in m["flank_sweep"])
+
+
+def test_derived_real_analyses_from_committed_shapes():
+    ps = _fake_per_station(slope_a=0.5, slope_b=-0.1)
+    d = rf.derived_real_analyses(ps)
+    assert set(d["stations"]) == {"A", "B"}
+    assert "slope_ci95" in d["stations"]["A"]
+    assert d["coherence_power"] and d["equal_n_pooled"]
+    assert d["window_matched"]["n"] > 0
