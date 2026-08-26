@@ -6,13 +6,13 @@ This driver samples one representative 15-min spectrum per station-month over 20
 each to a burst-immune, gain-cancelling occupancy metric, and trends the Starlink unintended-
 emission (UEM) band -- attributing any post-2019 rise to the public Starlink constellation count.
 
-PRIMARY metric = the narrowband UEM-line excess (`line_vs_adjacent`): the level at the 137/150/175
-MHz Starlink UEM lines over their adjacent clean channels. It is self-normalizing within the UEM
-band, so it cancels station gain drift AND survives the per-station RFI-avoidance notches that make
-a fixed FM control unusable at many stations (HUMAIN notches the FM band and the 137 MHz line
-entirely -- verified on real data). A station-adaptive band differential (UEM minus the best-sampled
-clean control) is a cross-check. Config-stability is enforced: a station must keep the SAME sampled
-UEM lines across its retained months, else the differing months are dropped.
+PRIMARY metric = the narrowband UEM-line excess (`line_vs_adjacent`): the level at the
+125/135/150/175 MHz Starlink UEM lines over their adjacent clean channels. It is self-normalizing
+within the UEM band, so it cancels station gain drift AND survives the per-station RFI-avoidance
+notches that make a fixed FM control unusable at many stations (HUMAIN's committed control_name is
+"low" because it samples no FM channels). A station-adaptive band differential (UEM minus the
+best-sampled clean control) is a cross-check. Config-stability is enforced: a station must keep the
+SAME sampled UEM lines across its retained months, else the differing months are dropped.
 
 Nothing is downloaded in bulk: each ~100 kB gzipped FITS is fetched, reduced in memory, and freed.
 
@@ -43,16 +43,32 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--start", type=int, default=2012)
     p.add_argument("--end", type=int, default=2026)
     p.add_argument("--out", default=str(REPO))
+    p.add_argument(
+        "--recompute",
+        action="store_true",
+        help="no network: rebuild every derived diagnostic from the committed per-station arrays",
+    )
     args = p.parse_args(argv)
 
     import json
 
-    metrics = rf._real_trend(
-        args.out, stations=tuple(args.stations), start_year=args.start, end_year=args.end
-    )
     op = Path(args.out)
+    if args.recompute:
+        committed = json.loads((op / "results" / "rfitrend_metrics.json").read_text())
+        per_station = committed["per_station"]
+        metrics = rf.summarize_stations(per_station)
+        metrics["derived"] = rf.derived_real_analyses(per_station)
+    else:
+        metrics = rf._real_trend(
+            args.out, stations=tuple(args.stations), start_year=args.start, end_year=args.end
+        )
+        metrics["derived"] = rf.derived_real_analyses(metrics["per_station"])
     (op / "results").mkdir(parents=True, exist_ok=True)
-    (op / "results" / "rfitrend_metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+    # through the merge guard, never a bare write: the round-10 referee found three synthetic
+    # keys spliced into this file by a direct write_text that bypassed preserve_live_results
+    from jansky_research.report import write_results
+
+    write_results(metrics, op / "results" / "rfitrend_metrics.json")
     rf._figure(metrics, op / "papers" / "rfitrend" / "figures")
     rf._write_macros(metrics, op / "papers" / "rfitrend" / "generated" / "macros.tex")
     print(json.dumps({k: v for k, v in metrics.items() if k != "per_station"}, indent=2))

@@ -1,8 +1,10 @@
 """e-Callisto as an accidental 15-year RFI observatory: the megaconstellation trend (plan 54, F17).
 
 The e-Callisto solar-spectrograph network has recorded 45--870 MHz dynamic spectra worldwide since
-2002. The only published RFI-trend study on it (Prieto/Perez+2020, Sol. Phys. 295:11) is a
-two-epoch 2012-vs-2019 campaign finding a ~2x interference rise --- and it stops in 2019, the year
+2002. The only published RFI-trend study on it (Prieto et al. 2020, Sol. Phys. 295, 11 --- with
+Bussons Gordo, Rodriguez-Pacheco et al.; an earlier draft mis-attributed this to a "Perez-Torres"
+who is not an author) is a two-epoch campaign finding increased interference levels between 2012
+and 2019 at the Spanish sites --- and it stops in 2019, the year
 Starlink deployment scaled. Nobody has mined the *continuous* archive across the megaconstellation
 era. This slice does: a robust, solar-burst-immune occupancy metric over configuration-stable
 stations 2012--2026, trended in the Starlink unintended-emission (UEM) band and attributed to the
@@ -90,8 +92,9 @@ def occupancy_metric(data: np.ndarray, freqs: np.ndarray, band_mhz: tuple[float,
 
 
 # Candidate control bands in preference order (name, lo, hi). FM is the cleanest fixed-transmitter
-# control, but MANY e-Callisto stations notch out the RFI-heavy FM band entirely (verified on HUMAIN
-# focus-59: a hardware gap 84->112 MHz, zero FM channels) -- so the control is picked per station
+# control, but MANY e-Callisto stations notch out the RFI-heavy FM band entirely (HUMAIN samples no
+# FM channels: its committed control_name is "low"; the 84->112 MHz gap figure seen during
+# smoke-testing is unlogged and is not committed evidence) -- so the control is picked per station
 # from whichever candidate the instrument actually samples. All lie OUTSIDE the 110-170 UEM window.
 _CONTROL_CANDIDATES = (
     ("FM", 88.0, 108.0),  # FM broadcast -- cleanest, but often notched out
@@ -163,11 +166,12 @@ def line_vs_adjacent(
 ) -> float:
     """Excess level at the narrowband Starlink UEM lines over their adjacent (clean) channels.
 
-    The cleanest Starlink-specific attribution: a real UEM line at 137/150/175 MHz sits ABOVE the
+    The cleanest Starlink-specific attribution: a real UEM line at 125/135/150/175 MHz sits ABOVE the
     band around it, whereas station gain / broadband RFI raise line and neighbourhood together. For
     each line we take (level within +/-``half_width`` MHz) minus (level in the flanking channels)
-    and average. The 137 MHz line carries an ORBCOMM/weather-sat confound (reported, not trusted
-    alone). NaN if none of the lines is in coverage.
+    and average. An earlier draft carried 137.05 MHz here (a transcription of GRAVES 143.05);
+    the current line list is :data:`UEM_LINES_MHZ`, and the low lines are reported, not trusted
+    alone. NaN if none of the lines is in coverage.
     """
     f = np.asarray(freqs, float)
     d = np.asarray(data, float)
@@ -203,10 +207,12 @@ def trend_fit(x: np.ndarray, y: np.ndarray) -> dict:
             "n": int(x.size),
             "total_change": float("nan"),
         }
-    slope, intercept, _, _ = _stats.theilslopes(y, x)
+    slope, intercept, lo, hi = _stats.theilslopes(y, x)
     tau = _stats.kendalltau(x, y)
     return {
         "slope": float(slope),
+        "slope_lo": float(lo),
+        "slope_hi": float(hi),
         "p_value": float(tau.pvalue),
         "kendall_tau": float(tau.statistic),
         "n": int(x.size),
@@ -214,8 +220,206 @@ def trend_fit(x: np.ndarray, y: np.ndarray) -> dict:
     }
 
 
+def step_analysis(
+    years: np.ndarray, values: np.ndarray, *, n_steps: int = 2, min_seg: int = 6
+) -> dict:
+    """Is a series a trend or a staircase? Find the largest single-interval jumps and test within.
+
+    The round-10 referee showed HUMAIN's fitted "+0.45/yr rise" is the difference between two
+    plateaus separated by single-month discontinuities larger than the whole fitted change --- a
+    signature of receiver reconfiguration, not of a growing constellation. This locates the
+    ``n_steps`` largest |month-to-month jumps|, splits the series into regimes at them, and reports
+    each regime's median and Theil--Sen slope/p: a genuine trend rises WITHIN regimes; a staircase
+    does not. Segments shorter than ``min_seg`` months are reported but their fits are NaN.
+    """
+    yr = np.asarray(years, float)
+    v = np.asarray(values, float)
+    good = np.isfinite(yr) & np.isfinite(v)
+    yr, v = yr[good], v[good]
+    order = np.argsort(yr)
+    yr, v = yr[order], v[order]
+    if yr.size < 2 * min_seg:
+        return {"steps": [], "segments": []}
+    jumps = np.abs(np.diff(v))
+    idx = np.argsort(jumps)[::-1][:n_steps]
+    idx = np.sort(idx)
+    steps = [
+        {
+            "at_year": round(float(yr[i + 1]), 3),
+            "delta": round(float(v[i + 1] - v[i]), 2),
+        }
+        for i in idx
+    ]
+    bounds = [0, *[int(i) + 1 for i in idx], yr.size]
+    segments = []
+    for a, b in zip(bounds[:-1], bounds[1:], strict=False):
+        seg_yr, seg_v = yr[a:b], v[a:b]
+        fit = trend_fit(seg_yr, seg_v) if seg_yr.size >= min_seg else {}
+        segments.append(
+            {
+                "start": round(float(seg_yr[0]), 3),
+                "end": round(float(seg_yr[-1]), 3),
+                "n": int(seg_yr.size),
+                "median": round(float(np.median(seg_v)), 2),
+                "slope": round(fit["slope"], 3) if fit.get("slope") is not None else None,
+                "p_value": round(fit["p_value"], 3) if fit.get("p_value") is not None else None,
+            }
+        )
+    return {"steps": steps, "segments": segments}
+
+
+def coherence_power(
+    per_station: dict,
+    *,
+    amps: tuple[float, ...] = (0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 15.0, 20.0),
+    n_trials: int = 200,
+    seed: int = 0,
+) -> list[dict]:
+    """Power of the paper's own coherence criterion against an injected COMMON Starlink-shaped rise.
+
+    "No coherent rise" divides by sensitivity (the frblens lesson). For each amplitude ``A`` (total
+    log-units at the final Starlink count): detrend each line-sampling station's committed series,
+    circularly shift its residuals (preserving the real autocorrelation and step structure), add
+    ``A``-scaled Starlink-shaped ramps to BOTH stations, and apply the same rule
+    ``summarize_stations`` uses --- both stations significant (Kendall p<0.05), both rising, pooled
+    Starlink correlation > 0.3. Reports P(coherent_rise) per amplitude. Deterministic.
+    """
+    rng = np.random.default_rng(seed)
+    series = []
+    for d in per_station.values():
+        if not d.get("stable_lines"):
+            continue
+        yr = np.asarray(d.get("years", []), float)
+        lx = np.asarray(d.get("line_excess", []), float)
+        g = np.isfinite(yr) & np.isfinite(lx)
+        yr, lx = yr[g], lx[g]
+        if yr.size < 10:
+            continue
+        fit = trend_fit(yr, lx)
+        resid = lx - fit["slope"] * (yr - yr.mean())
+        resid = resid - np.median(resid)
+        series.append((yr, resid))
+    if len(series) < 2:
+        return []
+    smax = float(starlink_count(2026.5))
+    out = []
+    for a in amps:
+        hits = 0
+        for _ in range(n_trials):
+            slopes, ps = [], []
+            pooled_y: list[float] = []
+            pooled_lx: list[float] = []
+            for yr, resid in series:
+                shift = int(rng.integers(0, resid.size))
+                inj = np.roll(resid, shift) + a * starlink_count(yr) / smax
+                fit = trend_fit(yr, inj)
+                slopes.append(fit["slope"])
+                ps.append(fit["p_value"])
+                pooled_y.extend(yr)
+                pooled_lx.extend(inj)
+            py = np.asarray(pooled_y)
+            plx = np.asarray(pooled_lx)
+            pooled_corr = float(np.corrcoef(starlink_count(py), plx)[0, 1])
+            sig_pos = [s for s, p in zip(slopes, ps, strict=True) if p < 0.05 and s > 0]
+            sig_neg = [s for s, p in zip(slopes, ps, strict=True) if p < 0.05 and s < 0]
+            if len(sig_pos) >= 2 and not sig_neg and pooled_corr > 0.3:
+                hits += 1
+        out.append({"amp": a, "power": round(hits / n_trials, 3)})
+    return out
+
+
+def equal_n_pooled(per_station: dict, *, n_draws: int = 500, seed: int = 0) -> dict:
+    """Does the pooled slope survive equalising the station month counts?
+
+    The abstract called the positive pooled slope "a sample-size artifact of whichever station
+    dominates". If that were a COUNT artifact, subsampling the larger station to the smaller's
+    month count would kill it; measured, it does not --- the pooled slope is dominated by one
+    station's AMPLITUDE, which is a different (and correct) reason to distrust it.
+    """
+    rng = np.random.default_rng(seed)
+    keyed = [
+        (np.asarray(d["years"], float), np.asarray(d["line_excess"], float))
+        for d in per_station.values()
+        if d.get("stable_lines")
+    ]
+    keyed = [(y[np.isfinite(l_)], l_[np.isfinite(l_)]) for y, l_ in keyed]
+    keyed = [(y, l_) for y, l_ in keyed if y.size >= 10]
+    if len(keyed) < 2:
+        return {}
+    n_min = min(y.size for y, _ in keyed)
+    slopes = []
+    for _ in range(n_draws):
+        ys, ls = [], []
+        for y, l_ in keyed:
+            if y.size > n_min:
+                pick = rng.choice(y.size, n_min, replace=False)
+                ys.append(y[pick])
+                ls.append(l_[pick])
+            else:
+                ys.append(y)
+                ls.append(l_)
+        fit = trend_fit(np.concatenate(ys), np.concatenate(ls))
+        slopes.append(fit["slope"])
+    arr = np.asarray(slopes, float)
+    return {
+        "n_min": int(n_min),
+        "n_draws": n_draws,
+        "pooled_slope_median": round(float(np.median(arr)), 4),
+        "pooled_slope_p05": round(float(np.percentile(arr, 5)), 4),
+        "pooled_slope_p95": round(float(np.percentile(arr, 95)), 4),
+    }
+
+
+def regressor_shape_comparison(years: np.ndarray, values: np.ndarray) -> dict:
+    """Correlation of a series with three shapes: the Starlink curve, a linear ramp, a 2019.4 step.
+
+    The only quantitative discriminant available for a single-station candidate: a genuine
+    constellation signal should prefer the Starlink shape over a generic drift or a single step.
+    """
+    yr = np.asarray(years, float)
+    v = np.asarray(values, float)
+    g = np.isfinite(yr) & np.isfinite(v)
+    yr, v = yr[g], v[g]
+    if yr.size < 10:
+        return {}
+
+    def _c(shape: np.ndarray) -> float:
+        return round(float(np.corrcoef(shape, v)[0, 1]), 3)
+
+    return {
+        "corr_starlink_shape": _c(starlink_count(yr)),
+        "corr_linear_ramp": _c(yr),
+        "corr_step_2019": _c((yr >= 2019.4).astype(float)),
+    }
+
+
+def window_matched_trend(per_station: dict, target: str, reference: str) -> dict:
+    """Fit ``target``'s series restricted to ``reference``'s retained window (span-confound check)."""
+    t = per_station.get(target, {})
+    r = per_station.get(reference, {})
+    ty = np.asarray(t.get("years", []), float)
+    tl = np.asarray(t.get("line_excess", []), float)
+    ry = np.asarray(r.get("years", []), float)
+    if ty.size < 10 or ry.size < 10:
+        return {}
+    lo, hi = float(np.nanmin(ry)), float(np.nanmax(ry))
+    m = (ty >= lo) & (ty <= hi) & np.isfinite(tl)
+    fit = trend_fit(ty[m], tl[m])
+    star = starlink_count(ty[m])
+    corr = float(np.corrcoef(star, tl[m])[0, 1]) if m.sum() > 3 else float("nan")
+    return {
+        "window": [round(lo, 3), round(hi, 3)],
+        "n": int(m.sum()),
+        "slope": round(fit["slope"], 4),
+        "p_value": round(fit["p_value"], 5),
+        "corr_starlink": round(corr, 3),
+    }
+
+
 # Public Starlink cumulative on-orbit count by year-start (planet4589 / J. McDowell statistics,
-# rounded); the attribution regressor -- no Space-Track login needed. Pre-2019 = 0.
+# rounded); the attribution regressor -- no Space-Track login needed. NOTE the interpolation is
+# nonzero from 2019.1 (linear between the 2019.0 and 2019.5 anchors) and CLAMPS at the last
+# anchor for months past 2026.0 -- both properties the paper states rather than papering over.
 _STARLINK_BY_YEAR = {
     2015: 0,
     2019.0: 0,  # first operational batch launched 2019.4 -> zero at year-start
@@ -341,6 +545,27 @@ def _synthetic_metrics() -> dict:
     sf = synthetic_month_stack(flank_rise=6.0)
     flank_line = np.array([line_vs_adjacent(m["data"], m["freqs"]) for m in sf["months"]])
     flank_tr = trend_fit(sf["years"], flank_line)
+    # the KNOWNS this recover-a-known previously never stated: the Theil-Sen slope of the
+    # injected series itself, so the recovery is scored as an amplitude ratio, not a detection
+    truth_line = trend_fit(s["years"], 4.0 * s["star_frac"])["slope"]
+    truth_diff = trend_fit(s["years"], 3.0 * s["star_frac"])["slope"]
+    # the flank sweep: where does the sign cross, and which flank_rise reproduces ALMATY?
+    sweep = [{"flank_rise": 0.0, "slope": round(line_tr["slope"], 4), "corr": round(line_corr, 3)}]
+    for fr in (2.0, 3.0, 3.5, 5.0, 6.0):
+        st = synthetic_month_stack(flank_rise=fr)
+        lx = np.array([line_vs_adjacent(m["data"], m["freqs"]) for m in st["months"]])
+        fitf = trend_fit(st["years"], lx)
+        cf = float(np.corrcoef(st["star_frac"], lx)[0, 1])
+        sweep.append({"flank_rise": fr, "slope": round(fitf["slope"], 4), "corr": round(cf, 3)})
+    # burst immunity on the PRIMARY metric, measured, not asserted
+    s00 = synthetic_month_stack(burst_frac=0.0)
+    s90 = synthetic_month_stack(burst_frac=0.9)
+    sl00 = trend_fit(
+        s00["years"], np.array([line_vs_adjacent(m["data"], m["freqs"]) for m in s00["months"]])
+    )["slope"]
+    sl90 = trend_fit(
+        s90["years"], np.array([line_vs_adjacent(m["data"], m["freqs"]) for m in s90["months"]])
+    )["slope"]
     return {
         "source": "synthetic monthly stack (injected UEM trend + gain drift + solar bursts)",
         "is_real": False,
@@ -357,11 +582,18 @@ def _synthetic_metrics() -> dict:
         "recovered_uem_trend": bool(tr["p_value"] < 0.01 and corr > 0.8),
         "recovered_line_trend": bool(line_tr["p_value"] < 0.01 and line_corr > 0.8),
         "control_flat": bool(ctrl_tr["p_value"] > 0.05),
+        "truth_line_slope_per_yr": round(truth_line, 4),
+        "truth_diff_slope_per_yr": round(truth_diff, 4),
+        "line_recovery_ratio": round(line_tr["slope"] / truth_line, 3),
+        "diff_recovery_ratio": round(tr["slope"] / truth_diff, 3),
+        "line_slope_burst_none": round(sl00, 4),
+        "line_slope_burst_heavy": round(sl90, 4),
         # Flank-contamination arm: the recovered slope under flank RFI, and its bias against the
         # clean arm's slope. A sign flip here is the ALMATY mechanism reproduced end-to-end.
         "flank_line_slope_per_yr": round(flank_tr["slope"], 4),
         "flank_slope_bias_per_yr": round(flank_tr["slope"] - line_tr["slope"], 4),
         "flank_sign_flipped": bool(np.sign(flank_tr["slope"]) != np.sign(line_tr["slope"])),
+        "flank_sweep": sweep,
     }
 
 
@@ -542,6 +774,39 @@ def summarize_stations(per_station: dict) -> dict:
     }
 
 
+def derived_real_analyses(per_station: dict) -> dict:
+    """Every derived diagnostic computable OFFLINE from the committed per-station arrays.
+
+    This is what lets the round-10 findings be fixed without re-streaming the archive: step
+    analysis and shape comparison per line station, Theil--Sen slope intervals, the coherence
+    power curve, the equal-n pooled test, and the window-matched mirror check.
+    """
+    out: dict = {"stations": {}}
+    line_sts = []
+    for st, d in per_station.items():
+        if not (d.get("stable_lines") and d.get("years")):
+            continue
+        line_sts.append(st)
+        yr = np.asarray(d["years"], float)
+        lx = np.asarray(d["line_excess"], float)
+        fit = trend_fit(yr, lx)
+        out["stations"][st] = {
+            "slope_ci95": [round(fit["slope_lo"], 4), round(fit["slope_hi"], 4)],
+            "steps": step_analysis(yr, lx, n_steps=3),
+            "shapes": regressor_shape_comparison(yr, lx),
+        }
+    out["coherence_power"] = coherence_power(per_station)
+    out["equal_n_pooled"] = equal_n_pooled(per_station)
+    if len(line_sts) == 2:
+        a, b = sorted(line_sts, key=lambda s: len(per_station[s].get("years", [])), reverse=True)
+        out["window_matched"] = {
+            "target": a,
+            "reference": b,
+            **window_matched_trend(per_station, a, b),
+        }
+    return out
+
+
 def _figure(m: dict, out_dir: str | Path) -> None:
     from .report import _agg
 
@@ -668,6 +933,56 @@ def _write_macros(m: dict, path: str | Path) -> None:
             # found none" from "this number is missing".
             rf"\newcommand{{\rfReal{name}Lines}}{{{', '.join(f'{x:g}' for x in sl) or 'none'}}}"
         )
+        dstat = ((real.get("derived") or {}).get("stations") or {}).get(st, {})
+        ci = dstat.get("slope_ci95") or [None, None]
+        lines.append(rf"\newcommand{{\rfReal{name}SlopeLo}}{{{g({'v': ci[0]}, 'v')}}}")
+        lines.append(rf"\newcommand{{\rfReal{name}SlopeHi}}{{{g({'v': ci[1]}, 'v')}}}")
+
+    # the derived diagnostics (round-10): steps, shapes, power, equal-n, window mirror
+    der = real.get("derived") or {}
+    hum = (der.get("stations") or {}).get("HUMAIN", {})
+    steps = (hum.get("steps") or {}).get("steps") or [{}, {}]
+    segs = (hum.get("steps") or {}).get("segments") or []
+    seg_slopes = [(s.get("slope"), s.get("p_value")) for s in segs if s.get("slope") is not None]
+    max_seg = max(seg_slopes, key=lambda t: t[0]) if seg_slopes else (None, None)
+    shapes = hum.get("shapes") or {}
+    power = {row["amp"]: row["power"] for row in der.get("coherence_power") or []}
+    amp90 = next(
+        (row["amp"] for row in der.get("coherence_power") or [] if row["power"] >= 0.9), None
+    )
+    eq = der.get("equal_n_pooled") or {}
+    win = der.get("window_matched") or {}
+    sweep = syn.get("flank_sweep") or []
+    cross = next((row["flank_rise"] for row in sweep if row["slope"] < 0), None)
+    at5: dict = next((row for row in sweep if row["flank_rise"] == 5.0), {})
+    lines += [
+        rf"\newcommand{{\rfRealHumStepOneYr}}{{{g(steps[0] if steps else {}, 'at_year')}}}",
+        rf"\newcommand{{\rfRealHumStepOneDelta}}{{{g(steps[0] if steps else {}, 'delta')}}}",
+        rf"\newcommand{{\rfRealHumStepTwoYr}}{{{g(steps[1] if len(steps) > 1 else {}, 'at_year')}}}",
+        rf"\newcommand{{\rfRealHumStepTwoDelta}}{{{g(steps[1] if len(steps) > 1 else {}, 'delta')}}}",
+        rf"\newcommand{{\rfRealHumStepThreeYr}}{{{g(steps[2] if len(steps) > 2 else {}, 'at_year')}}}",
+        rf"\newcommand{{\rfRealHumStepThreeDelta}}{{{g(steps[2] if len(steps) > 2 else {}, 'delta')}}}",
+        rf"\newcommand{{\rfRealHumMaxRegimeSlope}}{{{g({'v': max_seg[0]}, 'v')}}}",
+        rf"\newcommand{{\rfRealHumMaxRegimeP}}{{{g({'v': max_seg[1]}, 'v')}}}",
+        rf"\newcommand{{\rfRealHumShapeStar}}{{{g(shapes, 'corr_starlink_shape')}}}",
+        rf"\newcommand{{\rfRealHumShapeRamp}}{{{g(shapes, 'corr_linear_ramp')}}}",
+        rf"\newcommand{{\rfRealHumShapeStep}}{{{g(shapes, 'corr_step_2019')}}}",
+        rf"\newcommand{{\rfRealPowerAtSix}}{{{g({'v': power.get(6.0)}, 'v')}}}",
+        rf"\newcommand{{\rfRealPowerAtTwenty}}{{{g({'v': power.get(20.0)}, 'v')}}}",
+        rf"\newcommand{{\rfRealAmpNinety}}{{{g({'v': amp90}, 'v')}}}",
+        rf"\newcommand{{\rfRealEqualNSlope}}{{{g(eq, 'pooled_slope_median')}}}",
+        rf"\newcommand{{\rfRealEqualNLo}}{{{g(eq, 'pooled_slope_p05')}}}",
+        rf"\newcommand{{\rfRealEqualNHi}}{{{g(eq, 'pooled_slope_p95')}}}",
+        rf"\newcommand{{\rfRealWinSlope}}{{{g(win, 'slope')}}}",
+        rf"\newcommand{{\rfRealWinCorr}}{{{g(win, 'corr_starlink')}}}",
+        rf"\newcommand{{\rfSynTruthLineSlope}}{{{g(syn, 'truth_line_slope_per_yr')}}}",
+        rf"\newcommand{{\rfSynLineRecovery}}{{{g(syn, 'line_recovery_ratio')}}}",
+        rf"\newcommand{{\rfSynBurstNone}}{{{g(syn, 'line_slope_burst_none')}}}",
+        rf"\newcommand{{\rfSynBurstHeavy}}{{{g(syn, 'line_slope_burst_heavy')}}}",
+        rf"\newcommand{{\rfSynFlankCross}}{{{g({'v': cross}, 'v')}}}",
+        rf"\newcommand{{\rfSynFlankAtFiveSlope}}{{{g(at5, 'slope')}}}",
+        rf"\newcommand{{\rfSynFlankAtFiveCorr}}{{{g(at5, 'corr')}}}",
+    ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and
