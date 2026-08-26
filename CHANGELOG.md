@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-08-26
+
 ### Changed
 - **Style re-conversion batch 4 (final): rmsky, swaves, solarbursts, windwaves, stokesv,
   ppdot, pulsarspec, driftsearch, ecallisto_pipeline, vlbi.** Hand-converted; every one is
