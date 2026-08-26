@@ -30,12 +30,12 @@ cannot test: with confirmation linear in coverage the recovery ($r=\ecsSynPearso
 $\ecsSynSlope$ over \ecsSynNperiods\ months) is guaranteed by construction and checks only the
 arithmetic; under a station history shaped like the real network's growth the correction genuinely
 rescues a broken raw correlation ($r=\ecsSynGrowthRawPearson\to\ecsSynGrowthPearson$); and under
-a \emph{saturating} confirmation --- the shape the pipeline's fixed two-station threshold produces
---- the estimator measurably fails ($r=\ecsSynSatPearson$, with a spurious coverage
+a saturating confirmation (the shape the pipeline's fixed two-station threshold produces)
+the estimator measurably fails ($r=\ecsSynSatPearson$, with a spurious coverage
 anti-correlation of $\ecsSynSatCovCorr$), so the validation can now return a failing answer. This
 is a methods-and-tooling contribution. An attempted 168-day real ingest is reported as an audited
-ingest result --- \ecsRealNdaysIngested\ days ingested, \ecsRealNdaysFailed\ silently throttled
-with data present in the archive --- which is the concrete demonstration that the real multi-cycle
+ingest result (\ecsRealNdaysIngested\ days ingested, \ecsRealNdaysFailed\ silently throttled
+with data present in the archive), which is the concrete demonstration that the real multi-cycle
 census is an ingest-infrastructure task, not a method gap.
 \end{abstract}
 
@@ -72,18 +72,18 @@ occurrence rate is
 \label{eq:rate}
 \end{equation}
 with periods of zero coverage left undefined rather than counted as zero, and periods where the
-ingest failed (files listed by the archive but none retrieved) recorded as missing, never as zero
---- the distinction whose absence corrupted an earlier version of this paper's real leg
-(Section~\ref{sec:disc}). In this paper $C$ is the number of stations \emph{successfully
-ingested} in the sampled window; where retrieval is incomplete this undercounts the active network,
+ingest failed (files listed by the archive but none retrieved) recorded as missing, never as zero,
+the distinction whose absence corrupted an earlier version of this paper's real leg
+(Section~\ref{sec:disc}). Here $C$ is the number of stations successfully
+ingested in the sampled window; where retrieval is incomplete this undercounts the active network,
 which inflates the rate, so the per-period listed/fetched provenance is committed alongside every
 census row. Equation~(\ref{eq:rate}) is
-the minimal correction: \emph{if} a burst's confirmation probability scales linearly with how many
+the minimal correction: if a burst's confirmation probability scales linearly with how many
 stations are watching, then $N_\mathrm{events}\propto R\,C$ for an underlying rate $R$, and
 dividing by $C$ returns an estimator of $R$ that is comparable across epochs with different network
-sizes. That linearity is an assumption, not a fact --- the upstream pipeline confirms an event at
+sizes. That linearity is an assumption, not a fact: the upstream pipeline confirms an event at
 $\geq$2 coincident stations, a fixed threshold under which confirmation probability
-\emph{saturates} with coverage --- and the validation below measures what happens when it is
+saturates with coverage, and the validation below measures what happens when it is
 wrong. We then correlate
 the corrected rate against the SILSO monthly sunspot number \citep{clette2014,silso2015}, reporting the
 Pearson $r$ (linear association), the Spearman $\rho$ (rank association, robust to a non-linear
@@ -94,28 +94,28 @@ series is parsed directly from the public SILSO CSV.
 \section{Validation: three arms, one of which can fail}
 To be explicit about what is real in this section: every event count is synthetic, generated from a
 model, and the arms below state individually what each one is capable of testing. (The SILSO series
-is real data, but it enters the \emph{real} leg of Section~\ref{sec:disc}, not this validation,
+is real data, but it enters the real leg of Section~\ref{sec:disc}, not this validation,
 which uses a synthetic activity driver so the ground truth is known.) We generate a realistic
-monthly sunspot series --- a raised, fast-rise/slow-decay cycle plus noise --- and, for each month
+monthly sunspot series (a raised, fast-rise/slow-decay cycle plus noise) and, for each month
 with activity $S$ and station coverage $C$, draw the confirmed-event count from a Poisson
 distribution with mean $k\,S\,C_\mathrm{eff}$, with $k=\ecsSynKtrue$.
 
 \paragraph{The linear arm is correct by construction, and we say so.} With
-$C_\mathrm{eff}=C$ --- the same linearity Equation~(\ref{eq:rate}) assumes --- the corrected rate
+$C_\mathrm{eff}=C$, the same linearity Equation~(\ref{eq:rate}) assumes, the corrected rate
 has expectation $k\,S$ identically, so recovery cannot fail except through an arithmetic bug or
 Poisson noise. Over \ecsSynNperiods\ months (\ecsSynNevents\ events) it does not: Pearson
 $r=\ecsSynPearson$, Spearman $\rho=\ecsSynSpearman$, fitted slope $\ecsSynSlope$ against the
 injected $\ecsSynKtrue$ (Figure~\ref{fig:census}); over 30 independent realizations the slope is
 $\ecsSynSlopeMean\pm\ecsSynSlopeSD$, so the single-seed value is not an outlier. This arm
-validates the \emph{implementation}, not the statistic. Two honesty companions are committed with
-it: on this stationary coverage history the \emph{uncorrected} count already correlates with
+validates the implementation, not the statistic. Two honesty companions are committed with
+it: on this stationary coverage history the uncorrected count already correlates with
 activity at $r=\ecsSynRawPearson$ (the correction buys little where coverage barely varies), and
 the corrected rate retains a residual coverage correlation of $\ecsSynCovCorr$.
 
 \paragraph{The growth arm shows what the correction is for.} Under a station history shaped like
 the real network's growth (2 to 60 stations over the span), the raw count conflates activity with
 network size and correlates with the driver at only $r=\ecsSynGrowthRawPearson$; the corrected
-rate recovers $r=\ecsSynGrowthPearson$. This --- not the stationary arm --- is the demonstration
+rate recovers $r=\ecsSynGrowthPearson$. This, not the stationary arm, is the demonstration
 that the correction rescues a genuinely broken raw census.
 
 \paragraph{The misspecification arm can fail, and does.} The upstream pipeline confirms an event
@@ -123,8 +123,8 @@ at a fixed $\geq$2-station coincidence, so real confirmation probability saturat
 rather than growing linearly. Injecting that shape
 ($C_\mathrm{eff}=c_{1/2}(1-e^{-C/c_{1/2}})$) under the same growth history, the $N/C$ estimator
 over-corrects: the recovery degrades to $r=\ecsSynSatPearson$ and the corrected rate acquires a
-spurious \emph{anti}-correlation with coverage of $\ecsSynSatCovCorr$. This is the arm that keeps
-the validation honest --- it measures the failure mode of the correction's own assumption, and its
+spurious anti-correlation with coverage of $\ecsSynSatCovCorr$. This is the arm that keeps
+the validation honest: it measures the failure mode of the correction's own assumption, and its
 residual coverage correlation is the committed diagnostic a real census must report before its
 rates are believed.
 
@@ -150,7 +150,7 @@ that precedes this:
 \begin{itemize}
 \item \textbf{The validation event stream is synthetic.} The monthly event counts in
 Section~3 are drawn from a model, not measured; the linear arm is correct by construction and is
-labelled as such. The present work validates the implementation and measures the correction's
+labelled as such. This analysis validates the implementation and measures the correction's
 failure mode; it does not report a measured solar-cycle correlation.
 \item \textbf{The attempted real ingest is reported as an audited failure, and the failure is
 the point.} An earlier version of this paper described ``168 sampled days''. An audit of the
@@ -159,11 +159,11 @@ ingest succeeded on only \ecsRealNdaysIngested\ of the \ecsRealNdaysAttempted\ a
 (\ecsRealSpanStart\ to \ecsRealSpanEnd); on the other \ecsRealNdaysFailed\ days the archive
 lists data for tens of stations but the per-file fetch pattern was throttled and every failure was
 silently recorded as zero coverage. The ingested days yielded \ecsRealNevents\ confirmed events on
-\ecsRealNdaysWithEvents\ days (at a \ecsRealTolS~s coincidence tolerance --- twice the 60~s the
+\ecsRealNdaysWithEvents\ days (at a \ecsRealTolS~s coincidence tolerance, twice the 60~s the
 pipeline paper publishes, recorded here for that reason); we quote no correlation coefficient for
 them, because a statistic that is an exact function of which two days host the events is not a
 measurement. Producing the real multi-cycle census therefore requires the scheduled, backfilling
-Airflow ingest built for exactly this --- an infrastructure task the audited failure demonstrates
+Airflow ingest built for exactly this, an infrastructure task the audited failure demonstrates
 concretely, not a method gap.
 \item \textbf{Type~III only.} The underlying detector targets fast negative-drift ridges; a type~II
 census would need a second, slower-drift template.
@@ -174,7 +174,7 @@ actually produces, $N/C$ over-corrects (recovery $r=\ecsSynSatPearson$, coverage
 $\ecsSynSatCovCorr$). A real census must therefore report its residual rate--coverage correlation,
 and a fuller treatment would model the confirmation probability directly.
 \end{itemize}
-Every number above is written by the census tool into the macros this paper loads with \code{\textbackslash
+Every number above is written by the census tool into the macros loaded with \code{\textbackslash
 input}; \code{python -m jansky\_research.ecallisto\_census --offline} reproduces the validation
 suite, \code{--audit} re-lists the archive day indexes behind the ingest audit, and the same
 statistic runs on a real event stream once the multi-year ingest is collected.

@@ -11,6 +11,15 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion batch 2: triangulate, southern, glitchpop, peaked, ecallisto_census,
+  vlass.** Same procedure as batch 1, with the editor instructions hardened by batch 1's
+  referee findings (no abstract compression, no new exclusivity words, retraction referents
+  keep the house form, emphasized words survive their `\emph` removal) — and it showed:
+  two conversions are word-multiset-identical (peaked, vlass), and the other four carry
+  3–9 word connective/self-reference swaps, each verified faithful by direct inspection.
+  All six pass lint (zero HIGH) + per-file diff-guard + triage; the retraction and
+  audited-failure language in ecallisto_census keeps its referent ("an earlier version of
+  this paper") and directness.
 - **Style re-conversion batch 1 of the fix-campaign drift: rmstructure, stacking, torchdsp,
   rfitrend, spectra (main + note), skr.** All six pass lint + diff-guard + triage; every
   paper with real word changes got a conversion-drift referee pass, and the referees earned
