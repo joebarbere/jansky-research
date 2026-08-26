@@ -205,3 +205,52 @@ understates it 3.7× — the genuine recover-a-known for the ERROR MODEL that li
 the real leg. Lead with those three numbers.
 
 **Verdict: MAJOR REVISION.**
+
+**Status: RESOLVED (2026-08-26).** Full DR2 re-run with every fix in place; the blocker
+resolved by retraction.
+
+**The quality-flag break claim is retracted — the matched comparison it demanded killed it.**
+`matched_flag_sf` draws ONE pair set over the unflagged high-|b| sample (213,248 sources;
+the flagged curve keeps the 210,486-source subset's pairs) and bootstraps both curves
+together. The point estimates reproduce exactly (0.87° unflagged vs 2.29° flagged) — and mean
+nothing: the unflagged break is the smaller one in only **37.5%** of 200 shared replicates,
+and its 68% interval (0.87–2.29°) spans both values. The "leakage masquerading as small-scale
+structure" story was one noisy sub-degree bin (2,972 vs 745 rad²m⁻⁴, adjacent bins
+non-monotonic) carrying an 11-valued threshold statistic across the half-plateau line. Both
+curves, errors, per-bin pair counts and the bootstrap accounting are committed in
+`flag_comparison_high_b`. The abstract now states the retraction in its own words.
+
+**Every ladder error is now a sky-block jackknife, and the bootstrap was hiding a factor
+~7.** Plane plateau 81,837 ± 2,493 (bootstrap) vs ± 18,632 (jackknife); σ_RM plane 202.3 ±
+3.1 → ± 23.0; the abstract's floor 12.3 ± 0.21 → ± 0.56. The ladder stays monotonic with
+every step exceeding the summed adjacent jackknife errors — the result survives its honest
+errors, which is why it was safe to compute them.
+
+**The block-size sweep does move the headline SE**: 0.68/1.10/1.32/1.67/1.67 at 5/10/15/20/30°.
+The fixture arbitrates: swept identically it gives 1.01/1.12/1.25/1.54 against a true
+field-to-field scatter of 1.11 — calibrated at 10° (~5 coherence lengths), overestimating at
+larger blocks — so the paper quotes 1.1 as the calibrated error and 1.7 as the ceiling, both
+committed (real sweep in `jackknife_se_by_block_deg`, fixture sweep now in
+`rmstructure_synthetic.json`). 275 of 601 blocks actually move the estimate; the count is
+printed.
+
+**Definitional variants, run on DR2 for the first time, dwarf the error**: alt bins 5°/70°
+16.84 (+54%), |RM|<300 9.52 (−13%), better-half e_RM 11.48 (+5%) vs 10.97 ± 1.1. The abstract
+now says the statistic is definition-dependent and quotes it strictly for its stated bins —
+the same lesson rmsky's committed +39% alt-bins move taught, previously unapplied here.
+
+**goodRM selection vs |b| measured, worry inverted**: the flag removes 0.98–2.0% per ladder
+bin with the *maximum at the polar bin*, not the plane — a ~1 pp differential against
+factor-2 ladder steps. Honest Limits (viii).
+
+**The rest:** CI test asserts on the ensemble (mean 3.15, SD 1.11) instead of the window only
+seed 0 passed; figures split per leg (`rmstructure_real.pdf`/`_syn.pdf`, offline can no longer
+clobber the real one), real figure in Galactic coordinates at a 98th-percentile colour scale
+with the six-bin ladder as a third panel, caption states the leg; floor-bin σ_Gal is null
+by construction in the JSON; polar Galactic term ≤8.4 rad/m² allowance and the headline's
+independence from the floor stated; plateau-ratio macro printed (fixture 12.8, real 23.6);
+n_after_finite in the prose cascade; duplicates quoted as 35% of unique sources; release
+count softened to the abstract-quoted 2.5×10⁵ (exact table never located); DR1 7,707/5,818
+committed; lit-floor mid-bin values computed in run() and committed; true_coherence_deg null;
+thomson2023 e040 marked eid; stil2011 cited; Taylor comparison quotes rmsky's ±0.59 jackknife
+and says "measure from"; arXiv package rebuilt.

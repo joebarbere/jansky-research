@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **rmstructure round-11 revision: the flag claim is retracted by the matched test it lacked,
+  and every error bar is now the estimator the paper preaches.** `matched_flag_sf` puts the
+  flagged/unflagged high-|b| SFs on ONE shared pair set with a shared bootstrap: the
+  2.29°→0.87° break shift is preferred in only 37.5% of replicates (68% interval spans both
+  values), so the abstract retracts it — both curves, errors, pair counts and accounting
+  committed in `flag_comparison_high_b`. The latitude ladder's errors switch from the i.i.d.
+  bootstrap (condemned by the paper's own headline lesson; understates by ~7× here) to
+  per-bin sky-block jackknives, floor 12.3 ± 0.56 (was ± 0.21); the ladder stays monotonic.
+  The headline jackknife's block size is swept 5–30° (SE 0.68→1.67) with the fixture
+  arbitrating the 10° choice (its sweep crosses the true field-to-field scatter there), both
+  sweeps committed; 275 of 601 blocks are effective and the count is printed. Definitional
+  variants run on DR2 for the first time (alt bins 5°/70° 16.84, |RM|<300 9.52, e_RM cut
+  11.48 vs 10.97 ± 1.1) and the abstract now calls the statistic definition-dependent. The CI
+  test asserts on the committed 30-seed ensemble instead of the (3, 7) window only the outlier
+  seed passed. Figures split per leg (`rmstructure_real.pdf`/`_syn.pdf`) so an offline run
+  cannot clobber the real one; the real figure plots Galactic coordinates at a robust colour
+  scale and adds the six-bin ladder panel. goodRM removal measured per bin (0.98–2.0%, max at
+  the pole — the depolarization-selection worry inverted). Floor-bin σ_Gal recorded as null by
+  construction; DR1 counts, lit-floor sensitivities, and the fixture jackknife sweep moved
+  into committed JSON; release count softened to the abstract-quoted 2.5×10⁵; thomson2023
+  e040 marked as an eid; stil2011 cited; NaN literal removed.
 - **ecallisto_pipeline round-11 revision: the scanned file is the listed file, and the
   committed day is real.** list_day_files de-duplicates the index (each filename rendered
   twice: n_scanned had double-counted every file), and a shared scan_file worker fetches
