@@ -147,6 +147,9 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	uv run python -m jansky_research.pipeline --out .
 	uv run python -m jansky_research.frbperiod --out .
 	uv run python -m jansky_research.driftsearch --out .
+	@if [ -f data/Voyager1.single_coarse.fine_res.h5 ]; then \
+		uv run python -c "from jansky_research.driftsearch import run_voyager; run_voyager('.')"; \
+	else echo "driftsearch: Voyager file not cached; skipping the real leg"; fi
 	uv run python -m jansky_research.spectra --ra 180 --dec 30 --radius 3 --out .
 	uv run python -m jansky_research.hi --out .
 	uv run python -m jansky_research.peaked --ra 180 --dec 30 --radius 2 --validate --out .

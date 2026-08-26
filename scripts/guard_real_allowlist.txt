@@ -43,3 +43,7 @@ singlepulse_metrics.json
 # paper's synthetic macros are labelled as the selection-machinery validation and the real leg
 # ships in results/stokesv_targets.csv. Same pattern as singlepulse/stokesv_discovery above.
 stokesv_metrics.json
+# driftsearch: the committed benchmark IS the synthetic injection-recovery reference set --
+# that is the paper's deliverable (deliberately synthetic-primary; seeded and reproducible).
+# The slice's REAL leg has its own file (results/drift_voyager.json, is_real=true).
+drift_metrics.json

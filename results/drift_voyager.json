@@ -1,0 +1,30 @@
+{
+  "source": "Breakthrough Listen Voyager-1 GBT file (real data)",
+  "is_real": true,
+  "window_channels": 4096,
+  "n_channels": 1048576,
+  "carrier": {
+    "channel": 747953,
+    "freq_mhz": 8419.29696,
+    "mad_z": 56.3,
+    "measured_drift_chan_per_sample": 2.4441,
+    "measured_drift_hz_s": -0.3741,
+    "drift_fit_rms_chan": 0.41,
+    "snr": 997.1,
+    "search_best_drift_chan_per_sample": 2.450000000000001
+  },
+  "dc_spike": {
+    "channel": 524288,
+    "is_band_centre": true,
+    "mad_z": 131613.3,
+    "search_snr": 198508.0
+  },
+  "legacy_asserted": {
+    "freq_mhz": 8420.216,
+    "channel": 419016,
+    "snr": 4.85,
+    "note": "the earlier 'Voyager null' searched here: blank sky"
+  },
+  "blank_snr": 4.59,
+  "recovered": true
+}

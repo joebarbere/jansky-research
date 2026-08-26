@@ -11,6 +11,26 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **driftsearch round-11 revision: the carrier is located in the data, and Voyager-1 is
+  recovered.** validate_voyager no longer asserts a carrier frequency: locate_carrier finds
+  the brightest non-DC narrowband feature by MAD-z (8419.29696 MHz in this file) and
+  measure_drift fits its per-sample peak walk (-0.3741 Hz/s); the module's own search then
+  recovers the spacecraft at S/N = 997 with a best-fit drift one grid step from the measured
+  walk. The earlier "Voyager-1 null" -- which searched the asserted 8420.216 MHz, blank sky
+  ~0.92 MHz away -- is retracted in print, with the lesson kept as the committed
+  legacy_asserted block (its 4.85-vs-4.59 numbers reproduced) and the frame hypothesis
+  stated as unconfirmed. run_voyager commits results/drift_voyager.json + \dsVoy* macros;
+  a synthetic DC-spike regression test and a gated real-file recovery test now exist (the
+  assertions that would have caught both the original spurious 2e5 detection and the
+  targeting error); make reproduce runs the leg when the file is cached. The benchmark's
+  full configuration (64x512, 41-drift grid, 400 FPR trials, seed) is committed and stated;
+  the full p_detect matrix and per-drift 50% crossings ship ("flat across drift" is
+  auditable); the committed noise-only peak distribution (mean 4.11, max 5.28) makes the
+  threshold's ~18-sigma conservatism explicit with the correctly-labelled one-sided 0.75%
+  bound; the off-grid injection check is committed; the recovery figure uses pcolormesh with
+  explicit cell edges (the imshow extent drew the 50% crossing ~0.5 high); run()'s n_trials
+  default aligned to the committed 30; source markers added to JSON and macros; estevez2021's
+  note corrected; brzycki2022's title completed.
 - **lptduty round-11 revision: the weighting's true effect is stated, the counts match
   their JSON, and the note leads with the implied active fraction.** The blocker sentence
   ("removes roughly half the nominal exposure") is replaced by the measured effect (0.02% at

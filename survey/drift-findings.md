@@ -146,3 +146,38 @@ resulting dict, and rewrite Section 4 and the title around the recovery at S/N �
 the genuinely valuable caution that the band-centre DC spike is 2400× the carrier and a
 brightest-channel search reports the artifact. The corrected paper is stronger than the
 submitted one.
+
+**Status: RESOLVED (2026-08-26).** The Voyager leg re-run with the carrier LOCATED in the data;
+the pipeline itself now reproduces the referee's discovery: carrier at channel 747953 =
+8419.29696 MHz (`locate_carrier`: brightest non-DC narrowband feature by MAD-z, z = 56), drift
+measured from the per-sample peak walk (2.444 chan/sample = −0.3741 Hz/s, fit rms 0.4 chan), and
+the module's own search recovers it at **S/N = 997.1, best drift 2.45** (one grid step from the
+measured walk) — `recovered: true`. The DC spike reads 1.99×10⁵ (the caution stands); the legacy
+asserted 8420.216 MHz reads 4.85 vs blank 4.59 (the old published numbers, reproduced and kept in
+the committed evidence as the `legacy_asserted` lesson block).
+
+1. **B1+B2**: `validate_voyager` locates the carrier rather than asserting it (the wrong
+   constant survives only as `LEGACY_ASSERTED_CARRIER_MHZ`, documented as the lesson); the note
+   quotes the measured drift, not the hand-typed −0.69; the paper RETRACTS the null in print,
+   states the ~0.92 MHz offset with the frame hypothesis explicitly unconfirmed, and retitles.
+2. **Committed evidence + tests**: `run_voyager` writes results/drift_voyager.json (real
+   marker) and the \dsVoy* macros; a synthetic DC-spike regression test (spike at n/2 + a
+   drifting tone: locate_carrier must find the tone) and a gated real-file test (recovered,
+   S/N > 100, drift within 0.05 Hz/s, legacy channel still blank) now exist — the assertions
+   that would have caught both the original spurious detection and the 0.92 MHz targeting error.
+   `make reproduce` runs the leg when the file is cached.
+3. **The benchmark's configuration is the deliverable and is now stated**: 64×512 waterfalls,
+   41-point drift grid, unit noise, 400 FPR trials, seed — in the JSON, the macros, and the
+   Method; run()'s n_trials default aligned to the CLI/committed 30.
+4. **The full p_detect matrix and per-drift 50% crossings are committed** ("flat across drift"
+   auditable; referee's per-drift values reproduced), plus the off-grid check (1.31 vs 1.28 —
+   within scatter, stated in print).
+5. **The FPR is honest**: the committed noise-only peak distribution (mean 4.11, sd, max 5.28
+   over 400 draws) makes the threshold's ~18σ conservatism explicit; "cluster near S/N~5"
+   corrected; the bound is the one-sided 0.75% at the stated N=400, macro'd.
+6. **The figure axis is fixed** (pcolormesh with explicit cell edges — the imshow extent drew
+   the 50% crossing ~0.5 high); the JSON and macros carry source markers (\dsBenchSource /
+   \dsVoySource) so the guards can see them; estevez2021's note no longer asserts the
+   frequency as a property of this file; brzycki2022's title completed.
+7. This file's earlier "100 trials/cell by default" corrected by the code (30 everywhere) and
+   the ±0.1 crossing-scatter estimate superseded by the referee's ≈0.03.
