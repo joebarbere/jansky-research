@@ -57,12 +57,27 @@ def test_pair_subsampling_records_fraction():
 def test_run_offline_writes_artifacts(tmp_path):
     m = rms.run(str(tmp_path), offline=True)
     assert m["source"] == "synthetic RM screen"
-    assert 3.0 < m["enhancement_ratio"] < 7.0  # injected amplitude boost ~5
+    # Assert on the ENSEMBLE, not the single default seed: 17 of the 30 committed seed ratios
+    # fall outside the old (3, 7) window, so a per-seed assertion only passed because seed 0
+    # sits high -- a test that locks the outlier in (the svbSynNTargets lesson shape).
+    assert 2.0 < m["enhancement_ratio_ensemble"] < 5.0  # band median of an injected 5x boost
+    assert 0.3 < m["enhancement_ratio_ensemble_sd"] < 3.0
+    assert (
+        abs(m["enhancement_ratio"] - m["enhancement_ratio_ensemble"])
+        < 3.0 * m["enhancement_ratio_ensemble_sd"]
+    )
     assert m["sf_plateau_low_b"] > m["sf_plateau_high_b"]
+    assert m["sf_plateau_ratio"] > 4.0
     assert 1.0 < m["sf_break_high_b_deg"] < 6.0
+    assert m["true_coherence_deg"] == 2.0
+    assert isinstance(m["jackknife_se_by_block_deg"], dict)
+    assert m["n_jackknife_blocks_effective"] <= m["n_jackknife_blocks"]
     saved = json.loads((tmp_path / "results" / "rmstructure_metrics.json").read_text())
     assert saved == m
-    assert (tmp_path / "papers" / "rmstructure" / "figures" / "rmstructure.pdf").stat().st_size > 0
+    fig = tmp_path / "papers" / "rmstructure" / "figures" / "rmstructure_syn.pdf"
+    assert fig.stat().st_size > 0
+    # per-leg figure name: an offline run must never overwrite the real leg's figure
+    assert not (tmp_path / "papers" / "rmstructure" / "figures" / "rmstructure_real.pdf").exists()
     macros = (tmp_path / "papers" / "rmstructure" / "generated" / "macros.tex").read_text()
     assert r"\newcommand{\rmsSynRatio}" in macros and r"\newcommand{\rmsRealRatio}{--}" in macros
 
@@ -151,3 +166,81 @@ def test_run_offline_commits_seed_ensemble(tmp_path):
     assert r"\newcommand{\rmsRealSource}{--}" in macros
     assert r"\rmsRealRatioJkSe" in macros and r"\rmsSynRatioEnsSem" in macros
     assert r"\rmsRealNAfterGoodrm" in macros
+    assert r"\rmsRealBreakHiFlagM" in macros and r"\rmsRealBreakFracSmall" in macros
+    assert r"\rmsSynPlatRatio" in macros
+
+
+def test_matched_flag_sf_identity_when_all_flagged():
+    # with every source flagged good, the two curves share the exact same pairs
+    s = rms.synthetic_rm_screen(n_sources=500, seed=8)
+    out = rms.matched_flag_sf(
+        s["ra"], s["dec"], s["rm"], s["rm_err"], np.ones(s["rm"].size, bool), n_boot=20
+    )
+    f, u = out["flagged"], out["unflagged"]
+    assert np.allclose(f["sf"], u["sf"], equal_nan=True)
+    assert np.array_equal(f["n_pairs"], u["n_pairs"])
+    assert f["break_deg"] == u["break_deg"]
+    assert out["n_flagged"] == out["n_total"]
+
+
+def test_matched_flag_sf_detects_flagged_contamination():
+    # contaminate 25% of sources with large independent noise NOT recorded in rm_err (the
+    # leakage failure mode); flagging them out must lower the small-separation SF, and the
+    # flagged curve must use only pairs of clean sources
+    s = rms.synthetic_rm_screen(n_sources=800, seed=9)
+    rng = np.random.default_rng(10)
+    n = s["rm"].size
+    bad = rng.random(n) < 0.25
+    rm = s["rm"].copy()
+    rm[bad] += rng.normal(0.0, 60.0, int(bad.sum()))
+    out = rms.matched_flag_sf(s["ra"], s["dec"], rm, s["rm_err"], ~bad, n_boot=40)
+    f, u = out["flagged"], out["unflagged"]
+    assert np.all(f["n_pairs"] <= u["n_pairs"])
+    g = np.isfinite(f["sf"]) & np.isfinite(u["sf"])
+    # unrecorded white noise raises the unflagged SF at (at least) the smallest separations
+    assert u["sf"][g][0] > f["sf"][g][0]
+    # bootstrap accounting is committed, not asserted from a single draw
+    assert out["n_boot_finite"] > 0
+    assert 0.0 <= out["frac_boot_unflagged_break_smaller"] <= 1.0
+    for leg in (f, u):
+        assert np.isfinite(leg["break_deg"])
+        assert leg["break_p16"] <= leg["break_p84"]
+
+
+def test_structure_function_block_jackknife_plateau():
+    s = rms.synthetic_rm_screen(n_sources=1200, seed=11)
+    blocks = np.floor(s["gal_l"] / 10.0) * 1000 + np.floor((s["gal_b"] + 90.0) / 10.0)
+    out = rms.structure_function(
+        s["ra"], s["dec"], s["rm"], s["rm_err"], n_boot=10, block_ids=blocks
+    )
+    assert out["plateau_jk_blocks"] >= 5
+    assert np.isfinite(out["plateau_jk_se"]) and out["plateau_jk_se"] > 0
+
+
+def test_latitude_ladder_carries_jackknife_errors():
+    s = rms.synthetic_rm_screen(n_sources=2500, seed=4)
+    lad = rms.latitude_ladder(s, b_edges=(0.0, 10.0, 20.0), max_pairs=100_000, n_boot=10)
+    fin = np.isfinite(lad["sigma_rm"])
+    assert np.all(np.isfinite(lad["plateau_jk_err"][fin]))
+    assert np.all(np.isfinite(lad["sigma_rm_jk_err"][fin]))
+    assert np.all(lad["jk_blocks"][fin] >= 5)
+    assert np.isfinite(lad["floor_sigma_jk_err"])
+
+
+def test_spatial_block_jackknife_effective_blocks():
+    # a statistic supported only at |b| > 15 is untouched by low-|b| blocks: the effective
+    # count must exclude them (the "601 blocks, ~330 contribute zero" honesty item)
+    rng = np.random.default_rng(3)
+    n = 2000
+    gl = rng.uniform(0.0, 40.0, n)
+    gb = rng.uniform(-20.0, 20.0, n)
+    vals = rng.normal(0.0, 1.0, n)
+    pole = np.abs(gb) > 15.0
+
+    def stat(m):
+        keep = m & pole
+        return float(np.median(vals[keep])) if keep.any() else float("nan")
+
+    jk = rms.spatial_block_jackknife(gl, gb, stat, block_deg=10.0)
+    assert jk["n_blocks_effective"] < jk["n_blocks"]
+    assert jk["n_blocks_effective"] > 0

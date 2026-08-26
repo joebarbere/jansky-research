@@ -33,5 +33,14 @@
     2.141,
     0.946,
     3.347
-  ]
+  ],
+  "seed0_jackknife_se": 1.12,
+  "seed0_jackknife_se_by_block_deg": {
+    "5": 1.01,
+    "10": 1.12,
+    "15": 1.25,
+    "20": 1.54,
+    "30": null
+  },
+  "ensemble_sd": 1.11
 }

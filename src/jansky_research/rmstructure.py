@@ -28,6 +28,7 @@ from .rmsky import _ratio_bootstrap_se, enhancement_ratio
 __all__ = [
     "latitude_ladder",
     "load_spice_racs_dr2",
+    "matched_flag_sf",
     "spatial_block_jackknife",
     "structure_function",
     "synthetic_rm_screen",
@@ -38,6 +39,12 @@ __all__ = [
 SPICE_DR1_TABLE = "AS110.spice_racs_dr1_corrected_cut_v02"
 CASDA_TAP = "https://casda.csiro.au/casda_vo_tools/tap"
 DR2_DAP = "https://data.csiro.au/collection/csiro:64891"
+
+#: DR1 comparison counts the paper narrates: raw snr_polint>=8 rows from the CASDA TAP leg,
+#: and the DR1 release paper's fully-flagged RM count (Thomson et al. 2023). Committed here so
+#: the prose numbers trace to evidence rather than living only in a sentence.
+DR1_SNR_CUT_ROWS = 7707
+DR1_PAPER_FLAGGED_ROWS = 5818
 
 
 def structure_function(
@@ -50,6 +57,7 @@ def structure_function(
     n_boot: int = 100,
     max_pairs: int = 2_000_000,
     seed: int = 0,
+    block_ids: np.ndarray | None = None,
 ) -> dict:
     r"""Noise-debiased second-order RM structure function with bootstrap errors.
 
@@ -60,6 +68,12 @@ def structure_function(
     so the cost stays quadratic-safe; bootstrap resamples *sources* (not pairs) to respect the
     correlated pair structure. Returns bin centres, SF, its bootstrap SE, pair counts, and the
     subsample fraction.
+
+    ``block_ids`` (one label per source) additionally returns a leave-one-block-out jackknife SE
+    for the plateau (median of the full sample's three largest-separation finite bins). The i.i.d.
+    source bootstrap resamples within correlated patches, so on a real sky it is a shot-noise-only
+    lower bound; the block jackknife is the field-level uncertainty (the slice's recorded lesson,
+    previously applied to the headline ratio and to nothing else).
     """
     rng = np.random.default_rng(seed)
     ra = np.radians(np.asarray(ra_deg, float))
@@ -117,7 +131,7 @@ def structure_function(
     se = np.nanstd(boots, axis=0)
     counts = np.array([(which == b).sum() for b in range(nb)])
     centres = np.degrees(np.sqrt(bins[:-1] * bins[1:]))
-    return {
+    out = {
         "sep_deg": centres,
         "sf": sf,
         "sf_err": se,
@@ -125,6 +139,133 @@ def structure_function(
         # ordered random draws double-count unique pairs; fraction quoted per UNIQUE pair
         "pair_fraction": min(1.0, 0.5 * max_pairs / max(1, n_pairs_all)),
     }
+    if block_ids is not None:
+        ids = np.asarray(block_ids)
+        fin = np.where(np.isfinite(sf))[0]
+        plats = []
+        if fin.size >= 3:
+            idx3 = fin[-3:]  # the plateau bins are FIXED by the full sample, then re-evaluated
+            for u in np.unique(ids):
+                p = sf_of(ids != u)[idx3]
+                if np.isfinite(p).any():
+                    plats.append(float(np.nanmedian(p)))
+        vals = np.asarray(plats, float)
+        k = vals.size
+        out["plateau_jk_blocks"] = int(k)
+        out["plateau_jk_se"] = (
+            float(np.sqrt((k - 1) / k * np.sum((vals - vals.mean()) ** 2)))
+            if k >= 5
+            else float("nan")
+        )
+    return out
+
+
+def matched_flag_sf(
+    ra_deg: np.ndarray,
+    dec_deg: np.ndarray,
+    rm: np.ndarray,
+    rm_err: np.ndarray,
+    flag_ok: np.ndarray,
+    *,
+    bins_deg: np.ndarray | None = None,
+    n_boot: int = 200,
+    max_pairs: int = 2_000_000,
+    seed: int = 0,
+) -> dict:
+    r"""Flagged-vs-unflagged SF comparison on ONE shared random pair set, with uncertainties.
+
+    The paper's quality-flag claim compared half-plateau breaks from two *independent* random
+    pair draws, neither committed, neither uncertainty-bearing --- an 11-valued statistic read
+    off noisy curves (a referee blocker). Here the pair draw happens once over ALL sources; the
+    flagged curve keeps only pairs whose both endpoints pass ``flag_ok``, so every difference
+    between the two curves is attributable to the flagged-out sources, not to sampling. A shared
+    source bootstrap re-evaluates both curves and both breaks per replicate, giving percentile
+    intervals for each break and for their difference, plus the fraction of replicates in which
+    the unflagged break is the smaller --- the honest strength of "the flag removes small-scale
+    contamination". Both full curves (sf, sf_err, n_pairs per bin) are returned for committing.
+    """
+    rng = np.random.default_rng(seed)
+    ra = np.radians(np.asarray(ra_deg, float))
+    dec = np.radians(np.asarray(dec_deg, float))
+    rm = np.asarray(rm, float)
+    var = np.asarray(rm_err, float) ** 2
+    ok = np.asarray(flag_ok, bool)
+    n = rm.size
+    if bins_deg is None:
+        bins_deg = np.logspace(-1, 1.3, 12)
+    bins = np.radians(np.asarray(bins_deg, float))
+    n_pairs_all = n * (n - 1) // 2
+    if n <= 3000:
+        i_idx, j_idx = np.triu_indices(n, k=1)
+        if n_pairs_all > max_pairs:
+            keep = rng.choice(n_pairs_all, max_pairs, replace=False)
+            i_idx, j_idx = i_idx[keep], j_idx[keep]
+    else:  # pragma: no cover - big data only
+        n_draw = int(min(max_pairs, n_pairs_all))
+        i_idx = rng.integers(0, n, n_draw)
+        j_idx = rng.integers(0, n, n_draw)
+        good = i_idx != j_idx
+        i_idx, j_idx = i_idx[good], j_idx[good]
+    sdlat = np.sin((dec[j_idx] - dec[i_idx]) / 2.0)
+    sdlon = np.sin((ra[j_idx] - ra[i_idx]) / 2.0)
+    h = sdlat**2 + np.cos(dec[i_idx]) * np.cos(dec[j_idx]) * sdlon**2
+    sep = 2.0 * np.arcsin(np.sqrt(np.clip(h, 0.0, 1.0)))
+    d2 = (rm[i_idx] - rm[j_idx]) ** 2
+    nvar = var[i_idx] + var[j_idx]
+    which = np.digitize(sep, bins) - 1
+    nb = len(bins) - 1
+    centres = np.degrees(np.sqrt(bins[:-1] * bins[1:]))
+
+    def sf_of(mask_sources: np.ndarray) -> np.ndarray:
+        m = mask_sources[i_idx] & mask_sources[j_idx]
+        out = np.full(nb, np.nan)
+        for b in range(nb):
+            sel = m & (which == b)
+            if sel.sum() >= 20:
+                out[b] = d2[sel].mean() - nvar[sel].mean()
+        return out
+
+    all_mask = np.ones(n, bool)
+    curves = {"unflagged": sf_of(all_mask), "flagged": sf_of(ok)}
+    boots = {k: np.full((n_boot, nb), np.nan) for k in curves}
+    breaks = {k: np.full(n_boot, np.nan) for k in curves}
+    for r in range(n_boot):
+        pick = rng.integers(0, n, n)
+        mask = np.zeros(n, bool)
+        mask[np.unique(pick)] = True  # shared source resample: both curves see the SAME sky draw
+        for k, base in (("unflagged", mask), ("flagged", mask & ok)):
+            boots[k][r] = sf_of(base)
+            breaks[k][r] = _sf_break(centres, boots[k][r])
+
+    def _pairs_of(mask_sources: np.ndarray) -> np.ndarray:
+        m = mask_sources[i_idx] & mask_sources[j_idx]
+        return np.array([(m & (which == b)).sum() for b in range(nb)])
+
+    def _pcts(x: np.ndarray) -> tuple[float, float]:
+        x = x[np.isfinite(x)]
+        if x.size < 10:
+            return float("nan"), float("nan")
+        return float(np.percentile(x, 16)), float(np.percentile(x, 84))
+
+    out: dict[str, Any] = {"sep_deg": centres, "n_total": n, "n_flagged": int(ok.sum())}
+    for k, base in (("unflagged", all_mask), ("flagged", ok)):
+        lo16, hi84 = _pcts(breaks[k])
+        out[k] = {
+            "sf": curves[k],
+            "sf_err": np.nanstd(boots[k], axis=0),
+            "n_pairs": _pairs_of(base),
+            "break_deg": _sf_break(centres, curves[k]),
+            "break_p16": lo16,
+            "break_p84": hi84,
+        }
+    both = np.isfinite(breaks["unflagged"]) & np.isfinite(breaks["flagged"])
+    out["n_boot_finite"] = int(both.sum())
+    out["frac_boot_unflagged_break_smaller"] = (
+        float(np.mean(breaks["unflagged"][both] < breaks["flagged"][both]))
+        if both.any()
+        else float("nan")
+    )
+    return out
 
 
 #: Field realizations averaged for the offline recover-a-known. One realization's bootstrap
@@ -267,7 +408,7 @@ def load_spice_racs_dr2(
         idx = idx[order[np.sort(first)]]
         meta["dedup"] = "one row per cat_id: min separation_tile_centre, then max snr_polint"
     meta["n_final"] = int(idx.size)
-    return {
+    out = {
         "ra": ra[idx],
         "dec": dec[idx],
         "gal_l": gl[idx],
@@ -276,6 +417,11 @@ def load_spice_racs_dr2(
         "rm_err": rm_err[idx],
         "meta": meta,
     }
+    if "goodrm_flag" in cols:
+        # per-kept-row goodRM status, so an unflagged load can compare flagged vs unflagged
+        # sources on ONE shared pair set (matched_flag_sf) instead of two independent draws
+        out["goodrm_ok"] = np.asarray(t[cols["goodrm_flag"]], bool)[idx]
+    return out
 
 
 def spatial_block_jackknife(
@@ -303,10 +449,13 @@ def spatial_block_jackknife(
     vals = np.asarray([stat_fn(ids != u) for u in uniq], float)
     vals = vals[np.isfinite(vals)]
     k = vals.size
+    # blocks outside the statistic's support (e.g. mid-latitude blocks for a plane/pole ratio)
+    # leave it exactly unchanged; report how many actually move it, so "601 blocks" is honest
+    n_eff = int(np.sum(vals != full))
     if k < min_blocks:
-        return {"stat": full, "se": float("nan"), "n_blocks": int(k)}
+        return {"stat": full, "se": float("nan"), "n_blocks": int(k), "n_blocks_effective": n_eff}
     se = float(np.sqrt((k - 1) / k * np.sum((vals - vals.mean()) ** 2)))
-    return {"stat": full, "se": se, "n_blocks": int(k)}
+    return {"stat": full, "se": se, "n_blocks": int(k), "n_blocks_effective": n_eff}
 
 
 def latitude_ladder(
@@ -315,6 +464,7 @@ def latitude_ladder(
     b_edges: tuple = (0.0, 5.0, 10.0, 20.0, 30.0, 50.0, 90.0),
     max_pairs: int = 500_000,
     n_boot: int = 40,
+    jk_block_deg: float | None = 10.0,
 ) -> dict:
     """SF plateau (and sqrt(plateau/2) = RM dispersion) per |b| bin --- the fluctuation-power profile.
 
@@ -323,6 +473,13 @@ def latitude_ladder(
     largest-separation finite bins; per-bin source counts are reported (thin bins are honest
     NaNs). The intrinsic+extragalactic floor is latitude-independent, so the ladder's SHAPE is
     Galactic even though each absolute value is an upper bound.
+
+    Each plateau carries TWO errors: ``plateau_err`` (i.i.d. source bootstrap --- shot noise
+    only, a lower bound on a correlated sky) and ``plateau_jk_err`` (leave-one-sky-block-out
+    jackknife over ``jk_block_deg`` blocks --- the field-level error, the same estimator the
+    headline ratio uses). A referee round found every ladder error was the bootstrap the paper
+    itself condemns as ~11x too small on the headline; ``sigma_rm_jk_err`` propagates the
+    jackknife instead.
     """
     ab = np.abs(np.asarray(s["gal_b"], float))
     out: dict[str, list] = {
@@ -331,8 +488,11 @@ def latitude_ladder(
         "n": [],
         "plateau": [],
         "plateau_err": [],
+        "plateau_jk_err": [],
+        "jk_blocks": [],
         "sigma_rm": [],
         "sigma_rm_err": [],
+        "sigma_rm_jk_err": [],
         "n_pairs": [],
         "pair_fraction": [],
     }
@@ -342,10 +502,24 @@ def latitude_ladder(
         out["b_hi"].append(hi)
         out["n"].append(int(m.sum()))
         if m.sum() < 200:
-            for k in ("plateau", "plateau_err", "sigma_rm", "sigma_rm_err", "pair_fraction"):
+            for k in (
+                "plateau",
+                "plateau_err",
+                "plateau_jk_err",
+                "sigma_rm",
+                "sigma_rm_err",
+                "sigma_rm_jk_err",
+                "pair_fraction",
+            ):
                 out[k].append(float("nan"))
             out["n_pairs"].append(0)
+            out["jk_blocks"].append(0)
             continue
+        blocks = None
+        if jk_block_deg is not None:
+            gl = np.asarray(s["gal_l"], float)[m]
+            gb = np.asarray(s["gal_b"], float)[m]
+            blocks = np.floor(gl / jk_block_deg) * 1000 + np.floor((gb + 90.0) / jk_block_deg)
         sf = structure_function(
             s["ra"][m],
             s["dec"][m],
@@ -353,17 +527,26 @@ def latitude_ladder(
             s["rm_err"][m],
             max_pairs=max_pairs,
             n_boot=n_boot,
+            block_ids=blocks,
         )
         good = np.isfinite(sf["sf"])
         plat = float(np.nanmedian(sf["sf"][good][-3:])) if good.sum() >= 3 else float("nan")
         perr = float(np.nanmedian(sf["sf_err"][good][-3:])) if good.sum() >= 3 else float("nan")
+        pjk = float(sf.get("plateau_jk_se", float("nan")))
         out["plateau"].append(plat)
         out["plateau_err"].append(perr)
+        out["plateau_jk_err"].append(pjk)
+        out["jk_blocks"].append(int(sf.get("plateau_jk_blocks", 0)))
         sig = float(np.sqrt(plat / 2.0)) if plat > 0 else float("nan")
         out["sigma_rm"].append(sig)
         # error propagation through sigma = sqrt(plateau/2): dsigma = dplateau / (4 sigma) * ...
         out["sigma_rm_err"].append(
             float(perr / (2.0 * np.sqrt(2.0 * plat))) if plat > 0 else float("nan")
+        )
+        out["sigma_rm_jk_err"].append(
+            float(pjk / (2.0 * np.sqrt(2.0 * plat)))
+            if plat > 0 and np.isfinite(pjk)
+            else float("nan")
         )
         out["n_pairs"].append(int(np.sum(sf["n_pairs"])))
         out["pair_fraction"].append(float(sf["pair_fraction"]))
@@ -377,6 +560,7 @@ def latitude_ladder(
         lad["sigma_gal"] = np.sqrt(np.clip(lad["sigma_rm"] ** 2 - floor**2, 0.0, None))
     lad["floor_sigma"] = float(floor)
     lad["floor_sigma_err"] = float(floor_err)
+    lad["floor_sigma_jk_err"] = float(lad["sigma_rm_jk_err"][fin][-1])
     # Floor sensitivity: the subtraction is licensed by ONE bin's plateau, so quote how the
     # plane-bin Galactic dispersion moves when the floor is taken instead from the neighbouring
     # high-|b| bin (the plausible alternative) and across the floor's own +/-1 sigma.
@@ -437,6 +621,19 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         s["gal_b"],
         lambda m: enhancement_ratio(s["rm"][m], s["gal_b"][m], pole_deg=pole),
     )
+    # The jackknife's own tuning knob, varied: 10 deg was the only block size ever run while
+    # the paper's Honest Limits says plane gradients span "tens of degrees". Quote the largest.
+    jk_sweep: dict[str, float | None] = {}
+    for bd in (5.0, 10.0, 15.0, 20.0, 30.0):
+        j = spatial_block_jackknife(
+            s["gal_l"],
+            s["gal_b"],
+            lambda m: enhancement_ratio(s["rm"][m], s["gal_b"][m], pole_deg=pole),
+            block_deg=bd,
+        )
+        jk_sweep[f"{bd:.0f}"] = round(float(j["se"]), 2) if np.isfinite(j["se"]) else None
+    sweep_vals = [v for v in jk_sweep.values() if v is not None]
+    jk_se_max = max(sweep_vals) if sweep_vals else None
     ratio_ens = ratio_ens_se = None
     ens: list[float] = []
     if offline:
@@ -453,7 +650,33 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
     break_lo = _sf_break(sf_lo["sep_deg"], sf_lo["sf"])
     break_hi = _sf_break(sf_hi["sep_deg"], sf_hi["sf"])
 
+    # Definitional variants, mirrored from the sibling rmsky slice where each was free to move
+    # the answer (alt bins moved rmsky's ratio +39%): never previously run on DR2, where the
+    # quoted error is 10%.
+    variants: dict[str, float | None] = {}
+    if not offline:  # pragma: no cover - real legs only
+
+        def _r2(x: float) -> float | None:
+            return round(float(x), 2) if np.isfinite(x) else None
+
+        variants["enhancement_ratio_alt_bins_5_70"] = _r2(
+            enhancement_ratio(s["rm"], s["gal_b"], plane_deg=5.0, pole_deg=70.0)
+        )
+        c300 = np.abs(s["rm"]) < 300.0
+        variants["n_cut300"] = int(c300.sum())
+        variants["enhancement_ratio_cut300"] = _r2(
+            enhancement_ratio(s["rm"][c300], s["gal_b"][c300], pole_deg=pole)
+        )
+        med_e = float(np.median(s["rm_err"]))
+        ecut = s["rm_err"] < med_e
+        variants["rm_err_median"] = round(med_e, 2)
+        variants["enhancement_ratio_erm_cut"] = _r2(
+            enhancement_ratio(s["rm"][ecut], s["gal_b"][ecut], pole_deg=pole)
+        )
+
     ladder = latitude_ladder(s) if not offline else None  # pragma: no cover - big data only
+    plat_lo = float(np.nanmedian(sf_lo["sf"][-3:]))
+    plat_hi = float(np.nanmedian(sf_hi["sf"][-3:]))
     metrics = {
         "source": source,
         "is_real": not offline,
@@ -462,6 +685,9 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         "enhancement_ratio_se": round(float(ratio_se), 2),
         "enhancement_ratio_jackknife_se": round(float(jk["se"]), 2),
         "n_jackknife_blocks": jk["n_blocks"],
+        "n_jackknife_blocks_effective": jk["n_blocks_effective"],
+        "jackknife_se_by_block_deg": jk_sweep,
+        "enhancement_ratio_jackknife_se_max": jk_se_max,
         # Offline only: the honest uncertainty on a recover-a-known over a random field.
         "enhancement_ratio_ensemble": None if ratio_ens is None else round(ratio_ens, 2),
         "enhancement_ratio_ensemble_sd": None if ratio_ens_se is None else round(ratio_ens_se, 2),
@@ -469,16 +695,35 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
         if ratio_ens_se is None
         else round(ratio_ens_se / np.sqrt(N_SYNTHETIC_REALIZATIONS), 2),
         "n_realizations": N_SYNTHETIC_REALIZATIONS if offline else None,
-        "sf_plateau_low_b": round(float(np.nanmedian(sf_lo["sf"][-3:])), 1),
-        "sf_plateau_high_b": round(float(np.nanmedian(sf_hi["sf"][-3:])), 1),
+        "sf_plateau_low_b": round(plat_lo, 1),
+        "sf_plateau_high_b": round(plat_hi, 1),
+        # the disc/halo fluctuation-POWER contrast the docstring's "factor ~23" refers to;
+        # previously computed nowhere (the referee had to derive it from two other macros)
+        "sf_plateau_ratio": round(plat_lo / plat_hi, 1) if plat_hi > 0 else None,
         "sf_break_low_b_deg": round(break_lo, 2) if np.isfinite(break_lo) else None,
         "sf_break_high_b_deg": round(break_hi, 2) if np.isfinite(break_hi) else None,
-        "true_coherence_deg": s.get("coherence_deg"),
+        # None (JSON null), not a bare NaN literal: RFC 8259 has no NaN
+        "true_coherence_deg": (
+            float(s["coherence_deg"]) if np.isfinite(s.get("coherence_deg", float("nan"))) else None
+        ),
     }
+    metrics.update(variants)
     if "meta" in s:  # pragma: no cover - big data only
         metrics["sample_cascade"] = s["meta"]
+        # The DR1 comparison counts the paper narrates (raw S/N-cut rows vs the DR1 paper's
+        # fully-flagged RM count) belong in committed evidence, not only in prose.
+        metrics["dr1_snr_cut_rows"] = DR1_SNR_CUT_ROWS
+        metrics["dr1_paper_flagged_rows"] = DR1_PAPER_FLAGGED_ROWS
     if ladder is not None:  # pragma: no cover - big data only
         fin = np.isfinite(ladder["sigma_rm"])
+        fin_idx = np.where(fin)[0]
+        floor_i = int(fin_idx[-1])  # the bin the floor is READ FROM: its sigma_gal is zero by
+        # construction, a definition rather than a measurement -- record null, not 0.0
+
+        def _jkv(i: int) -> float | None:
+            v = float(ladder["sigma_rm_jk_err"][i])
+            return round(v, 2) if np.isfinite(v) else None
+
         metrics.update(
             {
                 "ladder_bins": [
@@ -489,9 +734,18 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                         "pair_fraction": round(float(ladder["pair_fraction"][i]), 4),
                         "plateau": round(float(ladder["plateau"][i]), 1),
                         "plateau_err": round(float(ladder["plateau_err"][i]), 1),
+                        "plateau_jk_err": (
+                            round(float(ladder["plateau_jk_err"][i]), 1)
+                            if np.isfinite(ladder["plateau_jk_err"][i])
+                            else None
+                        ),
+                        "jk_blocks": int(ladder["jk_blocks"][i]),
                         "sigma_rm": round(float(ladder["sigma_rm"][i]), 1),
                         "sigma_rm_err": round(float(ladder["sigma_rm_err"][i]), 2),
-                        "sigma_gal": round(float(ladder["sigma_gal"][i]), 1),
+                        "sigma_rm_jk_err": _jkv(i),
+                        "sigma_gal": (
+                            None if i == floor_i else round(float(ladder["sigma_gal"][i]), 1)
+                        ),
                     }
                     for i in range(len(ladder["n"]))
                     if fin[i]
@@ -500,6 +754,11 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                 "sigma_rm_pole": round(float(ladder["sigma_rm"][fin][-1]), 1),
                 "ladder_floor_sigma": round(ladder["floor_sigma"], 1),
                 "ladder_floor_sigma_err": round(ladder["floor_sigma_err"], 2),
+                "ladder_floor_sigma_jk_err": (
+                    round(ladder["floor_sigma_jk_err"], 2)
+                    if np.isfinite(ladder["floor_sigma_jk_err"])
+                    else None
+                ),
                 "ladder_alt_floor_sigma": round(ladder["alt_floor_sigma"], 1),
                 "sigma_gal_plane": round(ladder["sigma_gal_plane"], 1),
                 "sigma_gal_plane_floor_alt": round(ladder["sigma_gal_plane_floor_alt"], 1),
@@ -507,18 +766,86 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                 "sigma_gal_plane_floor_hi": round(ladder["sigma_gal_plane_floor_hi"], 1),
             }
         )
+        # Floor sensitivity where it bites (the second-highest-|b| bin), against the measured
+        # floor and across the literature floor range. Previously derived inside _write_macros
+        # only, so the two Honest-Limits numbers appeared in no committed JSON.
+        if fin.sum() >= 2:
+            mid_i = int(fin_idx[-2])
+            sig_mid = float(ladder["sigma_rm"][mid_i])
+            metrics["sigma_gal_mid_bin"] = (
+                f"{ladder['b_lo'][mid_i]:.0f}-{ladder['b_hi'][mid_i]:.0f}"
+            )
+            metrics["sigma_gal_mid"] = round(float(ladder["sigma_gal"][mid_i]), 1)
+            for name, f in zip(("lit_lo", "lit_hi"), LITERATURE_FLOOR_RANGE, strict=True):
+                metrics[f"sigma_gal_mid_floor_{name}"] = round(
+                    float(np.sqrt(max(sig_mid**2 - f**2, 0.0))), 1
+                )
+    flag_cmp = None
     if dr2 and not offline:  # pragma: no cover - big data only
-        # The unflagged variant behind the paper's quality-flag claim: same dedup, goodRM off.
-        # Its high-|b| break was previously asserted from an uncommitted run; measure and commit.
+        # The quality-flag comparison behind the paper's leakage claim, on a MATCHED pair set:
+        # one pair draw over the unflagged sample, the flagged curve keeping only pairs whose
+        # both endpoints pass goodRM. The previous version compared breaks from two independent
+        # uncommitted draws with no uncertainty -- a referee blocker.
         su = load_spice_racs_dr2(goodrm=False)
         hiu = np.abs(su["gal_b"]) > 10.0
-        sf_hiu = structure_function(su["ra"][hiu], su["dec"][hiu], su["rm"][hiu], su["rm_err"][hiu])
-        break_hiu = _sf_break(sf_hiu["sep_deg"], sf_hiu["sf"])
-        metrics["unflagged_n_sources"] = int(su["rm"].size)
-        metrics["unflagged_sf_break_high_b_deg"] = (
-            round(break_hiu, 2) if np.isfinite(break_hiu) else None
+        flag_cmp = matched_flag_sf(
+            su["ra"][hiu],
+            su["dec"][hiu],
+            su["rm"][hiu],
+            su["rm_err"][hiu],
+            su["goodrm_ok"][hiu],
         )
-        metrics["unflagged_sf_plateau_high_b"] = round(float(np.nanmedian(sf_hiu["sf"][-3:])), 1)
+        metrics["unflagged_n_sources"] = int(su["rm"].size)
+
+        def _leg(d: dict) -> dict:
+            return {
+                "sf": [None if not np.isfinite(x) else round(float(x), 1) for x in d["sf"]],
+                "sf_err": [None if not np.isfinite(x) else round(float(x), 1) for x in d["sf_err"]],
+                "n_pairs": [int(x) for x in d["n_pairs"]],
+                "break_deg": round(d["break_deg"], 2) if np.isfinite(d["break_deg"]) else None,
+                "break_p16": round(d["break_p16"], 2) if np.isfinite(d["break_p16"]) else None,
+                "break_p84": round(d["break_p84"], 2) if np.isfinite(d["break_p84"]) else None,
+            }
+
+        metrics["flag_comparison_high_b"] = {
+            "sep_deg": [round(float(x), 3) for x in flag_cmp["sep_deg"]],
+            "n_total": flag_cmp["n_total"],
+            "n_flagged": flag_cmp["n_flagged"],
+            "n_boot_finite": flag_cmp["n_boot_finite"],
+            "frac_boot_unflagged_break_smaller": round(
+                flag_cmp["frac_boot_unflagged_break_smaller"], 3
+            ),
+            "flagged": _leg(flag_cmp["flagged"]),
+            "unflagged": _leg(flag_cmp["unflagged"]),
+        }
+        # keep the headline keys, now sourced from the matched comparison
+        metrics["unflagged_sf_break_high_b_deg"] = metrics["flag_comparison_high_b"]["unflagged"][
+            "break_deg"
+        ]
+        metrics["flagged_sf_break_high_b_deg"] = metrics["flag_comparison_high_b"]["flagged"][
+            "break_deg"
+        ]
+        metrics["unflagged_sf_plateau_high_b"] = round(
+            float(np.nanmedian(flag_cmp["unflagged"]["sf"][-3:])), 1
+        )
+        # Does the goodRM selection itself vary with |b| (depolarization-selected disc
+        # populations)? The bound is one line: the flag-removed fraction per ladder bin.
+        abu = np.abs(su["gal_b"])
+        flag_by_bin = []
+        edges = (0.0, 5.0, 10.0, 20.0, 30.0, 50.0, 90.0)
+        for lo_b, hi_b in zip(edges[:-1], edges[1:], strict=True):
+            mb = (abu >= lo_b) & (abu < hi_b)
+            n_all = int(mb.sum())
+            n_ok = int((mb & su["goodrm_ok"]).sum())
+            flag_by_bin.append(
+                {
+                    "b": f"{lo_b:.0f}-{hi_b:.0f}",
+                    "n_unflagged": n_all,
+                    "n_goodrm": n_ok,
+                    "pct_removed": round(100.0 * (n_all - n_ok) / n_all, 2) if n_all else None,
+                }
+            )
+        metrics["goodrm_removed_by_bin"] = flag_by_bin
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
@@ -533,15 +860,29 @@ def run(out: str = ".", *, offline: bool = True, dr2: bool = False) -> dict:
                 "pole_deg": pole,
                 "injected_plane_boost": 5.0,
                 "ratios": [round(float(x), 3) for x in ens],
+                # The error-model recover-a-known the paper leads with, committed rather than
+                # living only in macros: the seed-0 block jackknife against the true scatter.
+                "seed0_jackknife_se": round(float(jk["se"]), 2),
+                "seed0_jackknife_se_by_block_deg": jk_sweep,
+                "ensemble_sd": None if ratio_ens_se is None else round(ratio_ens_se, 2),
             },
             op / "results" / "rmstructure_synthetic.json",
         )
-    _figure(s, sf_lo, sf_hi, op / "papers" / "rmstructure" / "figures")
+    # Per-leg figure names: JSON and macros are merge-guarded but a shared figure name meant a
+    # direct offline run in the repo root silently swapped the real figure for the synthetic one.
+    _figure(
+        s,
+        sf_lo,
+        sf_hi,
+        op / "papers" / "rmstructure" / "figures",
+        ladder=ladder,
+        name="rmstructure_syn" if offline else "rmstructure_real",
+    )
     _write_macros(metrics, op / "papers" / "rmstructure" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(s, sf_lo, sf_hi, out_dir) -> None:
+def _figure(s, sf_lo, sf_hi, out_dir, *, ladder=None, name: str = "rmstructure_syn") -> None:
     from pathlib import Path
 
     from .report import _agg
@@ -549,10 +890,15 @@ def _figure(s, sf_lo, sf_hi, out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.4, 3.9))
-    sc = ax1.scatter(s["ra"], s["gal_b"], c=s["rm"], s=4, cmap="RdBu_r", vmin=-40, vmax=40)
+    ncols = 3 if ladder is not None else 2
+    fig, axes = plt.subplots(1, ncols, figsize=(4.7 * ncols, 3.9))
+    ax1, ax2 = axes[0], axes[1]
+    # robust symmetric colour scale: fixed +/-40 saturated against a ~200 rad/m^2 plane sigma,
+    # making the headline contrast invisible in the one figure the paper prints
+    v = float(np.percentile(np.abs(s["rm"]), 98.0))
+    sc = ax1.scatter(s["gal_l"], s["gal_b"], c=s["rm"], s=4, cmap="RdBu_r", vmin=-v, vmax=v)
     fig.colorbar(sc, ax=ax1, label="RM (rad m$^{-2}$)")
-    ax1.set(xlabel="lon (deg)", ylabel="lat (deg)", title="RM sky")
+    ax1.set(xlabel="Galactic longitude (deg)", ylabel="Galactic latitude (deg)", title="RM sky")
     for sf, lab, c in ((sf_lo, "|b| < 10°", "C3"), (sf_hi, "|b| > 10°", "C0")):
         g = np.isfinite(sf["sf"])
         ax2.errorbar(
@@ -573,8 +919,22 @@ def _figure(s, sf_lo, sf_hi, out_dir) -> None:
         title="Noise-debiased structure function",
     )
     ax2.legend(fontsize=8)
+    if ladder is not None:  # pragma: no cover - big data only
+        ax3 = axes[2]
+        fin = np.isfinite(ladder["sigma_rm"])
+        bc = 0.5 * (ladder["b_lo"][fin] + ladder["b_hi"][fin])
+        jk = ladder["sigma_rm_jk_err"][fin]
+        boot = ladder["sigma_rm_err"][fin]
+        yerr = np.where(np.isfinite(jk), jk, boot)
+        ax3.errorbar(bc, ladder["sigma_rm"][fin], yerr=yerr, fmt="s-", color="k", ms=4, lw=1)
+        ax3.set(
+            yscale="log",
+            xlabel=r"$|b|$ bin centre (deg)",
+            ylabel=r"$\sigma_\mathrm{RM}$ (rad m$^{-2}$)",
+            title="Latitude ladder (jackknife errors)",
+        )
     fig.tight_layout()
-    fig.savefig(out / "rmstructure.pdf")
+    fig.savefig(out / f"{name}.pdf")
     plt.close(fig)
 
 
@@ -589,9 +949,16 @@ _ONE_DP = {
     "enhancement_ratio",
     "enhancement_ratio_se",
     "enhancement_ratio_jackknife_se",
+    "enhancement_ratio_jackknife_se_max",
     "enhancement_ratio_ensemble",
     "enhancement_ratio_ensemble_sd",
     "enhancement_ratio_ensemble_sem",
+    "enhancement_ratio_alt_bins_5_70",
+    "enhancement_ratio_cut300",
+    "enhancement_ratio_erm_cut",
+    # the floor is quoted at one decimal, so its errors display at one decimal too
+    "ladder_floor_sigma_err",
+    "ladder_floor_sigma_jk_err",
 }
 
 
@@ -611,17 +978,26 @@ def _write_macros(m: dict, path) -> None:
         val = c.get(key)
         return "--" if val is None else str(val)
 
-    # Floor sensitivity where it actually bites: the plane bins are floor-insensitive in
-    # quadrature, so also derive sigma_Gal for the SECOND-highest-|b| bin (the one within a
-    # factor ~2 of the floor) under the measured floor and across the literature floor range.
-    bins = m.get("ladder_bins") or []
-    if len(bins) >= 2:
-        sig_mid = float(bins[-2]["sigma_rm"])
+    def _flag(leg: str, key: str) -> str:
+        d = (m.get("flag_comparison_high_b") or {}).get(leg) or {}
+        val = d.get(key)
+        return "--" if val is None else str(val)
+
+    def _flag_top(key: str) -> str:
+        val = (m.get("flag_comparison_high_b") or {}).get(key)
+        return "--" if val is None else str(val)
+
+    # Display-time summaries of the per-bin goodRM removal (all inputs live in the JSON): the
+    # Honest Limits item needs only the span, not six numbers.
+    fb = [
+        b["pct_removed"]
+        for b in (m.get("goodrm_removed_by_bin") or [])
+        if b.get("pct_removed") is not None
+    ]
+    if fb:
         m = dict(m)
-        m["sigma_gal_mid_bin"] = bins[-2]["b"]
-        m["sigma_gal_mid"] = bins[-2]["sigma_gal"]
-        for name, f in zip(("lit_lo", "lit_hi"), LITERATURE_FLOOR_RANGE, strict=True):
-            m[f"sigma_gal_mid_floor_{name}"] = round(float(np.sqrt(max(sig_mid**2 - f**2, 0.0))), 1)
+        m["goodrm_removed_pct_min"] = round(min(fb), 2)
+        m["goodrm_removed_pct_max"] = round(max(fb), 2)
 
     pref = "rmsReal" if m.get("is_real") else "rmsSyn"
     lines = [
@@ -636,6 +1012,8 @@ def _write_macros(m: dict, path) -> None:
     for ns in ("rmsSyn", "rmsReal"):
         live = ns == pref
         g = (lambda k: _fmt(k)) if live else (lambda k: "--")
+        fl = _flag if live else (lambda leg, k: "--")
+        ft = _flag_top if live else (lambda k: "--")
         lines += [
             rf"\newcommand{{\{ns}Source}}{{{m['source'] if live else '--'}}}",
             rf"\newcommand{{\{ns}N}}{{{g('n_sources')}}}",
@@ -668,7 +1046,23 @@ def _write_macros(m: dict, path) -> None:
             rf"\newcommand{{\{ns}NUnflagged}}{{{g('unflagged_n_sources')}}}",
             rf"\newcommand{{\{ns}NRowsRaw}}{{{_casc('n_raw') if live else '--'}}}",
             rf"\newcommand{{\{ns}NAfterSnr}}{{{_casc('n_after_snr') if live else '--'}}}",
+            rf"\newcommand{{\{ns}NAfterFinite}}{{{_casc('n_after_finite') if live else '--'}}}",
             rf"\newcommand{{\{ns}NAfterGoodrm}}{{{_casc('n_after_goodrm') if live else '--'}}}",
+            rf"\newcommand{{\{ns}PlatRatio}}{{{g('sf_plateau_ratio')}}}",
+            rf"\newcommand{{\{ns}RatioJkSeMax}}{{{g('enhancement_ratio_jackknife_se_max')}}}",
+            rf"\newcommand{{\{ns}JkBlocksEff}}{{{g('n_jackknife_blocks_effective')}}}",
+            rf"\newcommand{{\{ns}RatioAltBins}}{{{g('enhancement_ratio_alt_bins_5_70')}}}",
+            rf"\newcommand{{\{ns}RatioCutThree}}{{{g('enhancement_ratio_cut300')}}}",
+            rf"\newcommand{{\{ns}RatioErmCut}}{{{g('enhancement_ratio_erm_cut')}}}",
+            rf"\newcommand{{\{ns}FloorSigJkErr}}{{{g('ladder_floor_sigma_jk_err')}}}",
+            rf"\newcommand{{\{ns}BreakHiFlagM}}{{{fl('flagged', 'break_deg')}}}",
+            rf"\newcommand{{\{ns}BreakHiFlagLo}}{{{fl('flagged', 'break_p16')}}}",
+            rf"\newcommand{{\{ns}BreakHiFlagHi}}{{{fl('flagged', 'break_p84')}}}",
+            rf"\newcommand{{\{ns}BreakHiUnflagLo}}{{{fl('unflagged', 'break_p16')}}}",
+            rf"\newcommand{{\{ns}BreakHiUnflagHi}}{{{fl('unflagged', 'break_p84')}}}",
+            rf"\newcommand{{\{ns}BreakFracSmall}}{{{ft('frac_boot_unflagged_break_smaller')}}}",
+            rf"\newcommand{{\{ns}FlagRemPctMin}}{{{g('goodrm_removed_pct_min')}}}",
+            rf"\newcommand{{\{ns}FlagRemPctMax}}{{{g('goodrm_removed_pct_max')}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
