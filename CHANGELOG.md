@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **stacking round-9 revision: forced photometry, a control that exists, an injection test
+  that can fail.** Every stacked flux is now a FORCED central-pixel measurement (a searched
+  peak on beam-correlated noise reads +1.57 sigma and is positive ~99% of the time); a
+  committed test asserts forced photometry goes negative about half the time on pure noise.
+  The "injection-recovery calibration" is retracted in print: the old test added the same PSF
+  plane to every cutout and sigma-clip is shift-equivariant, so recovered == injected
+  identically for any input. The replacement injects per-cutout sub-pixel offsets (0.3 px
+  assumed astrometric scatter) at the measured amplitude: ratio 0.923 +/- 0.024, reported as
+  a conditional systematic, with a test proving it fails for a badly-centred population. An
+  off-source control stack (298 cutouts at 30 arcsec offsets through the identical pipeline)
+  gives -17.5 +/- 8.2 uJy/beam -- no positive centre-common pedestal. The
+  individually-detected cut is implemented (5 sigma per-cutout test; 19 excluded), the full
+  denominator chain is committed (results/stacking_targets.csv: 300 queried -> 300 with
+  cutout -> 281 stacked; SE coverage grew from the old 236), and the headline on the current
+  stack is 40.8 uJy/beam at 4.9 sigma. The faintest magnitude bin is reported as the
+  non-detection it is (9.1 +/- 14.5, 0.6 sigma; no bright/faint ratio quoted), the binned
+  runs are framed as observed-frame machinery (apparent magnitude x redshift confound
+  stated), "mean" became clipped MEDIAN backed by a log-normal fixture in which the mean is
+  ~2.6x larger, the median noise sentence uses 1.25 sigma/sqrt(N),
+  White/Karim/Lindroos are Crossref-verified \citep entries, and synthetic runs can no longer
+  clobber the real figure.
 - **spectra round-9 revision: the flux-scale story is retracted; the measured mechanisms are
   selection bias and truncation.** The de Gasperin reference is built from the same
   uncorrected TGSS ADR1 fluxes (its own SS4 bounds the flux-scale term at ~0.06), so both
