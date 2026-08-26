@@ -11,6 +11,23 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Round-11 review verdicts: driftsearch, ecallisto_pipeline, rmstructure, lptduty (four
+  major revisions, seven blockers) -- every paper in the repo has now had a full referee
+  round.** driftsearch: the "Voyager-1 null" is a targeting error -- the hand-typed
+  8420.216 MHz maps to blank sky, while the actual carrier (8419.29703 MHz, +/-22.5 kHz
+  telemetry sidebands, -0.374 Hz/s) is recovered by the module's own search at S/N = 997.6;
+  the corrected paper is stronger than the submitted one. ecallisto_pipeline: the committed
+  figure is the real leg's output under the synthetic caption; n_scanned = 1512 double-counts
+  every file (763 listed, 559 fetched); 64% of rows analysed a different file than labelled,
+  corrupting the coincidence clock the paper contributes; the "8 candidates" are 2 detections
+  x4 duplicates. rmstructure: the quality-flag break claim rests on an 11-valued uncommitted
+  statistic on a noise-dominated curve; the ladder's errors use the bootstrap the paper
+  condemns; the CI assertion window passes only via the outlier seed (17/30 committed seeds
+  fail it). lptduty (RNAAS submission HELD): "removes roughly half the exposure" is false by
+  ~50x; two macro counts contradicted by their own JSON; a Kuiper statistic quoted with the
+  Rayleigh p; dividing p by each source's own (w+T)/P inverts the framing. All verdicts
+  recorded in the slices' findings files; fix campaigns follow (lptduty first -- it is
+  queued for submission -- then driftsearch, ecallisto_pipeline, rmstructure).
 - **frbperiod round-10 revision: one epoch per transit, and the abstract prints the number
   the argument rests on.** collapse_transits closes the same-transit pseudo-replication (19
   bursts -> 14 epochs for FRB 20180916B; Z2 33.4 -> 23.9, analytic FAP 8.4e-4 -- the
