@@ -11,6 +11,21 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion batch 1 of the fix-campaign drift: rmstructure, stacking, torchdsp,
+  rfitrend, spectra (main + note), skr.** All six pass lint + diff-guard + triage; every
+  paper with real word changes got a conversion-drift referee pass, and the referees earned
+  their keep again: torchdsp's conversion had created an exclusivity claim ("implemented
+  only in C++/CUDA") its own introduction refutes, plus a flat-noise absence claim the
+  committed S/N 5.0 contradicts (both fixed); rmstructure's retraction referent had softened
+  from "this paper" to "this analysis" and the section heading mis-attached goodRM to DR1
+  (both restored); skr's abstract compression cut the confidence-ranking marker, the
+  resolution concessive, "late-mission", and the controls-expose-bias clause — the refereed
+  abstract was restored wholesale. The spectra round resolved a pre-existing overstatement
+  in the process: the offset-vs-prediction comparison (observed −0.11 vs predicted
+  −0.0487 ± 0.033, 44% accounted for) now uses the partitive "of which the model predicts"
+  in all four places it appears. The skr README row still carrying the retracted
+  "collapses to ~1.4×" framing was corrected to match the paper. Audits recorded in
+  survey/{skr,uss}-findings.md.
 - **Style re-conversion of the submission-queue papers that drifted in the fix campaigns.**
   Of everything the README names as submission-bound, exactly two slices had prose rewritten
   in modern register since style batch 8: frbstats (round-9 fixes, main + RNAAS note) and

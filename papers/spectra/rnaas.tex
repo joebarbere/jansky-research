@@ -19,16 +19,15 @@ galaxies \citep{debreuck2000}. Using a small, tested tool (\code{spectra}), I
 cross-match TGSS~ADR1 \citep{intema2017} with NVSS \citep{condon1998} in a
 \usRadius$^\circ$ field, match \usNmatched\ sources (median $\alpha=\usAlphaMedian$),
 and flag \usNuss\ raw USS candidates ($\alpha<\usThreshold$). Scored against the
-\citet{degasperin2018} catalogue --- built from the same uncorrected ADR1 fluxes ---
-the field shows no population offset
-($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$, \usRealNPairs\ pairs), yet the
-candidates sit $\usRealFlaggedOffset$ steep: the amount a zero-free-parameter model
-of selection on the noisy index predicts ($\usRealSelPred\pm\usRealSelPredSD$).
-Against the reference's own USS population the cut is \usRealPurityPct\% pure and
-\usRealCompletenessPct\% complete; the incompleteness is structural, since a joint
-detection is equally sensitive only to $\alpha\approx\usAlphaMatch$ and flagging
-$\alpha=\usAlphaProbe$ requires $S_{150}\geq\usSNeededProbe$~mJy. A cautionary
-negative result, reported as such.
+\citet{degasperin2018} catalogue (built from the same uncorrected ADR1 fluxes), the
+field shows no population offset ($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$,
+\usRealNPairs\ pairs), yet the candidates sit $\usRealFlaggedOffset$ steep, of which
+a zero-free-parameter model of
+selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own USS population the cut is
+\usRealPurityPct\% pure and \usRealCompletenessPct\% complete; the incompleteness is
+structural, since a joint detection is equally sensitive only to
+$\alpha\approx\usAlphaMatch$ and flagging $\alpha=\usAlphaProbe$ requires
+$S_{150}\geq\usSNeededProbe$~mJy. A cautionary negative result.
 \end{abstract}
 
 \section{Result}
@@ -44,25 +43,25 @@ consistent with flux-limited extragalactic samples, and flags \usNuss\ raw USS
 candidates (steepest $\alpha=\usAlphaMin$), none with a measured redshift in NED or
 SIMBAD.
 
-The follow-up scores the \emph{whole field} against the 1.4-million-source
+The follow-up scores the whole field against the 1.4-million-source
 \citet{degasperin2018} TGSS$\times$NVSS catalogue. That catalogue is built from the
 same uncorrected ADR1 fluxes (its \S4 bounds the \citealt{hurleywalker2017}
 flux-scale term at $\sim$0.06 in $\alpha$), so the comparison measures matching and
 selection, not the flux scale. Three measured facts replace the flux-scale story an
-earlier draft of this note told. First, the population shows \emph{no offset}:
+earlier draft of this note told. The population shows no offset:
 $+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ over \usRealNPairs\ detection pairs,
-identical on both sides of the rescaled-coverage declination edge. Second, the
+identical on both sides of the rescaled-coverage declination edge. The
 candidates still sit $\usRealFlaggedOffset$ below their reference values
 (Figure~\ref{fig:spectra}; one candidate's reference entry is a non-detection limit,
-excluded) --- but treating the reference as truth and re-selecting on truth plus each
-source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$: the offset is
-selection on the extreme of a noisy variable, not calibration. Third, against the
+excluded); treating the reference as truth and re-selecting on truth plus each
+source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so the offset is
+selection on the extreme of a noisy variable, not calibration. Against the
 reference's own USS population the cut is \usRealPurityPct\% pure
 (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\% complete
 (\usRealNRefUssRec\ of \usRealNRefUss): with the documented survey floors a joint
 detection is equally sensitive only down to $\alpha\approx\usAlphaMatch$, and a
 source at $\alpha=\usAlphaProbe$ must have $S_{150}\geq\usSNeededProbe$~mJy to be
-flagged at all --- genuine USS sources are truncated out by construction.
+flagged at all, so genuine USS sources are truncated out by construction.
 
 A catalogue-level USS cut from this survey pair is therefore unreliable in both
 directions. Every number above is \code{\textbackslash input} from a
@@ -75,8 +74,8 @@ pipeline-generated macro file and regenerates from a clean checkout
 \includegraphics[width=0.7\linewidth]{figures/alpha_compare.pdf}
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every
 matched source with a counterpart. The population lies on the identity line (mean
-offset $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it by the
-amount the committed selection model predicts. The open circle is the candidate
+offset $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of
+which the committed selection model predicts. The open circle is the candidate
 whose reference entry is a non-detection limit (\code{Scode=L}), excluded from all
 means.}
 \label{fig:spectra}

@@ -173,3 +173,15 @@ claims the inference GATE-2 killed.
 Two new tested controls that can fail: a flat intrinsic rate through a range-independent floor
 must come out flat with zero noise promotions (both rejected nulls measurably fail it), and an
 injected intrinsic trend must survive the census.
+
+**Conversion-drift round (2026-08-26).** A traditional-style re-conversion compressed the
+abstract and the drift referee found four MAJOR scope losses (confidence-ranking marker,
+the concessive on the 0.08 h resolution, "published late-mission values", the
+controls-expose-bias clause); the refereed abstract was restored wholesale, keeping the
+body's verified-clean sentence splits. Standing items the round surfaced: the README slice
+row still carried the RETRACTED "collapses to ~1.4×" framing (fixed with the row now
+matching the paper); the abstract's 0.06% and the 1.68 in abstract+Results are hardcoded
+rather than pipeline-generated, against the Reproducibility paragraph's claim — worth
+macro-izing in a future round; and the abstract ranks the anchor above the census while the
+Conclusions' "firm results" list leads with the raw trend — arguably different claims
+(the raw trend is firm, its decomposition is not), but worth harmonising deliberately.

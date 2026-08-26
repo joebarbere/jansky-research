@@ -90,8 +90,8 @@ For the proximity census, we bin the SKR-active flag by Cassini--Saturn range qu
 report the duty cycle per bin, with a leave-one-periapsis-out jackknife supplying the error bar
 (the orbit, not the autocorrelated minute, is the independent unit). The dominant confound is
 inverse-square sensitivity: at smaller range the same intrinsic emission clears a fixed threshold
-more often. Constructing a valid null for that proved to be the hard part of this paper, and two
-plausible constructions fail on injection controls. Rescaling the total flux to a common
+more often. Constructing a valid null for that was the hard part of this paper: two plausible constructions
+fail on injection controls. Rescaling the total flux to a common
 range moves the range-independent instrumental-plus-galactic noise floor along with the signal
 and is biased toward a collapse; rescaling the excess over the floor upward at far range
 amplifies far-range noise deviations and is biased toward a reversal. The estimator we adopt is a
@@ -101,10 +101,10 @@ raw-active and its scaled excess still clears the raw threshold. On controls wit
 range-independent floor, a flat intrinsic rate comes out flat with zero noise promotions and an
 injected intrinsic trend is recovered; both controls, and both failure modes of the rejected
 constructions, are in the test suite. A second confound is latitude: SKR is auroral and beamed,
-and range correlates with sub-spacecraft latitude along the orbit: the near quartile sits at
+and range correlates with sub-spacecraft latitude along the orbit. The near quartile sits at
 median $|$lat$|$ 36$^\circ$ against the far quartile's 8$^\circ$, and higher-latitude viewing
-favours SKR visibility \citep{lamy2008}, so the latitude confound inflates the near bins and any
-corrected residual is an upper bound on the intrinsic part for that reason alone.
+favours SKR visibility \citep{lamy2008}. The latitude confound therefore inflates the near bins,
+and any corrected residual is an upper bound on the intrinsic part for that reason alone.
 
 \section{Results}
 \label{sec:results}
@@ -128,11 +128,12 @@ $\skrRealNearFar\pm\skrRealNearFarJkSe$ over \skrRealNOrbits\ periapsis passes
 (Figure~\ref{fig:skr}, right). The trend itself is well measured; its decomposition is not. The
 common-sensitivity census gives a corrected ratio of \skrRealSensCorrNearFar,
 indistinguishable from the raw trend, but with an orbit-to-orbit jackknife scatter of
-$\pm$\skrRealCorrNearFarJkSe, a detection-rule dependence spanning
+$\pm$\skrRealCorrNearFarJkSe. It also carries a detection-rule dependence spanning
 \skrRealSweepMin--\skrRealSweepMax\ over $k\in[4,10]$ and baseline percentiles 10--25 (at the
 50th percentile the floor absorbs real emission, 40\% of bins being active, and the estimator
-degenerates), a far-field-only value of \skrRealCorrNearFarFarField, and a per-day background
-value of \skrRealCorrNearFarPerDay, on the other side of unity. The two rejected null models
+degenerates). A far-field-only variant gives \skrRealCorrNearFarFarField, and a per-day
+background convention gives \skrRealCorrNearFarPerDay, on the other side of unity. The two
+rejected null models
 bracket it: rescaling total flux gives \skrRealCorrNearFarFluxScaled\ (biased toward a collapse:
 that is the number an earlier version of this paper reported as ``the null removes essentially
 the whole effect''), and rescaling the excess upward gives 1.68. When the answer moves by a
@@ -154,8 +155,8 @@ the first quartile's short-range lever arm.}
 
 \section{Conclusions}
 Cassini's RPWS key-parameter archive gives a well-measured raw proximity trend
-($\skrRealNearFar\pm\skrRealNearFarJkSe$ from $\sim$21 to $\sim$8~$R_S$) whose decomposition
-into detection sensitivity versus intrinsic occurrence this dataset cannot deliver: three
+($\skrRealNearFar\pm\skrRealNearFarJkSe$ from $\sim$21 to $\sim$8~$R_S$); this dataset cannot
+deliver its decomposition into detection sensitivity versus intrinsic occurrence. Three
 defensible null models span corrected ratios of \skrRealCorrNearFarFluxScaled\ to
 \skrRealSensCorrNearFar, the rule sweep spans \skrRealSweepMin--\skrRealSweepMax, and the
 per-day background convention lands below unity. An earlier version of this paper quoted the

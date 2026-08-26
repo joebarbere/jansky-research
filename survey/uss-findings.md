@@ -216,3 +216,13 @@ attributed exactly this offset to the TGSS flux scale").
    `survey/` duplicate CSV removed; this file's "flatter" sign error corrected in place; the
    RNAAS figure is now the raw-vs-reference panel that displays the note's conclusion; arXiv
    package regenerated (0 errors).
+
+**Conversion-drift round (2026-08-26).** The style re-conversion changed the RNAAS
+abstract's offset-vs-prediction sentence from an identity claim ("the amount ... predicts")
+to "close to" — and the drift referee showed NEITHER is supported: -0.11 observed vs
+-0.0487 ± 0.033 predicted is 1.9 sigma apart and the model accounts for 44% (31% against
+flagged_offset_all). All four statements of the comparison (both abstracts, both figure
+captions) now use the partitive "of which / part of which the model predicts", the only
+form the ratio supports. Standing item for the next science round: main.tex still says
+selection "produces most of the observed offset" — 44% is not "most"; the sentence should
+quote the fraction or say "roughly half".

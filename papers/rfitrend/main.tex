@@ -13,34 +13,34 @@ Unintended-Emission Trend Across the Megaconstellation Era}
 The e-CALLISTO network of low-cost solar radio spectrometers \citep{benz2009} has recorded
 45--870~MHz dynamic spectra worldwide since 2002, an unintended long-baseline record of the
 radio-frequency-interference (RFI) environment. The only published RFI-trend study on the
-archive \citep{prieto2020} is a two-epoch (2012 vs.\ 2019) campaign that found increased
-interference levels at the Spanish sites; it stops in 2019, the year Starlink deployment scaled. We examine the
-continuous archive over 2012--2026, sampling one representative spectrum per station-month from
-the open FITS record at \rfRealNStations\ long-running stations and reducing each to a
-burst-immune occupancy metric, a per-channel time median that a transient solar burst or satellite
-pass does not move. e-CALLISTO log-power drifts with uncalibrated station gain, a common-mode
-systematic that would fake a trend, so our primary metric is self-normalizing: the excess level at
-the intrinsic narrowband Starlink unintended-emission (UEM) lines (125/135/150/175~MHz;
-\citealt{divruno2023}) over their immediately adjacent channels. This cancels common-mode
-station gain and, unlike a fixed FM control, survives the per-station RFI-avoidance notches that leave many
-e-CALLISTO instruments without the FM band. We test the trend against the public Starlink
-on-orbit count \citep{planet4589}. The result is a systematics-limited null. Across
-\rfRealNMonths\ usable station-months, the two stations that sample UEM lines disagree in sign:
-HUMAIN's fitted line-excess trend is positive ($\rfRealHUMAINSlope$
-[$\rfRealHUMAINSlopeLo$, $\rfRealHUMAINSlopeHi$] per year), but a step analysis of the same
-committed series shows it is not a trend at all: single-month discontinuities of
-\rfRealHumStepTwoDelta\ (at \rfRealHumStepTwoYr) and $+$\rfRealHumStepThreeDelta\ (at
-\rfRealHumStepThreeYr) separate plateaus within which no regime rises (largest within-regime
-slope \rfRealHumMaxRegimeSlope\ per year, $p=\rfRealHumMaxRegimeP$) --- the signature of
-receiver reconfiguration, and the downward step spans exactly the interval in which the
-constellation grew from 0 to $\sim$1900 satellites. ALMATY's excess falls
+archive \citep{prieto2020}, a two-epoch (2012 vs.\ 2019) campaign at the Spanish sites, found
+increased interference levels; it stops in 2019, the year Starlink deployment scaled. We examine
+the continuous archive over 2012--2026, sampling one representative spectrum per station-month
+from the open FITS record at \rfRealNStations\ long-running stations and reducing each to a
+burst-immune occupancy metric, a per-channel time median that a transient solar burst or
+satellite pass does not move. e-CALLISTO log-power drifts with uncalibrated station gain, a
+common-mode systematic that would fake a trend, so our primary metric is self-normalizing: the
+excess level at the intrinsic narrowband Starlink unintended-emission (UEM) lines
+(125/135/150/175~MHz; \citealt{divruno2023}) over their immediately adjacent channels. This
+cancels common-mode station gain and, unlike a fixed FM control, survives the per-station
+RFI-avoidance notches that leave many e-CALLISTO instruments without the FM band. We test the
+trend against the public Starlink on-orbit count \citep{planet4589}. The result is a
+systematics-limited null. Across \rfRealNMonths\ usable station-months, the two stations that
+sample UEM lines disagree in sign. HUMAIN's fitted line-excess trend is positive
+($\rfRealHUMAINSlope$ [$\rfRealHUMAINSlopeLo$, $\rfRealHUMAINSlopeHi$] per year), but a step
+analysis of the same committed series shows it is not a trend at all: single-month
+discontinuities of \rfRealHumStepTwoDelta\ (at \rfRealHumStepTwoYr) and
+$+$\rfRealHumStepThreeDelta\ (at \rfRealHumStepThreeYr) separate plateaus within which no regime
+rises (largest within-regime slope \rfRealHumMaxRegimeSlope\ per year, $p=\rfRealHumMaxRegimeP$),
+the signature of receiver reconfiguration, and the downward step spans exactly the interval in
+which the constellation grew from 0 to $\sim$1900 satellites. ALMATY's excess falls
 ($\rfRealALMATYSlope$ [$\rfRealALMATYSlopeLo$, $\rfRealALMATYSlopeHi$] per year). A genuine
 global signal should raise every station's UEM lines together; the sign disagreement
 (\rfRealNRising\ rising, \rfRealNFalling\ falling; \code{coherent\_rise}=\rfRealCoherent) is
-consistent with per-station and local-RFI effects dominating --- and the null carries its
-measured sensitivity: injecting a common Starlink-shaped rise into both committed series, the
-coherence criterion reaches 90\% power only at \rfRealAmpNinety\ log-units, larger than the
-largest excursion in the data, so a modest common signal would not have been detected. The
+consistent with per-station and local-RFI effects dominating. The null carries its measured
+sensitivity: injecting a common Starlink-shaped rise into both committed series, the coherence
+criterion reaches 90\% power only at \rfRealAmpNinety\ log-units, larger than the largest
+excursion in the data, so a modest common signal would not have been detected. The
 positive pooled slope survives equalising the station month counts
 (\rfRealEqualNSlope\ [\rfRealEqualNLo, \rfRealEqualNHi] per year), so it is dominated by
 HUMAIN's step amplitude, not its month count. We claim no Starlink attribution and report the
@@ -68,9 +68,9 @@ at Spanish sites and reports increased interference levels across the band, but
 it ends in 2019, the year the first operational Starlink batches launched. The 2012--2026
 e-CALLISTO record is therefore an unexamined 15-year RFI observatory covering the megaconstellation
 ramp, and extending the two-epoch result into a continuous trend, attributed to the public
-constellation count, is unclaimed. We do that here, with the caveat stated up front: the
-archive can ask whether a post-2019, UEM-band-specific rise tracks Starlink growth, but it
-cannot by itself prove causation, because general terrestrial RFI grows over the same period.
+constellation count, is unclaimed. We do that here, with one caveat: the archive can ask whether
+a post-2019, UEM-band-specific rise tracks Starlink growth, but it cannot by itself prove
+causation, because general terrestrial RFI grows over the same period.
 
 \section{Method}
 \label{sec:method}
@@ -117,8 +117,8 @@ limitation the per-station results make visible rather than hide.
 We regress the metric against decimal year (robust Theil--Sen slope with a
 Kendall-$\tau$ significance, so a single anomalous month cannot swing it) and correlate it with the
 public cumulative on-orbit Starlink count \citep{planet4589}, a hand-vendored table of rounded
-yearly anchors interpolated linearly (so the regressor is nonzero from early 2019 --- between the
-2019.0 and mid-2019 anchors --- rises monotonically, and clamps at the last anchor for months
+yearly anchors interpolated linearly (so the regressor is nonzero from early 2019, between the
+2019.0 and mid-2019 anchors, rises monotonically, and clamps at the last anchor for months
 after 2026.0); no Space-Track credentials are required. As a qualitative pre-vs-post
 baseline check we also compare the raw UEM occupancy in 2012--2013 against 2018--2019, in the spirit
 of the two-epoch \citet{prieto2020} campaign, though this is the gain-contaminated raw level (not
@@ -134,12 +134,12 @@ Theil--Sen slope of the injected line series is \rfSynTruthLineSlope\ per year a
 line-vs-adjacent excess recovers \rfSynLineExcessSlope\ (ratio \rfSynLineRecovery); the
 secondary differential recovers \rfSynSlope\ per year ($p=\rfSynTrendP$). The correlations with
 the injected Starlink shape ($r=\rfSynLineCorr$) are near unity \emph{by construction} on these
-clean arms --- the metric returns the injected quantity plus noise --- so they test algebra, not
+clean arms (the metric returns the injected quantity plus noise), so they test algebra, not
 discrimination; the arm that can fail is the next one. Local RFI accruing in a line's flanking
 channels only (a linear ramp, uncorrelated with the Starlink curve) is the systematic the
 line-vs-adjacent difference cannot cancel. Sweeping its total amplitude against the fixed injected
 line rise of 4.0: the recovered sign crosses zero at a flank ramp of only
-$\sim$\rfSynFlankCross\ --- about $0.8\times$ the true line rise --- and at a flank ramp of 5.0
+$\sim$\rfSynFlankCross\ (about $0.8\times$ the true line rise), and at a flank ramp of 5.0
 the recovered pair (slope \rfSynFlankAtFiveSlope\ per year, Starlink correlation
 \rfSynFlankAtFiveCorr) reproduces ALMATY's measured pair almost exactly, a quantitative
 demonstration that ALMATY's fall is mechanistically consistent with local flank contamination. At
@@ -188,15 +188,15 @@ Starlink on-orbit count. GLASGOW samples no UEM line with a stable core-plus-fla
 The two line-sampling stations disagree in sign, and neither behaves like a constellation.
 HUMAIN's fitted line-excess trend is $\rfRealHUMAINSlope$
 [$\rfRealHUMAINSlopeLo$, $\rfRealHUMAINSlopeHi$] per year ($p=\rfRealHUMAINP$,
-$r=\rfRealHUMAINStarCorr$ against the Starlink count) --- but the fit is not describing a trend.
+$r=\rfRealHUMAINStarCorr$ against the Starlink count), but the fit is not describing a trend.
 A step analysis of the committed series finds three single-month discontinuities
 ($+$\rfRealHumStepOneDelta\ at \rfRealHumStepOneYr, \rfRealHumStepTwoDelta\ at
 \rfRealHumStepTwoYr, $+$\rfRealHumStepThreeDelta\ at \rfRealHumStepThreeYr), each larger than
 the fitted total change over the whole 13-year baseline, separating plateaus within which no
 regime rises (the largest within-regime slope is \rfRealHumMaxRegimeSlope\ per year at
 $p=\rfRealHumMaxRegimeP$). The \rfRealHumStepTwoDelta\ step is \emph{downward} and spans
-exactly the 2019--2022 interval in which the constellation grew from 0 to $\sim$1900 satellites
---- behaviour a megaconstellation signal cannot produce and receiver reconfiguration does. The
+exactly the 2019--2022 interval in which the constellation grew from 0 to $\sim$1900 satellites,
+behaviour a megaconstellation signal cannot produce and receiver reconfiguration does. The
 Starlink-shape correlation exists only because the 2022--2026 plateau is higher than the
 2013--2017 baseline; against a plain linear ramp the correlation is \rfRealHumShapeRamp\ and
 against a 2019.4 step \rfRealHumShapeStep. HUMAIN's raw UEM occupancy rose by
@@ -204,18 +204,19 @@ against a 2019.4 step \rfRealHumShapeStep. HUMAIN's raw UEM occupancy rose by
 the pre-Starlink rise \citet{prieto2020} found, read as a consistency note rather than a
 reproduction. ALMATY trends the opposite way: its line excess (lines \rfRealALMATYLines~MHz)
 falls ($\rfRealALMATYSlope$ [$\rfRealALMATYSlopeLo$, $\rfRealALMATYSlopeHi$] per year,
-$p=\rfRealALMATYP$, $r=\rfRealALMATYStarCorr$) --- an interval whose upper bound sits just
+$p=\rfRealALMATYP$, $r=\rfRealALMATYStarCorr$), an interval whose upper bound sits just
 below zero, and a fall the flank-contamination arm of \S\ref{sec:synth} reproduces
 quantitatively.
 
-The cross-station coherence test is the paper's primary discriminator. A real global Starlink UEM
-signal should raise every station's UEM lines together. Our pipeline computes, from the
-significant per-station slopes, whether they agree in sign: they do not (\rfRealNRising\ rising,
-\rfRealNFalling\ falling; \code{coherent\_rise}=\rfRealCoherent). The positive network-pooled
-slope (\rfRealLineExcessSlope\ per year, $p=\rfRealTrendP$, $r=\rfRealCorr$ with Starlink) is
-not a count artifact --- equalising the two stations' month counts leaves it at
-\rfRealEqualNSlope\ [\rfRealEqualNLo, \rfRealEqualNHi] per year over 500 subsamples --- it is
-dominated by the sheer amplitude of HUMAIN's step excursion ($\pm$13 units against ALMATY's
+The cross-station coherence test is the primary discriminator between a real signal and
+per-station noise. A real global Starlink UEM signal should raise every station's UEM lines
+together. Our pipeline computes, from the significant per-station slopes, whether they agree in
+sign: they do not (\rfRealNRising\ rising, \rfRealNFalling\ falling;
+\code{coherent\_rise}=\rfRealCoherent). The positive network-pooled slope
+(\rfRealLineExcessSlope\ per year, $p=\rfRealTrendP$, $r=\rfRealCorr$ with Starlink) is not a
+count artifact: equalising the two stations' month counts leaves it at \rfRealEqualNSlope\
+[\rfRealEqualNLo, \rfRealEqualNHi] per year over 500 subsamples. It is dominated by the sheer
+amplitude of HUMAIN's step excursion ($\pm$13 units against ALMATY's
 $\pm$2), which is the correct reason to distrust it. We claim no Starlink attribution and no
 megaconstellation detection. The result is consistent with per-station effects limiting any
 common signal: local RFI-environment change, receiver and antenna reconfiguration (e-CALLISTO
@@ -226,25 +227,25 @@ line.
 The coherence test's sensitivity is measured, not asserted. Injecting a common Starlink-shaped
 rise of total amplitude $A$ into both committed series (detrended, residuals circularly shifted
 so the real autocorrelation and step structure survive) and applying the pipeline's own
-criterion: the detection probability is \rfRealPowerAtSix\ at $A=6$ log-units --- a signal the
-size of HUMAIN's fitted total change --- and reaches 90\% only at $A=\rfRealAmpNinety$, larger
+criterion: the detection probability is \rfRealPowerAtSix\ at $A=6$ log-units (a signal the
+size of HUMAIN's fitted total change) and reaches 90\% only at $A=\rfRealAmpNinety$, larger
 than the largest excursion in the data. The null therefore excludes only a common rise of
 $\gtrsim$\rfRealAmpNinety\ log-units at high confidence; below that the two-station test has
 limited power. Opposite signs also do not strictly rule out a real global signal for a second
 reason: the two stations sample partly different lines (Table~\ref{tab:stations}), and because
 the line-excess is self-normalized against its flanks, a station whose flank channels accrue
 local terrestrial RFI faster than the line can register a falling excess even under a rising
-true signal --- the degeneracy the flank arm quantifies. The test therefore shows the data are
+true signal, the degeneracy the flank arm quantifies. The test therefore shows the data are
 dominated by per-station systematics; it does not prove the absence of any Starlink
 contribution. Because our conclusion is a null, both asymmetries are conservative.
 
 An earlier draft of this work flagged HUMAIN as a follow-up candidate "whose rise is real,
 significant, and Starlink-correlated". The step analysis retires that framing: what is real at
 HUMAIN is a 2022--2026 plateau sitting above the 2013--2017 baseline, reached through
-single-month reconfiguration-like steps --- including a downward one through the deployment era
---- with no rise inside any regime. If a follow-up is run, it should be satellite-pass-gated
+single-month reconfiguration-like steps (including a downward one through the deployment era)
+with no rise inside any regime. If a follow-up is run, it should be satellite-pass-gated
 occupancy within one instrument configuration, and per-month file provenance (which day and time
-each sampled spectrum came from --- computed by the sampler but not previously recorded) should
+each sampled spectrum came from, computed by the sampler but not previously recorded) should
 be committed first, so a step epoch can be checked against a sampling change. We claim nothing
 about HUMAIN beyond what the staircase shows.
 

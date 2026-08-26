@@ -13,27 +13,27 @@ Method, Recover-a-Known, and the Full-Sky Disc--Halo Contrast from DR2}
 The SPICE-RACS programme has multiplied the Faraday rotation-measure (RM) grid; its second data
 release \citep{spiceracs_dr2} ships $\sim$3.3$\times$10$^5$ quality-flagged (goodRM) rows over
 87.5\% of the sky, without a systematic Galactic structure-function analysis. We supply the
-reproducible tool and its validation, led by the error model: on a synthetic screen the
-sky-block jackknife SE of the latitude enhancement ratio (\rmsSynRatioJkSe) reproduces the true
-field-to-field scatter over \rmsSynNReal\ realizations (\rmsSynRatioEnsSd, per-seed values
-committed), where an i.i.d.\ source bootstrap claims \rmsSynRatioSe\ --- $\sim$3$\times$ too
-small on a correlated field. Applied to the DR2 goodRM sample deduplicated
+reproducible tool and its validation, led by the error model: on a synthetic screen the sky-block jackknife standard
+error of the latitude enhancement ratio, \rmsSynRatioJkSe, reproduces the true field-to-field
+scatter over \rmsSynNReal\ realizations (\rmsSynRatioEnsSd, per-seed values committed), while
+an i.i.d.\ source bootstrap claims \rmsSynRatioSe, an understatement of $\sim$3$\times$ on a
+correlated field. Applied to the DR2 goodRM sample deduplicated
 to one row per component (\rmsRealN\ components),
-the latitude enhancement ratio --- median $|$RM$|$ at $|b|<10^\circ$ over that at $|b|>60^\circ$
---- is \rmsRealRatio$\pm$\rmsRealRatioJkSe\ (jackknife over \rmsRealJkBlocks\ $10^\circ$
+the latitude enhancement ratio (median $|$RM$|$ at $|b|<10^\circ$ over that at $|b|>60^\circ$)
+is \rmsRealRatio$\pm$\rmsRealRatioJkSe\ (jackknife over \rmsRealJkBlocks\ $10^\circ$
 blocks, growing to at most $\pm$\rmsRealRatioJkSeMax\ across block sizes of 5--30$^\circ$; the
-bootstrap would claim $\pm$\rmsRealRatioSe). The statistic is definition-dependent ---
-plane/pole cuts of 5$^\circ$/70$^\circ$ give \rmsRealRatioAltBins, an
-$|\mathrm{RM}|<300$~rad\,m$^{-2}$ cut gives \rmsRealRatioCutThree\ --- so we quote it strictly
+bootstrap would claim $\pm$\rmsRealRatioSe). The statistic is definition-dependent:
+plane/pole cuts of 5$^\circ$/70$^\circ$ give \rmsRealRatioAltBins\ and an
+$|\mathrm{RM}|<300$~rad\,m$^{-2}$ cut gives \rmsRealRatioCutThree, so we quote it strictly
 for its stated bins. A six-bin latitude ladder
 falls monotonically from $\sigma_\mathrm{RM}=\rmsRealSigPlane$ to \rmsRealSigPole~rad\,m$^{-2}$
-(a different statistic on different bins than the median ratio),
+(a different statistic on different bins than the median ratio), with
 the polar endpoint (\rmsRealFloorSig$\pm$\rmsRealFloorSigJkErr) at the literature
 intrinsic+extragalactic floor, licensing a first-order quadrature floor subtraction. Each
 plateau is an upper bound (source-intrinsic scatter unremoved; the disc bins mix secular plane
-gradients), and every ladder error is now a sky-block jackknife. A quality-flag effect
-reported in an earlier version of this paper --- an unflagged high-latitude half-plateau scale
-of \rmsRealBreakHiUnflagged$^\circ$ against \rmsRealBreakHiFlagM$^\circ$ flagged --- does not
+gradients), and every ladder error is a sky-block jackknife. A quality-flag effect
+reported in an earlier version of this paper (an unflagged high-latitude half-plateau scale
+of \rmsRealBreakHiUnflagged$^\circ$ against \rmsRealBreakHiFlagM$^\circ$ flagged) does not
 survive a matched-pair comparison and is retracted: the shift is preferred in only
 \rmsRealBreakFracSmall\ of shared bootstrap replicates.
 \end{abstract}
@@ -59,12 +59,12 @@ $\mathrm{SF}(\delta\theta)=\langle(\mathrm{RM}_1-\mathrm{RM}_2)^2\rangle-\langle
 \sigma_2^2\rangle$: the second term removes the measurement-noise floor that otherwise dominates
 faint-grid SFs. Errors come from bootstrap resampling of sources (pairs are correlated);
 pair counts are capped with the subsample fraction recorded. The central validation is of the
-\emph{error model}, because the paper's headline uncertainty depends on it: on a synthetic
+error model, because the main result's uncertainty depends on it. On a synthetic
 Gaussian-blob screen with a known coherence scale, the leave-one-sky-block-out jackknife SE of
 the enhancement ratio is \rmsSynRatioJkSe, reproducing the true field-to-field scatter of
 \rmsSynRatioEnsSd\ (the SD over \rmsSynNReal\ independent realizations, per-seed values
-committed in \code{results/rmstructure\_synthetic.json}) to within a few percent, where the
-i.i.d.\ source bootstrap on one realization claims \rmsSynRatioSe\ --- an understatement of
+committed in \code{results/rmstructure\_synthetic.json}) to within a few percent. The
+i.i.d.\ source bootstrap on one realization claims \rmsSynRatioSe, an understatement of
 $\sim$3$\times$, because it resamples within correlated patches. The same fixture validates
 the statistics: a pure-noise sky debiases to $\mathrm{SF}\approx0$; the screen's 5$\times$ plane
 amplitude boost returns an enhancement ratio of \rmsSynRatioEns$\pm$\rmsSynRatioEnsSd\ over the
@@ -75,25 +75,25 @@ $2\sqrt{\ln 2}\approx1.67$
 Two properties of the fixture bound what this validates. The recovered ratio sits below the
 injected peak boost of 5 by construction, not by failure: the boost has a 5$^\circ$-scale
 Gaussian latitude profile, so the $|b|<10^\circ$ band median averages well down the profile, and
-blob-scale mixing across the band edge contracts it further --- the ensemble quantifies the
-machinery's \emph{response}, it is not a calibration of the sky statistic. And the fixture's
-patch spans only $\pm20^\circ$, so its plane/pole cut is $|b|>15^\circ$ where the science cut is
+blob-scale mixing across the band edge contracts it further. The ensemble quantifies the
+machinery's response; it is not a calibration of the sky statistic. The fixture's
+patch also spans only $\pm20^\circ$, so its plane/pole cut is $|b|>15^\circ$ where the science cut is
 $|b|>60^\circ$: the recover-a-known exercises the same code path, not the identical statistic.
 
-\section{Real data: DR1, then the full-sky DR2 goodRM sample}
+\section{Real data: DR1, then the DR2 goodRM sample}
 The first, bounded leg used the DR1 catalogue on CASDA TAP; its raw S/N cut (7{,}707 rows)
 exceeds the DR1 paper's fully-flagged 5{,}818 RM measurements \citep{thomson2023} because the
-leakage and Stokes-I-fit flags were not applied, a lesson promoted to the main result: the DR2
-leg uses the release's own \code{goodRM} flag. The full cut cascade is committed with the
-results: \rmsRealNRowsRaw\ catalogue rows, \rmsRealNAfterSnr\ at \code{snr\_polint}
-$\ge 8$ (the S/N column is recorded, not resolved silently), \rmsRealNAfterFinite\ with finite
-RM and positive error, \rmsRealNAfterGoodrm\ after
+leakage and Stokes-I-fit flags were not applied. That discrepancy sets the approach for the
+main result: the DR2 leg uses the release's own \code{goodRM} flag. The full cut cascade is
+committed with the results: \rmsRealNRowsRaw\ catalogue rows, \rmsRealNAfterSnr\ at
+\code{snr\_polint} $\ge 8$ (the S/N column is recorded, not resolved silently),
+\rmsRealNAfterFinite\ with finite RM and positive error, \rmsRealNAfterGoodrm\ after
 \code{goodRM}, deduplicated to \rmsRealN\ unique components (one row per \code{cat\_id}, keeping
-the observation nearest its tile centre) --- consistent with the post-deduplication 8$\sigma$
+the observation nearest its tile centre), consistent with the post-deduplication 8$\sigma$
 count of $2.5\times10^5$ the release quotes in its abstract \citep{spiceracs_dr2}.
 Deduplication matters beyond bookkeeping: tile-overlap repeats are the same source with
 independent noise, so they inject pure noise power into the smallest SF bins, and the repeat
-rows amount to 35\% of the unique-source count --- weight that lands multiply in every median.
+rows amount to 35\% of the unique-source count, weight that lands multiply in every median.
 
 On this sample the latitude enhancement ratio is \rmsRealRatio$\pm$\rmsRealRatioJkSe,
 where the error is a leave-one-block-out jackknife over \rmsRealJkBlocks\ sky blocks of
@@ -103,7 +103,7 @@ The jackknife's one tuning choice is varied rather than assumed: across block si
 5--30$^\circ$ the SE grows to at most \rmsRealRatioJkSeMax\ (all five values committed). The
 fixture arbitrates the setting: swept the same way, its jackknife SE reaches
 \rmsSynRatioJkSeMax\ against a true field-to-field scatter of \rmsSynRatioEnsSd, and matches
-the truth at $10^\circ$ blocks ($\approx$5 coherence lengths) --- so we quote the $10^\circ$
+the truth at $10^\circ$ blocks ($\approx$5 coherence lengths). We therefore quote the $10^\circ$
 value as the calibrated error and \rmsRealRatioJkSeMax\ as a conservative ceiling. The
 i.i.d.\ source bootstrap gives $\pm$\rmsRealRatioSe; the same understatement the synthetic
 ensemble exposes on the fixture, here on the real leg. That the relative jackknife error
@@ -122,12 +122,12 @@ The disc/halo SF plateaus are \rmsRealPlatLo\ and \rmsRealPlatHi~rad$^2$\,m$^{-4
 fluctuation-power ratio of \rmsRealPlatRatio), and the
 six-bin ladder gives $\sigma_\mathrm{RM}$ falling monotonically from \rmsRealSigPlane\
 ($|b|<5^\circ$) to \rmsRealSigPole~rad\,m$^{-2}$ ($|b|>50^\circ$); each plateau now carries a
-sky-block jackknife error next to its bootstrap one (the bootstrap is shot-noise-only, the
-lesson the headline taught), with pair counts and sampled pair fractions committed with the
-results. Note the power ratio and the enhancement ratio are different statistics on different
-bins --- squared dispersion in $|b|<5^\circ$ over $|b|>50^\circ$ versus median $|$RM$|$ in
-$|b|<10^\circ$ over $|b|>60^\circ$ --- so their magnitudes are not mutually convertible. The
-polar
+sky-block jackknife error next to its bootstrap one (the bootstrap is shot-noise-only, as
+the fixture establishes), with pair counts and sampled pair fractions committed
+with the results. Note the power ratio and the enhancement ratio are different statistics on
+different bins (squared dispersion in $|b|<5^\circ$ over $|b|>50^\circ$ versus median
+$|$RM$|$ in $|b|<10^\circ$ over $|b|>60^\circ$), so their magnitudes are not mutually
+convertible. The polar
 endpoint, \rmsRealFloorSig$\pm$\rmsRealFloorSigJkErr~rad\,m$^{-2}$, sits at the literature floor
 \citep{mao2010,taylor2009}, licensing the quadrature floor subtraction for the Galactic-only
 shape; the subtraction's sensitivity to that single number is quoted in Section~4.
@@ -138,7 +138,7 @@ that without \code{goodRM} the high-latitude half-plateau scale fell from
 small-scale RM structure. A matched-pair comparison retracts that claim. Drawing one pair set
 over the $|b|>10^\circ$ subset of the unflagged sample (\rmsRealNUnflagged\ deduplicated
 sources in total), with the flagged curve keeping exactly the pairs whose endpoints both pass
-\code{goodRM}, reproduces the two point estimates --- but a bootstrap shared between the
+\code{goodRM}, reproduces the two point estimates, but a bootstrap shared between the
 curves finds the unflagged break smaller in only \rmsRealBreakFracSmall\ of replicates, and
 its 68\% interval, \rmsRealBreakHiUnflagLo--\rmsRealBreakHiUnflagHi$^\circ$, spans both
 values. The apparent shift is a single noisy sub-degree bin carrying an 11-valued
@@ -170,7 +170,7 @@ rad\,m$^{-2}$, and by construction $\sigma_\mathrm{Gal}$ in that bin is zero: th
 results record it as null, a definition rather than a measurement. The literature floor range
 permits a genuine polar Galactic term as large as
 $({\rmsRealFloorSig}^2-9^2)^{1/2}\approx8.4$~rad\,m$^{-2}$, which would bias the whole
-subtracted profile low; the headline enhancement ratio involves no floor subtraction at all and
+subtracted profile low; the main enhancement ratio involves no floor subtraction at all and
 is untouched by this. The subtraction's leverage is latitude-dependent. The plane bins are
 insensitive in
 quadrature ($\sigma_\mathrm{Gal}$ at $|b|<5^\circ$ is \rmsRealSigGalPlane\ at the measured floor
@@ -183,7 +183,7 @@ carries frequency, $n\pi$-handling, and sky-coverage systematics (Section 3) tha
 quoted errors. (iv) The half-plateau break statistic is bin-width-limited ($\sim$30\% at
 these scales) and validated only against the fixture's known scale, not a turbulence model.
 (v) SF bootstrap errors use a unique-set source resample (conservative by $\sim$30\%); pair
-fractions are quoted per unique pair (ordered draws double-count); the headline ratio's error
+fractions are quoted per unique pair (ordered draws double-count); the main ratio's error
 is the sky-block jackknife, not a bootstrap. (vi) $n\pi$ resolution is inherited from the
 upstream RM-synthesis pipeline. (vii) At DR2 scale pairs are randomly sampled rather than
 exhausted (an unbiased estimator of the bin means), with the sampled fraction recorded.
@@ -192,7 +192,7 @@ in leakage and depolarization criteria that could in principle preferentially re
 sightlines, under-representing exactly the high-fluctuation regions the ladder measures. The
 committed per-bin accounting bounds this: the flag removes
 \rmsRealFlagRemPctMin--\rmsRealFlagRemPctMax\% of deduplicated sources across the six $|b|$
-bins, with the maximum in the \emph{polar} bin rather than the plane --- a differential of
+bins, with the maximum in the polar bin rather than the plane, a differential of
 $\sim$1 percentage point, far too small to reorder a ladder whose neighbouring bins differ by
 factors of $\sim$2.
 
