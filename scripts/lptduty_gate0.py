@@ -39,6 +39,13 @@ def main(argv: list[str] | None = None) -> int:
     rows = ld.load_epochs(args.epochs)
     periods = ld.read_periods(args.catalog)
     precision = ld.read_period_precision(args.catalog)
+    import csv as _csv
+
+    pdots = {
+        r["name"]: abs(float(r["pdot_s_s"]))
+        for r in _csv.DictReader(open(args.catalog))
+        if r.get("pdot_s_s")
+    }
     by: dict[str, list[ld.EpochRow]] = defaultdict(list)
     for r in rows:
         by[r.name].append(r)
@@ -56,7 +63,12 @@ def main(argv: list[str] | None = None) -> int:
         # required_period_precision_s. Otherwise the computed phase smears and the test
         # cannot detect clustering that may still be there: inconclusive, not reassuring.
         adequate = quoted <= ps.required_period_precision_s
-        p_corrected = min(1.0, ps.rayleigh_p * n_tested)  # Bonferroni over sources tested
+        # Bonferroni over sources AND over the two tests run per source (an earlier version
+        # corrected for sources only)
+        n_tests = 2 * n_tested
+        p_corrected = min(1.0, ps.rayleigh_p * n_tests)
+        kuiper_p_raw = ld.kuiper_p(ps.kuiper_v, ps.n_epochs)
+        kuiper_p_corrected = min(1.0, kuiper_p_raw * n_tests)
         per_source[name] = {
             "testable": True,
             "n_epochs": ps.n_epochs,
@@ -69,7 +81,12 @@ def main(argv: list[str] | None = None) -> int:
             "rayleigh_p": ps.rayleigh_p,
             "rayleigh_p_bonferroni": p_corrected,
             "kuiper_v": ps.kuiper_v,
-            "clustered": bool(adequate and p_corrected < ALPHA_FAMILYWISE),
+            "kuiper_p": kuiper_p_raw,
+            "kuiper_p_bonferroni": kuiper_p_corrected,
+            "clustered": bool(
+                adequate
+                and (p_corrected < ALPHA_FAMILYWISE or kuiper_p_corrected < ALPHA_FAMILYWISE)
+            ),
             "verdict": (
                 "inconclusive: catalogued period too imprecise for coherent phase"
                 if not adequate
@@ -80,6 +97,19 @@ def main(argv: list[str] | None = None) -> int:
                 )
             ),
         }
+        # a saturated published Pdot bound smears phase like an imprecise period does; the
+        # published values are upper limits, so this is a CONDITION on the verdict, not a
+        # replacement for it
+        if name in pdots:
+            smear = ld.pdot_phase_smear_cycles(pdots[name], ps.baseline_days, period)
+            per_source[name]["pdot_bound_smear_cycles"] = round(smear, 3)
+            per_source[name]["pdot_conditional"] = bool(smear > 0.1)
+            if smear > 0.1 and adequate and not per_source[name]["clustered"]:
+                per_source[name]["verdict"] += (
+                    " (conditional: the published Pdot BOUND, if saturated, smears "
+                    f"{smear:.2f} cycles across the baseline and would make this "
+                    "inconclusive)"
+                )
 
     flagged = [n for n, d in per_source.items() if d.get("clustered")]
     inconclusive = [
@@ -103,8 +133,11 @@ def main(argv: list[str] | None = None) -> int:
             "quoted_period_precision_s is inferred from the catalogue's decimal places -- a "
             "proxy for the published uncertainty, not the uncertainty itself. The ephemeris "
             "audit must replace it with real values from the discovery papers.",
-            "A period derivative large enough to matter over the baseline would break phase "
-            "coherence even when the period is quoted precisely; pdot is not folded in here.",
+            "A period derivative large enough to matter over the baseline breaks phase "
+            "coherence even when the period is quoted precisely; each source's published "
+            "Pdot BOUND is folded in as pdot_bound_smear_cycles / pdot_conditional. The "
+            "bounds are upper limits, so a conditional verdict stands unless the bound is "
+            "saturated.",
             "A uniform result does not prove independence, only that this test found no "
             "departure from it.",
         ],
@@ -112,6 +145,19 @@ def main(argv: list[str] | None = None) -> int:
         "alpha_familywise": ALPHA_FAMILYWISE,
         "flagged_clustered": flagged,
         "inconclusive_period_precision": inconclusive,
+        "pdot_conditional": [n for n, d in per_source.items() if d.get("pdot_conditional")],
+        "n_valid_unconditional": n_tested
+        - len(flagged)
+        - len(inconclusive)
+        - len(
+            [
+                n
+                for n, d in per_source.items()
+                if d.get("pdot_conditional")
+                and not d.get("clustered")
+                and d.get("period_precision_adequate")
+            ]
+        ),
         "per_source": per_source,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

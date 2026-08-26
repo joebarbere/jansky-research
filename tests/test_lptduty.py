@@ -53,8 +53,9 @@ def test_denominator_is_efficiency_weighted_not_epoch_count(tmp_path):
     assert c.effective_epochs == pytest.approx(1.0, abs=1e-3)
     assert c.n_detections == 0
     assert c.p_point is None
-    # limit uses ~1 effective epoch, NOT 10 -- an epoch-count denominator would give 0.30
-    assert c.p_upper_95 == pytest.approx(ld.POISSON_ZERO_95, rel=1e-2)
+    # limit uses ~1 effective epoch, NOT 10 -- an epoch-count denominator would give 0.30.
+    # 2.996/1 exceeds 1, and p is a probability: the limit is capped at 1 (unconstraining)
+    assert c.p_upper_95 == 1.0
 
 
 def test_no_sensitive_epoch_gives_an_infinite_limit_not_a_confident_one(tmp_path):
@@ -272,3 +273,50 @@ def test_leakage_veto_rejects_a_significant_but_leakage_scale_v(tmp_path):
     assert [r.i_mjy for r in rows] == [5000.0, 50.0]
     c = ld.duty_constraint(rows, pulse_mjy=20.0)
     assert c.n_detections == 1  # the leakage-scale one is vetoed
+
+
+def test_kuiper_p_calibration():
+    # Stephens' asymptotic form: the referee's check case (V=0.275, N=54) gives p ~ 0.006
+    p = ld.kuiper_p(0.275, 54)
+    assert 0.004 < p < 0.009
+    # tiny V -> p ~ 1; huge V -> p ~ 0
+    assert ld.kuiper_p(0.05, 54) > 0.9
+    assert ld.kuiper_p(0.8, 54) < 1e-6
+
+
+def test_common_rate_test_matches_referee():
+    # the three detection sources: k=1,1,2 on effective epochs 90.98, 71, 44
+    out = ld.common_rate_test([1, 1, 2], [90.981, 71.0, 44.0])
+    assert out["dof"] == 2
+    assert abs(out["g"] - 1.62) < 0.05
+    assert 0.4 < out["p"] < 0.5  # indistinguishable from one common rate
+    # genuinely different rates DO register
+    hot = ld.common_rate_test([20, 1], [50.0, 50.0])
+    assert hot["p"] < 0.001
+
+
+def test_pdot_phase_smear():
+    # GLEAM-X: Pdot bound 1.2e-9 over 1302 d on P=1091.169 s -> ~6.4 cycles
+    s = ld.pdot_phase_smear_cycles(1.2e-9, 1302.0, 1091.169)
+    assert 6.0 < s < 6.8
+    # GPM J1839-10's tiny bound is negligible
+    assert ld.pdot_phase_smear_cycles(3.6e-13, 1325.0, 1318.1957) < 0.01
+
+
+def test_duty_constraint_caps_upper_limit_at_one():
+    rows = [
+        ld.EpochRow(
+            name="X",
+            obs_id=str(i),
+            epoch_mjd=60000.0 + i,
+            duration_s=720.0,
+            v_mjy=0.0,
+            e_v=100.0,
+            i_mjy=0.0,
+        )
+        for i in range(5)
+    ]
+    # a pulse barely above threshold in absurdly noisy epochs: tiny effective exposure,
+    # limit capped at 1 rather than reported as a "probability" of 50
+    c = ld.duty_constraint(rows, pulse_mjy=520.0)
+    assert c.p_upper_95 <= 1.0

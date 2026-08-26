@@ -112,7 +112,27 @@ def main(argv: list[str] | None = None) -> int:
             if ph < 0:
                 ph += 1.0
             det_phases.append({"obs_id": r.obs_id, "v_sigma": abs(r.v_mjy) / r.e_v, "phase": ph})
+        # Pdot smear across THIS source's own epochs (max |t - PEPOCH|), from the published
+        # bound in the catalogue; an earlier caveat quoted ~0.22 cycles for J1832 computed
+        # over half the baseline -- the honest number uses the farthest epoch
+        import csv as _csv
+
+        pdot = next(
+            (
+                abs(float(r["pdot_s_s"]))
+                for r in _csv.DictReader(open("data/lpt_sample.csv"))
+                if r["name"] == name and r.get("pdot_s_s")
+            ),
+            None,
+        )
+        max_dt_days = max(abs(r.epoch_mjd - eph.pepoch_mjd) for r in srows)
+        pdot_smear = None
+        if pdot is not None:
+            dt_s = max_dt_days * 86400.0
+            pdot_smear = round(pdot * dt_s * dt_s / (2.0 * eph.period_s**2), 3)
         per_source[name] = {
+            "pdot_bound_smear_cycles_at_farthest_epoch": pdot_smear,
+            "window_assignment_defensible": bool(pdot_smear is None or pdot_smear <= 0.1),
             "ephemeris": {
                 "period_s": eph.period_s,
                 "sigma_period_s": eph.sigma_period_s,
@@ -129,11 +149,16 @@ def main(argv: list[str] | None = None) -> int:
             "n_detections_in_window": pr.n_detections_in_window,
             "n_detections_outside_window": pr.n_detections_outside,
             "f_active_point": pr.f_active_point,
+            # the split is CONDITIONAL on the PEPOCH being a pulse arrival; the only support
+            # is the detection's own phase, whose a-priori chance of landing in the window
+            # is the window fraction itself
+            "apriori_window_landing_prob": round(pr.window_fraction, 3),
             "f_active_upper_95": (
                 None if math.isinf(pr.f_active_upper_95) else pr.f_active_upper_95
             ),
             "max_phase_uncertainty_cycles": pr.max_phase_uncertainty,
-            "usable": pr.usable,
+            "usable": pr.usable and bool(pdot_smear is None or pdot_smear <= 0.1),
+            "pepoch_is_published_pulse_anchor": name != "ASKAP J183950.5-075635",
             "detection_phases": det_phases,
         }
 
@@ -152,12 +177,27 @@ def main(argv: list[str] | None = None) -> int:
             "that reason, not for period imprecision.",
             "Detections outside the predicted window are reported, not discarded: they are "
             "evidence the ephemeris is wrong.",
-            "Period derivatives are not folded in. For ASKAP J1832-0911 the published 95% "
-            "Pdot bound, if saturated, adds ~0.22 cycles and would void its window assignment.",
+            "Period derivatives ARE folded in as pdot_bound_smear_cycles_at_farthest_epoch. "
+            "For ASKAP J1832-0911 the published Pdot bound, if saturated, smears 0.40 cycles "
+            "at the farthest epoch (an earlier caveat said ~0.22, computed over half the "
+            "baseline), so its window assignment -- and hence n_in_pulse_window and any "
+            "f_active bound -- is not defensible and usable is False.",
             "J183950's epoch is the repo's own anchor with a +/-0.013 cycle systematic, not a "
             "published PEPOCH.",
         ],
-        "n_with_published_ephemeris": len(per_source),
+        "n_with_epoch_encoded": len(per_source),
+        # J183950's anchor is the repo's own documented T0, not a published PEPOCH
+        "n_published_pepoch": sum(
+            1 for d in per_source.values() if d["pepoch_is_published_pulse_anchor"]
+        ),
+        # J142431 is excluded for PERIOD PRECISION, not for lacking an epoch: count it
+        # separately so \ldNNoEpoch means what it says
+        "n_no_published_epoch": sum(
+            1 for v in NO_PUBLISHED_EPOCH.values() if "epoch published" not in v
+        ),
+        "n_epoch_but_excluded": sum(
+            1 for v in NO_PUBLISHED_EPOCH.values() if "epoch published" in v
+        ),
         "excluded_no_published_epoch": NO_PUBLISHED_EPOCH,
         "per_source": per_source,
     }
@@ -181,7 +221,10 @@ def main(argv: list[str] | None = None) -> int:
             f"k_in={d['n_detections_in_window']} k_out={d['n_detections_outside_window']}, "
             f"{shown}, usable={d['usable']}"
         )
-    print(f"  ({len(NO_PUBLISHED_EPOCH)} sources excluded: no published reference epoch)")
+    print(
+        f"  ({payload['n_no_published_epoch']} sources excluded: no published epoch; "
+        f"{payload['n_epoch_but_excluded']} excluded for period precision)"
+    )
     return 0
 
 

@@ -2,7 +2,7 @@
   "caveats": [
     "Only sources with a PUBLISHED reference epoch are included. Assuming an epoch 'near the campaign' would manufacture phase; most of the sample is excluded for that reason, not for period imprecision.",
     "Detections outside the predicted window are reported, not discarded: they are evidence the ephemeris is wrong.",
-    "Period derivatives are not folded in. For ASKAP J1832-0911 the published 95% Pdot bound, if saturated, adds ~0.22 cycles and would void its window assignment.",
+    "Period derivatives ARE folded in as pdot_bound_smear_cycles_at_farthest_epoch. For ASKAP J1832-0911 the published Pdot bound, if saturated, smears 0.40 cycles at the farthest epoch (an earlier caveat said ~0.22, computed over half the baseline), so its window assignment -- and hence n_in_pulse_window and any f_active bound -- is not defensible and usable is False.",
     "J183950's epoch is the repo's own anchor with a +/-0.013 cycle systematic, not a published PEPOCH."
   ],
   "excluded_no_published_epoch": {
@@ -15,9 +15,13 @@
     "GPM J1839-10": "period known to 2e-4 s over a 34-yr baseline, but the paper tabulates no PEPOCH; phase cannot be assigned without inventing one. Also 50-70% nulling."
   },
   "is_real": true,
-  "n_with_published_ephemeris": 3,
+  "n_epoch_but_excluded": 1,
+  "n_no_published_epoch": 6,
+  "n_published_pepoch": 2,
+  "n_with_epoch_encoded": 3,
   "per_source": {
     "ASKAP J175534.9-252749.1": {
+      "apriori_window_landing_prob": 0.181,
       "assumed_pulse_mjy": 6.3203,
       "brightest_abs_v_mjy": 6.3203,
       "detection_phases": [
@@ -42,10 +46,14 @@
       "n_detections_outside_window": 0,
       "n_epochs": 91,
       "n_in_pulse_window": 16,
+      "pdot_bound_smear_cycles_at_farthest_epoch": 0.003,
+      "pepoch_is_published_pulse_anchor": true,
       "usable": true,
+      "window_assignment_defensible": true,
       "window_fraction_of_period": 0.18087054479444617
     },
     "ASKAP J1832-0911": {
+      "apriori_window_landing_prob": 0.364,
       "assumed_pulse_mjy": 14.0424,
       "brightest_abs_v_mjy": 14.0424,
       "detection_phases": [
@@ -70,10 +78,14 @@
       "n_detections_outside_window": 1,
       "n_epochs": 71,
       "n_in_pulse_window": 23,
-      "usable": true,
+      "pdot_bound_smear_cycles_at_farthest_epoch": 0.4,
+      "pepoch_is_published_pulse_anchor": true,
+      "usable": false,
+      "window_assignment_defensible": false,
       "window_fraction_of_period": 0.36354427140310763
     },
     "ASKAP J183950.5-075635": {
+      "apriori_window_landing_prob": 0.062,
       "assumed_pulse_mjy": 24.3499,
       "brightest_abs_v_mjy": 24.3499,
       "detection_phases": [
@@ -103,7 +115,10 @@
       "n_detections_outside_window": 2,
       "n_epochs": 44,
       "n_in_pulse_window": 3,
-      "usable": true,
+      "pdot_bound_smear_cycles_at_farthest_epoch": 0.828,
+      "pepoch_is_published_pulse_anchor": false,
+      "usable": false,
+      "window_assignment_defensible": false,
       "window_fraction_of_period": 0.0619999934230909
     }
   },
