@@ -11,6 +11,18 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion of the submission-queue papers that drifted in the fix campaigns.**
+  Of everything the README names as submission-bound, exactly two slices had prose rewritten
+  in modern register since style batch 8: frbstats (round-9 fixes, main + RNAAS note) and
+  lptduty (the round-11 note rewrite). Both re-converted with the diff-guard clean per file;
+  lptduty's conversion is word-multiset-identical (punctuation and `\emph` markup only), and
+  frbstats passed a conversion-drift referee round (verdict clean). The referee's audit also
+  caught a round-9 bookkeeping overstatement: the resolution record claimed the source-level
+  width statistic reached "both abstracts" but the RNAAS abstract still quoted burst-level
+  D/p — now closed (abstract quotes \ksWidthDSrc/\ksWidthPSrc with the unit named, a
+  deliberate macro change in its own commit), and the note's median-widths clause moved
+  inside the burst-level parenthesis so 2.05 ms cannot read as the source-level median
+  (which is 2.47 ms). Audit recorded in survey/findings.md.
 - **rmstructure round-11 revision: the flag claim is retracted by the matched test it lacked,
   and every error bar is now the estimator the paper preaches.** `matched_flag_sf` puts the
   flagged/unflagged high-|b| SFs on ONE shared pair set with a shared bootstrap: the
