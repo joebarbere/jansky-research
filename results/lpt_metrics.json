@@ -1,5 +1,5 @@
 {
-  "source": "vendored verified sample (13 LPTs, per-value provenance)",
+  "source": "vendored cross-checked sample (16 LPTs, per-value provenance)",
   "n_lpt": 16,
   "n_wd_binary": 7,
   "n_xray": 3,
@@ -9,7 +9,172 @@
   "median_period_min": 73.4,
   "n_pdot_constrained": 9,
   "n_below_death_line": 9,
-  "delta_log_median_period": 0.176,
-  "p_perm_split": 0.5219,
-  "p_perm_synthetic_split": 0.0219
+  "delta_log_median_period": 0.413,
+  "p_perm_synthetic_split": 0.0031,
+  "p_split": 0.1667,
+  "split_primary_n": [
+    7,
+    6
+  ],
+  "label_sensitivity": [
+    {
+      "labelling": "unknowns_excluded",
+      "n_wd": 7,
+      "n_rest": 6,
+      "delta_log_median": 0.413,
+      "p": 0.1667
+    },
+    {
+      "labelling": "as_published_unknowns_with_rest",
+      "n_wd": 7,
+      "n_rest": 9,
+      "delta_log_median": 0.176,
+      "p": 0.5258
+    },
+    {
+      "labelling": "unknowns_as_binary",
+      "n_wd": 10,
+      "n_rest": 6,
+      "delta_log_median": 0.446,
+      "p": 0.0919
+    },
+    {
+      "labelling": "confirmed_only",
+      "n_wd": 3,
+      "n_rest": 6,
+      "delta_log_median": 0.605,
+      "p": 0.1905
+    }
+  ],
+  "split_method": "exact (11440 partitions)",
+  "death_line_margins": {
+    "objects": [
+      {
+        "name": "GLEAM-X J162759.5-523504.3",
+        "period_s": 1091.169,
+        "pdot": 1.2e-09,
+        "pdot_needed": 5.08e-08,
+        "margin": 42.3,
+        "is_wd_binary": false
+      },
+      {
+        "name": "GPM J1839-10",
+        "period_s": 1318.1957,
+        "pdot": 3.6e-13,
+        "pdot_needed": 8.95e-08,
+        "margin": 249000.0,
+        "is_wd_binary": false
+      },
+      {
+        "name": "ASKAP J1935+2148",
+        "period_s": 3225.313,
+        "pdot": 1.2e-10,
+        "pdot_needed": 1.31e-06,
+        "margin": 10900.0,
+        "is_wd_binary": false
+      },
+      {
+        "name": "CHIME J0630+25",
+        "period_s": 421.35584,
+        "pdot": 5.2e-12,
+        "pdot_needed": 2.92e-09,
+        "margin": 562.0,
+        "is_wd_binary": false
+      },
+      {
+        "name": "ASKAP J1832-0911",
+        "period_s": 2656.247,
+        "pdot": 9.8e-10,
+        "pdot_needed": 7.32e-07,
+        "margin": 747.0,
+        "is_wd_binary": false
+      },
+      {
+        "name": "ILT J1101+5521",
+        "period_s": 7531.78,
+        "pdot": 1.71e-11,
+        "pdot_needed": 1.67e-05,
+        "margin": 976000.0,
+        "is_wd_binary": true
+      },
+      {
+        "name": "GLEAM-X J0704-37",
+        "period_s": 10496.5575,
+        "pdot": 3.9e-11,
+        "pdot_needed": 4.52e-05,
+        "margin": 1160000.0,
+        "is_wd_binary": true
+      },
+      {
+        "name": "ASKAP J183950.5-075635",
+        "period_s": 23221.74,
+        "pdot": 1.6e-07,
+        "pdot_needed": 0.000489,
+        "margin": 3060.0,
+        "is_wd_binary": false
+      },
+      {
+        "name": "ASKAP J144834-685644",
+        "period_s": 5631.07,
+        "pdot": 2.2e-08,
+        "pdot_needed": 6.97e-06,
+        "margin": 317.0,
+        "is_wd_binary": true
+      }
+    ],
+    "min_margin": 42.3,
+    "max_margin": 1160000.0,
+    "n_below_nonbinary": 6,
+    "n_nonbinary_constrained": 6,
+    "valley_sweep": [
+      {
+        "b_over_p2": 50000000000.0,
+        "n_below": 9,
+        "min_margin": 10.6
+      },
+      {
+        "b_over_p2": 100000000000.0,
+        "n_below": 9,
+        "min_margin": 21.2
+      },
+      {
+        "b_over_p2": 200000000000.0,
+        "n_below": 9,
+        "min_margin": 42.3
+      },
+      {
+        "b_over_p2": 500000000000.0,
+        "n_below": 9,
+        "min_margin": 106.0
+      },
+      {
+        "b_over_p2": 1000000000000.0,
+        "n_below": 9,
+        "min_margin": 212.0
+      },
+      {
+        "b_over_p2": 2000000000000.0,
+        "n_below": 9,
+        "min_margin": 423.0
+      }
+    ]
+  },
+  "split_power": {
+    "at_primary_offset": {
+      "delta_log": 0.413,
+      "n_a": 7,
+      "n_b": 6,
+      "width_dex": 1.75,
+      "n_sims": 400,
+      "power": 0.172
+    },
+    "at_published_offset": {
+      "delta_log": 0.176,
+      "n_a": 7,
+      "n_b": 9,
+      "width_dex": 1.75,
+      "n_sims": 400,
+      "power": 0.062
+    }
+  }
 }

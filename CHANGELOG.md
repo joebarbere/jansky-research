@@ -11,6 +11,30 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **lpt round-10 revision: the paper contains its catalogue, the exact test is exact, and
+  the structural facts are framed as structural.** A generated 16-row deluxetable (period,
+  Pdot + type, companion status with unknown shown as unknown, X-ray, discovery reference)
+  ships in the paper with 11 new Crossref/arXiv-verified bib entries so all 16 discovery
+  papers are cited, plus a data-availability paragraph. The figure regenerates from the
+  corrected CSV with a derived title (the committed one predated two CSV corrections and
+  plotted one object 109x below its true Pdot limit under a "13 objects" title).
+  period_split_stat enumerates all 11,440 partitions (p = 0.5258 where the seed-dependent MC
+  said 0.5219, under a claim of "exact"); label_sensitivity makes the unknown-status
+  labelling primary evidence (unknowns excluded: Delta = 0.413, p = 0.167; the earlier
+  version silently counted two of the three longest periods with the null class);
+  split_power measures the test's power at the observed offset (0.062-0.172 -- essentially
+  its size), replacing a disjoint-classes "the test has power" demo now labelled as
+  machinery verification at the real composition. death_line_margins commits per-object
+  margins (42.3 to 1.2e6 -- no achievable measurement could have falsified "9/9"), the
+  death-valley sweep (9/9 across B/P^2 = 5e10-2e12), and the claim-carrying no-companion 6/6;
+  Chen & Ruderman and Bhattacharya & van den Heuvel are cited and the constant named as a
+  choice. "Verified" became "cross-checked" with a disclosure paragraph naming the five
+  defects the 2026-08 downstream audit fixed in this table. The CSV is now cell-pinned by
+  test (plus coordinate-cache and lptv-ephemeris drift guards), had three flags rows with
+  silently-truncating unquoted commas repaired, and carries the quoted uncertainties for the
+  accusation-bearing values. deruiter2025's title corrected; rea2026 cited for the 78-min
+  hypothesis; ruderman1975 cited for the death-line physics; \lptNx used (first LPT X-ray
+  discovery, citing wang2025).
 - **rfitrend round-10 revision: HUMAIN is a staircase, the citation names its authors, and
   the null carries its power curve.** All derived diagnostics rebuilt offline from the
   committed per-station arrays (`scripts/rfitrend_real.py --recompute`, which now writes
