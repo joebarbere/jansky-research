@@ -11,6 +11,24 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **frbperiod round-10 revision: one epoch per transit, and the abstract prints the number
+  the argument rests on.** collapse_transits closes the same-transit pseudo-replication (19
+  bursts -> 14 epochs for FRB 20180916B; Z2 33.4 -> 23.9, analytic FAP 8.4e-4 -- the
+  referee's exact predictions), and the period carries an epoch-bootstrap uncertainty
+  (16.32 +/- 0.09 d) instead of "within the grid resolution". The disclaimed-yet-printed
+  7e-6 FAP is replaced in the abstract by the measured coincidence probability -- how often a
+  null realization's grid peak lands within the published +/-0.15 d of 16.35 -- under a
+  uniform null (0.004) and a clustered null bootstrapped from the other repeater's intervals
+  (0.015), with the measured demonstration that burst clustering (null median max-Z2
+  11.3 -> 14.0), not aliasing, is what invalidates the analytic number, and an encoded
+  warning against the shuffle-own-intervals null that would wrongly destroy a real detection.
+  The second source's null now carries its sensitivity (twin power 0.32 at the measured 0.244
+  duty cycle; "sensitive only to duty cycles <~0.2") and its own numbers (Z2 9.4, FAP 0.757)
+  live in the metrics JSON's new all-searched-sources block and in print. Per-burst MJDs are
+  committed (results/period_epochs.csv) so the nulls reproduce from committed evidence; the
+  tracked synthetic CSV is retired (offline writes a gitignored *_synthetic.csv); the figure
+  clobber hole is closed (guarded + tested) and the figure plots collapsed epochs; grid
+  bounds/threshold became macros; the PDF's unevaluated "18 - 2" renders as 16.
 - **lpt round-10 revision: the paper contains its catalogue, the exact test is exact, and
   the structural facts are framed as structural.** A generated 16-row deluxetable (period,
   Pdot + type, companion status with unknown shown as unknown, X-ray, discovery reference)

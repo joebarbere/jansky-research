@@ -7,10 +7,90 @@
   "detections": [
     {
       "name": "FRB20180916B",
-      "period_days": 16.326,
-      "z2": 33.4,
-      "fap": 7.208799311819725e-06,
-      "n": 19
+      "period_days": 16.317,
+      "z2": 23.9,
+      "fap": 0.0008438367534968627,
+      "n": 19,
+      "n_epochs": 14
     }
-  ]
+  ],
+  "fap_threshold": 0.01,
+  "grid": {
+    "p_min_days": 2.0,
+    "p_max_days": 100.0,
+    "n_grid": 12000
+  },
+  "searched": [
+    {
+      "name": "FRB20180814A",
+      "n_bursts": 11,
+      "n_epochs": 11,
+      "best_period_days": 2.792,
+      "z2": 9.4,
+      "fap": 0.757,
+      "span_days": 316.16
+    },
+    {
+      "name": "FRB20180916B",
+      "n_bursts": 19,
+      "n_epochs": 14,
+      "best_period_days": 16.317,
+      "z2": 23.9,
+      "fap": 0.000844,
+      "span_days": 262.28
+    }
+  ],
+  "duty_cycle_at_peak": 0.244,
+  "period_bootstrap": {
+    "n_boot": 500,
+    "period_sd": 0.092,
+    "frac_near_peak": 0.956
+  },
+  "null_source_power": {
+    "name": "FRB20180814A",
+    "twin_duty_cycle": 0.244,
+    "power": [
+      {
+        "duty_cycle": 0.05,
+        "power": 1.0
+      },
+      {
+        "duty_cycle": 0.1,
+        "power": 1.0
+      },
+      {
+        "duty_cycle": 0.15,
+        "power": 1.0
+      },
+      {
+        "duty_cycle": 0.2,
+        "power": 0.72
+      },
+      {
+        "duty_cycle": 0.244,
+        "power": 0.32
+      },
+      {
+        "duty_cycle": 0.3,
+        "power": 0.045
+      }
+    ]
+  },
+  "mc_nulls": {
+    "uniform": {
+      "n_trials": 2000,
+      "p_exceed": 0.0005,
+      "p_coincidence": 0.0035,
+      "median_max_z2": 11.33,
+      "p99_max_z2": 17.62
+    },
+    "clustered": {
+      "n_trials": 2000,
+      "p_exceed": 0.0105,
+      "p_coincidence": 0.015,
+      "median_max_z2": 14.0,
+      "p99_max_z2": 23.86
+    },
+    "clustered_donor": "FRB20180814A"
+  }
 }
