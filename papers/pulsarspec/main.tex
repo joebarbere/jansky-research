@@ -22,8 +22,7 @@ of ordinary synchrotron sources (Maron et al.\ 2000; Bates et al.\ 2013; Jankows
 reproduce this from the public ATNF Pulsar Catalogue \citep{atnf} with a small, tested, CPU-only tool,
 forming the 400$\to$1400~MHz spectral index from the catalogue's tabulated S400 and S1400 flux
 densities. For the \psrN\ pulsars with a tabulated flux at both frequencies, the mean index is
-$\langle\alpha\rangle=\psrMeanAlpha\pm\psrMeanAlphaSE$ (median \psrMedianAlpha, scatter
-\psrStdAlpha) --- at the steep end of the published $-1.4$ to $-1.8$ range, with the statistical
+$\langle\alpha\rangle=\psrMeanAlpha\pm\psrMeanAlphaSE$ (median \psrMedianAlpha, scatter \psrStdAlpha), at the steep end of the published $-1.4$ to $-1.8$ range, with the statistical
 error far below the flux-scale systematics. The selection is coverage-dominated rather than purely
 flux-limited:
 only \psrNSfourHundred\ of \psrNcatalogue\ pulsars have any published 400-MHz flux (against
@@ -63,31 +62,26 @@ offline; the network fetch itself is exercised only by the real run.
 The ATNF Pulsar Catalogue \citep{atnf} (VizieR \code{B/psr}) tabulates heterogeneous literature flux
 densities S400 (400~MHz) and S1400 (1400~MHz) in mJy and the spin period $P$. \code{B/psr} is a
 frozen snapshot (published 2017-07-18) behind the live \code{psrcat}, so the counts here are
-epoch-specific. An absent flux is \emph{no published measurement at that frequency}, not a
-non-detection: of the \psrNcatalogue\ catalogued pulsars, \psrNSfourHundred\ have any S400 and
-\psrNSfourteenHundred\ any S1400 --- the binding constraint is 400-MHz coverage, since the modern
+epoch-specific. An absent flux is no published measurement at that frequency, not a
+non-detection: of the \psrNcatalogue\ catalogued pulsars, \psrNSfourHundred\ have any S400 and \psrNSfourteenHundred\ any S1400; the binding constraint is 400-MHz coverage, since the modern
 surveys that discovered most of the population did not observe there. \psrN\ have positive fluxes
 at both frequencies and enter the spectral-index sample (\psrNrejected\ further row, J0540$-$6919,
 tabulates both but records $S_{400}=0$ and is dropped by the positivity requirement). Per arm, the
-joint sample keeps \psrNmsp\ of \psrNmspCat\ catalogued millisecond pulsars and \psrNnormal\ of
-\psrNnormalCat\ normal ones --- the millisecond arm is the more heavily truncated. The analysed
+joint sample keeps \psrNmsp\ of \psrNmspCat\ catalogued millisecond pulsars and \psrNnormal\ of \psrNnormalCat\ normal ones; the millisecond arm is the more heavily truncated. The analysed
 rows are committed as \code{results/pulsarspec\_sources.csv}.
 
 \section{Results}
 The \psrN\ pulsars have a mean spectral index $\langle\alpha\rangle=\psrMeanAlpha\pm\psrMeanAlphaSE$
-(statistical), median \psrMedianAlpha, with a broad scatter (\psrStdAlpha; Figure~\ref{fig:spectra},
-left) --- consistent with the steep-spectrum results of \citet{bates2013} and \citet{jankowski2018},
+(statistical), median \psrMedianAlpha, with a broad scatter (\psrStdAlpha; Figure~\ref{fig:spectra}, left), consistent with the steep-spectrum results of \citet{bates2013} and \citet{jankowski2018},
 at the steep end of their $-1.4$ to $-1.8$ range. The joint-flux selection biases this number flat:
-above $S_{400}\geq\psrCompleteCut$~mJy --- the flux at which no source with $\alpha\geq-3$ can have
-been lost to the sample's own effective S1400 floor (\psrCompleteFloor~mJy, its 1st percentile) ---
-the \psrCompleteN-source completeness-limited mean is \psrCompleteMean\ (median
+above $S_{400}\geq\psrCompleteCut$~mJy, the flux at which no source with $\alpha\geq-3$ can have been lost to the sample's own effective S1400 floor (\psrCompleteFloor~mJy, its 1st percentile), the \psrCompleteN-source completeness-limited mean is \psrCompleteMean\ (median
 \psrCompleteMedian), so the truncation is worth $\sim$0.1 in $\alpha$ and the honest headline is
-``\psrMeanAlpha\ raw, \psrCompleteMean\ above the completeness limit.'' (Raising the \emph{S1400}
+``\psrMeanAlpha\ raw, \psrCompleteMean\ above the completeness limit.'' (Raising the S1400
 floor instead is not a clean check: it conditions on the numerator of $\alpha$ and flattens the
 mean mechanically.) Splitting the sample, the \psrNmsp\ millisecond pulsars have mean
 $\alpha=\psrMeanAlphaMsp$ (scatter \psrStdAlphaMsp) against $\psrMeanAlphaNormal$ (scatter
 \psrStdAlphaNormal) for the \psrNnormal\ normal pulsars. The difference (millisecond minus normal,
-i.e.\ millisecond pulsars marginally \emph{flatter}) is $\psrAlphaDiff\pm\psrAlphaDiffSE$, or
+i.e.\ millisecond pulsars marginally flatter) is $\psrAlphaDiff\pm\psrAlphaDiffSE$, or
 $\psrAlphaDiffSigma\sigma$ (two-sided permutation $p=\psrPermP$; the median difference is
 \psrMedianDiff), where the error is dominated by the millisecond arm. What the comparison
 yields is a bound: the data exclude offsets outside [$\psrCIlo$, $\psrCIhi$] (95\% interval
@@ -115,14 +109,12 @@ selection function quantified), not a new result. The limitations are intrinsic 
 index from a heterogeneous catalogue. (i) It misses the spectral curvature and low-frequency
 turnovers that multi-frequency fits resolve \citep{jankowski2018}. (ii) The selection is
 coverage-dominated with a flux-limit component: most of the catalogue simply has no published
-400-MHz flux, so the sample skews toward older, brighter, low-frequency-discovered pulsars ---
-a selection whose net direction is not obvious --- while the flux-limit component is measured
+400-MHz flux, so the sample skews toward older, brighter, low-frequency-discovered pulsars (a selection whose net direction is not obvious) while the flux-limit component is measured
 above (the completeness cut steepens the mean by $\sim$0.1). The per-arm coverage also differs
 (millisecond pulsars are the more truncated arm), so the bound applies to the observed subsets,
 not the intrinsic populations. (iii) The errors are statistical floors: the broad scatter reflects
 the $\sim$tens-of-percent catalogue flux-scale and scintillation uncertainties as much as
-intrinsic spread, and a flux-scale offset $f$ at one band maps to
-$\Delta\alpha=\ln(1+f)/\ln 3.5$ --- 0.076 at 10\%, 0.146 at 20\%. A scale error common to both arms
+intrinsic spread, and a flux-scale offset $f$ at one band maps to $\Delta\alpha=\ln(1+f)/\ln 3.5$: 0.076 at 10\%, 0.146 at 20\%. A scale error common to both arms
 cancels in the millisecond--normal difference but shifts the headline mean by exactly that amount;
 one that differs between the source literatures feeding the two arms does not cancel, and at
 $\sim$30\% it is the size of the quoted $2\sigma$ resolution. The Welch error also assumes

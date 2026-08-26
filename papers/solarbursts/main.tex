@@ -67,7 +67,7 @@ slope $|dr/dt|$ as the speed and the fit $R^2$ as a coherence flag. We stress th
 intensity peaks, which trace the bulk of the beam, not its leading edge; in \citet{reidkontar2018}
 the mean peak-time speed ($0.17\,c$) runs 15\% below the front-of-beam mean ($0.2\,c$). The
 sigma-clipped fit iterates to a fixed point, so the reported slope, kept-channel mask, and $R^2$
-all describe the same final fit — an earlier version stopped after a hard-coded three iterations,
+all describe the same final fit; an earlier version stopped after a hard-coded three iterations,
 under which the speed moved by $\sim$13\% and the mask and slope came from different iterations.
 Every function is tested against a synthetic burst built from the same Newkirk mapping the
 analysis inverts, so a clean burst round-trips. This verifies algebraic self-consistency of the
@@ -81,18 +81,16 @@ selection is the crux, and its evidence is committed
 (\code{results/solarbursts\_candidates.json}): all four candidates plus the X6.9-flare storm
 control were run at the same parameterization as the headline. Only \sbSource\ is a clean fit
 ($R^2=\sbRsq$); the three rejected candidates give $R^2$ of \sbCandOneRsq, \sbCandTwoRsq\ and
-\sbCandThreeRsq\ (the second with a wrong-direction, \emph{positive} drift of
+\sbCandThreeRsq\ (the second with a wrong-direction, positive drift of
 \sbCandTwoDrift~MHz/s), and the storm interval gives $R^2=\sbCandStormRsq$ with an incoherent,
-artificially slow ridge (nominal \sbCandStormSpeedC~$c$) — the negative control that shows the
-coherence gate can fail. Under this uniform parameterization the rejected events' nominal speeds
+artificially slow ridge (nominal \sbCandStormSpeedC~$c$), the negative control that shows the coherence gate can fail. Under this uniform parameterization the rejected events' nominal speeds
 (\sbCandOneSpeedC, \sbCandTwoSpeedC, \sbCandThreeSpeedC~$c$) do not all fall in the canonical
 band, so passing the gate is not guaranteed by construction. e-Callisto data carry no flux
 calibration, and only one station was used, so there is no second-station confirmation.
 
 \section{Results}
 The detector finds \sbNridge\ ridge channels over \sbFlo--\sbFhi~MHz; the converged sigma clip
-keeps \sbNused\ of them, spanning \sbFitFlo--\sbFitFhi~MHz — the fit band, which is what the
-$R^2$ and the speed describe (the wider detection band includes the clipped outliers, among them
+keeps \sbNused\ of them, spanning \sbFitFlo--\sbFitFhi~MHz, the fit band, which is what the $R^2$ and the speed describe (the wider detection band includes the clipped outliers, among them
 an isolated 10~MHz channel and a 78.9~MHz channel whose timing runs the wrong way for a type
 III). The kept channels' drift is \sbDriftUsed~MHz/s (the unclipped 66-channel value is
 \sbDrift), and the height--time track is coherent ($R^2=\sbRsq$) over heliocentric radii
@@ -106,13 +104,11 @@ to $4\times$ active region) move the speed from \sbGridFundOne$\,c$ (fundamental
 through \sbGridHarmOne$\,c$ (harmonic, $1\times$) to \sbGridHarmFour$\,c$ (harmonic, $4\times$),
 a factor of $\sim$3; we therefore report the grid, not a single number. The harmonic points lie
 within the canonical $0.1$--$0.5\,c$ band \citep{reidratcliffe2014}; the fundamental point falls
-below its lower edge, so the in-band conclusion is conditional on harmonic emission — a common
-identification for ground-based metric bursts, but not independently established for this event
+below its lower edge, so the in-band conclusion is conditional on harmonic emission, a common identification for ground-based metric bursts, but not independently established for this event
 (a fundamental--harmonic pair would appear as two ridges a factor of two apart in frequency;
 this spectrum shows one). As a peak-time speed, the headline lies within the range of published
 peak-time speeds (the 31-burst {LOFAR} sample of \citealt{reidkontar2018} has a $0.17\,c$
-peak-time mean, derived through their own density model — the model choice moves speeds by
-factors comparable to our grid, so this is a range comparison, not a point agreement). The
+peak-time mean, derived through their own density model; the model choice moves speeds by factors comparable to our grid, so this is a range comparison, not a point agreement). The
 measured drift is slower than typical: the \citet{alvarez1973} and \citet{zhang2018} relations
 give $\sim-6$ to $-9$~MHz/s at mid-band.
 
@@ -139,8 +135,7 @@ $R^2$ is a useful empirical flag for ``one burst vs.\ a storm'' but not a rigoro
 sensitive to ridge-point spacing. (iv) The data are uncalibrated and single-station, and ridge channels
 near the $\sim$10~MHz ground-based cutoff may carry ionospheric refraction. The recover-a-known's
 target band is wide (a factor of 5) against a model grid spanning a factor of 3, so landing
-in-band is weak evidence by itself; the committed candidate table is what makes the exercise
-falsifiable — the storm control and one rejected candidate produce out-of-band or wrong-direction
+in-band is weak evidence by itself; the committed candidate table is what makes the exercise falsifiable: the storm control and one rejected candidate produce out-of-band or wrong-direction
 answers under the same pipeline, so the gate does discriminate. These limits bound what a single
 ground-based spectrum can claim. Every number above is written by the pipeline into the macros
 \code{\textbackslash input}ted by this file, and

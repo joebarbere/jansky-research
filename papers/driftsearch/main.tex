@@ -29,7 +29,7 @@ threshold that this bound was never in danger. Pointing the same detector at the
 Listen open-data file of Voyager~1 \citep{lebofsky2019} yields two measured results. First, a
 caution: the band-center spectrometer DC spike is $\sim10^{3}\times$ brighter than the carrier,
 so a brightest-channel search reports the artifact at S/N~$\dsVoyDcSnr$ and is wrong. Second, a
-recovery: locating the carrier \emph{in the data} (the brightest non-DC narrowband feature, at
+recovery: locating the carrier in the data (the brightest non-DC narrowband feature, at
 \dsVoyFreq~MHz, drifting \dsVoyDriftHz~Hz\,s$^{-1}$ by direct measurement of its per-sample peak
 walk), the same brute-force search recovers it at S/N~$=\dsVoySnr$ with a best-fit drift matching
 the measured walk to one grid step. An earlier version of this paper asserted the carrier frequency
@@ -48,9 +48,7 @@ recover such tones \citep{enriquez2017}. Reported detection efficiencies depend 
 detector, and the data, which makes cross-comparison difficult. The \code{setigen} package
 \citep{brzycki2022} standardized signal injection. Still missing for small, portable work is a single
 reproducible cell that fixes both the injection model and the detector, so two detectors can be
-compared on identical inputs on any laptop. We provide that reference cell --- fully specified:
-$\dsNtime\times\dsNfreq$ waterfalls, a \dsNsearchDrifts-point drift grid, unit Gaussian noise,
-seeded --- and we test the underlying teaching-grade detector on real data.
+compared on identical inputs on any laptop. We provide that reference cell, fully specified ($\dsNtime\times\dsNfreq$ waterfalls, a \dsNsearchDrifts-point drift grid, unit Gaussian noise, seeded), and we test the underlying teaching-grade detector on real data.
 
 \section{Method}
 \code{driftsearch} wraps the brute-force Doppler-drift search in \code{jansky.seti}. It injects a
@@ -69,15 +67,13 @@ sensitivities; the benchmark compares detectors on a common reference, not on th
 
 \section{Benchmark results}
 The noise-only best peak distribution is committed with the benchmark: mean \dsNoiseMean, standard
-deviation \dsNoiseSd, maximum \dsNoiseMax\ over \dsFprTrials\ draws --- so the threshold of
-\dsThreshold\ sits roughly $18\sigma$ above the noise-only mean, and ``no false positives''
+deviation \dsNoiseSd, maximum \dsNoiseMax\ over \dsFprTrials\ draws, so the threshold of \dsThreshold\ sits roughly $18\sigma$ above the noise-only mean, and ``no false positives''
 (one-sided 95\% bound \dsFprBound\%) is a statement about a very conservative operating point,
 not a calibration near the boundary. The drift-averaged completeness reaches 50\% at injected
 S/N~$\approx\dsCfifty$ and 90\% at $\approx\dsCninety$ (Figure~\ref{fig:recovery}); the full
 per-drift matrix is committed, and the per-drift 50\% crossings agree within the binomial
 scatter, so ``flat across drift'' is auditable rather than asserted. Injecting half a grid step
-off the searched drifts moves the 50\% crossing to \dsOffGridCfifty\ --- within scatter, because
-the de-drift rounds to integer channel shifts --- so the on-grid injection is not flattering the
+off the searched drifts moves the 50\% crossing to \dsOffGridCfifty, within scatter because the de-drift rounds to integer channel shifts, so the on-grid injection is not flattering the
 completeness.
 
 \begin{figure}
@@ -92,23 +88,17 @@ calibrated janskys or Hz\,s$^{-1}$.}
 \section{Voyager-1: the DC-spike caution, and a recovery}
 Pointing the detector at the Breakthrough Listen GBT open-data file of Voyager~1
 \citep{lebofsky2019, macmahon2018} yields two measured results, both committed
-(\code{results/drift\_voyager.json}). The caution first: the brightest channel is the band-center
-spectrometer DC-spike artifact --- in this file $\sim10^{3}\times$ brighter than the carrier ---
-and a brightest-channel ``detection'' reports it at S/N~$\dsVoyDcSnr$, which is wrong. The
-pipeline therefore \emph{locates} the carrier rather than asserting where it is: masking the DC
+(\code{results/drift\_voyager.json}). The caution first: the brightest channel is the band-center spectrometer DC-spike artifact, in this file $\sim10^{3}\times$ brighter than the carrier, and a brightest-channel ``detection'' reports it at S/N~$\dsVoyDcSnr$, which is wrong. The
+pipeline therefore locates the carrier rather than asserting where it is: masking the DC
 region and normalising the time-averaged spectrum by its median absolute deviation, the brightest
 narrowband feature sits at \dsVoyFreq~MHz, flanked by the telemetry-subcarrier sidebands, with a
 per-sample peak walk of \dsVoyDriftChan\ channels\,sample$^{-1}$ = \dsVoyDriftHz~Hz\,s$^{-1}$.
-Evaluated there, the same brute-force search returns S/N~$=\dsVoySnr$ at a best-fit drift of
-\dsVoyBestDrift\ channels\,sample$^{-1}$ --- one grid step from the independently measured walk
---- against a blank-window \dsVoyBlankSnr. The teaching-grade detector does recover the
+Evaluated there, the same brute-force search returns S/N~$=\dsVoySnr$ at a best-fit drift of \dsVoyBestDrift\ channels\,sample$^{-1}$, one grid step from the independently measured walk, against a blank-window \dsVoyBlankSnr. The teaching-grade detector does recover the
 spacecraft, at three orders of magnitude above the noise floor, once it is pointed correctly.
 
 An earlier version of this paper reported a ``Voyager-1 null'': it searched at an asserted
 carrier frequency of \dsVoyLegacyFreq~MHz \citep{estevez2021} and found noise
-(S/N~\dsVoyLegacySnr). In this file that frequency maps to blank sky $\sim$0.92~MHz from the
-carrier --- the scale of a topocentric/barycentric frame difference at X band, though we have not
-confirmed the mechanism --- so the null was a targeting error, not a property of the detector,
+(S/N~\dsVoyLegacySnr). In this file that frequency maps to blank sky $\sim$0.92~MHz from the carrier (the scale of a topocentric/barycentric frame difference at X band, though we have not confirmed the mechanism), so the null was a targeting error, not a property of the detector,
 and we retract it. The lesson is kept in the committed evidence (the \code{legacy\_asserted}
 block) and in the pipeline's design: the carrier is now found in the data, never assumed. What
 remains true, and matters more: a search that ranks by raw brightness reports the instrumental

@@ -11,6 +11,12 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion batch 4 (final): rmsky, swaves, solarbursts, windwaves, stokesv,
+  ppdot, pulsarspec, driftsearch, ecallisto_pipeline, vlbi.** Hand-converted; every one is
+  word-multiset-identical except ecallisto_pipeline (+1 connective). typeii, frbwait,
+  rmdipole, and junodam needed no edits (no HIGH findings). With this, every paper that
+  drifted back to modern register during the rounds-9–11 fix campaigns is re-converted:
+  all 46 papers again lint at zero HIGH with clean diff-guards.
 - **Style re-conversion batch 3: type3synthesis, lpt, offsets, sourcecounts, torchfdmt, hi,
   frbperiod.** Hand-converted (em-dash and `\emph` register only): four are
   word-multiset-identical and the other three add a single connective ("so"/"since"/"and")

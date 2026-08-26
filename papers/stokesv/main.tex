@@ -63,16 +63,14 @@ $7\times$ that median (the RACS convention), not merely the image noise.
 a genuine radio star sits at its catalogue position propagated to the radio epoch, a
 discriminant a chance background match fails.
 \item \textbf{Forced photometry.} At each target we take the brightest Stokes-$I$ pixel within
-12\arcsec\ of the propagated position and read $V$ at that same pixel (either sign). This is a
-peak search, not a fixed-pixel measurement — acceptable for catalogued $I$-detections, and the
+12\arcsec\ of the propagated position and read $V$ at that same pixel (either sign). This is a peak search, not a fixed-pixel measurement: acceptable for catalogued $I$-detections, and the
 per-target offsets are committed so a reader can check the search stayed on-source (median
 \svMedOffset\arcsec, maximum \svMaxOffset\arcsec\ across the sample).
 \end{itemize}
-Each target's Stokes $I$ and $V$ cutouts are staged from the \emph{same observation}: an
+Each target's Stokes $I$ and $V$ cutouts are staged from the same observation: an
 ObsCore query constrains the collection to RACS, the band to RACS-low, and requires an I and a
 V product under one \code{obs\_id}, whose identifiers are committed per target. An earlier
-version staged the two Stokes through independent unordered queries with no such constraint —
-at a southern position that pattern can pair images from different bands or epochs, and it
+version staged the two Stokes through independent unordered queries with no such constraint; at a southern position that pattern can pair images from different bands or epochs, and it
 produced physically impossible ratios ($|V|/I>1$) that counted as detections. A physicality
 gate ($0\le|V|/I\le1$ and $I>3\sigma_I$) now excludes failed measurements from every
 statistic, and ``significant'' circular polarization requires the $V$-SNR gate
@@ -82,8 +80,7 @@ On a synthetic field of \svNtargets\ targets (a noise population plus injected e
 pipeline recovers \svNrecovered\ of \svNinjected\ injected emitters at purity \svPurity. We
 state this validation's scope plainly: the injected fractions sit far above the leakage floor,
 so the recovery exercises the machinery, not the decision boundary, and the proper-motion gate
-rejected \svNpmrejected\ cases on this field — a gate is only demonstrated by cases it
-rejects.
+rejected \svNpmrejected\ cases on this field; a gate is only demonstrated by cases it rejects.
 
 \section{Data}
 Targets are the Sydney Radio Star Catalogue \citep{driessen2024} of V-detected radio stars; images are
@@ -100,8 +97,7 @@ and Data Central mirrors carry RACS Stokes~I only).
 \svNparent\ targets; we measured \svNmeasured\ of them, each in an I$+$V pair from one
 committed \code{obs\_id} (\code{results/stokesv\_targets.csv} carries every row: fluxes,
 local rms values, $V$ signal-to-noise, offsets, product identifiers). \svNvalid\ pass the
-physicality gate; the \svNinvalid\ that fail are Stokes-$I$ non-detections in that
-observation — single-epoch states, not pipeline failures, and they enter no statistic. Among
+physicality gate; the \svNinvalid\ that fail are Stokes-$I$ non-detections in that observation, single-epoch states, not pipeline failures, and they enter no statistic. Among
 the valid targets the image-to-catalogue $I$ ratio has median \svIrec\ but spans
 \svIrecMin--\svIrecMax\ (Figure~\ref{fig:sv}, left): the median is consistent with the
 pipeline reading the right sources, while the spread says single-epoch stellar variability
@@ -109,9 +105,7 @@ and catalogue-vs-image flux conventions are unresolved, and we do not claim reco
 the median. Significant circular polarization is present in \svNVcirc\ of \svNvalid\
 (\svFracVcircPct\%, Wilson \svFracVcircLo--\svFracVcircHi\%; the four detections carry
 $|V|/\sigma_V$ of 12--47, so the count is identical at a 5\% or 10\% fraction threshold;
-Figure~\ref{fig:sv}, right). Whether each catalogue $V$ detection and this cutout share an
-epoch is not established here — the committed \code{t\_min} per target enables that
-comparison — so we state the fraction as a single-observation occurrence rate among
+Figure~\ref{fig:sv}, right). Whether each catalogue $V$ detection and this cutout share an epoch is not established here (the committed \code{t\_min} per target enables that comparison), so we state the fraction as a single-observation occurrence rate among
 catalogued emitters, not as a duty cycle.
 
 \begin{figure*}
@@ -132,8 +126,7 @@ working on real RACS-low DR1 images via CASDA. The honest limitations: (i) the o
 \svNvalid\ valid targets with a wide interval; a multi-epoch campaign (RACS-low1/low2 $+$
 VAST) with the committed per-target \code{obs\_id}/\code{t\_min} bookkeeping is what turns
 it into a duty cycle; (ii) the photometry searches a 12\arcsec\ box around the propagated
-position rather than reading a fixed pixel — the committed offsets (median
-\svMedOffset\arcsec) support the search staying on-source for this catalogued sample, but a
+position rather than reading a fixed pixel; the committed offsets (median \svMedOffset\arcsec) support the search staying on-source for this catalogued sample, but a
 blank-sky census must use the fixed-pixel mode; (iii) the 6\% circular threshold is the
 synthetic model's constant, not a per-field leakage measurement, mitigated here by the
 $V$-SNR gate and by the count's insensitivity from 5\% to 10\%; (iv) the absolute $V$ sign

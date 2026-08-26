@@ -31,9 +31,7 @@ defining threshold (\ppLogBmagnetarLoCut--\ppLogBmagnetarHiCut\ as the cut sweep
 $3\times10^{12}$--$3\times10^{13}$ G) and we commit it as a sweep rather than quote it as a
 population property. \ppFracAlivePct\% of the sample lies above a standard polar-cap death line
 (\ppFracAlivePctLo--\ppFracAlivePctHi\% across a factor-four sweep of the death-valley constant),
-as expected for a radio-selected catalogue. Four named pulsars --- the Crab ($B=\ppCrabB$ G,
-$\tau=\ppCrabAge$ yr), B1937$+$21, the magnetar J1550$-$5418, and the 8.5-s J2144$-$3933 --- are
-read out of the fetched rows and gated against literature windows, so a units or parsing
+as expected for a radio-selected catalogue. Four named pulsars (the Crab, $B=\ppCrabB$ G, $\tau=\ppCrabAge$ yr; B1937$+$21; the magnetar J1550$-$5418; and the 8.5-s J2144$-$3933) are read out of the fetched rows and gated against literature windows, so a units or parsing
 regression fails the run instead of rewriting these numbers. This is a reproducibility/method
 contribution and a recover-a-known, not a discovery, and we are explicit about the catalogue
 selection, the snapshot's vintage, the death-line model dependence, and what $B$ and $\tau$ do
@@ -71,22 +69,18 @@ that lags the live \code{psrcat}: its longest period is 11.8 s, so the ultra-lon
 discovered since (e.g.\ the 76-s PSR J0901$-$4046) are absent by construction, and the per-class
 counts are epoch-shaped as well as survey-shaped. Of the \ppNcatalogue\ entries, \ppN\ have a
 positive measured $\dot P$ and enter the diagram. The discards are measured, not assumed:
-\ppNpdotNull\ lack a measured $\dot P$ entirely (the dominant reason), \ppNpdotNeg\ show a
-negative apparent $\dot P$ --- for most, cluster acceleration in globular clusters rather than
-true spin-down --- \ppNpdotZero\ record exactly zero and are dropped by the positivity cut, and
+\ppNpdotNull\ lack a measured $\dot P$ entirely (the dominant reason), \ppNpdotNeg\ show a negative apparent $\dot P$ (for most, cluster acceleration in globular clusters rather than true spin-down); \ppNpdotZero\ record exactly zero and are dropped by the positivity cut, and
 \ppNpMissing\ lack a period.
 The analysed rows, with their derived quantities, classes, and death-line dispositions, are
 committed as \code{results/ppdot\_pulsars.csv}.
 
 \section{Results}
 The median surface field separates the populations (Figure~\ref{fig:ppdot}):
-$\log(B/\mathrm{G}) = \ppLogBmsp$ for the \ppNmsp\ millisecond pulsars and \ppLogBnormal\ for the
-\ppNnormal\ normal pulsars --- \ppMspNormalSpanDex\ dex apart, and this is the robust measured
+$\log(B/\mathrm{G}) = \ppLogBmsp$ for the \ppNmsp\ millisecond pulsars and \ppLogBnormal\ for the \ppNnormal\ normal pulsars, \ppMspNormalSpanDex\ dex apart, and this is the robust measured
 separation, since both classes are selected on period, not on $B$: the committed sweep moves the
 MSP median only \ppLogBmspTwentyMs--\ppLogBmspFiftyMs\ as the period cut sweeps 20--50 ms, and
 the normal median \ppLogBnormalTwentyMs--\ppLogBnormalFiftyMs. The
-\ppNmagnetar\ high-$B$/magnetar objects median \ppLogBmagnetar, but that class is defined by
-$B>10^{13}$ G --- a cut on the reported quantity itself --- so its median is guaranteed to
+\ppNmagnetar\ high-$B$/magnetar objects median \ppLogBmagnetar, but that class is defined by $B>10^{13}$ G, a cut on the reported quantity itself, so its median is guaranteed to
 exceed 13 and tracks the threshold directly: the committed sweep gives
 \ppLogBmagnetarLoCut--\ppLogBmagnetarHiCut\ as the cut moves $3\times10^{12}$--$3\times10^{13}$ G.
 The full \ppBSpanDex-dex span (a factor of $\sim$\ppBSpanFactor) between the MSP and high-$B$
@@ -103,8 +97,7 @@ $\sim$970-yr age, since $\tau$ assumes braking index 3 and $P_0\ll P$. B1937$+$2
 $B=\ppMspAnchorB$ G (the recycled floor), J1550$-$5418 gives $\ppMagnetarAnchorB$ G (a true
 magnetar), and J2144$-$3933 ($\ppDeathAnchorB$ G) is the 8.5-s archetype of the below-death-line
 population. Because each row is read from the fetched catalogue and gated against a literature
-window in \code{run()}, a units or parsing regression fails the run --- which evaluating the
-closed forms at hand-entered values cannot.
+window in \code{run()}, a units or parsing regression fails the run, which evaluating the closed forms at hand-entered values cannot.
 
 \begin{figure}
 \plotone{figures/ppdot.pdf}
@@ -118,18 +111,13 @@ the recycled millisecond island are recovered directly.}
 The contribution is method and reproducibility: a tested tool that recovers the P--$\dot P$ population
 structure from a public catalogue, with the caveats that bound it. (i) ``Magnetar'' here is a
 position-in-diagram label ($B>10^{13}$ G; \ppNmagnetar\ sources) that includes high-field
-rotation-powered pulsars as well as the $\sim$30 true magnetars, which are X-ray/$\gamma$-ray, not
-radio, selected --- and, per the Results, its median is set by its own threshold, which is why the
+rotation-powered pulsars as well as the $\sim$30 true magnetars, which are X-ray/$\gamma$-ray, not radio, selected, and, per the Results, its median is set by its own threshold, which is why the
 committed sweep accompanies it. (ii) The death line is one representative model; the literature
 spans a ``death valley'' \citep{chenruderman1993}, and the \ppFracDead\% below our line are not
-noise but real long-period pulsars that motivated that literature. The committed sweep bounds the
-model dependence --- \ppFracAlivePctLo\% above the line at twice our constant, \ppFracAlivePctHi\%
-at half --- so ``almost all'' survives a factor of two and not a factor of five. Our 2017-vintage
+noise but real long-period pulsars that motivated that literature. The committed sweep bounds the model dependence (\ppFracAlivePctLo\% above the line at twice our constant, \ppFracAlivePctHi\% at half), so ``almost all'' survives a factor of two and not a factor of five. Our 2017-vintage
 snapshot also predates the ultra-long-period discoveries that most stress death-line models, so
 the below-line census here is a floor. (iii) The ATNF catalogue is the union of many flux- and
-period-limited surveys, so the relative population sizes are survey-shaped, not intrinsic. The
-per-class median fields barely move under a flux cut --- requiring a tabulated $S_{1400}$, or
-$S_{1400}\geq0.5$ or 2 mJy, shifts no class median by more than \ppFluxCutMaxDex\ dex (committed
+period-limited surveys, so the relative population sizes are survey-shaped, not intrinsic. The per-class median fields barely move under a flux cut, requiring a tabulated $S_{1400}$, or $S_{1400}\geq0.5$ or 2 mJy, shifts no class median by more than \ppFluxCutMaxDex\ dex (committed
 as a sweep); the high-$B$ median moves most, because a radio-flux requirement removes radio-quiet
 high-$B$ objects. \code{B/psr} carries no survey-provenance column, so this bounds sensitivity to
 a flux cut, not to survey selection proper. None of these undermine the recover-a-known (the
