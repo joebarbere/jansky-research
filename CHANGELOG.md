@@ -11,6 +11,28 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Round-10 review verdicts: frbperiod, lpt, ecallisto_census, rfitrend (four major
+  revisions, six blockers).** Full presenter/referee rounds on the four highest-risk papers
+  without one; every referee reproduced the committed numbers before attacking them, and each
+  verdict is recorded in the slice's findings file. frbperiod: 5 of 19 "bursts" are
+  same-transit duplicate phases (Z2 33.4 -> 23.9), the measured null is 1e-3..1e-2 (burst
+  clustering, not aliasing), the null search had 34% power against a twin of the detected
+  source, and the paper's own stated validation -- the coincidence probability (~1/300) --
+  was never computed. lpt: the only figure predates two corrections to its own CSV (one
+  object 109x off; "13 objects" title vs 16); a provenance-catalogue paper ships no
+  catalogue, no data-availability statement, and leaves 10 of 16 discovery papers uncited;
+  "exact" p is Monte Carlo; unknown-status objects counted as non-binary halve the headline
+  effect size; the Rea+2026 transcription-bug accusation itself holds (Crossref-corroborated).
+  ecallisto_census: 123 of the "168 sampled days" were failed ingests recorded as zero
+  coverage (live-verified against the archive; 45 days actually entered), the designated
+  honesty sentence is now false, the recover-a-known is circular by construction and the
+  falsifiable saturating-confirmation variant fails informatively, and five \ecsReal* macros
+  were typed by hand into the auto-generated file. rfitrend: HUMAIN's "rise" is two
+  single-month instrumental steps (the downward one spanning Starlink deployment), the
+  load-bearing perez2020 reference carries a fabricated author (the real paper is Prieto,
+  Bussons Gordo, et al., DOI-verified), the null has no sensitivity statement (~60-70% power
+  against a signal the size of the data's own largest excursion), and the abstract's
+  "sample-size artifact" explanation is refuted by the equal-n subsample test.
 - **stacking round-9 revision: forced photometry, a control that exists, an injection test
   that can fail.** Every stacked flux is now a FORCED central-pixel measurement (a searched
   peak on beam-correlated noise reads +1.57 sigma and is positive ~99% of the time); a

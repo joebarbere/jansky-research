@@ -59,3 +59,73 @@ these numbers don't flow through the macro pipeline yet.
 - NS dipole quantities (B, τ) NOT assigned to binary members (orbital periods).
 - GCRT J1745−3009 flagged as the weakest member; disputed values carry flags in the CSV.
 - Selection effects on the period distribution are not modelled (stated).
+
+## Full referee round (2026-08-26): MAJOR REVISION, 18 findings, two BLOCKERs
+
+The underlying work is sound: every metrics field re-derives exactly from the CSV through the
+pure functions, no macro renders as `--`, all six checkable DOIs pass Crossref, and the
+transcription-bug accusation against Rea+2026's table HOLDS (Crossref settles it: the Caleb et
+al. discovery paper is titled "...with a 54-minute period" — 3225.313 s = 53.76 min; the
+review's 2225.309 s = 37.09 min contradicts the discovery paper's own title). The null on the
+78-min boundary is honest. What blocks acceptance is claim/artifact correspondence.
+
+**BLOCKER 1: the committed figure no longer matches its own data.** figures/lpt_ppdot.pdf was
+written 2026-08-04; the CSV was corrected twice since (2026-08-14, 2026-08-21). The figure
+plots ASKAP J1832−0911 at Ṗ = 9.0e-12 — a factor of 109 below its true published limit —
+under the name the CSV's own flag calls erroneous, and its hard-coded title reads "13
+objects, 2026-07" against an abstract saying 16. (The metrics JSON was checked: the
+corrections move no rounded metric — median still 73.4 min — so the JSON is stale in
+provenance, not value; the figure is stale in value.)
+
+**BLOCKER 2: a catalogue paper with no catalogue.** No table of the 16 objects, no
+data-availability statement, no pointer to the CSV, and ~10 of 16 discovery papers uncited —
+including the object that sets \lptPmax (6.48 hr), which has no reference anywhere in the
+manuscript. The claimed advance is provenance, and none of it is delivered to a reader.
+
+**MAJORs (all verified by exact enumeration/computation):**
+- "An EXACT permutation test gives p = 0.5219" — it is 20,000 random shuffles (MC SE ±0.0035);
+  the true exact enumeration over all C(16,7) = 11,440 partitions gives p = 0.5258. Enumerate
+  (it takes a second) or drop the word.
+- Three unknown-status objects (incl. the two longest-period VASTER sources) are counted as
+  "no companion", and the labelling moves the headline: Δlog P 0.176 (published) → 0.413 with
+  unknowns excluded (exact p 0.526 → 0.167). The bias runs toward the published null, but the
+  effect size in the abstract is the smallest of four defensible labellings and no sensitivity
+  is reported. Primary should be 7v6 excluding unknowns + the sensitivity table.
+- The power demo is easy by construction and misdescribed: "same size" is actually N=13, 4v9
+  (defaults), and the injected classes are DISJOINT (Δlog P ≈ 1.03 dex ≈ 6× observed; seed 0
+  is a low outlier at 0.349). At the OBSERVED offset the test's power at N=16 is ≈0.058 —
+  indistinguishable from its size — and a hard 78-min boundary is already falsified by
+  inspection (3 of 7 binaries below it, 3 of 9 non-binaries above; Fisher p = 0.615).
+- "9/9 below the death line" is one structural fact, not nine findings: sitting above the line
+  would need B = 3.6e16–1.1e20 G (1.5–5 dex above any magnetar; above the NS virial limit for
+  the three longest periods), characteristic ages 0.75–2280 yr, drifts up to 1.5e4 s/yr. No
+  achievable measurement could have falsified it; and three of the nine are WD binaries the
+  paper itself says the criterion doesn't apply to. Report the margin distribution (2–6 dex,
+  closest 42×), the field threshold, the death-valley sweep (9/9 across B/P² = 5e10–2e12, min
+  margin 2.64×), and 6/6 for the no-companion subset as the claim-carrying count.
+- "Verified" overclaims against the table's own history: the CSV's flags record five defects
+  found by a downstream audit AFTER the paper was committed (100× Ṗ error, 59″ wrong name,
+  three wrong discovery arXiv IDs — one pointing at a CAD-modelling paper, one at a
+  dark-matter paper). The manuscript, edited the day after the fixes landed, mentions none —
+  while accusing a published review of a transcription error. Disclose and rename to
+  "cross-checked".
+
+**MINOR/NIT:** no mechanical pin test protects the CSV that six modules consume (the 100×
+error lived 7 weeks; add a pinned-literature cell-by-cell test; lptv.J1839_PERIOD_S duplicates
+a CSV cell); lptxray coverage/cones coordinate caches currently consistent (checked, 1e-6 deg)
+but unguarded; the metrics JSON's source string says "13 LPTs" above n_lpt=16 (guard keys on
+"synthetic" so protection holds; derive the string); deruiter2025 title paraphrased (Crossref:
+"Sporadic radio pulses from a white dwarf binary at the orbital period"); the 78-min boundary
+hypothesis has no citation; death line cited to Ruderman & Sutherland but implemented as the
+B/P² form (Bhattacharya & van den Heuvel 1991) with the 2e11 choice undiscussed; the
+accusation sentence's uncertainties and the review-file version/access date live only in the
+manuscript (add pdot_err/period_err columns + provenance note); stale gitignored
+arxiv-submission tarball holds the 2026-07-02 manuscript and pre-correction figure — delete;
+\lptNx emitted, unused; --offline is a no-op flag (and hence no mode-dependent macro hazard —
+the one namespacing check this slice passes for free); "no published catalogue carries..." →
+"we are not aware".
+
+**Verdict: MAJOR REVISION.** The single change: put the catalogue IN the paper — a
+machine-readable 16-row table with per-value provenance and a reference column citing all 16
+discovery papers, plus a data-availability statement with a versioned DOI. That one addition
+delivers the claimed contribution and exposes/fixes four other findings at once.

@@ -77,3 +77,53 @@ since the closed set of four labelled axes is what evidences "structural rather 
 documented behaviour of `run()` (`csv_dir = op / ("results" if offline else "survey")`), but it
 puts offline output in `results/` under a name a reader will take for real evidence, and
 `results/period_metrics.json` carries no `is_real` field.
+
+## Full referee round (2026-08-26): MAJOR REVISION, 14 findings, no blocker
+
+Unusually reproducible: the referee re-derived every committed number exactly from
+data/chimefrbcat1.csv without touching slice code (19 bursts, P=16.3255, Z²=33.4000,
+n_indep=129, FAP=7.2088e-06; the null source's 2.7922/9.40/0.757), all three load-bearing
+citations Crossref-verify, the data URL is live, and the recover-a-known framing is honest.
+What blocks acceptance: both central quantitative statements are wrong by measured amounts.
+
+**MAJORs (all measured from the committed catalogue):**
+- FIVE OF THE 19 "BURSTS" ARE THE SAME CHIME TRANSIT (19 arrival times on 14 distinct sidereal
+  days; within-day separations 2–19 min = duplicate phases at P=16.33 d, exactly the
+  pseudo-replication pipeline.load_catalog_csv already collapses for sub-bursts). One epoch
+  per transit: n=14, Z²=23.87, analytic FAP 8.4e-4 — the recovery is untouched (16.317 d) but
+  the abstract's number moves two orders of magnitude.
+- THE MEASURED NULL IS 10⁻³–10⁻², NOT 7×10⁻⁶ — and for a reason the paper doesn't name.
+  Four Monte-Carlo nulls on the same grid: uniform, sidereal transit comb, and pooled-Cat-1
+  draws all roughly CALIBRATE the analytic FAP (aliasing — the paper's stated worry — is
+  measurably not the problem); what wrecks it is BURST CLUSTERING (a null bootstrapped from
+  another repeater's intervals: P(max Z² ≥ 33.4) = 7e-4; combined with transit collapse,
+  7.7e-3). The abstract disclaims the FAP in the same sentence it prints it.
+- "CORRECTLY FINDS NOTHING ELSEWHERE" HAS 34% POWER: injecting a 20180916B twin (duty cycle
+  0.244, measured) into the null source's 11 bursts, the paper's own significance rule detects
+  it 34% of the time — a real analogue would be missed two times in three. Honest form: "no
+  period detected, sensitive only to duty cycles ≲0.2". (At n=19 the same injection is
+  detected 100% of the time — the asymmetry is purely burst count.)
+- THE COINCIDENCE PROBABILITY — the paper's own stated validation — IS NEVER COMPUTED: the
+  chance a null peak lands within ±0.15 d of 16.35 is 0.002–0.01 across all four nulls
+  (~1/300, ~3σ-equivalent), i.e. the real evidence is ~10³ weaker than the abstract's number
+  and still perfectly good. Print THAT.
+- FIGURE CLOBBER HOLE: `python -m jansky_research.frbperiod --offline` (default --out .)
+  overwrites the real periodogram.pdf with a synthetic one whose peak (16.334) would make the
+  real caption still read correctly. JSON and macros are guarded; the figure is not.
+
+**MINOR/NIT:** P quoted with no uncertainty — bootstrap σ(P)=0.031 d, injection σ=0.059 d
+(claim survives at <1σ; "within the grid resolution" implies 0.008 d, ~5× too precise); the
+metrics JSON records only detections (the searched-null source lives outside every automated
+check — the innerrc lesson in mild form); results/period_results.csv is a TRACKED synthetic
+CSV in the real-evidence directory; the compiled PDF renders "18 − 2 repeaters" (unevaluated
+macro arithmetic — emit \fpNunsearchable); the FAP<0.01 detection threshold and min_bursts=8
+are never stated (any threshold 4–11 selects the same two sources — worth saying); "the
+correct recovery confirms [the barycentric term is negligible]" → "is consistent with"; grid
+bounds hand-typed (currently correct; emit macros); grid adequacy CHECKED and fine (400k
+uniform-in-frequency grid finds the same global max); citations all verify; a caution
+recorded: the shuffle-intervals null is INVALID here (it inherits the periodicity, P=0.24 —
+would wrongly appear to destroy the detection).
+
+**Verdict: MAJOR REVISION.** The single change: replace the analytic FAP in the abstract with
+the coincidence probability the paper itself calls the real validation (p ≈ 10⁻³, computable
+from committed data in minutes).

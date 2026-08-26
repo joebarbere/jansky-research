@@ -201,3 +201,75 @@ its lines registers a falling excess under a rising true signal. The paper's val
 now reports this instead of disclaiming it, and states the consequence --- a station's falling line
 excess cannot, by itself, be read as a falling UEM signal. Two tests pin the arm (bias is negative;
 sign flips; the committed bias equals the difference of the two committed slopes).
+
+## Full referee round (2026-08-26): MAJOR REVISION, 17 findings, two BLOCKERs
+
+The structure is right and the null is honest: every macro reproduces exactly from the
+committed JSON, the figure matches the data, the coherence verdict is pipeline-computed, and
+divruno2023/bassa2024/benz2009 all Crossref-verify. What blocks it: the one positive claim is
+contradicted by its own committed time series, and the reference carrying the novelty argument
+is mis-attributed.
+
+**BLOCKER 1: HUMAIN's "rise" is two single-month instrumental steps, not a trend.** From the
+committed line_excess array: a −12.0-unit step at 2018.875 (held 3.3 yr) and a +15.0-unit step
+at 2022.208 (held to the end); the paper's fitted total change over 13.4 yr is 6.0 units —
+less than half of either step. Within each of the four regimes the Theil–Sen slope is zero or
+negative (none rises significantly), and the DOWNWARD step spans exactly the interval
+(2019.0–2021.9) when Starlink went 0→~1900 — a signal that cannot behave like this. All
+retained months share the same stable_lines, so the config screen cannot catch it; the paper
+concedes within-set reconfigurations survive the screen, then exempts HUMAIN. "Whose rise is
+real, significant, and Starlink-correlated" must become a description of a piecewise-constant
+series with two discontinuities; the regime table belongs in the JSON.
+
+**BLOCKER 2: perez2020 is mis-attributed** — the real paper (Sol. Phys. 295, article 11, DOI
+10.1007/s11207-019-1577-5, Crossref-verified) is "Increase in Interference Levels in the
+45–870 MHz Band at the Spanish e-CALLISTO Sites over the Years 2012 and 2019" by Prieto,
+Bussons Gordo, Rodríguez-Pacheco, et al. — no Pérez-Torres exists on it, the title in refs.bib
+is wrong, and there is no DOI. The lawrance2024 pattern, on the single reference carrying "the
+only published RFI-trend study on the archive" and a results macro. The hand-typed "~2× rise"
+needs checking against the paper's own numbers.
+
+**MAJORs (all measured):**
+- NO SENSITIVITY STATEMENT ON THE NULL (the frblens lesson): injecting a common Starlink-shaped
+  rise into both real series (circular-shifted residuals, real cadence) and applying the
+  paper's own coherent_rise criterion: ~60–70% power against a global signal the size of the
+  largest excursion in the data (A≈6–8 units), 28% at half that. "Indicates per-station
+  effects dominate" is not earned at 60% power — "is consistent with" is; commit the power
+  curve and quote the exclusion amplitude.
+- "SAMPLE-SIZE ARTIFACT" IS REFUTED BY THE OBVIOUS TEST: subsampling HUMAIN to ALMATY's 125
+  months leaves the pooled slope at 0.261 [0.224, 0.292] vs published 0.306. The pooled slope
+  is amplitude-dominated (HUMAIN ±13 units vs ALMATY ±2), not count-dominated; the abstract's
+  stated reason for dismissing it is the wrong reason.
+- THE REAL RESULTS JSON IS A SPLICE: three flank_* keys only _synthetic_metrics produces were
+  appended to the real file (git show 016471d), no _merge marker, and scripts/rfitrend_real.py
+  writes with a bare write_text that bypasses preserve_live_results entirely. Values verified
+  correct; provenance is the defect (the torchfdmt pattern).
+- PER-MONTH FILE PROVENANCE COMPUTED AND DISCARDED: sample_month_metrics returns the file
+  name; _real_trend stores only years+excess. Which day/UT each month sampled is unrecorded —
+  and that is now the single most important question about the two HUMAIN steps.
+- THE ARXIV.YAML OVERRIDE REINSTATES A RETRACTED CLAIM: "configuration-stable stations" (the
+  post-hoc description the findings file records as previously fixed) replaces main.tex's
+  "long-running", and the override drops "We therefore claim no Starlink attribution." The
+  yaml's mechanical check preserved numbers but not claim strength.
+
+**MINOR/NIT:** Theil–Sen intervals discarded (HUMAIN +0.45 [0.27, 0.57]; ALMATY −0.13
+[−0.215, −0.023] — "falls significantly" rests on an upper bound of −0.023); ALMATY's window
+truncation checked and BOUNDED (HUMAIN on ALMATY's window: +0.546 — the confound does not
+drive the null; disclose the spans); the recover-a-known never states the known (truth slopes
+0.2382/0.1787, recovery ratios 1.009/1.015 — genuinely good, uncredited); r=1.0 is 1.0 by
+construction on the clean arms (say which arm can fail); the flank-arm sweep shows sign
+crossover at flank_rise ≈ 0.8× the true line rise and flank_rise=5.0 reproduces ALMATY's
+measured pair almost exactly (−0.119/−0.036 vs −0.128/+0.041) — a quantitative match,
+unreported; the Starlink regressor is ten hand-typed rounded anchors, nonzero from 2019.1
+(paper says zero before 2019.4), clamped after 2026.0, and possibly year-shifted (needs one
+planet4589 lookup; +1 yr shift moves r 0.480→0.516, nothing turns on it); the
+shape-discriminant (Starlink-shape r=0.480 vs linear-ramp 0.294 vs step 0.005) is the only
+quantitative evidence for the HUMAIN flag and is unreported; FM-notch 84/112/focus-59 numbers
+uncommitted (control_name="low" does back the usable half); stale 137 MHz prose in module +
+driver docstrings and one vacuous test assertion; GLASGOW's "162 of 163 retained" retains an
+empty line set (contributes nothing); burst-immunity claim true (0.2382 vs 0.2406, measured)
+but in no artifact.
+
+**Verdict: MAJOR REVISION.** The single change: report HUMAIN as a step function, not a trend
+— the null gets stronger, the systematics framing gets its sharpest example, and the flagged
+candidate is replaced by something the data support.
