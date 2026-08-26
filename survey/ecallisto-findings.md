@@ -149,3 +149,43 @@ Citations and macros all verify clean.
 \ecReal* macro — retiring all three blockers and turning the buried null into the paper's best
 sentence: of 15 stations across a full day, only two produced a type III candidate, and they
 were not coincident.
+
+**Status: RESOLVED (2026-08-26) — pipeline paper.** ingest fixed at the root and the real day
+re-run end to end; the referee's predictions confirmed by the committed pipeline: 763 files
+listed (their 763), 761 scanned (2 fetch failures now counted, never silent), **2 candidates**
+(the phantom 8 were duplicate rows), BIR's at t_peak = 42666 s = 11:51:06 UT — consistent with
+the known 11:50 UT type III (the referee's "plausible" identification, now auditable from the
+committed t_peak_s) — and OOTY's 3.2 h earlier; 0 coincident events.
+
+1. **BLOCKER 1 (figure/caption)**: each leg writes its own figure (ecallisto_syn.pdf /
+   ecallisto_real.pdf); the old shared path is deleted; the synthetic caption describes the
+   synthetic panel again and the real day gets its own figure with the honest reading.
+2. **BLOCKERS 2+3 (double-count + wrong-file analysis)**: `list_day_files` de-duplicates (the
+   index HTML renders each filename twice); `scan_file` fetches EXACTLY the listed file
+   (`fetch_ecallisto` gained a filename= path; the HHMM re-resolution and its 64% mismatch are
+   documented in its docstring as the lesson). n_scanned now counts spectra; "station-days"
+   language corrected.
+3. **The committed catalogue can audit the headline**: t_peak_s and file columns added — the
+   two fields coincident_events consumes.
+4. **The denominator exists**: n_files_listed / n_stations_listed / n_fetch_failed / station
+   scope committed and quoted; the bare-except is counted, not silent.
+5. **DAG = CLI**: both call the shared `scan_file`; the abstract's identical-rows claim is now
+   scoped and true (the DAG stamps the date, JSON-sanitises NaNs, and caps its fan-out — all
+   stated).
+6. **The validation can fail**: the fixture gained a constant narrowband carrier, a broadband
+   zero-drift impulse (30 s from the carrier — INSIDE the tolerance, so a morphology failure
+   would be promoted), and a reverse-drift ridge; all three rejected on morphology. The
+   single-seed sentence is replaced by the committed 60-seed ensemble (60/60 exact recovery,
+   0 quiet false flags, 0 contaminant false flags, drift sd 0.015).
+7. **Single-linkage honesty**: each confirmed event carries its span (a chained cluster can
+   exceed the tolerance — stated); `chance_coincidence_rate` commits the closed-form expected
+   chance events per day (0.0292 synthetic; 0.0014 for the real day's counts) — the QC's
+   actual reliability number, previously never quoted; the census sibling's 120 s tolerance is
+   cross-referenced in print.
+8. **The real-data null is the abstract's second sentence**, with the corrected explanation:
+   13 of 15 stations produced no candidate on a day with a known burst — the bottleneck is the
+   single-station detection threshold, not station coverage (this file's earlier six-station /
+   BIR-excluded explanation is superseded by the committed evidence).
+9. Hand-typed 60 s / 2 stations → \ecTolS/\ecMinStations macros; per-leg \ecSynSource /
+   \ecRealSource markers (fixing a downgrade-guard see-saw that had blocked the synthetic leg
+   from updating its own namespace); "injected bursts" vs "interference" vocabulary unified.

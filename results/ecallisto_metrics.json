@@ -1,10 +1,18 @@
 {
   "source": "e-Callisto 20110914",
-  "n_scanned": 1512,
-  "n_bursts": 8,
-  "burst_fraction": 0.005,
+  "n_scanned": 761,
+  "n_bursts": 2,
+  "burst_fraction": 0.003,
   "median_drift_mhz_s": -5.941,
   "n_events": 0,
   "max_event_stations": 0,
-  "n_rfi_rejected": 8
+  "n_rfi_rejected": 2,
+  "n_stations_scanned": 15,
+  "n_candidate_stations": 2,
+  "event_spans_s": [],
+  "expected_chance_events_per_day": 0.0014,
+  "n_files_listed": 763,
+  "n_stations_listed": 15,
+  "n_fetch_failed": 2,
+  "stations_scope": "all"
 }

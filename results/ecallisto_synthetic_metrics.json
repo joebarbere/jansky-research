@@ -1,10 +1,24 @@
 {
   "source": "synthetic-day",
-  "n_scanned": 10,
+  "n_scanned": 13,
+  "n_stations_scanned": 13,
   "n_bursts": 7,
-  "burst_fraction": 0.7,
+  "n_candidate_stations": 7,
+  "burst_fraction": 0.538,
   "median_drift_mhz_s": -6.911,
   "n_events": 1,
+  "event_spans_s": [
+    0.0
+  ],
   "max_event_stations": 4,
-  "n_rfi_rejected": 3
+  "n_rfi_rejected": 3,
+  "expected_chance_events_per_day": 0.0292,
+  "ensemble": {
+    "n_seeds": 60,
+    "n_recovered_exactly": 60,
+    "n_quiet_false_flags": 0,
+    "n_contaminant_false_flags": 0,
+    "drift_mean": -6.9,
+    "drift_sd": 0.015
+  }
 }
