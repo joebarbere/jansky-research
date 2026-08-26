@@ -129,3 +129,52 @@ the one namespacing check this slice passes for free); "no published catalogue c
 machine-readable 16-row table with per-value provenance and a reference column citing all 16
 discovery papers, plus a data-availability statement with a versioned DOI. That one addition
 delivers the claimed contribution and exposes/fixes four other findings at once.
+
+**Status: RESOLVED (2026-08-26).** One regeneration from the (already-corrected) CSV plus the
+new exact/labelling/margin/power machinery; every referee number reproduced in the committed
+pipeline (Δ 0.413/0.176/0.446/0.605 with exact p 0.1667/0.5258/0.0919/0.1905; min margin 42.3;
+power 0.062 at the published offset).
+
+1. **BLOCKER 1**: the figure regenerates from the corrected CSV (J1832−0911 at its true Ṗ
+   limit under its corrected name) with the title derived from the sample size — "16 objects",
+   never hard-coded again. The stale local arxiv-submission tarball was deleted and rebuilt.
+2. **BLOCKER 2**: the paper now CONTAINS the catalogue — a generated 16-row deluxetable
+   (`generated/table.tex`: period, Ṗ + type incl. m(d), companion status with *unknown shown
+   as unknown*, X-ray, and a discovery-reference column citing all 16 papers — 11 new
+   Crossref/arXiv-verified bib entries) — plus a data-availability paragraph with the Zenodo
+   concept DOI and the one-command rebuild.
+3. **"Exact" is exact**: `period_split_stat` enumerates all C(16,7)=11,440 partitions
+   (p = 0.5258 where the MC seed said 0.5219) and reports its method string; MC only as a
+   fallback above 200k partitions.
+4. **The labelling is primary evidence**: `label_sensitivity` commits all four labellings; the
+   PRIMARY comparison excludes the three unknown-status objects (7v6: Δ = 0.413, p = 0.167)
+   and the paper discloses that the earlier version counted two of the three longest periods
+   with the null class silently. No labelling reaches significance — conclusion unchanged,
+   effect size honest.
+5. **The power statement is measured**: `split_power` (vectorized exact test over simulated
+   overlapping classes at the sample's 1.75-dex width) gives power 0.172 at the observed
+   primary offset and 0.062 at the published one — essentially the size of the test — quoted
+   in place of "the test has power"; the synthetic disjoint demo is rerun at the real
+   composition (16, 7v9) and labelled as verifying machinery, not sensitivity. The paper also
+   notes a hard 78-min boundary is already disfavoured by inspection (3 binaries below, 3
+   non-binaries above).
+6. **"9/9" reframed as structural**: `death_line_margins` commits per-object margins (42.3 to
+   1.2e6 — no achievable measurement could have falsified the count), the death-valley sweep
+   (9/9 across B/P² = 5e10–2e12, min margin 10.6; Chen & Ruderman + Bhattacharya & van den
+   Heuvel now cited, the constant named as a choice), and the claim-carrying no-companion
+   count (6/6).
+7. **"Verified" → "cross-checked"**, with a disclosure paragraph naming the five defects the
+   2026-08 downstream audit fixed in this table (100× Ṗ, 59″ name, three wrong arXiv IDs) and
+   the accusation's own confirmation route (the discovery paper's "54-minute" title).
+8. **The CSV is mechanically pinned**: `test_csv_matches_pinned_literature` asserts every
+   period/Ṗ/type/discovery-ID cell (a future edit must change the pin deliberately);
+   `test_lptxray_coordinate_caches_match_the_csv` guards the duplicated coordinates;
+   `test_lptv_ephemeris_constant_matches_the_csv` guards lptv's hard-coded J1839 period. The
+   CSV itself was also repaired: three rows' flags contained unquoted commas that silently
+   truncated them for any named-column reader (found when the round-10 rewrite crashed on
+   them), and the quoted uncertainties for the accusation-bearing values now live in
+   `period_err_s`/`pdot_err_s_s` columns with the review-file comparand recorded in flags.
+9. MINORs: the metrics source string derives from the data ("16 LPTs"); deruiter2025's title
+   corrected to the published one; the 78-min boundary hypothesis cites rea2026; ruderman1975
+   cited for the death-line physics where it belongs; \lptNx used (first LPT X-ray discovery
+   sentence, citing wang2025); "no published catalogue" → "we are not aware of".
