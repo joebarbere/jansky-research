@@ -23,8 +23,8 @@ CPU-only library to perform them reproducibly. We survey the open-source radio-a
 tooling landscape, identify this gap, and fill it with \code{frbstats}, a small tested
 Python module built on the \code{jansky} helper package. Run on the \nBursts\ independent
 events of the First CHIME/FRB Catalog, the tool recovers the established result that
-repeating sources have larger temporal widths than apparent non-repeaters --- quoted with
-the source, not the burst, as the unit of analysis, since \nRepeaterBursts\ repeater
+repeating sources have larger temporal widths than apparent non-repeaters. The source, not
+the burst, is the unit of analysis, since \nRepeaterBursts\ repeater
 bursts from \nRepeaterSources\ sources are not independent draws: per-source medians give
 Kolmogorov--Smirnov $D=\ksWidthDSrc$, $p=\ksWidthPSrc$ (burst-level $D=\ksWidthD$,
 $p=\ksWidthP$; medians $\medWidthRep$ versus $\medWidthOne$ ms), validating the
@@ -56,8 +56,8 @@ demonstrate it end to end on public data, with full reproducibility as the goal.
 We surveyed the open-source radio-astronomy ecosystem: detection suites such as PRESTO
 \citep{presto} and \code{your} \citep{your2020}; the CHIME open-data utilities
 \code{cfod}; the population-synthesis package \code{frbpoppy} \citep{frbpoppy2019}; and
-the web platform FRBSTATS \citep{frbstatsplatform} --- whose name our module regrettably
-shares; ours is the offline library, theirs the web catalogue. Detection and I/O are well
+the web platform FRBSTATS \citep{frbstatsplatform} (whose name our module regrettably
+shares; ours is the offline library, theirs the web catalogue). Detection and I/O are well
 served, but burst-statistics analysis is not: Weibull wait-time fitting, power-law energy
 fits with principled lower bounds, and repeater/non-repeater hypothesis tests exist only
 as one-off scripts inside papers, while FRBSTATS exposes a web UI but no offline library.
@@ -86,11 +86,11 @@ lower bound $F_\mathrm{min}$ chosen by the Kolmogorov--Smirnov criterion of
 incomplete faint end.
 
 \paragraph{Population comparison.} Two-sample KS tests compare the dispersion measure,
-width, and fluence distributions of the two classes. The headline statistics take the
-\emph{source} as the unit of analysis (each repeater contributes its per-source median;
-each one-off is one source by definition), because \nRepeaterBursts\ bursts from
-\nRepeaterSources\ sources are not independent draws --- two sources supply nearly half
-the repeater bursts. The burst-level tests are reported alongside as the literature
+width, and fluence distributions of the two classes. The statistics reported as primary
+take the source, not the burst, as the unit of analysis (each repeater contributes its
+per-source median; each one-off is one source by definition), because \nRepeaterBursts\
+bursts from \nRepeaterSources\ sources are not independent draws: two sources supply
+nearly half the repeater bursts. The burst-level tests are reported alongside as the literature
 convention. Width here is the fitburst intrinsic width of the leading sub-burst
 (\code{width\_fitb}); the alternative \code{bc\_width} gives medians a factor of
 $\sim$4 larger for both classes with the same qualitative separation.
@@ -123,17 +123,17 @@ and is our validation that the tool is correct.
 
 \paragraph{Fluence power law.} The differential index is
 $\gamma=\energyGamma\pm\energyGammaBootErr$, where the error is a joint bootstrap over
-the index \emph{and} the auto-selected bound (the bound itself is uncertain:
+the index and the auto-selected bound (the bound itself is uncertain:
 $F_\mathrm{min}=\energyFmin$~Jy~ms, 95\% interval
 \energyFminCIlo--\energyFminCIhi~Jy~ms; the fixed-bound Hill error,
 $\pm\energyGammaErr$, conditions on a bound chosen from the same data and understates
 the uncertainty by $\sim$2$\times$). Over the \energyNtail-event tail
 (Figure~\ref{fig:fluence}), the index is consistent at $\energyGammaAgree\sigma$ with
 the catalog's own cumulative source-count slope \citep{chimecat1}, transformed to a
-differential index $\gamma_\mathrm{diff}=1+|\alpha_\mathrm{cum}|=\energyGammaRef\pm\energyGammaRefErr$
---- noting the estimands differ (theirs is selection-corrected; ours is a raw fit that
+differential index $\gamma_\mathrm{diff}=1+|\alpha_\mathrm{cum}|=\energyGammaRef\pm\energyGammaRefErr$.
+The estimands differ: theirs is selection-corrected, and ours is a raw fit that
 also retains the \nExcludedFlag\ events the catalog itself flags; excluding those moves
-$\gamma$ to \energyGammaNoExcl). The tail retains repeat bursts of the same sources
+$\gamma$ to \energyGammaNoExcl. The tail retains repeat bursts of the same sources
 (removing them moves $\gamma$ by $+0.03$).
 
 \paragraph{Wait-time clustering (a caveat, not a claim).} The pooled within-source
@@ -142,7 +142,7 @@ $\weibullKcluLo$--$\weibullKcluHi$ resampling sources, the wider and more honest
 interval; Figure~\ref{fig:wait}), formally clustered and broadly comparable to
 dense-monitoring estimates for FRB~121102 \citep{oppermann2018}. We report it only as an
 illustration: CHIME is a transit instrument that sees each source roughly once per
-sidereal day, and the cadence is visible in the waits themselves ---
+sidereal day, and the cadence is visible in the waits themselves:
 \nWaitsSameTransit\ of the \weibullNwaits\ fall within the same transit and
 \nWaitsSidereal\ within 5\% of one sidereal day. Removing the sub-burst
 pseudo-replication moved this estimate from a spurious $0.14$ to $\weibullK$, which
@@ -152,8 +152,8 @@ illustrates why event-level treatment matters.
 measure ($\medDMRep$ versus $\medDMOne$~pc~cm$^{-3}$). The unit of analysis decides how
 that reads: burst-level the difference looks decisive (KS $D=\ksDMD$, $p=\ksDMP$), but
 the tall spikes in Figure~\ref{fig:dm} are single prolific sources, and per-source
-medians give $D=\ksDMDSrc$, $p=\ksDMPSrc$ --- marginal, which is where the selection
-caveat below says it should sit. Fluence differs marginally either way
+medians give $D=\ksDMDSrc$, $p=\ksDMPSrc$, marginal, as the selection
+caveat noted below predicts. Fluence differs marginally either way
 ($\medFluenceRep$ versus $\medFluenceOne$~Jy~ms; source-level $p=\ksFluencePSrc$).
 Unlike the width result, these are not reproductions of \citet{pleunis2021}, who found
 the Cat~1 DM distributions consistent; a significant DM difference emerged later with
@@ -207,8 +207,8 @@ all code, results, figures, and citations, and takes full responsibility for the
 
 \begin{acknowledgments}
 The author gratefully acknowledges the substantial collaborative contribution of Anthropic's
-Claude throughout the conception, analysis, and writing of this paper, and the \code{jansky}
-project whose tested helpers this work builds on.
+Claude throughout the conception, analysis, and writing of the manuscript, and the \code{jansky}
+project, whose tested helpers this analysis builds on.
 \end{acknowledgments}
 
 \software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy,

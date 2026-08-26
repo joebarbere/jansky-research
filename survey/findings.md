@@ -154,3 +154,11 @@ bimodality quantified (7 same-transit + 8 sidereal-day waits, macro'd); width co
 in Methods (width_fitb, leading sub-burst; bc_width factor-4 alternative noted); mirror-URL
 provenance in Data with \catalogSource used; RNAAS \software carries jansky-research and the
 tool is attributed to the toolkit; arXiv package regenerated.
+
+**Post-conversion audit (2026-08-26).** The round-9 resolution above claimed the source is
+the unit of analysis "in both abstracts"; the conversion-drift referee found the RNAAS
+abstract still quoted the burst-level $D=\ksWidthD$, $p=\ksWidthP$ — the record had
+overstated what landed. Closed now: the RNAAS abstract quotes \ksWidthDSrc/\ksWidthPSrc with
+the unit of analysis named, and the body's median-widths clause moved inside the burst-level
+parenthesis (2.05 ms is the burst-level repeater median; the source-level value is 2.47 ms,
+and the sentence must not read as quoting it).
