@@ -11,6 +11,12 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion batch 3: type3synthesis, lpt, offsets, sourcecounts, torchfdmt, hi,
+  frbperiod.** Hand-converted (em-dash and `\emph` register only): four are
+  word-multiset-identical and the other three add a single connective ("so"/"since"/"and")
+  glossing an em-dash's causal role. All diff-guards clean, zero HIGH lint, triage zero
+  HIGH/MED; lpt's self-reference MED stands deliberately (its disclosed error-history
+  passages use the house retraction form).
 - **Style re-conversion batch 2: triangulate, southern, glitchpop, peaked, ecallisto_census,
   vlass.** Same procedure as batch 1, with the editor instructions hardened by batch 1's
   referee findings (no abstract compression, no new exclusivity words, retraction referents

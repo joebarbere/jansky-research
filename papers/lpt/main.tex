@@ -12,15 +12,15 @@ Transients, with Regenerable P--$\dot P$ Statistics}
 \begin{abstract}
 The long-period radio transients (LPTs) grew from two objects in 2022 to \lptN\ by mid-2026;
 we are not aware of a published population catalogue of the class carrying per-value provenance
-and regenerable statistics --- the review of \citealt{rea2026} discusses population constraints
+and regenerable statistics; the review of \citealt{rea2026} discusses population constraints
 and plots the class, but ships neither. We compile a cross-checked, per-value-provenanced
 catalogue of all \lptN\ confirmed LPTs (periods \lptPmin~min to \lptPmax~hr;
 Table~\ref{tab:lpts}, with every discovery paper cited), a process that surfaced a period
-transcription error in the review's machine-readable table --- and that also corrected five
+transcription error in the review's machine-readable table, and that also corrected five
 defects in our own compilation before this version, which we disclose. We place the class on
 the P--$\dot P$ plane against the pulsar death line and constant-field tracks. Only
 \lptNmeas\ $\dot P$ measurements exist in the class. All \lptNconstr\ objects with a positive
-$\dot P$ constraint sit below the death line --- a count we report as the structural fact it
+$\dot P$ constraint sit below the death line, a count we report as the structural fact it
 is: at these periods, sitting above the line would require $\dot P$ larger than any achievable
 constraint by factors of \lptMinMargin\ to over $10^{6}$, so no measurement could have
 falsified it; the claim-carrying subset is the \lptNdeathNonbin/\lptNnonbinConstr\
@@ -50,8 +50,8 @@ checked against its primary source.
 
 \section{The catalogue}
 Table~\ref{tab:lpts} is the catalogue: all \lptN\ objects with period, $\dot P$ value or
-limit with its type flagged, companion status --- including \emph{unknown}, shown as unknown
-rather than folded into any class --- X-ray status, and the discovery reference. The vendored
+limit with its type flagged, companion status (including unknown, shown as unknown
+rather than folded into any class), X-ray status, and the discovery reference. The vendored
 CSV additionally records positions, the discovery/measurement arXiv IDs, the quoted
 uncertainties for the values this paper's comparisons rest on, and a per-object free-text
 provenance flag. Converting every period to seconds is the step that caught a dropped leading
@@ -60,7 +60,7 @@ paper's $3225.313\pm0.002$~s, \citealt{caleb2024}; the retrieved review file and
 recorded in the CSV's flags). Two $\dot P$ entries need care: CHIME~J0630+25's
 $+5.2(1.1)\times10^{-12}$ is a measurement through a glitch (the review conservatively treats
 it as a limit; we carry both framings, \citealt{dong2025a}), and CHIME~J1634+44's
-$-9.03(0.11)\times10^{-12}$ is the class's only firm spin-up \citep{dong2025b} --- physically
+$-9.03(0.11)\times10^{-12}$ is the class's only firm spin-up \citep{dong2025b}, physically
 natural if the period is orbital or the emitter is torqued in a binary. \lptNx\ of the
 \lptN\ objects have X-ray detections, including the first LPT X-ray discovery
 \citep{wang2025}.
@@ -68,7 +68,7 @@ natural if the period is orbital or the emitter is torqued in a binary. \lptNx\ 
 \paragraph{The compilation's own error history, disclosed.} "Cross-checked" describes a
 process, not a guarantee, and this table's history proves it: a 2026-08 downstream audit of the
 same CSV found and fixed five defects that had survived the original compilation and this
-paper's first version --- a $\dot P$ limit two orders of magnitude low and a
+paper's first version: a $\dot P$ limit two orders of magnitude low and a
 59\arcsec-offset name for ASKAP~J1832$-$0911, and three wrong discovery arXiv IDs (one
 pointing at an unrelated engineering paper, one at a theory paper, one at a cosmology paper).
 Every corrected cell carries its audit note in the CSV's flags column, and the repository now
@@ -91,9 +91,9 @@ no dipole $B$ or characteristic age is quoted for binary members, whose ``period
 orbital and for whom neutron-star dipole formulae are meaningless. Every object with a positive $\dot P$ constraint lies
 below the death line (\lptNdeath/\lptNconstr). We report that count as the structural fact it
 is, not as \lptNconstr\ independent confirmations: because the death line scales as $P^{3}$,
-at minute-to-hour periods the $\dot P$ needed to sit \emph{above} it exceeds every published
+at minute-to-hour periods the $\dot P$ needed to sit above it exceeds every published
 constraint by factors from \lptMinMargin\ (the closest object, GLEAM-X~J1627) to over
-$10^{6}$, implying dipole fields far beyond any magnetar --- no achievable timing measurement
+$10^{6}$, implying dipole fields far beyond any magnetar; no achievable timing measurement
 could have falsified the statement for any member. The committed margin table quantifies the
 puzzle per object, and the count is \lptNdeath/\lptNconstr\ at every death-valley constant
 from $B/P^{2}=5\times10^{10}$ to $2\times10^{12}$ \citep[minimum margin
@@ -104,7 +104,7 @@ simply the wrong diagnostic, which is precisely why the diagram needs the class 
 The period distribution spans \lptPmin~min--\lptPmax~hr (median \lptPmed~min).
 
 \paragraph{The hinted binary boundary, with the labelling stated.} Three objects' companion
-status is unknown (GCRT~J1745$-$3009 and the two 2026 VASTER discoveries --- the latter being
+status is unknown (GCRT~J1745$-$3009 and the two 2026 VASTER discoveries, the latter being
 two of the three longest periods in the sample), so where they are counted moves the contrast.
 The primary comparison excludes them: \lptNwd\ binaries vs 6 known-no-companion objects give
 $\Delta\log P=\lptSplitD$ with an exact, fully enumerated permutation $p=\lptSplitP$. The
@@ -114,8 +114,8 @@ $\Delta\log P=\lptSplitDPub$ ($p=\lptSplitPPub$); counting them as binaries give
 \lptSplitDAsBin\ ($p=\lptSplitPAsBin$); confirmed-only gives \lptSplitDConf\
 ($p=\lptSplitPConf$). No labelling reaches significance. The honest power statement replaces
 the earlier ``the test has power'': at the observed offset the exact test's power at
-$N=\lptN$ is \lptPowerPrimary\ (and \lptPowerPub\ at the smaller published offset) ---
-essentially the size of the test --- so the null constrains only a clean, near-disjoint
+$N=\lptN$ is \lptPowerPrimary\ (and \lptPowerPub\ at the smaller published offset),
+essentially the size of the test, so the null constrains only a clean, near-disjoint
 boundary; a synthetic disjoint split at the real sample composition is detected
 ($p=$~\lptSynSplitP), which verifies the machinery, not the sensitivity. A hard 78-min
 boundary is in fact already disfavoured by inspection: three binaries sit below it and three

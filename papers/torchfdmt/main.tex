@@ -93,11 +93,11 @@ $\mathrm{DM}=\spRealDm$~pc\,cm$^{-3}$. The butterfly indexes rows by whole sampl
 delay (\spRealDmStep~pc\,cm$^{-3}$ per trial here), so the honest statement is positional: the
 maximum falls \spRealOffTrials\ trials from the catalogue value out of \spRealTrials, a
 coincidence with $p=\spRealPpos$ if the maximum were uniformly placed. The peak's
-\emph{height}, $S/N=\spRealSnr$, is quoted against a committed trials accounting rather than as
+height, $S/N=\spRealSnr$, is quoted against a committed trials accounting rather than as
 a bare significance: the DM--time plane holds $\sim$$8\times10^6$ cells, so its noise maximum is
 itself several sigma, and a per-channel circular-shift null (\spRealNullReps\ repetitions, which
 destroys any dispersed track while preserving each channel's statistics and RFI) has median
-\spRealNullMedian, 99th percentile \spRealNullNinetyNine, and maximum \spRealNullMax\ — the
+\spRealNullMedian, 99th percentile \spRealNullNinetyNine, and maximum \spRealNullMax; the
 observed peak's tail probability against it is $p=\spRealPnull$. The decisive detection is the
 boxcar matched filter on the best-DM series: a single bright pulse at $S/N=\spRealSpSnr$,
 consistent with a Crab giant pulse. The synthetic leg's butterfly $S/N$ of \spSnr\ against the
@@ -109,7 +109,7 @@ is a validation on real telescope data, not a discovery claim.
 
 \begin{figure}
 \plotone{figures/singlepulse.pdf}
-\caption{Left: the FDMT butterfly — the peak of the per-row z-scored series versus trial DM,
+\caption{Left: the FDMT butterfly, the peak of the per-row z-scored series versus trial DM,
 the same statistic the quoted peak maximises (the raw track sum rises with delay row and is not
 shown); the dashed line marks the ATNF catalogue DM of the Crab pulsar. Right: the dedispersed
 time series at the best DM, with the highest-S/N boxcar detection marked. The offline CI build
@@ -125,10 +125,10 @@ DM trials gives: brute force \spBruteCpu~s (CPU) $\rightarrow$ \spBruteGpu~s (GP
 hardware string written into the committed metrics by the run itself; an earlier version of
 this table spliced a CPU column from one invocation with a GPU column from another, and the two
 invocations' CPU timings differed by $\sim$15\%, which is the honest run-to-run systematic on
-these wall-clock numbers — the ratios should be read to a significant figure. Two conclusions
+these wall-clock numbers, so the ratios should be read to a significant figure. Two conclusions
 follow. First, the algorithm beats the hardware: the $O(N\log N)$ FDMT on a CPU outruns the
 $O(N\,N_\mathrm{DM})$ brute force even after the GPU accelerates the latter
-$\sim$\spBruteSpeedup$\times$ — a ratio consistent with the complexity estimate, though the
+$\sim$\spBruteSpeedup$\times$, a ratio consistent with the complexity estimate, though the
 baseline is the naive in-framework gather (an index tensor of $\sim$8 bytes per data float), not
 a tuned roll-and-sum, so part of the gap is memory traffic rather than arithmetic. Second, our
 FDMT's GPU gain is currently $\sim$\spFdmtSpeedup$\times$: the recursion's per-delay host loop

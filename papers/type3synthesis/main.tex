@@ -23,7 +23,7 @@ drift-to-distance framework, validated on three separate events across nearly th
 frequency: ground-based e-Callisto \citep{benz2009} in the corona (Newkirk model;
 \citealt{newkirk1961}), Wind/WAVES \citep{bougeret1995} in the inner heliosphere, and
 STEREO/WAVES \citep{bougeret2008} to $\synRealIpRhiAU$~AU (both via the Leblanc model;
-\citealt{leblanc1998}) --- with each leg's speed carried with the (emission-harmonic
+\citealt{leblanc1998}), with each leg's speed carried with the (emission-harmonic
 $\times$ density-scale) systematic its own slice propagates, since $f_p^2\propto n_e$ makes the
 two exactly degenerate. The ladder's reach is the low-frequency band edge through the assumed
 model, not an event property. The whole ladder rests on that density model, which we check where
@@ -31,7 +31,7 @@ it can be checked: STEREO/WAVES and a STEREO-A$+$B direction-finding triangulati
 \citep{cecconi2008,krupar2012} analyse the same 2013-05-15 event, so the model's distances can
 be compared with purely geometric ones. The comparison's honest summary is additive: the
 triangulated distances sit a nearly constant $\synRealGeomDiff\pm\synRealGeomDiffStd$~R$_\odot$
-outside the Leblanc plasma level (regression slope $\synRealGeomSlope$) --- the signature of a
+outside the Leblanc plasma level (regression slope $\synRealGeomSlope$), the signature of a
 constant direction-finding pointing bias, after which the model reproduces the geometry to
 $\synRealGeomRmsAdd$~R$_\odot$ rms; the comparison does not validate the model's log--log shape
 over the triangulated band (slopes $\synRealGeomLogSlope$ vs 1). This is a synthesis and
@@ -80,7 +80,7 @@ $\synRealHelioGridSpeedLo$--$\synRealHelioGridSpeedHi\,c$ and the reach
 $\synRealHelioGridReachLo$--$\synRealHelioGridReachHi$~AU, so its own slice declines to name the
 Alfv\'en region exclusively, and so do we).
 \item \textbf{Interplanetary}: STEREO/WAVES HFR, Leblanc model, to $\synRealIpRhi$~R$_\odot$
-$=\synRealIpRhiAU$~AU --- the HFR band edge through the model, not an event property
+$=\synRealIpRhiAU$~AU, the HFR band edge through the model, not an event property
 ($\synRealIpSpeed\pm\synRealIpSpeedErr\,c$; grid
 $\synRealIpGridSpeedLo$--$\synRealIpGridSpeedHi\,c$, reach
 $\synRealIpGridReachLo$--$\synRealIpGridReachHi$~AU).
@@ -97,26 +97,26 @@ plasma-frequency reach).
 \section{The geometric cross-check}
 The triangulation analyses the same burst (2013-05-15) the interplanetary leg fits, and compares
 the triangulated distance $r_{\rm geom}$ per channel with the Leblanc curve evaluated at the
-same frequencies, $r_{\rm plasma}(f)$ --- a model-free measurement against the model itself
+same frequencies, $r_{\rm plasma}(f)$: a model-free measurement against the model itself
 (Figure~\ref{fig:synth}, right; note $r_{\rm plasma}$ is a deterministic function of frequency,
 not a second measurement, and the drift fit itself does not enter). The companion paper
 (\code{papers/triangulate}) derives the honest summary, and this synthesis inherits it: all
-triangulated channels sit \emph{outside} the plasma level by a nearly constant
+triangulated channels sit outside the plasma level by a nearly constant
 $\synRealGeomDiff\pm\synRealGeomDiffStd$~R$_\odot$ while $r_{\rm plasma}$ varies by a factor
 of 13; the regression slope is $\synRealGeomSlope$ (an enhancement of the density itself would
 multiply, i.e.\ slope well above 1), so the offset is the signature of a constant few-degree
-direction-finding pointing bias --- of the size the triangulation slice's committed noise
-calibration produces from apparent-source scatter alone --- and after that one constant offset
+direction-finding pointing bias (of the size the triangulation slice's committed noise
+calibration produces from apparent-source scatter alone), and after that one constant offset
 the Leblanc model reproduces the geometry to $\synRealGeomRmsAdd$~R$_\odot$ rms ($\sim$12\%).
-What the comparison does \emph{not} do is validate the model's log--log shape over the
+What the comparison does not do is validate the model's log--log shape over the
 triangulated band: the log--log regression slope of $r_{\rm geom}$ on $r_{\rm plasma}$ is
 $\synRealGeomLogSlope$ against 1 for a pure scale factor, so the fractional discrepancy grows
 from tens of percent at the low-frequency end to a factor $\sim$3 at the high end (the
 frequency-dependent ratio $\synRealGeomRatio$ is quoted only as the median of that trend). The
 Pearson correlation ($r=\synRealGeomCorr$) is reported for continuity but carries little
-information here --- any monotone power law in frequency correlates with the Leblanc curve at
+information here, since any monotone power law in frequency correlates with the Leblanc curve at
 $r>0.95$. This is the element the framework adds: a same-event, model-free check that
-\emph{bounds} the model --- confirming the Leblanc level to $\sim$12\% after one measured
+bounds the model, confirming the Leblanc level to $\sim$12\% after one measured
 instrumental offset, while showing that the check cannot separate a pointing bias from a shape
 error at the tens-of-percent level. It also tests the Leblanc model only over the triangulated
 band; the Newkirk coronal leg is unchecked by it.
@@ -134,16 +134,16 @@ STEREO-A$+$B geometric (triangulated) distance for the same burst, with the 1:1 
 \section{Discussion and reproducibility}
 The contribution is a synthesis: one reproducible drift-to-distance framework validated from the
 corona to $\synRealOverallRhiAU$~AU across four public datasets (three instrument suites:
-e-Callisto, Wind/WAVES, and STEREO/WAVES in two roles --- its HFR spectra and its two-spacecraft
+e-Callisto, Wind/WAVES, and STEREO/WAVES in two roles, its HFR spectra and its two-spacecraft
 L3 direction-finding product), and (the new part) a same-event geometric check that bounds the
 density-model distance the framework rests on. The honest limitations are as follows. (i) The
 corona, inner-heliosphere, and interplanetary legs are different events, twelve years apart, so
 this is one method validated across three regimes, not one beam tracked end to end: a single
 event caught simultaneously by all three receivers would be the stronger demonstration and is
 the natural next step. (ii) The geometric cross-check is event-specific (2013-05-15) and its
-verdict is bounded: it reproduces the Leblanc \emph{level} to $\sim$12\% after one constant
+verdict is bounded: it reproduces the Leblanc level to $\sim$12\% after one constant
 measured pointing offset, but it does not confirm the model's log--log shape over the band, and
-it tests the Leblanc model only --- the Newkirk coronal leg is unchecked by it. (iii) The
+it tests the Leblanc model only; the Newkirk coronal leg is unchecked by it. (iii) The
 per-leg (harmonic $\times$ density) systematic is carried in the ladder itself (the grid
 brackets above), not merely referenced; the remaining per-leg systematics (peak-time vs onset
 speed bias, coarse-cadence fit statistics) are bounded in the component slices. (iv) The
