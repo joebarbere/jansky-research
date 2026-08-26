@@ -136,3 +136,72 @@ as large), the 30–50 deg bin dominated (18.3, spanning 16.1–20.1 across lite
 the guard reads); thomson2023 cited at the DR1 sentence; "quadrant signs" → "coarse net RM sign
 per quadrant"; abstract cut to arXiv's 1920-char limit and the arXiv package rebuilt clean
 (the dangling-citation abstract is gone); README row updated.
+
+## Full referee round (2026-08-26): MAJOR REVISION, 21 findings, one BLOCKER
+
+The core is sound and unusually honest: the sample cascade is fully committed and consistent
+(ladder bins sum to 246,508 exactly), all 29 macros resolve, every ladder row reproduces from
+its committed inputs to the last digit, the 30-seed ensemble is committed per-seed, "responds
+to" is the right verb, and all five journal citations Crossref-verify. What blocks it: one
+abstract claim rests on an uncommitted noise-dominated statistic, and the paper applies its
+hardest-won lesson to the headline while leaving the condemned estimator under every other
+error bar.
+
+**BLOCKER: the quality-flag claim ("unflagged, the break falls 2.29° → 0.87°, leakage
+masquerading as small-scale structure") rests on an 11-valued threshold-crossing statistic**
+(bin centres of a 1.62×-per-bin grid), whose underlying curves are neither committed (run()
+discards sf/sf_err/n_pairs for this comparison) nor uncertainty-bearing, evaluated on
+UNMATCHED random pair sets, on a curve the paper's own figure shows dipping non-monotonically
+by 3× at exactly those separations (~160 pairs in the 0.87° bin). The flag removes 1.17% of
+rows yet the mechanism claimed is a separation-independent contaminant that moves the plateau
+only 4%. Commit both curves on a matched pair set with an uncertainty on the break, or the
+claim leaves the abstract.
+
+**MAJORs:**
+- EVERY error except the headline uses the bootstrap the paper condemns as 11× too small:
+  plateau_err (hence sigma_rm_err for all six bins, incl. the abstract's floor ±0.21) is the
+  same i.i.d. source bootstrap. Jackknife the ladder or label the errors shot-noise-only.
+- The block jackknife's own tuning is never varied (10° is the only value run) while Honest
+  Limits itself says plane gradients span "tens of degrees" — and the (l,b) blocks are not
+  equal-area (polar blocks ~1/10 the solid angle, and the poles are the denominator). Sweep
+  block size (5–30°) or use HEALPix; quote the largest/stabilised SE.
+- THE CI TEST LOCKS THE OUTLIER IN: `assert 3.0 < ratio < 7.0` passes only because seed 0
+  (4.64) is the 6th-highest of 30 — 17 of the 30 committed seeds fall OUTSIDE the window (min
+  0.95). Assert on the ensemble mean/SD instead.
+- The depolarization/goodRM selection-vs-|b| caveat (recorded as unresolved in this file after
+  the previous round) is STILL absent from the manuscript, and the data to bound it is one line
+  away (run() already loads goodrm=False; commit the unflagged count per ladder bin).
+- The statistic's definitional sensitivity is measured in the SIBLING slice and unmeasured
+  here: rmsky commits alt-bins 5°/70° moving the same ratio +39% (5.4→7.5), cut300 and e_RM
+  variants — none run on DR2, where the quoted error is 10%.
+- The only figure mislabels its axis (real leg plots RA vs Galactic b under "lon"), saturates
+  at ±40 against a 202 rad/m² plane σ (the headline contrast is invisible), and never plots
+  the six-bin ladder that is the paper's result.
+- A direct offline run in the repo root silently swaps the real figure for the synthetic one
+  (JSON and macros are guarded; the figure is not).
+
+**MINOR/NIT:** the floor bin's σ_Gal=0.0 is a construction recorded as a measurement (mark
+null/by-construction; the literature floor range allows a polar Galactic term up to 8.4 rad/m²
+— which the quoted 16.1–20.1 span happens to bracket, and the headline ratio has NO floor
+subtraction at all — both worth saying); 11.0 vs 202.3/12.3=16.4 sit unreconciled in the
+abstract (different statistics, different bins); the Taylor comparison drops rmsky's committed
+comparable jackknife (±0.59) and "recover from Taylor" should be "measure from"; stil2011 is
+in refs.bib and the findings file ("not the first ever") but uncited in the paper; ~330 of
+"601 blocks" contribute zero (report the effective count); prose cascade omits the committed
+n_after_finite step and "26% duplicates" uses the rows denominator (35.2% of unique); two
+Honest-Limits macros + the DR1 counts (7,707/5,818) are in no committed JSON; the "release's
+own post-dedup count" validation cites no table (and this file previously attached the same
+rhetoric to a DIFFERENT number); the fixture plateau ratio (12.8) is referenced but never
+printed; true_coherence_deg is a bare NaN literal (RFC 8259); thomson2023 pages=e040 is an
+article-number (the lawrance2024 shape); stale arxiv tarball predates the artifacts; the
+figure caption doesn't say which leg is printed.
+
+**Positive findings recorded (do not re-run):** the SF coherence-scale test is NOT vacuous;
+preserve guards are wired for JSON+macros; the relative jackknife error matching rmsky's
+(10% vs 11% on a 6.6× smaller sample) is the signature of field-dominated error — say it; and
+the paper's single best unused asset is already committed: the fixture block-jackknife SE
+(1.1) reproduces the true 30-seed field-to-field scatter (1.114) to 1% while the bootstrap
+understates it 3.7× — the genuine recover-a-known for the ERROR MODEL that licenses ±1.1 on
+the real leg. Lead with those three numbers.
+
+**Verdict: MAJOR REVISION.**

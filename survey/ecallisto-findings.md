@@ -93,3 +93,59 @@ Two things this taught that are not in CLAUDE.md yet:
 **Still open:** the real archive day is now cited once (it flagged `\ecRealNbursts` candidates among
 `\ecRealNscanned` station-days and confirmed `\ecRealNevents`), but it remains a single day and does
 not characterise the coincidence step's real-data performance.
+
+## Full referee round (2026-08-26) — pipeline paper: MAJOR REVISION, 15 findings, three BLOCKERs
+
+The framing is right, the macro namespacing fix has held (offline rerun cannot clobber the real
+JSON or macros — verified live), and the synthetic validation is MORE robust than claimed (the
+referee ran 60 seeds: 60/60 recover, 0 of 180 pure-noise spectra false-flagged). But the real
+leg is not measuring what its sentences say.
+
+**BLOCKER 1: the committed figure is the real leg's output under the synthetic leg's caption.**
+figures/ecallisto.pdf extracts as "Coincidence QC: 0 confirmed / OOTY … BIR" while the caption
+describes "\ecSynMaxEventStations = 4 detections at a common time (red, dashed) confirmed as one
+event". `_figure` writes one path from both legs with no guard, and `make reproduce` runs the
+real leg last. The paper's only figure contradicts its caption and abstract.
+
+**BLOCKER 2: \ecRealNscanned = 1512 double-counts every file (the index regex matches each
+filename twice: 763 distinct listed → 1526 returned) and only 559 distinct spectra were actually
+fetched — the count is 2.7× the spectra analysed, and "station-days" is wrong by a further ~96×
+(files are 15-minute spectra). burst_fraction inherits it.**
+
+**BLOCKER 3: 64% of scanned rows analyse a DIFFERENT file than the one they are labelled with.**
+ingest_day lists a filename, extracts HHMM, then fetch_ecallisto re-resolves by
+closest-preceding-start — files starting at HHMM59 resolve to the PREVIOUS file (15 min early),
+and focus-code siblings collapse onto the first match. Referee simulation against the live
+index: 970/1516 rows (64.0%) fetch a different file; the mechanism reproduces the committed 1512
+to 0.3%. The UT peak time is computed from the LABEL's start second while the data came from
+another file — so up to 64% of t_peak_s values fed to the 60 s coincidence are wrong by up to
+~15 minutes. The same defect is in the production DAG.
+
+**MAJORs:** the committed CSV omits t_peak_s and file — the two fields coincident_events
+consumes (the innerrc lesson), which is also how the referee could show the "8 candidates" are
+4+4 byte-identical duplicate rows = TWO real detections (\ecRealNbursts wrong by 4×); no
+attempted denominator + the bare-except silent drop is undisclosed here while the census sibling
+now discloses it (14 of 1526 entries silently dropped on this very day); "the DAG and make
+ecallisto-day produce identical rows" is false (the DAG reimplements the worker inline with
+opposite error semantics, NaN→None, and MAX_FILES=12 vs the uncapped run); the synthetic
+validation cannot fail on the axis it claims (RFI and bursts are the SAME synthetic_burst
+function differing in seed; nearest injected gap to the 60 s boundary is 200 s); single-linkage
+clustering has no span cap (8 stations at 50 s spacing — true span 350 s — confirm as ONE event:
+"a 60-second tolerance" overstates); no false-positive rate anywhere (two chance-coincident RFI
+stations promote 20/20 seeds at dt ≤ 59 s — the QC's reliability IS the chance-coincidence rate,
+computable in closed form, unquoted); the real-data null (the QC has NEVER confirmed a real
+event) is buried in the Discussion and the findings-file explanation is stale — BIR is present
+in the committed run with a candidate (13 of 15 stations produced NO candidate: the null
+measures the single-station threshold, not station coverage).
+
+**MINOR/NIT:** single-seed "recovers exactly" should quote the referee's ensemble (60/60,
+0/180); the figure is the one artifact with no merge guard (verified live); the census sibling's
+120 s tolerance is unremarked here; the same three spectra are "injected bursts" in §3 and
+"interference" in §4; "60-second" and "two distinct stations" are hand-typed against defaults.
+Citations and macros all verify clean.
+
+**Verdict: MAJOR REVISION.** The single change: make ingest_day scan the file it listed
+(de-duplicate the listing, fetch by filename), then re-run 2011-09-14 and re-derive every
+\ecReal* macro — retiring all three blockers and turning the buried null into the paper's best
+sentence: of 15 stations across a full day, only two produced a type III candidate, and they
+were not coincident.

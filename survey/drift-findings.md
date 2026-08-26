@@ -93,3 +93,56 @@ regenerates from the .tex, so nothing needed syncing.
 number is hand-typed. The 0.9% needs N = 400, which lives only in the `fpr_trials=400` default in
 `src/jansky_research/driftsearch.py`, not in `results/drift_metrics.json`. Rule-of-three on 0/400
 gives 0.75%, so 0.9% is conservative rather than wrong.
+
+## Full referee round (2026-08-26): MAJOR REVISION, 13 findings, two BLOCKERs
+
+The synthetic benchmark leg is sound and byte-identically reproducible (the referee re-ran it:
+committed JSON and figure reproduce exactly at seed 0 / 30 trials; all four DOIs Crossref-clean;
+macros all match). The Voyager leg — half the title — is not a null.
+
+**BLOCKER 1: the "Voyager-1 null" is a targeting error; the detector RECOVERS the carrier.**
+The hard-coded VOYAGER_CARRIER_MHZ = 8420.216 maps to channel 419016 of the cached file — blank
+sky (peak MAD-z 2.76). The actual Voyager signal is at channel 747929 = **8419.29703 MHz**,
+unambiguous: MAD-z 205, telemetry-subcarrier sideband doublets at ±22.50 kHz, and a peak-channel
+walk of 2.444 channels/sample = **−0.3741 Hz/s** (not the paper's hand-typed −0.69). Running the
+module's own search there: **S/N = 997.6 at best_drift 2.45** (one grid step from the measured
+slope) vs blank 4.59. Every null sentence — abstract, Discussion, title, two README rows — is
+wrong, not overstated. The referee reproduced the paper's published 4.85/4.59 first (the
+committed narrative is faithful to the code as written; the code searched the wrong place).
+Offered hypothesis, not verified: the 0.9197 MHz offset ≈ 32.7 km/s at X-band — a
+barycentric/topocentric frame mismatch. Do not construct a replacement constant; locate the
+carrier in the data.
+
+**BLOCKER 2: two hand-typed physical constants are wrong for this file** (8420.216 MHz;
+−0.69 Hz/s), and the refs.bib estevez2021 note propagates the frequency into a citation
+annotation that is untrue of this file.
+
+**MAJORs:** the Voyager leg has NO committed evidence, no test, no path in make reproduce (the
+"REAL public data" target runs the synthetic leg only) — under a "no number is typed by hand"
+header carrying eight hand-typed numbers; the benchmark's configuration (64×512 waterfall,
+41-point drift grid, 1.5-channel line width, 400 FPR trials, seed) is the deliverable and
+appears nowhere in paper or JSON — and the FPR is entirely a function of it; the per-drift
+completeness matrix is discarded (only the drift-average is committed) so "flat across drift" is
+not auditable — referee recomputed it and the claim HOLDS (1.250/1.297/1.297); the recovery
+figure's imshow y-axis is quantitatively wrong (non-uniform S/N rows on a linear extent: the
+50% crossing reads ≈1.85 off the figure vs the caption's 1.3); the FPR test could not have
+failed (noise-only best-S/N distribution: mean 4.12, σ 0.33, max 5.28 in 300 draws vs threshold
+10 ≈ 18σ — "cluster near S/N~5" overstates; 0/400 distinguishes nothing).
+
+**MINOR/NIT:** the DC-spike bug this paper exists to report has NO regression test (the failure
+mode is live: the module's own _snr on the DC window returns 1.985e5 — the referee reproduced
+the original spurious detection); trials mismatch (JSON 30, run() default 100, findings doc
+"100" — re-run at both: crossings move ≤0.006, published rounding unaffected; findings-doc
+scatter estimate ±0.1 overstates the true ≈0.03 SE); no source/is_real marker on JSON or macros
+(a bare run(".") silently rewrites the evidence with different-depth numbers, no guard fires);
+the "~0.9%" is the two-sided CP endpoint labelled one-sided (one-sided = 0.746%) and N=400
+exists only as a code default; on-grid injection checked and NOT inflating completeness
+(off-grid at half-step: C50 1.279–1.292 vs 1.250 — within scatter; worth one stated row);
+brzycki2022 title truncated.
+
+**Verdict: MAJOR REVISION.** The single change: point the Voyager search at the Voyager signal
+(locate the carrier in the file — 8419.29703 MHz, ±22.5 kHz sidebands, −0.374 Hz/s), commit the
+resulting dict, and rewrite Section 4 and the title around the recovery at S/N ≈ 10³ — keeping
+the genuinely valuable caution that the band-centre DC spike is 2400× the carrier and a
+brightest-channel search reports the artifact. The corrected paper is stronger than the
+submitted one.

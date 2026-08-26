@@ -244,3 +244,80 @@ The headline the note leads with is the ephemeris finding rather than the duty c
 measurement is limited by what the discovery papers publish, not by sensitivity or epochs,
 and a reference epoch costing one table row would convert most of these products into
 activity fractions.
+
+## Full referee round (2026-08-26): MAJOR REVISION, 19 findings, one BLOCKER
+
+The core is real and worth publishing (the Poisson fix verified exact; the GPM J1839−10
+clustering verdict survives a phase-smearing check; both checkable citations exact) — but the
+note contains one quantitative claim about its own method that the committed JSON refutes by
+~50×, three counts its own evidence contradicts, and the note is IN THE SUBMISSION QUEUE, so
+these land before submission, exactly as intended.
+
+**BLOCKER: "removes roughly half the nominal exposure" is false by ~50× and the weighting is
+inert at every flux the note quotes.** Recomputed: at the observed brightnesses the
+sensitivity weighting keeps 90.981/71.000/44.000 of 91/71/44 epochs (0.02% effect); at 5 mJy,
+636.88/647 (1.6%). The findings-file origin conflated the loader dropping never-released rows
+(104/97/92 → 91/71/44) with the efficiency weighting — the note inherited the conflation, and
+the sentence is the whole justification for "sensitivity-weighted denominator" in the
+abstract.
+
+**MAJORs (all verified by computation):**
+- \ldNNoEpoch=7 and \ldNPhaseUsable=3 are both contradicted by the JSON that generates them
+  (J142431 is excluded for period precision, not a missing epoch → 6; J183950's anchor is the
+  repo's own, "not a published PEPOCH" → 2 of 3). The errors cancel to 10, which is why
+  nothing looked wrong.
+- A Kuiper statistic is quoted with the RAYLEIGH p (the Kuiper p, computed, is 0.059 —
+  above the family threshold); and the Bonferroni correction covers 10 sources but not
+  2 tests × 10 (checked: the verdict survives ×20 → 0.023).
+- GATE-0 gates on period precision but not Ṗ: applying its own 0.1-cycle criterion to the
+  published Ṗ bounds makes GLEAM-X (6.4 cycles!), J1832 (0.91), and J183950 (0.74)
+  inconclusive → \ldNValid 8 → 5 conditionally (the bounds are upper limits; state the
+  condition).
+- The independence claim: uniformity ≠ independence (the file's own caveat, absent from the
+  note). The presenter's pseudo-replication concern RELOCATED: no two snapshots overlap in
+  phase (min gap 776 s > 726 s duration) and the point estimates are unbiased (linearity);
+  what breaks is the INTERVALS — under a conservative one-per-cycle collapse \ldPMax moves
+  0.045→0.071 (+57%) and \ldLimMin 0.032→0.050 (+55%).
+- p is a STOKES-V threshold quantity presented as "probability of catching a pulse" — the
+  circular fraction (18–36% measured for J183950 alone) makes 5 mJy V ≡ 5–50 mJy total
+  intensity, unconvertible without an unquoted factor.
+- The one scale comparison uses J1832's T/P for a sample spanning 22× in T/P: dividing each p
+  by its own (w+T)/P, J183950 implies f_active ≈ 0.73 — the opposite of "an order of
+  magnitude below" permanently-active (and J175534's 0.061 matches the phase leg's 0.0625,
+  the consistency worth reporting).
+- \ldFActive = 0.06 is a k=1 estimate quoted with no interval (90%: [0.006, 0.297] — a
+  factor 50) and exists only under the assumption it supports (the split's window contains
+  the detection only within ~0.10 cycles of the assumed PEPOCH; a-priori landing chance 18%;
+  and identical one-event evidence is read oppositely for J1832 vs J175534 — the J1832
+  sentence itself is sound, checked).
+- The phase machinery's only validation cannot fail (same anchor constant, same period, same
+  table, same fold arithmetic as lptv — "independently" retracted to consistency check).
+- The ephemerides argued about are UNCITED (McSweeney, Wang, Lee — the note asserts a named
+  team's epoch "is not a pulse arrival" without citing them) and barbere2026lptv has no
+  resolvable identifier.
+- "p = 0.011–0.045" reads as spread; the three are indistinguishable (LRT vs common rate:
+  p = 0.45) — a single class-wide rate is the cleaner headline.
+- A limit on p constrains f_active only via its own (w+T)/P: the ordering INVERTS —
+  \ldLimMin (0.032) excludes only f_active > 0.75, GLEAM-X's 0.059 excludes > 0.09, and
+  J165130's limit is vacuous (> 1.60).
+- "A published epoch would convert most of these into activity fractions" has a
+  counterexample in the note's own JSON (J183950 has a usable anchor and yields nothing —
+  3 of 44 epochs in-window: the data, not the ephemeris, binds there; and for two sources a
+  perfect epoch gives a vacuous bound).
+- write_paper_assets has NO caller anywhere (lptduty is absent from the Makefile SLICES;
+  make paper SLICE=lptduty errors), and five pipeline numbers are hand-typed under "every
+  number is \input" (all currently correct to the digit — nothing checks them).
+
+**MINOR/NIT:** the sample selection (10 of 16, excluding the motivating Rose et al. source)
+is never stated; the committed flux grid contains "probabilities" up to 56 marked
+constrained (clip or mark unconstrained); a stale caveat says GATE-0 is "NOT yet tested" in
+the same file that carries its verdicts; the J1832 Ṗ smear is 0.400 cycles, not the file's
+0.22 (strengthens its own conclusion; invalidates its f_active_upper for J1832); two
+definitions of n_detections; "107 never-released epochs" is 319; findings-table 0.046 vs
+macro 0.045; \ldNDetSources unused. Format fine (~684 words).
+
+**Verdict: MAJOR REVISION.** The single change: report p/(w+T)/P — the implied active
+fraction — per source beside p. Computable today from committed JSONs, it converts the
+counting-noise range into the physical quantity, and surfaces the J183950 inversion, the
+limit ordering, and the vacuous conversions in one stroke. HOLD the RNAAS submission until
+this lands.
