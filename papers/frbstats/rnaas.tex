@@ -36,12 +36,12 @@ ground truth, so the suite runs offline.
 Run on the \nBursts\ independent events of the First CHIME/FRB Catalog
 \citep{chimecat1} (\nRepeaterBursts\ repeater bursts from \nRepeaterSources\ sources),
 the tool recovers the established morphological result that repeater bursts have
-significantly larger temporal widths than apparent non-repeaters: a two-sample
-Kolmogorov--Smirnov test on per-source medians --- the source, not the burst, is the
-unit of analysis, since \nRepeaterBursts\ repeater bursts from \nRepeaterSources\
-sources are not independent draws --- gives $D=\ksWidthDSrc$ ($p=\ksWidthPSrc$;
-burst-level $D=\ksWidthD$, $p=\ksWidthP$), with median widths $\medWidthRep$~ms versus
-$\medWidthOne$~ms (Figure~\ref{fig:dm} shows the companion dispersion-measure split,
+significantly larger temporal widths than apparent non-repeaters. The source, not the
+burst, is the unit of analysis, since \nRepeaterBursts\ repeater bursts from
+\nRepeaterSources\ sources are not independent draws. A two-sample Kolmogorov--Smirnov
+test on per-source medians gives $D=\ksWidthDSrc$ ($p=\ksWidthPSrc$;
+burst-level $D=\ksWidthD$, $p=\ksWidthP$, with median widths $\medWidthRep$~ms versus
+$\medWidthOne$~ms) (Figure~\ref{fig:dm} shows the companion dispersion-measure split,
 which is only marginal at the source level, $p=\ksDMPSrc$). This reproduces the
 peer-reviewed CHIME finding and is the validation that the implementation is correct. The
 differential fluence distribution follows a power law of index
