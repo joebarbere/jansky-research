@@ -95,3 +95,73 @@ the committed `ecallisto_census_real_metrics.json`: 168 sampled days, 5 events o
 r = 0.28. The limitations section now cites it as the data-volume point made concrete: five events
 cannot support a correlation measurement, which is consistent with (and evidence for) the paper's
 claim that the real census is an ingest problem, not a method gap.
+
+## Full referee round (2026-08-26): MAJOR REVISION, 15 findings, two BLOCKERs
+
+The synthetic methods paper underneath is honest and reproducible — the referee reproduced
+every committed synthetic metric exactly (180 periods, 4651 events, r 0.968/0.963, slope
+0.0302), verified all five bib DOIs, and found the seed scatter *sound* (30-seed ensemble:
+slope 0.0300 ± 0.0007, published seed-0 inside the ensemble). What blocks acceptance is the
+real leg bolted on 2026-08-24 — the "Resolved" note above is precisely what the round
+overturns — plus a validation that cannot fail.
+
+**BLOCKER 1: 123 of the "168 sampled days" were never sampled.** The committed realdays CSV
+records coverage 0 for every day after 2014-10 (and 2014-06), while the live archive lists
+26–45 stations with in-window files on those same days (referee checked six days read-only
+against the day-index; 2011-01-15 matches exactly — coverage 10 = 10 — so the pipeline once
+worked). The likely mechanism is in the code: `fetch_ecallisto` re-downloads the whole
+day-directory index per file, and every throttled failure is swallowed by a bare
+`except: continue`, making a failed day indistinguishable from an empty sky. Only 45 days
+entered the correlation (`n_periods: 45` in the committed JSON — never quoted in the paper).
+This is the frblens error in denominator form: N searched vs N the search could see into.
+
+**BLOCKER 2: the paper's designated honesty sentence is now false.** "All event counts in
+this paper are synthetic; the only real data ingested is the SILSO sunspot series" — but
+\ecsRealNevents = 5 is a real event count in this paper, the offline validation ingests NO
+SILSO (synthetic_sunspots()), and the real leg ingested real e-Callisto spectra. The
+2026-08-23 restyle round specifically restored this sentence's document scope; the next
+day's commit invalidated it.
+
+**MAJORs:**
+- The recover-a-known is CIRCULAR: synthetic_census draws N ~ Poisson(k·S·C) and the
+  statistic computes N/C, so E[N/C] = k·S identically — the test can fail only on arithmetic
+  or Poisson noise, never on the correction's assumption (confirmation linear in coverage).
+  "The census statistic ... [is] validated" is not earned; "the implementation is" is.
+- The falsifiable version is one keyword away AND FAILS INFORMATIVELY: the upstream pipeline
+  confirms at ≥2 stations, so confirmation probability saturates in C. Referee measured: with
+  saturating confirmation and a realistic 2→60 station history, r drops to 0.716 and the
+  corrected rate acquires corr(rate, C) = −0.601 — N/C over-corrects. A `c_half` fixture arm
+  + a corr(rate, coverage) residual diagnostic (already +0.155 on the shipped fixture,
+  unreported) is the rfitrend flank-arm move.
+- "Only after the correction does the clean activity correlation emerge" is false on the
+  shipped fixture: raw counts already correlate at 0.916/0.947 (correction buys 0.05) because
+  coverage jitter (±25%) is nowhere near the decision boundary; under a real-shaped 2→60
+  growth history the sentence WOULD be true (0.694 → 0.981). Fix fixture or sentence.
+- Un-namespaced mode-dependent macros + a single results file: a real run rewrites the
+  abstract's synthetic headline (45/5/0.28 over 180/4651/0.968) and NEITHER guard stops it —
+  preserve_live_results case 2 lets real overwrite synthetic by design, and
+  preserve_live_macros only blocks the synthetic-over-real direction. The sibling
+  ecallisto_catalog was namespaced for exactly this on 2026-08-23; the census edit the next
+  day did not inherit the fix.
+- The five \ecsReal* macros were TYPED BY HAND into the auto-generated macros file (git show
+  016471d), under a paper header claiming none are; provable: \ecsRealSource's string cannot
+  be produced by any code path (says "168 sampled days, real ingest"; run() emits "{n} days").
+  No code reads the real evidence files; no reproduction command exists for them.
+- r = 0.28 is an exact function of which two months host the events (closed form:
+  0.092·z_S(Feb14) + 0.122·z_S(Apr14)); its permutation null has sd 0.151, so 0.28 is 1.9σ —
+  "at only r = 0.28" dresses a two-point coincidence as a measured-but-weak correlation.
+  Report counts, or quote 0.28 ± 0.15 (permutation).
+
+**MINOR/NIT:** code-C (stations successfully ingested) ≠ paper-C (stations active) — on
+2014-10-15 it is 14 vs 29, and the "zero coverage → NaN" virtue is what let 123 failed days
+vanish; the coincidence tolerance is 120 s here vs the pipeline paper's published 60 s,
+undefined in this paper; the injected k = 0.03 appears nowhere (a recover-a-known that never
+states the known); the surviving real months (2011-01→2014-10) contain no solar minimum;
+silso2015 has the wrong given name (Laure, not Laëtitia — DataCite-verified); \ecsRealSource
+defined but unused; a figure caption says the statistic "is applied unchanged to the real
+stream" beside a synthetic-only figure; seed scatter worth committing (the one uncertainty
+here measuring the right variance).
+
+**Verdict: MAJOR REVISION.** The single change: delete the real leg or re-run it and report
+45 days honestly — every misleading element descends from the five hand-entered macros. Then
+make the validation able to fail (saturating-confirmation arm + growth-history coverage).
