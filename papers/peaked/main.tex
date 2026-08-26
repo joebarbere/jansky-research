@@ -1,6 +1,6 @@
 \documentclass[twocolumn]{aastex631}
 
-% Every selection/validation number is \input from the pipeline — no number is typed by hand.
+% Every selection/validation number is \input from the pipeline (no number is typed by hand).
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -24,7 +24,7 @@ Identifying them needs at least three frequencies to see the turnover. We build 
 tool that selects peaked-spectrum candidates from three public continuum surveys (TGSS
 150~MHz \citep{intema2017}, NVSS 1.4~GHz \citep{condon1998}, and VLASS 3~GHz \citep{lacy2020,
 gordon2021}) by their spectral curvature. The \ahi\ arm never uses TGSS, so it is unaffected by a constant
-TGSS flux-scale offset — though the candidate count is set by the \alo\ arm's assumed limit,
+TGSS flux-scale offset, though the candidate count is set by the \alo\ arm's assumed limit,
 which is treated below. The selector
 uses a low-frequency index (\alo, 150$\to$1400~MHz) minus a
 high-frequency index (\ahi, 1400$\to$3000~MHz). A naive ``detected in all
@@ -35,10 +35,10 @@ $7\sigma$ floor, a lower bound on \alo.
 (ii) The NVSS$\to$VLASS resolution mismatch (45\arcsec\ versus 2.5\arcsec) fakes steep turnovers for
 extended sources; a floor $\ahi>-2$ rejects \pkRealNextended\ of \pkRealNnvssvlass\ in the field.
 The upper-limit trick makes the candidate count limit-dominated, so the limit is taken from the
-field itself — the TGSS local-rms column gives a median $7\sigma$ floor of
-\pkRealLimitUsed~mJy in this cone — and the count is committed across a limit sweep rather than
+field itself (the TGSS local-rms column gives a median $7\sigma$ floor of
+\pkRealLimitUsed~mJy in this cone), and the count is committed across a limit sweep rather than
 quoted at one assumed value. Over a $2\arcdeg$ cone the method retains \pkRealNpeaked\ source
-as peaked and \pkRealNghzpeaked\ as GHz-peaked (still rising at 3~GHz — a class this field
+as peaked and \pkRealNghzpeaked\ as GHz-peaked (still rising at 3~GHz, a class this field
 gained when the VLASS flux-scale correction was applied); every rising candidate is published
 with fluxes, both indices and their errors, and SIMBAD/NED identifications, the vetting running
 in the committed pipeline. Under the looser survey-median limit the list grows to include a
@@ -48,8 +48,8 @@ nothing). Two literature comparisons calibrate the selection function: against
 the GLEAM-selected, MHz-peaked Callingham et al.\ (2017) sample it flags
 \pkRealCallLowFlagged\ of \pkRealCallLowTotal\ sources with $\nu_{\rm pk}<250$~MHz and
 \pkRealCallMidFlagged/\pkRealCallMidTotal\ at 250--500~MHz (its own claimed window); against
-the Dallacasa et al.\ (2000) High-Frequency-Peaker \emph{candidate} list, using each source's
-measured TGSS flux (\pkRealHfpTgssDet\ of \pkRealHfpN\ are TGSS-detected — an earlier version
+the Dallacasa et al.\ (2000) High-Frequency-Peaker candidate list, using each source's
+measured TGSS flux (\pkRealHfpTgssDet\ of \pkRealHfpN\ are TGSS-detected; an earlier version
 substituted the survey limit for all of them, which made the test a flux cut that could not
 fail), \pkRealHfpRising\% are optically-thick-rising and \pkRealHfpGhz\% still rising at 3~GHz,
 while \pkRealHfpFallingLow\% fall from 150~MHz to 1.4~GHz. This is a tooling and methodology
@@ -115,7 +115,7 @@ field-local: ADR1's per-source local rms in this cone has median \pkRealNoiseMed
 uses; the committed metrics carry the candidate count across a sweep of defensible limits
 (\pkRealLimitSweep), because the count is limit-dominated. The comparison samples are the
 Callingham et al.\ (2017) peaked-spectrum catalogue \citep{callingham2017} and the Dallacasa
-et al.\ (2000) High-Frequency-Peaker \emph{candidate} list \citep{dallacasa2000} (their
+et al.\ (2000) High-Frequency-Peaker candidate list \citep{dallacasa2000} (their
 Table~1 is the VLA target list, pre-selected on an inverted NVSS$\to$87GB index), each
 augmented with corrected VLASS 3~GHz and, for Dallacasa, each source's measured TGSS flux where
 detected.
@@ -123,17 +123,17 @@ detected.
 \section{Results}
 \paragraph{Field candidates.} At the field-local limit the selection retains
 \pkRealNpeaked\ peaked and \pkRealNghzpeaked\ GHz-peaked source (the latter appearing once
-the VLASS flux-scale correction is applied — its corrected $\ahi=+0.23$ sat at $+0.07$
+the VLASS flux-scale correction is applied; its corrected $\ahi=+0.23$ sat at $+0.07$
 uncorrected), shown in the spectral-curvature plane of Figure~\ref{fig:curv}; every rising
 candidate, including two extreme resolution artefacts kept for reference, is published with
 positions, fluxes, both indices with their propagated errors, and SIMBAD/NED identifications in
-\code{results/peaked\_candidates.csv} — the vetting runs in the committed pipeline, not as a
+\code{results/peaked\_candidates.csv}; the vetting runs in the committed pipeline, not as a
 side analysis. Each candidate's \alo\ is a lower limit (no TGSS detection), so its turnover is
 bounded, not measured, and no compactness is claimed beyond the VLASS component match. The count
 is limit-dominated, and the committed sweep says so plainly: 8 candidates at an assumed 20~mJy
 limit, 6 at the survey-median 25~mJy an earlier version used, \pkRealNpeaked\ at this field's
-own median $7\sigma$ floor, and 0 at its worst-case floor. The earlier six-candidate list —
-which included a known \textit{Fermi} BL~Lac that only the catalogue cross-ID identified — was
+own median $7\sigma$ floor, and 0 at its worst-case floor. The earlier six-candidate list,
+which included a known \textit{Fermi} BL~Lac that only the catalogue cross-ID identified, was
 therefore mostly a statement about the assumed limit, and the cross-ID lesson survives while
 the list does not.
 
@@ -145,7 +145,7 @@ honest scope of that number: those sources are all TGSS-detected with strongly f
 indices (median $\alo\approx-0.55$ against a $+0.1$ cut), so their rejection restates the
 sample rather than stresses the boundary. The informative bins are the higher ones, committed
 in full: \pkRealCallMidFlagged/\pkRealCallMidTotal\ at 250--500~MHz and
-\pkRealCallHiFlagged/\pkRealCallHiTotal\ at 500--1000~MHz — the recovery inside the method's
+\pkRealCallHiFlagged/\pkRealCallHiTotal\ at 500--1000~MHz, the recovery inside the method's
 own claimed $\sim$0.7--2~GHz window, previously computed and left out of the committed
 evidence.
 
@@ -153,8 +153,8 @@ evidence.
 et al.\ (2000) sources with corrected VLASS fluxes, using each source's \emph{measured} TGSS
 flux (\pkRealHfpTgssDet\ are TGSS-detected, some at Jy level; the limit is used only for the
 rest), \pkRealHfpRising\% are optically-thick-rising from 150~MHz and \pkRealHfpGhz\% still
-rising at 3~GHz, while \pkRealHfpFallingLow\% \emph{fall} from 150~MHz to 1.4~GHz. An earlier
-version of this test substituted the TGSS survey limit for every source — under which
+rising at 3~GHz, while \pkRealHfpFallingLow\% fall from 150~MHz to 1.4~GHz. An earlier
+version of this test substituted the TGSS survey limit for every source, under which
 ``rising'' reduced to an NVSS flux cut the sample (faintest member 60.6~mJy) could not fail,
 and it reported 100\%. The corrected numbers say something weaker and more interesting: a
 list pre-selected on a 1.4$\to$4.85~GHz inverted index is heterogeneous at 150~MHz, and this
@@ -173,12 +173,12 @@ non-detections \alo\ is a lower limit (rightward arrows), so true points lie fur
 Three-frequency curvature turns the unfinished business of a two-point steep cut into a
 maximal-reuse peaked-spectrum selector that separates resolution artefacts and publishes its
 candidates with errors and identifications. The honest scope of its calibration: the
-\ahi\ arm is TGSS-independent, but the candidate \emph{count} is set by the assumed TGSS limit
+\ahi\ arm is TGSS-independent, but the candidate count is set by the assumed TGSS limit
 through the \alo\ arm, which is why the limit is measured from the field and the count is
 committed across a sweep; and the two literature comparisons probe the regimes far from the
 selection boundary (TGSS-detected steep sources; bright pre-selected risers), so the regime
-that actually produces the candidates — TGSS non-detections within $\sim$30\% of the effective
-floor — is calibrated by neither, and the candidates are correspondingly labelled candidates.
+that actually produces the candidates (TGSS non-detections within $\sim$30\% of the effective
+floor) is calibrated by neither, and the candidates are correspondingly labelled candidates.
 Confirming any as a true GPS source needs higher-resolution or more-frequency follow-up (VLBI
 compactness, a sampled turnover). The method is depth-limited (the upper-limit trick can only
 select sources brighter than $\sim$$e^{0.225}$ times the local limit at 1.4~GHz), and its

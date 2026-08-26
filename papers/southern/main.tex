@@ -35,7 +35,7 @@ mismatch (median $\nupk\approx\soRealMedianNupk$~MHz, median reduced
 $\chi^2=\soRealMedianChisq$; \soRealGapFrac\ of the turnovers are interpolations across the
 unsampled 0.23--0.89~GHz gap), plus \soRealNuss\ ultra-steep-spectrum sources, all published as
 a machine-readable table. The candidate density, \soRealDensity~deg$^{-2}$, sits within
-$\sim$20\% of the Bayesian RadioSED~II Stripe-82 density \citep{kerrison2025} — an indication,
+$\sim$20\% of the Bayesian RadioSED~II Stripe-82 density \citep{kerrison2025}, an indication,
 not a controlled comparison. Against the Callingham et al.\ (2017) sample:
 \soRealCallRecovered\ of \soRealCallTried\ covered sources are recovered as peaked, with the
 measured \nupk\ matching the published value to a median $\soRealCallDlog$~dex
@@ -65,8 +65,8 @@ one select peaked-spectrum candidates and measure their turnovers?
 a companion peaked-spectrum slice. Its new capability is \code{fit\_log\_parabola}, a weighted
 least-squares fit of $\log_{10}S = a\,x^2+b\,x+c$ with $x=\log_{10}\nu$ to the full multi-band SED,
 using the catalogues' own per-point uncertainties and admitting only $\ge3\sigma$ detections
-(a sub-threshold point is not a detection, and keeping only its positive noise excursions — the
-log fit cannot take negatives — would censor the noise asymmetrically and manufacture a rising
+(a sub-threshold point is not a detection, and keeping only its positive noise excursions, since
+the log fit cannot take negatives, would censor the noise asymmetrically and manufacture a rising
 low-frequency side). We note GLEAM-X DR2 itself publishes a per-source curved-SED fit to
 227~MHz; the new lever arm here is the extension through the three RACS bands to 1.66~GHz. The
 turnover is $\nupk=10^{-b/2a}$ and is a genuine (concave) peak when $a<0$; we require it to lie
@@ -84,19 +84,19 @@ southern analogue of the northern method's resolution floor.
 
 \paragraph{Optically-thick rising side.} An ordinary steep source with mild low-frequency flattening
 fits a shallow parabola peaking spuriously at the GLEAM band edge. A genuine peaked source is
-optically thick below the turnover, so we require the \emph{fitted} GLEAM in-band index — a
+optically thick below the turnover, so we require the fitted GLEAM in-band index (a
 weighted fit over all $\ge3\sigma$ sub-bands, not a two-point ratio anchored on the noisy 76~MHz
-band — to be significantly rising or flat: $\alo-\sigma_{\alo}>-0.1$, the GPS/SSA signature. An
+band) to be significantly rising or flat: $\alo-\sigma_{\alo}>-0.1$, the GPS/SSA signature. An
 earlier version used the two-point 76-vs-227~MHz ratio with an assumed 10\% error; since the
 76~MHz noise floor in this field is $\sim$7--8~mJy regardless of source brightness, that gate
 selected on noise for the faint majority, and moving its anchor by one sub-band flipped half the
 displayed candidates.
 
 Every function is tested against a synthetic 19-sub-band GLEAM-X $+$ 3-band RACS field with
-injected peaked / steep / USS SEDs \emph{plus} the contaminants each cut exists to reject — a
+injected peaked / steep / USS SEDs plus the contaminants each cut exists to reject: a
 below-band-peak flattening class for the rising-side gate, an extended class with
 resolution-suppressed RACS fluxes for the compactness cut, and per-band noise floors shaped like
-the real catalogue's — so the suite can fail on either cut, and runs offline; the real run
+the real catalogue's. The suite can therefore fail on either cut, and it runs offline; the real run
 fetches GLEAM-X DR2 (VizieR) and the three RACS catalogues.
 
 \section{Data}
@@ -130,7 +130,7 @@ over our \soRealArea~deg$^2$ our density is \soRealDensity~deg$^{-2}$, a ratio o
 method, so this is an indication of comparable candidate density, not a controlled purity
 measurement. An earlier version of this selection, run with an assumed 10\% per-band error in
 place of the catalogue uncertainties, returned more than twice as many candidates at a
-$\sim$2.5$\times$ over-density — that excess was the error model, not the sky.
+$\sim$2.5$\times$ over-density; that excess was the error model, not the sky.
 
 \paragraph{Recovery of known sources.} As a validation, we re-derive the turnover of the Callingham
 et al.\ (2017) peaked sources \citep{callingham2017}. This is the catalogue against which the northern
@@ -141,7 +141,7 @@ slice could previously demonstrate only purity, because it bounded \nupk\ but ne
 with the published value to a median $\soRealCallDlog$~dex (\soRealCallWithin\% within a factor
 of two). That statistic is conditional on passing the selection gate; unconditionally, every
 covered source with a finite fitted peak (\soRealCallNuncond\ of \soRealCallTried) gives a median
-of \soRealCallDlogUncond~dex, and \soRealCallWithinTwoOfTested\% of \emph{all} tested sources
+of \soRealCallDlogUncond~dex, and \soRealCallWithinTwoOfTested\% of all tested sources
 land within a factor of two. The per-bin tested/recovered counts are committed: recovery climbs from
 \soRealCallBinLowRecovered/\soRealCallBinLowTested\ below 250~MHz through
 \soRealCallBinMidRecovered/\soRealCallBinMidTested\ at 250--500~MHz to
@@ -164,11 +164,11 @@ fall. We provide a reproducible, systematics-aware tool (catalogue errors and de
 thresholds, unit conversion, compactness cut, significant-rising-side requirement), a published
 per-source table, and a candidate list validated by recovering the Callingham
 \citep{callingham2017} turnovers above. The remaining limits are stated in place: half the
-turnovers are interpolations across the 0.23--0.89~GHz gap (a sampled point there — e.g.\ SUMSS
-at 843~MHz — would convert them), the density comparison to \citet{kerrison2025} is uncontrolled
+turnovers are interpolations across the 0.23--0.89~GHz gap (a sampled point there, e.g.\ SUMSS
+at 843~MHz, would convert them), the density comparison to \citet{kerrison2025} is uncontrolled
 across survey depths, and this is a single 28~deg$^2$ field, so the density carries
 field-to-field variance no single cone can estimate. Every selection number above is written by
-the pipeline into the macros this paper \code{\textbackslash input}s, and the analysis
+the pipeline into the macros the manuscript \code{\textbackslash input}s, and the analysis
 regenerates from a clean checkout on public data.
 
 \section*{AI use disclosure}

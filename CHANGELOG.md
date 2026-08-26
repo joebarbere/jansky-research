@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Style re-conversion batch 4 (final): rmsky, swaves, solarbursts, windwaves, stokesv,
+  ppdot, pulsarspec, driftsearch, ecallisto_pipeline, vlbi.** Hand-converted; every one is
+  word-multiset-identical except ecallisto_pipeline (+1 connective). typeii, frbwait,
+  rmdipole, and junodam needed no edits (no HIGH findings). With this, every paper that
+  drifted back to modern register during the rounds-9–11 fix campaigns is re-converted:
+  all 46 papers again lint at zero HIGH with clean diff-guards.
+- **Style re-conversion batch 3: type3synthesis, lpt, offsets, sourcecounts, torchfdmt, hi,
+  frbperiod.** Hand-converted (em-dash and `\emph` register only): four are
+  word-multiset-identical and the other three add a single connective ("so"/"since"/"and")
+  glossing an em-dash's causal role. All diff-guards clean, zero HIGH lint, triage zero
+  HIGH/MED; lpt's self-reference MED stands deliberately (its disclosed error-history
+  passages use the house retraction form).
+- **Style re-conversion batch 2: triangulate, southern, glitchpop, peaked, ecallisto_census,
+  vlass.** Same procedure as batch 1, with the editor instructions hardened by batch 1's
+  referee findings (no abstract compression, no new exclusivity words, retraction referents
+  keep the house form, emphasized words survive their `\emph` removal) — and it showed:
+  two conversions are word-multiset-identical (peaked, vlass), and the other four carry
+  3–9 word connective/self-reference swaps, each verified faithful by direct inspection.
+  All six pass lint (zero HIGH) + per-file diff-guard + triage; the retraction and
+  audited-failure language in ecallisto_census keeps its referent ("an earlier version of
+  this paper") and directness.
 - **Style re-conversion batch 1 of the fix-campaign drift: rmstructure, stacking, torchdsp,
   rfitrend, spectra (main + note), skr.** All six pass lint + diff-guard + triage; every
   paper with real word changes got a conversion-drift referee pass, and the referees earned

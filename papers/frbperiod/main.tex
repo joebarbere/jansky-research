@@ -28,7 +28,7 @@ search. FRB~20180916B peaks at $P=\fpPeriod\pm\fpPerr$~days on \fpNepochs\ trans
 quantified by the number the argument actually rests on: the probability that a null
 realization's grid peak lands within the published $\pm0.15$~d of 16.35~days by chance, measured
 by Monte Carlo as $\fpUniPcoinc$ under a uniform null and $\fpCluPcoinc$ under a clustered
-(aperiodic, interval-bootstrapped) null --- real evidence at roughly the $10^{-2}$ level, and
+(aperiodic, interval-bootstrapped) null: real evidence at roughly the $10^{-2}$ level, and
 about two orders of magnitude weaker than the analytic false-alarm probability an earlier
 version of this paper printed, which burst clustering (not aliasing) invalidates. The other
 searchable source shows no significant period, with the sensitivity stated: an injected twin of
@@ -64,9 +64,9 @@ independent inflates $Z^2_1$ (the same pseudo-replication the catalogue's sub-bu
 cause, collapsed one level up). We scan \fpPmin--\fpPmax~days on a \fpNgrid-point grid, take
 the peak, and attach three probabilities: the analytic
 $\mathrm{FAP}=1-(1-e^{-Z^2_1/2})^{n_\mathrm{indep}}$, reported only as an approximate guide (it
-assumes independent trials); a Monte-Carlo exceedance probability under two measured nulls ---
+assumes independent trials); a Monte-Carlo exceedance probability under two measured nulls,
 uniform arrivals, and a clustered null whose inter-epoch intervals are bootstrapped from the
-\emph{other} searchable repeater (never from the target's own intervals, which for a periodic
+other searchable repeater (never from the target's own intervals, which for a periodic
 source inherit the signal and would wrongly appear to destroy the detection); and the
 coincidence probability, how often a null realization's grid peak lands within the published
 uncertainty of the known period. The clustered null is the honest one: measured, burst
@@ -85,16 +85,16 @@ that bar, the central limitation of a catalog-only search.
 
 \section{Results}
 \paragraph{Recovery of the known period.} For FRB~20180916B the periodogram peaks at
-$P=\fpPeriod\pm\fpPerr$~days (epoch-bootstrap uncertainty --- the grid step is not the
+$P=\fpPeriod\pm\fpPerr$~days (epoch-bootstrap uncertainty; the grid step is not the
 measurement error) on \fpNepochs\ transit epochs from \fpNbursts\ catalogued bursts
 (Figure~\ref{fig:pgram}), consistent with the published $16.35\pm0.15$~days
 \citep{chime2020periodic}. The agreement with an independently measured value is the
 validation, and its strength is now a measured number: the chance of a null realization's peak
 landing within $\pm0.15$~d of 16.35 is $\fpUniPcoinc$ (uniform null) to $\fpCluPcoinc$
-(clustered null) --- roughly $3\sigma$-equivalent evidence. The peak statistic is
+(clustered null), roughly $3\sigma$-equivalent evidence. The peak statistic is
 $Z^2_1=\fpZtwo$ (down from an inflated 33.4 before the transit collapse); its Monte-Carlo
 exceedance probability is $\fpUniPexceed$ under the uniform null but $\fpCluPexceed$ under the
-clustered one, and the analytic $\mathrm{FAP}=\fpFAP$ sits between them --- aliasing, the
+clustered one, and the analytic $\mathrm{FAP}=\fpFAP$ sits between them; aliasing, the
 worry the earlier version of this paper named, is measurably not what breaks the analytic
 number; burst clustering is.
 
@@ -103,7 +103,7 @@ bursts on \fpNullNepochs\ transits) shows no significant period: best peak
 $Z^2_1=\fpNullZtwo$ at \fpNullPeriod~d, analytic $\mathrm{FAP}=\fpNullFAP$. That null is
 honest only with its power stated: injecting a twin of FRB~20180916B (period \fpPeriod~d, the
 measured duty cycle \fpDuty) into this source's epoch count and span, the search's own
-detection rule recovers it only \fpTwinPower\ of the time --- a real analogue would usually
+detection rule recovers it only \fpTwinPower\ of the time, so a real analogue would usually
 have been missed, so ``no period detected'' here means ``sensitive only to duty cycles
 $\lesssim$0.2'', not ``no period exists''. The remaining \fpNunsearchable\ repeaters have too
 few catalog bursts to constrain anything.
@@ -132,7 +132,7 @@ professional standards.
 The contribution is a tested, offline-capable periodicity-search tool plus a validation whose
 evidence is quantified: it recovers FRB~20180916B's published period from public data at a
 measured coincidence probability of $\sim10^{-2}$, and finds nothing significant in the one
-other searchable source --- a null whose measured power against a twin of the detection is
+other searchable source, a null whose measured power against a twin of the detection is
 \fpTwinPower, stated rather than implied. The analysis regenerates from a
 clean checkout in one command, and every number above is written by the pipeline into the macros
 the manuscript \code{\textbackslash input}s, so it is auditable end to end. Finding genuinely new

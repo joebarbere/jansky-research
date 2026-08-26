@@ -30,7 +30,7 @@ and we propagate it rather than footnote it: the emission mode and an event-driv
 enhancement are exactly degenerate ($f_p^2\propto n_e$, so fundamental emission at $4\times$
 density equals harmonic at $1\times$), and over the committed
 (mode\,$\times$\,density-scale) grid the speed spans \wwRealGridSpeedLo--\wwRealGridSpeedHi~$c$
-and the outer radius \wwRealGridReachLo--\wwRealGridReachHi~$R_\odot$ — a bracket that straddles
+and the outer radius \wwRealGridReachLo--\wwRealGridReachHi~$R_\odot$, a bracket that straddles
 the inner-heliosphere/interplanetary boundary, so we do not claim either regime exclusively. The
 radial range itself is set by the RAD2 band edges through the model, not by the event; only the
 speed is event-specific. The headline speed sits below most published values at comparable
@@ -58,14 +58,13 @@ sigma-clipped fit) and \code{jansky.solar} \citep{jansky}. It adds the Leblanc d
 $n_e(r)=3.3\times10^{5}r^{-2}+4.1\times10^{6}r^{-4}+8.0\times10^{7}r^{-6}$ cm$^{-3}$ (r in $R_\odot$;
 $\approx$7.1 cm$^{-3}$ at 1~AU) and its numerical inverse, mapping each ridge frequency to a plasma
 frequency $f_p=f/\mathrm{harmonic}$, a density, and a heliocentric radius. The speed comes from a
-linear fit with \emph{one point per distinct time sample} (the column median of the mapped radii),
+linear fit with one point per distinct time sample (the column median of the mapped radii),
 jackknifed leave-one-column-out for its error: the 16-s cadence stacks hundreds of channels into
 \wwRealNtimeCols\ samples, so a per-point fit is leverage-dominated, and an iterated residual clip
 on points was measured (on the sibling STEREO ridge) to collapse onto the crowded near-Sun columns
 and reject the sparse columns that carry the drift. The all-points fit and the inverse regression
 are committed alongside as the estimator bracket. The ridge uses intensity peaks rather than onset
-times, which biases the speed low. The synthetic burst fixture — built from the same Leblanc
-mapping — now runs at the real band and cadence as well as at fine sampling, so the
+times, which biases the speed low. The synthetic burst fixture, built from the same Leblanc mapping, now runs at the real band and cadence as well as at fine sampling, so the
 time-quantisation bias is measured rather than hidden; it remains a round-trip check of the
 inversion's code and not a validation of the real result.
 
@@ -80,14 +79,11 @@ the X17 flare's radio onset; on a day driven by an X17 flare a day-maximum near 
 expected, so this locates the burst rather than validates the pipeline. Across \wwRealNridge\
 detected channels occupying \wwRealNtimeCols\ time samples, the per-channel peak times trace a
 high-to-low drift (the committed ridge is \code{results/windwaves\_ridge.csv}); under harmonic
-emission and the unscaled Leblanc profile the mapped radii span \wwRealRlo--\wwRealRhi~$R_\odot$
-(Figure~\ref{fig:ipburst}) — a range fixed by the RAD2 band edges through the model, with the
+emission and the unscaled Leblanc profile the mapped radii span \wwRealRlo--\wwRealRhi~$R_\odot$ (Figure~\ref{fig:ipburst}), a range fixed by the RAD2 band edges through the model, with the
 outer value carried by the single lowest-frequency channel. The column-median fit gives
 $\wwRealSpeedC\pm\wwRealSpeedCSe$~$c$; the estimator bracket is real and asymmetric (all-points
 fit \wwRealSpeedCPoints, inverse regression \wwRealSpeedCInverse~$c$), and the committed
-(mode\,$\times$\,density) grid spans \wwRealGridSpeedLo--\wwRealGridSpeedHi~$c$ with reaches
-\wwRealGridReachLo--\wwRealGridReachHi~$R_\odot$ — under a factor-4 event-driven density
-enhancement, which the 2003-10-28 halo CME makes plausible, the speed enters the
+(mode\,$\times$\,density) grid spans \wwRealGridSpeedLo--\wwRealGridSpeedHi~$c$ with reaches \wwRealGridReachLo--\wwRealGridReachHi~$R_\odot$, under a factor-4 event-driven density enhancement, which the 2003-10-28 halo CME makes plausible, the speed enters the
 \citet{reiner2015} range (0.17--0.35~$c$; \citealt{krupar2015} report 0.02--0.35~$c$ at lower
 frequencies). The column-fit residuals are not consistent with a single straight track: they
 trend monotonically across the band ($R^2=\wwRealRsq$ on the columns), which is what
