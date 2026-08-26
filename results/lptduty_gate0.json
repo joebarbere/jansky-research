@@ -2,7 +2,7 @@
   "alpha_familywise": 0.05,
   "caveats": [
     "quoted_period_precision_s is inferred from the catalogue's decimal places -- a proxy for the published uncertainty, not the uncertainty itself. The ephemeris audit must replace it with real values from the discovery papers.",
-    "A period derivative large enough to matter over the baseline would break phase coherence even when the period is quoted precisely; pdot is not folded in here.",
+    "A period derivative large enough to matter over the baseline breaks phase coherence even when the period is quoted precisely; each source's published Pdot BOUND is folded in as pdot_bound_smear_cycles / pdot_conditional. The bounds are upper limits, so a conditional verdict stands unless the bound is saturated.",
     "A uniform result does not prove independence, only that this test found no departure from it."
   ],
   "flagged_clustered": [
@@ -14,10 +14,18 @@
   "is_real": true,
   "method": "Rayleigh Z and Kuiper V on phases referenced to each source's first epoch (the zero point is arbitrary; clustering is invariant under a phase shift, so no ephemeris is needed to test uniformity). Bonferroni-corrected over the sources tested.",
   "n_sources_tested": 10,
+  "n_valid_unconditional": 5,
+  "pdot_conditional": [
+    "ASKAP J1832-0911",
+    "ASKAP J183950.5-075635",
+    "GLEAM-X J162759.5-523504.3"
+  ],
   "per_source": {
     "ASKAP J142431.2-612611": {
       "baseline_days": 1320.457739999998,
       "clustered": false,
+      "kuiper_p": 0.9644705609925651,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.08040499370914544,
       "n_epochs": 104,
       "period_precision_adequate": false,
@@ -33,6 +41,8 @@
     "ASKAP J165130.3-450520": {
       "baseline_days": 1302.4420299999983,
       "clustered": false,
+      "kuiper_p": 0.5631987737072665,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.14890646241599365,
       "n_epochs": 60,
       "period_precision_adequate": true,
@@ -48,6 +58,8 @@
     "ASKAP J170036.6-445758": {
       "baseline_days": 1320.3843599999964,
       "clustered": false,
+      "kuiper_p": 0.8042861060429117,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.10324780837313044,
       "n_epochs": 93,
       "period_precision_adequate": true,
@@ -63,8 +75,12 @@
     "ASKAP J175534.9-252749.1": {
       "baseline_days": 1325.474159999998,
       "clustered": false,
+      "kuiper_p": 0.8278191842288475,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.10239854974929333,
       "n_epochs": 91,
+      "pdot_bound_smear_cycles": 0.004,
+      "pdot_conditional": false,
       "period_precision_adequate": true,
       "period_s": 4186.3285,
       "quoted_period_precision_s": 0.0001,
@@ -78,8 +94,12 @@
     "ASKAP J1832-0911": {
       "baseline_days": 1325.4354600000006,
       "clustered": false,
+      "kuiper_p": 0.3776779892084711,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.15227985246822845,
       "n_epochs": 71,
+      "pdot_bound_smear_cycles": 0.911,
+      "pdot_conditional": true,
       "period_precision_adequate": true,
       "period_s": 2656.247,
       "quoted_period_precision_s": 0.001,
@@ -88,13 +108,17 @@
       "rayleigh_z": 1.6077468163261996,
       "required_period_precision_s": 0.006161189775280042,
       "testable": true,
-      "verdict": "phase sampling consistent with uniform"
+      "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 0.91 cycles across the baseline and would make this inconclusive)"
     },
     "ASKAP J183950.5-075635": {
       "baseline_days": 817.7951099999991,
       "clustered": false,
+      "kuiper_p": 0.3278342423211689,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.19791549565147964,
       "n_epochs": 44,
+      "pdot_bound_smear_cycles": 0.741,
+      "pdot_conditional": true,
       "period_precision_adequate": true,
       "period_s": 23221.74,
       "quoted_period_precision_s": 0.01,
@@ -103,13 +127,17 @@
       "rayleigh_z": 1.1790694470516068,
       "required_period_precision_s": 0.7631875281134507,
       "testable": true,
-      "verdict": "phase sampling consistent with uniform"
+      "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 0.74 cycles across the baseline and would make this inconclusive)"
     },
     "ASKAP J1935+2148": {
       "baseline_days": 817.8127000000022,
       "clustered": false,
+      "kuiper_p": 0.9862011418861528,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.14069851497250901,
       "n_epochs": 28,
+      "pdot_bound_smear_cycles": 0.029,
+      "pdot_conditional": false,
       "period_precision_adequate": true,
       "period_s": 3225.313,
       "quoted_period_precision_s": 0.001,
@@ -123,6 +151,8 @@
     "GCRT J1745-3009": {
       "baseline_days": 1325.4470900000015,
       "clustered": false,
+      "kuiper_p": 0.3524081472108278,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.18154848289551037,
       "n_epochs": 51,
       "period_precision_adequate": true,
@@ -138,8 +168,12 @@
     "GLEAM-X J162759.5-523504.3": {
       "baseline_days": 1302.4442199999976,
       "clustered": false,
+      "kuiper_p": 0.5682847509715477,
+      "kuiper_p_bonferroni": 1.0,
       "kuiper_v": 0.16067414612813108,
       "n_epochs": 51,
+      "pdot_bound_smear_cycles": 6.381,
+      "pdot_conditional": true,
       "period_precision_adequate": true,
       "period_s": 1091.169,
       "quoted_period_precision_s": 0.0001,
@@ -148,18 +182,22 @@
       "rayleigh_z": 0.627867154687047,
       "required_period_precision_s": 0.0010580621123212116,
       "testable": true,
-      "verdict": "phase sampling consistent with uniform"
+      "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 6.38 cycles across the baseline and would make this inconclusive)"
     },
     "GPM J1839-10": {
       "baseline_days": 1325.4354600000006,
       "clustered": true,
+      "kuiper_p": 0.0058948544782445305,
+      "kuiper_p_bonferroni": 0.11789708956489062,
       "kuiper_v": 0.2753762471811907,
       "n_epochs": 54,
+      "pdot_bound_smear_cycles": 0.001,
+      "pdot_conditional": false,
       "period_precision_adequate": true,
       "period_s": 1318.1957,
       "quoted_period_precision_s": 0.0001,
       "rayleigh_p": 0.0011582510232827088,
-      "rayleigh_p_bonferroni": 0.011582510232827088,
+      "rayleigh_p_bonferroni": 0.023165020465654176,
       "rayleigh_z": 6.608841093960266,
       "required_period_precision_s": 0.0015173558852241995,
       "testable": true,

@@ -3,8 +3,14 @@
     "Only the product p is identifiable; f_active and the in-period duty cycle separate only with an ephemeris good enough to phase each snapshot.",
     "The denominator is efficiency-weighted exposure (sum of per-epoch detection probability at the assumed flux), not the epoch count -- the frblens lesson.",
     "Efficiencies below MIN_EFFICIENCY are floored to zero so that many shallow epochs cannot sum into sensitivity that does not exist.",
-    "VAST pointings are not randomly phased against any LPT period; aliasing between the survey cadence and a period is NOT yet tested (plan 90 GATE 0)."
+    "VAST pointings are not randomly phased against any LPT period; GATE 0 (phase-uniformity, Rayleigh + Kuiper, results/lptduty_gate0.json) tests this per source. A uniform marginal does not prove independence: if activity persists across a cycle, correlated snapshots over-disperse the counts and the Poisson limits are too tight (by up to ~55% under a one-epoch-per-cycle collapse); the point estimates are unbiased either way."
   ],
+  "common_rate_test": {
+    "common_rate": 0.01942,
+    "dof": 2,
+    "g": 1.621,
+    "p": 0.445
+  },
   "flux_grid_mjy": [
     0.5,
     1.0,
@@ -22,8 +28,13 @@
     "ASKAP J142431.2-612611": {
       "brightest_abs_v_mjy": 0.8818,
       "constraint_valid": false,
+      "efficiency_kept_at_5mjy": 1.0,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.085,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.2632,
       "n_detections": 0,
       "n_epochs_measured": 104,
@@ -38,8 +49,8 @@
         "0.5": {
           "effective_epochs": 0.31255456868976167,
           "p_point": null,
-          "p_upper_95": 9.584669602214394,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 18.189344150312323,
@@ -77,13 +88,19 @@
           "p_upper_95": 0.02880511801494221,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.3384
     },
     "ASKAP J165130.3-450520": {
       "brightest_abs_v_mjy": 0.8524,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 0.9999,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 1.602,
+      "implied_limit_vacuous": true,
       "median_sigma_v_mjy": 0.2811,
       "n_detections": 0,
       "n_epochs_measured": 60,
@@ -98,8 +115,8 @@
         "0.5": {
           "effective_epochs": 0.07378042481872144,
           "p_point": null,
-          "p_upper_95": 40.60334812268303,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 7.42509142570934,
@@ -137,13 +154,19 @@
           "p_upper_95": 0.049928871225899826,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.0312
     },
     "ASKAP J170036.6-445758": {
       "brightest_abs_v_mjy": 0.8305,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 1.0,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.75,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.3169,
       "n_detections": 0,
       "n_epochs_measured": 93,
@@ -158,8 +181,8 @@
         "0.5": {
           "effective_epochs": 0.0534066224662616,
           "p_point": null,
-          "p_upper_95": 56.092898880592465,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 7.311241808011312,
@@ -197,11 +220,14 @@
           "p_upper_95": 0.0322121749844515,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.043
     },
     "ASKAP J175534.9-252749.1": {
       "brightest_abs_v_mjy": 6.3203,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 0.9874,
+      "efficiency_kept_at_headline": 0.9998,
       "headline": {
         "assumed_pulse_mjy": 6.3203,
         "effective_epochs": 90.98111410179196,
@@ -209,6 +235,9 @@
         "p_upper_95": 0.05214120056919749
       },
       "identifiable_factors": false,
+      "implied_f_active": 0.061,
+      "implied_f_active_limit_5mjy": null,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.3428,
       "n_detections": 1,
       "n_epochs_measured": 91,
@@ -223,8 +252,8 @@
         "0.5": {
           "effective_epochs": 0.030702081889481037,
           "p_point": 32.57108112732296,
-          "p_upper_95": 154.51279608552838,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 4.975252563167475,
@@ -262,11 +291,14 @@
           "p_upper_95": 0.052130379322973375,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.1807
     },
     "ASKAP J1832-0911": {
       "brightest_abs_v_mjy": 14.0424,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 0.9973,
+      "efficiency_kept_at_headline": 1.0,
       "headline": {
         "assumed_pulse_mjy": 14.0424,
         "effective_epochs": 71.0,
@@ -274,13 +306,16 @@
         "p_upper_95": 0.06681499321676869
       },
       "identifiable_factors": false,
+      "implied_f_active": 0.039,
+      "implied_f_active_limit_5mjy": null,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.4226,
       "n_detections": 1,
       "n_epochs_measured": 71,
       "period_s": 2656.247,
       "phase_sampling": {
         "independence_assumption_holds": true,
-        "verdict": "phase sampling consistent with uniform"
+        "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 0.91 cycles across the baseline and would make this inconclusive)"
       },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 51522.1,
@@ -288,14 +323,14 @@
         "0.5": {
           "effective_epochs": 0.0069165083021319185,
           "p_point": 144.58162360504414,
-          "p_upper_95": 685.8756342312704,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 1.6533699238119344,
           "p_point": 0.6048253240838236,
-          "p_upper_95": 2.8692093947453325,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "10": {
           "effective_epochs": 70.99999999999997,
@@ -327,11 +362,14 @@
           "p_upper_95": 0.06681499321676869,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.3639
     },
     "ASKAP J183950.5-075635": {
       "brightest_abs_v_mjy": 24.3499,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 0.8006,
+      "efficiency_kept_at_headline": 1.0,
       "headline": {
         "assumed_pulse_mjy": 24.3499,
         "effective_epochs": 44.0,
@@ -339,13 +377,16 @@
         "p_upper_95": 0.14308621867890883
       },
       "identifiable_factors": false,
+      "implied_f_active": 0.735,
+      "implied_f_active_limit_5mjy": null,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.3077,
       "n_detections": 2,
       "n_epochs_measured": 44,
       "period_s": 23221.74,
       "phase_sampling": {
         "independence_assumption_holds": true,
-        "verdict": "phase sampling consistent with uniform"
+        "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 0.74 cycles across the baseline and would make this inconclusive)"
       },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 32108.9,
@@ -353,14 +394,14 @@
         "0.5": {
           "effective_epochs": 0.016894670389095756,
           "p_point": 118.38052793802063,
-          "p_upper_95": 372.6496863730145,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 2.8743144554200755,
           "p_point": 0.6958180919379274,
-          "p_upper_95": 2.19036355260297,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "10": {
           "effective_epochs": 43.995997494316626,
@@ -392,13 +433,19 @@
           "p_upper_95": 0.14308621867890883,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.0619
     },
     "ASKAP J1935+2148": {
       "brightest_abs_v_mjy": 0.5465,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 1.0,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.475,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.2143,
       "n_detections": 0,
       "n_epochs_measured": 28,
@@ -413,8 +460,8 @@
         "0.5": {
           "effective_epochs": 0.2014980734205143,
           "p_point": null,
-          "p_upper_95": 14.86729983418788,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 12.089342675800273,
@@ -452,13 +499,19 @@
           "p_upper_95": 0.10699043834121391,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.2253
     },
     "GCRT J1745-3009": {
       "brightest_abs_v_mjy": 0.8338,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 0.9999,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.374,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.4068,
       "n_detections": 0,
       "n_epochs_measured": 51,
@@ -479,8 +532,8 @@
         "1": {
           "effective_epochs": 0.3912076864329987,
           "p_point": null,
-          "p_upper_95": 7.65765187506627,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "10": {
           "effective_epochs": 51.0,
@@ -512,20 +565,26 @@
           "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.1572
     },
     "GLEAM-X J162759.5-523504.3": {
       "brightest_abs_v_mjy": 0.5616,
       "constraint_valid": true,
+      "efficiency_kept_at_5mjy": 1.0,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.088,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.2533,
       "n_detections": 0,
       "n_epochs_measured": 51,
       "period_s": 1091.169,
       "phase_sampling": {
         "independence_assumption_holds": true,
-        "verdict": "phase sampling consistent with uniform"
+        "verdict": "phase sampling consistent with uniform (conditional: the published Pdot BOUND, if saturated, smears 6.38 cycles across the baseline and would make this inconclusive)"
       },
       "snapshot_median_s": 726.6,
       "total_exposure_s": 37103.0,
@@ -533,8 +592,8 @@
         "0.5": {
           "effective_epochs": 0.11829658179005398,
           "p_point": null,
-          "p_upper_95": 25.323912392250218,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 10.232109189378388,
@@ -572,13 +631,19 @@
           "p_upper_95": 0.058739848501058615,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.6659
     },
     "GPM J1839-10": {
       "brightest_abs_v_mjy": 1.1683,
       "constraint_valid": false,
+      "efficiency_kept_at_5mjy": 1.0,
+      "efficiency_kept_at_headline": null,
       "headline": null,
       "identifiable_factors": false,
+      "implied_f_active": null,
+      "implied_f_active_limit_5mjy": 0.101,
+      "implied_limit_vacuous": false,
       "median_sigma_v_mjy": 0.235,
       "n_detections": 0,
       "n_epochs_measured": 54,
@@ -593,8 +658,8 @@
         "0.5": {
           "effective_epochs": 0.34511976997347676,
           "p_point": null,
-          "p_upper_95": 8.680268516011756,
-          "unconstrained": false
+          "p_upper_95": 1.0,
+          "unconstrained": true
         },
         "1": {
           "effective_epochs": 15.550496608149972,
@@ -632,7 +697,8 @@
           "p_upper_95": 0.05547652358433314,
           "unconstrained": false
         }
-      }
+      },
+      "wt_over_p": 0.5508
     }
   },
   "quantity": "p = f_active * (w + T) / P, the per-snapshot probability of catching a pulse",

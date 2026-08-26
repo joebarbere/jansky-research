@@ -11,6 +11,27 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **lptduty round-11 revision: the weighting's true effect is stated, the counts match
+  their JSON, and the note leads with the implied active fraction.** The blocker sentence
+  ("removes roughly half the nominal exposure") is replaced by the measured effect (0.02% at
+  the observed brightnesses; the findings-file origin -- a conflation of never-released rows
+  with the efficiency weighting -- corrected in place); Poisson limits are capped at 1 with
+  such rows marked unconstrained. The phase JSON now separates n_no_published_epoch = 6,
+  n_epoch_but_excluded = 1 (pritchard2026 cited), n_published_pepoch = 2. kuiper_p
+  (Stephens) is implemented; the Bonferroni covers sources x tests (GPM J1839-10's clustered
+  verdict survives at x20: p = 0.023, quoted with the Rayleigh statistic it belongs to).
+  pdot_phase_smear_cycles folds the published Pdot bounds into GATE-0 (three verdicts
+  conditional: 0.91/0.74/6.38 cycles if saturated -- "8 stand, 5 unconditionally") and into
+  the phase leg (J1832's farthest-epoch smear is 0.400 cycles, not the old 0.22; its split
+  retired). p is stated as a Stokes-V threshold quantity. The committed metrics gain
+  wt_over_p and implied_f_active per source -- 0.039/0.061/0.735 for the detections (J183950
+  active in most cycles under its window model), the limit-ordering inversion stated (best
+  bound GLEAM-X < 0.09; one vacuous), a common-rate LRT (p = 0.445) replacing the
+  spread-implying range, f_active quoted with its 95% interval (< 0.30) and its PEPOCH
+  conditionality (a-priori 0.18), and the J183950 phases relabelled a shared-anchor
+  consistency check. write_paper_assets finally has a caller (lptduty_run.py), lptduty is in
+  the Makefile SLICES, discovery ephemerides are cited (mcsweeney2025/wang2025/lee2025), and
+  barbere2026lptv resolves via the Zenodo concept DOI + committed filename.
 - **Round-11 review verdicts: driftsearch, ecallisto_pipeline, rmstructure, lptduty (four
   major revisions, seven blockers) -- every paper in the repo has now had a full referee
   round.** driftsearch: the "Voyager-1 null" is a targeting error -- the hand-typed

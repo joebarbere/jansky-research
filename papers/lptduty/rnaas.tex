@@ -8,8 +8,8 @@
 
 \begin{document}
 
-\title{Long-Period Transients Are Caught in a Few Per Cent of ASKAP Snapshots, and Only One
-in Ten Has an Ephemeris Good Enough to Say Why}
+\title{Long-Period Transients Are Caught in a Few Per Cent of ASKAP Snapshots, and the
+Published Ephemerides Rarely Say Why}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
@@ -17,78 +17,94 @@ in Ten Has an Ephemeris Good Enough to Say Why}
 \begin{abstract}
 Forced Stokes-V photometry at \ldNSources\ long-period transient (LPT) positions across
 \ldNEpochs\ archival ASKAP/VAST snapshots constrains the per-snapshot probability of catching
-a pulse, with a sensitivity-weighted denominator. Three sources with detections give
-\ldPMin--\ldPMax; the remaining valid limits span \ldLimMin--\ldLimMax\ at an assumed 5 mJy
-pulse. The quantity is the product of the active fraction and the in-period duty cycle, which
-separates only with a published ephemeris: \ldNNoEpoch\ of \ldNSources\ papers publish none,
-and the split is available for one source, which gives an active fraction of \ldFActive.
+a pulse whose \emph{circularly polarized} flux clears threshold. Three sources with
+detections give $p = \ldPMin$--$\ldPMax$ --- a range consistent with one common rate
+($p_{\rm LRT} = \ldCommonRateP$); the valid limits span \ldLimMin--\ldLimMax\ at an assumed
+5~mJy Stokes-V pulse. Dividing each $p$ by that source's own $(w+T)/P$ gives the implied
+active fraction, \ldFaDetMin--\ldFaDetMax: the class is not uniformly ``mostly off''. The
+split into active fraction and in-period duty cycle needs a pulse-anchored reference epoch:
+\ldNNoEpoch\ of \ldNSources\ discovery papers publish none, and the one available split gives
+$f_{\rm active} = \ldFActive$ ($<\ldFActiveUpper$ at 95\%), conditional on the published
+epoch being a pulse arrival.
 \end{abstract}
 
 \section{}
 
-Long-period transients pulse on minute-to-hour periods and are frequently silent: GPM
+Long-period transients pulse on minute-to-hour periods and are often silent: GPM
 J1839$-$10 nulls for 50--70\% of its cycles \citep{hurleywalker2023}, and the accreting
 white-dwarf binary ASKAP J174508.9$-$505149 ``turns off for several hours at a time''
-\citep{rose2026}. These statements are per-source, from heterogeneous campaigns. No uniform
-measurement across the class exists; the field review notes that survey selection functions
-``require explicit modeling before population analysis is possible'' \citep{rea2026}.
+\citep{rose2026}. These statements are per-source, from heterogeneous campaigns; the field
+review notes that survey selection functions ``require explicit modeling before population
+analysis is possible'' \citep{rea2026}. We measure a uniform per-snapshot quantity from
+archival data alone, for the \ldNSources\ of 16 catalogued LPTs with VAST coverage in the
+committed epoch table.
 
-We measure one from archival data alone. A snapshot of length $T$ on a source of period $P$
-whose emitting phase has width $w$ catches a pulse with probability
-$p = f_{\rm active}\,(w+T)/P$ when the source is active. Detection counts constrain the
-product, not its factors. Using forced Stokes-V photometry at the catalogued positions in
-\ldNEpochs\ VAST snapshots covering \ldNSources\ LPTs, we count a detection where
-$|V|/\sigma_V \ge 5$ and $|V|$ exceeds the on-axis leakage floor, matching
-\citet{barbere2026lptv}.
+A snapshot of length $T$ on a source of period $P$ whose emitting phase has width $w$ catches
+a pulse with probability $p = f_{\rm active}\,(w+T)/P$ when the source is active. Detection
+counts constrain the product. Using forced Stokes-V photometry at the catalogued positions in
+\ldNEpochs\ VAST snapshots, we count a detection where $|V|/\sigma_V \ge 5$ and $|V|$ exceeds
+the on-axis leakage floor, matching \citet{barbere2026lptv}; $p$ is therefore a Stokes-V
+threshold quantity, and converting it to total intensity requires the circular fraction,
+which spans tens of per cent across the class.
 
-The denominator is not the number of epochs. A pulse of flux $S$ is undetectable in an epoch
-whose noise is comparable to it, so each epoch contributes its own detection probability
-$\Phi(S/\sigma_V - 5)$ and the exposure is their sum. At the observed pulse brightnesses this
-removes roughly half the nominal exposure; using an epoch count instead would halve every
-$p$. Efficiencies below $10^{-3}$ are set to zero, because summing Gaussian tails over many
-hopeless epochs otherwise manufactures sensitivity that does not exist. Upper limits are the
-exact one-sided 95\% Poisson values.
+The denominator is the summed per-epoch detection efficiency $\Phi(S/\sigma_V - 5)$ rather
+than the epoch count --- a principled choice whose measured effect here is small: at the
+observed pulse brightnesses it removes \ldEffRemovedHeadlinePct\% of the nominal exposure
+(more at fainter assumed fluxes, where it matters). Efficiencies below $10^{-3}$ are floored
+to zero so shallow epochs cannot sum into sensitivity that does not exist. Upper limits are
+exact one-sided 95\% Poisson values, capped at 1.
 
-Three sources yield detections, giving $p = \ldPMin$--$\ldPMax$. For scale, a $\sim$730~s
-snapshot on a 2656~s period covers $\sim$27\% of a cycle, so a permanently active source with
-a broad pulse would sit near 0.3; the measurements are an order of magnitude below that.
-Sources without detections give 95\% limits of $\ldLimMin$--$\ldLimMax$ at an assumed 5~mJy
-pulse. Every limit is a function of that assumed brightness and is tabulated against it in
-the committed evidence.
+Three sources yield detections, $p = \ldPMin$--$\ldPMax$; a likelihood-ratio test finds the
+three rates indistinguishable from one common value ($p = \ldCommonRateP$). The physical
+scale comes from dividing each $p$ by its own $(w+T)/P$: the implied active fractions are
+\ldFaDetMin\ (ASKAP J1832$-$0911), 0.061 (ASKAP J175534.9$-$252749.1, matching the
+phase-resolved \ldFActive\ below), and \ldFaDetMax\ (ASKAP J183950.5$-$075635, whose narrow
+$(w+T)/P$ makes its modest $p$ imply a source active in most cycles). Non-detections give
+$p < \ldLimMin$--$\ldLimMax$ at an assumed 5~mJy Stokes-V pulse; the same division shows
+the numerically tightest $p$-limit is not the most constraining --- the strongest implied
+bound is $f_{\rm active} < \ldFaLimBest$ (GLEAM-X J162759.5, whose long snapshots cover
+two-thirds of a cycle), and \ldNFaLimVacuous\ limit excludes nothing at all. All limits are
+tabulated against assumed flux in the committed evidence.
 
-The binomial treatment assumes snapshots sample pulse phase independently, and VAST's
-fortnightly cadence is not random with respect to any LPT period. Testing this requires no
-ephemeris, since clustering is invariant under a phase shift. Of \ldNSources\ sources,
-\ldNClustered\ shows non-uniform phase sampling (Kuiper $V = 0.275$, Bonferroni-corrected
-$p = 0.012$) and its constraint is therefore void, and \ldNInconclusive\ has a period quoted
-too coarsely for the test to run. \ldNValid\ constraints stand.
+The binomial treatment assumes snapshots sample pulse phase uniformly and independently; a
+uniformity test needs no ephemeris, since clustering is invariant under a phase shift. Of
+\ldNSources\ sources, \ldNClustered\ shows non-uniform sampling (Rayleigh $Z = \ldClusterZ$,
+Bonferroni-corrected over sources and tests $p = \ldClusterP$) and its constraint is void;
+\ldNInconclusive\ has a period quoted too coarsely to test. \ldNValid\ constraints stand ---
+\ldNValidUncond\ unconditionally, since for \ldNPdotCond\ sources the published $\dot P$
+\emph{bound}, if saturated, would smear phase past coherence. Uniformity is also not
+independence: if activity persists across a cycle, the Poisson limits weaken by up to
+$\sim$55\%; the point estimates are unbiased either way.
 
-Separating $f_{\rm active}$ from the in-period duty cycle requires physical phase, and here
-the published record, not the data, is the limit. \ldNNoEpoch\ of \ldNSources\ discovery
-papers tabulate no reference epoch at all --- GPM J1839$-$10 knows its period to
-$2\times10^{-4}$~s over a 34-year baseline and still publishes no PEPOCH. Assuming an epoch
-would manufacture the phase. Of the \ldNPhaseUsable\ sources with one, ASKAP
-J175534.9$-$252749.1 admits the split: \ldFActiveOn\ of \ldFActiveN\ snapshots overlap its
-pulse window and one contains a detection, giving $f_{\rm active} = \ldFActive$. ASKAP
-J1832$-$0911's only detection falls at phase 0.699, which shows that its published period
-epoch is not a pulse arrival, so its split is not available; fitting the phase to that
-detection and then deriving $f_{\rm active}$ from it would be circular. ASKAP
-J183950.5$-$075635 requires a two-component model for its published interpulse, and the
-machinery reproduces the phases 0.489 and 0.951 reported independently by
-\citet{barbere2026lptv}.
+Separating the factors needs a pulse-anchored epoch, and the published record is the limit:
+\ldNNoEpoch\ of \ldNSources\ discovery papers tabulate no reference epoch (GPM J1839$-$10
+knows its period to $2\times10^{-4}$~s and publishes no PEPOCH), and one more
+\citep{pritchard2026} publishes an epoch with a period too coarse to use. Of
+\ldNPublishedPepoch\ published PEPOCHs, ASKAP J175534.9$-$252749.1 \citep{mcsweeney2025}
+admits the split: \ldFActiveOn\ of \ldFActiveN\ snapshots overlap its pulse window and one
+contains a detection, giving $f_{\rm active} = \ldFActive$ ($<\ldFActiveUpper$ at 95\%) ---
+conditional on the PEPOCH being a pulse arrival, for which the only evidence is that
+detection's own phase (a-priori landing chance \ldFActiveApriori). ASKAP J1832$-$0911's
+detection falls at phase \ldJEDPhase\ of the \citet{wang2025} epoch, and its $\dot P$ bound
+allows \ldJEDSmear\ cycles of smear at the farthest epoch, so its split is unavailable.
+ASKAP J183950.5$-$075635 \citep{lee2025} folds on the anchor of \citet{barbere2026lptv}; the
+pulse and interpulse phases (\ldPhaseA, \ldPhaseB) are a consistency check against that
+companion analysis (same anchor and period), not an independent validation.
 
-The measurement is limited by ephemerides rather than by sensitivity or epochs. A published
-reference epoch, at the cost of one table row, would convert most of these products into
-activity fractions.
+The measurement is limited by ephemerides for most of the sample --- a published,
+pulse-anchored epoch would convert several of these products into bounds on the activity
+fraction --- but not for all of it: for ASKAP J183950.5 and J165130.3, whose snapshots cover
+a few per cent of a cycle, the epoch count, not the ephemeris, is the limit.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/lptduty.pdf}
 \caption{Per-snapshot probability of catching a pulse for each of the \ldNSources\ LPTs, from
-\ldNEpochs\ VAST snapshots. Circles are sources with detections; open triangles are 95\%
-upper limits at an assumed 5~mJy pulse; crosses mark the two sources whose constraints do not
-stand (one with non-uniform phase sampling, one whose period is too coarsely quoted to test).
-Every value is regenerated by the tested pipeline (\code{jansky\_research.lptduty}).}
+\ldNEpochs\ VAST snapshots. Circles are the \ldNDetSources\ sources with detections; open
+triangles are 95\% upper limits at an assumed 5~mJy Stokes-V pulse; crosses mark the two
+sources whose constraints do not stand (one with non-uniform phase sampling, one whose
+period is too coarsely quoted to test). Every value is regenerated by the tested pipeline
+(\code{jansky\_research.lptduty}).}
 \label{fig:lptduty}
 \end{figure}
 

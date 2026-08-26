@@ -26,13 +26,13 @@ have one.
 |---|---|---|---|---|---|
 | ASKAP J175534.9−252749.1 | 1 | 0.011 | 91 | 6.3 mJy | 4186 s |
 | ASKAP J1832−0911 | 1 | 0.014 | 71 | 14.0 mJy | 2656 s |
-| ASKAP J183950.5−075635 | 2 | 0.046 | 44 | 24.3 mJy | 23222 s |
+| ASKAP J183950.5−075635 | 2 | 0.045 | 44 | 24.3 mJy | 23222 s |
 
 **Sources without** (95% upper limits at an assumed 5 mJy pulse): 0.029 to 0.107 across the
 seven, i.e. under ~3–11% of snapshots.
 
 For scale, a ~730 s snapshot on a 2656 s period samples ~27% of a cycle, so a source that
-were *always* active with a broad pulse would give p of order 0.3. The measured 0.011–0.046
+were *always* active with a broad pulse would give p of order 0.3. The measured 0.011–0.045
 are an order of magnitude below that — consistent with the switching-off behaviour Rose et
 al. describe, though the product cannot yet say how much is duty cycle and how much is
 inactivity.
@@ -42,8 +42,11 @@ inactivity.
 **The denominator is efficiency-weighted exposure, not epoch count** — the `frblens` lesson,
 whose limit was 4x too tight until per-source efficiency entered it. Each epoch contributes
 `Phi(S/sigma - 5)`, so epochs too shallow to have seen the assumed pulse contribute ~0. Note
-the effective epochs above (91, 71, 44) against raw counts of 104, 97 and 92: **roughly half
-the exposure is not real at these flux levels**, and an epoch-count denominator would have
+the effective epochs above (91, 71, 44) against raw counts of 104, 97 and 92 — **but those
+"raw counts" are total CSV rows including never-released epochs the loader drops before any
+weighting. The 2026-08-26 referee recomputed the weighting's true effect: at the observed
+brightnesses it removes 0.02% of the measured exposure, not half.** (Corrected in place; the
+original sentence propagated into the note's blocker.)
 halved every p.
 
 **Every limit is a function of the assumed pulse flux**, so the JSON reports a grid
@@ -110,7 +113,7 @@ test caught this as a zero-point invariance failure at the 1e-9 level.
    uncertainty itself.
 2. **Period derivatives are not folded in.** A pdot large enough to matter over the baseline
    breaks phase coherence even when the period is quoted precisely.
-3. The 107 never-released epochs carry no measurement and are excluded; that is recorded in
+3. The 319 never-released rows (of 966) carry no measurement and are excluded; that is recorded in
    the loader, not silently dropped.
 
 
@@ -157,7 +160,8 @@ Of the three attempted, the single-window model survives for one:
 
 - **ASKAP J175534.9-252749.1**: 16 of 91 snapshots on-window, its one detection at phase
   0.045 (window half-width 0.091), giving **f_active ~ 0.06**. The detection landing near
-  phase 0 corroborates the assumption that the published PEPOCH is a pulse epoch.
+  phase 0 is *consistent with* the assumption that the published PEPOCH is a pulse epoch —
+  but with an a-priori landing chance of 0.18 it cannot corroborate it (2026-08-26 referee).
 - **ASKAP J1832-0911**: its only detection sits at phase **0.699**, far outside a window
   centred on PEPOCH. That *falsifies* the pulse-at-phase-0 assumption for this source — a
   "period epoch" in a timing solution is a frequency reference and need not be a pulse
@@ -321,3 +325,52 @@ fraction — per source beside p. Computable today from committed JSONs, it conv
 counting-noise range into the physical quantity, and surfaces the J183950 inversion, the
 limit ordering, and the vacuous conversions in one stroke. HOLD the RNAAS submission until
 this lands.
+
+**Status: RESOLVED (2026-08-26).** All three drivers re-run offline from the committed CSV;
+every referee number reproduced (G-test p = 0.445; implied f_active 0.039/0.061/0.735;
+best informative limit 0.09 = GLEAM-X; one vacuous; Rayleigh ×20 = 0.023 survives; smears
+0.91/0.74/6.38; J1832 farthest-epoch smear 0.400; J175534 upper 0.297). The note is rewritten
+and the submission hold can lift after review of this revision.
+
+1. **BLOCKER**: the denominator sentence now states the measured effect — the weighting
+   removes \ldEffRemovedHeadlinePct = 0.02% of the exposure at the observed brightnesses
+   ("more at fainter assumed fluxes, where it matters") — and this file's origin sentence is
+   corrected in place. Limits are capped at 1 (a "limit" above 1 excludes nothing;
+   `duty_constraint` caps and the grid marks such rows unconstrained — the committed 0.5 mJy
+   rows with p_upper 56 are gone).
+2. **Counts fixed at the source**: the phase JSON now carries n_no_published_epoch = 6,
+   n_epoch_but_excluded = 1 (J142431, \citep{pritchard2026} cited for it), and
+   n_published_pepoch = 2 (J183950's anchor is the repo's own, stated); the note's abstract
+   and body use the new macros.
+3. **The Kuiper/Rayleigh attribution is fixed**: `kuiper_p` (Stephens) is implemented and
+   committed per source; the Bonferroni now covers sources × tests (×20); the note quotes
+   Rayleigh Z = 6.61 with its own corrected p = 0.023; the clustered criterion uses either
+   test at the family level.
+4. **Ṗ folded into GATE-0**: `pdot_phase_smear_cycles` per source; three verdicts are marked
+   conditional (smears 0.91/0.74/6.38 if the bounds are saturated); the note states "8 stand
+   — 5 unconditionally".
+5. **Independence caveat quantified**: the metrics caveat and the note state the ~55%
+   interval weakening under activity persistence, with point estimates unbiased (linearity)
+   — the presenter's pseudo-replication concern relocated to where it actually bites.
+6. **Stokes-V stated**: "circularly polarized flux clears threshold" in the abstract, with
+   the total-intensity conversion caveat in the body.
+7. **The single change is in**: per-source implied f_active = p/((w+T)/P) committed
+   (`wt_over_p`, `implied_f_active`, `implied_f_active_limit_5mjy`, vacuous flags) and the
+   note leads with it — 0.039–0.735 for the detections (J183950 active in most cycles under
+   its window model), the limit ordering inversion stated (best bound GLEAM-X < 0.09;
+   \ldLimMin excludes only > 0.75; one vacuous), and the p range labelled consistent with
+   one common rate (LRT p = 0.445, committed).
+8. **\ldFActive carries its interval** (< 0.30 at 95%) and its conditionality (PEPOCH as
+   pulse arrival; a-priori 0.18); J1832's split is retired via the corrected 0.400-cycle
+   smear (`usable: false`); the J183950 phases are labelled a consistency check with the
+   shared anchor, not an independent validation (here and in this file).
+9. **Citations**: mcsweeney2025, wang2025, lee2025, pritchard2026 added (arXiv-verified,
+   copied from the lpt paper's round-10 entries); barbere2026lptv now carries the Zenodo
+   concept DOI and the specific committed filename.
+10. **The producer exists**: `lptduty_run.py` calls `write_paper_assets` (previously
+    caller-less), lptduty is in the Makefile SLICES (make paper SLICE=lptduty builds), and
+    the five hand-typed prose numbers are macros (\ldClusterZ/P, \ldJEDPhase, \ldPhaseA/B).
+11. MINORs: sample selection stated (10 of 16 with VAST coverage); the stale "GATE 0 not yet
+    tested" caveat replaced; n_detections unified on _is_detection (leakage veto); this
+    file's 0.046, "107", and "corroborates" corrected in place; \ldNDetSources used in the
+    caption.
