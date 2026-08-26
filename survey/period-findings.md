@@ -127,3 +127,37 @@ would wrongly appear to destroy the detection).
 **Verdict: MAJOR REVISION.** The single change: replace the analytic FAP in the abstract with
 the coincidence probability the paper itself calls the real validation (p ≈ 10⁻³, computable
 from committed data in minutes).
+
+**Status: RESOLVED (2026-08-26).** One real re-run (cached Catalog 1); every referee number
+reproduced by the committed pipeline before the prose changed — the collapsed Z² = 23.9 with
+analytic FAP 8.4×10⁻⁴ are the referee's exact predictions, the twin power came out 0.32 (they
+estimated 0.34 with a slightly different injection), and the coincidence probability landed in
+their 0.002–0.01 range.
+
+1. **Transit collapse implemented** (`collapse_transits`): the searched series is one epoch per
+   transit (19 bursts → 14 epochs for FRB 20180916B), closing the same-transit
+   pseudo-replication one level above the existing sub-burst collapse. Headline: Z² = 23.9,
+   P = 16.32 ± 0.09 d (epoch bootstrap — the "grid resolution" precision claim is retired).
+2. **The abstract prints the coincidence probability, not the disclaimed FAP**: `mc_null` +
+   `null_summary` measure both the exceedance and the how-often-does-the-peak-land-on-16.35
+   probabilities under a uniform null (0.004) and a clustered null bootstrapped from the OTHER
+   repeater's intervals (0.015) — the argument's real strength, ~3σ-equivalent, two orders of
+   magnitude weaker than the old 7×10⁻⁶ and perfectly good. The paper states measured evidence
+   that clustering (median null max-Z² 11.3 → 14.0), not aliasing, is what breaks the analytic
+   FAP, and the module docstring warns against the shuffle-own-intervals null that would
+   wrongly destroy a real detection (the referee's caution, now encoded).
+3. **The null has its power stated**: `detection_power` injects a twin of the detection (duty
+   cycle 0.244, measured by `measured_duty_cycle`) into FRB 20180814A's epochs/span — power
+   0.32 at the twin duty (1.00 at duty ≤ 0.15), quoted in the paper as "sensitive only to duty
+   cycles ≲ 0.2". The null source's own numbers (Z² = 9.4, FAP = 0.757 at 2.79 d) are now in
+   the metrics JSON (`searched` records every searched source, nulls included) and in print.
+4. **Evidence is committed**: results/period_epochs.csv (per-burst MJDs for all repeaters) so
+   the nulls and the headline are reproducible from committed artifacts; the tracked synthetic
+   results/period_results.csv is retired (offline runs write a gitignored *_synthetic.csv);
+   survey/period_results.csv gains the n_epochs column.
+5. **The figure clobber hole is closed** (synthetic runs cannot overwrite the real
+   periodogram; guarded + tested), and the figure itself now plots the collapsed epochs.
+6. MINORs: grid bounds/size and the FAP<0.01 threshold are macros (with the 4–11 min_bursts
+   insensitivity stated); \fpNunsearchable replaces the unevaluated "18 − 2" the PDF rendered;
+   "the correct recovery confirms it" → "is consistent with"; P quoted with its bootstrap
+   uncertainty everywhere.
