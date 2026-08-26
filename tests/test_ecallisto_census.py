@@ -71,29 +71,64 @@ def test_parse_silso_reads_semicolon_columns_and_drops_missing():
     assert np.allclose(out["decimal_year"], [2020.042, 2020.208])
 
 
+def test_validation_suite_arms_including_the_ones_that_fail():
+    v = census.validation_suite(n_seeds=8)
+    lin = v["linear"]
+    # the linear/stationary arm is the arithmetic check -- and its honesty companions:
+    # the raw (uncorrected) correlation is ALREADY high there (the correction is cosmetic on
+    # a stationary fixture), which the paper must state rather than imply the opposite
+    assert lin["pearson_r"] > 0.9
+    assert lin["raw_pearson_r"] > 0.85
+    assert v["k_true"] == 0.03
+    # the growth-history arm is where the correction genuinely rescues a broken raw correlation
+    g = v["growth"]
+    assert g["raw_pearson_r"] < 0.85
+    assert g["pearson_r"] > 0.95
+    assert g["pearson_r"] - g["raw_pearson_r"] > 0.1
+    # the misspecification arm CAN fail and does: saturating confirmation makes N/C
+    # over-correct, degrading the recovery and inducing a spurious anti-correlation with C
+    s = v["growth_saturating"]
+    assert s["pearson_r"] < g["pearson_r"] - 0.05
+    assert s["rate_coverage_corr"] < -0.3
+    # realization variance, not a single seed
+    assert v["slope_ensemble"]["sd"] > 0
+    assert abs(v["slope_ensemble"]["mean"] - 0.03) < 0.005
+
+
+def test_saturating_census_departs_from_linear():
+    sunspot = census.synthetic_sunspots(n_months=120, seed=0)
+    cov = census.growth_coverage(120, seed=0)
+    n_lin, _ = census.synthetic_census(sunspot, coverage=cov, seed=1)
+    n_sat, _ = census.synthetic_census(sunspot, coverage=cov, c_half=3.0, seed=1)
+    # saturation suppresses counts where coverage is high (late months)
+    assert n_sat[60:].sum() < n_lin[60:].sum()
+
+
 def test_run_offline_writes_artifacts_and_recovers_correlation(tmp_path):
     metrics = census.run(str(tmp_path), offline=True)
     assert metrics["source"] == "synthetic"
-    assert metrics["n_periods"] == 180
-    assert metrics["n_events_total"] > 0
-    assert metrics["pearson_r"] > 0.9
-    assert abs(metrics["slope"] - 0.03) < 0.01
+    assert metrics["linear"]["n_periods"] == 180
+    assert metrics["linear"]["pearson_r"] > 0.9
+    assert abs(metrics["linear"]["slope"] - 0.03) < 0.01
+    assert metrics["growth_saturating"]["rate_coverage_corr"] < -0.3
 
     saved = json.loads((tmp_path / "results" / "ecallisto_census_metrics.json").read_text())
     assert saved == metrics
     fig = tmp_path / "papers" / "ecallisto_census" / "figures" / "census.pdf"
     assert fig.exists() and fig.stat().st_size > 0
     macros = (tmp_path / "papers" / "ecallisto_census" / "generated" / "macros.tex").read_text()
-    assert r"\newcommand{\ecsPearson}" in macros
+    assert r"\newcommand{\ecsSynPearson}" in macros
+    assert r"\newcommand{\ecsSynKtrue}{0.03}" in macros
+    assert r"\newcommand{\ecsSynSatCovCorr}" in macros
     assert r"\newcommand{\ecsSource}{synthetic}" in macros
+    # real macros are placeholders offline, never fabricated
+    assert r"\newcommand{\ecsRealNdaysAttempted}{--}" in macros
 
 
 def test_write_macros_placeholders_for_missing_keys(tmp_path):
-    # the offline/real macro union: a None metric renders as the LaTeX-safe placeholder
+    # a None metric renders as the LaTeX-safe placeholder
     path = tmp_path / "macros.tex"
-    census._write_macros(
-        {"source": "e-Callisto x SILSO (0 days)", "pearson_r": None, "slope": None}, path
-    )
+    census._write_macros({"source": "synthetic"}, path)
     text = path.read_text()
-    assert r"\newcommand{\ecsPearson}{--}" in text
-    assert r"\newcommand{\ecsSlope}{--}" in text
+    assert r"\newcommand{\ecsSynPearson}{--}" in text
+    assert r"\newcommand{\ecsRealNevents}{--}" in text

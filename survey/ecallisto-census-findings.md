@@ -165,3 +165,39 @@ here measuring the right variance).
 **Verdict: MAJOR REVISION.** The single change: delete the real leg or re-run it and report
 45 days honestly — every misleading element descends from the five hand-entered macros. Then
 make the validation able to fail (saturating-confirmation arm + growth-history coverage).
+
+**Status: RESOLVED (2026-08-26).** One audit run (`--audit`: one day-index listing per committed
+date, no spectra) plus the restructured validation suite; the audit reproduced the referee's
+numbers exactly and they are now the paper's own.
+
+1. **BLOCKER 1**: the census table now carries listed-vs-fetched provenance per day. Audited:
+   **45 of 168 days ingested** (2011-01 → 2014-10), **123 days silently throttled with data
+   listed** — recorded as missing (blank), never zero, and `coverage_corrected_rate`'s NaN rule
+   plus `sample_real_days` now make an ingest failure structurally distinguishable from an
+   empty sky (failed day → coverage NaN; provenance columns committed). The paper reports the
+   attempted ingest as an audited failure and frames it as the concrete demonstration that the
+   real census is an ingest-infrastructure task.
+2. **BLOCKER 2**: the honesty sentence is rewritten to be exactly right — the validation's
+   event counts are synthetic and labelled per arm; SILSO enters the real leg, not the offline
+   validation.
+3. **The validation can now fail**: `validation_suite` (deterministic, recomputed every run —
+   no mode-dependent macros left) has three arms: linear/stationary ("correct by construction;
+   validates the implementation, not the statistic" — stated in print, with the uncorrected
+   r=0.916 and residual cov-corr +0.155 committed beside it), growth-history (raw 0.707 →
+   corrected 0.975 — the sentence "the correction rescues a broken raw census" is now true and
+   scoped to the arm where it is), and the misspecification arm (saturating confirmation, the
+   shape the pipeline's own ≥2-station threshold produces: r degrades to 0.604 with a spurious
+   coverage anti-correlation of −0.568 — committed as the diagnostic a real census must
+   report). k=0.03 is stated and macro'd; the slope ensemble (30 seeds: 0.0300 ± 0.0007) ships.
+4. **The hand-typed \ecsReal* macros are gone**: run() itself writes the real metrics file and
+   the audited CSV; macros renamed \ecsSyn*/\ecsReal* (\ecsSource kept as the mode marker); the
+   synthetic namespace is recomputed deterministically on every invocation so nothing can
+   clobber or stale it.
+5. **r = 0.28 is retired** from the metrics, macros, and paper — the real leg reports counts
+   (5 events on 2 of 45 ingested days) and the audit, with the 120 s tolerance disclosed
+   against the pipeline paper's published 60 s (sample_real_days' default is now 60 s).
+6. MINORs: C is defined in print as stations *successfully ingested* with the undercount
+   direction stated; silso2015's author corrected to Laure Lefèvre; the figure caption no
+   longer claims the statistic "is applied unchanged to the real stream"; \ecsRealSource is
+   emitted by code with a string the code can produce; the reproduction commands cover both
+   `--offline` and `--audit`.

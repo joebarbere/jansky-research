@@ -19,13 +19,16 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
+    "audit_day_listings",
     "census_correlation",
     "coverage_corrected_rate",
     "fetch_sunspots",
+    "growth_coverage",
     "parse_silso",
     "run",
     "synthetic_census",
     "synthetic_sunspots",
+    "validation_suite",
 ]
 
 SILSO_URL = "https://www.sidc.be/SILSO/DATA/SN_m_tot_V2.0.csv"
@@ -93,21 +96,102 @@ def synthetic_census(
     *,
     k: float = 0.03,
     coverage_mean: float = 12.0,
+    coverage: np.ndarray | None = None,
+    c_half: float | None = None,
     seed: int = 0,
 ) -> tuple[np.ndarray, np.ndarray]:
     r"""Synthetic monthly event counts whose true rate is proportional to the sunspot number.
 
-    For each month with sunspot $S$ and (varying) active-station coverage $C$, the true confirmed-event
-    count is Poisson with mean $k\,S\,C$, so the coverage-corrected rate $N/C$ has expectation $k\,S$ ---
-    proportional to activity. Returns ``(n_events, coverage)`` per month, from which
-    :func:`coverage_corrected_rate` + :func:`census_correlation` recover $r\approx1$ and slope $\approx k$.
+    For each month with sunspot $S$ and active-station coverage $C$, the confirmed-event count is
+    Poisson with mean $k\,S\,C_\mathrm{eff}$. With the default ``c_half=None`` the confirmation is
+    *linear* in coverage ($C_\mathrm{eff}=C$) --- the same model the $N/C$ estimator assumes, so a
+    recovery on this arm tests only arithmetic and Poisson robustness, never the correction itself
+    (the round-10 referee's circularity finding). ``c_half`` switches to a **saturating**
+    confirmation, $C_\mathrm{eff}=c_\mathrm{half}(1-e^{-C/c_\mathrm{half}})$ --- the shape a fixed
+    two-station coincidence threshold actually produces --- under which $N/C$ over-corrects and the
+    validation CAN fail; :func:`validation_suite` measures by how much. ``coverage`` supplies an
+    explicit station history (e.g. :func:`growth_coverage`); default is the stationary jittered one.
+    Returns ``(n_events, coverage)`` per month.
     """
     rng = np.random.default_rng(seed)
     s = np.asarray(sunspot, float)
-    coverage = np.clip(rng.normal(coverage_mean, coverage_mean * 0.25, s.size), 2.0, None)
-    lam = k * s * coverage
+    if coverage is None:
+        coverage = np.clip(rng.normal(coverage_mean, coverage_mean * 0.25, s.size), 2.0, None)
+    else:
+        coverage = np.asarray(coverage, float)
+    ceff = coverage if c_half is None else c_half * (1.0 - np.exp(-coverage / c_half))
+    lam = k * s * ceff
     n_events = rng.poisson(np.clip(lam, 0.0, None)).astype(float)
     return n_events, coverage
+
+
+def growth_coverage(
+    n_months: int, *, lo: float = 2.0, hi: float = 60.0, jitter: float = 0.15, seed: int = 0
+) -> np.ndarray:
+    """A station history shaped like the real network's: monotone growth ``lo`` → ``hi`` plus jitter.
+
+    The shipped stationary fixture (mean 12, ±25%) puts the coverage confound nowhere near the
+    decision boundary, so the raw count already correlates with activity and the correction is
+    cosmetic there. Under a growth history the raw correlation genuinely breaks and the correction
+    genuinely rescues it --- the demonstration the paper's prose claims.
+    """
+    rng = np.random.default_rng(seed)
+    t = np.linspace(0.0, 1.0, n_months)
+    base = lo + (hi - lo) * t
+    return np.clip(base * (1.0 + rng.normal(0.0, jitter, n_months)), 1.0, None)
+
+
+def validation_suite(
+    *, n_months: int = 180, k: float = 0.03, seed: int = 0, n_seeds: int = 30
+) -> dict:
+    """Every validation arm the census statistic needs, including the ones that can fail.
+
+    Arms: (1) the linear/stationary arm (the original recover-a-known --- correct-by-construction
+    for the estimator, kept as the arithmetic check, now reported WITH the uncorrected correlation
+    and the residual coverage correlation); (2) a growth-history arm where the correction genuinely
+    rescues a broken raw correlation; (3) a **misspecification** arm --- saturating confirmation,
+    the shape the pipeline's fixed two-station threshold produces --- where N/C over-corrects and
+    the corrected rate acquires a spurious anti-correlation with coverage, measured and committed;
+    (4) a seed ensemble for the slope (realization variance, not just one draw). Deterministic.
+    """
+    sunspot = synthetic_sunspots(n_months, seed=seed)
+
+    def _arm(n_events: np.ndarray, coverage: np.ndarray) -> dict:
+        rate = coverage_corrected_rate(n_events, coverage)
+        c = census_correlation(rate, sunspot)
+        raw = census_correlation(n_events, sunspot)
+        good = np.isfinite(rate)
+        cov_corr = float(np.corrcoef(rate[good], coverage[good])[0, 1]) if good.sum() > 4 else None
+        return {
+            "n_periods": c["n_periods"],
+            "n_events_total": int(np.nansum(n_events)),
+            "pearson_r": round(c["pearson_r"], 3),
+            "spearman_rho": round(c["spearman_rho"], 3),
+            "slope": round(c["slope"], 4),
+            "raw_pearson_r": round(raw["pearson_r"], 3),
+            "rate_coverage_corr": round(cov_corr, 3) if cov_corr is not None else None,
+        }
+
+    out: dict = {"k_true": k}
+    n, c = synthetic_census(sunspot, k=k, seed=seed)
+    out["linear"] = _arm(n, c)
+    gcov = growth_coverage(n_months, seed=seed)
+    ng, _ = synthetic_census(sunspot, k=k, coverage=gcov, seed=seed)
+    out["growth"] = _arm(ng, gcov)
+    ns, _ = synthetic_census(sunspot, k=k, coverage=gcov, c_half=3.0, seed=seed)
+    out["growth_saturating"] = _arm(ns, gcov)
+    slopes = []
+    for sd in range(n_seeds):
+        s_i = synthetic_sunspots(n_months, seed=sd)
+        n_i, c_i = synthetic_census(s_i, k=k, seed=sd)
+        slopes.append(census_correlation(coverage_corrected_rate(n_i, c_i), s_i)["slope"])
+    arr = np.asarray(slopes, float)
+    out["slope_ensemble"] = {
+        "n_seeds": n_seeds,
+        "mean": round(float(np.mean(arr)), 4),
+        "sd": round(float(np.std(arr, ddof=1)), 4),
+    }
+    return out
 
 
 def parse_silso(text: str) -> dict:
@@ -138,13 +222,20 @@ def fetch_sunspots() -> dict:  # pragma: no cover - network
 
 
 def sample_real_days(
-    dates: list[str], *, window_hours: tuple[int, int] = (9, 13)
+    dates: list[str], *, window_hours: tuple[int, int] = (9, 13), dt_tol_s: float = 60.0
 ) -> list[dict]:  # pragma: no cover - network
     """Scan a fixed UT window of each e-Callisto day → per-day confirmed events + station coverage.
 
-    For a consistent occurrence-rate proxy, only files whose start hour is in ``window_hours`` are scanned
-    (a fixed sunlit window, sampled identically every day). Returns one row per date with the
-    coincidence-confirmed event count and the number of active stations.
+    For a consistent occurrence-rate proxy, only files whose start hour is in ``window_hours`` are
+    scanned (a fixed sunlit window, sampled identically every day). Each row now carries its own
+    provenance --- ``n_files_listed`` / ``n_stations_listed`` (from the day index) alongside
+    ``n_files_fetched`` / ``coverage`` (what actually downloaded and parsed) --- so a day where the
+    ingest failed is distinguishable from a day where nobody observed. The round-10 referee found
+    123 of 168 committed days with coverage 0 that the live archive lists 26--45 stations for: the
+    per-file index re-download inside ``solarbursts.fetch_ecallisto`` was throttled and every
+    failure vanished into a bare except. A day with files listed but none fetched now records
+    coverage NaN (ingest failure), never 0. ``dt_tol_s`` defaults to the pipeline paper's published
+    60 s (the earlier run used 120 s, which is recorded with the committed evidence).
     """
     from . import ecallisto_catalog as ec
     from . import solarbursts
@@ -152,80 +243,209 @@ def sample_real_days(
     rows_out = []
     h0, h1 = window_hours
     for date in dates:
-        files = [
+        listed = [
             (s, f) for (s, f) in ec.list_day_files(date) if h0 <= int(f.split("_")[2][:2]) < h1
         ]
         rows = []
-        for station, fname in files:
+        n_fetched = 0
+        for station, fname in listed:
             hhmmss = fname.split("_")[2]
             try:
                 spec = solarbursts.fetch_ecallisto(station, date, hhmmss[:4])
             except Exception:
                 continue
+            n_fetched += 1
             r = ec.scan_spectrum(spec)
             r["station"] = station
             if r.get("t_peak_s") is not None:
                 start = int(hhmmss[:2]) * 3600 + int(hhmmss[2:4]) * 60 + int(hhmmss[4:6])
                 r["t_peak_s"] = round(start + r["t_peak_s"], 1)
             rows.append(r)
-        events = ec.coincident_events(rows, dt_tol_s=120.0)
+        events = ec.coincident_events(rows, dt_tol_s=dt_tol_s)
+        coverage: float = len({r["station"] for r in rows})
+        if listed and n_fetched == 0:
+            coverage = float("nan")  # ingest failure, not an empty sky
         rows_out.append(
-            {"date": date, "n_events": len(events), "coverage": len({r["station"] for r in rows})}
+            {
+                "date": date,
+                "n_events": len(events),
+                "coverage": coverage,
+                "n_files_listed": len(listed),
+                "n_stations_listed": len({s for s, _ in listed}),
+                "n_files_fetched": n_fetched,
+            }
         )
     return rows_out
 
 
-def run(out: str = ".", *, offline: bool = True, dates: list[str] | None = None) -> dict:
-    """Full slice: build the type III occurrence census and correlate the rate with the sunspot number."""
-    from pathlib import Path
+def audit_day_listings(
+    dates: list[str], *, window_hours: tuple[int, int] = (9, 13), pause: float = 0.3
+) -> list[dict]:  # pragma: no cover - network
+    """Light audit: for each date, what the archive LISTS in the window (one index GET per day).
 
-    if offline or dates is None:
-        sunspot = synthetic_sunspots()
-        n_events, coverage = synthetic_census(sunspot)
-        rate = coverage_corrected_rate(n_events, coverage)
-        source = "synthetic"
-        xlabel = np.arange(sunspot.size, dtype=float)
-    else:  # pragma: no cover - network
-        ss = fetch_sunspots()
-        samples = sample_real_days(dates)
-        # pair each sampled day with its month's sunspot number
-        n_events = np.array([s["n_events"] for s in samples], float)
-        coverage = np.array([s["coverage"] for s in samples], float)
-        yrs = np.array([int(d[:4]) + (int(d[4:6]) - 0.5) / 12.0 for d in dates], float)
-        sunspot = np.interp(yrs, ss["decimal_year"], ss["sunspot"])
-        rate = coverage_corrected_rate(n_events, coverage)
-        source = f"e-Callisto x SILSO ({len(dates)} days)"
-        xlabel = yrs
+    No spectra are downloaded. This is the cheap check that separates "the sky was empty / nobody
+    observed" from "the ingest failed": a committed census day with coverage 0 but a non-zero
+    listing here was a silent fetch failure and must not enter any denominator.
+    """
+    import time
 
-    corr = census_correlation(rate, sunspot)
-    metrics = {
-        "source": source,
-        "n_periods": corr["n_periods"],
-        "n_events_total": int(np.nansum(n_events)),
-        "pearson_r": round(corr["pearson_r"], 3) if np.isfinite(corr["pearson_r"]) else None,
-        "spearman_rho": round(corr["spearman_rho"], 3)
-        if np.isfinite(corr["spearman_rho"])
-        else None,
-        "slope": round(corr["slope"], 4) if np.isfinite(corr["slope"]) else None,
-    }
-    if not (offline or dates is None):  # pragma: no cover - network
-        # The real leg also fills its own macro namespace (see _write_macros).
-        metrics.update(
-            real_source=source,
-            real_n_days=len(dates),
-            real_n_events_total=metrics["n_events_total"],
-            real_n_days_with_events=int(np.sum(n_events > 0)),
-            real_pearson_r=metrics["pearson_r"],
+    from . import ecallisto_catalog as ec
+
+    h0, h1 = window_hours
+    out = []
+    for date in dates:
+        try:
+            listed = [
+                (s, f) for (s, f) in ec.list_day_files(date) if h0 <= int(f.split("_")[2][:2]) < h1
+            ]
+        except Exception:
+            listed = None
+        out.append(
+            {
+                "date": date,
+                "n_files_listed": len(listed) if listed is not None else None,
+                "n_stations_listed": len({s for s, _ in listed}) if listed is not None else None,
+            }
         )
+        if pause:
+            time.sleep(pause)
+    return out
+
+
+def run(
+    out: str = ".",
+    *,
+    offline: bool = True,
+    dates: list[str] | None = None,
+    audit: bool = False,
+) -> dict:
+    """Full slice: the deterministic validation suite, plus (optionally) a real leg or its audit.
+
+    The validation suite is computed on EVERY invocation (it is deterministic), so the synthetic
+    namespace is always populated and there is no mode-dependent macro left to clobber. ``dates``
+    runs the heavy real ingest with per-day provenance; ``audit=True`` re-lists the day indexes for
+    the days already committed in ``results/ecallisto_census_realdays.csv`` (one cheap GET per day,
+    no spectra) and rewrites that CSV with listed-vs-fetched columns plus the real metrics file ---
+    the check that turned "168 sampled days" into "45 ingested + 123 silent failures".
+    """
+    import csv as _csv
+    from pathlib import Path
 
     op = Path(out)
     (op / "results").mkdir(parents=True, exist_ok=True)
     from .report import write_results
 
+    syn = validation_suite()
+    metrics: dict = {"source": "synthetic", **syn}
     write_results(metrics, op / "results" / "ecallisto_census_metrics.json")
-    _figure(xlabel, rate, sunspot, op / "papers" / "ecallisto_census" / "figures")
+
+    real: dict | None = None
+    if dates is not None and not offline:  # pragma: no cover - network
+        ss = fetch_sunspots()
+        samples = sample_real_days(dates)
+        _write_realdays_csv(op / "results" / "ecallisto_census_realdays.csv", samples)
+        real = _real_summary(samples, dt_tol_s=60.0)
+        real["source"] = f"e-Callisto x SILSO ({len(dates)} days attempted)"
+        real["n_silso_months"] = int(ss["sunspot"].size)
+        write_results(real, op / "results" / "ecallisto_census_real_metrics.json")
+    elif audit:  # pragma: no cover - network
+        path = op / "results" / "ecallisto_census_realdays.csv"
+        with path.open() as fh:
+            committed = list(_csv.DictReader(fh))
+        auditrows = audit_day_listings([r["date"] for r in committed])
+        by_date = {a["date"]: a for a in auditrows}
+        merged = []
+        for r in committed:
+            a = by_date.get(r["date"], {})
+            cov = float(r["coverage"])
+            listed = a.get("n_stations_listed")
+            ingest_failed = bool(listed) and cov == 0
+            merged.append(
+                {
+                    "date": r["date"],
+                    "n_events": int(r["n_events"]),
+                    "coverage": float("nan") if ingest_failed else cov,
+                    "n_files_listed": a.get("n_files_listed"),
+                    "n_stations_listed": listed,
+                    "n_files_fetched": None,
+                }
+            )
+        _write_realdays_csv(path, merged)
+        real = _real_summary(merged, dt_tol_s=120.0)
+        real["source"] = (
+            f"e-Callisto x SILSO ({len(merged)} days attempted; ingest audited "
+            "2026-08 against the live day indexes)"
+        )
+        write_results(real, op / "results" / "ecallisto_census_real_metrics.json")
+
+    if real is not None:  # pragma: no cover - network
+        metrics.update({f"real_{k}": v for k, v in real.items() if k != "source"})
+        metrics["real_source"] = real["source"]
+
+    # the figure and macros always describe the deterministic validation
+    sunspot = synthetic_sunspots()
+    n_events, coverage = synthetic_census(sunspot)
+    rate = coverage_corrected_rate(n_events, coverage)
+    _figure(
+        np.arange(sunspot.size, dtype=float),
+        rate,
+        sunspot,
+        op / "papers" / "ecallisto_census" / "figures",
+    )
     _write_macros(metrics, op / "papers" / "ecallisto_census" / "generated" / "macros.tex")
     return metrics
+
+
+def _real_summary(rows: list[dict], *, dt_tol_s: float) -> dict:  # pragma: no cover - network
+    """Counts-only summary of the real leg: no correlation coefficient on a handful of events."""
+
+    def _cov(r: dict) -> float:
+        try:
+            return float(r["coverage"])
+        except (TypeError, ValueError):
+            return float("nan")
+
+    ing = [r for r in rows if np.isfinite(_cov(r)) and _cov(r) > 0]
+    failed = [
+        r
+        for r in rows
+        if (not np.isfinite(_cov(r)) or _cov(r) == 0) and (r.get("n_stations_listed") or 0) > 0
+    ]
+    dates_ing = sorted(r["date"] for r in ing)
+    return {
+        "n_days_attempted": len(rows),
+        "n_days_ingested": len(ing),
+        "n_days_ingest_failed_with_data_listed": len(failed),
+        "ingested_span": [dates_ing[0], dates_ing[-1]] if dates_ing else None,
+        "n_events_total": int(sum(int(r["n_events"]) for r in ing)),
+        "n_days_with_events": int(sum(int(r["n_events"]) > 0 for r in ing)),
+        "dt_tol_s": dt_tol_s,
+    }
+
+
+def _write_realdays_csv(path, rows: list[dict]) -> None:  # pragma: no cover - network
+    import csv
+    from pathlib import Path
+
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    cols = [
+        "date",
+        "n_events",
+        "coverage",
+        "n_files_listed",
+        "n_stations_listed",
+        "n_files_fetched",
+    ]
+    with p.open("w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        for r in rows:
+            row = {c: r.get(c) for c in cols}
+            cov = row["coverage"]
+            if isinstance(cov, float) and not np.isfinite(cov):
+                row["coverage"] = ""  # ingest failure: blank, never 0
+            w.writerow(row)
 
 
 def _figure(x: np.ndarray, rate: np.ndarray, sunspot: np.ndarray, out_dir) -> None:
@@ -268,25 +488,48 @@ def _write_macros(m: dict, path) -> None:
         val = m.get(key)
         return "--" if val is None else str(val)
 
-    # Both namespaces are emitted on every run: the un-namespaced \ecs* names carry the synthetic
-    # validation the paper is scoped to, and \ecsReal* carries the committed illustrative real
-    # ingest. Each run fills what it knows and leaves the rest as placeholders for
-    # preserve_live_macros to restore -- the merge accumulates values, not names, so a writer
-    # that emits only its own namespace would DELETE the other's numbers (the ecallisto_catalog
-    # lesson, 2026-08-23).
+    lin = m.get("linear") or {}
+    grow = m.get("growth") or {}
+    sat = m.get("growth_saturating") or {}
+    ens = m.get("slope_ensemble") or {}
+    span = m.get("real_ingested_span") or [None, None]
+
+    def _g(dic: dict, key: str) -> str:
+        val = dic.get(key)
+        return "--" if val is None else str(val)
+
+    def _mon(s: str | None) -> str:
+        return "--" if not s else f"{s[:4]}-{s[4:6]}"
+
+    # The validation suite is deterministic and recomputed on every run, so the \ecsSyn*
+    # namespace can never go stale or be clobbered by a mode change; \ecsReal* carries the
+    # audited real-ingest counts (no correlation coefficient -- five events cannot support one).
     lines = [
         "% Auto-generated by jansky_research.ecallisto_census._write_macros -- do not edit by hand.",
         rf"\newcommand{{\ecsSource}}{{{_fmt('source')}}}",
-        rf"\newcommand{{\ecsNperiods}}{{{_fmt('n_periods')}}}",
-        rf"\newcommand{{\ecsNevents}}{{{_fmt('n_events_total')}}}",
-        rf"\newcommand{{\ecsPearson}}{{{_fmt('pearson_r')}}}",
-        rf"\newcommand{{\ecsSpearman}}{{{_fmt('spearman_rho')}}}",
-        rf"\newcommand{{\ecsSlope}}{{{_fmt('slope')}}}",
+        rf"\newcommand{{\ecsSynKtrue}}{{{_fmt('k_true')}}}",
+        rf"\newcommand{{\ecsSynNperiods}}{{{_g(lin, 'n_periods')}}}",
+        rf"\newcommand{{\ecsSynNevents}}{{{_g(lin, 'n_events_total')}}}",
+        rf"\newcommand{{\ecsSynPearson}}{{{_g(lin, 'pearson_r')}}}",
+        rf"\newcommand{{\ecsSynSpearman}}{{{_g(lin, 'spearman_rho')}}}",
+        rf"\newcommand{{\ecsSynSlope}}{{{_g(lin, 'slope')}}}",
+        rf"\newcommand{{\ecsSynRawPearson}}{{{_g(lin, 'raw_pearson_r')}}}",
+        rf"\newcommand{{\ecsSynCovCorr}}{{{_g(lin, 'rate_coverage_corr')}}}",
+        rf"\newcommand{{\ecsSynSlopeMean}}{{{_g(ens, 'mean')}}}",
+        rf"\newcommand{{\ecsSynSlopeSD}}{{{_g(ens, 'sd')}}}",
+        rf"\newcommand{{\ecsSynGrowthRawPearson}}{{{_g(grow, 'raw_pearson_r')}}}",
+        rf"\newcommand{{\ecsSynGrowthPearson}}{{{_g(grow, 'pearson_r')}}}",
+        rf"\newcommand{{\ecsSynSatPearson}}{{{_g(sat, 'pearson_r')}}}",
+        rf"\newcommand{{\ecsSynSatCovCorr}}{{{_g(sat, 'rate_coverage_corr')}}}",
         rf"\newcommand{{\ecsRealSource}}{{{_fmt('real_source')}}}",
-        rf"\newcommand{{\ecsRealNdays}}{{{_fmt('real_n_days')}}}",
+        rf"\newcommand{{\ecsRealNdaysAttempted}}{{{_fmt('real_n_days_attempted')}}}",
+        rf"\newcommand{{\ecsRealNdaysIngested}}{{{_fmt('real_n_days_ingested')}}}",
+        rf"\newcommand{{\ecsRealNdaysFailed}}{{{_fmt('real_n_days_ingest_failed_with_data_listed')}}}",
         rf"\newcommand{{\ecsRealNevents}}{{{_fmt('real_n_events_total')}}}",
         rf"\newcommand{{\ecsRealNdaysWithEvents}}{{{_fmt('real_n_days_with_events')}}}",
-        rf"\newcommand{{\ecsRealPearson}}{{{_fmt('real_pearson_r')}}}",
+        rf"\newcommand{{\ecsRealSpanStart}}{{{_mon(span[0])}}}",
+        rf"\newcommand{{\ecsRealSpanEnd}}{{{_mon(span[1])}}}",
+        rf"\newcommand{{\ecsRealTolS}}{{{_fmt('real_dt_tol_s')}}}",
     ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -309,9 +552,14 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     p.add_argument("--out", default=".")
     p.add_argument("--offline", action="store_true")
     p.add_argument("--dates", help="comma-separated YYYYMMDD days for the real run")
+    p.add_argument(
+        "--audit",
+        action="store_true",
+        help="re-list the day indexes for the committed realdays CSV (no spectra downloads)",
+    )
     args = p.parse_args(argv)
     dates = args.dates.split(",") if args.dates else None
-    metrics = run(args.out, offline=args.offline or not dates, dates=dates)
+    metrics = run(args.out, offline=args.offline or not dates, dates=dates, audit=args.audit)
     print(json.dumps(metrics, indent=2))
     return 0
 

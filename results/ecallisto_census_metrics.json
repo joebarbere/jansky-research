@@ -1,8 +1,36 @@
 {
   "source": "synthetic",
-  "n_periods": 180,
-  "n_events_total": 4651,
-  "pearson_r": 0.968,
-  "spearman_rho": 0.963,
-  "slope": 0.0302
+  "k_true": 0.03,
+  "linear": {
+    "n_periods": 180,
+    "n_events_total": 4651,
+    "pearson_r": 0.968,
+    "spearman_rho": 0.963,
+    "slope": 0.0302,
+    "raw_pearson_r": 0.916,
+    "rate_coverage_corr": 0.155
+  },
+  "growth": {
+    "n_periods": 180,
+    "n_events_total": 11317,
+    "pearson_r": 0.975,
+    "spearman_rho": 0.968,
+    "slope": 0.0303,
+    "raw_pearson_r": 0.707,
+    "rate_coverage_corr": -0.073
+  },
+  "growth_saturating": {
+    "n_periods": 180,
+    "n_events_total": 1153,
+    "pearson_r": 0.604,
+    "spearman_rho": 0.757,
+    "slope": 0.0039,
+    "raw_pearson_r": 0.888,
+    "rate_coverage_corr": -0.568
+  },
+  "slope_ensemble": {
+    "n_seeds": 30,
+    "mean": 0.03,
+    "sd": 0.0007
+  }
 }

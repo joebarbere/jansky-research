@@ -11,6 +11,23 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **ecallisto_census round-10 revision: the real leg is an audited ingest failure, and the
+  validation gained the arms that can fail.** The census table now carries listed-vs-fetched
+  provenance per day; the audit (`--audit`, one index GET per committed date) confirms 45 of
+  168 days ingested (2011-01 -> 2014-10) and 123 silently throttled days with data listed --
+  now recorded as missing, never zero, with sample_real_days marking failed days NaN and
+  committing per-day provenance. r = 0.28 is retired (counts only: 5 events on 2 of 45 days;
+  the 120 s tolerance disclosed against the pipeline's published 60 s, and the default fixed).
+  The validation suite is deterministic and recomputed on every run (no mode-dependent macros
+  remain; \ecsSyn*/\ecsReal* namespaced, all code-written): the linear arm is labelled
+  correct-by-construction with its uncorrected r (0.916) and residual coverage correlation
+  committed beside it; a growth-history arm shows the correction genuinely rescuing a broken
+  raw census (0.707 -> 0.975); and a saturating-confirmation misspecification arm -- the shape
+  the pipeline's own >=2-station threshold produces -- measurably fails (r 0.604, spurious
+  coverage anti-correlation -0.568), giving the statistic a committed failure diagnostic. The
+  injected k = 0.03 is stated and macro'd with a 30-seed slope ensemble (0.0300 +/- 0.0007);
+  the honesty sentence is exactly right again; silso2015's author is corrected (Laure
+  Lefevre).
 - **Round-10 review verdicts: frbperiod, lpt, ecallisto_census, rfitrend (four major
   revisions, six blockers).** Full presenter/referee rounds on the four highest-risk papers
   without one; every referee reproduced the committed numbers before attacking them, and each
