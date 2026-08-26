@@ -57,18 +57,17 @@ def ecallisto_ingest():
 
     @task()
     def scan_station(item: dict) -> dict:
-        """Fetch + scan one station's spectrum (one mapped task per station --- the fan-out)."""
-        from jansky_research import ecallisto_catalog, solarbursts
+        """Fetch + scan one station's file (one mapped task per file --- the fan-out).
 
-        hhmmss = item["file"].split("_")[2]
-        spec = solarbursts.fetch_ecallisto(item["station"], item["date"], hhmmss[:4])
-        row = ecallisto_catalog.scan_spectrum(spec)
-        row["station"] = item["station"]
+        Calls the SAME shared worker as ``make ecallisto-day`` (ecallisto_catalog.scan_file),
+        which fetches exactly the listed file; the DAG previously reimplemented this inline
+        with different error semantics and an HHMM re-resolution that could analyse a
+        different file than listed.
+        """
+        from jansky_research import ecallisto_catalog
+
+        row = ecallisto_catalog.scan_file(item["station"], item["date"], item["file"])
         row["date"] = item["date"]
-        # peak time as universal time-of-day (file start + local peak) so coincidence compares one clock
-        if row.get("t_peak_s") is not None:
-            start = int(hhmmss[:2]) * 3600 + int(hhmmss[2:4]) * 60 + int(hhmmss[4:6])
-            row["t_peak_s"] = round(start + row["t_peak_s"], 1)
         # Airflow 3 serialises XCom as STRICT JSON: a NaN anywhere in the returned dict raises
         # "Out of range float values are not JSON compliant" and fails the task. Airflow 2's
         # encoder allowed NaN, so this only appears at runtime, on stations whose scan yields

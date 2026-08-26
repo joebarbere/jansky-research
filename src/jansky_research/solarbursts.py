@@ -377,13 +377,17 @@ def speed_grid(ridge_freqs: np.ndarray, ridge_times: np.ndarray) -> list[dict]:
 
 
 def fetch_ecallisto(
-    station: str, date_yyyymmdd: str, hhmm: str
+    station: str, date_yyyymmdd: str, hhmm: str, *, filename: str | None = None
 ) -> dict:  # pragma: no cover - network
-    """Fetch + parse one e-Callisto 15-minute dynamic spectrum covering ``hhmm`` on ``date``.
+    """Fetch + parse one e-Callisto 15-minute dynamic spectrum.
 
-    Lists the public archive day-directory, picks the ``station`` file whose start time most closely
-    precedes ``hhmm``, downloads the gzipped FITS, and returns ``data`` (n_freq x n_time), ``freqs``
-    (MHz), ``times`` (s). No authentication; the archive is open over HTTP.
+    With ``filename`` given, fetches EXACTLY that file --- the path a caller that already listed
+    the day must use. Without it, lists the day-directory and picks the ``station`` file whose
+    start time most closely precedes ``hhmm``; note that resolution sends ``HHMM59``-starting
+    files to the PREVIOUS file and collapses focus-code siblings onto the first match, so a
+    caller iterating a day listing through the ``hhmm`` path can analyse a different file than
+    the one it listed (the round-11 ecallisto_pipeline referee measured 64% mismatches on a real
+    day). Returns ``data`` (n_freq x n_time), ``freqs`` (MHz), ``times`` (s). No authentication.
     """
     import gzip
     import io
@@ -395,16 +399,18 @@ def fetch_ecallisto(
     base = "http://soleil.i4ds.ch/solarradio/data/2002-20yy_Callisto"
     yyyy, mm, dd = date_yyyymmdd[:4], date_yyyymmdd[4:6], date_yyyymmdd[6:8]
     day_url = f"{base}/{yyyy}/{mm}/{dd}/"
-    idx = requests.get(day_url, timeout=60).text
-    pat = rf"{re.escape(station)}_{date_yyyymmdd}_([0-9]{{6}})_[0-9]+\.fit\.gz"
-    want = int(hhmm) * 100  # HHMM -> HHMM00 seconds-of-day key
-    best, best_dt = None, None
-    for m in re.finditer(pat, idx):
-        start = int(m.group(0).split("_")[2])
-        if start <= want and (best_dt is None or want - start < best_dt):
-            best, best_dt = m.group(0), want - start
+    best = filename
     if best is None:
-        raise RuntimeError(f"no e-Callisto {station} file near {hhmm} on {date_yyyymmdd}")
+        idx = requests.get(day_url, timeout=60).text
+        pat = rf"{re.escape(station)}_{date_yyyymmdd}_([0-9]{{6}})_[0-9]+\.fit\.gz"
+        want = int(hhmm) * 100  # HHMM -> HHMM00 seconds-of-day key
+        best_dt = None
+        for m in re.finditer(pat, idx):
+            start = int(m.group(0).split("_")[2])
+            if start <= want and (best_dt is None or want - start < best_dt):
+                best, best_dt = m.group(0), want - start
+        if best is None:
+            raise RuntimeError(f"no e-Callisto {station} file near {hhmm} on {date_yyyymmdd}")
     raw = gzip.decompress(requests.get(day_url + best, timeout=120).content)
     with fits.open(io.BytesIO(raw)) as hd:
         data = np.asarray(hd[0].data, float)

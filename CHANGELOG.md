@@ -11,6 +11,26 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **ecallisto_pipeline round-11 revision: the scanned file is the listed file, and the
+  committed day is real.** list_day_files de-duplicates the index (each filename rendered
+  twice: n_scanned had double-counted every file), and a shared scan_file worker fetches
+  EXACTLY the listed file (fetch_ecallisto gained filename=; the HHMM re-resolution that made
+  64% of rows analyse a different file than labelled -- corrupting the coincidence clock --
+  is documented as the lesson). The 2011-09-14 day re-run end to end confirms the referee's
+  numbers: 763 listed, 761 scanned (2 fetch failures counted, never silent), 2 candidates
+  (the phantom 8 were duplicates) -- BIR's at 11:51:06 UT, the known type III, auditable from
+  the committed t_peak_s/file columns the catalogue now carries -- 3.2 h from OOTY's, 0
+  coincident. Each leg writes its own figure (the committed real-output-under-synthetic-
+  caption blocker is structurally closed); the DAG's scan task calls the same scan_file as
+  make ecallisto-day; the fixture gained morphology contaminants that can defeat it (carrier,
+  broadband impulse 30 s away -- inside the tolerance -- and a reverse-drift ridge; all
+  rejected) plus a committed 60-seed ensemble (60/60 exact recovery, 0 false flags) replacing
+  the single-seed sentence; confirmed events carry their span (single-linkage can chain past
+  the tolerance -- stated); chance_coincidence_rate commits the QC's closed-form reliability
+  number (0.0292 synthetic / 0.0014 real); the real-day null is in the abstract with its
+  honest reading (13 of 15 stations saw nothing on a known-burst day: the single-station
+  threshold, not coverage, binds); per-leg source macros fix a downgrade-guard see-saw;
+  60 s / 2 stations became macros; the census sibling's 120 s tolerance is cross-referenced.
 - **driftsearch round-11 revision: the carrier is located in the data, and Voyager-1 is
   recovered.** validate_voyager no longer asserts a carrier frequency: locate_carrier finds
   the brightest non-DC narrowband feature by MAD-z (8419.29696 MHz in this file) and

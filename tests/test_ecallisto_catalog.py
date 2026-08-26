@@ -40,7 +40,7 @@ def test_scan_day_recovers_injected_bursts():
 def test_synthetic_coincident_day_and_coincidence():
     # a real burst at 4 stations (same UT) + 3 single-station RFI (distinct times) + 3 quiet
     specs = ec.synthetic_coincident_day(n_coincident=4, n_rfi=3, n_quiet=3, seed=0)
-    assert len(specs) == 10
+    assert len(specs) == 13  # + 3 morphology contaminants (carrier, impulse, reverse drift)
     rows = ec.scan_day_specs(specs)
     assert sum(r["is_burst"] for r in rows) == 7  # 4 real + 3 RFI detected as candidates
     events = ec.coincident_events(rows, dt_tol_s=60.0, min_stations=2)
@@ -66,14 +66,15 @@ def test_coincident_events_on_rows():
 def test_run_offline_writes_catalogue(tmp_path):
     m = ec.run(out=str(tmp_path), offline=True)
     assert m["source"] == "synthetic-day"
-    assert m["n_scanned"] == 10 and m["n_bursts"] == 7
+    assert m["n_scanned"] == 13 and m["n_bursts"] == 7  # 13 = +3 morphology contaminants
     # the coincidence QC confirms one real burst and rejects the single-station RFI
     assert m["n_events"] == 1 and m["max_event_stations"] == 4 and m["n_rfi_rejected"] == 3
     # Each leg keeps its own evidence file, so the synthetic run cannot displace the real one.
     assert (tmp_path / "results" / "ecallisto_synthetic_catalog.csv").exists()
     assert (tmp_path / "results" / "ecallisto_synthetic_metrics.json").exists()
     assert not (tmp_path / "results" / "ecallisto_metrics.json").exists()
-    assert (tmp_path / "papers" / "ecallisto_pipeline" / "figures" / "ecallisto.pdf").exists()
+    # per-leg figure names: the synthetic leg can never overwrite the real panel again
+    assert (tmp_path / "papers" / "ecallisto_pipeline" / "figures" / "ecallisto_syn.pdf").exists()
     macros = (tmp_path / "papers" / "ecallisto_pipeline" / "generated" / "macros.tex").read_text()
     # Namespaced, and the synthetic leg fills only its own half. The un-namespaced names this
     # test used to assert are the defect: both legs wrote them, so the committed file held the
@@ -86,3 +87,45 @@ def test_run_offline_writes_catalogue(tmp_path):
     # The real half is emitted as placeholders for preserve_live_macros to fill from disk;
     # emitting only the synthetic namespace would delete the real values outright.
     assert r"\newcommand{\ecRealNevents}{--}" in macros
+
+
+def test_morphology_contaminants_are_rejected_not_promoted():
+    """The fixture can now fail on the morphology axis: a carrier and a broadband impulse sit
+    within the 60 s tolerance of EACH OTHER, so if the scan passed them they would be promoted
+    as a spurious two-station event."""
+    specs = ec.synthetic_coincident_day(seed=0)
+    rows = ec.scan_day_specs(specs)
+    morph = [r for r in rows if r["station"] in ("STATION10", "STATION11", "STATION12")]
+    assert len(morph) == 3
+    assert not any(r["is_burst"] for r in morph)
+    events = ec.coincident_events(rows)
+    assert len(events) == 1 and events[0]["n_stations"] == 4
+    assert events[0]["span_s"] <= 60.0
+
+
+def test_synthetic_ensemble_rates():
+    e = ec.synthetic_ensemble(n_seeds=12)
+    assert e["n_recovered_exactly"] == 12  # every seed confirms exactly the injected event
+    assert e["n_quiet_false_flags"] == 0
+    assert e["n_contaminant_false_flags"] == 0
+    assert e["drift_sd"] is not None and e["drift_sd"] < 0.1
+
+
+def test_chance_coincidence_rate_closed_form():
+    # two stations with 3 and 4 candidates in a day at 60 s tolerance
+    r = ec.chance_coincidence_rate([3, 4], dt_tol_s=60.0)
+    assert abs(r - 3 * 4 * 120.0 / 86400.0) < 1e-12
+    # more stations add pairwise terms
+    r3 = ec.chance_coincidence_rate([2, 2, 2])
+    assert abs(r3 - 3 * 4 * 120.0 / 86400.0) < 1e-12
+
+
+def test_coincident_events_report_their_span():
+    rows = [
+        {"station": f"S{i}", "is_burst": True, "t_peak_s": 1000.0 + 50.0 * i, "drift_mhz_s": -5.0}
+        for i in range(8)
+    ]
+    ev = ec.coincident_events(rows)
+    # single-linkage chains all eight (adjacent gaps 50 s < 60 s) -- and the span says so
+    assert len(ev) == 1 and ev[0]["n_stations"] == 8
+    assert abs(ev[0]["span_s"] - 350.0) < 1e-9
