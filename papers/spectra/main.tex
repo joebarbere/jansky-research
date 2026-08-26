@@ -22,8 +22,8 @@ Ultra-steep-spectrum (USS) radio sources are an efficient way to find high-redsh
 indices, and selects USS candidates ($\alpha<\usThreshold$). In a \usRadius$^\circ$ field at
 $(\usFieldRa^\circ, +\usFieldDec^\circ)$ it matches \usNmatched\ sources (median
 $\alpha=\usAlphaMedian$) and flags \usNuss\ raw candidates. Scoring the whole field against the
-\citet{degasperin2018} TGSS$\times$NVSS spectral-index catalogue --- built from the same
-uncorrected ADR1 fluxes, so the comparison measures matching and selection, not the flux scale ---
+\citet{degasperin2018} TGSS$\times$NVSS spectral-index catalogue (built from the same
+uncorrected ADR1 fluxes, so the comparison measures matching and selection, not the flux scale)
 shows no population offset ($\Delta\alpha=+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ over
 \usRealNPairs\ detection pairs, identical on both sides of the rescaled-coverage declination edge).
 The candidates nonetheless sit $\Delta\alpha=\usRealFlaggedOffset$ below their reference values,
@@ -47,7 +47,7 @@ the steepest-spectrum sources ($\alpha<\usThreshold$) are preferentially high-re
 \citealt{intema2017}) with a 1.4~GHz survey (NVSS; \citealt{condon1998}) makes USS selection
 straightforward in principle. We built a reproducible tool to do it and asked whether a blind
 catalogue-level run produces a candidate list one should believe. The answer, measured against the
-1.4-million-source reference catalogue of \citet{degasperin2018}, is no --- and the two reasons are
+1.4-million-source reference catalogue of \citet{degasperin2018}, is no, and the two reasons are
 not the one we first suspected.
 
 \section{Method and data}
@@ -61,8 +61,8 @@ and flags $\alpha<\usThreshold$ as USS. We ran it on a \usRadius$^\circ$ cone ce
 $(\alpha,\delta)=(\usFieldRa^\circ,+\usFieldDec^\circ)$, a high-latitude extragalactic field near
 the North Galactic Pole; the expected number of chance coincidences at this match radius is
 \usChanceMatches\ (committed, not asserted). Every routine is tested on a synthetic field with
-injected indices --- including sources injected \emph{at} the USS boundary, where the selection
-operates --- so the suite runs offline: on the fixture the raw cut recovers the injected USS
+injected indices, including sources injected at the USS boundary where the selection
+operates, so the suite runs offline: on the fixture the raw cut recovers the injected USS
 population at purity \usSynCutPurity\ and completeness \usSynCutCompleteness\ under the fixture's
 small, well-behaved errors, which is precisely why the real-sky failure below is informative: what
 breaks it is the real error and sensitivity structure, not the arithmetic.
@@ -71,8 +71,8 @@ breaks it is the real error and sensitivity structure, not the arithmetic.
 \paragraph{The population statistics are consistent.} The run matches \usNmatched\ sources with a
 median $\alpha=\usAlphaMedian$ (Figure~\ref{fig:hist}), consistent with the typical $-0.7$ to
 $-0.8$ of flux-limited extragalactic radio samples and with the weighted mean of the
-\citet{degasperin2018} catalogue. This is a weak check --- a median is insensitive to everything
-this paper goes on to measure --- so we treat it as consistency, not validation.
+\citet{degasperin2018} catalogue. This is a weak check: a median is insensitive to everything
+measured below, so we treat it as consistency, not validation.
 \paragraph{Raw USS candidates.} \usNuss\ sources fall below the $\alpha<\usThreshold$ cut (steepest
 $\alpha=\usAlphaMin$; Figure~\ref{fig:scatter}). None has a measured redshift or high-$z$
 classification in NED or SIMBAD, i.e.\ candidates, not confirmations.
@@ -87,31 +87,31 @@ the USS cut $\alpha=\usThreshold$.}
 
 \section{Scoring the field against the reference catalogue}
 The reference is \citet{degasperin2018}, the 1.4-million-source TGSS$\times$NVSS spectral-index
-catalogue. One point must be stated first: that catalogue is built from the \emph{same uncorrected
-TGSS~ADR1 fluxes} as this tool --- its authors bound the effect of the \citet{hurleywalker2017}
-flux-scale scatter on their indices at $\sim$0.06 (their \S4) --- so a raw-minus-reference
+catalogue. One point must be stated first: that catalogue is built from the same uncorrected
+TGSS~ADR1 fluxes as this tool (its authors bound the effect of the \citet{hurleywalker2017}
+flux-scale scatter on their indices at $\sim$0.06, their \S4), so a raw-minus-reference
 difference is structurally incapable of measuring the TGSS flux scale, which is common to both
 sides. What it does measure is matching, deblending, and selection. We therefore score the
-\emph{whole field}, not just the candidates, and commit the comparison
+whole field, not just the candidates, and commit the comparison
 (\code{results/uss\_reference\_check.csv}; Figure~\ref{fig:compare}).
 
 \paragraph{No population offset.} Over the \usRealNPairs\ sources whose nearest reference entry is
 a genuine two-survey detection (\code{Scode=S}), the mean raw-minus-reference offset is
-$+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ --- zero --- with per-source scatter \usRealScatter,
+$+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ (zero), with per-source scatter \usRealScatter,
 matching the combined formal errors (\usRealScatterExp). Split at the $+30^\circ$ declination edge
 of the rescaled-TGSS coverage, the two sides are indistinguishable
 ($+\usRealDecLeMean\pm\usRealDecLeSE$ vs.\ $+\usRealDecGtMean\pm\usRealDecGtSE$): there is no
-declination-edge effect in this field, and no mechanism for one --- neither catalogue applies the
-rescaling.
+declination-edge effect in this field, and no mechanism for one, since neither catalogue applies
+the rescaling.
 
 \paragraph{The candidate offset is selection, not calibration.} The \usNuss\ raw candidates sit
 below their reference values by $\Delta\alpha=\usRealFlaggedOffset$ (over the detection rows; one
 candidate's reference entry is a non-detection limit, on which more below). An earlier draft of
-this work attributed exactly this offset to the TGSS flux scale. The population statistics above
+this analysis attributed exactly this offset to the TGSS flux scale. The population statistics above
 refute that, and a zero-free-parameter model supplies the real cause: treating the reference
 indices as truth and re-selecting on truth $+$ each source's own measurement noise predicts a mean
-offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected set --- selection on the extreme of
-a noisy variable produces most of the observed offset with no calibration error anywhere. This is
+offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected set. Selection on the extreme of
+a noisy variable produces most of the observed offset, with no calibration error anywhere. This is
 committed as \code{selection\_bias\_mc} and is the number any candidate-list offset must be
 compared against before invoking a systematic.
 
@@ -126,11 +126,11 @@ population in the same cone (its \code{Scode=S} entries with $\alpha<\usThreshol
 \usNuss\ candidates, \usRealNFlaggedRefUss\ is USS in the reference (purity \usRealPurityPct\%);
 of the \usRealNRefUss\ genuine reference USS sources in the field, the raw cut recovers
 \usRealNRefUssRec\ (completeness \usRealCompletenessPct\%). The incompleteness is structural, not
-statistical. A source enters the matched sample only if detected in \emph{both} surveys; with the
+statistical. A source enters the matched sample only if detected in both surveys; with the
 documented survey floors (NVSS $\sim$2.5~mJy, TGSS~ADR1 $\sim$24.5~mJy) the pair is equally
 sensitive only down to $\alpha\approx\usAlphaMatch$, and for anything steeper NVSS is the limiting
 survey: to be flagged at the cut requires $S_{150}\geq\usSNeededThr$~mJy, and at
-$\alpha=\usAlphaProbe$ (our steepest candidate) $S_{150}\geq\usSNeededProbe$~mJy --- a flux
+$\alpha=\usAlphaProbe$ (our steepest candidate) $S_{150}\geq\usSNeededProbe$~mJy, a flux
 exceeded by only a fraction \usFracAboveSNeeded\ of the matched sample. USS sources are truncated
 out of a joint TGSS$\times$NVSS detection by construction.
 
@@ -138,7 +138,7 @@ out of a joint TGSS$\times$NVSS detection by construction.
 \plotone{figures/alpha_compare.pdf}
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every matched source
 with a reference counterpart. The population lies on the identity line (mean offset
-$+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it by the amount the committed
+$+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of which the committed
 selection-on-a-noisy-variable model predicts. The open circle is the candidate whose reference
 entry is a non-detection limit (\code{Scode=L}), excluded from all means.}
 \label{fig:compare}
@@ -155,8 +155,8 @@ $\alpha=\usAlphaProbe$.}
 
 \section{Limitations}
 (i)~The TGSS~ADR1 flux-scale term of \citet{hurleywalker2017} is an approximately zero-mean
-position-dependent \emph{scatter} of $\sim$15--17\%, contributing $\sim$0.06--0.07 to individual
-indices --- it broadens the per-source comparison (our measured scatter \usRealScatter\ matches the
+position-dependent scatter of $\sim$15--17\%, contributing $\sim$0.06--0.07 to individual
+indices; it broadens the per-source comparison (our measured scatter \usRealScatter\ matches the
 formal errors) but does not systematically steepen a field, and this field shows no offset.
 (ii)~At $15\arcsec$ the expected number of chance coincidences is \usChanceMatches\ across the
 matched sample; the tightest USS matches are robust, the loosest less so. (iii)~A two-point index
@@ -168,8 +168,8 @@ either side of it in either catalogue.
 
 \section{Discussion and reproducibility}
 The honest outcome is a negative, cautionary result, sharper than the one an earlier draft of this
-work claimed. There is no evidence that the TGSS flux scale biases this field's indices --- the
-population offset against the reference is zero and the declination-edge mechanism is refuted by
+analysis claimed. There is no evidence that the TGSS flux scale biases this field's indices: the
+population offset against the reference is zero, and the declination-edge mechanism is refuted by
 measurement. What actually breaks a raw TGSS$\times$NVSS USS candidate list is (a) selection on
 the extreme of a noisy index, which manufactures a spurious steepening of the selected few that a
 committed zero-free-parameter model reproduces, and (b) matched-sensitivity truncation, which

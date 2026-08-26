@@ -10,32 +10,35 @@ Algorithm as Pure PyTorch Tensor Operations}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-The workhorse DSP kernels of pulsar and FRB astronomy are locked to specific platforms:
-coherent dedispersion lives in C++/CUDA codes \citep{vanstraten2011,bassa2017}, the
-SumThreshold and spectral-kurtosis RFI filters \citep{offringa2010,nita2010} have GPU
-implementations only behind CUDA-locked CuPy \citep{kania2026}, and no GPU Fast Folding
-Algorithm \citep{staelin1969,morello2020} was publicly usable as of this writing. We present
-\code{torch-dsp}: all three as pure PyTorch tensor operations with one \code{device=}
-argument covering CPU, CUDA, and ROCm, benchmarked on a consumer AMD RX 7600 XT, a card no
-production pulsar code supports.
-Correctness is anchored per kernel. The chirp is checked against the cold-plasma dispersion
-law itself (group-delay residual $\tdRealGroupDelayResid$ samples; the 99.5\%-energy impulse
-round trip bounds precision only), and
-its sign convention is measured on real data: the conjugate kernel does not sharpen the
-burst. Spectral kurtosis and sequential-mode SumThreshold are byte-identical to tested CPU
-references; the tensor-parallel SumThreshold's evaluation-order difference is quantified
-(Jaccard \tdRealStJaccard, swept and split by direction). The FFA recovers an injected period to the nearest drift-grid point against a
-brute-force folding oracle. On real data, coherent dedispersion of a CHIME/FRB baseband
-event \citep{chimebaseband2024} maximises the burst S/N at the catalogue DM
-(\tdRealChimeDm\,pc\,cm$^{-3}$) among trials at 0, $\pm$5, $\pm$20\,pc\,cm$^{-3}$; Parkes
-real-RFI mask agreement is \tdRealCrabJaccard. A planned validation returns a calibrated
-null: the \tdRealCrabDur-s Crab file gives fold S/N \tdRealCrabFoldPub\ at the published
-period against a same-volume noise level of \tdRealCrabNoiseSnr, with injections recovered
-only from \tdRealCrabInjMin$\sigma$ per pulse. The kernel checks re-run on the ROCm device
-reproduce the CPU results. Benchmarks are single-session with introspected hardware: the
-FFA gains \tdRealSpeedupFfa$\times$ on the GPU (\tdRealBenchFfaCpu\,s to
-\tdRealBenchFfaGpu\,s); the chirp is transfer-bound to near parity; the SumThreshold's
-per-series loop is GPU-hostile. Portability comes first, speed second.
+Coherent dedispersion for pulsar and FRB work lives in compiled codes, none of them
+PyTorch or JAX: C++/CUDA
+\citep{vanstraten2011,bassa2017}; the SumThreshold and spectral-kurtosis RFI filters
+\citep{offringa2010,nita2010} have GPU implementations only behind CUDA-locked CuPy
+\citep{kania2026}; and no GPU Fast Folding Algorithm \citep{staelin1969,morello2020}
+was publicly usable as of this writing. We present \code{torch-dsp}: all three as pure
+PyTorch tensor operations under one \code{device=} argument covering CPU, CUDA, and
+ROCm, benchmarked on a consumer AMD RX 7600 XT, a card no production pulsar code
+supports.
+Correctness is checked per kernel. The chirp matches the cold-plasma dispersion law to
+a group-delay residual of $\tdRealGroupDelayResid$ samples (the 99.5\%-energy impulse
+round trip bounds precision only), and its sign convention is measured on real data:
+the conjugate kernel does not sharpen the burst. Spectral kurtosis and sequential-mode
+SumThreshold are byte-identical to tested CPU references; the tensor-parallel
+SumThreshold's evaluation-order difference is quantified (Jaccard \tdRealStJaccard,
+swept and split by direction). The FFA recovers an injected period to the nearest
+drift-grid point against a brute-force folding oracle. Coherent dedispersion of a
+CHIME/FRB baseband event \citep{chimebaseband2024} maximises the burst S/N at the
+catalogue DM (\tdRealChimeDm\,pc\,cm$^{-3}$) among trials at 0, $\pm$5,
+$\pm$20\,pc\,cm$^{-3}$; the tensor SumThreshold mask agrees with the CPU reference at
+Jaccard \tdRealCrabJaccard\ on real Parkes RFI. A planned Crab-pulsar validation
+returns a calibrated null instead: the \tdRealCrabDur-s file gives fold S/N
+\tdRealCrabFoldPub\ at the published period against a same-volume noise level of
+\tdRealCrabNoiseSnr, with injected pulses recovered only from \tdRealCrabInjMin$\sigma$
+per pulse. Kernel checks re-run on a ROCm device reproduce the CPU results. Benchmarks are single-session
+with hardware introspected, not typed: the FFA runs \tdRealSpeedupFfa$\times$ faster
+on the GPU (\tdRealBenchFfaCpu\,s to \tdRealBenchFfaGpu\,s); the chirp is
+transfer-bound to near parity; the SumThreshold's per-series loop is GPU-hostile. The
+implementation favors portability over speed.
 \end{abstract}
 
 \keywords{Astronomy software (1855) --- Radio astronomy (1338) ---
@@ -69,9 +72,9 @@ channels are batched into single FFT calls, since a per-channel host loop erases
 the same lesson hit and fixed in \code{torch-fdmt}. Two conventions are stated rather than
 assumed. The kernel's sign depends on the backend's sideband/conjugation convention (dspsr
 parameterises this directly); the round-trip test is sign-self-consistent by construction,
-so the sign is anchored by a measurement on the CHIME leg --- dedispersing with the
+so the sign is anchored by a measurement on the CHIME leg: dedispersing with the
 conjugate kernel at the catalogue DM returns S/N \tdRealChimeConjSnr\ where the shipped sign
-returns 4.0 --- and other backends may need the conjugate. Both the chirp multiply and the
+returns 4.0, and other backends may need the conjugate. Both the chirp multiply and the
 inter-channel gather are circular, with no overlap-save discard region, which is correct for
 a burst captured mid-buffer but requires overlap-save on top for streaming use. Validation
 is two-layered, because a round trip against the exact inverse filter composes the chirp
@@ -80,9 +83,9 @@ directly: the chirp's numerical group delay matches the cold-plasma
 $k_\mathrm{DM}\,\mathrm{DM}\,\nu^{-2}$ delay to $\tdRealGroupDelayResid$ samples across the
 channel, a check that fails loudly for a wrong constant or exponent. The round trip then
 bounds numerical precision: an impulse dispersed by the exact inverse filter (DM 100--150)
-re-collapses to zero peak offset with 99.5\% of its energy re-concentrated --- through
+re-collapses to zero peak offset with 99.5\% of its energy re-concentrated (through
 \code{dedisperse\_channelized}, the wrapped-complex64 path every science and benchmark
-result uses, as well as through the complex128 single-channel variant --- while a wrong-DM
+result uses, as well as through the complex128 single-channel variant), while a wrong-DM
 control stays smeared.
 
 \subsection{RFI excision}
@@ -104,9 +107,8 @@ symmetric difference is also split by direction, since over-flagging (data loss)
 under-flagging (missed RFI) are operationally different: at the default the two modes'
 exclusive flags are nearly balanced on synthetic RFI (\tdRealStParOnly\ parallel-only vs
 \tdRealStCpuOnly\ reference-only samples), while on the Parkes data the parallel mode
-over-flags (\tdRealCrabParOnly\ vs \tdRealCrabCpuOnly\ of $\sim$524k samples --- data loss,
-not missed RFI). Injected narrowband and broadband RFI are fully caught by both modes. One
-trap is worth recording:
+over-flags (\tdRealCrabParOnly\ vs \tdRealCrabCpuOnly\ of $\sim$524k samples: data loss,
+not missed RFI). Injected narrowband and broadband RFI are fully caught by both modes. Note that
 \code{torch}'s even-length median takes the lower middle element where NumPy averages, so
 robust-statistics scalars must be computed NumPy-side, or the masks silently diverge.
 
@@ -114,14 +116,14 @@ robust-statistics scalars must be computed NumPy-side, or the masks silently div
 The implementation follows the radix-2 Staelin recursion, with each merge stage expressed
 as a batched gather over per-drift circular shifts (periods $p + j/(m{-}1)$ samples).
 Against a brute-force folding oracle sharing the same profile S/N statistic, an injected
-233.7-sample period is recovered to the nearest drift-grid point --- the injected value is
+233.7-sample period is recovered to the nearest drift-grid point (the injected value is
 not on the grid, whose spacing here is \tdRealFfaDriftRes\ samples, so the rounded error
-\tdRealFfaErr\ means ``within one grid cell,'' not ``exactly'' --- at S/N \tdRealFfaSnr\
-(oracle: \tdRealOracleSnr\ at the exact period). The S/N gap is not merely attributed but
-predicted and checked: power-of-two row truncation ($\sqrt{2^{\lfloor\log_2 m\rfloor}/m}$)
+\tdRealFfaErr\ means ``within one grid cell,'' not ``exactly'') at S/N \tdRealFfaSnr\
+(oracle: \tdRealOracleSnr\ at the exact period). The S/N gap is quantitatively predicted and
+checked against the measurement: power-of-two row truncation ($\sqrt{2^{\lfloor\log_2 m\rfloor}/m}$)
 times $\sim$2-bin quantisation smearing ($1/\sqrt2$) predicts a ratio of
-\tdRealFfaRatioPred, against a measured \tdRealFfaRatioMeas; both are committed. Flat noise
-stays quiet.
+\tdRealFfaRatioPred, against a measured \tdRealFfaRatioMeas; both are committed. On flat
+noise the FFA's best peak stays at the noise level.
 
 \begin{figure*}
 \centering
@@ -138,8 +140,8 @@ showing best profile S/N per base period and peaking at the injected 233.7-sampl
 The science legs below were run on CPU; the timings in Section~\ref{sec:bench} were measured
 on a ROCm device (RX 7600 XT), a card absent from every production pulsar pipeline's support
 matrix. Cross-device agreement is measured rather than assumed: the full offline kernel
-suite --- chirp round trips, spectral-kurtosis and SumThreshold oracle comparisons, and the
-FFA recover-a-known --- was re-run on the ROCm device in the same session as the benchmarks
+suite (chirp round trips, spectral-kurtosis and SumThreshold oracle comparisons, and the
+FFA recover-a-known) was re-run on the ROCm device in the same session as the benchmarks
 and committed alongside the CPU results (\code{cross\_device\_check} in
 \code{results/torchdsp\_metrics.json}).
 
@@ -155,25 +157,25 @@ search over the whole series, so the argmax of every trial is committed
 consistent with noise excursions in trials whose residual inter-channel smear ($\sim$7\,ms
 across the saved band at $\Delta\mathrm{DM}=5$) buries the burst. That smearing figure is
 also why the test is more discriminating than the modest S/N suggests: at DM 556 the
-\emph{intra}-channel smear alone is $\sim$3--28\,ms across the band, one to two orders above
-the 0.256-ms boxcar, so any boxcar detection at all requires the coherent chirp --- and its
-sign --- to be right; incoherent inter-channel alignment alone would leave the burst smeared
+intra-channel smear alone is $\sim$3--28\,ms across the band, one to two orders above
+the 0.256-ms boxcar, so any boxcar detection at all requires the coherent chirp, and its
+sign, to be right; incoherent inter-channel alignment alone would leave the burst smeared
 away. The six-point grid localises the DM only to $\pm$5, so the structure is taken as a
 validation of the machinery (and of the chirp sign, via the conjugate trial of
 Section~\ref{sec:kernels}) rather than as a DM measurement.
 
-\subsection{Parkes Crab filterbank: a null with a measured selection function}
+\subsection{Parkes Crab filterbank: a calibrated null}
 The tensor SumThreshold mask agrees with the CPU reference at Jaccard \tdRealCrabJaccard\ on
 real RFI. The planned Crab period re-find, however, is not supported by this
 \tdRealCrabDur-s file, and the null now carries its own calibration rather than an
 attribution. The brute fold at the published 33.7\,ms gives S/N \tdRealCrabFoldPub\ (nothing
 to find; the file was vendored for giant-pulse work). The FFA's formal peak
 (\tdRealCrabPeriodMs\,ms, S/N 5.2) sits at the measured noise level for this search volume
---- the same length and period range on pure noise returns \tdRealCrabNoiseSnr\ --- and is
+(the same length and period range on pure noise returns \tdRealCrabNoiseSnr) and is
 reported as not significant. What the file could have seen is measured by injection: a pulse
 train at the published period added to the real dedispersed series is recovered only from
 \tdRealCrabInjMin$\sigma$ per pulse (committed as a ladder), so the data length, not the
-algorithm, is the limit --- now as a statement with evidence. The synthetic injections carry
+algorithm, is the limit, now shown directly rather than assumed. The synthetic injections carry
 the FFA's validation.
 
 \section{Benchmarks and limits}
@@ -194,8 +196,8 @@ GPU), because its outer loop over series is host-side, the same vectorization wa
 documented for \code{torch-fdmt}. A batched 2-D variant is the stated next step, not an
 implied capability. No comparison is made against tuned CUDA codes on datacentre GPUs; the
 contribution is a single pip-installable, autograd-native implementation that runs from one
-code path on CPU, CUDA and ROCm, including hardware nothing else supports --- with the
-cross-device agreement of every kernel check committed (Section 3), not assumed.
+code path on CPU, CUDA and ROCm, including hardware nothing else supports, with the
+cross-device agreement of every kernel check committed (Section 3) rather than assumed.
 
 Every number above is generated by \code{jansky\_research.torchdsp}
 (\code{results/torchdsp\_metrics.json} $\to$ macros). The real-data legs use CANFAR DOI
