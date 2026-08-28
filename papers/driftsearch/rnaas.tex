@@ -1,0 +1,105 @@
+\documentclass[RNAAS]{aastex631}
+
+% Every number is \input from the pipeline-generated macros; the committed evidence is
+% results/drift_metrics.json (benchmark) and results/drift_voyager.json (real leg).
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{Voyager 1 Re-Recovered with a Minimal Open Drift Search: a Seeded Benchmark and Two
+Measured Pitfalls}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+An independent, pure-NumPy replication of the standard narrowband-drift-search validation on
+the public Breakthrough Listen Voyager~1 data: locating the carrier in the data at
+\dsVoyFreq~MHz (measured drift \dsVoyDriftHz~Hz\,s$^{-1}$), a brute-force de-drift search
+recovers it at S/N~$=\dsVoySnr$. A fully seeded CPU-only injection--recovery benchmark
+accompanies it (50\% completeness at internal S/N~$\approx\dsCfifty$, threshold \dsThreshold,
+committed noise-only statistics), with two pitfalls measured in the same file: the band-center
+DC spike, $\sim10^{3}\times$ brighter than the carrier, which a brightest-channel search
+reports instead; and a spurious null from searching an asserted rather than located carrier
+frequency, which an earlier version of the underlying analysis reported and this one retracts.
+\end{abstract}
+
+\section{}
+
+A narrowband transmitter drifts in frequency with the line-of-sight acceleration; SETI
+pipelines de-drift the dynamic spectrum to recover such tones, and the field's standard
+end-to-end validation is recovering the Voyager~1 carrier in Green Bank Telescope data
+\citep{enriquez2017,lebofsky2019}. That validation has, to our knowledge, no published
+independent replication with a minimal open detector, and reported injection--recovery
+efficiencies have no shared reference cell on which two detectors can be compared on identical
+inputs. This note supplies both, in the tested \code{jansky\_research.driftsearch} module
+wrapping the teaching-grade brute-force search of the \code{jansky} package, with
+\code{setigen} \citep{brzycki2022} as the standard for the injection side.
+
+The benchmark cell is fully specified and seeded: $\dsNtime\times\dsNfreq$ waterfalls of unit
+Gaussian noise, a \dsNsearchDrifts-point drift grid, a single injected drifting tone per
+trial, \dsNtrials\ trials per (S/N, drift) cell at a detection threshold of \dsThreshold.
+Drift-averaged completeness reaches 50\% at injected S/N~$\approx\dsCfifty$ and 90\% at
+$\approx\dsCninety$ (Figure~\ref{fig:recovery}), with the full per-drift matrix committed. No
+false positive occurred in \dsFprTrials\ noise-only trials (one-sided 95\% bound
+\dsFprBound\%); the committed noise-only peak distribution (mean \dsNoiseMean, maximum
+\dsNoiseMax) shows the threshold sits $\sim$18$\sigma$ above the noise-only mean, so that
+bound describes a conservative operating point, not a calibration near the boundary.
+Injecting half a grid step off the searched drifts moves the 50\% crossing to
+\dsOffGridCfifty, within binomial scatter, so on-grid injection is not flattering the
+completeness. The S/N and drift units are the synthetic model's internal units: the benchmark
+compares detectors on a common reference, not on the sky, and it contains no interference or
+observing cadence.
+
+On the real data, the first measured pitfall is the band-center spectrometer DC-spike
+artifact, in this file $\sim10^{3}\times$ brighter than the carrier: a brightest-channel
+``detection'' reports it at S/N~$\dsVoyDcSnr$ and is wrong. The pipeline therefore locates
+the carrier rather than asserting it: masking the DC region and normalising the time-averaged
+spectrum by its median absolute deviation, the brightest narrowband feature sits at
+\dsVoyFreq~MHz, flanked by the telemetry-subcarrier sidebands, with a directly measured
+per-sample peak walk of \dsVoyDriftChan\ channels\,sample$^{-1}$
+($=\dsVoyDriftHz$~Hz\,s$^{-1}$). Evaluated there, the search returns S/N~$=\dsVoySnr$ at a
+best-fit drift of \dsVoyBestDrift\ channels\,sample$^{-1}$, one grid step from the measured
+walk, against a blank-window \dsVoyBlankSnr.
+
+The second pitfall is the reason this note exists. An earlier version of the underlying
+analysis searched at an asserted carrier frequency of \dsVoyLegacyFreq~MHz
+\citep{estevez2021} and reported a ``Voyager-1 null'' (S/N~\dsVoyLegacySnr). In this file
+that frequency is blank sky, $\sim$0.92~MHz from the carrier (the scale of a
+topocentric/barycentric frame difference at X band, though the mechanism is not confirmed
+here); the null was a targeting error, not a property of the detector, and it is retracted,
+with the wrong frequency kept in the committed evidence as the lesson. Both failure modes
+carry the same moral: what separates a toy detector from purpose-built SETI software
+\citep{enriquez2017} is artifact handling and carrier location, not sensitivity, and a
+validation should locate its known signal in the data rather than assume where it is.
+
+Every number above is regenerated by the tested pipeline; the benchmark reruns from a clean
+checkout and the Voyager leg from the cached public file \citep{lebofsky2019,macmahon2018}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/drift_recovery.pdf}
+\caption{Injection--recovery completeness of the drift detector over injected S/N and drift
+rate (\dsNtrials\ trials per cell, threshold \dsThreshold). The drift-averaged 50\% point is
+at S/N~$\approx\dsCfifty$. Units are the detector's internal model units, not calibrated
+janskys or Hz\,s$^{-1}$; every value is regenerated by
+\code{jansky\_research.driftsearch}.}
+\label{fig:recovery}
+\end{figure}
+
+\begin{acknowledgments}
+Developed collaboratively with Anthropic's Claude \citep{anthropicclaude} (a large language
+model); the author directed and verified the work, and an AI assistant is not an eligible
+author. This work uses the public Breakthrough Listen open-data archive; the author thanks
+the Breakthrough Listen team for releasing the Voyager-1 Green Bank Telescope data.
+\end{acknowledgments}
+
+\software{jansky-research \citep{janskyresearch}, jansky \citep{jansky}, NumPy, SciPy,
+Matplotlib}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}

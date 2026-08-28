@@ -10,6 +10,20 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **driftsearch RNAAS note (plan 94): the replication note nobody has written.**
+  `papers/driftsearch/rnaas.tex` (~810 countable words, one figure) condenses the seeded
+  injection–recovery benchmark and the Voyager-1 carrier recovery into an RNAAS-shaped
+  independent replication of the field's standard validation, led by the two measured
+  pitfalls (the DC-spike trap in the exact public file newcomers download; the
+  locate-don't-assert spurious null, retracted with its 0.92 MHz number). GATE-0 recorded:
+  ADS shows no existing RNAAS replication of the Voyager validation nor any published
+  drift-search benchmark, and RNAAS is Breakthrough Listen's own venue at this scale. Every
+  value comes from the existing pipeline macros (verified against the two committed JSONs).
+  A deliberate exception to the recover-a-knowns-stay-in-repo venue policy, argued in the
+  plan. Submission is gated on a paper-referee round of the note (the wdpulsar condensation
+  lesson), owed in a future session.
+
 ## [1.9.0] - 2026-08-26
 
 ### Changed
