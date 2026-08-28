@@ -199,3 +199,33 @@ locate-don't-assert failure mode with its 0.92 MHz number. Every value from the 
 condensation introduces errors — is unmitigated here beyond an inline self-check (this
 session's subagent budget was exhausted; the self-check caught one overstatement,
 "published"→"reported"). Do not submit to journals.aas.org until a referee round runs.
+
+## RNAAS note condensation referee round (2026-08-28): NEEDS FIXES → applied
+
+Run inline (session subagent budget exhausted; every number re-derived from the two committed
+JSONs rather than delegated). One MAJOR, three MINOR, all fixed:
+
+- **MAJOR — a mis-scoped citation the condensation introduced.** "with \code{setigen} as the
+  standard for the injection side" read as though this work uses setigen; it is prior art
+  (the injector is jansky's own synthetic tone — main.tex states this correctly). Rewritten:
+  setigen standardized injection; this cell fixes injector and detector together.
+- **MINOR — "~18σ above the noise-only mean" is 20.4σ** under the committed stats
+  ((10 − 4.114)/0.289). Inherited from main.tex, where it was equally wrong (understating
+  conservatism — the rare error in the safe direction). Both fixed to ~20σ.
+- **MINOR — ambiguous retraction referent** in the abstract ("this one retracts") → "its
+  revision retracts".
+- **MINOR — software credits wrong in both papers**: SciPy is never imported by the slice
+  and Astropy only appeared in main.tex's template line; h5py, which actually reads the
+  Voyager file, was uncredited. Both \software lines corrected (astropy2022 citation removed;
+  no other use).
+
+Verified clean: all macro-quoted values match drift_metrics.json/drift_voyager.json
+(997↔997.1, 1.3↔1.2819, 1.5↔1.4734, 0.75%↔0.00746, 0.92 MHz↔8420.216−8419.29696); the
+"one grid step" drift agreement (2.45 vs 2.444); the "no published independent replication"
+claim is hedged and consistent with plan 94's GATE-0 (estevez2021's blog decode is neither
+published nor a drift-search replication, and it is cited); RNAAS constraints met (824
+countable words, one figure, abstract). Style: zero HIGH on the rnaas baseline (one LOW,
+sentence length, shared with the repo's other notes).
+
+**The submission gate recorded in plan 94 is CLOSED. The note is ready to submit** —
+alongside wdpulsar and frbstats, pending Joe's own read.

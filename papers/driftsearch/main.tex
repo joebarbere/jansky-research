@@ -67,7 +67,7 @@ sensitivities; the benchmark compares detectors on a common reference, not on th
 
 \section{Benchmark results}
 The noise-only best peak distribution is committed with the benchmark: mean \dsNoiseMean, standard
-deviation \dsNoiseSd, maximum \dsNoiseMax\ over \dsFprTrials\ draws, so the threshold of \dsThreshold\ sits roughly $18\sigma$ above the noise-only mean, and ``no false positives''
+deviation \dsNoiseSd, maximum \dsNoiseMax\ over \dsFprTrials\ draws, so the threshold of \dsThreshold\ sits roughly $20\sigma$ above the noise-only mean, and ``no false positives''
 (one-sided 95\% bound \dsFprBound\%) is a statement about a very conservative operating point,
 not a calibration near the boundary. The drift-averaged completeness reaches 50\% at injected
 S/N~$\approx\dsCfifty$ and 90\% at $\approx\dsCninety$ (Figure~\ref{fig:recovery}); the full
@@ -129,7 +129,7 @@ The author acknowledges the collaborative contribution of Anthropic's Claude and
 project, and the Breakthrough Listen team for the public Voyager-1 data.
 \end{acknowledgments}
 
-\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude}, Astropy \citep{astropy2022}, NumPy, SciPy, Matplotlib,
+\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude}, NumPy, h5py, Matplotlib,
 jansky \citep{jansky}}
 
 \bibliographystyle{aasjournal}
