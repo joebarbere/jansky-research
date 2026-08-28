@@ -332,3 +332,42 @@ def test_rnaas_query_is_not_refereed_filtered() -> None:
     assert "bibstem:RNAAS" in q
     assert f"year:2017-{sc.CUTOFF_YEAR - 1}" in q
     assert "refereed" not in q
+
+
+def test_latex_paper_title_extracts_and_collapses():
+    tex = "\\title{A Survey of\n  Something \\code{x}}\n\\begin{document}"
+    assert sc.latex_paper_title(tex) == "A Survey of Something \\code{x}"
+    assert sc.latex_paper_title("no title here") is None
+
+
+def test_title_sentence_like_detection():
+    # sentence-shaped titles (finite verb, not a question) fire
+    assert sc.title_is_sentence_like(
+        "Long-Period Transients Are Caught in a Few Per Cent of Snapshots"
+    )
+    assert sc.title_is_sentence_like("The Census Proves Method-Limited")
+    # noun phrases do not
+    assert not sc.title_is_sentence_like(
+        "Implied Active Fractions of the Long-Period Transients from Archival Snapshots"
+    )
+    assert not sc.title_is_sentence_like("A Search for Eclipse Cycles in Archival Data")
+    # genuine questions are corpus-attested and exempt
+    assert not sc.title_is_sentence_like("Is HS 240 an Interstellar Bubble?")
+
+
+def test_lint_flags_sentence_title_by_genre():
+    fp = {"title_sentence_like": 1.0, "title_words": 12.0}
+    paper = sc.lint_paper(fp, {}, genre="paper")
+    note = sc.lint_paper(fp, {}, genre="rnaas")
+    assert ("MED", "title_sentence_like") in [(s, m) for s, m, _ in paper]
+    assert ("LOW", "title_sentence_like") in [(s, m) for s, m, _ in note]
+    # over-long titles are LOW in both
+    long_fp = {"title_sentence_like": 0.0, "title_words": 25.0}
+    assert [(s, m) for s, m, _ in sc.lint_paper(long_fp, {})] == [("LOW", "title_words")]
+
+
+def test_fingerprint_latex_carries_title_metrics():
+    tex = "\\title{The Sky Is Falling on Radio Surveys}\n\\begin{abstract}x\\end{abstract} body"
+    fp = sc.fingerprint_latex(tex)
+    assert fp["title_sentence_like"] == 1.0
+    assert fp["title_words"] == 7.0

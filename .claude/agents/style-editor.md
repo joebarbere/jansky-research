@@ -28,6 +28,10 @@ reviewer here gutted committed results by "checking" one.
    - no claim gets stronger or weaker — register changes, strength does not;
    - validations, limits, and negatives stay (in-line, with magnitudes, in
      declarative sentences — that is what the corpus itself does).
+   The paper title (`\title{}`) IS in scope (guide §S4b: noun phrase, ≤~18 words;
+   sentence titles are a 0.9%-of-corpus anomaly, RNAAS 6.0%) — but do not silently
+   reword it: propose old → new in your report and let the caller apply it, since a
+   title is the author's most visible wording and may encode a negotiated framing.
 4. Gates, in order; if one fails, fix and re-run before proceeding:
    - `... prose_lint.py papers/<slice> --diff-guard`
    - `... prose_lint.py papers/<slice>` — zero HIGH findings

@@ -26,6 +26,9 @@ the evidence base is too large for one file):
 3. Rewrite prose only, per the guide: abstract toward the corpus ~160-word median and
    result-first; em-dash parentheticals → parentheses or plain sentences; `\emph`
    rhetorical openers → said in words; editorializing section titles → nouns;
+   **the paper title too** (guide §S4b: noun phrase ≤~18 words; 0.9% of 113,829 corpus
+   titles are sentences, RNAAS 6.0%) — but a title is the author's most visible wording,
+   so propose the new title in the PR body for sign-off rather than silently rewording;
    self-referential epistemics and reader address → deleted or restated as fact;
    limitations stay but move in-line with magnitudes. Do NOT touch `generated/`,
    `refs.bib`, macros, numbers, `\software{}`, or any claim's strength.
