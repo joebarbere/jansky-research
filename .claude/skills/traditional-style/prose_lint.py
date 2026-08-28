@@ -43,7 +43,7 @@ def _macro_names(paper: Path) -> set[str]:
 def run_lint(paper: Path, tex_name: str, genre: str) -> int:
     corpus = json.loads((REPO / "results" / BASELINES[genre]).read_text())
     fp = sc.fingerprint_latex((paper / tex_name).read_text())
-    findings = sc.lint_paper(fp, corpus["all"])
+    findings = sc.lint_paper(fp, corpus["all"], genre=genre)
     if not findings:
         print(f"{paper.name}: no style findings ({genre}-baseline p90 clean)")
         return 0

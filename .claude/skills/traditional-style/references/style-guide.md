@@ -105,6 +105,27 @@ content is a hedge or a genuine question.
 headings exist but are real open questions: "What is a dwarf galaxy?" (astro-ph/0006290),
 "Is HS 240 an interstellar bubble?" (1989A+A...221..311W).
 
+### S4b. Paper titles (`\title{}`) — in scope, same rule, measured separately
+(a) Measured 2026-08-28 over the corpus metadata (case-insensitive finite-verb match): of
+**113,829** refereed journal titles, only **0.9%** read as a sentence (finite verb, not a
+question); p50 11 words, p90 17. Of **1,035** RNAAS titles, **6.0%** are sentences — the
+"verdict title" ("TRAPPIST-1e HAS A LARGE IRON CORE") is genuinely attested in that genre,
+but noun phrases still dominate 15:1.
+Question titles are attested in both and exempt.
+(b) A paper title is a noun phrase naming the object, quantity, or operation, ≤~18 words.
+For RNAAS a short declarative verdict is permissible when the note's one result IS the
+verdict; an editorializing clause ("..., and the Published Ephemerides Rarely Say Why") has
+no analogue in either corpus. `prose_lint` flags sentence-shaped titles (MED for papers,
+LOW for RNAAS) and over-long titles (LOW).
+(c) The repo's own first title remediation: "Long-Period Transients Are Caught in a Few Per
+Cent of ASKAP Snapshots, and the Published Ephemerides Rarely Say Why" → "Implied Active
+Fractions of the Long-Period Transients from Archival ASKAP Snapshots". Note the first
+title also carried a superseded framing — a sentence title states a conclusion, and
+conclusions can rot; a noun-phrase title naming the quantity survives revision.
+**Conversion caution:** a title is the author's most visible wording — when converting an
+existing paper, treat the title like a run-in label that carries ranking (SKILL step 3):
+propose the change in the PR body for the author's sign-off rather than silently rewording.
+
 ### S5. Dedicated Limitations sections
 (a) "No paper has a 'Limitations' or 'Caveats' section" — stated independently in the 2000s
 ("zero instances"), 2010–15, and 2016–21 notes; nothing like it in 1933–1995 either.

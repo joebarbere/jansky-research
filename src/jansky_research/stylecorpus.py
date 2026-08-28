@@ -637,6 +637,40 @@ def latex_abstract(tex: str) -> str | None:
     return m.group(1) if m else None
 
 
+def latex_paper_title(tex: str) -> str | None:
+    """The ``\\title{...}`` text (brace-balanced one level), whitespace-collapsed, or None."""
+    m = re.search(r"\\title\{((?:[^{}]|\{[^{}]*\})*)\}", tex)
+    return " ".join(m.group(1).split()) if m else None
+
+
+#: Finite-verb markers that make a title read as a SENTENCE rather than a noun phrase.
+#: Empirical basis (measured 2026-08-28 over the style corpus metadata, case-insensitive):
+#: 0.9% of 113,829 refereed journal titles match (p50 11 words, p90 17); 6.0% of 1,035
+#: RNAAS titles match (the "verdict title" is attested there, but rare). Titles ending in
+#: "?" are exempt: genuine question titles are corpus-attested (style-guide S4c).
+#: Case-insensitive because title-case conventions lowercase short verbs ("... is Neither
+#: Pure Nor Complete" escaped a capitalized-only draft of this rule).
+_TITLE_VERB_RE = re.compile(
+    r"\b(Is|Are|Was|Were|Has|Have|Had|Does|Do|Did|Says?|Prove[sn]?|Rarely|Remains?"
+    r"|Cannot|Can|Will|Must|Should|Comes?|Makes?|Gets?|Shows?|Reveals?|Confirms?"
+    r"|Suggests?|Favou?rs?|Needs?|Hosts?|Harbou?rs?|Exhibits?|Lacks?|Requires?"
+    r"|Recovers)\b",
+    re.IGNORECASE,
+)
+
+
+def title_is_sentence_like(title: str) -> bool:
+    """True when a paper title reads as a sentence (finite verb, not a question).
+
+    Any "?" exempts the title: question titles are corpus-attested (S4c), including the
+    question-plus-subtitle form ("Is the RM Sky Isotropic? A First Dipole Test ...").
+    """
+    title = title.strip()
+    if "?" in title:
+        return False
+    return bool(_TITLE_VERB_RE.search(title))
+
+
 def strip_latex(tex: str) -> str:
     """Reduce LaTeX source to approximate running prose (heuristic, deterministic).
 
@@ -737,6 +771,10 @@ def fingerprint_latex(tex: str) -> dict[str, float]:
             ),
         }
     )
+    title = latex_paper_title(tex)
+    if title is not None:
+        out["title_words"] = float(len(title.split()))
+        out["title_sentence_like"] = float(title_is_sentence_like(title))
     return out
 
 
@@ -780,8 +818,18 @@ LINT_RULES: tuple[tuple[str, str, str], ...] = (
 )
 
 
+#: Paper-title thresholds, measured 2026-08-28 directly over the corpus METADATA (the
+#: committed fingerprint percentiles predate the title metrics and do not carry them):
+#: 113,829 refereed journal titles — p50 11 words, p90 17, sentence-like 0.9%; 1,035 RNAAS
+#: titles — p50 10, p90 16, sentence-like 6.0%. A sentence-shaped title is a MED defect in
+#: a journal paper (0.9% base rate) and a LOW one in an RNAAS note (the "verdict title" is
+#: attested there); an over-long title is LOW in both.
+TITLE_WORDS_P90 = 18.0
+TITLE_SENTENCE_BASE = {"paper": "0.9% of 113,829", "rnaas": "6.0% of 1,035"}
+
+
 def lint_paper(
-    fp: dict[str, float], corpus_all: dict[str, dict[str, float]]
+    fp: dict[str, float], corpus_all: dict[str, dict[str, float]], *, genre: str = "paper"
 ) -> list[tuple[str, str, str]]:
     """Findings (severity, metric, message) where ``fp`` exceeds the corpus p90."""
     out = []
@@ -792,6 +840,24 @@ def lint_paper(
         if val > p90:
             p50 = corpus_all[metric]["p50"]
             out.append((sev, metric, f"{label}: {val:.2f} vs corpus p50={p50:.2f} p90={p90:.2f}"))
+    if fp.get("title_sentence_like"):
+        sev = "LOW" if genre == "rnaas" else "MED"
+        base = TITLE_SENTENCE_BASE.get(genre, TITLE_SENTENCE_BASE["paper"])
+        out.append(
+            (
+                sev,
+                "title_sentence_like",
+                f"title reads as a sentence; corpus titles are noun phrases ({base} match)",
+            )
+        )
+    if fp.get("title_words", 0.0) > TITLE_WORDS_P90:
+        out.append(
+            (
+                "LOW",
+                "title_words",
+                f"title length: {fp['title_words']:.0f} words vs corpus p90={TITLE_WORDS_P90:.0f}",
+            )
+        )
     return out
 
 

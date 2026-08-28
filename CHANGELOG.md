@@ -10,6 +10,19 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **Paper titles enter traditional-style scope (plan 95), with the repo remediated.** The
+  lptduty title survived the whole style campaign because `\title{}` was never linted or
+  fingerprinted. New: `stylecorpus.latex_paper_title`/`title_is_sentence_like` + two
+  fingerprint metrics, with genre-aware lint rules calibrated on the corpus metadata
+  (0.9% of 113,829 journal titles are sentence-shaped, RNAAS 6.0% — the verdict title is
+  attested there; p90 length ~18 words). SKILL.md, style-guide §S4b, and the style-editor
+  agent updated; the agent proposes titles rather than silently rewording. Remediation:
+  audit of all 46 papers found 21 offenders; 19 retitled (each verified to lose no claim
+  absent from its abstract), two documented exceptions kept (dr20radio, whose
+  southern-first priority claim lives only in the title; the spectra note's ten-word
+  RNAAS-attested verdict). All 18 affected slices rebuild; triage zero HIGH/MED.
+
 ### Changed
 - **lptduty note retitled.** "Long-Period Transients Are Caught in a Few Per Cent of ASKAP
   Snapshots, and the Published Ephemerides Rarely Say Why" was a leftover of the pre-revision
