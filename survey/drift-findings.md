@@ -181,3 +181,21 @@ the committed evidence as the `legacy_asserted` lesson block).
    frequency as a property of this file; brzycki2022's title completed.
 7. This file's earlier "100 trials/cell by default" corrected by the code (30 everywhere) and
    the ±0.1 crossing-scatter estimate superseded by the referee's ≈0.03.
+
+## RNAAS note drafted (2026-08-27, plan 94)
+
+`papers/driftsearch/rnaas.tex` (~810 countable words, one figure): the condensation of the
+benchmark + Voyager recovery, framed as an independent minimal-code replication of the
+standard validation (GATE-0: ADS shows no RNAAS note replicating the Voyager validation or
+publishing a drift-search benchmark; RNAAS is BL's own venue for this scale — Enriquez 2018,
+Perez 2022, Sheikh 2021, Price 2021, Jacobson-Bell 2025). Deliberate exception to the
+recover-a-knowns-stay-in-repo policy, justified by the three unpublished kernels: the seeded
+benchmark cell, the DC-spike trap in the exact public file newcomers download, and the
+locate-don't-assert failure mode with its 0.92 MHz number. Every value from the existing
+\ds*/\dsVoy* macros (verified against drift_metrics.json + drift_voyager.json); gates pass
+(builds, lint zero HIGH, triage clean for the note).
+
+**OPEN GATE before submission: a paper-referee round on the note.** The wdpulsar lesson —
+condensation introduces errors — is unmitigated here beyond an inline self-check (this
+session's subagent budget was exhausted; the self-check caught one overstatement,
+"published"→"reported"). Do not submit to journals.aas.org until a referee round runs.
