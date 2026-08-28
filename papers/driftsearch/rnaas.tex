@@ -23,7 +23,8 @@ accompanies it (50\% completeness at internal S/N~$\approx\dsCfifty$, threshold 
 committed noise-only statistics), with two pitfalls measured in the same file: the band-center
 DC spike, $\sim10^{3}\times$ brighter than the carrier, which a brightest-channel search
 reports instead; and a spurious null from searching an asserted rather than located carrier
-frequency, which an earlier version of the underlying analysis reported and this one retracts.
+frequency, which an earlier version of the underlying analysis reported and its revision
+retracts.
 \end{abstract}
 
 \section{}
@@ -34,9 +35,10 @@ end-to-end validation is recovering the Voyager~1 carrier in Green Bank Telescop
 \citep{enriquez2017,lebofsky2019}. That validation has, to our knowledge, no published
 independent replication with a minimal open detector, and reported injection--recovery
 efficiencies have no shared reference cell on which two detectors can be compared on identical
-inputs. This note supplies both, in the tested \code{jansky\_research.driftsearch} module
-wrapping the teaching-grade brute-force search of the \code{jansky} package, with
-\code{setigen} \citep{brzycki2022} as the standard for the injection side.
+inputs. This note supplies both, as the tested \code{jansky\_research.driftsearch} module
+wrapping the teaching-grade brute-force search of the \code{jansky} package. The
+\code{setigen} package \citep{brzycki2022} standardized signal injection; the cell here
+fixes the injector and the detector together, so two detectors meet on identical inputs.
 
 The benchmark cell is fully specified and seeded: $\dsNtime\times\dsNfreq$ waterfalls of unit
 Gaussian noise, a \dsNsearchDrifts-point drift grid, a single injected drifting tone per
@@ -45,7 +47,7 @@ Drift-averaged completeness reaches 50\% at injected S/N~$\approx\dsCfifty$ and 
 $\approx\dsCninety$ (Figure~\ref{fig:recovery}), with the full per-drift matrix committed. No
 false positive occurred in \dsFprTrials\ noise-only trials (one-sided 95\% bound
 \dsFprBound\%); the committed noise-only peak distribution (mean \dsNoiseMean, maximum
-\dsNoiseMax) shows the threshold sits $\sim$18$\sigma$ above the noise-only mean, so that
+\dsNoiseMax) shows the threshold sits $\sim$20$\sigma$ above the noise-only mean, so that
 bound describes a conservative operating point, not a calibration near the boundary.
 Injecting half a grid step off the searched drifts moves the 50\% crossing to
 \dsOffGridCfifty, within binomial scatter, so on-grid injection is not flattering the
@@ -96,7 +98,7 @@ author. This work uses the public Breakthrough Listen open-data archive; the aut
 the Breakthrough Listen team for releasing the Voyager-1 Green Bank Telescope data.
 \end{acknowledgments}
 
-\software{jansky-research \citep{janskyresearch}, jansky \citep{jansky}, NumPy, SciPy,
+\software{jansky-research \citep{janskyresearch}, jansky \citep{jansky}, NumPy, h5py,
 Matplotlib}
 
 \bibliography{refs}

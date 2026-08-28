@@ -217,8 +217,8 @@ contribution — the tooling and the reproducibility, not a novelty claim:
   [Research Notes of the AAS](https://journals.aas.org/research-notes/) — the frbstats validation
   (`papers/frbstats/rnaas.tex`), the WD-pulsar survey (`papers/wdpulsar/rnaas.tex`, refereed and
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
-  drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94;
-  referee round still owed before submission).
+  drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
+  refereed and ready to submit).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level

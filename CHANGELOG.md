@@ -10,6 +10,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **driftsearch RNAAS note: condensation referee round (plan 94's open gate, now closed).**
+  One MAJOR (a setigen citation the condensation had re-scoped from prior art to
+  apparently-used tooling) and three MINOR fixes: the "~18σ" threshold margin is 20.4σ under
+  the committed noise statistics (fixed in the note and in main.tex, where it was equally
+  wrong); the abstract's retraction referent disambiguated; the \software lines in both
+  papers corrected (SciPy was never imported by the slice, Astropy was template residue,
+  h5py — which reads the Voyager file — was uncredited). All macro-quoted values re-verified
+  against the two committed JSONs; 824 countable words; the note is ready to submit.
+
 ### Added
 - **driftsearch RNAAS note (plan 94): the replication note nobody has written.**
   `papers/driftsearch/rnaas.tex` (~810 countable words, one figure) condenses the seeded
