@@ -10,6 +10,13 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **lptduty note retitled.** "Long-Period Transients Are Caught in a Few Per Cent of ASKAP
+  Snapshots, and the Published Ephemerides Rarely Say Why" was a leftover of the pre-revision
+  framing (the round-11 fix inverted the mostly-off narrative) and an editorializing full
+  sentence besides. Now "Implied Active Fractions of the Long-Period Transients from Archival
+  ASKAP Snapshots" — the revised headline quantity, in a plain noun phrase.
+
 ### Fixed
 - **driftsearch RNAAS note: condensation referee round (plan 94's open gate, now closed).**
   One MAJOR (a setigen citation the condensation had re-scoped from prior art to
