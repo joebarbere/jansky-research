@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-08-28
+
 ### Added
 - **Paper titles enter traditional-style scope (plan 95), with the repo remediated.** The
   lptduty title survived the whole style campaign because `\title{}` was never linted or
