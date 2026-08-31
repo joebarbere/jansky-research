@@ -162,3 +162,49 @@ overstated what landed. Closed now: the RNAAS abstract quotes \ksWidthDSrc/\ksWi
 the unit of analysis named, and the body's median-widths clause moved inside the burst-level
 parenthesis (2.05 ms is the burst-level repeater median; the source-level value is 2.47 ms,
 and the sentence must not read as quoting it).
+
+## .bib sweep: 20 preprint citations were published papers (2026-08-31)
+
+Prompted by the `innerrc` defect found during the `hi` GATE-0 pass. Scanned all 46 `refs.bib`
+plus `joss/paper.bib` for entries carrying an arXiv identifier with no journal DOI, or a
+`10.48550/arXiv` DOI: **38 candidates**. Resolved each arXiv id through ADS, then adjudicated
+every hit against Crossref field-by-field before touching anything, per the plan-95 procedure.
+
+**20 were published and still cited as preprints.** Eleven are genuinely still preprints and
+were left alone (`papamakarios2016` and `talts2018` are ML conference/arXiv items,
+`lihu2024` is the campus-telescope note, `hurleywalker2017` is a TGSS rescaling note, and the
+rest are 2026 submissions). Journal, volume, pages and DOI added to all 20.
+
+**Two defects were worse than staleness, and a title-trusting repair pass would have missed
+both.**
+
+`papers/lptv/refs.bib` carried `@article{deruiter2026}` — author "de Ruiter, I.", title "A
+36-Minute-Period Long-Period Radio Transient" — against `arXiv:2603.07857`, which is
+**Pritchard et al.**, *Discovery of a 36-min long-period transient ASKAP J142431.2−612611*,
+PASA 43, e083. The source name in the entry's own `note` was right and the people were wrong.
+`lpt` and `lptduty` already keyed the same paper correctly as `pritchard2026`, so lptv was
+citing a real paper under a fabricated author. Fixed and the key renamed (one citation in
+`main.tex`).
+
+`papers/peaked/refs.bib` gave `dallacasa2000` the eprint **astro-ph/0010256**, which is *Fast
+CMB Analyses via Correlation Functions* by other authors entirely. The real one is
+**astro-ph/0012428** — an adjacent, wrong identifier, the same failure mode as the e085/e084
+and 169090/169089 cases in plan 95. The entry's `adsurl` was correct throughout, which is what
+made it findable.
+
+**Five entries had the right DOI under a preprint title**, exactly the case CLAUDE.md warns a
+title-driven repair would "correct" into error: `rea2026` appeared in three papers under three
+*different* titles (`Long-Period Radio Transients`, `Long-Period Radio Transients: A Review`,
+`Long Period Transients: a Comprehensive Review`) for one DOI, published as *Long period
+transients (LPTs): A comprehensive review*; `rose2026` carried the preprint title against the
+Nature Astronomy paper *Periodic radio and X-ray emission from an accreting white dwarf
+binary*, which `lpt`, `lptv` and `lptduty` already cite correctly under that title; `chime1634`
+and `cecconi2017` likewise. `cecconi2017` was also a year off (2018, not 2017).
+
+One mechanical trap worth recording: stripping `archivePrefix` from now-published entries also
+stripped it from entries that legitimately keep an `eprint`, which BibTeX needs paired. Caught
+by re-scanning rather than by the build, since a missing `archivePrefix` degrades silently.
+
+Gates: all 16 affected papers rebuild with no undefined citations; `triage_papers.py` is
+**0 HIGH / 0 MED across all 53 documents**, and its `bad-doi` check re-queries Crossref for every
+DOI, so the sweep is verified by the same mechanism that would have caught a mistake in it.

@@ -10,6 +10,18 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **20 citations across 16 papers pointed at preprints that had been published.** Swept every
+  `refs.bib` for arXiv-only entries (38 candidates), resolved each through ADS and adjudicated
+  every hit against Crossref field-by-field before editing. Journal, volume, pages and DOI added
+  to the 20 published ones; the 11 genuine preprints left alone. Two were worse than stale:
+  `lptv`'s `deruiter2026` attributed Pritchard et al.'s PASA paper to de Ruiter (right source in
+  its own note, wrong people), and `peaked`'s `dallacasa2000` carried the eprint
+  `astro-ph/0010256`, a CMB paper by other authors, where the real one is `astro-ph/0012428`.
+  Five more had the right DOI under a preprint title — `rea2026` appeared under three different
+  titles in three papers for one DOI. Triage is 0 HIGH / 0 MED across all 53 documents and its
+  `bad-doi` check re-verifies every DOI against Crossref.
+
 ## [1.11.0] - 2026-08-31
 
 ### Added
