@@ -10,6 +10,90 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`hi` gains a cross-survey comparison and a longitude step.** `hi.fetch_mgd2016` /
+  `hi.read_mgd2016` pull the tabulated VGPS terminal-velocity curve of McClure-Griffiths &
+  Dickey 2016 (VizieR `J/ApJ/831/124/table1`); `hi.compare_terminal_velocities` matches any
+  terminal-velocity curve against a densely sampled reference within one beam half-width,
+  dropping rather than extrapolating uncovered longitudes; `hi.synthetic_reference_curve`
+  supplies the offline equivalent. `hi.run` takes `step_deg` (default $1\arcdeg$).
+
+### Added
+- **An RNAAS note for `hi` (`papers/hi/rnaas.tex`).** "The LAB and VGPS HI Terminal-Velocity
+  Curves Agree to 1 km/s When the Profile Edge Is Fitted" — 111-word abstract, 883 words
+  total, one figure (`figures/vgps_comparison.pdf`, also pipeline-written), every number from
+  macros. GATE-0 discharged: the comparison appears unpublished (MG&D 2016 has 22 citers,
+  enumerated; none is a survey cross-validation). The note's claim is deliberately narrow —
+  neither "the tangent-point method has estimator systematics" (known, and MG&D warn about it)
+  nor "the inner curve is not flat" (known — Reid & Dame 2016), but that LAB reproduces the
+  VGPS curve to 1 km/s in level and slope provided the edge is fitted, and that a 2 K
+  threshold costs 15 km/s at a cost that is not constant.
+- **`hi` measures the systematic its headline actually depends on.** `estimator_systematics`
+  varies the erfc fit window and adds MG&D's own `|b| < 0.5` latitude averaging
+  (`latitude_spectrum`, `terminal_velocity_edge(window_kms=...)`), and the span is **2.12 km/s**
+  — an order of magnitude above the 0.15 statistical error, so the 1.04 km/s LAB-VGPS offset is
+  agreement at the one-channel level rather than a resolved difference. Also committed:
+  `matched_slopes()` (both arms fitted on one longitude set), the `rmin` sweep for both arms,
+  the LAB channel width, the edge residual's longitude trend and lag-1 autocorrelation, its
+  correlation with fitted width, and the drop-defective slope variant.
+- **`hi` commits the matching-window robustness it quotes.** `compare_edge_window_sweep`
+  (half-widths 0.25/0.5/1.0 deg, mean and median) plus `reference_slope_n`, so the note's
+  range and point count are auditable from the results JSON rather than typed by hand.
+
+### Changed
+- **`hi` resampled to 71 longitudes and cross-validated against the VGPS — the flatness claim
+  is retracted.** `hi.run` now samples $\ell = 10$–$80\arcdeg$ every `step_deg` (default
+  $1\arcdeg$, so 71 sightlines against the previous 8) and compares its terminal velocities
+  against the tabulated VGPS curve of McClure-Griffiths & Dickey 2016. The
+  edge-fit curve agrees with theirs to **+1.04 ± 0.15 km/s** over the 49 overlapping
+  longitudes and matches its slope (+2.52 ± 0.55 against +3.82 ± 0.18) — an all-sky
+  single-dish survey reproducing an interferometric one in level and shape, which the paper
+  did not previously demonstrate. The same sample retracts the published slope: 2.8 ± 1.8
+  (1.6σ, "consistent with flat") at N=6 becomes **+1.79 ± 0.57 (3.1σ)** at N=51, so the
+  curve rises and the paper — including its title, which carried "Flat" — no longer says
+  otherwise. The Keplerian contrast and the flat level are unchanged. The 2 K threshold
+  estimator's bias is confirmed at +15.26 ± 0.56 km/s against the VGPS, is *not* a constant
+  (sd 3.92), and closes monotonically to +4.2 at the 20 K threshold MG&D seed their own fit
+  from. Also reported now: the 5 sightlines whose >2 K emission is non-contiguous and the 1
+  edge-fit failure, both invisible in the 8-point sample.
+
+### Fixed
+- **The `hi` note's slope claim compared two different radial ranges (referee blocker).** The
+  LAB fit ran to 8.03 kpc while the reference stops at 7.50, so `2.52 ± 0.55` against
+  `3.82 ± 0.18` read as a 2.2σ tension. Fitted over the same longitudes the pair is
+  `3.59 ± 0.76` against `3.57 ± 0.71`. Also fixed from the same round: a figure caption that
+  claimed 71 sightlines where 49 are plotted; the LAB beam, which is 36′ and was called a
+  "0.5° half-beam" in both documents; a 20 K clause implying a pipeline convergence that MG&D's
+  own construction forbids; an unreported +0.025 ± 0.010 km/s/deg trend in the edge residual and
+  the autocorrelation-corrected SEM (0.21, not 0.15); and a stale `V_flat_std_kms` key sitting
+  in the results JSON beside `V_flat_scatter_kms` as the same quantity from an older run.
+- **"Retract" was the wrong verb in four papers, none of which was ever submitted.** Each had
+  corrected a claim made in an earlier version of *itself*; "retract" implies withdrawal from
+  the published record and invites an editor to look for the withdrawn paper. Changed to
+  "withdraw"/"corrects", always scoped to the earlier version, in `driftsearch` (`main.tex` +
+  `rnaas.tex`, where three of the four uses were unqualified), `skr`, `rmstructure` and
+  `stacking`. Prose only — diff-guard clean on all five documents, style lint unchanged against
+  baseline, all rebuild with no undefined references. Context worth recording: the driftsearch
+  null did ship in 11 tagged release archives and 11 Zenodo source snapshots before the fix, so
+  the honest description is a self-correction to an unpublished draft that had been distributed,
+  not a retraction and not an unshipped edit.
+- **`hi` was missing the citation its own slope result depends on.** A GATE-0 ADS pass on the
+  LAB-vs-VGPS comparison (the comparison itself appears unpublished: MG&D 2016 has 22 citers
+  and none is a survey cross-validation) turned up Reid & Dame 2016, who show that fitting a
+  flat curve to HI terminal velocities biases the inferred $\Theta_0$ because the true curve
+  is curved. Without it the Results paragraph read as though the rise were a discovery; it is
+  not, and the paper now says that what it corrects is its own earlier claim. Davis et al.
+  2025 (MNRAS 547, staf2166) cited alongside.
+- **A non-finite `hi` metric could reach the paper as the literal string `nan`.** Every
+  numeric macro now goes through a formatter emitting `--`, the placeholder the arXiv
+  assembler already blocks on, so a hole fails loudly at packaging instead of rendering as a
+  value. The `\hiRealReference` macro also escapes `&` for LaTeX.
+- **The `hi` offline fixture could not exercise what the paper claims.** It used one 5 km/s
+  edge width, so the width-dependence of the threshold overshoot was unmeasurable offline;
+  it now varies 3–8 km/s (reproducing the scaling at slope 1.80, r = 0.96) and runs the same
+  reference-comparison path as a real run against its own injected curve, recovering it to
+  0.09 km/s.
+
 ## [1.10.0] - 2026-08-28
 
 ### Added

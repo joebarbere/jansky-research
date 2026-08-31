@@ -4,37 +4,39 @@
 \input{generated/macros}
 
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{The flat inner Milky Way rotation curve from LAB HI}
+\shorttitle{The inner Milky Way rotation curve from LAB HI}
 \shortauthors{Barbere}
 
 \begin{document}
 
-\title{Recovering the Flat Inner Milky Way Rotation Curve from Public LAB HI~21\,cm Data
-by the Tangent-Point Method}
+\title{The Inner Milky Way Rotation Curve from Public LAB HI~21\,cm Tangent-Point
+Velocities, Validated Against the VGPS Terminal-Velocity Curve}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-The flat rotation curve of the Milky Way is a foundational piece of evidence for dark matter, and the
-classical way to measure its inner part is the HI~21\,cm tangent-point method. We ask whether that
-textbook result can be recovered from public survey data with a small, tested, CPU-only tool. We read
-\hiNlong\ Galactic-longitude $(b,v)$ slices from the Leiden/Argentine/Bonn (LAB) HI survey
-\citep{kalberla2005}, extract the terminal velocity of each $b=0$ profile with two estimators run on
-the same spectra (a fixed 2~K brightness-temperature threshold and an error-function fit to the
-profile edge) and apply $R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with
-$R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$ \citep{reid2019}. Beyond the bar-dominated inner
-region, over the \hiRealNflat\ points from $R\approx\hiRealRmin$ to $\hiRealRmax$~kpc, the rotation
-speed holds at $V=\hiRealVflat$~km\,s$^{-1}$ (point-to-point scatter \hiRealVflatScatter, standard
-error of the mean \hiRealVflatSem) with a fitted slope of
-$\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$, consistent with flat, and far from the
-Keplerian decline that would reach \hiRealKepler~km\,s$^{-1}$ at the outermost point. The two
-estimators differ by a measured \hiRealThrMinusEdge~km\,s$^{-1}$: the threshold crossing sits
-on the profile wing, and the edge fit brings the level to \hiRealVflatEdge~km\,s$^{-1}$, within
-$\hiRealExcessPctEdge$\% of the \citet{reid2019} $V_0$, so the threshold estimator's
-$\hiRealExcessPct$\% excess is an estimator systematic measured on this data, not a cited one. An
-inner-Galaxy flat curve is not, by itself, a standalone dark-matter detection. This is a tooling and
-reproducibility contribution.
+We measure the inner Milky Way rotation curve from \hiNlong\ Galactic-longitude $(b,v)$ slices of
+the Leiden/Argentine/Bonn (LAB) HI survey \citep{kalberla2005}, spaced \hiStep\arcdeg, taking the
+terminal velocity of each $b=0$ profile with two estimators on the same spectra: a fixed 2~K
+brightness-temperature threshold, and an error-function fit to the profile edge. Beyond the
+bar-dominated region, over the \hiRealNflat\ points from $R\approx\hiRealRmin$ to
+$\hiRealRmax$~kpc, the rotation speed is $V=\hiRealVflat$~km\,s$^{-1}$ (point-to-point scatter
+\hiRealVflatScatter, standard error of the mean \hiRealVflatSem), far from the Keplerian decline
+that would reach \hiRealKepler~km\,s$^{-1}$ at the outermost point. It is not flat: the fitted
+slope is $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$ ($\hiRealSlopeSigma\sigma$).
+Against the independently measured VGPS curve of \citet{mccluregriffiths2016}, at the
+\hiRealRefN\ longitudes the two surveys share, the edge fit agrees to
+$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ and gives a slope of
+$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ against their $\hiRealRefSlope\pm\hiRealRefSlopeErr$, so
+an all-sky single-dish survey reproduces an interferometric one in level and in shape. The two
+estimators differ by \hiRealThrMinusEdge~km\,s$^{-1}$, since the threshold crossing sits on the
+profile wing; the edge fit brings the level to \hiRealVflatEdge~km\,s$^{-1}$, within
+$\hiRealExcessPctEdge$\% of the \citet{reid2019} $V_0=\hiVzero$~km\,s$^{-1}$, so the threshold
+estimator's $\hiRealExcessPct$\% excess is a systematic measured on this data rather than a cited
+one. Geometry follows $R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with
+$R_0=\hiRzero$~kpc. An inner-Galaxy non-Keplerian curve is not by itself a dark-matter detection.
+This is a tooling and reproducibility contribution.
 \end{abstract}
 
 \keywords{Milky Way rotation (1059) --- Milky Way dynamics (1051) --- Neutral hydrogen clouds (1099) --- Dark matter (353) --- Open source software (1866)}
@@ -46,21 +48,27 @@ is measured from the HI~21\,cm line by the tangent-point (terminal-velocity) met
 \citep{mccluregriffiths2007}: along an inner sightline the gas at the subcentral point moves fastest
 along the line of sight, marking the high-velocity edge of the profile. We test whether this classic
 measurement is reproducible from public survey data (each $(b,v)$ slice is a sub-megabyte file) with
-a small, tested tool whose core estimator and geometry fit in a few dozen lines. This is a
-validation, not a new measurement.
+a small, tested tool whose core estimator and geometry fit in a few dozen lines, and we check the
+answer against an independent survey rather than against a textbook expectation:
+\citet{mccluregriffiths2016} publish a uniformly measured first-quadrant terminal-velocity curve
+from the VLA Galactic Plane Survey, sampled far more finely than ours, which serves as the
+comparand throughout. This is a validation, not a new measurement.
 
 \section{Method}
 \code{hi} is a pure-NumPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}). For each
-longitude $\ell$ it reads the LAB $(b,v)$ slice, takes the $b=0$ spectrum, and estimates the terminal
-velocity two ways on the same spectrum: (i) the threshold estimator, the most positive LSR
+of the \hiNlong\ longitudes $\ell$, spaced \hiStep\arcdeg, it reads the LAB $(b,v)$ slice, takes the
+$b=0$ spectrum, and estimates the terminal velocity two ways on the same spectrum: (i) the threshold estimator, the most positive LSR
 velocity with brightness temperature above 2~K (a conventional choice; sweeping the threshold over
 1.5--5~K moves the flat mean only \hiRealSweepLoThr\ to \hiRealSweepHiThr~km\,s$^{-1}$, small
 against the estimator systematic below); and (ii) the edge estimator, an error-function fit
 $T(v)=\frac{A}{2}\,\mathrm{erfc}\!\big((v-v_0)/\sqrt{2}w\big)+c$ to the profile's falling edge,
 whose half-height velocity $v_0$ sits inside the edge rather than out on its wing, in the spirit of
-the edge fitting of \citet{mccluregriffiths2016}. In every LAB spectrum used here the emission above
-2~K is a single contiguous velocity run, so the threshold crossing is the top edge of the main
-emission, not an isolated wing. The tangent point then gives
+the edge fitting of \citet{mccluregriffiths2016}. In \hiRealNNoncontig\ of the \hiNlong\ LAB spectra the
+emission above 2~K breaks into more than one velocity run, so for those sightlines the threshold
+crossing may sit on a detached local-emission island rather than on the top edge of the main
+emission; the edge fit, which is seeded there but then fits the profile itself, is the estimator we
+quote. The edge fit fails to converge on \hiRealNEdgeFail\ sightline, which is dropped from the edge
+curve. The tangent point then gives
 \begin{equation}
 R = R_0\sin\ell, \qquad V(R) = v_\mathrm{term} + V_0\sin\ell,
 \end{equation}
@@ -69,34 +77,82 @@ circular speed, not the older IAU 220~km\,s$^{-1}$). LAB velocities are tabulate
 LSR frame, which uses the standard solar motion; the \citet{reid2019} constants are tied to their
 fitted solar motion, and the residual frame mismatch injects a few km\,s$^{-1}$ at $\sim\sin\ell$,
 small against the estimator terms tracked below. A synthetic $(\ell,v)$ slice with a known injected
-flat curve and a realistic ($\sim$5~km\,s$^{-1}$) edge width drives the offline tests: the fixture
-reproduces the threshold estimator's wing overshoot (\hiSynThrMinusEdge~km\,s$^{-1}$ against
-\hiRealThrMinusEdge\ measured on LAB) while the edge estimator recovers the injected curve.
+flat curve and realistic edge widths (3--8~km\,s$^{-1}$, spanning the range LAB shows) drives the
+offline tests: the fixture reproduces the threshold estimator's wing overshoot
+(\hiSynThrMinusEdge~km\,s$^{-1}$ against \hiRealThrMinusEdge\ measured on LAB) while the edge
+estimator recovers the injected curve to \hiSynRefEdgeOffset~km\,s$^{-1}$. The offline leg runs the
+same comparison machinery as the real one, against the injected curve in place of the VGPS curve, so
+that code is exercised without a network.
+
+\paragraph{Comparison with the VGPS curve.} We compare our terminal velocities against
+\citet{mccluregriffiths2016} Table~1: \hiRealRefN\ of our longitudes fall inside their
+$18.4\arcdeg < \ell < 67.0\arcdeg$ coverage with enough samples to average. Their curve is sampled
+every $0.065\arcdeg$, far finer than the LAB beam, so each of our longitudes is compared against the
+mean of their values within $0.5\arcdeg$, comparable to the $36\arcmin$ LAB beam; longitudes
+outside their coverage are dropped, never extrapolated. The comparison is made on $v_\mathrm{term}$ itself rather than on
+$V(R)$, so no $R_0$ or $V_0$ choice enters it and the two surveys are compared on what each
+measured. Their estimator is of the same family as our edge fit (a sum of two error functions,
+seeded from a 20~K threshold crossing on continuum-masked, latitude-averaged spectra), so this is
+a cross-survey check of a shared method, not a comparison of independent methods.
 
 \section{Data}
 We use the LAB survey \citep{kalberla2005}, the all-sky combination of the Leiden/Dwingeloo and
 Instituto Argentino de Radioastronom\'ia surveys with stray-radiation correction, retrieved as
 per-longitude $(b,v)$ FITS slices from VizieR. We sample \hiNlong\ longitudes from $\ell=10\arcdeg$ to
-$80\arcdeg$ in the first quadrant and read the mid-plane ($b=0$) spectrum of each.
+$80\arcdeg$ in the first quadrant, spaced \hiStep\arcdeg, and read the mid-plane ($b=0$) spectrum of
+each. For the comparison of \S\ref{sec:results} we use the tabulated VGPS terminal velocities of
+\citet{mccluregriffiths2016}, also from VizieR (748 rows over
+$18.4\arcdeg < \ell < 67.0\arcdeg$).
 
 \section{Results}
-Table~\ref{tab:curve} lists every point under both estimators; the recovered curve rises gently
-across the inner disk and then flattens. Beyond the bar-dominated region ($R\lesssim\hiRealRmin$~kpc,
-dropped), the \hiRealNflat\ points from $R\approx\hiRealRmin$ to $\hiRealRmax$~kpc give
-$V=\hiRealVflat$~km\,s$^{-1}$ on the threshold estimator, where the point-to-point scatter is
-\hiRealVflatScatter~km\,s$^{-1}$ and the standard error of the mean \hiRealVflatSem\
-(Figure~\ref{fig:rc}). Flatness is quantified, not eyeballed: a least-squares slope over the flat
-sample gives $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$, consistent with zero, while
-a Keplerian $V\propto R^{-1/2}$ normalised at the innermost flat point would fall to
-\hiRealKepler~km\,s$^{-1}$ at the outermost; the measured value stays $\sim$90~km\,s$^{-1}$
-above it. The level is insensitive to the hand-chosen analysis parameters: sweeping the threshold
-1.5--5~K moves the mean from \hiRealSweepLoThr\ to \hiRealSweepHiThr, dropping the innermost flat
-point (which sits 0.07~kpc above the $R>\hiRealRmin$~kpc cut) gives \hiRealDropInner, and dropping
+\label{sec:results}
+Table~\ref{tab:curve} lists the curve at $5\arcdeg$ intervals under both estimators (the full
+\hiNlong-point curve is in the committed results file). Beyond the bar-dominated region
+($R\lesssim\hiRealRmin$~kpc, dropped), the \hiRealNflat\ points from $R\approx\hiRealRmin$ to
+$\hiRealRmax$~kpc give $V=\hiRealVflat$~km\,s$^{-1}$ on the threshold estimator, where the
+point-to-point scatter is \hiRealVflatScatter~km\,s$^{-1}$ and the standard error of the mean
+\hiRealVflatSem\ (Figure~\ref{fig:rc}). The level is insensitive to the hand-chosen analysis
+parameters: sweeping the threshold 1.5--5~K moves the mean from \hiRealSweepLoThr\ to
+\hiRealSweepHiThr, dropping the innermost point beyond the cut gives \hiRealDropInner, and dropping
 the two outermost points (the longitudes where local emission blends most with the terminal edge)
 gives \hiRealDropOuterTwo~km\,s$^{-1}$. All variants are committed with the results.
 
+\paragraph{The curve is non-Keplerian, but it is not flat.} A Keplerian $V\propto R^{-1/2}$
+normalised at the innermost point beyond the bar cut would fall to \hiRealKepler~km\,s$^{-1}$ at the
+outermost; the measured value stays $\sim$90~km\,s$^{-1}$ above it, which is the dark-matter-relevant
+contrast and is not in doubt. The curve is nonetheless rising: a least-squares slope over the
+\hiRealNflat\ points gives $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$
+($\hiRealSlopeSigma\sigma$) on the threshold estimator and
+$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ ($\hiRealSlopeEdgeSigma\sigma$) on the edge fit. This
+supersedes an earlier version of this analysis which sampled only eight longitudes and reported a
+slope consistent with zero; that sample was too small to resolve a rise this gentle, and the
+conclusion of flatness was a statement about its power, not about the Galaxy. The reference curve
+agrees: \citet{mccluregriffiths2016}, on their own \hiRealRefSlopeN\ points beyond the same cut, give
+$\hiRealRefSlope\pm\hiRealRefSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$. That the inner curve is
+curved rather than flat is not itself new. \citet{reiddame2016} show that fitting a flat
+curve to HI terminal velocities biases the inferred $\Theta_0$ for exactly this reason, and
+\citet{davis2026} examine what terminal-velocity curves do and do not recover in simulated
+galaxies. What is corrected here is this analysis's own earlier claim.
+
+\paragraph{Cross-survey validation.} Over the \hiRealRefN\ overlapping longitudes the edge-fit
+terminal velocities sit
+$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ from the VGPS values
+(scatter \hiRealRefEdgeOffsetSd~km\,s$^{-1}$), so an all-sky single-dish survey with a $36\arcmin$
+beam reproduces an interferometric survey's terminal-velocity curve at the km\,s$^{-1}$ level, in
+both normalisation and slope. The threshold estimator does not: it sits
+$\hiRealRefThrOffset\pm\hiRealRefThrOffsetSem$~km\,s$^{-1}$ high, with a scatter of
+\hiRealRefThrOffsetSd~km\,s$^{-1}$ that is itself large, so the offset is not a constant that
+could be subtracted. That gap is the wing overshoot and it closes as the threshold climbs the profile
+edge: raising it to the 20~K that \citet{mccluregriffiths2016} seed their own fit from leaves
+\hiRealSweepRefTwenty~km\,s$^{-1}$. Consistent with the error-function picture, the per-sightline
+overshoot grows with the fitted edge width (slope \hiRealWidthSlope, correlation
+$r=\hiRealWidthCorr$ across the \hiNlong\ sightlines). The relation is real but loose, since the
+fitted width is itself noisy.
+
 \begin{deluxetable}{cccc}
-\tablecaption{Tangent-point rotation curve, both estimators.\label{tab:curve}}
+\tablecaption{Tangent-point rotation curve at $5\arcdeg$ intervals, both estimators. The full
+\hiNlong-point curve, and every sensitivity variant, is in the committed results
+file.\label{tab:curve}}
 \tablehead{\colhead{$\ell$ (deg)} & \colhead{$R$ (kpc)} & \colhead{$V_\mathrm{thr}$ (km/s)} &
 \colhead{$V_\mathrm{edge}$ (km/s)}}
 \startdata
@@ -107,9 +163,11 @@ gives \hiRealDropOuterTwo~km\,s$^{-1}$. All variants are committed with the resu
 \begin{figure}
 \plotone{figures/rotation_curve.pdf}
 \caption{Inner Milky Way rotation curve from LAB HI tangent-point velocities, under the threshold
-(circles; open where bar-excluded) and edge-fit (squares) estimators. The dashed line is the
-flat-sample mean of the threshold curve, drawn only over the flat range; the dash-dotted curve is
-the Keplerian decline normalised at the innermost flat point; the dotted line marks
+(circles; open where bar-excluded) and edge-fit (squares) estimators, sampled every \hiStep\arcdeg.
+The solid red curve is the VGPS reference curve of \citet{mccluregriffiths2016} over its own
+coverage, which the edge fit tracks to \hiRealRefEdgeOffset~km\,s$^{-1}$. The dashed line is the
+mean of the threshold curve beyond the bar cut; the dash-dotted curve is the Keplerian decline
+normalised at the innermost point beyond that cut; the dotted line marks
 $V_0=\hiVzero$~km\,s$^{-1}$.}
 \label{fig:rc}
 \end{figure}
@@ -118,9 +176,9 @@ $V_0=\hiVzero$~km\,s$^{-1}$.}
 \paragraph{The normalization is an estimator statement, measured here.} The threshold curve sits
 $\hiRealExcessPct$\% above $V_0=\hiVzero$; the edge fit, run on the same spectra, sits at
 \hiRealVflatEdge~km\,s$^{-1}$ ($\hiRealExcessPctEdge$\%). The difference,
-\hiRealThrMinusEdge~km\,s$^{-1}$ on the flat sample, is the wing overshoot of a threshold crossing
-on a finite-width edge, reproduced quantitatively by the synthetic fixture
-(\hiSynThrMinusEdge~km\,s$^{-1}$ at a 5~km\,s$^{-1}$ edge width). Note this is measured
+\hiRealThrMinusEdge~km\,s$^{-1}$ on the sample beyond the bar cut, is the wing overshoot of a
+threshold crossing on a finite-width edge, reproduced by the synthetic fixture
+(\hiSynThrMinusEdge~km\,s$^{-1}$) and confirmed against the VGPS curve above. Note this is measured
 in-house rather than imported: the $\sim$7~km\,s$^{-1}$ offset in \citet{mccluregriffiths2016} is
 between the \citet{clemens1985} CO terminal curve and their fitted HI curve (a cross-tracer,
 cross-survey comparison they attribute only partly to the threshold method) and is not a
@@ -128,11 +186,19 @@ substitute for the comparison done here. The residual $\sim$$\hiRealExcessPctEdg
 estimator is within the streaming-motion and frame-convention terms below. The quoted
 \hiRealVflatScatter~km\,s$^{-1}$ is point-to-point scatter, orthogonal to this shared systematic:
 an estimator bias moves all \hiRealNflat\ points together and leaves the scatter unchanged.
+\paragraph{The cross-survey check is not a check of independent methods.} Our edge fit and the
+\citet{mccluregriffiths2016} estimator are both error-function fits to the profile edge, so their
+agreement bounds survey-to-survey and pipeline-to-pipeline differences (beam, sampling,
+continuum treatment, absorption masking) and does not test the choice of estimator family. Both
+would move together under a different definition of the terminal velocity.
 \paragraph{Circular orbits assumed.} $V = v_\mathrm{term} + V_0\sin\ell$ assumes the tangent-point gas
 is on a circular orbit; spiral-arm and bar-driven streaming biases individual points and cannot be
 removed without a model.
 \paragraph{Bar region excluded.} Points at $R\lesssim\hiRealRmin$~kpc are dominated by the bar's
-non-circular motions and are dropped from the mean.
+non-circular motions and are dropped from the mean and the slope fit. The fitted slope is a
+description of $V(R)$ over $\hiRealRmin < R < \hiRealRmax$~kpc under a straight-line model, not a
+physical parameter; a real rotation curve is not a line, and the value would change with the fitted
+range.
 \paragraph{Not, by itself, a dark-matter detection.} An inner flat curve is consistent with a
 dark halo but can also arise from the disk's own mass; the unambiguous case needs the curve beyond
 $R\approx R_0$, where the visible-mass contribution falls, a regime requiring a different method
@@ -140,10 +206,15 @@ and not covered here. The result is also first-quadrant, $b=0$ only, and the tan
 applies solely for $R<R_0$.
 
 \section{Discussion and reproducibility}
-This is a validation: a small, tested, offline-capable tool recovers the approximately flat
-inner Milky Way rotation curve from public LAB HI data, with the flatness quantified by a slope
-fit, the Keplerian alternative excluded by $\sim$90~km\,s$^{-1}$ at the outermost point, and the
-normalization traced to a measured estimator systematic rather than a citation. The analysis
+This is a validation: a small, tested, offline-capable tool recovers the inner Milky Way rotation
+curve from public LAB HI data, with the Keplerian alternative excluded by $\sim$90~km\,s$^{-1}$ at
+the outermost point, the gentle rise resolved and matched to the VGPS curve rather than asserted
+flat, the absolute level agreeing with that curve to
+$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$, and the normalization traced to a
+measured estimator systematic rather than a citation. The practical consequence for anyone reading
+terminal velocities off an all-sky survey is that LAB is adequate to the km\,s$^{-1}$ level provided
+the profile edge is fitted; a fixed low brightness-temperature threshold costs
+$\hiRealRefThrOffset$~km\,s$^{-1}$ and the cost varies from sightline to sightline. The analysis
 regenerates from a clean checkout, and every number traces to the pipeline-written macros and
 table \code{\textbackslash input}ted at the top of the source.
 

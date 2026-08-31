@@ -254,3 +254,12 @@ count softened to the abstract-quoted 2.5×10⁵ (exact table never located); DR
 committed; lit-floor mid-bin values computed in run() and committed; true_coherence_deg null;
 thomson2023 e040 marked eid; stil2011 cited; Taylor comparison quotes rmsky's ±0.59 jackknife
 and says "measure from"; arXiv package rebuilt.
+
+## Wording: "retract" -> "withdraw" (2026-08-31)
+
+This paper corrected a claim made in an earlier version of *itself*, which was never submitted
+anywhere. "Retract" implies withdrawal from the published record and invites an editor to look
+for the withdrawn paper. Changed to "withdraw", scoped to the earlier version, as part of a sweep
+of the four papers using the verb. The correction and its arithmetic are unchanged; see
+`survey/drift-findings.md` for the full reasoning and for what the repo's tagged releases did and
+did not distribute.

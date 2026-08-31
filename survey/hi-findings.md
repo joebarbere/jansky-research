@@ -110,3 +110,204 @@ addressed by the edge fit, and the drop-outer-two variant is committed). Macros 
 (\hiSyn*/\hiReal*), the figure draws both estimators + the Keplerian curve with bar points open,
 the frame-mismatch sentence is honest, the size claims are scoped, the "Table-style," artifact
 is gone, and the arXiv package is rebuilt clean.
+
+## Dense resampling + VGPS cross-validation (2026-08-31)
+
+The 8-longitude sample was the referee's finding 5 left half-fixed: the parameters were swept,
+but the *sampling* was never questioned. Resampled to \hiNlong = 71 longitudes
+($\ell = 10$--$80\arcdeg$, every $1\arcdeg$ -- LAB is all-sky and each slice is ~370 kB, so the
+cost is one fetch loop) and compared against the tabulated VGPS terminal velocities of
+McClure-Griffiths & Dickey 2016 (VizieR `J/ApJ/831/124/table1`, 748 rows over
+$18.4 < \ell < 67.0\arcdeg$ at $0.065\arcdeg$). The comparison is made on `v_term` itself, so no
+$R_0$/$V_0$ choice enters it.
+
+**The headline result is a validation the paper did not previously have.** Over the 49
+overlapping longitudes the edge-fit terminal velocities agree with VGPS to
+**+1.04 +/- 0.15 km/s** (sd 1.05), and the slopes agree too: LAB edge
+**+2.52 +/- 0.55** against MG&D's **+3.82 +/- 0.18** on their own 579 points beyond the same cut
+(restricted to their longitude range and their sampling reduced to our 1-degree grid, the two
+give +3.59 +/- 0.76 and +3.57 +/- 0.71 -- indistinguishable). A 0.5-degree-beam all-sky single-dish
+survey reproduces an interferometric survey's terminal-velocity curve at the km/s level, in
+normalisation and in shape. Robust to the matching window: +/-0.25/0.5/1.0 deg, mean or median,
+all give +0.97 to +1.17; nearest-point +1.17.
+
+**And it retracts the flatness claim.** The published slope was 2.8 +/- 1.8 km/s/kpc at N=6 --
+1.6 sigma, reported as "consistent with flat". At N=51 it is **+1.79 +/- 0.57 (3.1 sigma)** on the
+threshold estimator and **+2.52 +/- 0.55 (4.6 sigma)** on the edge fit. The curve rises. Nothing
+about the data changed; the six-point sample simply could not resolve a rise this gentle, so the
+old sentence was a statement about the sample's power dressed as a statement about the Galaxy.
+MG&D's own curve rises at the same rate, so the *correct* reading is that the dense LAB curve
+reproduces the reference in shape -- a better result than the one being retracted, arrived at by
+giving the test enough points to fail. This is the mirror of the fashienv lesson: run the test even
+when you expect it to confirm the claim. The title carried "Flat" and has been changed.
+
+The Keplerian contrast (176 vs ~257 at the outermost point) is untouched, so the
+dark-matter-relevant statement stands. The flat *level* also survives: 256.6 (scatter 5.3, SEM 0.7)
+and 243.0 (scatter 5.5, SEM 0.8) at N=51, against 257 and 243 at N=6 -- the old point estimates
+were right, only their error bars and the slope were underpowered.
+
+**The threshold estimator is confirmed biased, and the bias is not a constant.** vs VGPS it sits
+**+15.26 +/- 0.56 km/s** high with sd **3.92** (range +7.5 to +29.9), so no single offset would
+correct it. The gap closes monotonically as the threshold climbs the profile edge --
+1.5 K +17.2, 2 K +15.3, 3 K +13.2, 5 K +10.6, 10 K +7.5, **20 K +4.2**, 40 K +0.6 -- and 20 K is
+the threshold MG&D seed their own fit from, so the two pipelines converge where they should. That
+is a prediction the data could have refused and did not. The overshoot correlates with the fitted
+edge width (r = 0.44, slope 1.02 over all 71; r = 0.74, slope 1.86 over the 49 overlap), against an
+erfc-model prediction of ~1.5: the relation is real but loose, because the fitted width is noisy.
+
+**Honest caveat, stated in the paper.** MG&D's estimator is the same family as ours -- a sum of two
+error functions seeded from a 20 K threshold, on continuum-masked latitude-averaged spectra. So the
++1.04 bounds survey-to-survey and pipeline-to-pipeline differences (beam, sampling, absorption
+treatment) and does *not* test the estimator family; both would move together under a different
+definition of the terminal velocity. Claiming an independent-method confirmation here would be the
+`dr20radio` vacuous-robustness-check error in a new costume.
+
+**Two defects the dense sample exposed that the 8-point sample hid.** (1) 5 of the 71 spectra have
+non-contiguous emission above 2 K -- the paper's flat assertion that "in every LAB spectrum used
+here the emission above 2 K is a single contiguous velocity run" was true of the 8 and is not true
+of the 71; it now reports the count. (2) The edge fit fails to converge on 1 sightline
+($\ell = 12\arcdeg$), which is dropped and stated.
+
+**Fixture change.** The offline fixture used a single 5 km/s edge width, so it could not exercise
+the width-bias relation the paper now reports; it varies 3--8 km/s and reproduces the scaling
+(slope 1.80, r = 0.96). The offline leg also now runs the same comparison machinery against the
+injected curve in place of the VGPS one, recovering it to 0.09 km/s -- so the comparison code is
+covered without a network, which is where the previous version had no coverage at all.
+
+**Macro hygiene.** A non-finite metric used to reach the macro file as the literal string `nan`
+(the 40 K sweep point has no crossing on a 30 K synthetic fixture); every numeric macro now goes
+through a formatter that emits `--` instead, which the arXiv assembler already blocks on. The
+`\hiSyn*` namespace was refilled by running the offline leg with `out=<tmpdir>` and calling
+`_write_macros` on the real path, per CLAUDE.md; `preserve_live_macros` held every real value.
+
+## GATE-0 novelty pass on the LAB-vs-VGPS comparison (2026-08-31, ADS)
+
+Run before drafting any RNAAS note. Note first that **"terminal velocity" is badly overloaded**
+— stellar winds, AGN outflows, precipitation physics — so every keyword query has to be pinned to
+a Galactic-kinematics term ("tangent point", "rotation curve") or the results are noise. An
+unpinned `full:"terminal velocity"` search returns Wolf-Rayet winds and Rayleigh-Taylor mixing.
+
+**Verdict: the comparison appears unpublished.** The decisive check is that MG&D 2016 has only
+**22 citers**, so they can be enumerated exhaustively — none is a survey cross-validation of
+terminal velocities. Supporting queries: `full:"terminal velocity" AND full:"LAB survey"` returns
+26, all of which use one survey or the other for a different purpose (and several are the
+stellar-wind homonym); `citations(MG&D 2016) AND citations(Kalberla 2005)` returns **3**
+(Sormani 2024, the McClure-Griffiths & Stanimirović 2023 ARA&A review, Dickey 2022 GASKAP), none
+of them a comparison; a title search for terminal-velocity curves in a Galactic context returns
+15, of which the Galactic ones are MG&D 2016, McGaugh 2016 (surface density *from* a compiled
+curve) and Davis 2025. Full-text control confirmed the index reaches MG&D 2016 itself, so the
+zero-hit queries are real zeros and not a broken query.
+
+**Two things the pass turned up that the paper owed, both now fixed and rebuilt:**
+
+1. **`reiddame2016` (ApJ 832, 159, 10.3847/0004-637X/832/2/159, adjudicated against Crossref).**
+   Reid & Dame show that fitting a *flat* curve to HI terminal velocities biases the inferred
+   Theta_0, precisely because the true curve is slightly curved. That is the same fact my dense
+   slope measures, arriving from the other direction, and without it the Results paragraph reads
+   as though the rise were a discovery. It is not: what this analysis corrects is **its own**
+   earlier claim, and the paper now says exactly that.
+2. **`davis2026` (Davis et al., MNRAS 547, staf2166, 10.1093/mnras/staf2166)** on what
+   terminal-velocity curves do and do not recover in simulations, cited alongside it.
+
+**A defect found in passing, NOT fixed (out of this PR's scope):** `papers/innerrc/refs.bib`
+carries the same Davis et al. paper as `@article{tvmcaution}` with `journal = {arXiv e-prints}`,
+`year = {2025}`, `note = {arXiv:2510.10845}` and **no DOI** — it was published in MNRAS on
+2025-12-08. A preprint citation for a paper that now has a DOI. Worth a sweep of every `.bib` for
+`arXiv e-prints` entries whose eprint now resolves to a journal article; that is the same
+adjudicate-don't-search procedure that fixed the 19 citation defects in plan 95.
+
+**Adjacent literature worth knowing about.** There is a small recent cluster of small-telescope
+tangent-point rotation curves — Li & Hu 2024 (arXiv:2404.17893, campus DIY telescope, and it
+"analyses the possible measurement error in the tangent method"), Pandian & Ganesh 2022
+(arXiv:2202.11039, low-cost horn + SDR), the SALSA educational tool, NARIT 4.5 m — all using their
+*own* observations rather than an archival all-sky survey, and none doing a cross-survey
+validation. They are the closest work in spirit to this slice's framing, they are mostly
+uncited arXiv/conference items, and any note should cite Li & Hu rather than pretend the niche is
+empty.
+
+**Consequence for the RNAAS question.** The novelty gate is discharged in favour of the note, but
+the note's claim must be narrow: not "the tangent-point method has estimator systematics" (known,
+and MG&D warn about it in print), nor "the inner curve is not flat" (known — Reid & Dame), but
+**"LAB reproduces the VGPS terminal-velocity curve to 1 km/s in level and slope, provided the
+profile edge is fitted; a 2 K threshold costs 15 km/s and the cost is not a constant."** That is
+the sentence nothing in the 22-citer list or the adjacent cluster contains.
+
+## RNAAS note drafted (2026-08-31)
+
+`papers/hi/rnaas.tex` — *"The LAB and VGPS HI Terminal-Velocity Curves Agree to 1 km/s When the
+Profile Edge Is Fitted."* 111-word abstract, 883 words total (RNAAS median 830, cap 1500), two
+pages, one figure. Triage clean; RNAAS-genre prose lint clean apart from one LOW on the
+sentence-shaped title, which is attested for the genre (6.0% of 1,035 notes) and which the style
+guide says should carry the verdict — flagged for sign-off rather than decided unilaterally.
+
+The exhibit is `figures/vgps_comparison.pdf`, pipeline-written like everything else: left panel
+both estimators against the reference in `v_term`, right panel the mean offset against the
+brightness-temperature threshold, showing the convergence.
+
+**Two numbers were nearly shipped hand-typed.** The first draft quoted the matching-window range
+as "+0.97 to +1.17" and the sweep endpoints as "+17.2 to +0.6" — the sweep values were at least in
+the results JSON, but the window range existed *only in a scratch script*, which makes it
+unauditable and, as it turned out, wrong: the pipeline's own sweep gives **0.96 to 1.12**, because
+my scratch version had averaged a different statistic set. `compare_edge_window_sweep` and
+`reference_slope_n` are now committed metrics with macros, and both papers cite them. The lesson is
+the familiar one in a new place: a number that reaches prose from a notebook rather than from the
+committed pipeline is not evidence, and the discrepancy here was small enough that nothing would
+have flagged it.
+
+**Writing the note broke `main.tex`'s traditional-style baseline, and the linter caught it.** The
+dense-resampling edits introduced 7 em-dash pivots (rate 3.74/kw against a corpus p90 of 0.66,
+a HIGH) and pushed the abstract to 308 words (corpus p90 273). Both fixed: parentheses and plain
+sentences, abstract down to 276. Worth noting that the style gates are not self-maintaining — a
+content edit to a converted paper silently de-converts it, so `prose_lint.py` belongs in the same
+reflex as `triage_papers.py` after any paper edit.
+
+## Full referee round on the RNAAS note (2026-08-31): MAJOR REVISION, 16 findings — RESOLVED
+
+Presenter/referee round-trip on `papers/hi/rnaas.tex`. Every checkable finding verified against
+the committed arrays before acting; `git status` clean after (the reviewer executed nothing that
+writes). Two findings changed what the note claims.
+
+**BLOCKER (1). The slope half of the title claim was contradicted by the numbers printed beside
+it.** The note offered `2.52 +/- 0.55` against the reference's `3.82 +/- 0.18` — a difference of
+`1.30 +/- 0.58`, **2.2 sigma**, so a reader who subtracts gets a tension, not an agreement. Cause:
+`_slope_fit` cuts only on `R > rmin`, so the LAB fit ran to **8.03 kpc** (l=80) while the
+reference stops at **7.50 kpc** (l=67). Two different chords of a curve with real structure in it.
+The like-for-like pair is **3.59 +/- 0.76 against 3.57 +/- 0.71** (0.0 sigma) — and it existed only
+in this findings file, which is exactly the "a number that reaches prose from a notebook is not
+evidence" failure the same day's commit message described for the window sweep, left standing on
+the load-bearing claim. `matched_slopes()` now fits both arms on the *same* longitude set and the
+pair is committed and macro'd.
+
+**The systematic that was never measured (4).** The note's only robustness check on the headline
++1.04 was the matching-window sweep — symmetric averaging of a smooth reference curve, which to
+first order cannot move the mean. The `dr20radio` vacuous-check shape, and the measured span
+(0.16) was one SEM, as a check that cannot fail always is. The parameters that *can* move it are
+inside our own estimator, and measured they move it hard: **window_wide +1.90, window_narrow
+-0.22, lat_avg(|b|<0.5) +0.89, span 2.12 km/s** — an order of magnitude above the 0.15 statistical
+error. So **the +1.04 is not a resolved offset between the surveys**; it is agreement at the
+one-channel level and no better. This also dissolves the referee's separate worry (5) that a
+6.9-sigma offset numerically equal to one LAB channel (1.0306 km/s, measured from the data) was
+being reported as an absence. The note now says the agreement is one channel and says why.
+
+Everything else, fixed and committed: the reference slope's `+/-0.18` was an OLS error on 579
+correlated samples and is now shown against the matched-grid value (2); the figure caption said
+71 sightlines where the panel plots the 49 matched ones (3); the LAB beam is **36 arcmin**, not the
+"0.5 deg half-beam" both papers claimed — 0.5 deg is the grid spacing (6); the 20 K clause implied a
+pipeline convergence that MG&D's `V_t = v_t - v_o` construction forbids, and is reframed (7); the
+edge residual drifts with longitude at **+0.025 +/- 0.010 km/s/deg (2.4 sigma)** with lag-1
+autocorrelation 0.31, which puts the honest SEM at **0.21** not 0.15 (8); the width systematic does
+**not** leak into the validated estimator (`r = -0.089` against the edge residual), which is the
+direct answer to the question and a clean negative worth printing (9); the six defective sightlines
+are located — one inside the compared sample, three in the outer segment — and dropping them moves
+the full-range slope to 2.79 +/- 0.61 (10); the `rmin` cut is swept for **both** arms (11).
+
+**The rmin sweep is the note's best robustness result and it nearly went unreported.** The fitted
+slope is not a stable property: 3 to 6 kpc swings it from **+7.3 to -7.2**. But it swings the
+reference identically (**+7.1 to -6.7**) at every cut. The slope is a chord across a ~2 kpc
+undulation MG&D themselves report; what is robust is that LAB tracks the reference wherever you
+cut. Reporting only "the curve rises at 2.52" would have been reporting the cut.
+
+Also: `lihu2024` cited, as the GATE-0 pass said the note owed (12); the VizieR table named (13);
+the stale `V_flat_std_kms` key removed from the results JSON, where it sat beside
+`V_flat_scatter_kms` as the same quantity from an older run (14). Note is now 121-word abstract,
+948-word body, 3 pages. Triage 0/0/0 on both documents; prose lint 0 HIGH on both.
