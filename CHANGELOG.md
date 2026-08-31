@@ -10,6 +10,42 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`hi` gains a cross-survey comparison and a longitude step.** `hi.fetch_mgd2016` /
+  `hi.read_mgd2016` pull the tabulated VGPS terminal-velocity curve of McClure-Griffiths &
+  Dickey 2016 (VizieR `J/ApJ/831/124/table1`); `hi.compare_terminal_velocities` matches any
+  terminal-velocity curve against a densely sampled reference within one beam half-width,
+  dropping rather than extrapolating uncovered longitudes; `hi.synthetic_reference_curve`
+  supplies the offline equivalent. `hi.run` takes `step_deg` (default $1\arcdeg$).
+
+### Changed
+- **`hi` resampled to 71 longitudes and cross-validated against the VGPS — the flatness claim
+  is retracted.** `hi.run` now samples $\ell = 10$–$80\arcdeg$ every `step_deg` (default
+  $1\arcdeg$, so 71 sightlines against the previous 8) and compares its terminal velocities
+  against the tabulated VGPS curve of McClure-Griffiths & Dickey 2016. The
+  edge-fit curve agrees with theirs to **+1.04 ± 0.15 km/s** over the 49 overlapping
+  longitudes and matches its slope (+2.52 ± 0.55 against +3.82 ± 0.18) — an all-sky
+  single-dish survey reproducing an interferometric one in level and shape, which the paper
+  did not previously demonstrate. The same sample retracts the published slope: 2.8 ± 1.8
+  (1.6σ, "consistent with flat") at N=6 becomes **+1.79 ± 0.57 (3.1σ)** at N=51, so the
+  curve rises and the paper — including its title, which carried "Flat" — no longer says
+  otherwise. The Keplerian contrast and the flat level are unchanged. The 2 K threshold
+  estimator's bias is confirmed at +15.26 ± 0.56 km/s against the VGPS, is *not* a constant
+  (sd 3.92), and closes monotonically to +4.2 at the 20 K threshold MG&D seed their own fit
+  from. Also reported now: the 5 sightlines whose >2 K emission is non-contiguous and the 1
+  edge-fit failure, both invisible in the 8-point sample.
+
+### Fixed
+- **A non-finite `hi` metric could reach the paper as the literal string `nan`.** Every
+  numeric macro now goes through a formatter emitting `--`, the placeholder the arXiv
+  assembler already blocks on, so a hole fails loudly at packaging instead of rendering as a
+  value. The `\hiRealReference` macro also escapes `&` for LaTeX.
+- **The `hi` offline fixture could not exercise what the paper claims.** It used one 5 km/s
+  edge width, so the width-dependence of the threshold overshoot was unmeasurable offline;
+  it now varies 3–8 km/s (reproducing the scaling at slope 1.80, r = 0.96) and runs the same
+  reference-comparison path as a real run against its own injected curve, recovering it to
+  0.09 km/s.
+
 ## [1.10.0] - 2026-08-28
 
 ### Added

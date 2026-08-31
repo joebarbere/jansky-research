@@ -18,11 +18,14 @@ import numpy as np
 __all__ = [
     "R0_KPC",
     "V0_KMS",
+    "compare_terminal_velocities",
     "fetch_lab_longitude",
+    "fetch_mgd2016",
     "read_lab_slice",
     "rotation_curve",
     "run",
     "synthetic_lv_slice",
+    "synthetic_reference_curve",
     "tangent_point",
     "terminal_velocity",
     "terminal_velocity_edge",
@@ -173,6 +176,110 @@ def synthetic_lv_slice(
     return lat, vel, data
 
 
+def compare_terminal_velocities(
+    longitudes: np.ndarray,
+    v_term: np.ndarray,
+    ref_l_deg: np.ndarray,
+    ref_v_kms: np.ndarray,
+    *,
+    half_width_deg: float = 0.5,
+    min_points: int = 5,
+) -> dict:
+    """Match a terminal-velocity curve against a densely sampled external reference curve.
+
+    The reference (McClure-Griffiths & Dickey 2016, from the VGPS) is sampled every $0.065\\arcdeg$,
+    far finer than the LAB beam, so each of our longitudes is compared against the *mean*
+    reference value within ``half_width_deg`` — one LAB half-beam. Longitudes with fewer than
+    ``min_points`` reference samples in that window (outside the reference's coverage) are
+    dropped rather than extrapolated.
+
+    The comparison is made on the terminal velocity itself, not on $V(R)$: $v_\\mathrm{term}$ is a
+    directly observed LSR quantity, so no $R_0$/$V_0$ choice enters and the two surveys are
+    compared on what each actually measured.
+
+    Returns the per-longitude match plus ``mean``/``sd``/``sem``/``n`` of the difference.
+    """
+    longitudes = np.asarray(longitudes, dtype=float)
+    v_term = np.asarray(v_term, dtype=float)
+    ref_l_deg = np.asarray(ref_l_deg, dtype=float)
+    ref_v_kms = np.asarray(ref_v_kms, dtype=float)
+    matched_l, matched_ref, matched_v = [], [], []
+    for ell, vt in zip(longitudes, v_term, strict=True):
+        m = np.abs(ref_l_deg - ell) <= half_width_deg
+        if int(m.sum()) < min_points or not np.isfinite(vt):
+            continue
+        matched_l.append(float(ell))
+        matched_ref.append(float(np.mean(ref_v_kms[m])))
+        matched_v.append(float(vt))
+    d = np.asarray(matched_v) - np.asarray(matched_ref)
+    n = int(d.size)
+    sd = float(np.std(d, ddof=1)) if n > 1 else float("nan")
+    return {
+        "longitudes_deg": matched_l,
+        "reference_v_term_kms": matched_ref,
+        "v_term_kms": matched_v,
+        "delta_kms": d.tolist(),
+        "mean": float(np.mean(d)) if n else float("nan"),
+        "median": float(np.median(d)) if n else float("nan"),
+        "sd": sd,
+        "sem": sd / np.sqrt(n) if n > 1 else float("nan"),
+        "n": n,
+        "half_width_deg": half_width_deg,
+    }
+
+
+def synthetic_reference_curve(longitudes: np.ndarray, *, v_flat: float = 230.0) -> tuple:
+    """Densely sampled *known* terminal-velocity curve for the offline fixture.
+
+    Mirrors what :func:`fetch_mgd2016` supplies on a real run, so the offline leg exercises the
+    same comparison code path with a reference whose answer is known exactly: the injected
+    curve. The edge estimator should match it, the threshold estimator should sit above it by
+    the wing overshoot.
+    """
+    lo, hi_ = float(np.min(longitudes)) + 1.0, float(np.max(longitudes)) - 1.0
+    ell = np.arange(lo, hi_ + 1e-9, 0.065)
+    return ell, v_flat - V0_KMS * np.sin(np.radians(ell))
+
+
+def fetch_mgd2016() -> tuple:  # pragma: no cover - network
+    """McClure-Griffiths & Dickey (2016) Table 1: VGPS HI terminal velocities (cached).
+
+    748 rows over $18.4\\arcdeg < \\ell < 67.0\\arcdeg$ at $0.065\\arcdeg$ spacing, from VizieR
+    ``J/ApJ/831/124/table1``. Their $v_\\mathrm{LSR}$ is the *fitted* terminal velocity: a sum of
+    two error functions seeded from a 20 K threshold crossing, on continuum-masked, latitude-
+    averaged spectra. Returns ``(l_deg, v_term_kms)``.
+    """
+    from . import data as _data
+
+    target = _data.data_dir() / "mgd2016_table1.tsv"
+    if not target.exists():
+        _data._download(
+            "https://vizier.cds.unistra.fr/viz-bin/asu-tsv?-source=J/ApJ/831/124/table1"
+            "&-out=GLON,vLSR&-out.max=5000",
+            target,
+        )
+    return read_mgd2016(target)
+
+
+def read_mgd2016(path) -> tuple:
+    """Parse a cached VizieR TSV of MG&D 2016 Table 1 into ``(l_deg, v_term_kms)``."""
+    from pathlib import Path
+
+    ell, vel = [], []
+    for line in Path(path).read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        parts = line.split("\t")
+        try:
+            ell.append(float(parts[0]))
+            vel.append(float(parts[1]))
+        except (ValueError, IndexError):
+            continue  # header, unit and rule rows
+    if not ell:
+        raise ValueError(f"no data rows parsed from {path}")
+    return np.asarray(ell), np.asarray(vel)
+
+
 def fetch_lab_longitude(l_deg: float):  # pragma: no cover - network
     """Download the LAB $(b, v)$ slice at integer/half-degree longitude ``l_deg`` from VizieR (cached)."""
     from . import data as _data
@@ -210,23 +317,52 @@ def _slope_fit(R: np.ndarray, V: np.ndarray, rmin: float) -> tuple[float, float]
     return float(coef[0]), se
 
 
-def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> dict:
-    """Build the inner-Galaxy rotation curve (real LAB longitudes, or synthetic offline). Writes a figure.
+def _contiguity(vel_kms: np.ndarray, spectrum: np.ndarray, threshold_k: float) -> int:
+    """Number of separate velocity runs above ``threshold_k`` (1 = a single contiguous edge)."""
+    above = np.isfinite(spectrum) & (spectrum > threshold_k)
+    if not above.any():
+        return 0
+    return int(np.sum(np.diff(above.astype(int)) == 1)) + int(above[0])
+
+
+def run(
+    out: str = ".",
+    *,
+    offline: bool = False,
+    threshold_k: float = 2.0,
+    step_deg: float = 1.0,
+) -> dict:
+    """Build the inner-Galaxy rotation curve (real LAB longitudes, or synthetic offline).
+
+    Longitudes are sampled from $10\\arcdeg$ to $80\\arcdeg$ every ``step_deg``; at the default
+    $1\\arcdeg$ that is 71 sightlines. The earlier 8-longitude sampling was too sparse to resolve
+    the slope of $V(R)$, and reported it as consistent with zero when it is not.
 
     Both terminal-velocity estimators run on the same spectra — the fixed-threshold crossing and
     the error-function edge fit — so the estimator systematic is a *measured* per-run quantity,
-    not a citation. Sensitivity variants (threshold sweep, drop-a-point) are committed with the
-    headline.
+    not a citation. On a real run the curve is additionally compared against the independently
+    measured VGPS terminal velocities of McClure-Griffiths & Dickey (2016); offline, the same
+    comparison runs against the fixture's injected curve. Sensitivity variants (threshold sweep,
+    drop-a-point) are committed with the headline.
     """
     from pathlib import Path
 
-    longitudes = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0])
+    longitudes = np.arange(10.0, 80.0 + 1e-9, step_deg)
     if offline:
-        slices = [synthetic_lv_slice(ell, seed=i) for i, ell in enumerate(longitudes)]
+        # Real LAB edges span ~2-12 km/s and the threshold overshoot scales with that width,
+        # so a single-width fixture cannot exercise the width-bias relation measured below.
+        slices = [
+            synthetic_lv_slice(ell, seed=i, edge_width_kms=3.0 + 5.0 * (i % 6) / 5.0)
+            for i, ell in enumerate(longitudes)
+        ]
         source = "synthetic"
+        ref_l, ref_v = synthetic_reference_curve(longitudes)
+        reference = "synthetic injected curve"
     else:  # pragma: no cover - network
         slices = [read_lab_slice(fetch_lab_longitude(ell)) for ell in longitudes]
         source = "LAB (Kalberla et al. 2005)"
+        ref_l, ref_v = fetch_mgd2016()
+        reference = "VGPS (McClure-Griffiths & Dickey 2016, Table 1)"
     rmin = 4.0  # the bar dominates non-circular motions at R < ~4 kpc; exclude it
     R, V = rotation_curve(longitudes, slices, threshold_k=threshold_k)
     Re, Ve = rotation_curve(longitudes, slices, threshold_k=threshold_k, estimator="edge")
@@ -237,21 +373,67 @@ def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> d
     # Keplerian contrast: a point-mass decline normalised at the innermost flat point.
     m = R > rmin
     kepler = float(V[m][0] * np.sqrt(R[m][0] / R[m][-1])) if m.sum() >= 2 else float("nan")
-    # Sensitivity variants, committed with the headline so the flat level's robustness to the
-    # hand-chosen analysis parameters is evidence, not assertion.
-    sweep = {}
-    for thr in (1.5, 2.0, 3.0, 5.0):
+
+    # Per-longitude terminal velocities and edge widths, in longitude order.
+    v_thr, v_edge, widths, runs = [], [], [], []
+    for lat, vv, d in slices:
+        spec = d[int(np.argmin(np.abs(lat)))]
+        v_thr.append(terminal_velocity(vv, spec, threshold_k=threshold_k))
+        ve, w = terminal_velocity_edge(vv, spec, threshold_k=threshold_k)
+        v_edge.append(ve)
+        widths.append(w)
+        runs.append(_contiguity(vv, spec, threshold_k))
+    v_thr_a, v_edge_a, widths_a = (np.asarray(x) for x in (v_thr, v_edge, widths))
+
+    # Cross-survey validation: both estimators against the same external reference curve.
+    cmp_thr = compare_terminal_velocities(longitudes, v_thr_a, ref_l, ref_v)
+    cmp_edge = compare_terminal_velocities(longitudes, v_edge_a, ref_l, ref_v)
+    # The reference's own V(R) slope, on its native sampling -- the comparand for ours.
+    ref_R = R0_KPC * np.sin(np.radians(ref_l))
+    ref_V = ref_v + V0_KMS * np.sin(np.radians(ref_l))
+    ref_slope, ref_slope_se = _slope_fit(ref_R, ref_V, rmin)
+
+    # Does the threshold estimator's disagreement with the reference close as the threshold
+    # rises towards the 20 K the reference itself was seeded from? If the gap is the wing
+    # overshoot it must, and that is a prediction the data can refuse.
+    sweep, sweep_ref = {}, {}
+    for thr in (1.5, 2.0, 3.0, 5.0, 10.0, 20.0, 40.0):
         Rs, Vs = rotation_curve(longitudes, slices, threshold_k=thr)
         sweep[f"{thr:g}"] = round(_flat_stats(Rs, Vs, rmin)["mean"], 1)
+        vt_s = np.asarray(
+            [
+                terminal_velocity(vv, d[int(np.argmin(np.abs(lat)))], threshold_k=thr)
+                for (lat, vv, d) in slices
+            ]
+        )
+        sweep_ref[f"{thr:g}"] = round(
+            compare_terminal_velocities(longitudes, vt_s, ref_l, ref_v)["mean"], 2
+        )
+
+    # Is the threshold bias set by the width of the profile edge, as the erfc model says?
+    bias = v_thr_a - v_edge_a
+    ok = np.isfinite(bias) & np.isfinite(widths_a)
+    if int(ok.sum()) > 2:
+        width_corr = float(np.corrcoef(widths_a[ok], bias[ok])[0, 1])
+        width_slope = float(np.polyfit(widths_a[ok], bias[ok], 1)[0])
+    else:
+        width_corr = width_slope = float("nan")
+
     drop_inner = float(np.mean(np.delete(V[m], 0))) if m.sum() > 1 else float("nan")
     drop_outer_two = float(np.mean(V[m][:-2])) if m.sum() > 2 else float("nan")
 
     metrics = {
         "source": source,
+        "reference": reference,
+        "step_deg": step_deg,
         "longitudes_deg": longitudes.tolist(),
         "R_kpc": R.tolist(),
         "V_kms": V.tolist(),
         "V_kms_edge": Ve.tolist(),
+        "v_term_threshold_kms": v_thr_a.tolist(),
+        "v_term_edge_kms": v_edge_a.tolist(),
+        "edge_width_kms": widths_a.tolist(),
+        "n_above_threshold_runs": runs,
         "V_flat_mean_kms": thr_stats["mean"],
         "V_flat_scatter_kms": thr_stats["scatter"],
         "V_flat_sem_kms": thr_stats["sem"],
@@ -263,10 +445,21 @@ def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> d
         "threshold_minus_edge_kms": thr_stats["mean"] - edge_stats["mean"],
         "slope_kms_per_kpc": slope,
         "slope_se_kms_per_kpc": slope_se,
+        "slope_sigma": abs(slope / slope_se) if slope_se else float("nan"),
         "slope_edge_kms_per_kpc": slope_e,
         "slope_edge_se_kms_per_kpc": slope_e_se,
+        "slope_edge_sigma": abs(slope_e / slope_e_se) if slope_e_se else float("nan"),
+        "reference_slope_kms_per_kpc": ref_slope,
+        "reference_slope_se_kms_per_kpc": ref_slope_se,
+        "compare_threshold": cmp_thr,
+        "compare_edge": cmp_edge,
         "keplerian_at_rmax_kms": kepler,
         "threshold_sweep_vflat": sweep,
+        "threshold_sweep_minus_reference": sweep_ref,
+        "width_bias_corr": width_corr,
+        "width_bias_slope": width_slope,
+        "n_noncontiguous": int(np.sum(np.asarray(runs) > 1)),
+        "n_edge_fit_failed": int(np.sum(~np.isfinite(v_edge_a))),
         "vflat_drop_innermost": drop_inner,
         "vflat_drop_outermost_two": drop_outer_two,
         "flat_radius_min_kpc": rmin,
@@ -287,14 +480,22 @@ def run(out: str = ".", *, offline: bool = False, threshold_k: float = 2.0) -> d
     return metrics
 
 
-def _write_table(longitudes, R, V, Ve, rmin: float, path) -> None:
-    """Emit the per-longitude (l, R, V_threshold, V_edge) rows the paper's table \\input{}s."""
+def _write_table(longitudes, R, V, Ve, rmin: float, path, *, every_deg: float = 5.0) -> None:
+    """Emit the per-longitude (l, R, V_threshold, V_edge) rows the paper's table \\input{}s.
+
+    The curve is now sampled every degree, which is 71 rows — too many for a two-column
+    table and no more informative than a regular subsample, so the printed table steps by
+    ``every_deg``. The full per-longitude curve is in the committed results JSON, which is
+    the evidence; this is the reader's excerpt.
+    """
     from pathlib import Path
 
     order = np.argsort(np.asarray(R))
     lon = np.asarray(sorted(longitudes, key=lambda x: R0_KPC * np.sin(np.radians(x))))
     lines = []
     for i in order:
+        if round(float(lon[i])) % int(every_deg):
+            continue
         note = "" if R[i] > rmin else r" (bar; excluded)"
         lines.append(rf"{lon[i]:.0f} & {R[i]:.2f} & {V[i]:.1f} & {Ve[i]:.1f}{note} \\")
     p = Path(path)
@@ -312,31 +513,63 @@ def _write_macros(m: dict, path) -> None:
     """
     from pathlib import Path
 
+    def num(value: float, fmt: str = ".2f") -> str:
+        """Format a metric, or the repo's placeholder if it is not finite.
+
+        A macro must never carry the literal ``nan``: it renders in the PDF and reads as a
+        value. ``--`` is the placeholder the arXiv assembler already blocks on, so a
+        non-finite metric that the paper actually cites fails loudly at packaging time
+        instead of shipping.
+        """
+        return "--" if not np.isfinite(value) else format(value, fmt)
+
     real = not str(m.get("source", "")).lower().startswith("synthetic")
     ns, other = ("hiReal", "hiSyn") if real else ("hiSyn", "hiReal")
     excess = 100.0 * (m["V_flat_mean_kms"] - m["V0_kms"]) / m["V0_kms"]
     excess_edge = 100.0 * (m["V_flat_edge_mean_kms"] - m["V0_kms"]) / m["V0_kms"]
     sweep = m.get("threshold_sweep_vflat", {})
+    sweep_ref = m.get("threshold_sweep_minus_reference", {})
+    ct = m.get("compare_threshold", {})
+    ce = m.get("compare_edge", {})
     values = (
-        ("Vflat", f"{m['V_flat_mean_kms']:.0f}"),
-        ("VflatScatter", f"{m['V_flat_scatter_kms']:.0f}"),
-        ("VflatSem", f"{m['V_flat_sem_kms']:.1f}"),
+        ("Vflat", num(m["V_flat_mean_kms"], ".0f")),
+        ("VflatScatter", num(m["V_flat_scatter_kms"], ".0f")),
+        ("VflatSem", num(m["V_flat_sem_kms"], ".1f")),
         ("Nflat", f"{m['n_flat']}"),
-        ("VflatEdge", f"{m['V_flat_edge_mean_kms']:.0f}"),
-        ("VflatEdgeScatter", f"{m['V_flat_edge_scatter_kms']:.0f}"),
-        ("VflatEdgeSem", f"{m['V_flat_edge_sem_kms']:.1f}"),
-        ("ThrMinusEdge", f"{m['threshold_minus_edge_kms']:.1f}"),
-        ("ExcessPct", f"{excess:.0f}"),
-        ("ExcessPctEdge", f"{excess_edge:.1f}"),
-        ("Slope", f"{m['slope_kms_per_kpc']:.1f}"),
-        ("SlopeErr", f"{m['slope_se_kms_per_kpc']:.1f}"),
-        ("Kepler", f"{m['keplerian_at_rmax_kms']:.0f}"),
+        ("VflatEdge", num(m["V_flat_edge_mean_kms"], ".0f")),
+        ("VflatEdgeScatter", num(m["V_flat_edge_scatter_kms"], ".0f")),
+        ("VflatEdgeSem", num(m["V_flat_edge_sem_kms"], ".1f")),
+        ("ThrMinusEdge", num(m["threshold_minus_edge_kms"], ".1f")),
+        ("ExcessPct", num(excess, ".0f")),
+        ("ExcessPctEdge", num(excess_edge, ".1f")),
+        ("Slope", num(m["slope_kms_per_kpc"])),
+        ("SlopeErr", num(m["slope_se_kms_per_kpc"])),
+        ("SlopeSigma", num(m["slope_sigma"], ".1f")),
+        ("SlopeEdge", num(m["slope_edge_kms_per_kpc"])),
+        ("SlopeEdgeErr", num(m["slope_edge_se_kms_per_kpc"])),
+        ("SlopeEdgeSigma", num(m["slope_edge_sigma"], ".1f")),
+        ("RefSlope", num(m["reference_slope_kms_per_kpc"])),
+        ("RefSlopeErr", num(m["reference_slope_se_kms_per_kpc"])),
+        ("RefN", f"{ce['n']}"),
+        ("RefEdgeOffset", num(ce.get("mean", float("nan")))),
+        ("RefEdgeOffsetSd", num(ce.get("sd", float("nan")))),
+        ("RefEdgeOffsetSem", num(ce.get("sem", float("nan")))),
+        ("RefThrOffset", num(ct.get("mean", float("nan")))),
+        ("RefThrOffsetSd", num(ct.get("sd", float("nan")))),
+        ("RefThrOffsetSem", num(ct.get("sem", float("nan")))),
+        ("SweepRefTwenty", num(sweep_ref.get("20", float("nan")), ".1f")),
+        ("WidthCorr", num(m["width_bias_corr"])),
+        ("WidthSlope", num(m["width_bias_slope"])),
+        ("NNoncontig", f"{m['n_noncontiguous']}"),
+        ("NEdgeFail", f"{m['n_edge_fit_failed']}"),
+        ("Kepler", num(m["keplerian_at_rmax_kms"], ".0f")),
         ("Rmin", f"{m['flat_radius_min_kpc']:.0f}"),
-        ("Rmax", f"{max(m['R_kpc']):.1f}"),
-        ("SweepLoThr", f"{sweep.get('1.5', float('nan')):.0f}"),
-        ("SweepHiThr", f"{sweep.get('5', float('nan')):.0f}"),
-        ("DropInner", f"{m['vflat_drop_innermost']:.0f}"),
-        ("DropOuterTwo", f"{m['vflat_drop_outermost_two']:.0f}"),
+        ("Rmax", num(max(m["R_kpc"]), ".1f")),
+        ("SweepLoThr", num(sweep.get("1.5", float("nan")), ".0f")),
+        ("SweepHiThr", num(sweep.get("5", float("nan")), ".0f")),
+        ("DropInner", num(m["vflat_drop_innermost"], ".0f")),
+        ("DropOuterTwo", num(m["vflat_drop_outermost_two"], ".0f")),
+        ("Reference", str(m.get("reference", "--")).replace("&", r"\&")),
     )
     lines = [
         "% Auto-generated by jansky_research.hi._write_macros — do not edit by hand.",
@@ -346,6 +579,7 @@ def _write_macros(m: dict, path) -> None:
         rf"\newcommand{{\hiRzero}}{{{m['R0_kpc']:.2f}}}",
         rf"\newcommand{{\hiVzero}}{{{m['V0_kms']:.0f}}}",
         rf"\newcommand{{\hiNlong}}{{{len(m['longitudes_deg'])}}}",
+        rf"\newcommand{{\hiStep}}{{{m.get('step_deg', 1.0):g}}}",
     ]
     for suffix, value in values:
         lines.append(rf"\newcommand{{\{ns}{suffix}}}{{{value}}}")
@@ -372,9 +606,22 @@ def _figure(R, V, Re, Ve, m: dict, out_dir) -> None:
     rmin = m["flat_radius_min_kpc"]
     bar = R <= rmin
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.plot(R[~bar], V[~bar], "o", color="C0", label="threshold (2 K)")
-    ax.plot(R[bar], V[bar], "o", mfc="none", color="C0", label="bar region (excluded)")
-    ax.plot(Re, Ve, "s", color="C2", ms=4, label="edge fit")
+    ax.plot(R[~bar], V[~bar], "o", color="C0", ms=3, label="threshold (2 K)")
+    ax.plot(R[bar], V[bar], "o", mfc="none", color="C0", ms=3, label="bar region (excluded)")
+    ax.plot(Re, Ve, "s", color="C2", ms=3, label="edge fit")
+    # The external reference curve the edge fit is validated against, on the same axes.
+    ref = m.get("compare_edge", {})
+    if ref.get("n"):
+        rl = np.asarray(ref["longitudes_deg"])
+        ax.plot(
+            R0_KPC * np.sin(np.radians(rl)),
+            np.asarray(ref["reference_v_term_kms"]) + V0_KMS * np.sin(np.radians(rl)),
+            "-",
+            color="C3",
+            lw=1.2,
+            alpha=0.8,
+            label="reference curve",
+        )
     flat = ~bar
     # Keplerian decline normalised at the innermost flat point, for the non-Keplerian contrast
     rk = np.linspace(R[flat][0], R.max(), 60)
