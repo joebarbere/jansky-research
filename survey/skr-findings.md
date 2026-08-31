@@ -185,3 +185,12 @@ rather than pipeline-generated, against the Reproducibility paragraph's claim â€
 macro-izing in a future round; and the abstract ranks the anchor above the census while the
 Conclusions' "firm results" list leads with the raw trend â€” arguably different claims
 (the raw trend is firm, its decomposition is not), but worth harmonising deliberately.
+
+## Wording: "retract" -> "withdraw" (2026-08-31)
+
+This paper corrected a claim made in an earlier version of *itself*, which was never submitted
+anywhere. "Retract" implies withdrawal from the published record and invites an editor to look
+for the withdrawn paper. Changed to "withdraw", scoped to the earlier version, as part of a sweep
+of the four papers using the verb. The correction and its arithmetic are unchanged; see
+`survey/drift-findings.md` for the full reasoning and for what the repo's tagged releases did and
+did not distribute.

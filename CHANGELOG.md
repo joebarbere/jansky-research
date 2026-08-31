@@ -67,6 +67,16 @@ recommend the next version number.
   own construction forbids; an unreported +0.025 ± 0.010 km/s/deg trend in the edge residual and
   the autocorrelation-corrected SEM (0.21, not 0.15); and a stale `V_flat_std_kms` key sitting
   in the results JSON beside `V_flat_scatter_kms` as the same quantity from an older run.
+- **"Retract" was the wrong verb in four papers, none of which was ever submitted.** Each had
+  corrected a claim made in an earlier version of *itself*; "retract" implies withdrawal from
+  the published record and invites an editor to look for the withdrawn paper. Changed to
+  "withdraw"/"corrects", always scoped to the earlier version, in `driftsearch` (`main.tex` +
+  `rnaas.tex`, where three of the four uses were unqualified), `skr`, `rmstructure` and
+  `stacking`. Prose only — diff-guard clean on all five documents, style lint unchanged against
+  baseline, all rebuild with no undefined references. Context worth recording: the driftsearch
+  null did ship in 11 tagged release archives and 11 Zenodo source snapshots before the fix, so
+  the honest description is a self-correction to an unpublished draft that had been distributed,
+  not a retraction and not an unshipped edit.
 - **`hi` was missing the citation its own slope result depends on.** A GATE-0 ADS pass on the
   LAB-vs-VGPS comparison (the comparison itself appears unpublished: MG&D 2016 has 22 citers
   and none is a survey cross-validation) turned up Reid & Dame 2016, who show that fitting a

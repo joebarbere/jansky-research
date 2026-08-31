@@ -229,3 +229,37 @@ sentence length, shared with the repo's other notes).
 
 **The submission gate recorded in plan 94 is CLOSED. The note is ready to submit** —
 alongside wdpulsar and frbstats, pending Joe's own read.
+
+## "Retract" was the wrong verb, and it survived a referee round (2026-08-31)
+
+Raised by Joe: if the note was never posted, is the earlier Voyager null really a *retraction*?
+It is not, and checking the question turned up more distribution than expected.
+
+**Nothing was ever submitted.** driftsearch is not on the arXiv queue, and its note is logged
+"refereed and ready to submit". There is no published record, so nothing can be withdrawn from
+one.
+
+**But it did leave the machine.** The wrong claim shipped in **11 tagged GitHub releases**
+(v1.0.0 through v1.8.0, the last dated 2026-08-22, three days before the fix), each carrying a
+compiled `jansky-research-papers-<tag>.zip`. Verified by downloading v1.8.0 and reading the PDF,
+whose abstract states: *"at the documented Voyager carrier (8420.216 MHz, drifting ~ -0.69 Hz/s)
+it returns only noise-floor S/N -- it does not recover the spacecraft."* Separately, **13 Zenodo
+records** exist under the concept DOI, 11 of them predating the fix; they archive the *source*
+zip rather than the papers zip, so they carry the erroneous claim as LaTeX. Archived and citable,
+as a software release, and uncited.
+
+So the honest description is a **self-correction to an unpublished draft that had been
+distributed in versioned archives** -- weaker than a retraction, stronger than an unshipped
+edit. "Retract" inflates it: an editor reading "its revision retracts" will look for the
+withdrawn paper. This is the CLAUDE.md "overclaiming can live in a verb" lesson pointing at a
+claim about our own process rather than about the sky, which is presumably why four review rounds
+walked past it.
+
+Changed to "corrects"/"withdrawn", always scoped to the earlier version, in
+`papers/driftsearch/{main,rnaas}.tex`. The three unqualified uses were the misleading ones
+("which we retract", "it is retracted"); the qualified one already told the reader it was a draft
+revision. Swept the other three papers using the verb the same way -- `skr`, `rmstructure`,
+`stacking`, all self-corrections to earlier versions of themselves. Diff-guard clean on all five
+(prose only, every number, macro and citation preserved); style lint unchanged against baseline;
+all five rebuild with no undefined references. The three pre-existing `overclaim` LOWs in the
+triage are unrelated and predate the edit (verified by stashing).

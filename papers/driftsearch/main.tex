@@ -35,7 +35,8 @@ walk), the same brute-force search recovers it at S/N~$=\dsVoySnr$ with a best-f
 the measured walk to one grid step. An earlier version of this paper asserted the carrier frequency
 (\dsVoyLegacyFreq~MHz) instead of locating it; in this file that frequency is blank sky
 (S/N~\dsVoyLegacySnr\ vs.\ \dsVoyBlankSnr\ blank), and the resulting ``Voyager null'' was a
-targeting error, which we retract. The benchmark, the recovery, and the DC-spike caution are the
+targeting error, and the earlier version's claim of it is withdrawn. The benchmark, the
+recovery, and the DC-spike caution are the
 contributions; there is no discovery.
 \end{abstract}
 
@@ -99,7 +100,7 @@ spacecraft, at three orders of magnitude above the noise floor, once it is point
 An earlier version of this paper reported a ``Voyager-1 null'': it searched at an asserted
 carrier frequency of \dsVoyLegacyFreq~MHz \citep{estevez2021} and found noise
 (S/N~\dsVoyLegacySnr). In this file that frequency maps to blank sky $\sim$0.92~MHz from the carrier (the scale of a topocentric/barycentric frame difference at X band, though we have not confirmed the mechanism), so the null was a targeting error, not a property of the detector,
-and we retract it. The lesson is kept in the committed evidence (the \code{legacy\_asserted}
+and we withdraw it. The lesson is kept in the committed evidence (the \code{legacy\_asserted}
 block) and in the pipeline's design: the carrier is now found in the data, never assumed. What
 remains true, and matters more: a search that ranks by raw brightness reports the instrumental
 artifact, so artifact handling, not sensitivity, is what separates a toy detector from
