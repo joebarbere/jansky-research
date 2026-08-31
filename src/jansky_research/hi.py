@@ -392,6 +392,7 @@ def run(
     ref_R = R0_KPC * np.sin(np.radians(ref_l))
     ref_V = ref_v + V0_KMS * np.sin(np.radians(ref_l))
     ref_slope, ref_slope_se = _slope_fit(ref_R, ref_V, rmin)
+    ref_slope_n = int(np.sum(ref_R > rmin))
 
     # Does the threshold estimator's disagreement with the reference close as the threshold
     # rises towards the 20 K the reference itself was seeded from? If the gap is the wing
@@ -409,6 +410,19 @@ def run(
         sweep_ref[f"{thr:g}"] = round(
             compare_terminal_velocities(longitudes, vt_s, ref_l, ref_v)["mean"], 2
         )
+
+    # Does the answer depend on how the reference is averaged onto our longitudes? The note
+    # quotes this range, so it has to be in the committed evidence rather than in a notebook.
+    window_sweep = {}
+    for half in (0.25, 0.5, 1.0):
+        c = compare_terminal_velocities(longitudes, v_edge_a, ref_l, ref_v, half_width_deg=half)
+        d = np.asarray(c["delta_kms"])
+        window_sweep[f"{half:g}"] = {
+            "mean": round(float(np.mean(d)), 3) if d.size else float("nan"),
+            "median": round(float(np.median(d)), 3) if d.size else float("nan"),
+            "n": c["n"],
+        }
+    _wv = [v[k] for v in window_sweep.values() for k in ("mean", "median") if np.isfinite(v[k])]
 
     # Is the threshold bias set by the width of the profile edge, as the erfc model says?
     bias = v_thr_a - v_edge_a
@@ -451,11 +465,15 @@ def run(
         "slope_edge_sigma": abs(slope_e / slope_e_se) if slope_e_se else float("nan"),
         "reference_slope_kms_per_kpc": ref_slope,
         "reference_slope_se_kms_per_kpc": ref_slope_se,
+        "reference_slope_n": ref_slope_n,
         "compare_threshold": cmp_thr,
         "compare_edge": cmp_edge,
         "keplerian_at_rmax_kms": kepler,
         "threshold_sweep_vflat": sweep,
         "threshold_sweep_minus_reference": sweep_ref,
+        "compare_edge_window_sweep": window_sweep,
+        "compare_edge_window_min": min(_wv) if _wv else float("nan"),
+        "compare_edge_window_max": max(_wv) if _wv else float("nan"),
         "width_bias_corr": width_corr,
         "width_bias_slope": width_slope,
         "n_noncontiguous": int(np.sum(np.asarray(runs) > 1)),
@@ -474,6 +492,7 @@ def run(
 
     write_results(metrics, op / "results" / "rotation_curve.json")
     _figure(R, V, Re, Ve, metrics, paper / "figures")
+    _figure_comparison(metrics, paper / "figures")
     _write_macros(metrics, paper / "generated" / "macros.tex")
     if not offline:  # pragma: no cover - the real table is committed evidence
         _write_table(longitudes, R, V, Ve, rmin, paper / "generated" / "curve_table.tex")
@@ -550,6 +569,7 @@ def _write_macros(m: dict, path) -> None:
         ("SlopeEdgeSigma", num(m["slope_edge_sigma"], ".1f")),
         ("RefSlope", num(m["reference_slope_kms_per_kpc"])),
         ("RefSlopeErr", num(m["reference_slope_se_kms_per_kpc"])),
+        ("RefSlopeN", f"{m['reference_slope_n']}"),
         ("RefN", f"{ce['n']}"),
         ("RefEdgeOffset", num(ce.get("mean", float("nan")))),
         ("RefEdgeOffsetSd", num(ce.get("sd", float("nan")))),
@@ -557,7 +577,11 @@ def _write_macros(m: dict, path) -> None:
         ("RefThrOffset", num(ct.get("mean", float("nan")))),
         ("RefThrOffsetSd", num(ct.get("sd", float("nan")))),
         ("RefThrOffsetSem", num(ct.get("sem", float("nan")))),
+        ("SweepRefLo", num(sweep_ref.get("1.5", float("nan")), ".1f")),
         ("SweepRefTwenty", num(sweep_ref.get("20", float("nan")), ".1f")),
+        ("SweepRefHi", num(sweep_ref.get("40", float("nan")), ".1f")),
+        ("RefWindowMin", num(m.get("compare_edge_window_min", float("nan")))),
+        ("RefWindowMax", num(m.get("compare_edge_window_max", float("nan")))),
         ("WidthCorr", num(m["width_bias_corr"])),
         ("WidthSlope", num(m["width_bias_slope"])),
         ("NNoncontig", f"{m['n_noncontiguous']}"),
@@ -645,6 +669,65 @@ def _figure(R, V, Re, Ve, m: dict, out_dir) -> None:
     ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(out / "rotation_curve.pdf")
+    plt.close(fig)
+
+
+def _figure_comparison(m: dict, out_dir) -> None:
+    """The note's single exhibit: both estimators against the reference, and the threshold sweep.
+
+    Left, the terminal velocities themselves (not $V(R)$, so no $R_0$/$V_0$ choice enters);
+    right, the mean offset from the reference as a function of the brightness-temperature
+    threshold, which is the evidence that the gap is the wing overshoot and not a survey
+    difference: it closes where the reference's own estimator is seeded.
+    """
+    from pathlib import Path
+
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    ct, ce = m.get("compare_threshold", {}), m.get("compare_edge", {})
+    if not ce.get("n"):
+        return
+    fig, (a, b) = plt.subplots(1, 2, figsize=(7.1, 3.0))
+
+    lo = np.asarray(ce["longitudes_deg"])
+    a.plot(lo, ce["reference_v_term_kms"], "-", color="C3", lw=2.0, label="VGPS reference")
+    a.plot(
+        np.asarray(ct["longitudes_deg"]),
+        ct["v_term_kms"],
+        "o",
+        color="C0",
+        ms=3.5,
+        label="LAB, threshold (2 K)",
+    )
+    # open squares, so the reference line stays visible underneath where the two agree
+    a.plot(lo, ce["v_term_kms"], "s", color="C2", ms=4, mfc="none", mew=1.1, label="LAB, edge fit")
+    a.set(xlabel=r"Galactic longitude $\ell$ (deg)", ylabel=r"$v_\mathrm{term}$ (km s$^{-1}$)")
+    a.legend(fontsize=7)
+
+    sweep = m.get("threshold_sweep_minus_reference", {})
+    thr = sorted(float(k) for k in sweep)
+    val = [sweep[f"{t:g}"] for t in thr]
+    ok = [(t, v) for t, v in zip(thr, val, strict=True) if np.isfinite(v)]
+    b.plot(
+        [t for t, _ in ok], [v for _, v in ok], "o-", color="C0", ms=4, label="threshold estimator"
+    )
+    b.axhline(ce["mean"], color="C2", ls="--", lw=1.4, label="edge fit")
+    b.axhline(0.0, color="0.6", lw=0.8)
+    b.set(
+        xscale="log",
+        xlabel=r"brightness-temperature threshold (K)",
+        ylabel=r"mean offset from reference (km s$^{-1}$)",
+    )
+    # the default log locator crowds these labels into unreadable overlap
+    b.set_xticks([t for t, _ in ok])
+    b.set_xticklabels([f"{t:g}" for t, _ in ok], fontsize=7)
+    b.minorticks_off()
+    b.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out / "vgps_comparison.pdf")
     plt.close(fig)
 
 

@@ -1061,5 +1061,25 @@
   "width_bias_corr": 0.43778726232162773,
   "width_bias_slope": 1.024084418547914,
   "n_noncontiguous": 5,
-  "n_edge_fit_failed": 1
+  "n_edge_fit_failed": 1,
+  "compare_edge_window_sweep": {
+    "0.25": {
+      "mean": 1.119,
+      "median": 1.045,
+      "n": 48
+    },
+    "0.5": {
+      "mean": 1.04,
+      "median": 0.956,
+      "n": 49
+    },
+    "1": {
+      "mean": 1.073,
+      "median": 1.011,
+      "n": 50
+    }
+  },
+  "compare_edge_window_min": 0.956,
+  "compare_edge_window_max": 1.119,
+  "reference_slope_n": 579
 }

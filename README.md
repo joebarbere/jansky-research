@@ -213,12 +213,13 @@ contribution — the tooling and the reproducibility, not a novelty claim:
 
 - **Software / citable archive:** the toolkit is meant for [JOSS](https://joss.theoj.org) (see
   `joss/paper.md`) and a [Zenodo](https://zenodo.org) DOI on release (`.zenodo.json`, `CITATION.cff`).
-- **Short notes:** four results are condensed to
+- **Short notes:** five results are condensed to
   [Research Notes of the AAS](https://journals.aas.org/research-notes/) — the frbstats validation
   (`papers/frbstats/rnaas.tex`), the WD-pulsar survey (`papers/wdpulsar/rnaas.tex`, refereed and
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
   drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
-  refereed and ready to submit).
+  refereed and ready to submit), and the LAB/VGPS terminal-velocity comparison
+  (`papers/hi/rnaas.tex`, GATE-0 discharged 2026-08-31, not yet refereed).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level

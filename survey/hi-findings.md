@@ -231,3 +231,32 @@ and MG&D warn about it in print), nor "the inner curve is not flat" (known — R
 **"LAB reproduces the VGPS terminal-velocity curve to 1 km/s in level and slope, provided the
 profile edge is fitted; a 2 K threshold costs 15 km/s and the cost is not a constant."** That is
 the sentence nothing in the 22-citer list or the adjacent cluster contains.
+
+## RNAAS note drafted (2026-08-31)
+
+`papers/hi/rnaas.tex` — *"The LAB and VGPS HI Terminal-Velocity Curves Agree to 1 km/s When the
+Profile Edge Is Fitted."* 111-word abstract, 883 words total (RNAAS median 830, cap 1500), two
+pages, one figure. Triage clean; RNAAS-genre prose lint clean apart from one LOW on the
+sentence-shaped title, which is attested for the genre (6.0% of 1,035 notes) and which the style
+guide says should carry the verdict — flagged for sign-off rather than decided unilaterally.
+
+The exhibit is `figures/vgps_comparison.pdf`, pipeline-written like everything else: left panel
+both estimators against the reference in `v_term`, right panel the mean offset against the
+brightness-temperature threshold, showing the convergence.
+
+**Two numbers were nearly shipped hand-typed.** The first draft quoted the matching-window range
+as "+0.97 to +1.17" and the sweep endpoints as "+17.2 to +0.6" — the sweep values were at least in
+the results JSON, but the window range existed *only in a scratch script*, which makes it
+unauditable and, as it turned out, wrong: the pipeline's own sweep gives **0.96 to 1.12**, because
+my scratch version had averaged a different statistic set. `compare_edge_window_sweep` and
+`reference_slope_n` are now committed metrics with macros, and both papers cite them. The lesson is
+the familiar one in a new place: a number that reaches prose from a notebook rather than from the
+committed pipeline is not evidence, and the discrepancy here was small enough that nothing would
+have flagged it.
+
+**Writing the note broke `main.tex`'s traditional-style baseline, and the linter caught it.** The
+dense-resampling edits introduced 7 em-dash pivots (rate 3.74/kw against a corpus p90 of 0.66,
+a HIGH) and pushed the abstract to 308 words (corpus p90 273). Both fixed: parentheses and plain
+sentences, abstract down to 276. Worth noting that the style gates are not self-maintaining — a
+content edit to a converted paper silently de-converts it, so `prose_lint.py` belongs in the same
+reflex as `triage_papers.py` after any paper edit.

@@ -16,31 +16,27 @@ Velocities, Validated Against the VGPS Terminal-Velocity Curve}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-The non-Keplerian rotation curve of the Milky Way is a foundational piece of evidence for dark
-matter, and the classical way to measure its inner part is the HI~21\,cm tangent-point method. We
-ask whether that textbook result can be recovered from public survey data with a small, tested,
-CPU-only tool. We read \hiNlong\ Galactic-longitude $(b,v)$ slices, spaced \hiStep\arcdeg, from the
-Leiden/Argentine/Bonn (LAB) HI survey \citep{kalberla2005}, extract the terminal velocity of each
-$b=0$ profile with two estimators run on the same spectra (a fixed 2~K brightness-temperature
-threshold and an error-function fit to the profile edge) and apply $R = R_0\sin\ell$,
-$V(R) = v_\mathrm{term} + V_0\sin\ell$ with $R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$
-\citep{reid2019}. Beyond the bar-dominated inner region, over the \hiRealNflat\ points from
-$R\approx\hiRealRmin$ to $\hiRealRmax$~kpc, the rotation speed is $V=\hiRealVflat$~km\,s$^{-1}$
-(point-to-point scatter \hiRealVflatScatter, standard error of the mean \hiRealVflatSem) --- far
-from the Keplerian decline that would reach \hiRealKepler~km\,s$^{-1}$ at the outermost point, but
-not flat: the fitted slope is $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$
-($\hiRealSlopeSigma\sigma$), a gentle rise. Comparing the edge-fit terminal velocities against the
-independently measured VGPS curve of \citet{mccluregriffiths2016} at the \hiRealRefN\ longitudes
-where the two surveys overlap, we find agreement of
-$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ and a slope of
-$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ against their $\hiRealRefSlope\pm\hiRealRefSlopeErr$: an
-all-sky single-dish survey reproduces an interferometric one in both level and shape. The two
-estimators differ by a measured \hiRealThrMinusEdge~km\,s$^{-1}$: the threshold crossing sits on
-the profile wing, and the edge fit brings the level to \hiRealVflatEdge~km\,s$^{-1}$, within
-$\hiRealExcessPctEdge$\% of the \citet{reid2019} $V_0$, so the threshold estimator's
-$\hiRealExcessPct$\% excess is an estimator systematic measured on this data, not a cited one. An
-inner-Galaxy non-Keplerian curve is not, by itself, a standalone dark-matter detection. This is a
-tooling and reproducibility contribution.
+We measure the inner Milky Way rotation curve from \hiNlong\ Galactic-longitude $(b,v)$ slices of
+the Leiden/Argentine/Bonn (LAB) HI survey \citep{kalberla2005}, spaced \hiStep\arcdeg, taking the
+terminal velocity of each $b=0$ profile with two estimators on the same spectra: a fixed 2~K
+brightness-temperature threshold, and an error-function fit to the profile edge. Beyond the
+bar-dominated region, over the \hiRealNflat\ points from $R\approx\hiRealRmin$ to
+$\hiRealRmax$~kpc, the rotation speed is $V=\hiRealVflat$~km\,s$^{-1}$ (point-to-point scatter
+\hiRealVflatScatter, standard error of the mean \hiRealVflatSem), far from the Keplerian decline
+that would reach \hiRealKepler~km\,s$^{-1}$ at the outermost point. It is not flat: the fitted
+slope is $\hiRealSlope\pm\hiRealSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$ ($\hiRealSlopeSigma\sigma$).
+Against the independently measured VGPS curve of \citet{mccluregriffiths2016}, at the
+\hiRealRefN\ longitudes the two surveys share, the edge fit agrees to
+$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ and gives a slope of
+$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ against their $\hiRealRefSlope\pm\hiRealRefSlopeErr$, so
+an all-sky single-dish survey reproduces an interferometric one in level and in shape. The two
+estimators differ by \hiRealThrMinusEdge~km\,s$^{-1}$, since the threshold crossing sits on the
+profile wing; the edge fit brings the level to \hiRealVflatEdge~km\,s$^{-1}$, within
+$\hiRealExcessPctEdge$\% of the \citet{reid2019} $V_0=\hiVzero$~km\,s$^{-1}$, so the threshold
+estimator's $\hiRealExcessPct$\% excess is a systematic measured on this data rather than a cited
+one. Geometry follows $R = R_0\sin\ell$, $V(R) = v_\mathrm{term} + V_0\sin\ell$ with
+$R_0=\hiRzero$~kpc. An inner-Galaxy non-Keplerian curve is not by itself a dark-matter detection.
+This is a tooling and reproducibility contribution.
 \end{abstract}
 
 \keywords{Milky Way rotation (1059) --- Milky Way dynamics (1051) --- Neutral hydrogen clouds (1099) --- Dark matter (353) --- Open source software (1866)}
@@ -95,8 +91,8 @@ every $0.065\arcdeg$, far finer than the LAB beam, so each of our longitudes is 
 mean of their values within one LAB half-beam ($0.5\arcdeg$); longitudes outside their coverage are
 dropped, never extrapolated. The comparison is made on $v_\mathrm{term}$ itself rather than on
 $V(R)$, so no $R_0$ or $V_0$ choice enters it and the two surveys are compared on what each
-measured. Their estimator is of the same family as our edge fit --- a sum of two error functions,
-seeded from a 20~K threshold crossing on continuum-masked, latitude-averaged spectra --- so this is
+measured. Their estimator is of the same family as our edge fit (a sum of two error functions,
+seeded from a 20~K threshold crossing on continuum-masked, latitude-averaged spectra), so this is
 a cross-survey check of a shared method, not a comparison of independent methods.
 
 \section{Data}
@@ -131,9 +127,9 @@ $\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ ($\hiRealSlopeEdgeSigma\sigma$) on the 
 supersedes an earlier version of this analysis which sampled only eight longitudes and reported a
 slope consistent with zero; that sample was too small to resolve a rise this gentle, and the
 conclusion of flatness was a statement about its power, not about the Galaxy. The reference curve
-agrees: \citet{mccluregriffiths2016}, on their own 579 points beyond the same cut, give
+agrees: \citet{mccluregriffiths2016}, on their own \hiRealRefSlopeN\ points beyond the same cut, give
 $\hiRealRefSlope\pm\hiRealRefSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$. That the inner curve is
-curved rather than flat is not itself new --- \citet{reiddame2016} show that fitting a flat
+curved rather than flat is not itself new. \citet{reiddame2016} show that fitting a flat
 curve to HI terminal velocities biases the inferred $\Theta_0$ for exactly this reason, and
 \citet{davis2026} examine what terminal-velocity curves do and do not recover in simulated
 galaxies. What is corrected here is this analysis's own earlier claim.
@@ -145,13 +141,13 @@ $\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ from the VGPS valu
 beam reproduces an interferometric survey's terminal-velocity curve at the km\,s$^{-1}$ level, in
 both normalisation and slope. The threshold estimator does not: it sits
 $\hiRealRefThrOffset\pm\hiRealRefThrOffsetSem$~km\,s$^{-1}$ high, with a scatter of
-\hiRealRefThrOffsetSd~km\,s$^{-1}$ that is itself large --- the offset is not a constant that could
-be subtracted. That gap is the wing overshoot and it closes as the threshold climbs the profile
+\hiRealRefThrOffsetSd~km\,s$^{-1}$ that is itself large, so the offset is not a constant that
+could be subtracted. That gap is the wing overshoot and it closes as the threshold climbs the profile
 edge: raising it to the 20~K that \citet{mccluregriffiths2016} seed their own fit from leaves
 \hiRealSweepRefTwenty~km\,s$^{-1}$. Consistent with the error-function picture, the per-sightline
 overshoot grows with the fitted edge width (slope \hiRealWidthSlope, correlation
-$r=\hiRealWidthCorr$ across the \hiNlong\ sightlines) --- a real but loose relation, since the fitted
-width is itself noisy.
+$r=\hiRealWidthCorr$ across the \hiNlong\ sightlines). The relation is real but loose, since the
+fitted width is itself noisy.
 
 \begin{deluxetable}{cccc}
 \tablecaption{Tangent-point rotation curve at $5\arcdeg$ intervals, both estimators. The full
@@ -192,8 +188,8 @@ estimator is within the streaming-motion and frame-convention terms below. The q
 an estimator bias moves all \hiRealNflat\ points together and leaves the scatter unchanged.
 \paragraph{The cross-survey check is not a check of independent methods.} Our edge fit and the
 \citet{mccluregriffiths2016} estimator are both error-function fits to the profile edge, so their
-agreement bounds survey-to-survey and pipeline-to-pipeline differences --- beam, sampling,
-continuum treatment, absorption masking --- and does not test the choice of estimator family. Both
+agreement bounds survey-to-survey and pipeline-to-pipeline differences (beam, sampling,
+continuum treatment, absorption masking) and does not test the choice of estimator family. Both
 would move together under a different definition of the terminal velocity.
 \paragraph{Circular orbits assumed.} $V = v_\mathrm{term} + V_0\sin\ell$ assumes the tangent-point gas
 is on a circular orbit; spiral-arm and bar-driven streaming biases individual points and cannot be

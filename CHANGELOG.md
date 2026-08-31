@@ -18,6 +18,20 @@ recommend the next version number.
   dropping rather than extrapolating uncovered longitudes; `hi.synthetic_reference_curve`
   supplies the offline equivalent. `hi.run` takes `step_deg` (default $1\arcdeg$).
 
+### Added
+- **An RNAAS note for `hi` (`papers/hi/rnaas.tex`).** "The LAB and VGPS HI Terminal-Velocity
+  Curves Agree to 1 km/s When the Profile Edge Is Fitted" — 111-word abstract, 883 words
+  total, one figure (`figures/vgps_comparison.pdf`, also pipeline-written), every number from
+  macros. GATE-0 discharged: the comparison appears unpublished (MG&D 2016 has 22 citers,
+  enumerated; none is a survey cross-validation). The note's claim is deliberately narrow —
+  neither "the tangent-point method has estimator systematics" (known, and MG&D warn about it)
+  nor "the inner curve is not flat" (known — Reid & Dame 2016), but that LAB reproduces the
+  VGPS curve to 1 km/s in level and slope provided the edge is fitted, and that a 2 K
+  threshold costs 15 km/s at a cost that is not constant.
+- **`hi` commits the matching-window robustness it quotes.** `compare_edge_window_sweep`
+  (half-widths 0.25/0.5/1.0 deg, mean and median) plus `reference_slope_n`, so the note's
+  range and point count are auditable from the results JSON rather than typed by hand.
+
 ### Changed
 - **`hi` resampled to 71 longitudes and cross-validated against the VGPS — the flatness claim
   is retracted.** `hi.run` now samples $\ell = 10$–$80\arcdeg$ every `step_deg` (default
