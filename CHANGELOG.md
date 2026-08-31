@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-08-31
+
 ### Added
 - **`hi` gains a cross-survey comparison and a longitude step.** `hi.fetch_mgd2016` /
   `hi.read_mgd2016` pull the tabulated VGPS terminal-velocity curve of McClure-Griffiths &
