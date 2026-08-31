@@ -36,6 +36,13 @@ recommend the next version number.
   edge-fit failure, both invisible in the 8-point sample.
 
 ### Fixed
+- **`hi` was missing the citation its own slope result depends on.** A GATE-0 ADS pass on the
+  LAB-vs-VGPS comparison (the comparison itself appears unpublished: MG&D 2016 has 22 citers
+  and none is a survey cross-validation) turned up Reid & Dame 2016, who show that fitting a
+  flat curve to HI terminal velocities biases the inferred $\Theta_0$ because the true curve
+  is curved. Without it the Results paragraph read as though the rise were a discovery; it is
+  not, and the paper now says that what it corrects is its own earlier claim. Davis et al.
+  2025 (MNRAS 547, staf2166) cited alongside.
 - **A non-finite `hi` metric could reach the paper as the literal string `nan`.** Every
   numeric macro now goes through a formatter emitting `--`, the placeholder the arXiv
   assembler already blocks on, so a hole fails loudly at packaging instead of rendering as a

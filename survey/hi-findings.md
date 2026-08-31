@@ -179,3 +179,55 @@ covered without a network, which is where the previous version had no coverage a
 through a formatter that emits `--` instead, which the arXiv assembler already blocks on. The
 `\hiSyn*` namespace was refilled by running the offline leg with `out=<tmpdir>` and calling
 `_write_macros` on the real path, per CLAUDE.md; `preserve_live_macros` held every real value.
+
+## GATE-0 novelty pass on the LAB-vs-VGPS comparison (2026-08-31, ADS)
+
+Run before drafting any RNAAS note. Note first that **"terminal velocity" is badly overloaded**
+— stellar winds, AGN outflows, precipitation physics — so every keyword query has to be pinned to
+a Galactic-kinematics term ("tangent point", "rotation curve") or the results are noise. An
+unpinned `full:"terminal velocity"` search returns Wolf-Rayet winds and Rayleigh-Taylor mixing.
+
+**Verdict: the comparison appears unpublished.** The decisive check is that MG&D 2016 has only
+**22 citers**, so they can be enumerated exhaustively — none is a survey cross-validation of
+terminal velocities. Supporting queries: `full:"terminal velocity" AND full:"LAB survey"` returns
+26, all of which use one survey or the other for a different purpose (and several are the
+stellar-wind homonym); `citations(MG&D 2016) AND citations(Kalberla 2005)` returns **3**
+(Sormani 2024, the McClure-Griffiths & Stanimirović 2023 ARA&A review, Dickey 2022 GASKAP), none
+of them a comparison; a title search for terminal-velocity curves in a Galactic context returns
+15, of which the Galactic ones are MG&D 2016, McGaugh 2016 (surface density *from* a compiled
+curve) and Davis 2025. Full-text control confirmed the index reaches MG&D 2016 itself, so the
+zero-hit queries are real zeros and not a broken query.
+
+**Two things the pass turned up that the paper owed, both now fixed and rebuilt:**
+
+1. **`reiddame2016` (ApJ 832, 159, 10.3847/0004-637X/832/2/159, adjudicated against Crossref).**
+   Reid & Dame show that fitting a *flat* curve to HI terminal velocities biases the inferred
+   Theta_0, precisely because the true curve is slightly curved. That is the same fact my dense
+   slope measures, arriving from the other direction, and without it the Results paragraph reads
+   as though the rise were a discovery. It is not: what this analysis corrects is **its own**
+   earlier claim, and the paper now says exactly that.
+2. **`davis2026` (Davis et al., MNRAS 547, staf2166, 10.1093/mnras/staf2166)** on what
+   terminal-velocity curves do and do not recover in simulations, cited alongside it.
+
+**A defect found in passing, NOT fixed (out of this PR's scope):** `papers/innerrc/refs.bib`
+carries the same Davis et al. paper as `@article{tvmcaution}` with `journal = {arXiv e-prints}`,
+`year = {2025}`, `note = {arXiv:2510.10845}` and **no DOI** — it was published in MNRAS on
+2025-12-08. A preprint citation for a paper that now has a DOI. Worth a sweep of every `.bib` for
+`arXiv e-prints` entries whose eprint now resolves to a journal article; that is the same
+adjudicate-don't-search procedure that fixed the 19 citation defects in plan 95.
+
+**Adjacent literature worth knowing about.** There is a small recent cluster of small-telescope
+tangent-point rotation curves — Li & Hu 2024 (arXiv:2404.17893, campus DIY telescope, and it
+"analyses the possible measurement error in the tangent method"), Pandian & Ganesh 2022
+(arXiv:2202.11039, low-cost horn + SDR), the SALSA educational tool, NARIT 4.5 m — all using their
+*own* observations rather than an archival all-sky survey, and none doing a cross-survey
+validation. They are the closest work in spirit to this slice's framing, they are mostly
+uncited arXiv/conference items, and any note should cite Li & Hu rather than pretend the niche is
+empty.
+
+**Consequence for the RNAAS question.** The novelty gate is discharged in favour of the note, but
+the note's claim must be narrow: not "the tangent-point method has estimator systematics" (known,
+and MG&D warn about it in print), nor "the inner curve is not flat" (known — Reid & Dame), but
+**"LAB reproduces the VGPS terminal-velocity curve to 1 km/s in level and slope, provided the
+profile edge is fitted; a 2 K threshold costs 15 km/s and the cost is not a constant."** That is
+the sentence nothing in the 22-citer list or the adjacent cluster contains.
