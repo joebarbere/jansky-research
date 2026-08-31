@@ -21,6 +21,7 @@ __all__ = [
     "compare_terminal_velocities",
     "fetch_lab_longitude",
     "fetch_mgd2016",
+    "latitude_spectrum",
     "read_lab_slice",
     "rotation_curve",
     "run",
@@ -71,7 +72,11 @@ def terminal_velocity(
 
 
 def terminal_velocity_edge(
-    vel_kms: np.ndarray, spectrum: np.ndarray, *, threshold_k: float = 2.0
+    vel_kms: np.ndarray,
+    spectrum: np.ndarray,
+    *,
+    threshold_k: float = 2.0,
+    window_kms: tuple[float, float] = (50.0, 40.0),
 ) -> tuple[float, float]:
     """Terminal velocity from an error-function fit to the profile's high-velocity edge.
 
@@ -80,7 +85,8 @@ def terminal_velocity_edge(
     its Gaussian width. The half-height point is interior to the edge, so it does not carry the
     wing overshoot of the threshold crossing; the same construction underlies the edge fits of
     McClure-Griffiths & Dickey (2016). Returns ``(nan, nan)`` if no crossing exists or the fit
-    fails.
+    fails. ``window_kms`` is the ``(below, above)`` extent of the fitted window about the
+    threshold crossing; it is a hand-chosen parameter, so :func:`run` sweeps it.
     """
     from scipy.optimize import curve_fit
     from scipy.special import erfc
@@ -94,7 +100,7 @@ def terminal_velocity_edge(
     v_thr = terminal_velocity(vel_kms, spectrum, threshold_k=threshold_k)
     if not np.isfinite(v_thr):
         return float("nan"), float("nan")
-    m = (vel_kms > v_thr - 50.0) & (vel_kms < v_thr + 40.0)
+    m = (vel_kms > v_thr - window_kms[0]) & (vel_kms < v_thr + window_kms[1])
     x, y = vel_kms[m], spectrum[m]
     if x.size < 8:
         return float("nan"), float("nan")
@@ -118,18 +124,42 @@ def tangent_point(
     return float(R0 * s), float(v_term + V0 * s)
 
 
+def latitude_spectrum(lat_deg: np.ndarray, data: np.ndarray, *, half_width_deg: float = 0.0):
+    """The $b=0$ row, or the mean over $|b| <$ ``half_width_deg`` when that is positive.
+
+    McClure-Griffiths & Dickey (2016) measure their terminal velocities on latitude averages
+    over $|b| < 0.5\\arcdeg$ rather than on a single row. Averaging changes the profile edge, so
+    it is a real difference between their pipeline and a single-row one, and :func:`run` carries
+    it as a systematic rather than assuming it is negligible.
+    """
+    lat_deg = np.asarray(lat_deg, dtype=float)
+    data = np.asarray(data, dtype=float)
+    if half_width_deg <= 0.0:
+        return data[int(np.argmin(np.abs(lat_deg)))]
+    m = np.abs(lat_deg) <= half_width_deg
+    if not m.any():
+        return data[int(np.argmin(np.abs(lat_deg)))]
+    return np.nanmean(data[m], axis=0)
+
+
 def rotation_curve(
-    longitudes: np.ndarray, slices, *, threshold_k: float = 2.0, estimator: str = "threshold"
+    longitudes: np.ndarray,
+    slices,
+    *,
+    threshold_k: float = 2.0,
+    estimator: str = "threshold",
+    lat_half_width_deg: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Build the rotation curve from per-longitude $(b, v)$ slices (uses each $b=0$ spectrum).
+    """Build the rotation curve from per-longitude $(b, v)$ slices.
 
     ``slices`` is an iterable of ``(lat_deg, vel_kms, data)`` aligned with ``longitudes``.
     ``estimator`` selects the terminal-velocity estimator: ``"threshold"`` (fixed 2 K crossing)
-    or ``"edge"`` (error-function edge fit). Returns ``(R_kpc, V_kms)`` sorted by radius.
+    or ``"edge"`` (error-function edge fit). ``lat_half_width_deg`` averages the spectrum over
+    $|b|$ below it, 0 meaning the single $b=0$ row. Returns ``(R_kpc, V_kms)`` sorted by radius.
     """
     rad, vel = [], []
     for ell, (lat, v, d) in zip(longitudes, slices, strict=True):
-        spec = d[int(np.argmin(np.abs(lat)))]  # b = 0
+        spec = latitude_spectrum(lat, d, half_width_deg=lat_half_width_deg)
         if estimator == "edge":
             vt, _ = terminal_velocity_edge(v, spec, threshold_k=threshold_k)
         else:
@@ -317,6 +347,29 @@ def _slope_fit(R: np.ndarray, V: np.ndarray, rmin: float) -> tuple[float, float]
     return float(coef[0]), se
 
 
+def matched_slopes(cmp_result: dict, rmin: float, *, R0: float = R0_KPC, V0: float = V0_KMS):
+    """Slope of $V(R)$ for our curve and the reference over **the same** longitudes.
+
+    Fitting our curve over $R >$ ``rmin`` while the reference stops short of our outermost
+    sightline compares two different radial ranges, and a rotation curve with real structure in
+    it gives a different chord over a different range. Here both arms are fitted on the matched
+    longitudes of :func:`compare_terminal_velocities`, so the only difference left between them
+    is the survey. Returns ``(ours, reference)``, each ``(slope, se, n)``.
+    """
+    ell = np.asarray(cmp_result.get("longitudes_deg", []), dtype=float)
+    if ell.size == 0:
+        nan3 = (float("nan"), float("nan"), 0)
+        return nan3, nan3
+    R = R0 * np.sin(np.radians(ell))
+    shift = V0 * np.sin(np.radians(ell))
+    out = []
+    for key in ("v_term_kms", "reference_v_term_kms"):
+        V = np.asarray(cmp_result[key], dtype=float) + shift
+        slope, se = _slope_fit(R, V, rmin)
+        out.append((slope, se, int(np.sum(R > rmin))))
+    return out[0], out[1]
+
+
 def _contiguity(vel_kms: np.ndarray, spectrum: np.ndarray, threshold_k: float) -> int:
     """Number of separate velocity runs above ``threshold_k`` (1 = a single contiguous edge)."""
     above = np.isfinite(spectrum) & (spectrum > threshold_k)
@@ -411,6 +464,74 @@ def run(
             compare_terminal_velocities(longitudes, vt_s, ref_l, ref_v)["mean"], 2
         )
 
+    nan = float("nan")
+    # F1: the like-for-like slope pair, and the range mismatch that made the naive pair
+    # look discrepant. Quoted in the paper in place of the mismatched one.
+    (ours_s, ours_se, ours_n), (ref_s, ref_se, ref_n) = matched_slopes(cmp_edge, rmin)
+    ref_rmax = float(R0_KPC * np.sin(np.radians(np.max(ref_l))))
+
+    # F11: the flat-region cut is hand-chosen, so sweep it -- for BOTH arms, since the
+    # question is whether our curve tracks the reference, not what either value is.
+    rmin_sweep = {}
+    for rm in (3.0, 4.0, 5.0, 5.5, 6.0):
+        a, b_ = matched_slopes(cmp_edge, rm)
+        rmin_sweep[f"{rm:g}"] = {"ours": round(a[0], 3), "reference": round(b_[0], 3), "n": a[2]}
+
+    # F10: where the known-defective sightlines fall, and what dropping them does
+    bad = {float(ell) for ell, n in zip(longitudes, runs, strict=True) if n > 1}
+    bad |= {float(ell) for ell, v in zip(longitudes, v_edge, strict=True) if not np.isfinite(v)}
+    keep = np.array([ell not in bad for ell in longitudes])
+    Rk, Vk = rotation_curve(
+        longitudes[keep],
+        [sl for sl, k in zip(slices, keep, strict=True) if k],
+        threshold_k=threshold_k,
+        estimator="edge",
+    )
+    drop_slope, drop_slope_se = _slope_fit(Rk, Vk, rmin)
+
+    # F4: the estimator's own hand-chosen parameters, which the matching-window sweep could
+    # never move. A systematic on the headline offset has to vary these instead.
+    estimator_sys = {}
+    variants: tuple[tuple[str, tuple[float, float], float], ...] = (
+        ("window_wide", (80.0, 60.0), 0.0),
+        ("window_narrow", (30.0, 25.0), 0.0),
+        ("lat_avg_0.5", (50.0, 40.0), 0.5),
+    )
+    for label, win, lat_hw in variants:
+        vt_v = []
+        for lat, vv, dd in slices:
+            sp = latitude_spectrum(lat, dd, half_width_deg=lat_hw)
+            vt_v.append(terminal_velocity_edge(vv, sp, threshold_k=threshold_k, window_kms=win)[0])
+        estimator_sys[label] = round(
+            compare_terminal_velocities(longitudes, np.asarray(vt_v), ref_l, ref_v)["mean"], 3
+        )
+    _es = [v for v in estimator_sys.values() if np.isfinite(v)]
+
+    # F5: the velocity grid the offset has to be read against
+    _vt_fin = np.asarray([v for v in v_thr if np.isfinite(v)])
+    _gaps = np.abs(np.diff(np.unique(np.round(_vt_fin, 6))))
+    channel = float(np.min(_gaps[_gaps > 1e-6])) if _gaps.size and (_gaps > 1e-6).any() else nan
+
+    # F8: the edge residual is not a constant offset -- it drifts with longitude
+    _d = np.asarray(cmp_edge["delta_kms"])
+    _l = np.asarray(cmp_edge["longitudes_deg"])
+    if _d.size > 2:
+        _A = np.vstack([_l, np.ones(_l.size)]).T
+        _c, *_ = np.linalg.lstsq(_A, _d, rcond=None)
+        _r = _d - _A @ _c
+        trend = float(_c[0])
+        trend_se = float(np.sqrt(np.sum(_r**2) / (_l.size - 2) / np.sum((_l - _l.mean()) ** 2)))
+        # lag-1 autocorrelation inflates the SEM of the mean above the iid value
+        _a1 = float(np.corrcoef(_d[:-1], _d[1:])[0, 1])
+        sem_corr = float(cmp_edge["sd"] / np.sqrt(_d.size) * np.sqrt((1 + _a1) / (1 - _a1)))
+    else:
+        trend = trend_se = _a1 = sem_corr = nan
+
+    # F9: does the width systematic leak into the estimator we validated? (It does not.)
+    _w = np.asarray([dict(zip(longitudes, widths, strict=True))[e] for e in _l])
+    _ok = np.isfinite(_w) & np.isfinite(_d)
+    edge_width_corr = float(np.corrcoef(_w[_ok], _d[_ok])[0, 1]) if _ok.sum() > 2 else nan
+
     # Does the answer depend on how the reference is averaged onto our longitudes? The note
     # quotes this range, so it has to be in the committed evidence rather than in a notebook.
     window_sweep = {}
@@ -438,6 +559,25 @@ def run(
 
     metrics = {
         "source": source,
+        "reference_max_R_kpc": ref_rmax,
+        "matched_slope_ours_kms_per_kpc": ours_s,
+        "matched_slope_ours_se": ours_se,
+        "matched_slope_ours_n": ours_n,
+        "matched_slope_reference_kms_per_kpc": ref_s,
+        "matched_slope_reference_se": ref_se,
+        "matched_slope_reference_n": ref_n,
+        "matched_slope_rmin_sweep": rmin_sweep,
+        "slope_edge_drop_defective_kms_per_kpc": drop_slope,
+        "slope_edge_drop_defective_se": drop_slope_se,
+        "defective_longitudes_deg": sorted(bad),
+        "estimator_systematics": estimator_sys,
+        "estimator_systematic_span": (max(_es) - min(_es)) if len(_es) > 1 else nan,
+        "lab_channel_kms": channel,
+        "edge_residual_trend_per_deg": trend,
+        "edge_residual_trend_se": trend_se,
+        "edge_residual_autocorr_lag1": _a1,
+        "edge_offset_sem_autocorr": sem_corr,
+        "edge_residual_width_corr": edge_width_corr,
         "reference": reference,
         "step_deg": step_deg,
         "longitudes_deg": longitudes.tolist(),
@@ -548,6 +688,7 @@ def _write_macros(m: dict, path) -> None:
     excess_edge = 100.0 * (m["V_flat_edge_mean_kms"] - m["V0_kms"]) / m["V0_kms"]
     sweep = m.get("threshold_sweep_vflat", {})
     sweep_ref = m.get("threshold_sweep_minus_reference", {})
+    _rs = m.get("matched_slope_rmin_sweep", {})
     ct = m.get("compare_threshold", {})
     ce = m.get("compare_edge", {})
     values = (
@@ -570,6 +711,27 @@ def _write_macros(m: dict, path) -> None:
         ("RefSlope", num(m["reference_slope_kms_per_kpc"])),
         ("RefSlopeErr", num(m["reference_slope_se_kms_per_kpc"])),
         ("RefSlopeN", f"{m['reference_slope_n']}"),
+        ("MatchSlope", num(m["matched_slope_ours_kms_per_kpc"])),
+        ("MatchSlopeErr", num(m["matched_slope_ours_se"])),
+        ("MatchSlopeRef", num(m["matched_slope_reference_kms_per_kpc"])),
+        ("MatchSlopeRefErr", num(m["matched_slope_reference_se"])),
+        ("MatchSlopeN", f"{m['matched_slope_ours_n']}"),
+        ("RefRmax", num(m["reference_max_R_kpc"], ".1f")),
+        ("SlopeDropDefective", num(m["slope_edge_drop_defective_kms_per_kpc"])),
+        ("SlopeDropDefectiveErr", num(m["slope_edge_drop_defective_se"])),
+        ("NDefective", f"{len(m['defective_longitudes_deg'])}"),
+        ("EstSysSpan", num(m["estimator_systematic_span"], ".1f")),
+        ("EstSysLat", num(m["estimator_systematics"].get("lat_avg_0.5", float("nan")))),
+        ("Channel", num(m["lab_channel_kms"], ".2f")),
+        ("ResidTrend", num(m["edge_residual_trend_per_deg"], ".3f")),
+        ("ResidAuto", num(m["edge_residual_autocorr_lag1"])),
+        ("RminSweepLo", num(_rs.get("3", {}).get("ours", float("nan")), ".1f")),
+        ("RminSweepHi", num(_rs.get("6", {}).get("ours", float("nan")), ".1f")),
+        ("RminSweepRefLo", num(_rs.get("3", {}).get("reference", float("nan")), ".1f")),
+        ("RminSweepRefHi", num(_rs.get("6", {}).get("reference", float("nan")), ".1f")),
+        ("ResidTrendErr", num(m["edge_residual_trend_se"], ".3f")),
+        ("RefEdgeOffsetSemCorr", num(m["edge_offset_sem_autocorr"])),
+        ("EdgeWidthCorr", num(m["edge_residual_width_corr"])),
         ("RefN", f"{ce['n']}"),
         ("RefEdgeOffset", num(ce.get("mean", float("nan")))),
         ("RefEdgeOffsetSd", num(ce.get("sd", float("nan")))),

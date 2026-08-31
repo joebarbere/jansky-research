@@ -219,7 +219,7 @@ contribution — the tooling and the reproducibility, not a novelty claim:
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
   drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
   refereed and ready to submit), and the LAB/VGPS terminal-velocity comparison
-  (`papers/hi/rnaas.tex`, GATE-0 discharged 2026-08-31, not yet refereed).
+  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level

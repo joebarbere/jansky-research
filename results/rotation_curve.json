@@ -220,7 +220,6 @@
     263.3317887808811
   ],
   "V_flat_mean_kms": 256.5970321407648,
-  "V_flat_std_kms": 6.3791575613304,
   "flat_radius_min_kpc": 4.0,
   "R0_kpc": 8.15,
   "V0_kms": 236.0,
@@ -321,12 +320,6 @@
   "vflat_drop_innermost": 256.79254286108005,
   "vflat_drop_outermost_two": 256.2533344522138,
   "threshold_k": 2.0,
-  "_merge": {
-    "retained_from_previous_run": [
-      "V_flat_std_kms"
-    ],
-    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
-  },
   "reference": "VGPS (McClure-Griffiths & Dickey 2016, Table 1)",
   "step_deg": 1.0,
   "v_term_threshold_kms": [
@@ -1081,5 +1074,61 @@
   },
   "compare_edge_window_min": 0.956,
   "compare_edge_window_max": 1.119,
-  "reference_slope_n": 579
+  "reference_slope_n": 579,
+  "reference_max_R_kpc": 7.5003348484160846,
+  "matched_slope_ours_kms_per_kpc": 3.5875196610167244,
+  "matched_slope_ours_se": 0.7591290248151114,
+  "matched_slope_ours_n": 38,
+  "matched_slope_reference_kms_per_kpc": 3.5703000846577244,
+  "matched_slope_reference_se": 0.712532934845939,
+  "matched_slope_reference_n": 38,
+  "matched_slope_rmin_sweep": {
+    "3": {
+      "ours": 7.324,
+      "reference": 7.091,
+      "n": 46
+    },
+    "4": {
+      "ours": 3.588,
+      "reference": 3.57,
+      "n": 38
+    },
+    "5": {
+      "ours": 3.09,
+      "reference": 2.843,
+      "n": 30
+    },
+    "5.5": {
+      "ours": 0.129,
+      "reference": 0.336,
+      "n": 25
+    },
+    "6": {
+      "ours": -7.225,
+      "reference": -6.66,
+      "n": 20
+    }
+  },
+  "slope_edge_drop_defective_kms_per_kpc": 2.789757994336363,
+  "slope_edge_drop_defective_se": 0.6071770819107875,
+  "defective_longitudes_deg": [
+    11.0,
+    12.0,
+    32.0,
+    74.0,
+    75.0,
+    76.0
+  ],
+  "estimator_systematics": {
+    "window_wide": 1.9,
+    "window_narrow": -0.22,
+    "lat_avg_0.5": 0.894
+  },
+  "estimator_systematic_span": 2.12,
+  "lab_channel_kms": 1.0305719999999923,
+  "edge_residual_trend_per_deg": 0.024707022267283156,
+  "edge_residual_trend_se": 0.010092435777205862,
+  "edge_residual_autocorr_lag1": 0.3053105045436834,
+  "edge_offset_sem_autocorr": 0.20557080397051486,
+  "edge_residual_width_corr": -0.08867947064398386
 }

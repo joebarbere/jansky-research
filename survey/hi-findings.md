@@ -260,3 +260,54 @@ a HIGH) and pushed the abstract to 308 words (corpus p90 273). Both fixed: paren
 sentences, abstract down to 276. Worth noting that the style gates are not self-maintaining — a
 content edit to a converted paper silently de-converts it, so `prose_lint.py` belongs in the same
 reflex as `triage_papers.py` after any paper edit.
+
+## Full referee round on the RNAAS note (2026-08-31): MAJOR REVISION, 16 findings — RESOLVED
+
+Presenter/referee round-trip on `papers/hi/rnaas.tex`. Every checkable finding verified against
+the committed arrays before acting; `git status` clean after (the reviewer executed nothing that
+writes). Two findings changed what the note claims.
+
+**BLOCKER (1). The slope half of the title claim was contradicted by the numbers printed beside
+it.** The note offered `2.52 +/- 0.55` against the reference's `3.82 +/- 0.18` — a difference of
+`1.30 +/- 0.58`, **2.2 sigma**, so a reader who subtracts gets a tension, not an agreement. Cause:
+`_slope_fit` cuts only on `R > rmin`, so the LAB fit ran to **8.03 kpc** (l=80) while the
+reference stops at **7.50 kpc** (l=67). Two different chords of a curve with real structure in it.
+The like-for-like pair is **3.59 +/- 0.76 against 3.57 +/- 0.71** (0.0 sigma) — and it existed only
+in this findings file, which is exactly the "a number that reaches prose from a notebook is not
+evidence" failure the same day's commit message described for the window sweep, left standing on
+the load-bearing claim. `matched_slopes()` now fits both arms on the *same* longitude set and the
+pair is committed and macro'd.
+
+**The systematic that was never measured (4).** The note's only robustness check on the headline
++1.04 was the matching-window sweep — symmetric averaging of a smooth reference curve, which to
+first order cannot move the mean. The `dr20radio` vacuous-check shape, and the measured span
+(0.16) was one SEM, as a check that cannot fail always is. The parameters that *can* move it are
+inside our own estimator, and measured they move it hard: **window_wide +1.90, window_narrow
+-0.22, lat_avg(|b|<0.5) +0.89, span 2.12 km/s** — an order of magnitude above the 0.15 statistical
+error. So **the +1.04 is not a resolved offset between the surveys**; it is agreement at the
+one-channel level and no better. This also dissolves the referee's separate worry (5) that a
+6.9-sigma offset numerically equal to one LAB channel (1.0306 km/s, measured from the data) was
+being reported as an absence. The note now says the agreement is one channel and says why.
+
+Everything else, fixed and committed: the reference slope's `+/-0.18` was an OLS error on 579
+correlated samples and is now shown against the matched-grid value (2); the figure caption said
+71 sightlines where the panel plots the 49 matched ones (3); the LAB beam is **36 arcmin**, not the
+"0.5 deg half-beam" both papers claimed — 0.5 deg is the grid spacing (6); the 20 K clause implied a
+pipeline convergence that MG&D's `V_t = v_t - v_o` construction forbids, and is reframed (7); the
+edge residual drifts with longitude at **+0.025 +/- 0.010 km/s/deg (2.4 sigma)** with lag-1
+autocorrelation 0.31, which puts the honest SEM at **0.21** not 0.15 (8); the width systematic does
+**not** leak into the validated estimator (`r = -0.089` against the edge residual), which is the
+direct answer to the question and a clean negative worth printing (9); the six defective sightlines
+are located — one inside the compared sample, three in the outer segment — and dropping them moves
+the full-range slope to 2.79 +/- 0.61 (10); the `rmin` cut is swept for **both** arms (11).
+
+**The rmin sweep is the note's best robustness result and it nearly went unreported.** The fitted
+slope is not a stable property: 3 to 6 kpc swings it from **+7.3 to -7.2**. But it swings the
+reference identically (**+7.1 to -6.7**) at every cut. The slope is a chord across a ~2 kpc
+undulation MG&D themselves report; what is robust is that LAB tracks the reference wherever you
+cut. Reporting only "the curve rises at 2.52" would have been reporting the cut.
+
+Also: `lihu2024` cited, as the GATE-0 pass said the note owed (12); the VizieR table named (13);
+the stale `V_flat_std_kms` key removed from the results JSON, where it sat beside
+`V_flat_scatter_kms` as the same quantity from an older run (14). Note is now 121-word abstract,
+948-word body, 3 pages. Triage 0/0/0 on both documents; prose lint 0 HIGH on both.

@@ -8,98 +8,113 @@
 
 \begin{document}
 
-\title{The LAB and VGPS HI Terminal-Velocity Curves Agree to 1~km\,s$^{-1}$ When the Profile
-Edge Is Fitted}
+\title{The LAB and VGPS HI Terminal-Velocity Curves Agree to One Velocity Channel When the
+Profile Edge Is Fitted}
 
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-We compare inner-Galaxy HI terminal velocities measured from the all-sky Leiden/Argentine/Bonn
-(LAB) survey against the VLA Galactic Plane Survey curve of \citet{mccluregriffiths2016}, at the
-\hiRealRefN\ first-quadrant longitudes the two cover in common. An error-function fit to the
-profile edge agrees with the interferometric curve to
-$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$, with a slope of
-$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$ against their
-$\hiRealRefSlope\pm\hiRealRefSlopeErr$~km\,s$^{-1}$\,kpc$^{-1}$. A fixed 2~K
+We compare inner-Galaxy HI terminal velocities from the all-sky Leiden/Argentine/Bonn (LAB)
+survey against the VLA Galactic Plane Survey curve of \citet{mccluregriffiths2016}, at the
+\hiRealRefN\ first-quadrant longitudes the two cover in common. Fitting the profile edge with an
+error function, as they do, the two agree to
+$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSemCorr$~km\,s$^{-1}$, one LAB channel, and vary
+by \hiRealEstSysSpan~km\,s$^{-1}$ across reasonable choices of the fit itself. Over the same
+longitudes the curves have the same slope, $\hiRealMatchSlope\pm\hiRealMatchSlopeErr$ against
+$\hiRealMatchSlopeRef\pm\hiRealMatchSlopeRefErr$~km\,s$^{-1}$\,kpc$^{-1}$. A fixed 2~K
 brightness-temperature threshold on the same spectra sits
 $\hiRealRefThrOffset\pm\hiRealRefThrOffsetSem$~km\,s$^{-1}$ high, with a scatter of
-\hiRealRefThrOffsetSd~km\,s$^{-1}$ that rules out a constant correction. The gap closes as the
-threshold climbs the profile edge.
+\hiRealRefThrOffsetSd~km\,s$^{-1}$ that rules out a constant correction.
 \end{abstract}
 
 \section{}
 
 Terminal velocities at the tangent point remain the standard route to the inner Milky Way
 rotation curve \citep{mccluregriffiths2007}, and what a terminal velocity is depends on how the
-high-velocity edge of the HI profile is reduced to one number. \citet{mccluregriffiths2016}
-fit that edge with a sum of two error functions and publish a uniformly measured first-quadrant
-curve from the VLA Galactic Plane Survey, warning in the same paper that any threshold method
-is subject to errors. The size of those errors on an all-sky single-dish survey has not been
-measured against their curve, and neither has the agreement. Both are worth knowing, because
-LAB \citep{kalberla2005} covers the whole sky at sub-megabyte cost per sightline and the VGPS
-does not.
+high-velocity edge of the HI profile is reduced to one number. \citet{mccluregriffiths2016} fit
+that edge with a sum of two error functions and publish a uniformly measured first-quadrant
+curve from the VLA Galactic Plane Survey, warning in the same paper that any threshold method is
+subject to errors. The size of those errors on an all-sky single-dish survey has not been
+measured against their curve, and neither has the agreement. Both are worth knowing, because LAB
+\citep{kalberla2005} covers the whole sky at sub-megabyte cost per sightline and the VGPS does
+not. Small-telescope tangent-point curves are measured against textbook expectations rather than
+against a survey \citep{lihu2024}.
 
-We read the $b=0$ spectrum of \hiNlong\ LAB $(b,v)$ slices from $\ell=10\arcdeg$ to
-$80\arcdeg$, spaced \hiStep\arcdeg, and estimate the terminal velocity of each twice on the
-same spectrum: the most positive velocity with $T_B$ above 2~K, and the half-height velocity
-$v_0$ of an error-function fit $T(v)=\frac{A}{2}\mathrm{erfc}((v-v_0)/\sqrt{2}w)+c$ to the
-falling edge. \hiRealRefN\ of these longitudes fall inside the $18.4\arcdeg<\ell<67.0\arcdeg$
-coverage of \citet{mccluregriffiths2016}, whose curve is sampled every $0.065\arcdeg$; each is
-compared against the mean of their values within one LAB half-beam ($0.5\arcdeg$), and
+We read the $b=0$ spectrum of \hiNlong\ LAB $(b,v)$ slices from $\ell=10\arcdeg$ to $80\arcdeg$,
+spaced \hiStep\arcdeg, at the survey's $36\arcmin$ resolution and \hiRealChannel~km\,s$^{-1}$
+channels, and estimate the terminal velocity of each twice on the same spectrum: the most
+positive velocity with $T_B$ above 2~K, and the half-height velocity $v_0$ of an error-function
+fit $T(v)=\frac{A}{2}\mathrm{erfc}((v-v_0)/\sqrt{2}w)+c$ to the falling edge. \hiRealRefN\ of
+these longitudes fall inside the $18.4\arcdeg<\ell<67.0\arcdeg$ coverage of the
+\citet{mccluregriffiths2016} table (VizieR J/ApJ/831/124), whose curve is sampled every
+$0.065\arcdeg$; each is compared against the mean of their values within $0.5\arcdeg$, and
 longitudes outside their coverage are dropped rather than extrapolated. The comparison is made
 on $v_\mathrm{term}$ itself, so no $R_0$ or $V_0$ enters it.
 
-The edge fit reproduces the interferometric curve
-(Figure~\ref{fig:cmp}, left): the mean difference is
-$\hiRealRefEdgeOffset\pm\hiRealRefEdgeOffsetSem$~km\,s$^{-1}$ with a scatter of
-\hiRealRefEdgeOffsetSd~km\,s$^{-1}$, and the result is insensitive to the matching window,
-moving between \hiRealRefWindowMin\ and \hiRealRefWindowMax\ over half-widths of $0.25\arcdeg$ to $1.0\arcdeg$ under
-either a mean or a median. The shapes agree as well as the levels. Converting to
-$V(R)=v_\mathrm{term}+V_0\sin\ell$ with $R_0=\hiRzero$~kpc and $V_0=\hiVzero$~km\,s$^{-1}$
-\citep{reid2019} and fitting beyond the bar-dominated region, LAB gives
-$\hiRealSlopeEdge\pm\hiRealSlopeEdgeErr$~km\,s$^{-1}$\,kpc$^{-1}$ against the
-$\hiRealRefSlope\pm\hiRealRefSlopeErr$ of the reference curve on its own \hiRealRefSlopeN\ points. That the
-inner curve rises rather than staying flat is not new \citep{reiddame2016,davis2026}; that a
-$0.5\arcdeg$ beam recovers the rise measured at $1\arcmin$ is the point.
+The edge fit reproduces the interferometric curve (Figure~\ref{fig:cmp}, left). The mean
+difference is \hiRealRefEdgeOffset~km\,s$^{-1}$, one LAB channel, with a scatter of
+\hiRealRefEdgeOffsetSd~km\,s$^{-1}$; the residuals are correlated between neighbouring
+sightlines (lag-1 \hiRealResidAuto), which puts the standard error at
+\hiRealRefEdgeOffsetSemCorr\ rather than the \hiRealRefEdgeOffsetSem\ an independent-sample
+count would give. Three choices inside our own estimator matter more than that. Widening or
+narrowing the fitted window, or averaging over $|b|<0.5\arcdeg$ as
+\citet{mccluregriffiths2016} do instead of taking the single $b=0$ row, moves the offset across
+a range of \hiRealEstSysSpan~km\,s$^{-1}$. The agreement is therefore at the one-channel level
+and no better, and the \hiRealRefEdgeOffset\ is not a resolved offset between the surveys. The
+residual does drift with longitude, at
+$\hiRealResidTrend\pm\hiRealResidTrendErr$~km\,s$^{-1}$ per degree, which is unexplained.
 
-The 2~K threshold does not reproduce it. Those terminal velocities sit
-$\hiRealRefThrOffset\pm\hiRealRefThrOffsetSem$~km\,s$^{-1}$ above the reference, and the
-scatter of \hiRealRefThrOffsetSd~km\,s$^{-1}$ is large enough that no single subtracted offset
-would repair them. The excess is the overshoot of a threshold crossing on a finite-width edge,
-and it behaves accordingly (Figure~\ref{fig:cmp}, right): raising the threshold from 1.5~K to
-40~K walks the mean offset from \hiRealSweepRefLo\ to \hiRealSweepRefHi~km\,s$^{-1}$, passing
-\hiRealSweepRefTwenty~km\,s$^{-1}$ at the 20~K that \citet{mccluregriffiths2016} seed their own
-fit from. Per sightline the overshoot grows with the fitted edge width, at
-\hiRealWidthSlope~km\,s$^{-1}$ per km\,s$^{-1}$ of width, though the correlation is loose
-($r=\hiRealWidthCorr$) because the fitted width is itself noisy.
+The shapes agree as well as the levels, provided both are measured over the same radii. Our
+sightlines run to $R=\hiRealRmax$~kpc and the reference stops at \hiRealRefRmax~kpc, so a slope
+fitted to each over its own range compares different chords of a curve that has real structure
+in it. Fitted over the \hiRealMatchSlopeN\ shared longitudes beyond
+$R=\hiRealRmin$~kpc, LAB gives $\hiRealMatchSlope\pm\hiRealMatchSlopeErr$ and the reference
+$\hiRealMatchSlopeRef\pm\hiRealMatchSlopeRefErr$~km\,s$^{-1}$\,kpc$^{-1}$. Neither is a stable
+property of the Galaxy: moving the inner cut from 3 to 6~kpc swings the fitted slope from
+\hiRealRminSweepLo\ to \hiRealRminSweepHi, consistent with the $\sim$2~kpc undulation
+\citet{mccluregriffiths2016} report. It swings the reference identically
+(\hiRealRminSweepRefLo\ to \hiRealRminSweepRefHi), which is the result here. That the inner
+curve rises rather than staying flat is not new \citep{reiddame2016,davis2026}.
+
+The 2~K threshold reproduces neither. Those terminal velocities sit
+$\hiRealRefThrOffset\pm\hiRealRefThrOffsetSem$~km\,s$^{-1}$ above the reference, and the scatter
+of \hiRealRefThrOffsetSd~km\,s$^{-1}$ is large enough that no single subtracted offset would
+repair them. The excess is the overshoot of a threshold crossing on a finite-width edge, and it
+behaves accordingly (Figure~\ref{fig:cmp}, right): raising the threshold from 1.5~K to 40~K
+walks the mean offset from \hiRealSweepRefLo\ to \hiRealSweepRefHi~km\,s$^{-1}$, reaching
+\hiRealSweepRefTwenty~km\,s$^{-1}$ at 20~K. A residual there is expected, since
+\citet{mccluregriffiths2016} use their 20~K crossing only to seed a fit and publish the fitted
+value. Per sightline the overshoot grows with the fitted edge width, at
+\hiRealWidthSlope~km\,s$^{-1}$ per km\,s$^{-1}$ of width, loosely ($r=\hiRealWidthCorr$). It
+does not leak into the estimator we validated: the edge-fit residual is uncorrelated with
+fitted width, $r=\hiRealEdgeWidthCorr$.
 
 Two limits bound this. The \citet{mccluregriffiths2016} estimator and ours are both
-error-function fits to the profile edge, so the agreement bounds survey and pipeline
-differences (beam, sampling, absorption and continuum treatment) and says nothing about the
-choice of estimator family, which would move both together. And the LAB spectra are not
-uniformly clean: in \hiRealNNoncontig\ of the \hiNlong\ the emission above 2~K breaks into more
-than one velocity run, so the threshold crossing there may sit on a detached local-emission
-island, and the edge fit fails to converge on \hiRealNEdgeFail. Both counts are small, and both
-are the kind of defect an eight-longitude sample hides.
+error-function fits to a profile edge, so the agreement bounds survey and pipeline differences
+and says nothing about the choice of estimator family, which would move both together. And the
+LAB spectra are not uniformly clean: \hiRealNDefective\ of the \hiNlong\ have emission above 2~K
+in more than one velocity run or no converged edge fit. One of those falls inside the compared
+sample, so the agreement above is essentially defect-free; three fall in the outer sightlines
+the reference cannot check, and dropping all of them moves the full-range slope to
+$\hiRealSlopeDropDefective\pm\hiRealSlopeDropDefectiveErr$.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/vgps_comparison.pdf}
-\caption{Left: terminal velocities from \hiNlong\ LAB sightlines under a 2~K threshold
+\caption{Left: terminal velocities at the \hiRealRefN\ shared longitudes under a 2~K threshold
 (circles) and an error-function edge fit (open squares), against the VGPS curve of
-\citet{mccluregriffiths2016} (line) over its $18.4\arcdeg<\ell<67.0\arcdeg$ coverage. Right:
-mean offset from that curve as a function of the brightness-temperature threshold, with the
-edge fit's \hiRealRefEdgeOffset~km\,s$^{-1}$ marked. Every value is regenerated by
-\code{jansky\_research.hi}.}
+\citet{mccluregriffiths2016} (line). Right: mean offset from that curve as a function of the
+brightness-temperature threshold, with the edge fit's \hiRealRefEdgeOffset~km\,s$^{-1}$ marked.
+Every value is regenerated by \code{jansky\_research.hi}.}
 \label{fig:cmp}
 \end{figure}
 
 \begin{acknowledgments}
 Developed collaboratively with Anthropic's Claude \citep{anthropicclaude} (a large language
 model); the author directed and verified the work, and an AI assistant is not an eligible
-author. This work uses the public LAB survey and the tabulated VGPS terminal velocities, and
-the author thanks both survey teams for releasing them.
+author. This work uses the public LAB survey and the tabulated VGPS terminal velocities, and the
+author thanks both survey teams for releasing them.
 \end{acknowledgments}
 
 \software{jansky-research \citep{janskyresearch}, jansky \citep{jansky}, Astropy

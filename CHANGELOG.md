@@ -28,6 +28,14 @@ recommend the next version number.
   nor "the inner curve is not flat" (known — Reid & Dame 2016), but that LAB reproduces the
   VGPS curve to 1 km/s in level and slope provided the edge is fitted, and that a 2 K
   threshold costs 15 km/s at a cost that is not constant.
+- **`hi` measures the systematic its headline actually depends on.** `estimator_systematics`
+  varies the erfc fit window and adds MG&D's own `|b| < 0.5` latitude averaging
+  (`latitude_spectrum`, `terminal_velocity_edge(window_kms=...)`), and the span is **2.12 km/s**
+  — an order of magnitude above the 0.15 statistical error, so the 1.04 km/s LAB-VGPS offset is
+  agreement at the one-channel level rather than a resolved difference. Also committed:
+  `matched_slopes()` (both arms fitted on one longitude set), the `rmin` sweep for both arms,
+  the LAB channel width, the edge residual's longitude trend and lag-1 autocorrelation, its
+  correlation with fitted width, and the drop-defective slope variant.
 - **`hi` commits the matching-window robustness it quotes.** `compare_edge_window_sweep`
   (half-widths 0.25/0.5/1.0 deg, mean and median) plus `reference_slope_n`, so the note's
   range and point count are auditable from the results JSON rather than typed by hand.
@@ -50,6 +58,15 @@ recommend the next version number.
   edge-fit failure, both invisible in the 8-point sample.
 
 ### Fixed
+- **The `hi` note's slope claim compared two different radial ranges (referee blocker).** The
+  LAB fit ran to 8.03 kpc while the reference stops at 7.50, so `2.52 ± 0.55` against
+  `3.82 ± 0.18` read as a 2.2σ tension. Fitted over the same longitudes the pair is
+  `3.59 ± 0.76` against `3.57 ± 0.71`. Also fixed from the same round: a figure caption that
+  claimed 71 sightlines where 49 are plotted; the LAB beam, which is 36′ and was called a
+  "0.5° half-beam" in both documents; a 20 K clause implying a pipeline convergence that MG&D's
+  own construction forbids; an unreported +0.025 ± 0.010 km/s/deg trend in the edge residual and
+  the autocorrelation-corrected SEM (0.21, not 0.15); and a stale `V_flat_std_kms` key sitting
+  in the results JSON beside `V_flat_scatter_kms` as the same quantity from an older run.
 - **`hi` was missing the citation its own slope result depends on.** A GATE-0 ADS pass on the
   LAB-vs-VGPS comparison (the comparison itself appears unpublished: MG&D 2016 has 22 citers
   and none is a survey cross-validation) turned up Reid & Dame 2016, who show that fitting a

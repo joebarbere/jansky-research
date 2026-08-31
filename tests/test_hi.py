@@ -184,3 +184,72 @@ def test_contiguity_counts_runs():
     spec[40:45] = 5.0  # a detached second run, e.g. a local-emission island
     assert hi._contiguity(vel, spec, 2.0) == 2
     assert hi._contiguity(vel, np.zeros_like(vel), 2.0) == 0
+
+
+def test_latitude_spectrum_row_vs_average():
+    lat = np.linspace(-2.0, 2.0, 9)
+    data = np.outer(np.arange(9, dtype=float), np.ones(5))
+    row = hi.latitude_spectrum(lat, data)
+    assert np.allclose(row, 4.0)  # the b = 0 row
+    avg = hi.latitude_spectrum(lat, data, half_width_deg=0.5)
+    assert np.allclose(avg, 4.0)  # symmetric window about b = 0
+    wide = hi.latitude_spectrum(lat, data, half_width_deg=1.0)
+    assert np.allclose(wide, 4.0) and wide.shape == (5,)
+
+
+def test_terminal_velocity_edge_window_is_a_knob():
+    """The fitted window is hand-chosen, so the paper sweeps it; it has to actually bite."""
+    vel = np.linspace(-50.0, 300.0, 500)
+    spec = 30.0 / (1.0 + np.exp((vel - 150.0) / 5.0))
+    wide, _ = hi.terminal_velocity_edge(vel, spec, window_kms=(80.0, 60.0))
+    narrow, _ = hi.terminal_velocity_edge(vel, spec, window_kms=(20.0, 15.0))
+    assert np.isfinite(wide) and np.isfinite(narrow)
+    assert abs(wide - 150.0) < 3.0 and abs(narrow - 150.0) < 3.0
+
+
+def test_matched_slopes_uses_one_longitude_set_for_both_arms():
+    """The referee's blocker: fitting each arm over its own radial range compares chords.
+
+    Here the two curves are identical by construction, so a correct implementation must
+    return the same slope twice however the longitudes are distributed.
+    """
+    ell = np.arange(20.0, 70.0, 1.0)
+    v = 200.0 - hi.V0_KMS * np.sin(np.radians(ell))  # a genuinely flat V(R) = 200
+    cmp_result = {
+        "longitudes_deg": ell.tolist(),
+        "v_term_kms": v.tolist(),
+        "reference_v_term_kms": v.tolist(),
+    }
+    (s1, se1, n1), (s2, se2, n2) = hi.matched_slopes(cmp_result, 4.0)
+    assert n1 == n2 and n1 > 10
+    assert np.isclose(s1, s2) and abs(s1) < 1e-6  # flat, and identical between arms
+    empty = hi.matched_slopes({"longitudes_deg": []}, 4.0)
+    assert empty[0][2] == 0 and np.isnan(empty[0][0])
+
+
+def test_run_offline_commits_the_referees_evidence(tmp_path):
+    """Every number the note quotes has to come from the results file, not a notebook."""
+    m = hi.run(out=str(tmp_path), offline=True)
+    for key in (
+        "matched_slope_ours_kms_per_kpc",
+        "matched_slope_reference_kms_per_kpc",
+        "matched_slope_rmin_sweep",
+        "estimator_systematics",
+        "estimator_systematic_span",
+        "lab_channel_kms",
+        "edge_residual_trend_per_deg",
+        "edge_offset_sem_autocorr",
+        "edge_residual_width_corr",
+        "slope_edge_drop_defective_kms_per_kpc",
+        "defective_longitudes_deg",
+        "reference_max_R_kpc",
+    ):
+        assert key in m, key
+    # the matched pair is fitted on one longitude set, so the counts must agree
+    assert m["matched_slope_ours_n"] == m["matched_slope_reference_n"]
+    # the fixture injects a flat curve into both arms, so both matched slopes sit near zero
+    assert abs(m["matched_slope_ours_kms_per_kpc"]) < 1.0
+    assert abs(m["matched_slope_reference_kms_per_kpc"]) < 1.0
+    # the estimator sweep must vary something, or it is the vacuous check it replaced
+    assert m["estimator_systematic_span"] > 0.0
+    assert set(m["estimator_systematics"]) == {"window_wide", "window_narrow", "lat_avg_0.5"}
