@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-09-02
+
 ### Fixed
 - **20 citations across 16 papers pointed at preprints that had been published.** Swept every
   `refs.bib` for arXiv-only entries (38 candidates), resolved each through ADS and adjudicated
