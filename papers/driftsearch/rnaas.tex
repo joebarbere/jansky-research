@@ -34,13 +34,13 @@ pipelines de-drift the dynamic spectrum to recover such tones, and the field's s
 end-to-end validation is recovering the Voyager~1 carrier in Green Bank Telescope data
 \citep{enriquez2017,lebofsky2019}. That validation has, to our knowledge, no published
 independent replication with a minimal open detector, and reported injection--recovery
-efficiencies have no shared reference cell on which two detectors can be compared on identical
+efficiencies have no shared reference set on which two detectors can be compared on identical
 inputs. This note supplies both, as the tested \code{jansky\_research.driftsearch} module
 wrapping the teaching-grade brute-force search of the \code{jansky} package. The
-\code{setigen} package \citep{brzycki2022} standardized signal injection; the cell here
+\code{setigen} package \citep{brzycki2022} standardized signal injection; the reference set here
 fixes the injector and the detector together, so two detectors meet on identical inputs.
 
-The benchmark cell is fully specified and seeded: $\dsNtime\times\dsNfreq$ waterfalls of unit
+The reference set is fully specified and seeded: $\dsNtime\times\dsNfreq$ waterfalls of unit
 Gaussian noise, a \dsNsearchDrifts-point drift grid, a single injected drifting tone per
 trial, \dsNtrials\ trials per (S/N, drift) cell at a detection threshold of \dsThreshold.
 Drift-averaged completeness reaches 50\% at injected S/N~$\approx\dsCfifty$ and 90\% at

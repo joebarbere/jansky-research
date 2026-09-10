@@ -10,6 +10,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`driftsearch` used "cell" for two different things.** Five uses meant a box in the
+  (S/N, drift) grid ("30 trials per cell", the standard idiom); five meant the whole fixed
+  benchmark specimen ("a single reproducible cell that fixes both the injection model and the
+  detector"). The second sense was also named three ways across one paper — the abstract said
+  "reference **set**", the introduction "reference **cell**", the discussion "a common
+  **reference**". Sense B now uses the abstract's own term, "reference set", throughout both
+  `main.tex` and `rnaas.tex`; "cell" is kept for grid boxes. Prose only — diff-guard clean,
+  style lint unchanged against baseline, both PDFs rebuild with no undefined references.
+
 ## [1.11.1] - 2026-09-02
 
 ### Fixed

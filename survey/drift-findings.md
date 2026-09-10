@@ -263,3 +263,41 @@ revision. Swept the other three papers using the verb the same way -- `skr`, `rm
 (prose only, every number, macro and citation preserved); style lint unchanged against baseline;
 all five rebuild with no undefined references. The three pre-existing `overclaim` LOWs in the
 triage are unrelated and predate the edit (verified by stashing).
+
+## "Cell" meant two things; the abstract already had the right word (2026-09-07)
+
+Raised by Joe while reading the paper cold, which is the only way this kind of defect surfaces.
+The word **cell** carried two unrelated senses, five uses each, within two paragraphs of each
+other:
+
+- **a box in the (S/N, drift) grid** — "30 trials per cell". Standard idiom in injection-recovery
+  work; every referee reads it correctly.
+- **the whole fixed benchmark specimen** — "a single reproducible cell that fixes both the
+  injection model and the detector". The novel concept the paper introduces, borrowing a
+  metrology metaphor (a calibration cell) into a context where the word was already taken.
+
+Worse, sense B was named **three different ways in one paper**: the abstract promised a
+"reference **set**" (main.tex:21), the introduction delivered a "reference **cell**"
+(main.tex:52), and the discussion called it "a common **reference**" (main.tex:67). A referee
+reading straight through meets three names for one object and has to work out they are the same
+thing.
+
+The fix was not to invent terminology but to adopt the paper's own: **"reference set"**
+throughout for sense B, "cell" kept for grid boxes. Five substitutions across both documents,
+one of which also dropped a redundant "benchmark" ("The benchmark cell is fully specified" ->
+"The reference set is fully specified"), since "benchmark" already appears 10 times in main.tex
+meaning the whole exercise and was blurring the specimen into the activity.
+
+Rejected alternatives: "reference configuration" (precise, but new vocabulary in a paper that
+already had a working term); "reference benchmark" (collides with the 15 existing uses of
+"benchmark"); and inverting the fix by renaming the grid boxes (backwards -- renaming the
+standard idiom to protect the novel term).
+
+Gates: diff-guard clean on both documents (prose only, every number, macro and citation
+preserved), style lint unchanged against baseline (main 2 findings / rnaas 1, both 0 HIGH),
+triage unchanged, both PDFs rebuild with no undefined references.
+
+The general lesson: **a term that is standard in your field can still be the wrong word if your
+own paper already uses it for something else.** No linter checks for a word carrying two senses,
+and four review rounds plus a full referee round walked past this one -- it took a reader coming
+to the paper without the author's context.

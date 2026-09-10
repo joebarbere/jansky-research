@@ -48,8 +48,8 @@ because of the changing line-of-sight acceleration; SETI pipelines de-drift the 
 recover such tones \citep{enriquez2017}. Reported detection efficiencies depend on the injector, the
 detector, and the data, which makes cross-comparison difficult. The \code{setigen} package
 \citep{brzycki2022} standardized signal injection. Still missing for small, portable work is a single
-reproducible cell that fixes both the injection model and the detector, so two detectors can be
-compared on identical inputs on any laptop. We provide that reference cell, fully specified ($\dsNtime\times\dsNfreq$ waterfalls, a \dsNsearchDrifts-point drift grid, unit Gaussian noise, seeded), and we test the underlying teaching-grade detector on real data.
+reproducible reference set that fixes both the injection model and the detector, so two detectors can be
+compared on identical inputs on any laptop. We provide that reference set, fully specified ($\dsNtime\times\dsNfreq$ waterfalls, a \dsNsearchDrifts-point drift grid, unit Gaussian noise, seeded), and we test the underlying teaching-grade detector on real data.
 
 \section{Method}
 \code{driftsearch} wraps the brute-force Doppler-drift search in \code{jansky.seti}. It injects a
