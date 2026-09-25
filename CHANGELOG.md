@@ -10,6 +10,12 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **`fable-ideas.md` closes the exoplanet-radio-in-surveys door.** β Pic b's MeerKAT emission
+  (arXiv:2609.16720; brightest burst 307 µJy) is ≥3× below RACS snapshot limits, and forced
+  I+V photometry at β Pic in five RACS epochs returned no detection (5σ V limits 0.7–1.2 mJy).
+  Recorded so the next idea scan does not propose a RACS/VLASS imaged-planet census.
+
 ### Fixed
 - **`driftsearch` used "cell" for two different things.** Five uses meant a box in the
   (S/N, drift) grid ("30 trials per cell", the standard idiom); five meant the whole fixed

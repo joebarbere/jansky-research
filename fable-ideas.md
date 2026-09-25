@@ -105,6 +105,16 @@ should treat these as hard "do not plan" flags unless the GATE-0 re-check overtu
   visibilities the teams own); MeerTRAP statistics (no public unified catalogue); amateur
   meteor **head-echo** classification (physically inaccessible to forward scatter — reframed in
   S5); Saturn-lightning re-analysis (above); "PulsarNet"/"ffancy" (do not exist — phantom tools).
+- **Exoplanet radio in survey data (RACS/VLASS) is closed by sensitivity** (added 2026-09-24).
+  The first localized exoplanet radio detection, β Pic b (Ortiz Ceballos, Berger & Cendes,
+  arXiv:2609.16720, MeerKAT 0.85–3.5 GHz), peaks at 307 µJy in its brightest L-band burst and
+  sits at 48 µJy quiescent at S-band. Forced I+V photometry at β Pic in five RACS epochs
+  (887–1655 MHz, 2021–2024) found nothing: V S/N between −0.2 and +1.9, 5σ V limits
+  0.7–1.2 mJy per ~15-min snapshot, i.e. ≥3× too shallow even for the brightest burst. The
+  paper itself says the seven other imaged giant planets within 45 pc need 5–7× *better* than
+  MeerKAT. A directly-imaged-planet census, and β Pic as a recover-a-known, are both out of
+  reach of survey snapshots; only deep targeted interferometry works. (RACS-mid epoch 2 tile
+  ASKAP-67275 returned "no access" from CASDA and was not measured.)
 
 ---
 
