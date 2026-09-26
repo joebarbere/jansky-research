@@ -237,3 +237,35 @@ cause not established.
 **Still open:** a density-insensitive estimator (SWML); a true footprint mask; a random-placement
 null for the groups; a beam-confusion test; whether FASHI v_opt and the Douglass redshifts share
 a velocity frame.
+
+## Second referee round on the DR2 revision (2026-09-26): MAJOR REVISION
+
+Bookkeeping now clean (every macro and every derived ratio re-derived from the JSON and agrees).
+Of the 12 first-round findings: 9 RESOLVED, 3 PARTLY (#5 group reasoning; #10 `assign_groups`
+still uses H0=70 against Tempel's h=0.678 for R200/distance, ~3%; #12 `fashi_dr2` fourth author
+is Hong Guo per Crossref, not "W.-K. Guo" -- my "Crossref-verified" checked DOI/volume/article
+but not every author). The headline now rests on the random-void null, and the referee argues
+it has not been shown fair:
+
+1. **The null's scatter (0.018) is below every noise estimate for the real void bin** (fit 0.043,
+   jackknife 0.033) -- the expected symptom of placements landing on mean-density structure and
+   filling a better-populated void bin. Against the real bin's own noise the excess is 1.4-1.8
+   sigma, not 3.3. Needs per-placement occupancy committed and a jackknife on a few placements.
+2. **The null is not signal-free or geometry-matched:** placed voids can overlap the real voids
+   (leaking signal into the null), overlap each other, spill holes outside the footprint (only
+   the centre is tested), and the classifiable box stays the real voids'. "Alone produce 60%"
+   is stronger than shown. Needs a constrained null + an overlap regression.
+3. **EdS (-0.063) sits at the null's 93rd percentile** -- a coherent few-Mpc shift moves the
+   statistic by the size of the excess, a variation the placement scatter cannot see.
+4-11 (minor): void fit uses 14 bins vs the wall's 18; beam confusion and the unresolved
+   velocity frame missing from the void section ("attributable to the real voids" -> "not
+   reproduced by random placements"); the DR1 offset moved -0.256 -> -0.135 with full voids
+   (undisclosed) and "DR1 and DR2 agree" is wrong (0.095 dex apart); the group-section detection-
+   limit argument is wrong (the limit reaches the knee at 380 Mpc); p = 0.0099 is just the
+   0-of-100 floor (run >= 1000); run the null under the single-limit weighting too; ALFALFA
+   comparison should be raw-vs-raw; caption should mention the null.
+NIT: stale `weighting_shift_pct` (40.0) still in the JSON as a `_merge` carry-over.
+
+**Single change recommended:** make the null demonstrably fair (per-placement occupancy,
+real-void overlap, spill-over; constrained placements; >= 1000 draws), and until then lead the
+abstract with the conservative 1.4-1.8 sigma.
