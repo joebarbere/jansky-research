@@ -148,12 +148,12 @@ def test_void_jackknife_measures_sample_variance_and_is_committed():
         pytest.skip("committed fashienv results not present")
     m = json.loads(path.read_text())
     jk = m.get("void_jackknife")
-    assert jk and jk.get("jackknife_err") is not None, "the paper quotes this; commit it"
-    assert 0 < jk["n_occupied"] <= jk["n_voids"]
-    assert jk["n_ok"] == jk["n_occupied"]
+    assert jk and jk.get("B_jackknife_err") is not None, "the paper quotes this; commit it"
+    assert jk.get("B_minus_optA_same_jackknife_err") is not None  # the paired weighting error
+    assert 0 < jk["n_ok"] == jk["n_voids_occupied"]
     # the jackknife mean must sit on the full-sample offset, or the resampling is wrong
-    assert jk["mean_offset"] == pytest.approx(m["void_knee_offset"], abs=0.01)
-    assert jk["min_offset"] <= m["void_knee_offset"] <= jk["max_offset"]
+    assert jk["B_mean_offset"] == pytest.approx(m["void_knee_offset"], abs=0.01)
+    assert jk["B_min_offset"] <= m["void_knee_offset"] <= jk["B_max_offset"]
 
 
 def test_comparison_bin_size_is_committed():

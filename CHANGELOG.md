@@ -21,6 +21,14 @@ recommend the next version number.
   the sample size, moves them. The paper is revised to DR2: the Einstein-de Sitter distance
   check, recomputed under the new weighting, takes the void offset to -0.021 (0.43 sigma), so
   the abstract now reports it as a tentative upper bound rather than a detection.
+  After the referee round on the revision (MAJOR, 12 findings) that framing is itself replaced:
+  voids are full VoidFinder unions, a random-void null (100 rigid relocations within the
+  footprint) reproduces -0.091 +/- 0.018 of the -0.150 +/- 0.043 offset, and the real-void excess
+  of -0.059 dex (3.3 sigma vs the null scatter, 1.8 sigma vs the void jackknife) is reported as
+  tentative. The weighting alone moves the offset by +0.078 +/- 0.018 on the same sample. The
+  group offset (+0.165, frame-corrected) is no longer attributed to survivor bias. Two of the
+  revision's own claims -- EdS as evidence of fragility, and a comparison "on the same data" that
+  was not -- are retracted in the findings.
 
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).

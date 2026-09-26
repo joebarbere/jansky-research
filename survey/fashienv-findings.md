@@ -183,3 +183,57 @@ galaxies near void boundaries -- a fragility the fit error and the jackknife (bo
 the geometry fixed) cannot see. The abstract now calls the void offset a tentative upper bound,
 not a detection, and names this test. Group-field (+0.141, 3.6 sigma) is unaffected by it but
 remains survivor-biased.
+
+## Referee round on the DR2 revision (2026-09-26): MAJOR REVISION, 12 findings — response
+
+The referee checked every macro against the JSON (all agree) and found the problems were
+interpretation, not bookkeeping. Two of them were my errors from earlier the same day, and are
+recorded as such.
+
+**Retracted (mine):**
+- *"The EdS check shows the void offset is fragile."* Wrong. For the distant, knee-mass galaxies
+  the EdS relation moves positions by 0.4-1.2 hole radii; measured, it changes the void status
+  of 7% of void galaxies at z < 0.02 and of more galaxies than the void bin contains at z > 0.06
+  (126%). It scrambles membership, so it would remove a real signal too. It is now reported as
+  exactly that, not as evidence.
+- *"The single-limit weighting gives -0.252 on the same data" / "40% of the offset is the
+  weighting."* Not the same data: option A had run on all 155,983 sources, not the C >= 0.5
+  sample, and the 40% compared DR1-A with DR2-B (catalogue, sample and weighting at once). Now
+  measured on the same sample with a paired void jackknife: the weighting alone moves the
+  offset by +0.078 +/- 0.018 (4.3 sigma; -0.228 -> -0.150).
+- *"Upper bound."* The paper gave the bounding-box bias opposite signs in two places, and the
+  1/Vmax bias's sign was asserted. Dropped.
+
+**New computations (all in `results/fashienv_metrics.json`):**
+- **Full VoidFinder voids** (table2, all holes): 17,289 void galaxies vs 6,399 in maximal spheres;
+  offset -0.150 +/- 0.043 vs -0.157 -- the classification barely matters.
+- **Random-void null** (the referee's key recommendation): every void moved rigidly (distance,
+  holes, size kept) to a random position inside the Tempel footprint, 100 placements, same
+  weights. Mean **-0.091 +/- 0.018 (s.d.)**: the estimator and geometry produce ~60% of the
+  measured offset, in the direction of the signal (the sign is now measured, not argued). No
+  placement reached the measured value (one-sided p = 0.0099). **Excess from the real voids:
+  -0.059 dex**, 3.3 sigma against the placement scatter, 1.8 sigma against the void jackknife
+  (0.033). Tentative, not a detection.
+- **Group frame fix:** Tempel `zcmb` converted to heliocentric with the Planck dipole (was
+  Dist.c x H0=70 vs the catalogue's 67.8, in the wrong frame). Group offset +0.165 +/- 0.043
+  (3.85 sigma).
+- **Fit quality committed:** reduced chi2 19 (void), 26 (wall), 41 (global). curve_fit scales
+  the errors by it; the knee values depend on the Schechter form.
+
+**Claim changes:** survivor bias withdrawn as the group explanation (1/Vmax counts a stripped
+galaxy at its current mass; it leaves the sample only far below the knee); the group offset is
+now unexplained, with beam confusion (FAST ~3'), the field bin's out-of-footprint sky and
+distance-dependent group finding listed. "Recover the published HIMF" is now "reproduces, as a
+bookkeeping check". The mock-validation sentence says what the mock tests (the sign, with no
+void geometry). The jackknife is read as "no excess void-to-void variance", not as a second
+significance. The "every number is pipeline-generated" sentence is qualified, and the 142 other
+dropped sources are stated. `fashi_dr2` now carries the Crossref-verified journal DOI
+(10.1007/s11433-026-3072-1, Sci. China PMA 69, 129811).
+
+**Headline now:** void-wall knee -0.150 +/- 0.043 dex, of which -0.091 is reproduced by randomly
+placed voids; the real-void excess -0.059 dex is tentative. Group-field +0.165 +/- 0.043,
+cause not established.
+
+**Still open:** a density-insensitive estimator (SWML); a true footprint mask; a random-placement
+null for the groups; a beam-confusion test; whether FASHI v_opt and the Douglass redshifts share
+a velocity frame.
