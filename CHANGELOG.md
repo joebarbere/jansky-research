@@ -10,6 +10,16 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
+  On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
+  recover-a-known with the science leg on CUDA reproduces every committed number exactly, and
+  torch-dsp's cross-device kernel check matches the committed AMD one field for field — both
+  papers' portability claims now hold on two GPU vendors. 17 minutes, $0.29.
+  Evidence in `results/cuda_validation_2026-09-26.json`; `infra/terraform/` (a free,
+  self-terminating GPU launch template, SSM-only) and `infra/jobs/cuda_validation.sh`
+  reproduce it. No committed metrics or paper macros changed.
+
 ### Removed
 - **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
   seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new

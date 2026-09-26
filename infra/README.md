@@ -26,4 +26,31 @@ managing one account-wide object undo each other's applies.
   `jansky-research-monthly` budget cannot see it. The account-wide budget catches the rest.
 - **Drift:** `make drift` in `aws-cloud` (exit 0 = the account matches the code).
 
-Nothing is provisioned for this repo yet.
+## What exists (2026-09-26)
+
+`infra/terraform/` — free until an instance runs: an EC2 role with SSM access only, a security
+group with **no inbound rules**, and the `jansky-gpu` launch template (NVIDIA-driver base AMI,
+IMDSv2, encrypted gp3 root, shutdown = terminate, user-data schedules a shutdown
+`max_lifetime_minutes` after boot). State is local and gitignored.
+
+One-shot GPU job, as run for plan 96 phase 2:
+
+```fish
+set -x AWS_PROFILE joebarbere-admin
+terraform -chdir=infra/terraform init; and terraform -chdir=infra/terraform apply
+aws ec2 run-instances --launch-template LaunchTemplateName=jansky-gpu \
+    --instance-type g5.xlarge --subnet-id <default subnet in an AZ with capacity>
+# wait for SSM PingStatus Online, then:
+aws ssm send-command --instance-ids <id> --document-name AWS-RunShellScript \
+    --parameters 'commands=["curl -fsSL https://raw.githubusercontent.com/joebarbere/jansky-research/<sha>/infra/jobs/cuda_validation.sh -o /opt/cv.sh && bash /opt/cv.sh <sha>"]'
+# fetch /opt/job/out/* over SSM, then terminate the instance yourself
+```
+
+- **Capacity is not guaranteed.** g6.xlarge had no on-demand capacity in any us-east-1 zone on
+  2026-09-26; loop over subnets and fall back to another allowlisted type.
+- **The job pins a commit**, so push before launching; results go to a scratch dir on the
+  instance, never into a `results/` tree.
+- **Terminate after copying results home** rather than waiting for the max-lifetime shutdown.
+
+`infra/jobs/cuda_validation.sh` — the torch-fdmt Crab recover-a-known + CPU/CUDA parity +
+torch-dsp cross-device checks; its evidence is `results/cuda_validation_2026-09-26.json`.

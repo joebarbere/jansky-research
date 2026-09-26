@@ -179,6 +179,31 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
    and a CPU-oracle parity pass on NVIDIA. This strengthens an existing paper claim
    ("device-portable") at trivial cost, and proves the whole pipeline end to end.
    `terraform destroy` afterwards; `terraform state list` must be empty of compute.
+   **Done 2026-09-26 — PASS, $0.29.** Evidence: `results/cuda_validation_2026-09-26.json`.
+   - Ran on **g5.xlarge (NVIDIA A10G 24 GB)**, not g6.xlarge: the L4 had no on-demand capacity
+     in any us-east-1 zone at launch (the seatbelt's region lock forbids trying elsewhere, as
+     intended). Launched from the `jansky-gpu` template (`infra/terraform/`), job
+     `infra/jobs/cuda_validation.sh` via SSM Run Command, results fetched over SSM (no bucket
+     needed for KB-scale output), terminated by hand after the copy-home. 17 min 11 s of
+     instance time = **$0.288** at $1.006/h, + ~$0.002 of gp3; the plan estimated $2.50.
+   - torch **2.13.0+cu130** (the `uv.lock` version; the committed ROCm run was 2.12.1).
+     2.13.0 has no `cu128` wheel — the first attempt failed on that, a second on a relative
+     output path in my job script; both were setup failures before any science ran.
+   - **36/36** fdmt/singlepulse/torchdsp tests pass. FDMT plane CPU vs CUDA: **bit-identical**
+     (max diff 0.0). Brute dedispersion: max relative diff 1.8e-7 (float summation order),
+     same best DM.
+   - **The Crab recover-a-known with the science leg on CUDA reproduces every committed CPU
+     number exactly** (real DM 56.59, S/N 14.0, position 3501, 2.9 trials, p_pos 0.00353, null
+     5.23/6.03/6.26, p_null 0.0299; synthetic 56.63 / 33.379 ms).
+   - Bonus: `torchdsp`'s cross-device kernel check on NVIDIA is **identical field-for-field**
+     to the committed AMD one, so that paper's portability claim now holds across two GPU
+     vendors.
+   - A10G timings (not comparable to the committed AMD rows; different host): brute 0.79 s
+     vs 85.4 s on the 4-vCPU host; FDMT 0.84 s GPU vs 0.68 s CPU (FDMT is already cheap);
+     SumThreshold is *slower* on the GPU (12.0 s vs 4.8 s) — its iteration structure does not
+     parallelise well, consistent with the torchdsp paper's framing.
+   - Terraform kept: the role/SG/launch template cost nothing idle; `terraform destroy` in
+     `infra/terraform/` removes them.
 3. **First real workload** — plan 61 (Apertif subset + Heimdall oracle) or plan 51 (classifier
    CUDA baseline), whichever is picked first. Budget the run in advance from the table above.
 
