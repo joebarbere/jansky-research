@@ -29,6 +29,10 @@ recommend the next version number.
   permission set: region lock, no hourly-billed managed services, an EC2 instance-type allowlist,
   and no NAT gateways, fleets, dedicated hosts or purchase commitments. Each deny was proven by a
   dry-run call.
+- **`make seatbelt-check`** (`scripts/check_seatbelt.py`) — compares `infra/seatbelt.json`, the
+  source of truth, with the copy in the sibling `aws-ai` repo **and** the policy actually attached
+  in the account; exits non-zero on drift. The policy's `Id` names its source of truth (IAM JSON
+  allows no comments). `infra/README.md` documents the shared-account setup.
 
 - **`fable-ideas.md` closes the exoplanet-radio-in-surveys door.** β Pic b's MeerKAT emission
   (arXiv:2609.16720; brightest burst 307 µJy) is ≥3× below RACS snapshot limits, and forced
