@@ -18,8 +18,9 @@ recommend the next version number.
   The new weighting reproduces the DR2 paper's own HIMF (log M* 9.907 vs 9.89, alpha -1.328 vs
   -1.31). The void-wall knee offset shrinks from the published -0.256 to -0.154 +/- 0.052
   (3.0 sigma) and group-field from +0.192 to +0.141 +/- 0.039 (3.6 sigma) -- the weighting, not
-  the sample size, moves them. Evidence in `results/fashienv_dr2_preview.json` until the paper
-  is revised.
+  the sample size, moves them. The paper is revised to DR2: the Einstein-de Sitter distance
+  check, recomputed under the new weighting, takes the void offset to -0.021 (0.43 sigma), so
+  the abstract now reports it as a tentative upper bound rather than a detection.
 
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
