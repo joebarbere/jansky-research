@@ -10,6 +10,14 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Removed
+- **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
+  seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new
+  [`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo's Terraform, imported from the live
+  account with a post-import plan showing no changes. `infra/seatbelt.json`,
+  `scripts/check_seatbelt.py` and `make seatbelt-check` are removed: `terraform plan` in
+  `aws-cloud` is the drift check now. `infra/README.md` and plan 96 say what lives where.
+
 ### Changed
 - **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
   data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,

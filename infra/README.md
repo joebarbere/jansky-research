@@ -1,50 +1,29 @@
-# infra/ — AWS for the cloud leg (plan 96)
+# infra/ — this repo's AWS resources (plan 96)
 
-What lives here, and what is live in the account. The plan, prices and phases are in
-[`plans/96-aws-infrastructure.md`](../plans/96-aws-infrastructure.md).
+The plan, prices and phases are in [`plans/96-aws-infrastructure.md`](../plans/96-aws-infrastructure.md).
 
-## `seatbelt.json` — the source of truth for the account's cost seatbelt
+## Three repos, one account
 
-This repo and the sibling [`aws-ai`](https://github.com/joebarbere/aws-ai) study repo share **one
-AWS account**, separated by the `Project` cost-allocation tag and by separate Terraform state. A
-permission set holds one inline policy, so there is **one** seatbelt for both, and this file is it.
-It has been the inline policy on the `AdministratorAccess` permission set since 2026-09-26.
-
-`aws-ai/iam/cost-seatbelt.json` is a **byte-for-byte copy**. Edit here, never there.
-
-| Statement | Denies |
+| Repo | Owns |
 |---|---|
-| `RegionLock` | everything outside `us-east-1` (global services exempt) |
-| `NoHourlyBilledResourcesWithoutEditingThisPolicy` | Kendra indexes, OpenSearch Serverless, SageMaker endpoints, RDS/Aurora |
-| `Ec2InstanceTypeAllowlist` | `ec2:RunInstances` for any type outside: `t3.micro`/`t3.small`/`t4g.small`, `c7i.4xlarge`, `c7a.4xlarge`/`8xlarge`, `m7a.2xlarge`, `r7a.2xlarge`, `g4dn.xlarge`, `g5.xlarge`/`2xlarge`, `g6.xlarge`/`2xlarge`, `g6e.xlarge` |
-| `NoNatGatewayNoFleetsNoCommitments` | NAT gateways, `CreateFleet`, spot fleets, legacy spot requests, dedicated hosts, capacity reservations, Reserved Instances, Savings Plans |
+| [`aws-cloud`](https://github.com/joebarbere/aws-cloud) | **everything account-wide**: the cost seatbelt (explicit-deny inline policy on `AdministratorAccess`), cost-allocation tag activation, all budgets (account-wide $25/month and per-`Project`), the cost-anomaly monitor |
+| this repo, `infra/terraform/` (not built yet) | jansky-research's own bucket and spot compute, tagged `Project = jansky-research` |
+| [`aws-ai`](https://github.com/joebarbere/aws-ai) | the AIF-C01 study modules |
 
-Spot instances go through `run-instances --instance-market-options MarketType=spot`, which the
-allowlist governs; the fleet APIs are denied because they launch through paths it does not see.
+Each keeps its own Terraform state, so a `destroy` in one can only remove what that state
+created. **Do not declare budgets, tag activations or IAM guardrails here** — two states
+managing one account-wide object undo each other's applies.
 
-**Comments:** IAM policy JSON allows none, and IAM rejects unknown keys. The optional top-level
-`Id` is the one free-text field, so it names the source of truth and the copy. IAM ignores `Id`
-when evaluating (Access Analyzer: no findings; IAM accepted it on attach).
+## What that means when working here
 
-### Changing it
+- **Instance types:** the seatbelt denies `ec2:RunInstances` for any type not on its allowlist
+  (small, CPU, and single-GPU `g4dn`/`g5`/`g6` types). A job needing another type means a change
+  to `aws-cloud/terraform/seatbelt.json` first, then `make plan && make apply` there, then a
+  `--dry-run` to prove it.
+- **Spot:** use `run-instances --instance-market-options MarketType=spot`; the fleet and legacy
+  spot-request APIs are denied. No NAT gateways; only `us-east-1`.
+- **Cost:** tag everything `Project = jansky-research` (provider `default_tags`), or the
+  `jansky-research-monthly` budget cannot see it. The account-wide budget catches the rest.
+- **Drift:** `make drift` in `aws-cloud` (exit 0 = the account matches the code).
 
-1. Edit `infra/seatbelt.json`; `aws accessanalyzer validate-policy --policy-type IDENTITY_POLICY
-   --policy-document file://infra/seatbelt.json`.
-2. Copy it to `../aws-ai/iam/cost-seatbelt.json` and commit in both repos.
-3. `aws sso-admin put-inline-policy-to-permission-set …` then `provision-permission-set …
-   --target-type ALL_PROVISIONED_ACCOUNTS` (an edited permission set does nothing until
-   re-provisioned).
-4. `make seatbelt-check` — compares the aws-ai copy **and the live attached policy** with this
-   file, and exits non-zero on drift. Needs `aws sso login --profile joebarbere-admin`; without a
-   session the live leg reports SKIPPED, not OK.
-5. Prove any new deny with a `--dry-run` call (`UnauthorizedOperation` = denied,
-   `DryRunOperation` = allowed). A guard is tested through the path that runs it.
-
-## Also live in the account (created by CLI 2026-09-26; import into Terraform later)
-
-- Cost-allocation tags `Project` and `ManagedBy` — **active** (the split starts on that date).
-- Budgets, alerts only, email at 50/80/100% actual and 100% forecast: `account-monthly-25`
-  ($25/month, account-wide), `jansky-research-monthly` and `aws-ai-monthly` (per `Project`).
-- Cost-anomaly monitor `services-anomaly-monitor`, daily email for anomalies ≥ $5.
-
-No compute, storage or Terraform exists for this repo yet.
+Nothing is provisioned for this repo yet.
