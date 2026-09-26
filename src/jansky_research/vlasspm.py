@@ -54,6 +54,7 @@ __all__ = [
     "epoch_triples",
     "flux_consistent",
     "inject_movers",
+    "isolated_mask",
     "link_pairs",
     "orphan_masks",
     "run",
@@ -70,7 +71,13 @@ MU_MIN_ARCSEC_YR = 0.3  # plan 64 annulus; its low edge sits at the E1 astrometr
 MU_MAX_ARCSEC_YR = 5.0
 STATIC_MATCH_ARCSEC = 2.5  # one VLASS beam: a counterpart this close means "did not move"
 E3_TOL_SIGMA = 3.0  # E3 must lie within this many combined sigma of the predicted position
-FLUX_RATIO_MAX = 3.0  # max/min peak flux across the three detections
+FLUX_RATIO_MAX: float | None = None  # max/min peak flux across detections; None = no cut.
+# Off by default since the first real run: radio stars FLARE (UV Ceti: 1.9, 11.0, 1.2 mJy across
+# E2-E4, ratio 9.5), so a flux-consistency cut rejects exactly the population being searched for.
+ISOLATION_ARCSEC = 30.0  # an orphan must have no other component this close IN ITS OWN EPOCH.
+# The first real run's candidates had a same-epoch neighbour within 30" 86% of the time vs 25%
+# for a random component: extended sources decomposed differently per epoch produce spatially
+# correlated orphans that line up, and an arcminute RA-scramble null cannot see them.
 POISSON95_ZERO = 2.996  # 95% one-sided upper limit on a Poisson mean when 0 events are seen
 DAYS_PER_YEAR = 365.25
 
@@ -130,6 +137,15 @@ def tangent_offsets_arcsec(ra0, dec0, ra1, dec1) -> tuple[np.ndarray, np.ndarray
     dra = (np.asarray(ra1, float) - np.asarray(ra0, float) + 180.0) % 360.0 - 180.0
     cosd = np.cos(np.radians(0.5 * (np.asarray(dec0, float) + np.asarray(dec1, float))))
     return dra * cosd * 3600.0, (np.asarray(dec1, float) - np.asarray(dec0, float)) * 3600.0
+
+
+def isolated_mask(cat: EpochCatalog, *, radius_arcsec: float = ISOLATION_ARCSEC) -> np.ndarray:
+    """True for components with no OTHER component of the same epoch within ``radius_arcsec``."""
+    if len(cat) == 0:
+        return np.zeros(0, dtype=bool)
+    xyz = _xyz(cat.ra, cat.dec)
+    n = cKDTree(xyz).query_ball_point(xyz, r=_chord(radius_arcsec), return_length=True)
+    return np.asarray(n) <= 1
 
 
 def orphan_masks(
@@ -277,10 +293,12 @@ def collinearity_test(
 
 
 def flux_consistent(
-    fa: np.ndarray, fb: np.ndarray, fc: np.ndarray, *, max_ratio: float = FLUX_RATIO_MAX
+    fa: np.ndarray, fb: np.ndarray, fc: np.ndarray, *, max_ratio: float | None = FLUX_RATIO_MAX
 ) -> np.ndarray:
-    """True where max/min of the three peak fluxes is within ``max_ratio``."""
+    """True where max/min of the three peak fluxes is within ``max_ratio`` (all True if None)."""
     f = np.column_stack([fa, fb, fc]).astype(float)
+    if max_ratio is None:
+        return np.ones(f.shape[0], dtype=bool)
     with np.errstate(divide="ignore", invalid="ignore"):
         r = f.max(axis=1) / f.min(axis=1)
     return np.isfinite(r) & (r <= max_ratio)
@@ -302,16 +320,23 @@ def search(
     *,
     mu_min: float = MU_MIN_ARCSEC_YR,
     mu_max: float = MU_MAX_ARCSEC_YR,
+    isolation_arcsec: float | None = ISOLATION_ARCSEC,
+    max_flux_ratio: float | None = FLUX_RATIO_MAX,
 ) -> SearchResult:
-    """Steps 1-4: orphans, E1 x E2 linkage, E3 collinearity, flux consistency."""
+    """Steps 1-4: isolated orphans, E1 x E2 linkage, E3 collinearity, (optional) flux cut."""
     o1, o2 = orphan_masks(e1, e2)
     # An E3 orphan must be unmatched in BOTH earlier epochs (a mover's E3 position is new sky).
     o3a, _ = orphan_masks(e3, e1)
     o3b, _ = orphan_masks(e3, e2)
-    a, b, c = e1.subset(o1), e2.subset(o2), e3.subset(o3a & o3b)
+    o3 = o3a & o3b
+    if isolation_arcsec is not None:
+        o1 &= isolated_mask(e1, radius_arcsec=isolation_arcsec)
+        o2 &= isolated_mask(e2, radius_arcsec=isolation_arcsec)
+        o3 &= isolated_mask(e3, radius_arcsec=isolation_arcsec)
+    a, b, c = e1.subset(o1), e2.subset(o2), e3.subset(o3)
     pairs = link_pairs(a, b, mu_min=mu_min, mu_max=mu_max)
     trip = collinearity_test(a, b, c, pairs, mu_max=mu_max)
-    fok = flux_consistent(a.flux[trip.i], b.flux[trip.j], c.flux[trip.k])
+    fok = flux_consistent(a.flux[trip.i], b.flux[trip.j], c.flux[trip.k], max_ratio=max_flux_ratio)
     cand = Triplets(
         trip.i[fok],
         trip.j[fok],

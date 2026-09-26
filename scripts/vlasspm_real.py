@@ -308,7 +308,7 @@ def main() -> int:
     f = work / "uvcet.json"
     if not f.exists():
         log("uvcet: recover-a-known ...")
-        _save(f, uvcet_check(search["candidates"]))
+        _save(f, uvcet_check(search["candidates"], cats))
     log(f"  {json.loads(f.read_text())}")
 
     f = work / "vet.json"
@@ -326,7 +326,7 @@ def _track(c: dict, t: float) -> tuple[float, float]:
     return float(ra), float(dec)
 
 
-def uvcet_check(cands: list[dict]) -> dict:  # network
+def uvcet_check(cands: list[dict], cats: list | None = None) -> dict:  # network
     """Is UV Ceti (Gaia DR3 5140693571158946048) recovered, and by which triple?"""
     try:
         from astroquery.vizier import Vizier
@@ -352,35 +352,88 @@ def uvcet_check(cands: list[dict]) -> dict:  # network
                     "gaia_mu": float(np.hypot(pmra, pmde)) / 1000,
                 }
             )
+    per_epoch: dict = {}
+    for e, cat in enumerate(cats or []):
+        # Where UV Cet should be in this epoch: nearest component, its flux and isolation.
+        rp, dp = v._mover_track(
+            ra, dec, pmra / 1000, pmde / 1000, 2016.0, float(np.median(cat.t_yr))
+        )
+        near = np.flatnonzero((np.abs(cat.dec - dp) < 0.01) & (np.abs(cat.ra - rp) < 0.02))
+        if near.size == 0:
+            per_epoch[f"E{e + 1}"] = "no component within ~36 arcsec"
+            continue
+        rp2, dp2 = v._mover_track(ra, dec, pmra / 1000, pmde / 1000, 2016.0, cat.t_yr[near])
+        dx, dy = v.tangent_offsets_arcsec(rp2, dp2, cat.ra[near], cat.dec[near])
+        k = int(np.argmin(np.hypot(dx, dy)))
+        dxy = v.tangent_offsets_arcsec(
+            cat.ra[near[k]], cat.dec[near[k]], cat.ra[near], cat.dec[near]
+        )
+        per_epoch[f"E{e + 1}"] = {
+            "sep_arcsec": float(np.hypot(dx[k], dy[k])),
+            "flux_mjy": float(cat.flux[near[k]]),
+            "n_other_within_30": int((np.hypot(*dxy) < 30.0).sum() - 1),
+        }
     return {
         "gaia_mu_arcsec_yr": float(np.hypot(pmra, pmde)) / 1000,
         "recovered": bool(hits),
         "hits": hits,
+        "per_epoch": per_epoch,
     }
 
 
 def vet_counterparts(cands: list[dict], radius_arcsec: float = 5.0) -> list[dict]:  # network
-    """Gaia DR3 / CatWISE2020 sources near each candidate's track at the catalogue epoch."""
+    """Gaia DR3 / CatWISE2020 near each candidate's track at the catalogue epoch.
+
+    For Gaia, the NEAREST match's proper motion is recorded and compared with the radio one:
+    agreement (vector difference < 30% of |mu|) marks a known star recovered blind -- the
+    positive control. Disagreement or no match leaves the candidate unexplained.
+    """
     from astropy import units as u
     from astropy.coordinates import SkyCoord
     from astroquery.vizier import Vizier
 
-    viz = Vizier(columns=["*"], row_limit=20)
+    gaia = Vizier(columns=["RA_ICRS", "DE_ICRS", "pmRA", "pmDE", "Gmag"], row_limit=20)
+    wise = Vizier(columns=["*"], row_limit=20)
     out = []
     for n, c in enumerate(cands):
-        rec = {"index": n}
-        for key, cat, epoch in (
-            ("gaia", "I/355/gaiadr3", 2016.0),
-            ("catwise", "II/365/catwise", 2015.4),
-        ):
-            ra, dec = _track(c, epoch)
-            try:
-                r = viz.query_region(
-                    SkyCoord(ra * u.deg, dec * u.deg), radius=radius_arcsec * u.arcsec, catalog=cat
+        rec: dict = {"index": n}
+        ra, dec = _track(c, 2016.0)
+        try:
+            r = gaia.query_region(
+                SkyCoord(ra * u.deg, dec * u.deg),
+                radius=radius_arcsec * u.arcsec,
+                catalog="I/355/gaiadr3",
+            )
+            rec["gaia"] = int(len(r[0])) if len(r) else 0
+            if rec["gaia"]:
+                t = r[0]
+                dx, dy = v.tangent_offsets_arcsec(
+                    ra, dec, np.asarray(t["RA_ICRS"]), np.asarray(t["DE_ICRS"])
                 )
-                rec[key] = int(len(r[0])) if len(r) else 0
-            except Exception as exc:  # noqa: BLE001
-                rec[key] = f"error: {exc!r}"
+                k = int(np.argmin(np.hypot(dx, dy)))
+                pmra, pmde = float(t["pmRA"][k]) / 1000, float(t["pmDE"][k]) / 1000  # arcsec/yr
+                rec |= {
+                    "gaia_sep": float(np.hypot(dx[k], dy[k])),
+                    "gaia_pmra": pmra,
+                    "gaia_pmde": pmde,
+                    "gaia_gmag": float(t["Gmag"][k]),
+                }
+                if np.isfinite(pmra) and np.isfinite(pmde):
+                    diff = float(np.hypot(c["mu_ra"] - pmra, c["mu_dec"] - pmde))
+                    rec["pm_diff"] = diff
+                    rec["pm_agree"] = bool(diff < 0.3 * max(c["mu"], 1e-9))
+        except Exception as exc:  # noqa: BLE001
+            rec["gaia"] = f"error: {exc!r}"
+        ra, dec = _track(c, 2015.4)
+        try:
+            r = wise.query_region(
+                SkyCoord(ra * u.deg, dec * u.deg),
+                radius=radius_arcsec * u.arcsec,
+                catalog="II/365/catwise",
+            )
+            rec["catwise"] = int(len(r[0])) if len(r) else 0
+        except Exception as exc:  # noqa: BLE001
+            rec["catwise"] = f"error: {exc!r}"
         out.append(rec)
     return out
 
@@ -421,6 +474,8 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
         "real_completeness": comp,
         "real_n_candidates": len(search["candidates"]),
         "real_n_optically_dark": len(dark),
+        "real_n_gaia_pm_agree": sum(1 for vt in vet if vt.get("pm_agree") is True),
+        "real_n_gaia_pm_disagree": sum(1 for vt in vet if vt.get("pm_agree") is False),
         "real_uvcet": uv,
         "real_area_deg2_max_triple": area,
         "real_density_limit_per_deg2_3mJy": v.surface_density_limit(len(dark), area, comp3),
@@ -429,10 +484,20 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
     write_results(metrics, out / "results" / "vlasspm_metrics.json")
     keys = list(search["candidates"][0]) if search["candidates"] else []
     with (out / "results" / "vlasspm_candidates.csv").open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=keys + ["gaia", "catwise"])
+        extra = [
+            "gaia",
+            "catwise",
+            "gaia_sep",
+            "gaia_pmra",
+            "gaia_pmde",
+            "gaia_gmag",
+            "pm_diff",
+            "pm_agree",
+        ]
+        w = csv.DictWriter(fh, fieldnames=keys + extra)
         w.writeheader()
         for c, vt in zip(search["candidates"], vet, strict=True):
-            w.writerow(c | {"gaia": vt.get("gaia"), "catwise": vt.get("catwise")})
+            w.writerow(c | {k: vt.get(k) for k in extra})
     log(f"wrote results: {len(search['candidates'])} candidates, {len(dark)} optically dark")
 
 

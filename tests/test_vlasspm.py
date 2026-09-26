@@ -72,10 +72,10 @@ def test_collinearity_accepts_line_rejects_kink():
 
 
 def test_flux_consistent():
-    ok = v.flux_consistent(
-        np.array([1.0, 1.0, 1.0]), np.array([2.0, 5.0, 0.0]), np.array([1.5, 1.0, 1.0])
-    )
-    assert ok.tolist() == [True, False, False]
+    fa, fb, fc = np.array([1.0, 1.0, 1.0]), np.array([2.0, 5.0, 0.0]), np.array([1.5, 1.0, 1.0])
+    assert v.flux_consistent(fa, fb, fc, max_ratio=3.0).tolist() == [True, False, False]
+    # off by default: flare stars vary by ~10x between epochs (UV Ceti)
+    assert v.flux_consistent(fa, fb, fc).tolist() == [True, True, True]
 
 
 def test_search_recovers_planted_movers_without_false_candidates():
@@ -89,8 +89,11 @@ def test_search_recovers_planted_movers_without_false_candidates():
         & (b.ident[cand.j] == c.ident[cand.k])
     )
     assert same.all()  # no false candidates in the fixture
-    # Above BOTH static-radius floors: 2.5"/(E1->E2 ~3 yr) and the tighter 2.5"/(E2->E3 ~2 yr).
-    fast = np.flatnonzero(mu > 1.5)
+    # Above BOTH static-radius floors: 2.5"/(E1->E2 ~3 yr) and the tighter 2.5"/(E2->E3 ~2 yr),
+    # and isolated in every epoch (a chance neighbour within 30" costs completeness by design).
+    iso = [{int(x) for x in e.ident[v.isolated_mask(e)] if x >= 0} for e in (e1, e2, e3)]
+    fast = [k for k in np.flatnonzero(mu > 1.5) if all(k in s_ for s_ in iso)]
+    assert len(fast) >= 10
     assert set(fast) <= set(a.ident[cand.i].tolist())
     # recovered rates match the planted ones
     for n in range(len(cand)):
@@ -229,3 +232,20 @@ def test_calibrate_floors_recovers_injected_astrometric_errors():
 def test_calibrate_floors_underdetermined():
     a = _cat([1.0], [0.0], 2018.0)
     assert v.calibrate_floors([a, a])["floor_arcsec"] is None
+
+
+def test_isolated_mask():
+    c = _cat([10.0, 10.0 + 10 / 3600, 20.0], [0.0, 0.0, 0.0], 2020.0)
+    assert v.isolated_mask(c).tolist() == [False, False, True]  # 10" pair is not isolated
+    assert v.isolated_mask(c, radius_arcsec=5.0).tolist() == [True, True, True]
+    assert v.isolated_mask(_cat([], [], 2020.0)).size == 0
+
+
+def test_search_isolation_removes_split_extended_sources():
+    """A double source whose two components shift between epochs mimics a mover; isolation stops it."""
+    ra0, dec0 = 120.0, 20.0
+    a = _cat([ra0, ra0 + 20 / 3600], [dec0, dec0], 2018.0)
+    b = _cat([ra0, ra0 + 20 / 3600], [dec0 + 6 / 3600, dec0 + 6 / 3600], 2021.0)
+    c = _cat([ra0, ra0 + 20 / 3600], [dec0 + 11 / 3600, dec0 + 11 / 3600], 2023.5)
+    assert len(v.search(a, b, c, isolation_arcsec=None).candidates) == 2
+    assert len(v.search(a, b, c).candidates) == 0
