@@ -184,3 +184,12 @@ universal "every production GPU dedisperser ships CUDA" claim narrowed and Scloc
 the uncited giant-pulse rate dropped; the stale findings table and the wrong "same-run 3.3x"
 claim corrected in place; provenance comment scoped to result numbers; arXiv package rebuilt
 clean under the abstract limit.
+
+## Cross-vendor check on NVIDIA (2026-09-26, plan 96 phase 2)
+
+The paper's "device-portable" claim had only run on CPU and AMD/ROCm. On an AWS g5.xlarge
+(NVIDIA A10G, torch 2.13.0+cu130) the FDMT plane is bit-identical to the CPU one, and the full
+Crab recover-a-known with the science leg on CUDA reproduces every committed number exactly
+(DM 56.59, S/N 14.0, p_pos 0.00353, p_null 0.0299). Evidence:
+`results/cuda_validation_2026-09-26.json`. The paper's committed numbers and benchmark row
+are unchanged; whether to cite the NVIDIA result in the paper is a separate edit.

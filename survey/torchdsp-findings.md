@@ -220,3 +220,12 @@ ae0d86); the macro header now says the tdReal/tdSyn prefix labels the RUN MODE, 
 quantity's provenance, and no longer claims a rebuild resets tdReal*; SK cited via the
 formatted `\tdRealSkMaxDiffSci`; the phase figure is "10^3-10^4 rad (band bottom to top)";
 benchmark shapes and real-leg descriptors (97 ch / 37.9 MHz / 2.097 s) all emitted from code.
+
+## Cross-vendor check on NVIDIA (2026-09-26, plan 96 phase 2)
+
+`--benchmark-only --device cuda` on an AWS g5.xlarge (NVIDIA A10G, torch 2.13.0+cu130): the
+`cross_device_check` block is identical field-for-field to the committed AMD/ROCm one
+(dedispersion, SK max diff 1.5e-14, SumThreshold agreement sweep, FFA period and S/N). The
+portability claim now holds on two GPU vendors. SumThreshold is slower on the A10G than on its
+4-vCPU host (12.0 s vs 4.8 s). Evidence: `results/cuda_validation_2026-09-26.json`; the
+committed `torchdsp_metrics.json` is unchanged.

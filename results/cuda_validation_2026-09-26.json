@@ -1,0 +1,236 @@
+{
+  "source": "real: plan-96 phase-2 NVIDIA cross-vendor validation on AWS (g5.xlarge, NVIDIA A10G). NOT the papers' committed benchmark rows; singlepulse_metrics.json and torchdsp_metrics.json are unchanged.",
+  "run": {
+    "date_utc": "2026-09-26",
+    "commit": "b08fe2667b4e59e7574720d286c68fbfbbdca6a3",
+    "region": "us-east-1",
+    "instance_type": "g5.xlarge",
+    "instance_type_note": "g6.xlarge (the plan's choice) had no on-demand capacity in any us-east-1 AZ at launch",
+    "ami": "ami-0dde05826db98e14c (Deep Learning Base OSS Nvidia Driver GPU AMI, Ubuntu 22.04, 20260925)",
+    "nvidia_smi": "NVIDIA A10G, 595.91.07, 23028 MiB",
+    "torch": "2.13.0+cu130 13.0 NVIDIA A10G",
+    "torch_note": "torch 2.13.0 is the version uv.lock pins; the committed ROCm run used 2.12.1",
+    "launched_utc": "2026-09-26T15:20:48Z",
+    "terminated_utc": "2026-09-26T15:37:59Z",
+    "runtime_s": 1031,
+    "cost_usd": {
+      "ec2_on_demand": 0.288,
+      "ebs_gp3_75gb": 0.002,
+      "estimate_in_plan": 2.5,
+      "rate_note": "g5.xlarge on-demand $1.006/h, us-east-1 list price 2026-09-26; per-second billing"
+    },
+    "job": "infra/jobs/cuda_validation.sh (via SSM Run Command, launch template jansky-gpu)"
+  },
+  "pytest": "36 passed in 38.44s",
+  "fdmt_parity_cpu_vs_cuda": {
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu": "NVIDIA A10G",
+    "fdmt_shape": [
+      298,
+      4096
+    ],
+    "fdmt_max_abs_diff": 0.0,
+    "fdmt_max_rel_diff": 0.0,
+    "fdmt_best_cpu": [
+      56.62615761223575,
+      119.62893676757812
+    ],
+    "fdmt_best_cuda": [
+      56.62615761223575,
+      119.62893676757812
+    ],
+    "fdmt_same_best_dm": true,
+    "brute_max_abs_diff": 0.0003662109375,
+    "brute_max_rel_diff": 1.7992708478686836e-07,
+    "brute_best_dm_cpu": 57.0,
+    "brute_best_dm_cuda": 57.0,
+    "catalogue_dm": 56.77
+  },
+  "singlepulse_science_cpu_vs_cuda": {
+    "recovered_dm": {
+      "committed_cpu": 56.63,
+      "cuda_a10g": 56.63
+    },
+    "butterfly_snr": {
+      "committed_cpu": 113.5,
+      "cuda_a10g": 113.5
+    },
+    "recovered_period_ms": {
+      "committed_cpu": 33.379,
+      "cuda_a10g": 33.379
+    },
+    "real_recovered_dm": {
+      "committed_cpu": 56.59,
+      "cuda_a10g": 56.59
+    },
+    "real_butterfly_snr": {
+      "committed_cpu": 6.0,
+      "cuda_a10g": 6.0
+    },
+    "real_sp_snr": {
+      "committed_cpu": 14.0,
+      "cuda_a10g": 14.0
+    },
+    "real_sp_pos": {
+      "committed_cpu": 3501,
+      "cuda_a10g": 3501
+    },
+    "real_sp_width_samples": {
+      "committed_cpu": 32,
+      "cuda_a10g": 32
+    },
+    "real_n_time": {
+      "committed_cpu": 4096,
+      "cuda_a10g": 4096
+    },
+    "real_dm_error_pc": {
+      "committed_cpu": 0.3,
+      "cuda_a10g": 0.3
+    },
+    "real_dm_step_pc": {
+      "committed_cpu": 0.0635,
+      "cuda_a10g": 0.0635
+    },
+    "real_n_dm_trials": {
+      "committed_cpu": 1903,
+      "cuda_a10g": 1903
+    },
+    "real_dm_offset_trials": {
+      "committed_cpu": 2.9,
+      "cuda_a10g": 2.9
+    },
+    "real_p_positional": {
+      "committed_cpu": 0.00353,
+      "cuda_a10g": 0.00353
+    },
+    "real_null_reps": {
+      "committed_cpu": 200,
+      "cuda_a10g": 200
+    },
+    "real_null_p50": {
+      "committed_cpu": 5.23,
+      "cuda_a10g": 5.23
+    },
+    "real_null_p99": {
+      "committed_cpu": 6.03,
+      "cuda_a10g": 6.03
+    },
+    "real_null_max": {
+      "committed_cpu": 6.26,
+      "cuda_a10g": 6.26
+    },
+    "real_p_null": {
+      "committed_cpu": 0.0299,
+      "cuda_a10g": 0.0299
+    }
+  },
+  "singlepulse_science_identical": true,
+  "singlepulse_benchmark_a10g": {
+    "bench_brute_cpu_s": 85.4,
+    "bench_fdmt_cpu_s": 0.68,
+    "bench_brute_gpu_s": 0.79,
+    "bench_fdmt_gpu_s": 0.84,
+    "bench_numpy_oracle_s": 26.96,
+    "bench_n_dm": 1009,
+    "bench_devices": [
+      "cpu",
+      "cuda"
+    ],
+    "benchmark_hardware": "NVIDIA A10G, torch 2.13.0+cu130"
+  },
+  "torchdsp_cross_device_check_cuda": {
+    "device": "cuda",
+    "dedisp": {
+      "peak_offset_samples": 0,
+      "reconcentrated_energy_frac": 0.995,
+      "peak_offset_samples_channelized": 0,
+      "reconcentrated_energy_frac_channelized": 0.995,
+      "group_delay_max_resid_samples": 1.15e-08,
+      "dispersed_peak_frac": 0.021,
+      "n_time": 4096
+    },
+    "sk_max_diff": 1.509903313490213e-14,
+    "sumthreshold_sequential_equals_oracle": true,
+    "sumthreshold_parallel_jaccard": 0.949,
+    "sumthreshold_par_only_flags": 54,
+    "sumthreshold_cpu_only_flags": 51,
+    "sumthreshold_agreement_sweep": {
+      "thr3.0_iter1": {
+        "jaccard": 0.9339,
+        "n_par_only": 144,
+        "n_cpu_only": 106
+      },
+      "thr3.0_iter2": {
+        "jaccard": 0.8814,
+        "n_par_only": 340,
+        "n_cpu_only": 392
+      },
+      "thr3.5_iter1": {
+        "jaccard": 0.949,
+        "n_par_only": 54,
+        "n_cpu_only": 51
+      },
+      "thr3.5_iter2": {
+        "jaccard": 0.9328,
+        "n_par_only": 112,
+        "n_cpu_only": 67
+      },
+      "thr4.0_iter1": {
+        "jaccard": 0.9707,
+        "n_par_only": 24,
+        "n_cpu_only": 16
+      },
+      "thr4.0_iter2": {
+        "jaccard": 0.9685,
+        "n_par_only": 38,
+        "n_cpu_only": 11
+      }
+    },
+    "rfi_line_caught": true,
+    "rfi_burst_caught": true,
+    "ffa_period_true": 233.7,
+    "ffa_period_found": 233.7,
+    "ffa_period_err_samples": 0.0,
+    "ffa_drift_resolution_samples": 0.0039,
+    "ffa_snr": 60.5,
+    "fold_oracle_snr": 93.4,
+    "ffa_snr_ratio_predicted": 0.67,
+    "ffa_snr_ratio_measured": 0.65
+  },
+  "torchdsp_cross_device_identical_to_committed_rocm": true,
+  "torchdsp_benchmark_a10g": {
+    "gpu": {
+      "device": "cuda",
+      "chirp_s": 0.09,
+      "chirp_msamples": 67.1,
+      "chirp_n_chan": 64,
+      "chirp_n_time": 1048576,
+      "sumthreshold_s": 12.04,
+      "st_shape": [
+        8192,
+        256
+      ],
+      "ffa_s": 0.34,
+      "ffa_n_samples": 4194304,
+      "ffa_n_base_periods": 64
+    },
+    "cpu": {
+      "device": "cpu",
+      "chirp_s": 3.42,
+      "chirp_msamples": 67.1,
+      "chirp_n_chan": 64,
+      "chirp_n_time": 1048576,
+      "sumthreshold_s": 4.78,
+      "st_shape": [
+        8192,
+        256
+      ],
+      "ffa_s": 11.42,
+      "ffa_n_samples": 4194304,
+      "ffa_n_base_periods": 64
+    },
+    "hardware": "NVIDIA A10G, torch 2.13.0+cu130",
+    "hardware_cpu": "x86_64, torch 2.13.0+cu130"
+  }
+}
