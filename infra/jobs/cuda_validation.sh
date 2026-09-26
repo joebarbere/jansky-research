@@ -7,7 +7,7 @@ set -euxo pipefail
 SHA="$1"
 TORCH_VERSION="2.13.0"   # the version uv.lock pins (CPU wheel); same version, CUDA build
 export HOME=/root PATH=/root/.local/bin:$PATH
-mkdir -p /opt/job/out && cd /opt/job
+rm -rf /opt/job && mkdir -p /opt/job/out && cd /opt/job   # idempotent re-runs
 
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > out/nvidia-smi.csv
 
@@ -18,7 +18,7 @@ uv sync -q --extra fdmt   # the dev group (pytest) is included by default
 # uv.lock pins torch to the CPU wheel index; swap in the CUDA build of the same version, and
 # call .venv/bin/python directly so `uv run` cannot re-sync it back to CPU.
 uv pip install -q --python .venv/bin/python --reinstall "torch==${TORCH_VERSION}" \
-    --index-url https://download.pytorch.org/whl/cu128
+    --index-url https://download.pytorch.org/whl/cu130   # 2.13.0 has no cu128 build
 PY=.venv/bin/python
 $PY -c "import torch; assert torch.cuda.is_available(), 'no CUDA'; print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))" | tee out/torch.txt
 
