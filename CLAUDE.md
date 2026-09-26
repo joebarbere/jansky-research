@@ -365,6 +365,8 @@ concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{ja
   re-checks releases and scoops and sets the order (FASHI DR2 leg → plan 64 → plans 59/53).
   Cloud is planned, not built: `plans/96-aws-infrastructure.md` (storage + CUDA only; the
   science must never depend on AWS). Free disk is ~70 GB, not the 275 GB the ideas assume.
+  Account-wide AWS (seatbelt, budgets, cost tags, anomaly monitor) is owned by the sibling
+  `../aws-cloud` repo's Terraform — never declare those here; `infra/README.md` has the split.
 - **Standing GATE-0 for anything from that file:** the scan session couldn't fetch primary
   sources (egress-blocked), so do a full-text novelty pass + a data-URL check before writing the
   plan. Its "Corrections & closed doors" section lists ideas already killed — check it first.

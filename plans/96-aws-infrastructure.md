@@ -1,8 +1,9 @@
 # 96 — AWS for storage and burst compute: a Terraform-managed, cost-gated cloud leg
 
 Status: 📋 planned 2026-09-26 — **no infrastructure exists yet and nothing here has been
-applied.** Phase 0 needs owner decisions (account layout, monthly budget) before any
-`terraform apply`. Prices are us-east-1 list prices pulled from AWS's public price-list files on
+applied.** Phase 0 (account guardrails) is **done and lives in the
+[`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo** as of 2026-09-26; phases 1–3
+(this repo's own bucket and compute) have not started. Prices are us-east-1 list prices pulled from AWS's public price-list files on
 2026-09-26 (S3 offer `publicationDate` 2026-09-26T01:55Z; AWSDataTransfer offer); **spot prices
 are third-party averages** (instances.vantage.sh) and move daily — re-check before any run.
 
@@ -100,14 +101,19 @@ The last three rows are why the guardrails in phase 0 come before anything else.
 
 ## Terraform layout (mirrors `aws-ai`)
 
+**Three repos, three states, one account.** Account-wide resources — the seatbelt, the
+cost-allocation tags, every budget (account and per-project) and the anomaly monitor — are owned
+by [`aws-cloud`](https://github.com/joebarbere/aws-cloud) (decided 2026-09-26: two states
+managing one budget or one permission-set policy would each undo the other's apply). This repo's
+Terraform holds only jansky-research's own resources:
+
 ```
 infra/terraform/
   versions.tf  providers.tf   # aws ~> 5.70; default_tags Project=jansky-research, ManagedBy=terraform
-  variables.tf                # region, name_prefix, monthly_budget_usd, alert_email, enable_* gates
+  variables.tf                # region, name_prefix, enable_* gates (budgets live in aws-cloud)
   main.tf  outputs.tf
   terraform.tfvars.example    # tfvars + state gitignored, exactly as in aws-ai
   modules/
-    budget/      always on    aws_budgets_budget (actual 50/80/100% + forecast 100%), cost anomaly monitor
     storage/     always on    one private bucket: public-access block, SSE-S3, lifecycle
                               (raw/ → IA at 30 d → Glacier IR at 90 d; results/ stays Standard;
                               abort incomplete multipart uploads at 7 d), S3 gateway VPC endpoint (free)
@@ -117,10 +123,9 @@ infra/terraform/
                               shutdown_behavior = terminate + a hard max-lifetime in user-data
     sagemaker/   gated off    execution role + bucket access for managed-spot training jobs only
                               (plan 51); no domain, no endpoints — those bill hourly
-  ../seatbelt.json            # ATTACHED 2026-09-26 (infra/seatbelt.json); extends aws-ai's: region lock; deny ec2:RunInstances unless
-                              # instance type ∈ allowlist above; deny NAT gateway, p4d/p5,
-                              # SageMaker endpoints, OpenSearch Serverless, Kendra
 ```
+
+Any instance type a job needs must be on the seatbelt's EC2 allowlist in `aws-cloud` first.
 
 Local state (gitignored) is fine for one operator; an S3 backend with a lock is a later
 upgrade, not a prerequisite. CI gets `terraform fmt -check` + `terraform validate` (no
@@ -149,9 +154,8 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
    `account-monthly-25` ($25/month, account-wide) plus `jansky-research-monthly` and
    `aws-ai-monthly` ($25 each, filtered on `user:Project`) — **alerts only**, email at 50/80/100%
    actual and 100% forecast; cost-anomaly monitor `services-anomaly-monitor` (per service) with a
-   daily email for anomalies ≥ $5. These were made by hand, so the `budget` module must
-   `terraform import` them rather than create duplicates.
-   **Seatbelt attached 2026-09-26 (owner-approved):** `infra/seatbelt.json` is the inline policy
+   daily email for anomalies ≥ $5.
+   **Seatbelt attached 2026-09-26 (owner-approved):** the merged seatbelt became the inline policy
    on the `AdministratorAccess` permission set, provisioned to the account. It is `aws-ai`'s
    `iam/cost-seatbelt.json` (region lock to us-east-1; no Kendra / OpenSearch Serverless /
    SageMaker endpoints / RDS) **plus** an EC2 instance-type allowlist and denies on NAT gateways,
@@ -161,8 +165,13 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
    `g6.xlarge`, `g5.xlarge` spot, `t3.micro` → allowed; `create-nat-gateway` on a real
    default-VPC subnet → denied; `request-spot-instances` → denied; any call in `us-west-2` →
    denied; STS and Budgets still work. Spot runs go through `run-instances
-   --instance-market-options`, which the allowlist governs. To change it: edit the file,
-   `put-inline-policy-to-permission-set`, then `provision-permission-set`.
+   --instance-market-options`, which the allowlist governs.
+   **Imported into Terraform 2026-09-26 — the [`aws-cloud`](https://github.com/joebarbere/aws-cloud)
+   repo now owns all of the above** (8 resources; the post-import apply added only default tags
+   and relabelled the policy's `Id`; a second plan showed no changes; denies re-proven by
+   dry-run). The CLI copies, `infra/seatbelt.json`, `aws-ai/iam/cost-seatbelt.json` and the
+   `make seatbelt-check` script were removed: `terraform plan` in `aws-cloud` is the drift check.
+   To change the seatbelt or a budget, change it there.
 1. **Storage — ~$0 until used.** `storage` module; upload nothing yet. Verify the public-access
    block and lifecycle rules with `aws s3api get-bucket-*`.
 2. **One CUDA validation run — ~$2.50.** `compute` module, g6.xlarge on-demand, the `torchfdmt`
@@ -188,3 +197,4 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
 - ~~Separate member account or shared?~~ **Decided 2026-09-26: shared account, tag-separated.**
 - ~~Budget and alert mode~~ **Decided 2026-09-26: $25/month account-wide, alerts only.**
 - ~~Attach the merged seatbelt?~~ **Done 2026-09-26** (see phase 0).
+- ~~Where do account-wide resources live?~~ **Decided 2026-09-26: a separate `aws-cloud` repo.**
