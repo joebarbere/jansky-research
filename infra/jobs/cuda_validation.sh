@@ -14,7 +14,7 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > out/nvidi
 curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone -q https://github.com/joebarbere/jansky-research.git repo
 cd repo && git checkout -q "$SHA"
-uv sync -q --extra fdmt --extra dev
+uv sync -q --extra fdmt   # the dev group (pytest) is included by default
 # uv.lock pins torch to the CPU wheel index; swap in the CUDA build of the same version, and
 # call .venv/bin/python directly so `uv run` cannot re-sync it back to CPU.
 uv pip install -q --python .venv/bin/python --reinstall "torch==${TORCH_VERSION}" \
