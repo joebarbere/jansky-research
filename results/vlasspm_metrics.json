@@ -1,0 +1,204 @@
+{
+  "source": "real: VLASS Quick-Look epochs 1, 2, 3 (QL3.1+3.2) and 4.1 component catalogues",
+  "is_real": true,
+  "real_epochs": {
+    "E1": {
+      "n_clean": 1874643,
+      "t_min": 2017.685006756564,
+      "t_max": 2019.5395818136415
+    },
+    "E2": {
+      "n_clean": 1873524,
+      "t_min": 2020.4862771801002,
+      "t_max": 2022.1421686929223
+    },
+    "E3": {
+      "n_clean": 2360730,
+      "t_min": 2023.0331253778804,
+      "t_max": 2024.7623378322496
+    },
+    "E4": {
+      "n_clean": 1081153,
+      "t_min": 2025.6516271460757,
+      "t_max": 2026.10419897188
+    }
+  },
+  "real_floors": {
+    "pair_sigma_arcsec": {
+      "E1-E2": 0.13424104344082652,
+      "E1-E3": 0.14601087984077274,
+      "E1-E4": 0.1476900586884533,
+      "E2-E3": 0.13860183471891988,
+      "E2-E4": 0.144132920943143,
+      "E3-E4": 0.14388937694945167
+    },
+    "floor_arcsec": [
+      0.10133727196574807,
+      0.09325160159133387,
+      0.10153840550695953,
+      0.10648263309447521
+    ]
+  },
+  "real_per_triple": {
+    "E1-E2-E3": {
+      "n_orphans": [
+        256353,
+        263923,
+        253399
+      ],
+      "n_pairs": 1336,
+      "n_triplets": 4,
+      "n_candidates": 4,
+      "area_deg2": 33838.5
+    },
+    "E1-E2-E4": {
+      "n_orphans": [
+        256353,
+        263923,
+        107522
+      ],
+      "n_pairs": 1336,
+      "n_triplets": 1,
+      "n_candidates": 1,
+      "area_deg2": 17288.5
+    },
+    "E1-E3-E4": {
+      "n_orphans": [
+        204901,
+        384434,
+        76087
+      ],
+      "n_pairs": 2826,
+      "n_triplets": 0,
+      "n_candidates": 0,
+      "area_deg2": 17296.75
+    },
+    "E2-E3-E4": {
+      "n_orphans": [
+        210690,
+        382391,
+        86099
+      ],
+      "n_pairs": 1819,
+      "n_triplets": 1,
+      "n_candidates": 1,
+      "area_deg2": 17301.25
+    }
+  },
+  "real_null": {
+    "E1-E2-E3": {
+      "n_reps": 50,
+      "pairs_mean": 65.5,
+      "triplets_mean": 0.02,
+      "candidates_mean": 0.02
+    },
+    "E1-E2-E4": {
+      "n_reps": 50,
+      "pairs_mean": 65.4,
+      "triplets_mean": 0.0,
+      "candidates_mean": 0.0
+    },
+    "E1-E3-E4": {
+      "n_reps": 50,
+      "pairs_mean": 324.0,
+      "triplets_mean": 0.0,
+      "candidates_mean": 0.0
+    },
+    "E2-E3-E4": {
+      "n_reps": 50,
+      "pairs_mean": 73.58,
+      "triplets_mean": 0.0,
+      "candidates_mean": 0.0
+    }
+  },
+  "real_completeness": {
+    "1.5mJy": {
+      "n_injected": 20000,
+      "flux_mjy": 1.5,
+      "overall": 0.59635,
+      "bin_edges": [
+        0.3,
+        0.5266123072839791,
+        0.9244017406098535,
+        1.6226711115996046,
+        2.8483952601417566,
+        5.0
+      ],
+      "per_bin": [
+        0.0,
+        0.0808489135927236,
+        0.914759869248177,
+        0.984087518647439,
+        0.9821253672869735
+      ],
+      "per_triple": {
+        "E1-E2-E3": 0.54615,
+        "E1-E2-E4": 0.58025,
+        "E1-E3-E4": 0.4598,
+        "E2-E3-E4": 0.4412
+      }
+    },
+    "3mJy": {
+      "n_injected": 20000,
+      "flux_mjy": 3.0,
+      "overall": 0.59525,
+      "bin_edges": [
+        0.3,
+        0.5266123072839791,
+        0.9244017406098535,
+        1.6226711115996046,
+        2.8483952601417566,
+        5.0
+      ],
+      "per_bin": [
+        0.0,
+        0.08455244235060749,
+        0.916560994166878,
+        0.9856435643564356,
+        0.9831516352824579
+      ],
+      "per_triple": {
+        "E1-E2-E3": 0.5472,
+        "E1-E2-E4": 0.57945,
+        "E1-E3-E4": 0.4564,
+        "E2-E3-E4": 0.4393
+      }
+    }
+  },
+  "real_n_candidates": 6,
+  "real_n_optically_dark": 2,
+  "real_n_gaia_pm_agree": 0,
+  "real_n_gaia_pm_disagree": 0,
+  "real_uvcet": {
+    "gaia_mu_arcsec_yr": 3.2319069908270874,
+    "recovered": true,
+    "hits": [
+      {
+        "triple": "E2-E3-E4",
+        "sep_arcsec": 0.8553277111382015,
+        "mu": 3.452266988458307,
+        "gaia_mu": 3.2319069908270874
+      }
+    ],
+    "per_epoch": {
+      "E1": "no component within ~36 arcsec",
+      "E2": {
+        "sep_arcsec": 0.536044986537158,
+        "flux_mjy": 2.006488422565,
+        "n_other_within_30": 0
+      },
+      "E3": {
+        "sep_arcsec": 0.8553277111382015,
+        "flux_mjy": 11.32384892601401,
+        "n_other_within_30": 0
+      },
+      "E4": {
+        "sep_arcsec": 1.6421264413479109,
+        "flux_mjy": 1.15880386075,
+        "n_other_within_30": 0
+      }
+    }
+  },
+  "real_area_deg2_max_triple": 33838.5,
+  "real_density_limit_per_deg2_3mJy": 9.929319566009053e-05
+}
