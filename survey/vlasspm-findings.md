@@ -91,3 +91,47 @@ is off by default.
 3. Only then compute a surface-density limit; the one in the metrics file
    (`real_density_limit_per_deg2_3mJy`) treats unvetted candidates as detections and is **not**
    a result.
+
+## Vetting (2026-09-26): zero new movers; the southern clustering is beam elongation
+
+Three steps, in order of cost.
+
+1. **Gaia retry.** The two candidates whose Gaia query had failed have no Gaia DR3 or CatWISE
+   source either. So 5 of the 6 non-UV-Cet candidates were "optically dark", which is what an
+   astrometric artefact looks like as much as a dark mover.
+2. **Declination-banded floors (run 3).** Floors fitted per Dec band from bright statics:
+   ~0.17-0.20" at Dec -40..-20 against ~0.08-0.10" further north. The candidates did not go
+   away (7, including UV Cet), and **5 of the 6 non-UV-Cet candidates sit south of Dec -15**, a
+   band holding ~23% of the area (binomial p ~ 0.003). A systematic, not a population. The
+   bright-source floor cannot see what is wrong with these faint, partly resolved sources.
+3. **Image inspection** (`scripts/vlasspm_vet_images.py`; CADC SODA cutouts at every epoch;
+   `results/vlasspm_vetting.json`, `results/vlasspm_vetting_montage.png`). Two tests per
+   epoch: S/N at the predicted track position, and S/N at the *first* detection's position --
+   a mover leaves that spot empty.
+   - **UV Ceti is textbook:** a point source walks the track, its first position is empty
+     afterwards (S/N 2.0, 1.6), and a marginal S/N 4.6 source sits on-track in 2018 -- just below
+     the E1 catalogue threshold, which is why E1 has no entry.
+   - **All six others are static extended sources.** Emission persists at the first position in
+     later epochs (S/N 5-16). c3 and c5 are compact knots fixed on diffuse structure; c0 and c1
+     are faint extended blobs. **c2 and c4 (Dec -39) are compact in 2019/2022 but stretched N-S in
+     2024; the image headers give beams of 4.8-4.9" x 1.7-1.8" in 2024 against ~3.5" x 2.2"
+     otherwise.** At low declination the VLA observes near the horizon, the beam elongates, and
+     the elongation differs between epochs; the fitted centroid of a partly resolved source
+     moves along it. That, plus extended structure, is the southern systematic -- and the
+     scramble null holds each epoch's beam and error model fixed, so it could not see it.
+
+**Result: UV Ceti recovered blind (3.45"/yr vs Gaia 3.23"/yr); zero new movers.** The 95%
+upper limit on optically dark (no Gaia DR3 / CatWISE2020) radio movers at 0.92-5"/yr, for
+isolated compact sources above ~3 mJy at 3 GHz, is **< 9.2 x 10^-5 per deg^2** over the
+33,838 deg^2 of the E1-E2-E3 sky: 2.996 / (area x the 0.961 mean completeness in those rate
+bins). That is fewer than ~3.1 such movers in the whole VLASS sky. The
+`real_density_limit_per_deg2_3mJy` in `vlasspm_metrics.json` treated unvetted candidates as
+detections and is superseded by `vlasspm_vetting.json`.
+
+**Caveats that belong in any write-up:** the completeness comes from injections that assume the
+catalogue's positional errors plus the measured floors, and the vetting shows faint partly
+resolved sources have larger, beam-dependent position errors -- so completeness for a real
+faint mover near other emission is overstated. The isolation cut (no neighbour within 30")
+also removes real movers that pass near other sources; the injections, placed 60-120" from
+real components, do not pay that cost. A shape-aware (beam-deconvolved) astrometric error
+model is the fix before a paper.
