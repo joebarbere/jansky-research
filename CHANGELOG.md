@@ -16,8 +16,10 @@ recommend the next version number.
   survey), confirmed by a straight-line third detection, with an RA-scramble null, injection
   completeness and per-epoch astrometric floors measured from bright static sources.
   UV Ceti is recovered blind at 3.45"/yr (Gaia 3.23"/yr); completeness is 0.92-0.99 above
-  ~0.9"/yr and ~0 below 0.5"/yr. Five other candidates are unvetted and not claims -- four sit
-  where epoch-1 astrometry degrades. The failed first run (746 candidates from split extended
+  ~0.9"/yr and ~0 below 0.5"/yr. Image-level vetting finds **zero new movers**: every other
+  candidate is a static extended source, most of them south of Dec -15 where the low-elevation
+  beam elongates differently between epochs and moves fitted centroids. 95% limit: < 9.2e-5
+  optically dark movers per deg^2 at 0.92-5"/yr (>~3 mJy, 33,838 deg^2). The failed first run (746 candidates from split extended
   sources and a flux cut that rejected flare stars) is recorded in `survey/vlasspm-findings.md`.
   `scripts/vlasspm_real.py` is the checkpointed real leg; it runs detached under
   `systemd-run --user`.
