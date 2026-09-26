@@ -34,11 +34,18 @@ speed.** Specifically:
 
 - `infra/terraform/` (not top-level `terraform/`): it is not part of the Python package, and
   `infra/` leaves room for a Packer/AMI or container definition later.
-- **A separate AWS member account** for `jansky-research`, under the Organization that enabling
-  Identity Center already created (free). Research spend then has its own bill, budget and
-  seatbelt, and a study-session `terraform destroy` in `aws-ai` can never touch research data.
-  Fallback if a second account is unwanted: same account, `Project = jansky-research` default
-  tag activated as a cost-allocation tag.
+- **One shared account, separated by tags (owner decision 2026-09-26).** `default_tags`
+  sets `Project = jansky-research` here and `Project = aws-ai` in the study repo; the two
+  projects keep **separate Terraform state**, so a `terraform destroy` in one can only remove
+  what that state created. What tags do *not* give, and how the plan covers it:
+  - *Cost split* — only after `Project` is **activated** as a cost-allocation tag, and only
+    from activation onward (not retroactive). Untagged spend (e.g. some data-transfer lines,
+    anything created by hand) lands in "no tag", so the account-wide budget is the backstop.
+  - *Blast radius* — tags don't limit permissions. The seatbelt is account-wide, so it
+    constrains both projects; that is intended (an allowlist of cheap instance types suits the
+    study repo too). Name prefixes (`jansky-`) keep resources distinguishable in the console.
+  - A separate member account remains the upgrade path if spend grows or data becomes
+    something that must never be deleted by accident.
 - **The science never depends on AWS.** Same rule as the GPU: every cloud result must reproduce
   at small scale on the CPU path, and no committed number may depend on which device or
   provider produced it.
@@ -128,9 +135,15 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
 
 ## Phases
 
-0. **Account and guardrails — $0.** Decide account layout; create the member account and an
-   Identity Center permission set; `budget` module with an alert email; attach `seatbelt.json`.
-   Test the seatbelt by trying to launch a denied instance type and confirming the deny.
+0. **Guardrails in the shared account — $0.** State on 2026-09-26 (read-only audit): the
+   `Project`, `ManagedBy` and `Purpose` tags exist but are **Inactive** for cost allocation;
+   **no budgets** and **no cost-anomaly monitors** exist; the `AdministratorAccess` permission
+   set has **no inline policy**, i.e. `aws-ai`'s `cost-seatbelt.json` is written but not
+   attached. No EC2 instances were running. Steps: activate `Project` (and `ManagedBy`) as
+   cost-allocation tags; an account-wide monthly budget plus one `Project`-filtered budget per
+   repo; a cost-anomaly monitor; attach a merged seatbelt (aws-ai's statements + the EC2
+   allowlist and NAT/p4d/p5 denies) to the permission set. Test the seatbelt by trying to
+   launch a denied instance type and confirming the deny.
 1. **Storage — ~$0 until used.** `storage` module; upload nothing yet. Verify the public-access
    block and lifecycle rules with `aws s3api get-bucket-*`.
 2. **One CUDA validation run — ~$2.50.** `compute` module, g6.xlarge on-demand, the `torchfdmt`
@@ -153,6 +166,6 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
 
 ## Owner decisions needed before phase 0
 
-- Separate member account (recommended) or shared with `aws-ai`?
+- ~~Separate member account or shared?~~ **Decided 2026-09-26: shared account, tag-separated.**
 - Monthly budget ceiling and alert email.
 - Whether budget *actions* (auto-attach a deny policy at 100%) are wanted, or alerts only.
