@@ -8,7 +8,7 @@ pip-installable / autograd-native", NOT "first portable". SumThreshold/spectral-
 kernels exist only CuPy-locked (`jess`, Kania et al. 2026, AJ 171, 73); IQRM and AOFlagger are
 CPU. No pure-torch FFA exists (riptide is C++/CPU, its GPU issue closed unimplemented
 2024-03-27; `gaffa`, a CUDA FFA scaffold, appeared 2026-06-12 --- cite as concurrent CUDA work,
-claim only the torch niche). LPT fence from fable-ideas: the FFA targets classical pulsar
+claim only the torch niche). LPT fence from ideas.md: the FFA targets classical pulsar
 reprocessing, not LPT discovery.
 
 Anchors (plan 43): a synthetic dispersed impulse must re-collapse to its impulse (round-trip);

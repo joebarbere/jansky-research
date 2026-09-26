@@ -1,7 +1,7 @@
 # 51 — First external FAST-FREX benchmark + an open-weights burst classifier (ROCm)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the Science
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — confirm the Science
 Data Bank download works from a US connection and pin the total GB (currently unknown)
 
 ## Context

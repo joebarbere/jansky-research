@@ -1,14 +1,14 @@
 # 65 — WALLABY DR2 pair: BTFR/angular momentum vs environment + cube stacking at DESI positions
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — fetch the kinematic
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — fetch the kinematic
 products via CSIRO DAP DOI 10.25919/7w8n-9h19 (team page, not obscore) + check DESI footprint
 overlap before committing to leg (b)
 
 ## Context
 
 WALLABY DR2's 126 kinematic models remain the ceiling — no DR3 until ~2029, and the team's
-post-release papers are morphometrics and dark-source work, not BTFR-vs-environment (fable-ideas
+post-release papers are morphometrics and dark-source work, not BTFR-vs-environment (ideas.md
 F28, open as of the 2026-07 scan). Two legs: (a) baryonic Tully–Fisher and Fall-relation
 (angular-momentum) residuals split by field/local-density environment at N=126 — small enough
 that the null framing is pre-registered up front; (b) sub-threshold spectral stacking of WALLABY

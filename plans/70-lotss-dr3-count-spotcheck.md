@@ -1,13 +1,13 @@
 # 70 — LoTSS DR3 faint-count injection spot-check: an independent completeness harness
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 LoTSS DR3 ships its own faint source counts and completeness corrections; an *independent*
 injection-recovery spot-check of those counts, run with this repo's own harness, is a
-reproducibility note, not discovery — and is framed as exactly that (fable-ideas F33). The
+reproducibility note, not discovery — and is framed as exactly that (ideas.md F33). The
 injection-recovery completeness machinery derives directly from the merged `stacking` slice
 (inject known sources into real mosaics, measure the recovered fraction vs flux). This slice is
 also the natural migration of `plans/29` (the DR2-era count work) to DR3 — that lineage is

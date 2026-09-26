@@ -1,13 +1,13 @@
 # 69 — MeerKLASS 2019 intensity-mapping cube × DESI: an independent-tracer cross-correlation
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 The only published single-dish HI intensity-mapping × galaxy cross-correlation detection used
 WiggleZ galaxies (7.7σ, arXiv:2206.01579, MeerKLASS 2019 pilot data). An independent-tracer
-check against DESI spectroscopic galaxies in the overlapping footprint is open (fable-ideas
+check against DESI spectroscopic galaxies in the overlapping footprint is open (ideas.md
 F32): same cube, different galaxy sample, published pipeline followed step by step. Foreground
 cleaning is the hard part of this field — this slice does not innovate there; it follows the
 published PCA-cleaning recipe and frames every result conservatively as a cross-check. The

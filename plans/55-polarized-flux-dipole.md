@@ -1,7 +1,7 @@
 # 55 — Polarized-flux dipole from SPICE-RACS DR2 (the open axis of the dipole anomaly)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: confirm
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — specifically: confirm
 no polarized-flux dipole with a modern catalogue has landed since Tiwari & Jain 2013/15, with a
 same-week ADS re-search (the dipole field moves fast)
 
@@ -10,7 +10,7 @@ same-week ADS re-search (the dipole field moves fast)
 The cosmic-dipole-anomaly literature is total-intensity source-count/flux based and now crowded
 (arXiv:2509.16732 PRL joint NVSS+RACS+LoTSS-DR2 at 5.4σ; arXiv:2509.18689; RMP colloquium
 arXiv:2505.23526 — the Corrections fence). The **polarized-flux dipole** is one of the two open
-differentiator axes (fable-ideas F18): last measured with NVSS by Tiwari & Jain 2013/15, never
+differentiator axes (ideas.md F18): last measured with NVSS by Tiwari & Jain 2013/15, never
 with a modern RM/polarization catalogue. SPICE-RACS DR2 (arXiv:2605.16917; ~2.5–3.4×10⁵
 polarized sources over 87.5% of sky; CSIRO DAP `csiro:64891`, ~5 GB, no auth) is already
 fetched and used by the merged `rmstructure` slice, so data risk ≈ 0. This is a sibling of
@@ -39,7 +39,7 @@ footprint-scramble muscles.
 3. DR2 leg: polarized-flux sample after S/N cuts → HEALPix bins → dipole fit; nulls from
    footprint-preserving RA scrambles (load-bearing — the footprint is the dominant systematic);
    compare direction to the CMB dipole and the source-count dipole.
-4. GATE-2 science review naming the fable-ideas caveats: sparse counts after S/N cuts,
+4. GATE-2 science review naming the ideas.md caveats: sparse counts after S/N cuts,
    scan-pattern leakage systematics; honest isotropy-test framing (no over-interpretation of
    amplitude without a kinematic expectation).
 5. Paper: the first modern-catalogue polarized-flux dipole measurement (or honest null).

@@ -3,7 +3,7 @@
 # conventions and supersets them with survey/airflow/paper targets.
 
 .DEFAULT_GOAL := help
-.PHONY: release-check help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper guard-real papers-zip arxiv reproduce clean
+.PHONY: seatbelt-check release-check help setup dev-env test cov typecheck lint fmt fetch-data pipeline figures figures-dry airflow-up airflow-down dag-test ecallisto-day paper-image paper guard-real papers-zip arxiv reproduce clean
 
 # The research slices, each with a paper under papers/<slice>/.
 SLICES ?= frbstats frbperiod driftsearch spectra hi vlass peaked southern offsets pulsarspec stacking vlbi solarbursts rmsky ppdot windwaves swaves triangulate sourcecounts type3synthesis ecallisto_pipeline ecallisto_census torchfdmt torchdsp rmstructure rmdipole frbwait frblens lpt junodam stokesv stokesv_discovery wdpulsar fashienv svsbi lptv skr typeii rfitrend vgpra pte2 glitchpop atlas3i innerrc dr20radio lptduty
@@ -185,6 +185,9 @@ reproduce: ## Full reproduction on REAL public data -> figures+macros -> papers 
 	test -d data/skr && uv run python -m jansky_research.skr --out . || uv run python -m jansky_research.skr --offline --out .  # Cassini SKR proximity census (download: uv run python scripts/skr_real.py --year 2017)
 	uv run python -m jansky_research.typeii --offline --out .  # OVRO-LWA type II detector + synthetic (real leg Turnstile-gated: scripts/typeii_real.py)
 	$(MAKE) paper && $(MAKE) arxiv
+
+seatbelt-check: ## AWS cost seatbelt: infra/seatbelt.json vs the aws-ai copy and the live attached policy
+	python3 scripts/check_seatbelt.py
 
 clean: ## Remove caches and build artefacts
 	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/ .snakemake/ site/

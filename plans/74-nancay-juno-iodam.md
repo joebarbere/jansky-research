@@ -1,7 +1,7 @@
 # 74 — Ground (Nançay JunoN) × Juno simultaneous Io-DAM census: two vantages, one emission
 
 Status: 📋 planned (not started) — GATE 0 pending: file-level NDA/JunoN data access + full-text
-novelty pass (the fable-ideas scan ran egress-blocked; see the standing caveat there)
+novelty pass (the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
@@ -9,7 +9,7 @@ The merged `junodam` slice found that the classic ground-based Io-A/B/C/D (CML, 
 do not organise Juno's sky the way they organise Nançay's — the vantage matters. The Nançay
 Decameter Array's JunoN support campaign provides a public ground-based stream simultaneous
 with the Juno/Waves public CDFs; a simultaneous Io-DAM occurrence census — same emission
-windows, two vantages — extends that finding with an independent ground stream (fable-ideas
+windows, two vantages — extends that finding with an independent ground stream (ideas.md
 F37). The comparison is the point: which activity intervals are seen from the ground, from
 orbit, or both, per (CML, Io-phase) cell. The Juno side is data-risk-free (verified `junodam`
 CDFs); the ground side is the hard gate — file-level access to the NDA/JunoN public products

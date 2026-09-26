@@ -1,4 +1,4 @@
-# Findings — PTE-II per-source giant-pulse census (plan 47, fable-ideas F10)
+# Findings — PTE-II per-source giant-pulse census (plan 47, ideas.md F10)
 
 `jansky_research.pte2`: a uniform, per-source giant-pulse (heavy-tail) test across all 363 pulsars in
 the Parkes Transient Events II database, correlated with spin-down luminosity. Reuses the merged

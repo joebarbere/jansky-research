@@ -15,7 +15,7 @@ survey/rmdipole-findings.md.
 The cosmic-dipole-anomaly literature is entirely source-count/flux based: the joint
 NVSS+RACS+LoTSS-DR2 5.4σ result (arXiv:2509.16732, PRL), arXiv:2509.18689, the RMP colloquium
 (arXiv:2505.23526), and Mittal & Lewis (arXiv:2605.27520) — none uses Faraday rotation measures
-as the tracer. fable-ideas.md flags total-intensity source counts as a crowded/closed axis
+as the tracer. ideas.md flags total-intensity source counts as a crowded/closed axis
 (Corrections section); the RM dipole is the open differentiator. SPICE-RACS DR2
 (arXiv:2605.16917; ~2.5–3.4×10⁵ RMs over 87.5% of sky) is the first catalogue large enough, and
 the merged `rmstructure` slice already fetched it (CSIRO DAP `csiro:64891`, ~5 GB, no auth) and

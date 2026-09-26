@@ -1,13 +1,13 @@
 ---
 name: idea-scan
-description: Run a deep, multi-agent opportunity re-scan of the radio-astronomy research landscape and produce a plan-ready ideas file. Use when the user asks for new research opportunities, a fresh look at the field, "what should we work on next", or to refresh/replace an earlier ideas file (fable-ideas.md, survey/opportunity-scan-*.md).
+description: Run a deep, multi-agent opportunity re-scan of the radio-astronomy research landscape and produce a plan-ready ideas file. Use when the user asks for new research opportunities, a fresh look at the field, "what should we work on next", or to refresh/replace an earlier ideas file (ideas.md, survey/opportunity-scan-*.md).
 ---
 
 # Idea scan — deep opportunity re-survey
 
 Produce a **plan-ready ideas file** (each entry turnable into a `plans/NN-*.md` by a planning
 model without re-doing the survey). This codifies the process behind
-`survey/new-findings-scan.md`, `survey/opportunity-scan-2026-07.md`, and `fable-ideas.md` —
+`survey/new-findings-scan.md`, `survey/opportunity-scan-2026-07.md`, and `ideas.md` —
 read whichever is newest first; the new scan must go *beyond* it, not repeat it.
 
 ## Procedure

@@ -12,7 +12,7 @@ on CPU (`results/torchdsp_metrics.json`: `device: cpu`, `benchmark_device: cuda`
   PyTorchDedispersion (incoherent only — confirmed unchanged). Fences requiring careful
   wording: CoherentDedispersion.jl (Julia, active) and a SYCL prototype (fxzjshm) exist → the
   claim is "pure-PyTorch / pip-installable", NOT "first device-portable".
-- **RFI kernels — OPEN.** `jess` (Kania+2026, AJ 171, 73 — NOT Agarwal as fable-ideas had it)
+- **RFI kernels — OPEN.** `jess` (Kania+2026, AJ 171, 73 — NOT Agarwal as ideas.md had it)
   is CuPy/CUDA-locked; IQRM/AOFlagger CPU. No torch SumThreshold/SK anywhere.
 - **FFA — OPEN for torch, fence appeared.** riptide is C++/CPU (GPU issue closed unimplemented
   2024-03-27: "let's face it, it's not happening"); **`gaffa`**, a CUDA FFA scaffold, appeared

@@ -13,7 +13,7 @@ calibrated optical km⁻²hr⁻¹ product. Geometry correction + public-survey g
 novelty axis, matching the repo's house style. The build is `station/meteor-scatter-station.md`
 (FM forward scatter; Echoes per-event logs → CSV/SQLite). The honest ML add-on is a
 ping/aircraft/RFI spectrogram classifier — head-echo work is physically out of reach for forward
-scatter (see fable-ideas "Corrections") and is dropped. Perseids first, Geminids (Dec) second.
+scatter (see ideas.md "Corrections") and is dropped. Perseids first, Geminids (Dec) second.
 
 ## Deliverables
 
@@ -30,7 +30,7 @@ scatter (see fable-ideas "Corrections") and is dropped. Perseids first, Geminids
 
 0. GATE 0: meteor station on air per `station/meteor-scatter-station.md` — frequency selected
    (locally silent, 50–100 kW station 500–1500 km away), Echoes logging, and the GMN flux
-   product + RMOB access path re-verified (standing full-text/data GATE-0 from fable-ideas).
+   product + RMOB access path re-verified (standing full-text/data GATE-0 from ideas.md).
 1. Tooling + synthetic recover-a-known, ahead of hardware: `synthetic_pings` injects a known
    shower activity profile through the observability function plus aircraft/RFI contaminants;
    classifier + correction must recover the injected profile and flux normalization.

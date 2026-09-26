@@ -53,7 +53,7 @@ processed node-serially (download → search → delete, resumable), minimum pub
 full ABACAD cadence for one compute node (~187.5 MHz, 6×10 GB on disk at peak), stretch = all
 L-band nodes. *Novelty:* web pass 2026-07-30 finds no independent reanalysis of the released
 GB_ATLAS data; the RNAAS is 7 months old and the follow-ups above are all original
-observations. Standing fable-ideas caveat satisfied (full-text + data-URL check done here).
+observations. Standing ideas.md caveat satisfied (full-text + data-URL check done here).
 
 ## Deliverables
 

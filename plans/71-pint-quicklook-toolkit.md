@@ -1,7 +1,7 @@
 # 71 — PINT quick-look triage toolkit on NANOGrav 15yr + PPTA DR3
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
@@ -10,7 +10,7 @@ triage: residual plots, a normalized power spectrum, a step-function/small-glitc
 filter, and EFAC/EQUAD sanity checks. A small, tested, PINT-based quick-look toolkit run
 uniformly over the two big *public* datasets — NANOGrav 15yr (Zenodo 7967584/8060824/8092346)
 and PPTA DR3 (CSIRO DAP 10.25919/w0nw-jt05, 10.25919/23wj-1d69) — is methods/JOSS-adjacent
-value (fable-ideas F34). IPTA DR3 is NOT public (fable-ideas corrections), so these two are the
+value (ideas.md F34). IPTA DR3 is NOT public (ideas.md corrections), so these two are the
 right substrates. PINT's NGC 6440E tutorial dataset is vendored as the offline test fixture.
 Any "candidate glitch" the matched filter flags must be gated against chromatic-noise nulls —
 achromatic step vs DM-noise look-alikes is the known trap.

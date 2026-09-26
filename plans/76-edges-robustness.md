@@ -1,14 +1,14 @@
 # 76 — EDGES raw-data averaging/flagging robustness check (calibration held fixed)
 
 Status: 📋 planned (not started, **parked — high effort; pick up only if keen**) — GATE 0
-pending: full-text novelty pass + raw-data-URL verification (the fable-ideas scan ran
+pending: full-text novelty pass + raw-data-URL verification (the ideas.md scan ran
 egress-blocked; see the standing caveat there)
 
 ## Context
 
 The EDGES 78-MHz absorption feature (Bowman et al. 2018) has been contested chiefly on
 calibration and foreground-model grounds; SARAS 3 disputes it observationally. A narrower,
-rarely-asked question is open (fable-ideas F39): holding the EDGES team's *own calibration
+rarely-asked question is open (ideas.md F39): holding the EDGES team's *own calibration
 fixed*, how robust is the averaged spectrum to day-selection and RFI-flagging choices alone?
 This is emphatically NOT a recalibration — no receiver modelling, no new foreground physics; it
 is a data-selection sensitivity analysis on the public raw/intermediate products, using their

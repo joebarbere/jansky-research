@@ -4,7 +4,7 @@ Status: ✅ complete 2026-08-21 — all four increments; the note is drafted and
 Was: increments 1-3 complete 2026-08-21 (GATE 0 cleared: novelty clear, aliasing
 tested and two constraints invalidated; phase-resolved leg validated against lptv's published
 phases). Increment 4 (GATE-2 review, then the note) in progress. Planned 2026-08-20. Sourced from Rose et al. 2026 (Nature Astron. 10, 1166;
-`10.1038/s41550-026-02882-x`), not from `fable-ideas.md`.
+`10.1038/s41550-026-02882-x`), not from `ideas.md`.
 
 ## Context
 

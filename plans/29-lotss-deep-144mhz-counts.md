@@ -2,7 +2,7 @@
 
 Status: 📋 planned (not started) — a *larger* effort: new survey + a non-trivial completeness/area gate.
 2026-07 update: **migrate to LoTSS DR3** before building (13.7M sources, 88% of the northern sky,
-better rms map, same no-auth catalogue + cutout access pattern — see `fable-ideas.md` F33 and the
+better rms map, same no-auth catalogue + cutout access pattern — see `ideas.md` F33 and the
 DR3 survey paper, arXiv:2602.15949); the DR2 numbers below stay as written for context.
 
 ## Context

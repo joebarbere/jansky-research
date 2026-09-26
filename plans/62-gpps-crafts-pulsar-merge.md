@@ -1,7 +1,7 @@
 # 62 — Merged GPPS+CRAFTS pulsar catalogue: the `lpt` compilation pattern at N≈1,000
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the GPPS bulk
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — confirm the GPPS bulk
 table is live at zmtt.bao.ac.cn and that no merged FAST-discovery catalogue paper has appeared
 
 ## Context
@@ -9,7 +9,7 @@ table is live at zmtt.bao.ac.cn and that no merged FAST-discovery catalogue pape
 FAST's two big pulsar surveys have discovered ~1,000 pulsars — 751 GPPS + >200 CRAFTS — but they
 exist only as per-paper tables and the GPPS web table; no homogeneous, provenance-typed merge
 exists with Galactic Z-heights, luminosity-function placement, or MSP fraction compared against
-ATNF (fable-ideas F25). This is the `lpt` compilation pattern (per-row provenance flags,
+ATNF (ideas.md F25). This is the `lpt` compilation pattern (per-row provenance flags,
 discovery-paper spot-checks) at 60× the row count, reusing the merged `ppdot` (ATNF handling,
 P–Ṗ plane) and `pulsarspec` (luminosity/spectral statistics) machinery. Data: the live GPPS bulk
 table at `zmtt.bao.ac.cn/GPPS/GPPSnewPSR.html` (access pattern noted in earlier scans) + the GPPS

@@ -11,6 +11,29 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
+  data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,
+  CHIME Cat 2 baseband, Gaia DR4 and IPTA DR3 are not), a scoop re-check of every unstarted plan
+  (10 open, plans 51 and 52 partly scooped), seven new leads, the compute policy (core stays
+  CPU-reproducible; GPU and cloud are accelerators with a CPU parity path), and the
+  machine-learning opportunities sorted by scientific value. All 48 files that referenced the old
+  name point at the new one; released CHANGELOG entries keep the old name.
+
+### Added
+- **`plans/96-aws-infrastructure.md`** — a cost-gated AWS plan for the two constraints the
+  workstation cannot meet (70 GB free disk; CUDA-only tools), with us-east-1 prices pulled from
+  AWS's public price list on 2026-09-26, worked costs per use, a Terraform layout mirroring the
+  `aws-ai` repo, and phases. Phase 0 guardrails are live in the shared account (cost-allocation
+  tags, a $25/month alerts-only budget, an anomaly monitor); no compute or storage is provisioned.
+- **`infra/seatbelt.json`** — the explicit-deny policy now attached to the account's admin
+  permission set: region lock, no hourly-billed managed services, an EC2 instance-type allowlist,
+  and no NAT gateways, fleets, dedicated hosts or purchase commitments. Each deny was proven by a
+  dry-run call.
+- **`make seatbelt-check`** (`scripts/check_seatbelt.py`) — compares `infra/seatbelt.json`, the
+  source of truth, with the copy in the sibling `aws-ai` repo **and** the policy actually attached
+  in the account; exits non-zero on drift. The policy's `Id` names its source of truth (IAM JSON
+  allows no comments). `infra/README.md` documents the shared-account setup.
+
 - **`fable-ideas.md` closes the exoplanet-radio-in-surveys door.** β Pic b's MeerKAT emission
   (arXiv:2609.16720; brightest burst 307 µJy) is ≥3× below RACS snapshot limits, and forced
   I+V photometry at β Pic in five RACS epochs returned no detection (5σ V limits 0.7–1.2 mJy).

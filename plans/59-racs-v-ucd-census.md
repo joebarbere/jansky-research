@@ -1,14 +1,14 @@
 # 59 — RACS Stokes-V two-epoch census of the Gaia UCD sample
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the Gaia UCD
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — confirm the Gaia UCD
 table used by arXiv:2506.21169 is machine-readable and that no RACS-V UCD paper has landed
 
 ## Context
 
 The blind VLASS Stokes-I UCD search is CLOSED: arXiv:2506.21169 checked 14,915 Gaia
 ultracool dwarfs against 3 VLASS epochs and found zero brown-dwarf counterparts. What survives
-(fable-ideas F22) is the V-selected, lower-frequency two-epoch companion: UCD radio emission is
+(ideas.md F22) is the V-selected, lower-frequency two-epoch companion: UCD radio emission is
 coherent and highly circularly polarized (new VLITE detection arXiv:2512.11120; the Driessen
 review arXiv:2606.27706 flags exactly this lever), so forced Stokes-V photometry in RACS-low1 and
 RACS-low2 probes a different emission mechanism at a different frequency than the closed search.

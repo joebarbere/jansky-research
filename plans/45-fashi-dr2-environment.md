@@ -20,7 +20,7 @@ Solanes+2001 curve at 40× the sample), and void-vs-wall gas fractions (pre-FASH
 only). Data: the FASHI DR2 table (VizieR / China-VO mirror — GATE-0 confirms the ID),
 SDSS/DESI group catalogues (Tempel+2017 / Lim+2017 on VizieR), and the Douglass+2023 void
 catalogues (VizieR, three void-finders). Extends the `hi.py` and catalogue-cross-match muscle
-memory from merged slices; the biggest fresh-data surface in fable-ideas.md. CPU, days.
+memory from merged slices; the biggest fresh-data surface in ideas.md. CPU, days.
 
 ## Deliverables
 
@@ -49,7 +49,7 @@ memory from merged slices; the biggest fresh-data surface in fable-ideas.md. CPU
 
 ## Verification
 
-Anchors from fable-ideas.md before any new claim: reproduce the declining HI-deficiency profile
+Anchors from ideas.md before any new claim: reproduce the declining HI-deficiency profile
 inside R200 for a well-sampled cluster, and the ALFALFA-era "void galaxies are gas-richer at
 fixed M*" result; synthetic round-trip passes; checks green; GATE-2 sign-off.
 

@@ -109,7 +109,7 @@ keeping it.
 
 ## What's next
 
-The idea backlog is [`fable-ideas.md`](fable-ideas.md) (a 2026-07 deep re-scan of the open-data
+The idea backlog is [`ideas.md`](ideas.md) (a 2026-07 deep re-scan of the open-data
 landscape). Every entry there now has a plan (`plans/38`–`93`) and most have been executed, so
 current work is depth rather than breadth:
 
@@ -119,7 +119,7 @@ current work is depth rather than breadth:
   for finishing it before submitting anything.
 - **Publishing.** The submission queue and venue reasoning are in the papers section below.
 - **The station.** Once the rooftop receiver produces calibrated spectra, self-collected data
-  joins the public-archive slices (plan 78; `fable-ideas.md` carries a station track for it).
+  joins the public-archive slices (plan 78; `ideas.md` carries a station track for it).
 
 
 ### Running the full test suite locally
@@ -334,7 +334,7 @@ jansky-research/
                          #   radio-research-assistant
   plans/                 # numbered slice specs (00-93); the lasting record is each slice's
                          #   survey/*-findings.md + papers/<slice>/
-  fable-ideas.md         # current plan-ready idea list (2026-07 deep re-scan; supersedes the
+  ideas.md         # current plan-ready idea list (2026-07 deep re-scan; supersedes the
                          #   opportunity-scan shortlist)
 ```
 
