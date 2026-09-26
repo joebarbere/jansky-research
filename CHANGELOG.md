@@ -11,6 +11,17 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`fashienv` reads FASHI DR2 and uses DR2's own completeness weighting.** DR2 (156,411
+  sources) comes from the survey's public CSTCloud share (`fetch_fashi_dr2` / `load_fashi_dr2`).
+  Each galaxy is weighted by 1/(C x Vmax) from the catalogue (`vmax_from_catalogue`, C >= 0.5),
+  replacing the single 0.30 Jy km/s flux cut; the old weighting is kept alongside (`optA_*`).
+  The new weighting reproduces the DR2 paper's own HIMF (log M* 9.907 vs 9.89, alpha -1.328 vs
+  -1.31). The void-wall knee offset shrinks from the published -0.256 to -0.154 +/- 0.052
+  (3.0 sigma) and group-field from +0.192 to +0.141 +/- 0.039 (3.6 sigma) -- the weighting, not
+  the sample size, moves them. Evidence in `results/fashienv_dr2_preview.json` until the paper
+  is revised.
+
+### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
   recover-a-known with the science leg on CUDA reproduces every committed number exactly, and
