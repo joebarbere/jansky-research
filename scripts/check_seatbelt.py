@@ -40,16 +40,33 @@ def live_policy() -> dict | None:
     try:
         inst = _aws("sso-admin", "list-instances", "--query", "Instances[0].InstanceArn")
         for ps in _aws(
-            "sso-admin", "list-permission-sets", "--instance-arn", inst, "--query", "PermissionSets[]"
+            "sso-admin",
+            "list-permission-sets",
+            "--instance-arn",
+            inst,
+            "--query",
+            "PermissionSets[]",
         ).split():
             name = _aws(
-                "sso-admin", "describe-permission-set", "--instance-arn", inst,
-                "--permission-set-arn", ps, "--query", "PermissionSet.Name",
+                "sso-admin",
+                "describe-permission-set",
+                "--instance-arn",
+                inst,
+                "--permission-set-arn",
+                ps,
+                "--query",
+                "PermissionSet.Name",
             )
             if name == PERMISSION_SET:
                 raw = _aws(
-                    "sso-admin", "get-inline-policy-for-permission-set", "--instance-arn", inst,
-                    "--permission-set-arn", ps, "--query", "InlinePolicy",
+                    "sso-admin",
+                    "get-inline-policy-for-permission-set",
+                    "--instance-arn",
+                    inst,
+                    "--permission-set-arn",
+                    ps,
+                    "--query",
+                    "InlinePolicy",
                 )
                 return json.loads(raw) if raw and raw != "None" else {}
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
