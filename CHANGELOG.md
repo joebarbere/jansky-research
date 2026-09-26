@@ -22,6 +22,20 @@ recommend the next version number.
 ## [1.12.0] - 2026-09-26
 
 ### Added
+- **`fashienv` is rewritten as a methodological caution: environment-split HI mass functions
+  need random-placement nulls.** On FASHI DR2 (156,411 sources, DR2's own 1/(C Vmax) weighting,
+  which reproduces the published global HIMF), the void-wall knee offset is -0.150 and the
+  group-field +0.166 dex -- but randomly relocated voids give -0.087 +/- 0.017 and randomly
+  relocated groups +0.126 +/- 0.056, so arbitrary volume splits shift the fitted knee by as much
+  as published void effects. The group offset is reached by 44/200 random placements. The void
+  offset lies beyond all 1,000 placements, but the null's mean moves with where the volumes land
+  (0.35 dex per unit overlap with the real voids) and the residual depends on the weighting
+  (-0.063 vs -0.160), so no environmental dependence is claimed. Two referee rounds (both MAJOR)
+  drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  unconstrained void null with per-placement diagnostics, a group null, a KD-tree
+  `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
+  The DR1 paper's -0.256 is disclosed as the old estimator's value.
+### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
   recover-a-known with the science leg on CUDA reproduces every committed number exactly, and

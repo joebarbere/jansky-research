@@ -1,200 +1,188 @@
 \documentclass[twocolumn]{aastex631}
 \input{generated/macros}
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{The environment-split FASHI HI mass function}
+\shorttitle{Random-placement nulls for environment-split HIMFs}
 \shortauthors{Barbere}
 \begin{document}
-\title{The Environment Dependence of the HI Mass Function in FASHI DR1}
+\title{Environment-Split HI Mass Functions in FASHI DR2 and Random-Placement Null Tests}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-The FAST All Sky HI Survey (FASHI), the largest blind HI-galaxy catalogue to date, publishes only a
-global Schechter HI mass function (HIMF) in its DR2 \citep{fashi_dr2} and DR1 \citep{fashi_dr1};
-its one environment study used 230 group galaxies \citep{fashi_groups}. We split the FASHI
-DR1 HIMF by environment, cross-matching its \feN\ HI sources against the Douglass+2023 SDSS void
-catalogue \citep{douglass2023} and the Tempel+2017 group catalogue \citep{tempel2017}, and fit a
-Schechter function to the $1/V_{\rm max}$ HIMF in each. In the SDSS-cap overlap, where the
-optical catalogues apply, the void HIMF
-knee is suppressed relative to walls by $\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex
-(\feRealVoidKneeSigma$\sigma$; void $\log M^*/M_\odot = \feRealVoidLogMStar$ from
-\feRealNInVoid\ void galaxies, wall $\feRealWallLogMStar$), consistent in sign with, and somewhat
-larger in magnitude than, the ALFALFA void-HIMF suppression \citep[$\sim$0.14~dex;][]{moorman2014}.
-Sample variance across voids does not limit the result: a delete-one-void jackknife gives
-\feRealVoidJkErr~dex, below the fit error. Two biases act instead, both in the signal's
-direction: the $1/V_{\rm max}$
-uniform-density assumption (violated by construction here) and a bounding-box comparison bin
-holding 58\% of the catalogue; we report the offset as an upper bound on any true suppression.
-Group members show the opposite offset, $\Delta\log M^*=+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex
-(\feRealGroupKneeSigma$\sigma$, \feRealNGroupMembers\ members), reflecting survivor bias: the
-group galaxies that retain detectable HI in a flux-limited sample are the more massive, gas-rich
-survivors, so the group knee is an upper envelope, not a deficiency. The relative knee offsets
-are robust, since every environment bin uses the same estimator; the
-absolute faint-end slope is not, pending FASHI's full completeness function. The pipeline,
-validated by injection on an environment-dependent mock, applies to the DR2 catalogue
-(156{,}411 sources) once released.
+We split the HI mass function (HIMF) of the FAST All Sky HI Survey DR2 \citep{fashi_dr2} by
+environment, using the \feN\ sources above the survey's 50\% completeness limit weighted by
+$1/(C\,V_{\rm max})$ from the catalogue's own completeness and accessible volume. Against the
+Douglass+2023 VoidFinder voids \citep{douglass2023} the void$-$wall knee offset is
+$\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex, and
+the Tempel+2017 group-member knee \citep{tempel2017} is offset from the field by
+$+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex. We test both offsets by relocating the voids and the groups at random within the survey
+footprint. Randomly placed voids give $\feRealNullCMean\pm\feRealNullCStd$~dex and randomly
+placed groups $+\feRealGroupNullMean\pm\feRealGroupNullStd$~dex, so splitting this sample by
+arbitrary volumes shifts the fitted knee by amounts comparable to published void effects. The
+group offset is reached by \feRealGroupNullNGe\ of \feRealGroupNullReps\ random placements. The
+void offset lies beyond all \feRealNullCReps\ void placements, but the null does not supply a
+unique baseline: its mean changes by $\feRealNullCSlope$~dex per unit overlap with the real
+voids, and the residual after subtracting it is $\feRealNullCExcess$~dex under the completeness
+weighting and $\feRealOptANullExcess$~dex under a single flux limit. We find no environmental
+dependence of the HIMF that survives these tests, and recommend random-placement nulls for
+environment-split $1/V_{\rm max}$ HIMFs.
 \end{abstract}
 
 \keywords{HI line emission (690), Galaxy environments (2029), Large-scale structure of the
 universe (902), Luminosity function (942)}
 
 \section{Introduction}
-The shape of the HI mass function (how many galaxies of each atomic-gas mass exist per unit
-volume) encodes the balance of gas accretion, consumption, and removal, set partly by
-environment. Cluster and group galaxies lose HI to ram-pressure and tidal stripping
-\citep{solanes2001}; void galaxies, evolving in isolation, are expected to have a HIMF with a
-suppressed knee and a steeper faint end \citep{moorman2014,jones2018}. FASHI, the FAST all-sky
-blind HI survey \citep{fashi_dr1,fashi_dr2}, is now the largest such catalogue, but its released
-products stop at the global HIMF; the one environment analysis on FASHI data \citep{fashi_groups}
-used 230 group galaxies. The DR1 catalogue alone contains \feN\ HI sources, two orders of
-magnitude more, and its environment-split HIMF has not been measured.
+The HI mass function is expected to depend on environment. Group and cluster galaxies lose gas
+to ram-pressure and tidal stripping \citep{solanes2001}, and void galaxies, which evolve in
+isolation, are expected to show a lower knee mass and a different faint-end slope
+\citep{moorman2014,jones2018}. \citet{moorman2014} measured a void knee
+$\sim$0.14~dex below the wall knee in ALFALFA. The FAST All Sky HI Survey
+\citep[FASHI;][]{fashi_dr1,fashi_dr2} now provides \feRealNDRTwo\ HI sources, but its released
+products stop at the global HIMF, and the one environment study on FASHI data used 230 group
+galaxies \citep{fashi_groups}.
 
-The DR2 catalogue is not yet public as of this
-writing (release targeted for late 2026), so we work with the public DR1 catalogue as a first
-leg, following the usual practice of large surveys whose analyses proceed on an earlier release
-while a bigger one is embargoed. Moreover, FASHI carries HI masses and distances but no stellar
-masses or optical diameters, so the classical Haynes--Giovanelli HI deficiency (which needs
-optical morphology) and gas-fraction-at-fixed-$M_*$ statistics are out of reach; the HIMF itself,
-split by environment, is the measurement these data support on their own.
+An environment-split HIMF compares the mass function of galaxies inside a set of volumes (voids,
+group regions) with that of the remaining galaxies. Any volume selection in a flux-limited sample
+also selects in distance and in local structure, and the $1/V_{\rm max}$ estimator assumes that
+each galaxy is uniformly distributed within its accessible volume, which an environment
+selection violates by construction. The offset measured between two such sets therefore mixes
+any physical difference with the response of the estimator to the selection. Here we measure the
+environment-split HIMF of FASHI DR2 and test the offsets against the same splits made with
+randomly placed volumes. An earlier version of this analysis, on DR1 with a single flux-limit
+weighting, reported a void offset of $\feRealDROneMaxVoidKneeOffset$~dex as an independent confirmation of the ALFALFA
+result; the tests below show that the offset is not attributable to the void environment.
 
 \section{Data and Method}
 \label{sec:data}
-\label{sec:method}
-From FASHI DR1 (VizieR \code{J/other/SCPMA/67.19511}) we take each source's position, redshift,
-integrated flux, distance, and precomputed $\log M_{\rm HI}$. We classify environment two ways.
+DR2 is not in VizieR; we take Table~2 of \citet{fashi_dr2} from the survey's public CSTCloud share,
+linked from the FASHI release page. For each source we use the position, optical redshift,
+integrated flux, distance, precomputed $\log M_{\rm HI}$, completeness $C$ and $V_{\rm max}$, the
+latter computed by the survey over 19{,}482~deg$^2$. We drop the \feRealNZNonpos\ sources with
+$z\leq0$ and \feRealNDropped\ with non-finite mass or distance or non-positive flux, and keep the
+\feN\ sources with $C\geq\feRealCMin$, the sample defined by the survey's own HIMF (theirs, which
+also cuts on $W_{20}$ and a noise statistic not in the public table, holds just over 109{,}000).
+Each galaxy contributes $1/(C_i V_i)$ to its mass bin; as a bookkeeping check this reproduces the
+published global HIMF ($\log M^*=\feRealGlobalLogMStar\pm\feRealGlobalLogMStarErr$,
+$\alpha=\feRealGlobalAlpha\pm\feRealGlobalAlphaErr$, against $9.89\pm0.02$ and $-1.31\pm0.02$ in
+\citealt{fashi_dr2}). We fit a Schechter function \citep{schechter1976} in log space to each
+$1/V_{\rm max}$ HIMF \citep{schmidt1968}. The fits are formally poor (reduced $\chi^2$ of
+\feRealVoidRedChi, \feRealWallRedChi\ and \feRealGlobalRedChi\ for the void, wall and global HIMFs);
+the fitter scales the parameter errors by the reduced $\chi^2$, and the knee positions depend on
+the Schechter form.
 
-Voids: we convert positions to the comoving Cartesian frame of the Douglass+2023 VoidFinder
-maximal spheres \citep[working in the survey's $h^{-1}$Mpc units, which are $H_0$-independent for
-comoving distance;][]{douglass2023}. A galaxy is a void member if it lies inside any sphere, and a
-wall galaxy if it lies inside the void-survey volume but outside every sphere; galaxies beyond
-that volume (most of FASHI's southern and high-redshift sky) are unclassifiable and excluded,
-leaving \feRealNInVoid\ void and the surrounding wall galaxies in the SDSS cap. The classifiable
-volume is approximated by a padded bounding box around the void spheres. The SDSS cap is a wedge
-and its bounding box is several times its volume, so the contamination is large: the wall bin holds
-\feRealNWall\ galaxies, 58\% of all of DR1, and its knee \feRealWallLogMStar\ sits 0.010\,dex from
-the all-sky fit \feRealGlobalLogMStar, a fifth of its own error. The comparison is therefore
-closer to void versus everything than to void versus wall. The contamination dilutes the wall bin
-toward the global population, so, if anything, it weakens the reported contrast; a genuine
-footprint mask, rather than a bounding box, is required to remove it and is not yet available.
+Voids are the Douglass+2023 VoidFinder voids in their Planck2018 cosmology, each the union of its
+holes; a galaxy inside any hole is a void member (\feRealNInVoid\ galaxies). Wall galaxies are
+the rest of the classifiable volume, approximated by a padded bounding box around the voids; it
+includes sky where no voids were searched and holds \feRealWallPct\% of the sample. Groups are
+the Tempel+2017 SDSS groups; a galaxy within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of a
+group is a member (\feRealNGroupMembers\ in the cap), with the catalogue's CMB-frame redshifts
+converted to the heliocentric frame of FASHI's $v_{\rm opt}$ and distances on the catalogue's
+$H_0=67.8$ scale.
 
-Groups: a galaxy within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of any Tempel+2017 group is
-a member (\feRealNGroupMembers\ in the cap), the rest field.
-
-The $1/V_{\rm max}$ method assumes each
-source is uniformly distributed within its accessible volume, which is false for a sample
-selected by its density environment. For the void bin the accessible volume is not the survey
-cone but the union of void spheres inside it, and that fraction falls to zero at the near and far
-edges of the box while staying finite for the wall bin. Because $V_{\rm max}$ is mass-dependent
-(brighter galaxies reach further, sampling more void-free volume), the distortion is
-mass-dependent too, and it suppresses $\phi$ at the high-mass end of the void bin, in the same
-direction as the reported signal. A density-insensitive estimator (SWML) is the standard answer
-and is not attempted here; until it is, the offset should be read as an upper bound on any true
-suppression rather than a measurement of it.
-
-For each environment we build the HIMF by the $1/V_{\rm max}$ method \citep{schmidt1968}: each
-source contributes $1/V_i$ to its mass bin, where $V_i$ is the comoving volume out to the
-distance at which its flux would fall to the survey limit, and we fit a Schechter function
-\citep{schechter1976} in log space. The pipeline is exercised on a flux-limited mock with two
-injected Schechter HIMFs (void: lower $M^*$, steeper $\alpha$; wall: the reference), which it
-fits back to the injected knees and slopes and to the correct knee-offset sign
-(\code{tests/test\_fashienv.py}).
-
-This simple $1/V_{\rm max}$ estimator uses a single flux limit rather than FASHI's full
-completeness function, so the absolute faint-end slopes from the $1/V_{\rm max}$ fits to the
-survey data ($\alpha\approx\feRealVoidAlpha$ to $\feRealWallAlpha$ across the void and wall
-bins) are steeper
-than the published FASHI global HIMF. Because every environment bin uses the identical
-$1/V_{\rm max}$ estimator, the relative knee offsets between environments are robust to this; the
-absolute slope is not, and we do not claim to reproduce the global HIMF.
-
-\section{Results}
-\label{sec:results}
+\section{Environment Splits}
+\label{sec:splits}
+The void knee is offset from the wall knee by
+$\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex (void
+$\log M^*=\feRealVoidLogMStar$, wall $\feRealWallLogMStar$; Figure~\ref{fig:himf}). A delete-one-void
+jackknife over the \feRealJkNOcc\ occupied voids gives \feRealJkErr~dex. The value is stable
+against the void definition (\feRealMaxSphereVoidKneeOffset~dex using only each void's maximal
+sphere) and against the mass range fitted: the void fit uses \feRealVoidNBins\ bins and the wall
+fit \feRealWallNBins, and fitting both over their \feRealCommonNBins\ common bins gives
+$\feRealCommonKneeOffset\pm\feRealCommonKneeErr$~dex. It is not stable against the weighting: a
+single flux limit of 0.30~Jy\,km\,s$^{-1}$, on the same sample, gives
+$\feRealOptASameVoidKneeOffset$~dex, a change of $\feRealWeightEffect\pm\feRealWeightEffectErr$~dex
+(paired jackknife). On DR1 with that weighting the offset is $\feRealDROneMaxVoidKneeOffset$~dex with
+maximal spheres, the value our earlier analysis reported, and $\feRealDROneVoidKneeOffset$~dex with
+full voids. Group members lie $+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex above the field.
 
 \begin{figure}
 \plotone{figures/fashienv.pdf}
-\caption{The environment-split FASHI DR1 HI mass function. Each environment's $1/V_{\rm max}$ HIMF
-is fitted with a Schechter function (legend gives $\log M^*$). The void knee sits below the wall
-value ($\Delta\log M^*=\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex,
-\feRealVoidKneeSigma$\sigma$); the group-member knee lies above the field, a survivor-biased upper
-envelope (Section~\ref{sec:results}). Relative knee offsets are robust to the estimator choice; the absolute
-faint-end slope is steeper than the published global HIMF because this simple estimator uses a
-single flux limit rather than the survey completeness function.}
+\caption{The void and wall HI mass functions of FASHI DR2, weighted by $1/(C\,V_{\rm max})$ and each
+fitted with a Schechter function (legend gives $\log M^*$).}
 \label{fig:himf}
 \end{figure}
 
-\subsection{Voids}
-The void HIMF knee sits below the wall value by
-$\Delta\log M^* = \feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex, a
-\feRealVoidKneeSigma$\sigma$ suppression (void
-$\log M^* = \feRealVoidLogMStar\pm\feRealVoidLogMStarErr$, wall
-$\feRealWallLogMStar\pm\feRealWallLogMStarErr$).
+\section{Random-Placement Nulls}
+\label{sec:nulls}
+Each void is moved rigidly, keeping its distance, holes, size and a random orientation, to a random
+sky position inside the SDSS footprint (occupied by Tempel galaxies), and the split is recomputed
+with the same weights. In the constrained version every hole must lie inside the footprint and the
+classifiable box. We also attempted placements in which voids may not overlap one another, as real
+VoidFinder voids do not, but in a one-off test 687 of the 1163 voids could not be placed (recorded in the repository findings, not in the pipeline's results file): the voids fill too much of
+the volume to be re-scattered disjointly, so overlap is allowed and measured. Groups are moved to
+random footprint positions keeping their velocities and $R_{200}$.
 
-Those are Poisson counting errors within one realisation of large-scale structure, which cannot
-capture how much voids differ from one another, the variance that usually dominates a void
-statistic. Deleting each of the \feRealVoidNOcc\ occupied voids in turn and refitting gives a
-jackknife error of \feRealVoidJkErr\,dex, smaller than the fit error, so the offset strengthens
-to \feRealVoidJkSigma$\sigma$ on that axis rather than weakening; a bootstrap over voids agrees
-(0.031). Sample variance across voids is therefore not what limits this measurement; the limit
-is set by bias rather than variance, which resampling cannot bound. The $1/V_{\rm max}$ density assumption
-(Section~\ref{sec:data}) and the bounding-box comparison bin (Section~\ref{sec:data}) both act in
-the direction of the reported signal. The offset is consistent in sign, and somewhat larger, than
-the ALFALFA void-HIMF knee suppression \citep[$-0.14$~dex, $\sim$2$\sigma$;][]{moorman2014}, an
-independent measurement from a different telescope and pipeline.
-The HI measurement itself is independent of ALFALFA's (FAST rather than Arecibo), but the
-environment classification for both comes from the same SDSS DR7 parent sample and largely the
-same voids, so the comparison is a deeper HI sample over much the same volume rather than an
-independent realisation of large-scale structure. We note also that the void
-membership depends on the adopted distance--redshift relation (we use the Douglass catalogue's
-own Planck2018 cosmology so the frames match); an EdS relation dilutes the offset to
-$\sim$1$\sigma$, so the quoted value is specific to the matched-cosmology geometry. The void
-faint-end slope ($\feRealVoidAlpha$) is marginally flatter than the wall's ($\feRealWallAlpha$),
-consistent with Moorman+2014's mild flattening rather than the steepening of \citet{jones2018};
-at DR1 sample size the two are within their mutual uncertainties, so we report the sign, not a
-detection of the slope difference.
+\begin{figure}
+\plotone{figures/fashienv_nulls.pdf}
+\caption{Knee offsets from random placements of the voids (left; two placement schemes) and the
+groups (right), against the measured offsets (vertical lines).}
+\label{fig:nulls}
+\end{figure}
 
 \subsection{Groups}
-Group members show a knee above the field by $+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex
-(\feRealGroupKneeSigma$\sigma$; group $\log M^* = \feRealGroupLogMStar$, field
-$\feRealFieldLogMStar$), statistically the stronger of our two offsets, though not our main
-result, because it is survivor-biased. Taken at face value a positive
-offset is the opposite of gas stripping; it is instead the expected signature of a selection
-effect, not a physical enhancement: a flux-limited HI survey detects the group galaxies that have
-retained substantial HI, i.e.\ the more massive, gas-rich survivors (the group knee,
-\feRealGroupLogMStar, even exceeds the global \feRealGlobalLogMStar\ for this reason), while
-stripped members drop out of the sample entirely. The group knee is therefore an upper envelope
-on the surviving HI-rich population, and the true environmental effect (including the
-undetected, stripped galaxies) is more negative than $+\feRealGroupKneeOffset$~dex. The
-void--wall comparison does not suffer this bias, since voids do not preferentially strip HI,
-which is why we take it as the main result despite its lower raw significance.
+Randomly placed groups give $+\feRealGroupNullMean\pm\feRealGroupNullStd$~dex over
+\feRealGroupNullReps\ placements, and \feRealGroupNullNGe\ reach the measured offset
+(Figure~\ref{fig:nulls}). The group offset is consistent with the random-placement distribution.
 
-\section{Discussion and Conclusions}
-Splitting the FASHI DR1 HIMF by environment, we find the void knee suppressed by
-$\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex relative to walls
-(\feRealVoidKneeSigma$\sigma$), an independent, FAST-based measurement of the ALFALFA void HIMF
-suppression \citep{moorman2014}, and a group-member knee offset that is survivor-biased upward
-and thus a lower bound on HI stripping. The relative measurements are robust, as all bins share
-one estimator; the
-absolute faint-end slope requires FASHI's own completeness function, and the void offset's central
-value carries a distance-model dependence that we quantify. The
-same pipeline applies to the DR2 catalogue (156{,}411 sources, $\sim$4$\times$ DR1 and a wider
-footprint) once it is public. Halving the errors would move the
-void offset toward a firm ($\gtrsim$4$\sigma$) detection and would extend the group split to
-cluster-scale densities.
+\subsection{Voids}
+Over \feRealNullCReps\ constrained placements the offset is
+$\feRealNullCMean\pm\feRealNullCStd$~dex, and none is as negative as the measured value
+(\feRealNullMean~dex for placements constrained only at the void centre). The random voids are not
+signal-free and not density-matched. Their void bins hold a median of \feRealNullCNInVoid\ galaxies
+against \feRealNInVoid\ for the real voids, because random placements fall on average-density
+structure, and a median \feRealNullCOverlap\ of their members are real-void members. The null mean
+depends on this overlap: regressing the placement offsets on it gives a slope of
+$\feRealNullCSlope$~dex per unit overlap and $\feRealNullCIntercept$~dex at zero overlap, more
+negative than the measurement. A delete-one-void jackknife on ten placements gives a median
+\feRealNullCJkErr~dex, the same as for the real voids, so the placements are no less noisy than the
+measurement. Under the single flux-limit weighting the null mean is $\feRealNullCOptAMean$~dex and
+the residual $\feRealOptANullExcess$~dex, against $\feRealNullCExcess$~dex under the completeness
+weighting. An Einstein--de~Sitter distance relation, which changes void membership for
+\feRealEdsChangedLowZPct\% of void galaxies at $z<0.02$ and scrambles it at $z>0.06$
+(\feRealEdsChangedHighZPct\%), gives $\feRealEdsVoidKneeOffset$~dex, at the
+\feRealEdsPercentile\ percentile of the null.
 
-Reproducibility: \code{jansky\_research.fashienv}; every number above is pipeline-generated
-(\code{results/fashienv\_metrics.json} $\to$ macros). Data: FASHI DR1 (VizieR
-\code{J/other/SCPMA/67.19511}), Tempel+2017 (\code{J/A+A/602/A100}), Douglass+2023
-(\code{J/ApJS/265/7}), all via VizieR, no auth.
+\section{Discussion}
+\label{sec:discussion}
+The measured void offset is more negative than any random placement, so the real voids are not
+exchangeable with randomly placed volumes. That is expected whether or not HI knees differ
+physically in voids: the real voids are the emptiest regions of the survey, and the placements
+show that the offset depends on where the volumes lie, by $\sim$0.1~dex across the range of
+overlap and by $\sim$0.1~dex between two defensible weightings. We therefore cannot attribute any
+part of the offset to the void environment, and we do not claim an environmental dependence of the
+HIMF. The group offset is reproduced by random placement.
+
+The general result is that, in a FASHI-like survey geometry, splitting a flux-limited sample by
+volume moves the fitted $1/V_{\rm max}$ knee by 0.1--0.2~dex with no environmental signal: randomly
+placed void shapes give $\feRealNullCMean$~dex and randomly placed group regions
+$+\feRealGroupNullMean$~dex. These offsets are as large as published void effects, including the
+ALFALFA void suppression \citep[$-0.14$~dex;][]{moorman2014}, which was measured with a different
+survey and estimator and which we have not tested. We recommend that environment-split HIMFs be
+accompanied by random-placement nulls of the kind used here, reported with the null's dependence on
+placement and on the weighting. The volume selection correlates with distance, and with fits of
+reduced $\chi^2\sim20$--40 the fitted knee depends on the mass range each distance range
+contributes; a density-insensitive estimator, a true footprint mask, and density-matched nulls are
+the next steps. Two systematics that follow real density, and so are not removed by random
+placement, remain untested: blending of neighbouring galaxies in FAST's $\sim$3~arcmin beam, and a
+possible mismatch between the velocity frames of FASHI's $v_{\rm opt}$ and the void catalogue's
+redshifts.
+
+Reproducibility: \code{jansky\_research.fashienv}; every number derived from the data is
+pipeline-generated (\code{results/fashienv\_metrics.json} $\to$ macros); survey constants and
+values quoted from other papers are typed. Data: FASHI DR2 Table~2 (public CSTCloud share linked
+from the FASHI release page), FASHI DR1 for the comparison (VizieR \code{J/other/SCPMA/67.19511}),
+Tempel+2017 (\code{J/A+A/602/A100}) and Douglass+2023 (\code{J/ApJS/265/7}, table1 and table2) via
+VizieR; no authentication is needed.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude
-\citep{anthropicclaude} (model Claude Opus~4.x, accessed 2026). Claude contributed to the design,
+\citep{anthropicclaude} (models Claude Opus~4.x and 5.5, accessed 2026). Claude contributed to the design,
 implementation, and testing of the \code{fashienv} module and the drafting of this manuscript.
 The author directed the work, independently reviewed and verified all code, results, and
 citations, and takes full responsibility for the content. An AI/LLM is not an author.
 
 \begin{acknowledgments}
-This work uses the FASHI DR1 catalogue (FAST; \citealt{fashi_dr1}), the Tempel et al.\ (2017)
+This work uses the FASHI DR2 and DR1 catalogues (FAST; \citealt{fashi_dr2,fashi_dr1}), the Tempel et al.\ (2017)
 group catalogue, and the Douglass et al.\ (2023) SDSS void catalogue, all via VizieR, and builds
 on the \code{jansky} project. The author acknowledges the collaborative contribution of Anthropic's
 Claude.

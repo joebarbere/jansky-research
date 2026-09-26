@@ -148,12 +148,12 @@ def test_void_jackknife_measures_sample_variance_and_is_committed():
         pytest.skip("committed fashienv results not present")
     m = json.loads(path.read_text())
     jk = m.get("void_jackknife")
-    assert jk and jk.get("jackknife_err") is not None, "the paper quotes this; commit it"
-    assert 0 < jk["n_occupied"] <= jk["n_voids"]
-    assert jk["n_ok"] == jk["n_occupied"]
+    assert jk and jk.get("B_jackknife_err") is not None, "the paper quotes this; commit it"
+    assert jk.get("B_minus_optA_same_jackknife_err") is not None  # the paired weighting error
+    assert 0 < jk["n_ok"] == jk["n_voids_occupied"]
     # the jackknife mean must sit on the full-sample offset, or the resampling is wrong
-    assert jk["mean_offset"] == pytest.approx(m["void_knee_offset"], abs=0.01)
-    assert jk["min_offset"] <= m["void_knee_offset"] <= jk["max_offset"]
+    assert jk["B_mean_offset"] == pytest.approx(m["void_knee_offset"], abs=0.01)
+    assert jk["B_min_offset"] <= m["void_knee_offset"] <= jk["B_max_offset"]
 
 
 def test_comparison_bin_size_is_committed():
@@ -174,3 +174,307 @@ def test_comparison_bin_size_is_committed():
     # if the wall bin ever stops matching the global fit, the "void versus everything"
     # framing in the paper needs revisiting
     assert abs(m["himf_wall"]["log_m_star"] - m["himf_global"]["log_m_star"]) < 0.05
+
+
+def test_vmax_from_catalogue_is_completeness_weighted_per_sr():
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    v = fe.vmax_from_catalogue(np.array([1e6, 2e6, np.nan, 5e5]), np.array([0.5, 1.0, 0.9, 0.0]))
+    assert v[0] == pytest.approx(0.5e6 / omega)
+    assert v[1] == pytest.approx(2e6 / omega)
+    assert v[2] == 0.0 and v[3] == 0.0  # non-finite / zero completeness drop out of himf
+    # multiplied back by the survey area it is C * Vmax: the DR2 1/(C * Vmax) weight
+    assert v[0] * omega == pytest.approx(0.5e6)
+
+
+def test_load_fashi_dr2_maps_columns_and_units(tmp_path):
+    p = tmp_path / "t2.csv"
+    p.write_text(
+        "ra,dec,v_opt,z_opt,W_50,S_sum,distance,mass,completeness,Vmax\n"
+        "10.0,5.0,3000.0,0.01,120.0,450.0,43.0,9.1,0.8,2.5e6\n"
+        "11.0,6.0,bad,0.02,100.0,,86.0,9.5,,\n"
+    )
+    d = fe.load_fashi_dr2(p)
+    assert d["ra"].tolist() == [10.0, 11.0]
+    assert d["flux"][0] == pytest.approx(0.45)  # mJy km/s -> Jy km/s
+    assert d["cz"][0] == 3000.0 and np.isnan(d["cz"][1])
+    assert d["completeness"][0] == 0.8 and np.isnan(d["completeness"][1])
+    assert d["vmax_mpc3"][0] == 2.5e6 and np.isnan(d["vmax_mpc3"][1])
+    assert set(d) >= {"ra", "dec", "cz", "z", "w50", "flux", "dist_mpc", "log_mhi"}
+
+
+def test_himf_and_fit_uses_supplied_vmax():
+    cat = fe.synthetic_environment_catalogue()
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    v1 = fe.vmax_1vmax(lm, dd, ff)
+    h_default, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"])
+    h_same, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], vmax=v1)
+    h_half, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], vmax=2.0 * v1)
+    np.testing.assert_allclose(h_same["phi"], h_default["phi"])
+    np.testing.assert_allclose(h_half["phi"], 0.5 * h_default["phi"])  # twice the volume
+    mask = cat["is_void"]
+    h_m, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], mask=mask, vmax=v1)
+    lm_m = lm[mask & (v1 > 0)]
+    in_bins = (lm_m >= 6.5) & (lm_m < 11.0)  # himf's default bin range
+    assert h_m["counts"].sum() == int(in_bins.sum())  # exactly the masked sources, no others
+
+
+def test_dr2_macros_are_emitted_from_nested_metrics(tmp_path):
+    m = {
+        "source": "x", "is_real": True, "release": "DR2", "n_sources": 10, "n_dr2_catalogue": 156411,
+        "c_min": 0.5, "himf_global": {"log_m_star": 9.9, "log_m_star_err": 0.02, "alpha": -1.3},
+        "optA_single_flux_cut": {"void_knee_offset": -0.25, "himf_global": {"alpha": -1.78}},
+        "dr1_optA_single_flux_cut": {"n_sources": 41741},
+    }  # fmt: skip
+    p = tmp_path / "macros.tex"
+    fe._write_macros(m, p)
+    t = p.read_text()
+    assert r"\newcommand{\feRealNDRTwo}{156411}" in t
+    assert r"\newcommand{\feRealOptAVoidKneeOffset}{-0.250}" in t  # floats to 3 decimals
+    assert r"\newcommand{\feRealOptAGlobalAlpha}{-1.780}" in t
+    assert r"\newcommand{\feRealDROneN}{41741}" in t
+    assert r"\newcommand{\feRealEdsVoidKneeOffset}{--}" in t  # absent key -> placeholder
+    # a DR1 or synthetic run never emits the DR2 block
+    fe._write_macros({**m, "release": "DR1"}, tmp_path / "m1.tex")
+    assert "feRealNDRTwo" not in (tmp_path / "m1.tex").read_text()
+
+
+def test_void_membership_holes_matches_the_brute_force_test():
+    rng = np.random.default_rng(3)
+    gal = rng.uniform(-50, 50, (4000, 3))
+    holes = rng.uniform(-40, 40, (30, 3))
+    radii = rng.uniform(3, 12, 30)
+    brute = fe.void_membership(gal, holes, radii)
+    np.testing.assert_array_equal(fe.void_membership_holes(gal, holes, radii), brute)
+    assert fe.void_membership_holes(gal[:0], holes, radii).size == 0
+
+
+def test_cmb_to_helio_cz_follows_the_dipole():
+    # Toward the CMB apex the Sun approaches: heliocentric cz is 369.82 km/s LOWER; anti-apex higher.
+    import astropy.units as u
+    from astropy.coordinates import SkyCoord
+
+    apex = SkyCoord(
+        l=fe.CMB_DIPOLE_LB[0] * u.deg, b=fe.CMB_DIPOLE_LB[1] * u.deg, frame="galactic"
+    ).icrs
+    anti = SkyCoord(
+        l=fe.CMB_DIPOLE_LB[0] * u.deg + 180 * u.deg,
+        b=-fe.CMB_DIPOLE_LB[1] * u.deg,
+        frame="galactic",
+    ).icrs
+    out = fe.cmb_to_helio_cz(
+        np.array([apex.ra.deg, anti.ra.deg]),
+        np.array([apex.dec.deg, anti.dec.deg]),
+        np.array([10000.0, 10000.0]),
+    )
+    assert out[0] == pytest.approx(10000.0 - 369.82, abs=0.05)
+    assert out[1] == pytest.approx(10000.0 + 369.82, abs=0.05)
+
+
+def test_random_void_positions_is_rigid_and_stays_in_footprint():
+    rng = np.random.default_rng(5)
+    # two voids of three holes each, at distances ~100 and ~200
+    base = np.array(
+        [[100.0, 0, 0], [102, 3, 0], [99, -2, 4], [0, 200.0, 0], [3, 203, 1], [-2, 198, 5]]
+    )
+    vid = np.array([1, 1, 1, 2, 2, 2])
+    fra = rng.uniform(150, 200, 5000)  # footprint: a patch of sky
+    fdec = rng.uniform(10, 40, 5000)
+    moved, diag = fe.random_void_positions(base, vid, fra, fdec, rng)
+    assert diag["n_unplaced"] == 0
+    for v in (1, 2):
+        a, b = base[vid == v], moved[vid == v]
+        np.testing.assert_allclose(np.linalg.norm(b, axis=1), np.linalg.norm(a, axis=1), rtol=1e-9)
+        # internal geometry preserved: all pairwise hole separations unchanged
+        da = np.linalg.norm(a[:, None] - a[None], axis=2)
+        db = np.linalg.norm(b[:, None] - b[None], axis=2)
+        np.testing.assert_allclose(db, da, atol=1e-9)
+        c = b.mean(axis=0)
+        ra = np.degrees(np.arctan2(c[1], c[0])) % 360
+        dec = np.degrees(np.arcsin(c[2] / np.linalg.norm(c)))
+        assert 146 <= ra <= 204 and 6 <= dec <= 44  # inside the patch (+ one cell of slack)
+
+
+def test_void_members_and_paired_jackknife():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(9)
+    xyz = rng.uniform(-100, 100, (n, 3))
+    holes = rng.uniform(-80, 80, (40, 3))
+    radii = np.full(40, 18.0)
+    vid = np.repeat(np.arange(20), 2)
+    vm = fe.void_members(xyz, holes, radii, vid)
+    in_void = fe.void_membership_holes(xyz, holes, radii)
+    assert (vm["n_voids"] > 0).sum() == in_void.sum()
+    base = np.ones(n, bool)
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    out = fe.void_jackknife(
+        cat, cat["area_sr"], in_void, np.ones(n, bool), vm, {"a": (base, v1), "b": (base, 2 * v1)}
+    )
+    assert out["n_voids_occupied"] > 5 and out["n_ok"] > 5
+    # scaling the volume by a constant shifts phi, not the knee: the paired difference is ~0
+    assert out["b_minus_a_jackknife_err"] == pytest.approx(0.0, abs=1e-6)
+    assert out["a_jackknife_err"] > 0
+
+
+def test_fit_schechter_reports_fit_quality():
+    cat = fe.synthetic_environment_catalogue()
+    h, fit = fe._himf_and_fit(cat["log_mhi"], cat["dist_mpc"], cat["flux"], cat["area_sr"])
+    assert fit["n_bins"] >= 4 and np.isfinite(fit["red_chi2"]) and fit["red_chi2"] > 0
+    assert -1.0 <= fit["corr_mstar_alpha"] <= 1.0
+
+
+def _assign_groups_bruteforce(gra, gdec, gcz, pra, pdec, pcz, r200, dv_max=1000.0, h0=70.0):
+    """The original O(N_gal x N_grp) loop, kept as the oracle for the KD-tree version."""
+    ra, dec = np.radians(gra), np.radians(gdec)
+    qra, qdec = np.radians(pra), np.radians(pdec)
+    out = np.full(len(gcz), -1, int)
+    for i in range(len(gcz)):
+        near = np.abs(gcz[i] - pcz) <= dv_max
+        if not near.any():
+            continue
+        h = (
+            np.sin((qdec - dec[i]) / 2) ** 2
+            + np.cos(dec[i]) * np.cos(qdec) * np.sin((qra - ra[i]) / 2) ** 2
+        )
+        sep = 2 * np.arcsin(np.sqrt(np.clip(h, 0, 1))) * (pcz / h0)
+        ratio = np.where(near, sep / np.maximum(r200, 1e-6), np.inf)
+        j = int(np.argmin(ratio))
+        if ratio[j] <= 1.0:
+            out[i] = j
+    return out
+
+
+@pytest.mark.parametrize("h0", [70.0, 67.8])
+def test_assign_groups_kdtree_matches_the_bruteforce_oracle(h0):
+    rng = np.random.default_rng(21)
+    n, m = 3000, 400
+    gra, gdec = rng.uniform(150, 170, n), rng.uniform(10, 25, n)
+    gcz = rng.uniform(3000, 15000, n)
+    pra, pdec = rng.uniform(150, 170, m), rng.uniform(10, 25, m)
+    pcz, r200 = rng.uniform(3000, 15000, m), rng.uniform(0.3, 1.5, m)
+    fast = fe.assign_groups(gra, gdec, gcz, pra, pdec, pcz, r200, h0=h0)
+    slow = _assign_groups_bruteforce(gra, gdec, gcz, pra, pdec, pcz, r200, h0=h0)
+    np.testing.assert_array_equal(fast, slow)
+    assert (fast >= 0).sum() > 50  # the test exercises real assignments, not just -1s
+
+
+def test_random_void_positions_constrained_keeps_holes_in_footprint_and_apart():
+    rng = np.random.default_rng(31)
+    # 12 voids of 3 holes each, radius 5, at distances 80-120
+    base, vid = [], []
+    for k in range(12):
+        c = rng.normal(0, 1, 3)
+        c = c / np.linalg.norm(c) * rng.uniform(80, 120)
+        for _ in range(3):
+            base.append(c + rng.normal(0, 3, 3))
+            vid.append(k)
+    base, vid = np.asarray(base), np.asarray(vid)
+    rad = np.full(len(base), 5.0)
+    fra, fdec = rng.uniform(140, 220, 20000), rng.uniform(0, 50, 20000)
+    moved, diag = fe.random_void_positions(
+        base, vid, fra, fdec, rng, hole_radius=rad, constrained=True, no_overlap=True
+    )
+    assert diag["n_unplaced"] == 0 and diag["spill_frac"] == 0.0
+    ra = np.degrees(np.arctan2(moved[:, 1], moved[:, 0])) % 360
+    dec = np.degrees(np.arcsin(moved[:, 2] / np.linalg.norm(moved, axis=1)))
+    assert np.all(
+        (ra >= 138) & (ra <= 222) & (dec >= -2) & (dec <= 52)
+    )  # every hole, not just centre
+    for a in range(12):
+        for b in range(a + 1, 12):
+            d = np.linalg.norm(moved[vid == a][:, None] - moved[vid == b][None], axis=2)
+            assert d.min() >= 10.0 - 1e-9  # radius 5 + radius 5: no overlap between voids
+
+
+def test_random_group_positions_land_in_footprint():
+    rng = np.random.default_rng(41)
+    fra, fdec = rng.uniform(150, 200, 5000), rng.uniform(10, 40, 5000)
+    ra, dec = fe.random_group_positions(np.zeros(300), np.zeros(300), fra, fdec, rng)
+    assert ra.size == 300 and np.all((ra >= 148) & (ra <= 202) & (dec >= 8) & (dec <= 42))
+
+
+def test_knee_offset_common_bins_uses_only_shared_bins():
+    cat = fe.synthetic_environment_catalogue()
+    v, w = cat["is_void"], ~cat["is_void"]
+    out = fe.knee_offset_common_bins(cat, cat["area_sr"], v, w, None)
+    assert out["n_common_bins"] >= 4
+    assert np.isfinite(out["common_knee_offset"])
+    assert out["common_knee_offset"] < 0  # the mock's void knee is injected below the wall's
+
+
+def test_void_null_runs_both_variants_and_reports_fairness_diagnostics():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(51)
+    # galaxies on a sky patch, at their catalogue distances (Mpc/h-ish frame is irrelevant here)
+    ra, dec = rng.uniform(150, 210, n), rng.uniform(5, 45, n)
+    d = np.asarray(cat["dist_mpc"], float) * 0.7
+    r_, d_ = np.radians(ra), np.radians(dec)
+    xyz = (
+        np.column_stack([np.cos(d_) * np.cos(r_), np.cos(d_) * np.sin(r_), np.sin(d_)]) * d[:, None]
+    )
+    holes, vid = [], []
+    for k in range(15):
+        c = xyz[rng.integers(n)]
+        for _ in range(2):
+            holes.append(c + rng.normal(0, 2, 3))
+            vid.append(k)
+    voids = {
+        "sphere_xyz": np.asarray(holes),
+        "sphere_radius": np.full(30, 8.0),
+        "void_id": np.asarray(vid),
+    }
+    in_void = fe.void_membership_holes(xyz, voids["sphere_xyz"], voids["sphere_radius"])
+    env = {"xyz": xyz, "in_void": in_void, "classifiable": np.ones(n, bool)}
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    wts = {"B": (np.ones(n, bool), v1), "optA_same": (np.ones(n, bool), 2 * v1)}
+    for constrained in (False, True):
+        out = fe.void_null(
+            cat, cat["area_sr"], env, voids, (ra, dec), wts,
+            n=6, seed=3, constrained=constrained, n_jackknife=1,
+        )  # fmt: skip
+        assert out["n_reps"] == 6 and len(out["rows"]) == 6
+        assert out["B"]["n_ok"] >= 3
+        row = out["rows"][0]
+        for key in ("n_in_void", "n_bins_void", "real_overlap_frac", "spill_frac", "B_offset"):
+            assert key in row
+        assert len(out["B_jackknife_err_placements"]) <= 1
+        assert "B_regression" not in out  # needs > 20 placements
+        # scaling Vmax by a constant cannot move a knee: where both fits are well posed
+        # (sensible offsets), the two weightings agree placement by placement
+        sane = [
+            r for r in out["rows"]
+            if abs(r["B_offset"]) < 1.0 and abs(r["optA_same_offset"]) < 1.0
+        ]  # fmt: skip
+        assert sane, "no well-posed placements -- the test would be vacuous"
+        for r in sane:
+            assert r["B_offset"] == pytest.approx(r["optA_same_offset"], abs=1e-3)
+
+
+def test_void_null_regression_block_with_enough_placements():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(52)
+    ra, dec = rng.uniform(150, 210, n), rng.uniform(5, 45, n)
+    d = np.asarray(cat["dist_mpc"], float) * 0.7
+    r_, d_ = np.radians(ra), np.radians(dec)
+    xyz = (
+        np.column_stack([np.cos(d_) * np.cos(r_), np.cos(d_) * np.sin(r_), np.sin(d_)]) * d[:, None]
+    )
+    holes = xyz[rng.integers(n, size=20)]
+    voids = {"sphere_xyz": holes, "sphere_radius": np.full(20, 25.0), "void_id": np.arange(20)}
+    env = {
+        "xyz": xyz,
+        "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
+        "classifiable": np.ones(n, bool),
+    }
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    out = fe.void_null(
+        cat, cat["area_sr"], env, voids, (ra, dec), {"B": (np.ones(n, bool), v1)},
+        n=25, seed=4, constrained=False,
+    )  # fmt: skip
+    reg = out["B_regression"]
+    assert 0.0 <= reg["r2_overlap_only"] <= reg["r2_occupancy_z_overlap"] <= 1.0
+    assert reg["r2_occupancy_z"] <= reg["r2_occupancy_z_overlap"] + 1e-12
+    lo, hi = reg["overlap_range_minmax"]
+    assert 0.0 <= lo <= hi <= 1.0
