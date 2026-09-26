@@ -10,6 +10,17 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **`driftsearch`: why the asserted Voyager-1 frequency missed, now measured instead of guessed.**
+  The 8420.216 MHz the withdrawn "null" searched at is Estevez's (2021) *measurement* in a
+  different Breakthrough Listen recording (2015 December 30); the benchmark file was recorded
+  on 2016 September 19. `annual_doppler_offset` computes the change in the Earth's orbital
+  velocity toward Voyager between the two dates (32.5 km/s, with JPL Horizons positions): it
+  predicts 0.91 MHz of the 0.92 MHz offset (99%). Both papers replace "a frame difference we
+  have not confirmed" with this, from new macros; the `estevez2021` bib note no longer makes an
+  untrue claim about this file; and `data.py` no longer labels the file with the other
+  recording's date (2015-12-30), which is probably how the two were conflated.
+
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab

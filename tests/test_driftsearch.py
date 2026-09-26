@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from jansky_research import driftsearch
 
@@ -116,3 +117,23 @@ def test_real_voyager_recovery_when_file_cached():
     assert m["dc_spike"]["is_band_centre"]
     # the legacy asserted frequency remains blank sky -- the recorded lesson
     assert m["legacy_asserted"]["snr"] < m["carrier"]["snr"] / 50
+
+
+def test_annual_doppler_offset_explains_the_voyager_carrier_move():
+    """The asserted 8420.216 MHz was measured in a Dec-2015 recording; Earth's orbit moves it."""
+    from jansky_research import driftsearch as d
+
+    r = d.annual_doppler_offset(
+        d.LEGACY_REF_MJD,
+        d.LEGACY_REF_FREQ_MHZ,
+        d.VOYAGER1_RADEC[57386.0],
+        57650.78209,
+        8419.29696,
+        d.VOYAGER1_RADEC[57650.78209],
+    )
+    assert r["observed_shift_mhz"] == pytest.approx(-0.9195, abs=1e-4)
+    assert 30.0 < r["velocity_change_kms"] < 35.0  # Earth recedes from Voyager faster in Sept
+    assert 0.97 < r["fraction_explained"] < 1.03
+    # Same date, same place: no shift predicted.
+    z = d.annual_doppler_offset(57386.0, 8420.0, (258.0, 12.0), 57386.0, 8420.0, (258.0, 12.0))
+    assert z["predicted_shift_mhz"] == 0.0 and z["fraction_explained"] is None
