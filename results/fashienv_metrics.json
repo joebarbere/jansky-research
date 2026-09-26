@@ -1,61 +1,117 @@
 {
-  "source": "FASHI DR1 (VizieR J/other/SCPMA/67.19511) x Tempel+2017 groups x Douglass+2023 voids",
+  "source": "FASHI DR2 (arXiv:2606.31539, CSTCloud share) x Tempel+2017 groups x Douglass+2023 voids; weights 1/(C*Vmax) from the DR2 catalogue (C >= 0.5)",
   "is_real": true,
-  "n_sources": 41741,
-  "n_classifiable_void": 26713,
-  "n_in_void": 2538,
-  "n_wall": 24175,
-  "n_field": 20594,
-  "void_jackknife": {
-    "n_voids": 1163,
-    "n_occupied": 186,
-    "n_ok": 186,
-    "mean_offset": -0.2561,
-    "jackknife_err": 0.0391,
-    "min_offset": -0.2694,
-    "max_offset": -0.2466
+  "release": "DR2",
+  "n_dr2_catalogue": 156411,
+  "n_dr2_z_nonpositive": 286,
+  "n_finite_z_pos": 155983,
+  "weighting": "DR2 per-source completeness x Vmax (option B)",
+  "c_min": 0.5,
+  "dr2_paper_himf": {
+    "log_m_star": 9.89,
+    "log_m_star_err": 0.02,
+    "alpha": -1.31,
+    "alpha_err": 0.02,
+    "ref": "arXiv:2606.31539 abstract"
   },
-  "n_group_members": 6119,
+  "n_sources": 110520,
+  "n_classifiable_void": 73792,
+  "n_in_void": 6399,
+  "n_wall": 67393,
+  "wall_pct_of_sample": 61.0,
+  "wall_minus_global_logmstar": 0.025,
+  "n_group_members": 17988,
+  "n_field": 55804,
   "himf_global": {
-    "log_phi_star": -2.893,
-    "log_m_star": 9.944,
-    "alpha": -1.732,
-    "log_m_star_err": 0.058,
-    "alpha_err": 0.077
+    "log_phi_star": -2.222,
+    "log_m_star": 9.907,
+    "alpha": -1.328,
+    "log_m_star_err": 0.021,
+    "alpha_err": 0.032
   },
   "himf_void": {
-    "log_phi_star": -3.7,
-    "log_m_star": 9.698,
-    "alpha": -1.582,
-    "log_m_star_err": 0.071,
-    "alpha_err": 0.137
+    "log_phi_star": -3.411,
+    "log_m_star": 9.778,
+    "alpha": -1.306,
+    "log_m_star_err": 0.047,
+    "alpha_err": 0.079
   },
   "himf_wall": {
-    "log_phi_star": -3.131,
-    "log_m_star": 9.954,
-    "alpha": -1.703,
-    "log_m_star_err": 0.05,
-    "alpha_err": 0.065
+    "log_phi_star": -2.508,
+    "log_m_star": 9.932,
+    "alpha": -1.365,
+    "log_m_star_err": 0.022,
+    "alpha_err": 0.031
   },
   "himf_group": {
-    "log_phi_star": -3.923,
-    "log_m_star": 10.082,
-    "alpha": -1.742,
-    "log_m_star_err": 0.05,
-    "alpha_err": 0.049
+    "log_phi_star": -3.198,
+    "log_m_star": 10.022,
+    "alpha": -1.442,
+    "log_m_star_err": 0.034,
+    "alpha_err": 0.041
   },
   "himf_field": {
-    "log_phi_star": -3.1,
-    "log_m_star": 9.89,
-    "alpha": -1.678,
-    "log_m_star_err": 0.053,
-    "alpha_err": 0.077
+    "log_phi_star": -2.53,
+    "log_m_star": 9.881,
+    "alpha": -1.317,
+    "log_m_star_err": 0.02,
+    "alpha_err": 0.03
   },
-  "void_knee_offset": -0.256,
-  "void_knee_offset_err": 0.087,
-  "void_knee_offset_sigma": 2.93,
-  "group_knee_offset": 0.192,
-  "group_knee_offset_err": 0.073,
-  "group_knee_offset_sigma": 2.64,
-  "dr2_followon": "swap fetch_fashi_dr1 -> DR2 table when it publishes (~Aug 2026)"
+  "void_knee_offset": -0.154,
+  "void_knee_offset_err": 0.052,
+  "void_knee_offset_sigma": 2.96,
+  "group_knee_offset": 0.141,
+  "group_knee_offset_err": 0.039,
+  "group_knee_offset_sigma": 3.6,
+  "void_jackknife": {
+    "n_voids": 1163,
+    "n_occupied": 409,
+    "n_ok": 409,
+    "mean_offset": -0.1537,
+    "jackknife_err": 0.0405,
+    "min_offset": -0.1812,
+    "max_offset": -0.1427
+  },
+  "eds_void_knee_offset": -0.021,
+  "eds_void_knee_offset_err": 0.05,
+  "eds_void_knee_offset_sigma": 0.43,
+  "dr1_dr2_match": {
+    "n_dr1": 41741,
+    "n_matched": 39540,
+    "matched_pct": 94.7,
+    "median_dist_ratio_dr2_over_dr1": 1.0253
+  },
+  "weighting_shift_pct": 40.0,
+  "optA_single_flux_cut": {
+    "n_sources": 155983,
+    "void_knee_offset": -0.252,
+    "void_knee_offset_err": 0.092,
+    "void_knee_offset_sigma": 2.72,
+    "group_knee_offset": 0.208,
+    "group_knee_offset_err": 0.068,
+    "group_knee_offset_sigma": 3.07,
+    "himf_global": {
+      "log_phi_star": -3.009,
+      "log_m_star": 10.048,
+      "alpha": -1.78,
+      "log_m_star_err": 0.062,
+      "alpha_err": 0.066
+    }
+  },
+  "dr1_optA_single_flux_cut": {
+    "n_sources": 41741,
+    "void_knee_offset": -0.256,
+    "void_knee_offset_err": 0.087,
+    "void_knee_offset_sigma": 2.93,
+    "group_knee_offset": 0.192,
+    "group_knee_offset_err": 0.073,
+    "group_knee_offset_sigma": 2.64,
+    "himf_global": {
+      "log_phi_star": -2.893,
+      "log_m_star": 9.944,
+      "alpha": -1.732,
+      "log_m_star_err": 0.058,
+      "alpha_err": 0.077
+    }
+  }
 }

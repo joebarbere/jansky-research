@@ -164,3 +164,22 @@ Evidence: `results/fashienv_dr2_preview.json` (its own file until the paper is r
 committed `fashienv_metrics.json` and macros still hold the DR1 numbers under the DR1 prose).
 **Next:** revise `papers/fashienv/` to DR2 + option B, then a presenter/referee round — the
 headline number changes, so this is a revision, not a data refresh.
+
+### Revision (2026-09-26, same day): DR2 + option B is now the paper; the void offset is fragile
+
+The paper now reports DR2 with the 1/(C Vmax) weighting; `results/fashienv_metrics.json` is the
+DR2 run (the preview file is retired; the DR1 file is in git history). Every comparison the prose
+makes is pipeline-generated: the old weighting on DR2 (`optA_*`) and on DR1 (`dr1_optA_*`), the
+DR1<->DR2 match (94.7% matched; DR2 distances larger by a median factor 1.025), the share of the
+old offset due to the weighting (40%), and the wall bin's share of the sample (61%). Hand-typed
+DR1-era numbers (58%, 0.010 dex, a void bootstrap of 0.031) were removed or replaced.
+
+**The Einstein-de Sitter check, recomputed under option B, removes the void signal:** placing
+galaxies with q0 = 0.5 instead of the Douglass catalogue's Planck q0 = -0.527 (a few per cent in
+distance at this depth) takes the void-wall offset from -0.154 (3.0 sigma) to **-0.021 (0.43
+sigma)**. The DR1 paper had reported "dilutes to ~1 sigma" in a subordinate clause. The matched
+cosmology is the right one, but a signal that a few-per-cent distance change erases rests on
+galaxies near void boundaries -- a fragility the fit error and the jackknife (both of which hold
+the geometry fixed) cannot see. The abstract now calls the void offset a tentative upper bound,
+not a detection, and names this test. Group-field (+0.141, 3.6 sigma) is unaffected by it but
+remains survivor-biased.

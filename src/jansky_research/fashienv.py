@@ -77,7 +77,7 @@ FASHI_FLUX_LIMIT = 0.30  # Jy km/s integrated-flux limit for the 1/Vmax weightin
 _Q0 = -0.527
 
 
-def _comoving_distance_mpc(z: np.ndarray, h0: float = H0) -> np.ndarray:
+def _comoving_distance_mpc(z: np.ndarray, h0: float = H0, q0: float = _Q0) -> np.ndarray:
     r"""Low-z comoving distance, 2nd-order in z: :math:`(c/H_0)\,z\,[1 - (1+q_0)z/2]`.
 
     Uses the Planck2018 :math:`q_0=-0.527` (not the EdS 0.5) so the void-membership geometry
@@ -86,17 +86,17 @@ def _comoving_distance_mpc(z: np.ndarray, h0: float = H0) -> np.ndarray:
     frame; with ``h0=70`` it is physical Mpc (the FASHI DR1 convention).
     """
     z = np.asarray(z, float)
-    return (C_KM_S / h0) * z * (1.0 - 0.5 * (1.0 + _Q0) * z)
+    return (C_KM_S / h0) * z * (1.0 - 0.5 * (1.0 + q0) * z)
 
 
 def comoving_xyz(
-    ra_deg: np.ndarray, dec_deg: np.ndarray, z: np.ndarray, *, h0: float = H0
+    ra_deg: np.ndarray, dec_deg: np.ndarray, z: np.ndarray, *, h0: float = H0, q0: float = _Q0
 ) -> np.ndarray:
     """(RA, Dec, z) -> comoving Cartesian, the frame for void-sphere membership.
 
     Use ``h0=100`` to match the Douglass void spheres' Mpc/h frame; ``h0=70`` for physical Mpc.
     """
-    d = _comoving_distance_mpc(z, h0)
+    d = _comoving_distance_mpc(z, h0, q0)
     ra = np.radians(np.asarray(ra_deg, float))
     dec = np.radians(np.asarray(dec_deg, float))
     return np.stack(
@@ -653,68 +653,160 @@ def void_jackknife_offset(
     }
 
 
+def _environment_split(cat: dict, base: np.ndarray, vmax, area: float, env: dict) -> dict:
+    """Void/wall and group/field HIMF fits + knee offsets for one catalogue and one weighting."""
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    cl, iv, ig = env["classifiable"], env["in_void"], env["in_group"]
+    _h_all, f_all = _himf_and_fit(lm, dd, ff, area, mask=base, vmax=vmax)
+    h_v, f_v = _himf_and_fit(lm, dd, ff, area, mask=base & cl & iv, vmax=vmax)
+    h_w, f_w = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ~iv, vmax=vmax)
+    _h_g, f_g = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ig, vmax=vmax)
+    _h_f, f_f = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ~ig, vmax=vmax)
+
+    def rnd(f: dict) -> dict:
+        return {k: round(v, 3) for k, v in f.items() if isinstance(v, float)}
+
+    n = int(base.sum())
+    n_wall = int((base & cl & ~iv).sum())
+    return {
+        "n_sources": n,
+        "n_classifiable_void": int((base & cl).sum()),
+        "n_in_void": int((base & cl & iv).sum()),
+        "n_wall": n_wall,
+        # The comparison bin's share of the whole sample: the bounding-box classifiable region
+        # makes "wall" close to "everything", which the paper must quantify, not assert.
+        "wall_pct_of_sample": round(100.0 * n_wall / n, 1) if n else None,
+        "wall_minus_global_logmstar": round(
+            f_w.get("log_m_star", np.nan) - f_all.get("log_m_star", np.nan), 3
+        ),
+        "n_group_members": int((base & cl & ig).sum()),
+        "n_field": int((base & cl & ~ig).sum()),
+        "himf_global": rnd(f_all),
+        "himf_void": rnd(f_v),
+        "himf_wall": rnd(f_w),
+        "himf_group": rnd(f_g),
+        "himf_field": rnd(f_f),
+        **_offset_stats("void", f_v, f_w),
+        **_offset_stats("group", f_g, f_f),
+        "_fig": (h_v, h_w, f_v, f_w),
+    }
+
+
+def _environments(cat: dict, spheres: dict, grp: dict, *, q0: float = _Q0) -> dict:
+    """Void membership (in the Douglass Mpc/h frame), classifiability and group membership."""
+    xyz = comoving_xyz(cat["ra"], cat["dec"], cat["z"], h0=100.0, q0=q0)
+    gidx = assign_groups(
+        cat["ra"],
+        cat["dec"],
+        cat["cz"],
+        grp["grp_ra"],
+        grp["grp_dec"],
+        grp["grp_cz"],
+        grp["grp_r200"],
+    )
+    return {
+        "xyz": xyz,
+        "in_void": void_membership(xyz, spheres["sphere_xyz"], spheres["sphere_radius"]),
+        "classifiable": _within_void_footprint(xyz, spheres["sphere_xyz"]),
+        "in_group": gidx >= 0,
+    }
+
+
+def _match_releases(
+    dr1: dict, dr2: dict, *, sep_arcmin: float = 1.5, dv_kms: float = 100.0
+) -> dict:
+    """Match DR1 to DR2 by position and velocity; report the matched fraction and distance ratio."""
+    from scipy.spatial import cKDTree
+
+    def xyz(c):
+        r, d = np.radians(c["ra"]), np.radians(c["dec"])
+        return np.column_stack([np.cos(d) * np.cos(r), np.cos(d) * np.sin(r), np.sin(d)])
+
+    chord = 2.0 * np.sin(np.radians(sep_arcmin / 60.0) / 2.0)
+    hits = cKDTree(xyz(dr2)).query_ball_point(xyz(dr1), r=chord)
+    ratio, n_match = [], 0
+    for i, js in enumerate(hits):
+        if not js:
+            continue
+        js = np.asarray(js)
+        dv = np.abs(dr2["cz"][js] - dr1["cz"][i])
+        if dv.min() <= dv_kms:
+            n_match += 1
+            j = js[int(np.argmin(dv))]
+            ratio.append(dr2["dist_mpc"][j] / dr1["dist_mpc"][i])
+    r = np.asarray(ratio)
+    return {
+        "n_dr1": int(dr1["ra"].size),
+        "n_matched": n_match,
+        "matched_pct": round(100.0 * n_match / max(dr1["ra"].size, 1), 1),
+        "median_dist_ratio_dr2_over_dr1": round(float(np.median(r)), 4) if r.size else None,
+    }
+
+
+def _clean(cat: dict) -> dict:
+    """Finite mass/distance, positive flux, z > 0 (no comoving position otherwise)."""
+    ok = (
+        np.isfinite(cat["log_mhi"])
+        & np.isfinite(cat["dist_mpc"])
+        & (cat["flux"] > 0)
+        & (cat["z"] > 0)
+    )
+    return {k: np.asarray(v)[ok] for k, v in cat.items()}
+
+
 def _real_leg():  # pragma: no cover - network + VizieR catalogues
     """FASHI DR2 x Tempel groups x Douglass voids: the environment-split HIMF.
 
     Headline weighting (option B, 2026-09-26): DR2's own per-source completeness and Vmax,
     weight 1/(C * Vmax), on the DR2 HIMF sample (C >= 0.5, "above the 50% flux completeness
-    limit"). This replaces the single 0.30 Jy km/s flux cut the referee flagged as unstated.
-    The old single-cut weighting on the same DR2 catalogue is reported alongside (``optA_*``) so
-    the effect of the METHOD change is visible separately from the effect of the larger sample.
+    limit"). The old single-flux-cut weighting is run alongside on the SAME DR2 data
+    (``optA_*``) and on DR1 (``dr1_optA_*``), so the paper can separate the effect of the
+    weighting from the effect of the sample. The Einstein-de Sitter distance check (void
+    membership under q0 = 0.5) is recomputed here rather than carried over from DR1.
     """
-    fashi = fetch_fashi_dr2()
+    spheres = fetch_voidfinder_spheres()
+    grp = fetch_tempel_groups()
     area = FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2  # DR2's own Vmax area
-    finite = (
-        np.isfinite(fashi["log_mhi"])
-        & np.isfinite(fashi["dist_mpc"])
-        & (fashi["flux"] > 0)
-        & (fashi["z"] > 0)  # 286 sources have z <= 0: no comoving position, excluded
-    )
-    n_dr2 = int(fashi["ra"].size)
-    lm, dd, ff = fashi["log_mhi"][finite], fashi["dist_mpc"][finite], fashi["flux"][finite]
-    ra, dec, z, cz = (fashi[k][finite] for k in ("ra", "dec", "z", "cz"))
-    comp, vcat = fashi["completeness"][finite], fashi["vmax_mpc3"][finite]
-    # Option B sample + weights; option A uses every finite source with the single-cut Vmax.
+
+    raw = fetch_fashi_dr2()
+    n_dr2 = int(raw["ra"].size)
+    n_zle0 = int(np.sum(raw["z"] <= 0))
+    cat = _clean(raw)
+    env = _environments(cat, spheres, grp)
+    comp, vcat = cat["completeness"], cat["vmax_mpc3"]
     samp_b = np.isfinite(comp) & (comp >= FASHI_DR2_C_MIN) & np.isfinite(vcat) & (vcat > 0)
     vmax_b = vmax_from_catalogue(vcat, comp)
-
-    spheres = fetch_voidfinder_spheres()
-    gal_xyz = comoving_xyz(ra, dec, z, h0=100.0)
-    in_void = void_membership(gal_xyz, spheres["sphere_xyz"], spheres["sphere_radius"])
-    classifiable = _within_void_footprint(gal_xyz, spheres["sphere_xyz"])
-    grp = fetch_tempel_groups()
-    gidx = assign_groups(ra, dec, cz, grp["grp_ra"], grp["grp_dec"], grp["grp_cz"], grp["grp_r200"])
-    in_group = gidx >= 0
-
-    def _split(base: np.ndarray, vmax: np.ndarray | None) -> dict:
-        _h_all, f_all = _himf_and_fit(lm, dd, ff, area, mask=base, vmax=vmax)
-        h_v, f_v = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & in_void, vmax=vmax)
-        h_w, f_w = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & ~in_void, vmax=vmax)
-        _h_g, f_g = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & in_group, vmax=vmax)
-        _h_f, f_f = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & ~in_group, vmax=vmax)
-        rnd = lambda f: {k: round(v, 3) for k, v in f.items() if isinstance(v, float)}  # noqa: E731
-        return {
-            "n_sources": int(base.sum()),
-            "n_classifiable_void": int((base & classifiable).sum()),
-            "n_in_void": int((base & classifiable & in_void).sum()),
-            "n_wall": int((base & classifiable & ~in_void).sum()),
-            "n_group_members": int((base & classifiable & in_group).sum()),
-            "n_field": int((base & classifiable & ~in_group).sum()),
-            "himf_global": rnd(f_all),
-            "himf_void": rnd(f_v),
-            "himf_wall": rnd(f_w),
-            "himf_group": rnd(f_g),
-            "himf_field": rnd(f_f),
-            **_offset_stats("void", f_v, f_w),
-            **_offset_stats("group", f_g, f_f),
-            "_fig": (h_v, h_w, f_v, f_w),
-        }
-
-    all_finite = np.ones(lm.size, bool)
-    b = _split(samp_b, vmax_b)
-    a = _split(all_finite, None)
+    b = _environment_split(cat, samp_b, vmax_b, area, env)
     figdata = b.pop("_fig")
+    a = _environment_split(cat, np.ones(cat["ra"].size, bool), None, area, env)
     a.pop("_fig")
+    env_eds = _environments(cat, spheres, grp, q0=0.5)
+    b_eds = _environment_split(cat, samp_b, vmax_b, area, env_eds)
+    b_eds.pop("_fig")
+
+    dr1 = _clean(fetch_fashi_dr1())
+    dr1_env = _environments(dr1, spheres, grp)
+    d1 = _environment_split(
+        dr1, np.ones(dr1["ra"].size, bool), None, 7600.0 * (np.pi / 180.0) ** 2, dr1_env
+    )
+    d1.pop("_fig")
+
+    # DR1 <-> DR2 cross-match (1.5 arcmin, 100 km/s): the distance-convention change, measured.
+    xm = _match_releases(dr1, cat)
+
+    def keep(d: dict, *keys: str) -> dict:
+        return {k: d[k] for k in keys if k in d}
+
+    offs = (
+        "n_sources",
+        "void_knee_offset",
+        "void_knee_offset_err",
+        "void_knee_offset_sigma",
+        "group_knee_offset",
+        "group_knee_offset_err",
+        "group_knee_offset_sigma",
+        "himf_global",
+    )
     metrics = {
         "source": (
             "FASHI DR2 (arXiv:2606.31539, CSTCloud share) x Tempel+2017 groups x "
@@ -723,23 +815,30 @@ def _real_leg():  # pragma: no cover - network + VizieR catalogues
         "is_real": True,
         "release": "DR2",
         "n_dr2_catalogue": n_dr2,
-        "n_finite_z_pos": int(lm.size),
+        "n_dr2_z_nonpositive": n_zle0,
+        "n_finite_z_pos": int(cat["ra"].size),
         "weighting": "DR2 per-source completeness x Vmax (option B)",
         "c_min": FASHI_DR2_C_MIN,
+        "dr2_paper_himf": {"log_m_star": 9.89, "log_m_star_err": 0.02, "alpha": -1.31,
+                           "alpha_err": 0.02, "ref": "arXiv:2606.31539 abstract"},
         **b,
         "void_jackknife": void_jackknife_offset(
-            lm,
-            dd,
-            ff,
-            area,
-            gal_xyz=gal_xyz,
-            sphere_xyz=spheres["sphere_xyz"],
+            cat["log_mhi"], cat["dist_mpc"], cat["flux"], area,
+            gal_xyz=env["xyz"], sphere_xyz=spheres["sphere_xyz"],
             sphere_radius=spheres["sphere_radius"],
-            classifiable=classifiable & samp_b,
-            vmax=vmax_b,
+            classifiable=env["classifiable"] & samp_b, vmax=vmax_b,
         ),
-        "optA_single_flux_cut": a,
-    }
+        "eds_void_knee_offset": b_eds["void_knee_offset"],
+        "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
+        "eds_void_knee_offset_sigma": b_eds["void_knee_offset_sigma"],
+        "dr1_dr2_match": xm,
+        # Share of the DR1 single-limit void offset that the weighting removes (not the sample).
+        "weighting_shift_pct": round(
+            100.0 * (1.0 - b["void_knee_offset"] / d1["void_knee_offset"]), 0
+        ) if d1.get("void_knee_offset") else None,
+        "optA_single_flux_cut": keep(a, *offs),
+        "dr1_optA_single_flux_cut": keep(d1, *offs),
+    }  # fmt: skip
     return metrics, figdata
 
 
@@ -843,6 +942,39 @@ def _write_macros(m: dict, path) -> None:
             rf"\newcommand{{\feRealVoidJkSigma}}{{{abs(m['void_knee_offset']) / jk['jackknife_err']:.1f}}}",
             rf"\newcommand{{\feRealVoidNOcc}}{{{jk['n_occupied']}}}",
         ]
+    if m.get("is_real") and m.get("release") == "DR2":
+        # DR2-leg numbers the prose needs, all pipeline-made (no hand-typed comparisons).
+        def nested(path_: str):
+            cur: object = m
+            for k in path_.split("."):
+                cur = cur.get(k) if isinstance(cur, dict) else None
+            return "--" if cur is None else cur
+
+        for macro, key in (
+            ("NDRTwo", "n_dr2_catalogue"),
+            ("NZNonpos", "n_dr2_z_nonpositive"),
+            ("CMin", "c_min"),
+            ("WallPct", "wall_pct_of_sample"),
+            ("WallMinusGlobal", "wall_minus_global_logmstar"),
+            ("GlobalLogMStarErr", "himf_global.log_m_star_err"),
+            ("GlobalAlphaErr", "himf_global.alpha_err"),
+            ("EdsVoidKneeOffset", "eds_void_knee_offset"),
+            ("EdsVoidKneeSigma", "eds_void_knee_offset_sigma"),
+            ("OptAVoidKneeOffset", "optA_single_flux_cut.void_knee_offset"),
+            ("OptAVoidKneeErr", "optA_single_flux_cut.void_knee_offset_err"),
+            ("OptAGroupKneeOffset", "optA_single_flux_cut.group_knee_offset"),
+            ("OptAGlobalAlpha", "optA_single_flux_cut.himf_global.alpha"),
+            ("DROneN", "dr1_optA_single_flux_cut.n_sources"),
+            ("DROneVoidKneeOffset", "dr1_optA_single_flux_cut.void_knee_offset"),
+            ("DROneVoidKneeErr", "dr1_optA_single_flux_cut.void_knee_offset_err"),
+            ("DROneVoidKneeSigma", "dr1_optA_single_flux_cut.void_knee_offset_sigma"),
+            ("DROneGroupKneeOffset", "dr1_optA_single_flux_cut.group_knee_offset"),
+            ("DROneGlobalAlpha", "dr1_optA_single_flux_cut.himf_global.alpha"),
+            ("WeightingShiftPct", "weighting_shift_pct"),
+            ("MatchedPct", "dr1_dr2_match.matched_pct"),
+            ("DistRatio", "dr1_dr2_match.median_dist_ratio_dr2_over_dr1"),
+        ):
+            lines.append(rf"\newcommand{{\feReal{macro}}}{{{nested(key)}}}")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Merge rather than overwrite: this run knows only its own mode's metrics and

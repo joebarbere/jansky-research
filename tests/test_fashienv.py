@@ -216,3 +216,23 @@ def test_himf_and_fit_uses_supplied_vmax():
     lm_m = lm[mask & (v1 > 0)]
     in_bins = (lm_m >= 6.5) & (lm_m < 11.0)  # himf's default bin range
     assert h_m["counts"].sum() == int(in_bins.sum())  # exactly the masked sources, no others
+
+
+def test_dr2_macros_are_emitted_from_nested_metrics(tmp_path):
+    m = {
+        "source": "x", "is_real": True, "release": "DR2", "n_sources": 10, "n_dr2_catalogue": 156411,
+        "c_min": 0.5, "himf_global": {"log_m_star": 9.9, "log_m_star_err": 0.02, "alpha": -1.3},
+        "optA_single_flux_cut": {"void_knee_offset": -0.25, "himf_global": {"alpha": -1.78}},
+        "dr1_optA_single_flux_cut": {"n_sources": 41741},
+    }  # fmt: skip
+    p = tmp_path / "macros.tex"
+    fe._write_macros(m, p)
+    t = p.read_text()
+    assert r"\newcommand{\feRealNDRTwo}{156411}" in t
+    assert r"\newcommand{\feRealOptAVoidKneeOffset}{-0.25}" in t
+    assert r"\newcommand{\feRealOptAGlobalAlpha}{-1.78}" in t
+    assert r"\newcommand{\feRealDROneN}{41741}" in t
+    assert r"\newcommand{\feRealEdsVoidKneeOffset}{--}" in t  # absent key -> placeholder
+    # a DR1 or synthetic run never emits the DR2 block
+    fe._write_macros({**m, "release": "DR1"}, tmp_path / "m1.tex")
+    assert "feRealNDRTwo" not in (tmp_path / "m1.tex").read_text()
