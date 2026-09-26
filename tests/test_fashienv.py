@@ -236,3 +236,87 @@ def test_dr2_macros_are_emitted_from_nested_metrics(tmp_path):
     # a DR1 or synthetic run never emits the DR2 block
     fe._write_macros({**m, "release": "DR1"}, tmp_path / "m1.tex")
     assert "feRealNDRTwo" not in (tmp_path / "m1.tex").read_text()
+
+
+def test_void_membership_holes_matches_the_brute_force_test():
+    rng = np.random.default_rng(3)
+    gal = rng.uniform(-50, 50, (4000, 3))
+    holes = rng.uniform(-40, 40, (30, 3))
+    radii = rng.uniform(3, 12, 30)
+    brute = fe.void_membership(gal, holes, radii)
+    np.testing.assert_array_equal(fe.void_membership_holes(gal, holes, radii), brute)
+    assert fe.void_membership_holes(gal[:0], holes, radii).size == 0
+
+
+def test_cmb_to_helio_cz_follows_the_dipole():
+    # Toward the CMB apex the Sun approaches: heliocentric cz is 369.82 km/s LOWER; anti-apex higher.
+    import astropy.units as u
+    from astropy.coordinates import SkyCoord
+
+    apex = SkyCoord(
+        l=fe.CMB_DIPOLE_LB[0] * u.deg, b=fe.CMB_DIPOLE_LB[1] * u.deg, frame="galactic"
+    ).icrs
+    anti = SkyCoord(
+        l=fe.CMB_DIPOLE_LB[0] * u.deg + 180 * u.deg,
+        b=-fe.CMB_DIPOLE_LB[1] * u.deg,
+        frame="galactic",
+    ).icrs
+    out = fe.cmb_to_helio_cz(
+        np.array([apex.ra.deg, anti.ra.deg]),
+        np.array([apex.dec.deg, anti.dec.deg]),
+        np.array([10000.0, 10000.0]),
+    )
+    assert out[0] == pytest.approx(10000.0 - 369.82, abs=0.05)
+    assert out[1] == pytest.approx(10000.0 + 369.82, abs=0.05)
+
+
+def test_random_void_positions_is_rigid_and_stays_in_footprint():
+    rng = np.random.default_rng(5)
+    # two voids of three holes each, at distances ~100 and ~200
+    base = np.array(
+        [[100.0, 0, 0], [102, 3, 0], [99, -2, 4], [0, 200.0, 0], [3, 203, 1], [-2, 198, 5]]
+    )
+    vid = np.array([1, 1, 1, 2, 2, 2])
+    fra = rng.uniform(150, 200, 5000)  # footprint: a patch of sky
+    fdec = rng.uniform(10, 40, 5000)
+    moved = fe.random_void_positions(base, vid, fra, fdec, rng)
+    for v in (1, 2):
+        a, b = base[vid == v], moved[vid == v]
+        np.testing.assert_allclose(np.linalg.norm(b, axis=1), np.linalg.norm(a, axis=1), rtol=1e-9)
+        # internal geometry preserved: all pairwise hole separations unchanged
+        da = np.linalg.norm(a[:, None] - a[None], axis=2)
+        db = np.linalg.norm(b[:, None] - b[None], axis=2)
+        np.testing.assert_allclose(db, da, atol=1e-9)
+        c = b.mean(axis=0)
+        ra = np.degrees(np.arctan2(c[1], c[0])) % 360
+        dec = np.degrees(np.arcsin(c[2] / np.linalg.norm(c)))
+        assert 146 <= ra <= 204 and 6 <= dec <= 44  # inside the patch (+ one cell of slack)
+
+
+def test_void_members_and_paired_jackknife():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(9)
+    xyz = rng.uniform(-100, 100, (n, 3))
+    holes = rng.uniform(-80, 80, (40, 3))
+    radii = np.full(40, 18.0)
+    vid = np.repeat(np.arange(20), 2)
+    vm = fe.void_members(xyz, holes, radii, vid)
+    in_void = fe.void_membership_holes(xyz, holes, radii)
+    assert (vm["n_voids"] > 0).sum() == in_void.sum()
+    base = np.ones(n, bool)
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    out = fe.void_jackknife(
+        cat, cat["area_sr"], in_void, np.ones(n, bool), vm, {"a": (base, v1), "b": (base, 2 * v1)}
+    )
+    assert out["n_voids_occupied"] > 5 and out["n_ok"] > 5
+    # scaling the volume by a constant shifts phi, not the knee: the paired difference is ~0
+    assert out["b_minus_a_jackknife_err"] == pytest.approx(0.0, abs=1e-6)
+    assert out["a_jackknife_err"] > 0
+
+
+def test_fit_schechter_reports_fit_quality():
+    cat = fe.synthetic_environment_catalogue()
+    h, fit = fe._himf_and_fit(cat["log_mhi"], cat["dist_mpc"], cat["flux"], cat["area_sr"])
+    assert fit["n_bins"] >= 4 and np.isfinite(fit["red_chi2"]) and fit["red_chi2"] > 0
+    assert -1.0 <= fit["corr_mstar_alpha"] <= 1.0

@@ -41,6 +41,9 @@ import numpy as np
 __all__ = [
     "comoving_xyz",
     "void_membership",
+    "void_membership_holes",
+    "cmb_to_helio_cz",
+    "random_void_positions",
     "assign_groups",
     "clustercentric_radius",
     "vmax_1vmax",
@@ -123,6 +126,174 @@ def void_membership(
         d2 = ((g[:, None, :] - cen[None, :, :]) ** 2).sum(axis=2)  # (chunk, n_sphere)
         inside[a : a + step] = (d2 < rad[None, :] ** 2).any(axis=1)
     return inside
+
+
+def void_membership_holes(
+    gal_xyz: np.ndarray, hole_xyz: np.ndarray, hole_radius: np.ndarray
+) -> np.ndarray:
+    """True where a galaxy lies inside ANY hole (sphere); KD-tree on galaxies, one query per hole.
+
+    Same test as :func:`void_membership`, scaled for the full VoidFinder hole list (a void is the
+    union of all its holes, Douglass+2023 table2) and for repeated calls in the random-void null.
+    """
+    from scipy.spatial import cKDTree
+
+    gal = np.asarray(gal_xyz, float)
+    inside = np.zeros(len(gal), bool)
+    if len(gal) == 0 or len(hole_xyz) == 0:
+        return inside
+    tree = cKDTree(gal)
+    for hits in tree.query_ball_point(
+        np.asarray(hole_xyz, float), r=np.asarray(hole_radius, float)
+    ):
+        if hits:
+            inside[hits] = True
+    return inside
+
+
+# Sun's velocity relative to the CMB (Planck 2018 dipole): 369.82 km/s toward (l, b) =
+# (264.021, 48.253) deg. A galaxy's heliocentric cz = CMB-frame cz - v_sun . n_hat.
+CMB_DIPOLE_KMS = 369.82
+CMB_DIPOLE_LB = (264.021, 48.253)
+
+
+def cmb_to_helio_cz(ra_deg: np.ndarray, dec_deg: np.ndarray, cz_cmb: np.ndarray) -> np.ndarray:
+    """Convert CMB-frame recession velocities to heliocentric ones (km/s)."""
+    import astropy.units as u
+    from astropy.coordinates import SkyCoord
+
+    apex = SkyCoord(l=CMB_DIPOLE_LB[0] * u.deg, b=CMB_DIPOLE_LB[1] * u.deg, frame="galactic")
+    pos = SkyCoord(np.asarray(ra_deg, float) * u.deg, np.asarray(dec_deg, float) * u.deg)
+    cos_t = np.cos(pos.separation(apex).radian)
+    return np.asarray(cz_cmb, float) - CMB_DIPOLE_KMS * cos_t
+
+
+def _unit(xyz: np.ndarray) -> np.ndarray:
+    return xyz / np.linalg.norm(xyz, axis=-1, keepdims=True)
+
+
+def _sky_cells(ra_deg: np.ndarray, dec_deg: np.ndarray, cell_deg: float) -> set:
+    """Occupied equal-area cells (RA bins x sin(Dec) bins) -- a footprint map without healpy."""
+    ds = np.radians(cell_deg)
+    nra = int(round(360.0 / cell_deg))
+    ira = (np.asarray(ra_deg, float) // cell_deg).astype(int) % nra
+    idec = np.floor(np.sin(np.radians(np.asarray(dec_deg, float))) / ds).astype(int)
+    return set(zip(ira.tolist(), idec.tolist(), strict=True))
+
+
+def _rotation_to(a: np.ndarray, b: np.ndarray, roll: float) -> np.ndarray:
+    """Rotation matrix taking unit vector ``a`` onto unit vector ``b``, then rolling about ``b``."""
+    v = np.cross(a, b)
+    c = float(np.dot(a, b))
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    r1 = np.eye(3) + vx + vx @ vx / (1.0 + c) if c > -1 + 1e-12 else -np.eye(3)
+    k = b
+    kx = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    r2 = np.eye(3) + np.sin(roll) * kx + (1 - np.cos(roll)) * kx @ kx
+    return r2 @ r1
+
+
+def random_void_positions(
+    hole_xyz: np.ndarray,
+    void_id: np.ndarray,
+    footprint_ra: np.ndarray,
+    footprint_dec: np.ndarray,
+    rng: np.random.Generator,
+    *,
+    cell_deg: float = 2.0,
+) -> np.ndarray:
+    """Move every void RIGIDLY (all its holes together) to a random direction inside the footprint.
+
+    Each void keeps its radial distance, size and internal shape; only its sky position (and a
+    random roll about the line of sight) changes. The target direction is uniform on the sphere,
+    accepted only where the footprint (cells occupied by ``footprint_ra/dec``) has coverage. This
+    is the random-void null: it preserves the void population's radial profile and volume
+    fraction, so any void-wall offset it produces is the estimator's and geometry's own bias.
+    """
+    cells = _sky_cells(footprint_ra, footprint_dec, cell_deg)
+    hole_xyz = np.asarray(hole_xyz, float)
+    out = np.empty_like(hole_xyz)
+    for vid in np.unique(void_id):
+        sel = np.flatnonzero(void_id == vid)
+        centre = _unit(hole_xyz[sel].mean(axis=0))
+        while True:
+            z = rng.uniform(-1, 1)
+            phi = rng.uniform(0, 2 * np.pi)
+            tgt = np.array([np.sqrt(1 - z * z) * np.cos(phi), np.sqrt(1 - z * z) * np.sin(phi), z])
+            ra = np.degrees(np.arctan2(tgt[1], tgt[0])) % 360.0
+            dec = np.degrees(np.arcsin(tgt[2]))
+            if next(iter(_sky_cells(np.array([ra]), np.array([dec]), cell_deg))) in cells:
+                break
+        rot = _rotation_to(centre, tgt, rng.uniform(0, 2 * np.pi))
+        out[sel] = hole_xyz[sel] @ rot.T
+    return out
+
+
+def void_members(
+    gal_xyz: np.ndarray, hole_xyz: np.ndarray, hole_radius: np.ndarray, void_id: np.ndarray
+) -> dict:
+    """Per-void member galaxy indices, and how many voids contain each galaxy."""
+    from scipy.spatial import cKDTree
+
+    tree = cKDTree(np.asarray(gal_xyz, float))
+    members: dict[int, set] = {}
+    for c, r, vid in zip(
+        np.asarray(hole_xyz, float), np.asarray(hole_radius, float), void_id, strict=True
+    ):
+        hits = tree.query_ball_point(c, r)
+        if hits:
+            members.setdefault(int(vid), set()).update(hits)
+    n_in = np.zeros(len(gal_xyz), int)
+    for m in members.values():
+        n_in[list(m)] += 1
+    return {"members": {k: np.fromiter(v, int) for k, v in members.items()}, "n_voids": n_in}
+
+
+def void_jackknife(
+    cat: dict,
+    area: float,
+    in_void: np.ndarray,
+    classifiable: np.ndarray,
+    vm: dict,
+    weights: dict,
+) -> dict:
+    """Delete-one-VOID jackknife of the void-wall knee offset under several weightings at once.
+
+    ``vm`` is :func:`void_members` output; deleting void k turns every galaxy that ONLY void k
+    contains into a wall galaxy. ``weights`` maps a label to ``(base_mask, vmax_or_None)``; the
+    same deletions are applied to every weighting, so the jackknife error of their DIFFERENCE is
+    a paired error (what the weighting comparison needs), not a quadrature guess.
+    """
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    offs: dict[str, list] = {k: [] for k in weights}
+    occupied = [k for k, m in vm["members"].items() if np.any(classifiable[m])]
+    for k in occupied:
+        m = vm["members"][k]
+        iv = in_void.copy()
+        iv[m[vm["n_voids"][m] == 1]] = False
+        row = {}
+        for lab, (base, vmax) in weights.items():
+            _hv, fv = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & iv, vmax=vmax)
+            _hw, fw = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & ~iv, vmax=vmax)
+            row[lab] = fv.get("log_m_star", np.nan) - fw.get("log_m_star", np.nan)
+        if all(np.isfinite(v) for v in row.values()):
+            for lab, v in row.items():
+                offs[lab].append(v)
+
+    def jk(a: np.ndarray) -> float:
+        n = a.size
+        return float(np.sqrt((n - 1) / n * np.sum((a - a.mean()) ** 2))) if n > 2 else np.nan
+
+    out: dict = {"n_voids_occupied": len(occupied), "n_ok": len(next(iter(offs.values())))}
+    arrs = {k: np.asarray(v) for k, v in offs.items()}
+    for lab, a in arrs.items():
+        out[f"{lab}_jackknife_err"] = round(jk(a), 4)
+    labs = list(arrs)
+    if len(labs) == 2:
+        out[f"{labs[1]}_minus_{labs[0]}_jackknife_err"] = round(
+            jk(arrs[labs[1]] - arrs[labs[0]]), 4
+        )
+    return out
 
 
 def assign_groups(
@@ -314,6 +485,8 @@ def fit_schechter(h: dict, *, p0: tuple = (-2.5, 9.9, -1.3)) -> dict:
             "n_bins": int(good.sum()),
         }
     perr = np.sqrt(np.diag(pcov))
+    resid = (np.log10(phi[good]) - model(lm[good], *popt)) / sigma
+    dof = max(int(good.sum()) - 3, 1)
     return {
         "log_phi_star": float(popt[0]),
         "log_m_star": float(popt[1]),
@@ -321,6 +494,11 @@ def fit_schechter(h: dict, *, p0: tuple = (-2.5, 9.9, -1.3)) -> dict:
         "log_m_star_err": float(perr[1]),
         "alpha_err": float(perr[2]),
         "n_bins": int(good.sum()),
+        # Fit quality, committed so a missed bin is visible in the evidence, not only the figure.
+        "red_chi2": float(np.sum(resid**2) / dof),
+        "corr_mstar_alpha": float(pcov[1, 2] / (perr[1] * perr[2]))
+        if perr[1] * perr[2] > 0
+        else np.nan,
     }
 
 
@@ -485,7 +663,7 @@ def fetch_tempel_groups() -> dict:  # pragma: no cover - network
     """Fetch Tempel+2017 SDSS groups: member GroupID/Ngal (table1) + group R200/M200 (table2)."""
     from astroquery.vizier import Vizier
 
-    vg = Vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "Dist.c", "R200", "M200"])
+    vg = Vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zcmb", "R200", "M200"])
     vg.ROW_LIMIT = -1
     grp = vg.get_catalogs(f"{TEMPEL_VIZIER}/table2")[0]
     vgal = Vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zobs"])
@@ -495,7 +673,14 @@ def fetch_tempel_groups() -> dict:  # pragma: no cover - network
         "grp_id": np.asarray(grp["GroupID"], int),
         "grp_ra": np.asarray(grp["RAJ2000"], float),
         "grp_dec": np.asarray(grp["DEJ2000"], float),
-        "grp_cz": np.asarray(grp["Dist.c"], float) * H0,  # Mpc -> km/s (Hubble)
+        # FASHI v_opt is heliocentric; Tempel gives CMB-frame redshifts. The old
+        # Dist.c * H0 used H0=70 against the catalogue's 67.8 and the wrong frame (referee
+        # 2026-09-26, finding 10: a few hundred km/s against a +/-1000 km/s window).
+        "grp_cz": cmb_to_helio_cz(
+            np.asarray(grp["RAJ2000"], float),
+            np.asarray(grp["DEJ2000"], float),
+            np.asarray(grp["zcmb"], float) * C_KM_S,
+        ),
         "grp_r200": np.asarray(grp["R200"], float),
         "grp_ngal": np.asarray(grp["Ngal"], int),
         "gal_ra": np.asarray(gal["RAJ2000"], float),
@@ -504,20 +689,31 @@ def fetch_tempel_groups() -> dict:  # pragma: no cover - network
     }
 
 
-def fetch_voidfinder_spheres() -> dict:  # pragma: no cover - network
-    """Fetch Douglass+2023 VoidFinder maximal spheres (J/ApJS/265/7/table1)."""
+def fetch_voidfinder_spheres(*, all_holes: bool = True) -> dict:  # pragma: no cover - network
+    """Douglass+2023 VoidFinder voids, Planck2018 cosmology, in Mpc/h equatorial Cartesian.
+
+    ``all_holes=True`` (default since the DR2 referee round) returns every hole of every void
+    (table2): a VoidFinder void is the UNION of its holes, so using only the maximal sphere
+    (table1) classifies void-outskirt galaxies as wall. ``void_id`` groups holes into voids, for
+    the delete-one-void jackknife and for moving whole voids in the random-void null.
+    """
     from astroquery.vizier import Vizier
 
-    v = Vizier(columns=["x", "y", "z", "Rad", "Cosmo"])
+    table = "table2" if all_holes else "table1"
+    v = Vizier(columns=["x", "y", "z", "Rad", "Cosmo", "void"])
     v.ROW_LIMIT = -1
-    t = v.get_catalogs(f"{DOUGLASS_VIZIER}/table1")[0]
-    # one cosmology only (Planck2018); x,y,z,Rad are Mpc/h in the standard equatorial frame
-    # (verified: RA/Dec reconstructed from x,y,z match the catalogue's own RA/Dec exactly)
+    t = v.get_catalogs(f"{DOUGLASS_VIZIER}/{table}")[0]
+    # (verified 2026-07: RA/Dec reconstructed from x,y,z match the catalogue's own RA/Dec)
     m = np.asarray([str(c).strip().startswith("Planck") for c in t["Cosmo"]])
     xyz = np.stack(
         [np.asarray(t["x"], float), np.asarray(t["y"], float), np.asarray(t["z"], float)], axis=1
     )
-    return {"sphere_xyz": xyz[m], "sphere_radius": np.asarray(t["Rad"], float)[m]}
+    return {
+        "sphere_xyz": xyz[m],
+        "sphere_radius": np.asarray(t["Rad"], float)[m],
+        "void_id": np.asarray(t["void"], int)[m],
+        "table": table,
+    }
 
 
 def _offset_stats(name: str, fit_a: dict, fit_b: dict) -> dict:
@@ -664,7 +860,11 @@ def _environment_split(cat: dict, base: np.ndarray, vmax, area: float, env: dict
     _h_f, f_f = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ~ig, vmax=vmax)
 
     def rnd(f: dict) -> dict:
-        return {k: round(v, 3) for k, v in f.items() if isinstance(v, float)}
+        return {
+            k: (round(v, 3) if isinstance(v, float) else v)
+            for k, v in f.items()
+            if isinstance(v, (float, int))
+        }
 
     n = int(base.sum())
     n_wall = int((base & cl & ~iv).sum())
@@ -692,8 +892,8 @@ def _environment_split(cat: dict, base: np.ndarray, vmax, area: float, env: dict
     }
 
 
-def _environments(cat: dict, spheres: dict, grp: dict, *, q0: float = _Q0) -> dict:
-    """Void membership (in the Douglass Mpc/h frame), classifiability and group membership."""
+def _environments(cat: dict, voids: dict, grp: dict, *, q0: float = _Q0) -> dict:
+    """Void membership over all holes (Douglass Mpc/h frame), classifiability, group membership."""
     xyz = comoving_xyz(cat["ra"], cat["dec"], cat["z"], h0=100.0, q0=q0)
     gidx = assign_groups(
         cat["ra"],
@@ -706,8 +906,8 @@ def _environments(cat: dict, spheres: dict, grp: dict, *, q0: float = _Q0) -> di
     )
     return {
         "xyz": xyz,
-        "in_void": void_membership(xyz, spheres["sphere_xyz"], spheres["sphere_radius"]),
-        "classifiable": _within_void_footprint(xyz, spheres["sphere_xyz"]),
+        "in_void": void_membership_holes(xyz, voids["sphere_xyz"], voids["sphere_radius"]),
+        "classifiable": _within_void_footprint(xyz, voids["sphere_xyz"]),
         "in_group": gidx >= 0,
     }
 
@@ -754,17 +954,19 @@ def _clean(cat: dict) -> dict:
     return {k: np.asarray(v)[ok] for k, v in cat.items()}
 
 
-def _real_leg():  # pragma: no cover - network + VizieR catalogues
+def _real_leg(n_null: int = 100):  # pragma: no cover - network + VizieR catalogues
     """FASHI DR2 x Tempel groups x Douglass voids: the environment-split HIMF.
 
-    Headline weighting (option B, 2026-09-26): DR2's own per-source completeness and Vmax,
-    weight 1/(C * Vmax), on the DR2 HIMF sample (C >= 0.5, "above the 50% flux completeness
-    limit"). The old single-flux-cut weighting is run alongside on the SAME DR2 data
-    (``optA_*``) and on DR1 (``dr1_optA_*``), so the paper can separate the effect of the
-    weighting from the effect of the sample. The Einstein-de Sitter distance check (void
-    membership under q0 = 0.5) is recomputed here rather than carried over from DR1.
+    Headline weighting: DR2's own 1/(C * Vmax) on the C >= 0.5 sample. Since the DR2 referee
+    round (2026-09-26): voids are full VoidFinder unions (all holes, table2), groups are in the
+    heliocentric frame, the single-flux-cut weighting is ALSO run on the same C >= 0.5 sample with
+    a paired delete-one-void jackknife on the difference, the EdS check reports how many
+    galaxies change void status (by distance) instead of being read as fragility, and a
+    random-void null (voids moved rigidly within the footprint) measures the estimator's and
+    geometry's own bias with its sign and size.
     """
-    spheres = fetch_voidfinder_spheres()
+    voids = fetch_voidfinder_spheres(all_holes=True)
+    spheres1 = fetch_voidfinder_spheres(all_holes=False)
     grp = fetch_tempel_groups()
     area = FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2  # DR2's own Vmax area
 
@@ -772,26 +974,98 @@ def _real_leg():  # pragma: no cover - network + VizieR catalogues
     n_dr2 = int(raw["ra"].size)
     n_zle0 = int(np.sum(raw["z"] <= 0))
     cat = _clean(raw)
-    env = _environments(cat, spheres, grp)
+    env = _environments(cat, voids, grp)
     comp, vcat = cat["completeness"], cat["vmax_mpc3"]
     samp_b = np.isfinite(comp) & (comp >= FASHI_DR2_C_MIN) & np.isfinite(vcat) & (vcat > 0)
     vmax_b = vmax_from_catalogue(vcat, comp)
+    vmax_a = vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
     b = _environment_split(cat, samp_b, vmax_b, area, env)
     figdata = b.pop("_fig")
-    a = _environment_split(cat, np.ones(cat["ra"].size, bool), None, area, env)
-    a.pop("_fig")
-    env_eds = _environments(cat, spheres, grp, q0=0.5)
+    a_same = _environment_split(cat, samp_b, vmax_a, area, env)
+    a_same.pop("_fig")
+    a_all = _environment_split(cat, np.ones(cat["ra"].size, bool), vmax_a, area, env)
+    a_all.pop("_fig")
+
+    # Old classification (maximal spheres only), for continuity with the DR1 paper.
+    env_max = {
+        **env,
+        "in_void": void_membership_holes(
+            env["xyz"], spheres1["sphere_xyz"], spheres1["sphere_radius"]
+        ),
+    }
+    b_max = _environment_split(cat, samp_b, vmax_b, area, env_max)
+    b_max.pop("_fig")
+
+    # EdS: how many galaxies change void status, by redshift -- what the test actually probes.
+    env_eds = _environments(cat, voids, grp, q0=0.5)
     b_eds = _environment_split(cat, samp_b, vmax_b, area, env_eds)
     b_eds.pop("_fig")
+    cl = env["classifiable"] & samp_b
+    flip = cl & (env["in_void"] != env_eds["in_void"])
+    zb = [0.0, 0.02, 0.04, 0.06, 0.09]
+    eds_flips = {
+        f"z{lo:.2f}-{hi:.2f}": {
+            "n_void": int((cl & env["in_void"] & (cat["z"] >= lo) & (cat["z"] < hi)).sum()),
+            "n_changed": int((flip & (cat["z"] >= lo) & (cat["z"] < hi)).sum()),
+        }
+        for lo, hi in zip(zb[:-1], zb[1:], strict=True)
+    }
+
+    vm = void_members(env["xyz"], voids["sphere_xyz"], voids["sphere_radius"], voids["void_id"])
+    jk = void_jackknife(
+        cat, area, env["in_void"], env["classifiable"], vm,
+        {"optA_same": (samp_b, vmax_a), "B": (samp_b, vmax_b)},
+    )  # fmt: skip
+
+    # Random-void null: voids moved rigidly within the Tempel (SDSS) footprint.
+    rng = np.random.default_rng(64)
+    null = []
+    for _ in range(n_null):
+        moved = random_void_positions(
+            voids["sphere_xyz"], voids["void_id"], grp["gal_ra"], grp["gal_dec"], rng
+        )
+        iv = void_membership_holes(env["xyz"], moved, voids["sphere_radius"])
+        _hv, fv = _himf_and_fit(
+            cat["log_mhi"],
+            cat["dist_mpc"],
+            cat["flux"],
+            area,
+            mask=samp_b & env["classifiable"] & iv,
+            vmax=vmax_b,
+        )
+        _hw, fw = _himf_and_fit(
+            cat["log_mhi"],
+            cat["dist_mpc"],
+            cat["flux"],
+            area,
+            mask=samp_b & env["classifiable"] & ~iv,
+            vmax=vmax_b,
+        )
+        d = fv.get("log_m_star", np.nan) - fw.get("log_m_star", np.nan)
+        if np.isfinite(d):
+            null.append(float(d))
+    na = np.asarray(null)
+    null_out = {
+        "n_reps": n_null,
+        "n_ok": int(na.size),
+        "mean": round(float(na.mean()), 4) if na.size else None,
+        "std": round(float(na.std(ddof=1)), 4) if na.size > 1 else None,
+        # fraction of null offsets at least as negative as the measured one (one-sided p)
+        "p_le_measured": round(float((np.sum(na <= b["void_knee_offset"]) + 1) / (na.size + 1)), 4)
+        if na.size
+        else None,
+        "offsets": [round(x, 4) for x in null],
+    }
+    null_out["measured_minus_null_mean"] = (
+        round(b["void_knee_offset"] - null_out["mean"], 3) if null_out["mean"] is not None else None
+    )
 
     dr1 = _clean(fetch_fashi_dr1())
-    dr1_env = _environments(dr1, spheres, grp)
+    dr1_env = _environments(dr1, voids, grp)
     d1 = _environment_split(
         dr1, np.ones(dr1["ra"].size, bool), None, 7600.0 * (np.pi / 180.0) ** 2, dr1_env
     )
     d1.pop("_fig")
-
-    # DR1 <-> DR2 cross-match (1.5 arcmin, 100 km/s): the distance-convention change, measured.
     xm = _match_releases(dr1, cat)
 
     def keep(d: dict, *keys: str) -> dict:
@@ -806,38 +1080,40 @@ def _real_leg():  # pragma: no cover - network + VizieR catalogues
         "group_knee_offset_err",
         "group_knee_offset_sigma",
         "himf_global",
+        "n_in_void",
     )
     metrics = {
         "source": (
             "FASHI DR2 (arXiv:2606.31539, CSTCloud share) x Tempel+2017 groups x "
-            "Douglass+2023 voids; weights 1/(C*Vmax) from the DR2 catalogue (C >= 0.5)"
+            "Douglass+2023 voids (all holes); weights 1/(C*Vmax) from the DR2 catalogue (C >= 0.5)"
         ),
         "is_real": True,
         "release": "DR2",
+        "void_classification": "VoidFinder full voids (Douglass+2023 table2, all holes)",
         "n_dr2_catalogue": n_dr2,
         "n_dr2_z_nonpositive": n_zle0,
+        "n_dropped_nonfinite_or_nonpositive_flux": int(n_dr2 - n_zle0 - cat["ra"].size),
         "n_finite_z_pos": int(cat["ra"].size),
         "weighting": "DR2 per-source completeness x Vmax (option B)",
         "c_min": FASHI_DR2_C_MIN,
         "dr2_paper_himf": {"log_m_star": 9.89, "log_m_star_err": 0.02, "alpha": -1.31,
                            "alpha_err": 0.02, "ref": "arXiv:2606.31539 abstract"},
         **b,
-        "void_jackknife": void_jackknife_offset(
-            cat["log_mhi"], cat["dist_mpc"], cat["flux"], area,
-            gal_xyz=env["xyz"], sphere_xyz=spheres["sphere_xyz"],
-            sphere_radius=spheres["sphere_radius"],
-            classifiable=env["classifiable"] & samp_b, vmax=vmax_b,
-        ),
+        "void_jackknife": jk,
+        "random_void_null": null_out,
         "eds_void_knee_offset": b_eds["void_knee_offset"],
         "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
         "eds_void_knee_offset_sigma": b_eds["void_knee_offset_sigma"],
-        "dr1_dr2_match": xm,
-        # Share of the DR1 single-limit void offset that the weighting removes (not the sample).
-        "weighting_shift_pct": round(
-            100.0 * (1.0 - b["void_knee_offset"] / d1["void_knee_offset"]), 0
-        ) if d1.get("void_knee_offset") else None,
-        "optA_single_flux_cut": keep(a, *offs),
+        "eds_void_status_changes": eds_flips,
+        "maxsphere_void_knee_offset": b_max["void_knee_offset"],
+        "maxsphere_void_knee_offset_err": b_max["void_knee_offset_err"],
+        "maxsphere_n_in_void": b_max["n_in_void"],
+        "optA_same_sample": keep(a_same, *offs),
+        "optA_single_flux_cut": keep(a_all, *offs),
         "dr1_optA_single_flux_cut": keep(d1, *offs),
+        "dr1_dr2_match": xm,
+        # Same sample, only the weighting differs: the effect of the weighting alone.
+        "weighting_effect_same_sample": round(b["void_knee_offset"] - a_same["void_knee_offset"], 3),
     }  # fmt: skip
     return metrics, figdata
 
