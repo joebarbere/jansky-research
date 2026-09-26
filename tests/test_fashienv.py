@@ -229,8 +229,8 @@ def test_dr2_macros_are_emitted_from_nested_metrics(tmp_path):
     fe._write_macros(m, p)
     t = p.read_text()
     assert r"\newcommand{\feRealNDRTwo}{156411}" in t
-    assert r"\newcommand{\feRealOptAVoidKneeOffset}{-0.25}" in t
-    assert r"\newcommand{\feRealOptAGlobalAlpha}{-1.78}" in t
+    assert r"\newcommand{\feRealOptAVoidKneeOffset}{-0.250}" in t  # floats to 3 decimals
+    assert r"\newcommand{\feRealOptAGlobalAlpha}{-1.780}" in t
     assert r"\newcommand{\feRealDROneN}{41741}" in t
     assert r"\newcommand{\feRealEdsVoidKneeOffset}{--}" in t  # absent key -> placeholder
     # a DR1 or synthetic run never emits the DR2 block
