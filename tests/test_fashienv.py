@@ -439,6 +439,7 @@ def test_void_null_runs_both_variants_and_reports_fairness_diagnostics():
         for key in ("n_in_void", "n_bins_void", "real_overlap_frac", "spill_frac", "B_offset"):
             assert key in row
         assert len(out["B_jackknife_err_placements"]) <= 1
+        assert "B_regression" not in out  # needs > 20 placements
         # scaling Vmax by a constant cannot move a knee: where both fits are well posed
         # (sensible offsets), the two weightings agree placement by placement
         sane = [
@@ -448,3 +449,32 @@ def test_void_null_runs_both_variants_and_reports_fairness_diagnostics():
         assert sane, "no well-posed placements -- the test would be vacuous"
         for r in sane:
             assert r["B_offset"] == pytest.approx(r["optA_same_offset"], abs=1e-3)
+
+
+def test_void_null_regression_block_with_enough_placements():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(52)
+    ra, dec = rng.uniform(150, 210, n), rng.uniform(5, 45, n)
+    d = np.asarray(cat["dist_mpc"], float) * 0.7
+    r_, d_ = np.radians(ra), np.radians(dec)
+    xyz = (
+        np.column_stack([np.cos(d_) * np.cos(r_), np.cos(d_) * np.sin(r_), np.sin(d_)]) * d[:, None]
+    )
+    holes = xyz[rng.integers(n, size=20)]
+    voids = {"sphere_xyz": holes, "sphere_radius": np.full(20, 25.0), "void_id": np.arange(20)}
+    env = {
+        "xyz": xyz,
+        "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
+        "classifiable": np.ones(n, bool),
+    }
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    out = fe.void_null(
+        cat, cat["area_sr"], env, voids, (ra, dec), {"B": (np.ones(n, bool), v1)},
+        n=25, seed=4, constrained=False,
+    )  # fmt: skip
+    reg = out["B_regression"]
+    assert 0.0 <= reg["r2_overlap_only"] <= reg["r2_occupancy_z_overlap"] <= 1.0
+    assert reg["r2_occupancy_z"] <= reg["r2_occupancy_z_overlap"] + 1e-12
+    lo, hi = reg["overlap_range_minmax"]
+    assert 0.0 <= lo <= hi <= 1.0

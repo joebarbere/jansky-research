@@ -1143,6 +1143,33 @@ def void_null(
             "slope": round(float(slope), 4),
             "intercept_at_zero_overlap": round(float(icpt), 4),
         }
+    # What the null offset actually tracks (third referee round): R^2 of offset on occupancy and
+    # median redshift, and whether real-void overlap adds anything once those are included.
+    nv, mz = col("n_in_void"), col("median_z_void")
+    ok = np.isfinite(b) & np.isfinite(ov) & np.isfinite(nv) & np.isfinite(mz)
+    if ok.sum() > 20:
+
+        def r2(cols: list) -> tuple[float, np.ndarray]:
+            x = np.column_stack([np.ones(int(ok.sum())), *[c[ok] for c in cols]])
+            coef, *_ = np.linalg.lstsq(x, b[ok], rcond=None)
+            res = b[ok] - x @ coef
+            return float(1 - res.var() / b[ok].var()), coef
+
+        r2_ov, _ = r2([ov])
+        r2_nz, _ = r2([nv, mz])
+        r2_all, coef_all = r2([nv, mz, ov])
+        lo, hi = np.percentile(ov[ok], [5, 95])
+        slope = float(out.get("B_vs_overlap", {}).get("slope", np.nan))
+        out["B_regression"] = {
+            "overlap_range_5_95": [round(float(lo), 3), round(float(hi), 3)],
+            "overlap_range_minmax": [round(float(ov[ok].min()), 3), round(float(ov[ok].max()), 3)],
+            "n_in_void_range_minmax": [int(nv[ok].min()), int(nv[ok].max())],
+            "r2_overlap_only": round(r2_ov, 3),
+            "r2_occupancy_z": round(r2_nz, 3),
+            "r2_occupancy_z_overlap": round(r2_all, 3),
+            "overlap_coef_controlled": round(float(coef_all[3]), 3),
+            "overlap_line_change_over_range": round(slope * float(ov[ok].max() - ov[ok].min()), 3),
+        }
     out["rows"] = [
         {k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()} for r in rows
     ]
@@ -1257,7 +1284,7 @@ def _real_leg(
     )  # fmt: skip
 
     # Random-void nulls (second referee round): unconstrained (centre-in-footprint, as round 1)
-    # and constrained (every hole in the footprint and the classifiable box, no mutual overlap),
+    # and constrained (every hole in the footprint and the classifiable box; overlap allowed),
     # each with per-placement occupancy / overlap / spill diagnostics, both weightings, and a
     # delete-one-void jackknife on a few placements for the null's own noise.
     footprint = (grp["gal_ra"], grp["gal_dec"])
@@ -1309,6 +1336,8 @@ def _real_leg(
     # Group null: every group moved to a random footprint position (velocity, R200 kept).
     rng_g = np.random.default_rng(66)
     goffs = []
+    grows: list[dict] = []
+    real_ig = env["in_group"]
     for _ in range(n_group_null):
         gra, gdec = random_group_positions(grp["grp_ra"], grp["grp_dec"], *footprint, rng_g)
         ig = (
@@ -1341,6 +1370,13 @@ def _real_leg(
             vmax=vmax_b,
         )
         d = fg.get("log_m_star", np.nan) - ffd.get("log_m_star", np.nan)
+        selg = samp_b & env["classifiable"] & ig
+        grows.append({
+            "offset": round(float(d), 4),
+            "n_in_group": int(selg.sum()),
+            "median_z_group": round(float(np.median(cat["z"][selg])), 4) if selg.any() else None,
+            "real_group_overlap_frac": round(float(np.mean(real_ig[selg])), 4) if selg.any() else None,
+        })  # fmt: skip
         if np.isfinite(d):
             goffs.append(float(d))
         if len(goffs) % 50 == 0:
@@ -1358,7 +1394,29 @@ def _real_leg(
         if ga.size
         else None,
         "offsets": [round(x, 4) for x in goffs],
+        "rows": grows,
     }
+    real_sel = samp_b & env["classifiable"] & real_ig
+    zs = [r["median_z_group"] for r in grows if r["median_z_group"] is not None]
+    ovs = [r["real_group_overlap_frac"] for r in grows if r["real_group_overlap_frac"] is not None]
+    group_null.update({
+        "n_in_group_median": int(np.median([r["n_in_group"] for r in grows])) if grows else None,
+        "n_in_group_real": int(real_sel.sum()),
+        "median_z_group_median": round(float(np.median(zs)), 4) if zs else None,
+        "median_z_group_real": round(float(np.median(cat["z"][real_sel])), 4) if real_sel.any() else None,
+        "real_group_overlap_median": round(float(np.median(ovs)), 4) if ovs else None,
+    })  # fmt: skip
+
+    # One seeded no-overlap placement, committed so the paper's "could not be placed" is evidence.
+    _m, no_ov = random_void_positions(
+        voids["sphere_xyz"], voids["void_id"], *footprint, np.random.default_rng(67),
+        hole_radius=voids["sphere_radius"], constrained=True, no_overlap=True, max_tries=500,
+        box=(voids["sphere_xyz"].min(axis=0) - 20.0, voids["sphere_xyz"].max(axis=0) + 20.0),
+    )  # fmt: skip
+    no_overlap_trial = {
+        **no_ov, "n_voids": int(np.unique(voids["void_id"]).size), "seed": 67, "max_tries": 500,
+        "method": "greedy sequential, void order = sorted void id; count depends on order and budget",
+    }  # fmt: skip
 
     common = knee_offset_common_bins(
         cat, area, samp_b & env["classifiable"] & env["in_void"],
@@ -1416,6 +1474,7 @@ def _real_leg(
         "random_void_null": null_u,
         "random_void_null_constrained": null_c,
         "random_group_null": group_null,
+        "no_overlap_trial": no_overlap_trial,
         "void_offset_common_bins": common,
         "eds_void_knee_offset": b_eds["void_knee_offset"],
         "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
@@ -1560,7 +1619,10 @@ def _write_macros(m: dict, path) -> None:
         def nested(path_: str):
             cur: object = m
             for k in path_.split("."):
-                cur = cur.get(k) if isinstance(cur, dict) else None
+                if isinstance(cur, list) and k.isdigit():
+                    cur = cur[int(k)] if int(k) < len(cur) else None
+                else:
+                    cur = cur.get(k) if isinstance(cur, dict) else None
             if cur is None:
                 return "--"
             if isinstance(cur, float):  # integers as integers, other values to 3 decimals
@@ -1587,7 +1649,6 @@ def _write_macros(m: dict, path) -> None:
             ("DROneVoidKneeSigma", "dr1_optA_single_flux_cut.void_knee_offset_sigma"),
             ("DROneGroupKneeOffset", "dr1_optA_single_flux_cut.group_knee_offset"),
             ("DROneGlobalAlpha", "dr1_optA_single_flux_cut.himf_global.alpha"),
-            ("WeightingShiftPct", "weighting_shift_pct"),
             ("MatchedPct", "dr1_dr2_match.matched_pct"),
             ("NDropped", "n_dropped_nonfinite_or_nonpositive_flux"),
             ("JkErr", "void_jackknife.B_jackknife_err"),
@@ -1622,6 +1683,37 @@ def _write_macros(m: dict, path) -> None:
             ("NullIntercept", "random_void_null.B_vs_overlap.intercept_at_zero_overlap"),
             ("NullSlope", "random_void_null.B_vs_overlap.slope"),
             ("NullCOptAStd", "random_void_null_constrained.optA_same.std"),
+            ("NullCOptAMin", "random_void_null_constrained.optA_same.min"),
+            ("NullCOverlapLo", "random_void_null_constrained.B_regression.overlap_range_minmax.0"),
+            ("NullCOverlapHi", "random_void_null_constrained.B_regression.overlap_range_minmax.1"),
+            (
+                "NullCNInVoidMin",
+                "random_void_null_constrained.B_regression.n_in_void_range_minmax.0",
+            ),
+            (
+                "NullCNInVoidMax",
+                "random_void_null_constrained.B_regression.n_in_void_range_minmax.1",
+            ),
+            ("NullCRtwoOverlap", "random_void_null_constrained.B_regression.r2_overlap_only"),
+            ("NullCRtwoOccZ", "random_void_null_constrained.B_regression.r2_occupancy_z"),
+            ("NullCRtwoAll", "random_void_null_constrained.B_regression.r2_occupancy_z_overlap"),
+            (
+                "NullCOverlapCoefCtl",
+                "random_void_null_constrained.B_regression.overlap_coef_controlled",
+            ),
+            (
+                "NullCOverlapChange",
+                "random_void_null_constrained.B_regression.overlap_line_change_over_range",
+            ),
+            ("OptASameGlobalAlpha", "optA_same_sample.himf_global.alpha"),
+            ("OptASameGlobalRedChi", "optA_same_sample.himf_global.red_chi2"),
+            ("GroupNullNInGroup", "random_group_null.n_in_group_median"),
+            ("GroupNInGroupReal", "random_group_null.n_in_group_real"),
+            ("GroupNullMedZ", "random_group_null.median_z_group_median"),
+            ("GroupMedZReal", "random_group_null.median_z_group_real"),
+            ("GroupNullOverlap", "random_group_null.real_group_overlap_median"),
+            ("NoOverlapUnplaced", "no_overlap_trial.n_unplaced"),
+            ("NoOverlapNVoids", "no_overlap_trial.n_voids"),
             ("EdsPercentile", "random_void_null_constrained.eds_percentile"),
             ("GroupNullReps", "random_group_null.n_ok"),
             ("GroupNullMean", "random_group_null.mean"),
