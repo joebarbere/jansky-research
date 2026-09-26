@@ -269,3 +269,37 @@ NIT: stale `weighting_shift_pct` (40.0) still in the JSON as a `_merge` carry-ov
 **Single change recommended:** make the null demonstrably fair (per-placement occupancy,
 real-void overlap, spill-over; constrained placements; >= 1000 draws), and until then lead the
 abstract with the conservative 1.4-1.8 sigma.
+
+## Null upgrade (2026-09-26, run `fashienv-round3`): the environment split does not survive
+
+Round-2 referee asked for a demonstrably fair null. Built and run (1,000 unconstrained + 1,000
+constrained void placements, per-placement diagnostics, a 10-placement jackknife on each, a
+200-placement group null, a common-bin fit, DR1 under both void definitions). A disjoint
+("no overlap") void null proved infeasible: 687 of 1,163 voids cannot be re-placed disjointly,
+because the voids fill too much of the volume; overlap is measured instead.
+
+- **Occupancy:** random void bins hold ~28,800 galaxies vs the real 17,289 -- placements land on
+  mean-density sky, as the referee predicted.
+- **But noise is not the explanation:** a delete-one-void jackknife on the placements gives
+  0.028-0.042 (median ~0.034), the same as the real bin (0.033). The placement-to-placement
+  scatter (0.017-0.018) is simply smaller than within-configuration void-to-void variance.
+- **The null is not a clean bias estimate.** Null offset vs the fraction of null-void galaxies that
+  are real-void members: slope +0.35 (constrained) / +0.42, intercept at zero overlap -0.20 /
+  -0.22 -- *more negative than the measurement*. The geometric bias depends on where the placed
+  voids sit, so no single null mean can be subtracted.
+- **The null-subtracted excess depends on the weighting:** -0.063 under 1/(C Vmax), -0.160 under
+  the single flux limit (null means -0.087 vs -0.068). The referee's can-fail test, failed.
+- **Groups:** randomly placed groups give +0.126 +/- 0.056; 44 of 200 reach the measured +0.166
+  (p ~ 0.22). The group offset is reproduced by geometry and estimator alone.
+- Common mass bins: -0.134 +/- 0.043 (14 bins) vs -0.150; bin coverage is not the issue.
+- DR1: -0.256 with maximal spheres, -0.135 with full voids -- to be disclosed.
+- EdS sits at the 92nd percentile of the null.
+
+**Conclusion:** the raw void-wall offset (-0.15) is robust as a *number*, but 1/Vmax
+environment splits in this survey geometry produce offsets of the same size with no
+environmental signal, that bias is environment-dependent, and the residual is
+weighting-dependent. **No environmental dependence of the HIMF is claimed.** The group offset
+is consistent with random placement. The defensible paper is a methodological caution: in a
+FASHI-like geometry, random-placement nulls reproduce knee offsets as large as published void
+effects (ALFALFA -0.14), so environment-split 1/Vmax HIMFs need such a null. Reframe pending
+owner decision; the paper text still carries the previous framing.
