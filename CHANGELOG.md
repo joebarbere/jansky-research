@@ -11,6 +11,20 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
+  Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole
+  survey), confirmed by a straight-line third detection, with an RA-scramble null, injection
+  completeness and per-epoch astrometric floors measured from bright static sources.
+  UV Ceti is recovered blind at 3.45"/yr (Gaia 3.23"/yr); completeness is 0.92-0.99 above
+  ~0.9"/yr and ~0 below 0.5"/yr. Image-level vetting finds **zero new movers**: every other
+  candidate is a static extended source, most of them south of Dec -15 where the low-elevation
+  beam elongates differently between epochs and moves fitted centroids. 95% limit: < 9.2e-5
+  optically dark movers per deg^2 at 0.92-5"/yr (>~3 mJy, 33,838 deg^2). The failed first run (746 candidates from split extended
+  sources and a flux cut that rejected flare stars) is recorded in `survey/vlasspm-findings.md`.
+  `scripts/vlasspm_real.py` is the checkpointed real leg; it runs detached under
+  `systemd-run --user`.
+
+### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
   recover-a-known with the science leg on CUDA reproduces every committed number exactly, and

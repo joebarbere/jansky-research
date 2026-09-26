@@ -1,0 +1,254 @@
+{
+ "source": "real: VLASS QL image cutouts (CADC SODA) at the 7 run-3 candidates; scripts/vlasspm_vet_images.py",
+ "is_real": true,
+ "candidates": {
+  "c0": {
+   "triple": "E1-E2-E3",
+   "ra": 314.1357942929721,
+   "dec": -32.6139322562983,
+   "mu": 1.55926333207152,
+   "epochs": [
+    {
+     "date": "2019-07-08",
+     "rms_mjy": 0.14,
+     "snr_at_track": 6.2,
+     "offset_from_track_arcsec": 0.34,
+     "snr_at_first_position": 6.2
+    },
+    {
+     "date": "2022-02-08",
+     "rms_mjy": 0.12,
+     "snr_at_track": 11.1,
+     "offset_from_track_arcsec": 0.36,
+     "snr_at_first_position": 6.5
+    },
+    {
+     "date": "2024-09-29",
+     "rms_mjy": 0.133,
+     "snr_at_track": 6.9,
+     "offset_from_track_arcsec": 1.02,
+     "snr_at_first_position": 5.4
+    }
+   ],
+   "verdict": "static: emission persists at first position (S/N 6.5, 5.4); faint extended source"
+  },
+  "c1": {
+   "triple": "E1-E2-E3",
+   "ra": 196.6452670934591,
+   "dec": -22.07012481536476,
+   "mu": 1.191361002401574,
+   "epochs": [
+    {
+     "date": "2019-07-02",
+     "rms_mjy": 0.165,
+     "snr_at_track": 6.1,
+     "offset_from_track_arcsec": 1.49,
+     "snr_at_first_position": 6.1
+    },
+    {
+     "date": "2022-02-06",
+     "rms_mjy": 0.128,
+     "snr_at_track": 6.5,
+     "offset_from_track_arcsec": 1.47,
+     "snr_at_first_position": 6.5
+    },
+    {
+     "date": "2024-09-21",
+     "rms_mjy": 0.155,
+     "snr_at_track": 7.9,
+     "offset_from_track_arcsec": 2.08,
+     "snr_at_first_position": 5.4
+    }
+   ],
+   "verdict": "static: emission persists at first position (S/N 6.5, 5.4); N-S extended structure"
+  },
+  "c2": {
+   "triple": "E1-E2-E3",
+   "ra": 195.7911502136483,
+   "dec": -39.24740156223899,
+   "mu": 1.788489788151912,
+   "epochs": [
+    {
+     "date": "2019-07-14",
+     "rms_mjy": 0.175,
+     "snr_at_track": 9.4,
+     "offset_from_track_arcsec": 0.18,
+     "snr_at_first_position": 9.4
+    },
+    {
+     "date": "2022-02-03",
+     "rms_mjy": 0.136,
+     "snr_at_track": 18.9,
+     "offset_from_track_arcsec": 0.44,
+     "snr_at_first_position": 9.7
+    },
+    {
+     "date": "2024-09-22",
+     "rms_mjy": 0.15,
+     "snr_at_track": 9.6,
+     "offset_from_track_arcsec": 2.37,
+     "snr_at_first_position": 3.0
+    }
+   ],
+   "verdict": "static: compact 2019/2022, elongated in 2024 (beam 4.8x1.8\" vs 3.5x2.2\") -- centroid shift along the elongated beam"
+  },
+  "c3": {
+   "triple": "E1-E2-E3",
+   "ra": 29.815392731373787,
+   "dec": -5.8821088985873695,
+   "mu": 1.5205310723552248,
+   "epochs": [
+    {
+     "date": "2017-12-03",
+     "rms_mjy": 0.161,
+     "snr_at_track": 7.8,
+     "offset_from_track_arcsec": 0.39,
+     "snr_at_first_position": 7.8
+    },
+    {
+     "date": "2020-08-07",
+     "rms_mjy": 0.168,
+     "snr_at_track": 6.1,
+     "offset_from_track_arcsec": 0.91,
+     "snr_at_first_position": 12.6
+    },
+    {
+     "date": "2023-05-09",
+     "rms_mjy": 0.147,
+     "snr_at_track": 6.7,
+     "offset_from_track_arcsec": 1.7,
+     "snr_at_first_position": 8.1
+    },
+    {
+     "date": "2025-12-16",
+     "rms_mjy": 0.145,
+     "snr_at_track": 5.2,
+     "offset_from_track_arcsec": 2.32,
+     "snr_at_first_position": 7.8
+    }
+   ],
+   "verdict": "static: compact knot on a diffuse NE-SW source present at the first position in all 4 epochs (S/N 7.8-12.6)"
+  },
+  "c4": {
+   "triple": "E1-E2-E3",
+   "ra": 199.41224123794163,
+   "dec": -39.054073374061296,
+   "mu": 1.3686699265469753,
+   "epochs": [
+    {
+     "date": "2019-07-14",
+     "rms_mjy": 0.178,
+     "snr_at_track": 9.6,
+     "offset_from_track_arcsec": 1.09,
+     "snr_at_first_position": 9.6
+    },
+    {
+     "date": "2022-02-03",
+     "rms_mjy": 0.14,
+     "snr_at_track": 24.1,
+     "offset_from_track_arcsec": 0.64,
+     "snr_at_first_position": 16.2
+    },
+    {
+     "date": "2024-09-22",
+     "rms_mjy": 0.159,
+     "snr_at_track": 11.3,
+     "offset_from_track_arcsec": 1.64,
+     "snr_at_first_position": 8.2
+    }
+   ],
+   "verdict": "static: same as c2 (Dec -39; 2024 beam 4.9x1.7\" vs 3.6x2.1\"); first position S/N 16.2 in 2022"
+  },
+  "c5": {
+   "triple": "E1-E2-E4",
+   "ra": 223.0501682878744,
+   "dec": -15.09749089118928,
+   "mu": 1.4096685646017497,
+   "epochs": [
+    {
+     "date": "2018-01-01",
+     "rms_mjy": 0.153,
+     "snr_at_track": 11.8,
+     "offset_from_track_arcsec": 2.28,
+     "snr_at_first_position": 11.8
+    },
+    {
+     "date": "2020-10-10",
+     "rms_mjy": 0.17,
+     "snr_at_track": 23.9,
+     "offset_from_track_arcsec": 1.83,
+     "snr_at_first_position": 11.2
+    },
+    {
+     "date": "2023-03-28",
+     "rms_mjy": 0.157,
+     "snr_at_track": 40.9,
+     "offset_from_track_arcsec": 0.95,
+     "snr_at_first_position": 10.0
+    },
+    {
+     "date": "2025-08-26",
+     "rms_mjy": 0.191,
+     "snr_at_track": 3.7,
+     "offset_from_track_arcsec": 2.31,
+     "snr_at_first_position": 10.3
+    }
+   ],
+   "verdict": "static: knot fixed on a diffuse bar; first position S/N 10-12 in all 4 epochs"
+  },
+  "c6": {
+   "triple": "E2-E3-E4",
+   "ra": 24.77612683663293,
+   "dec": -17.94704491342479,
+   "mu": 3.452266988458307,
+   "epochs": [
+    {
+     "date": "2018-02-09",
+     "rms_mjy": 0.131,
+     "snr_at_track": 4.6,
+     "offset_from_track_arcsec": 0.98,
+     "snr_at_first_position": 2.0
+    },
+    {
+     "date": "2020-10-31",
+     "rms_mjy": 0.148,
+     "snr_at_track": 11.2,
+     "offset_from_track_arcsec": 0.49,
+     "snr_at_first_position": 11.2
+    },
+    {
+     "date": "2023-06-03",
+     "rms_mjy": 0.141,
+     "snr_at_track": 71.6,
+     "offset_from_track_arcsec": 0.39,
+     "snr_at_first_position": 2.0
+    },
+    {
+     "date": "2026-01-25",
+     "rms_mjy": 0.137,
+     "snr_at_track": 8.5,
+     "offset_from_track_arcsec": 0.71,
+     "snr_at_first_position": 1.6
+    }
+   ],
+   "verdict": "REAL MOVER = UV Ceti (Gaia 3.23\"/yr): point source walks the track; first position empty afterwards (S/N 2.0, 1.6); marginal S/N 4.6 on-track in 2018 (catalogue E1 non-detection)"
+  }
+ },
+ "n_candidates": 7,
+ "n_real_movers": 1,
+ "n_known": 1,
+ "n_new_movers": 0,
+ "limit": {
+  "mu_range_arcsec_yr": [
+   0.92,
+   5.0
+  ],
+  "completeness_mean_above_0p92": 0.961,
+  "area_deg2": 33838.5,
+  "flux_mjy": 3.0,
+  "n_new": 0,
+  "upper_limit_per_deg2_95": 9.21e-05,
+  "all_sky_equivalent_95": 3.8,
+  "note": "95% Poisson (2.996) / (area x mean completeness over the 0.92-5 arcsec/yr bins); optically-dark = no Gaia DR3/CatWISE2020 counterpart; applies to isolated compact sources >~3 mJy at 3 GHz"
+ }
+}
