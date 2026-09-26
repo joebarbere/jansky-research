@@ -303,3 +303,38 @@ is consistent with random placement. The defensible paper is a methodological ca
 FASHI-like geometry, random-placement nulls reproduce knee offsets as large as published void
 effects (ALFALFA -0.14), so environment-split 1/Vmax HIMFs need such a null. Reframe pending
 owner decision; the paper text still carries the previous framing.
+
+## Third referee round, on the methodological-caution rewrite (2026-09-26): MAJOR (text-level)
+
+Reframing endorsed; bookkeeping clean (every macro vs JSON, both figures); "worth publishing as a
+short RNAAS-scale caution once #1-5 are fixed". Nearly all fixes are claim strength, not new
+computation. Two are my misreadings of my own regression, recorded as such:
+
+1. **I misread the overlap regression.** real_overlap_frac spans only 0.280-0.367 (5-95%:
+   0.304-0.347); R^2 = 0.07; across the sampled range the fitted line moves 0.03 dex, not "~0.1
+   dex". The zero-overlap intercept (-0.201) that I set beside the measurement is an
+   extrapolation 3.2 range-widths out, and the same line predicts +0.15 at overlap 1 against a
+   measured -0.15 -- the linear model fails at both ends.
+2. **"Overlap" is a proxy for occupancy and redshift, with the wrong sign for leakage.** Offset
+   vs occupancy + median z: R^2 = 0.200; adding overlap: 0.201, and its coefficient falls 0.351 ->
+   0.056. A positive slope is the opposite of real-void signal leaking into the null.
+3. **The Discussion's mechanism is contradicted by the rows:** within the null, emptier
+   placements give LESS negative offsets; the real voids (17k members) lie outside the null's
+   occupancy range (25-32k), so the null cannot say what a density-matched split would give.
+4. "No environmental dependence survives" overclaims -- the void offset is beyond all 1,000
+   placements under BOTH weightings; the supported statement is "cannot attribute". The intro
+   also said the tests showed the DR1 -0.256 not attributable, but DR1 was never null-tested.
+5. "Arbitrary volumes" / "no environmental signal" blame the null offsets on the estimator
+   alone, contradicting Sec. 4.2 ("not signal-free"); the volumes keep the catalogues' distances,
+   which is the portable point.
+6-14 (minor/nit): Moorman+2014 may have used a density-insensitive estimator (2DSWML; to verify)
+   so the ALFALFA juxtaposition needs narrowing; the single-limit weighting fails the global-HIMF
+   check (alpha -1.73, chi2 190) so it should not carry half the argument; the group null
+   records no occupancy/redshift diagnostics; 687/1163 is order- and budget-dependent and
+   contradicts the blanket reproducibility sentence; "beyond all 1000" is conditional on one
+   galaxy sample; Fig. 1 caption should state fitted bins; "126%" undefined; fashi_groups year is
+   2026 not 2025 (Crossref); stale \feRealWeightingShiftPct macro.
+
+**Recommended single change:** rebuild the "no unique baseline" argument on what the rows show
+(no density match; offsets track occupancy and redshift; the preferred-weighting residual is
+-0.063, 1.5-1.9 sigma against the real bin's noise) and conclude "we cannot attribute".
