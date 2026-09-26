@@ -14,9 +14,9 @@ recommend the next version number.
 - **Plan 61 re-scoped by a measured access probe.** Apertif Time-Domain DR2 is 0.76 PB in
   2,582 observations, not the ~0.8 TB the plan assumed; only 3.9 TB is online without a tape
   request. Measured 24 MB/s to the workstation and ~21 s of GPU FDMT per 3-h 2019 file (522x
-  real time). The feasible slice is the 489 pulsar-calibrator observations (5.9 TB) plus the
-  pulsar-field compound beams (7.5 TB), streamed and deleted locally at $0; the $170 AWS
-  estimate is superseded.
+  real time). The feasible slice is the pulsar-calibrator observations' central beam
+  (0.15 TB) plus the pulsar-field compound beams (~7.3 TB), streamed and deleted locally at $0;
+  the $170 AWS estimate is superseded.
 
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
