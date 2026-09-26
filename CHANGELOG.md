@@ -10,6 +10,15 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **The archive description stopped repeating two withdrawn claims.** `.zenodo.json` (the text
+  Zenodo shows for every version, including v1.12.0) and the JOSS paper still called the `hi`
+  curve "flat", which #304 retracted -- the paper says it is far from Keplerian but *not* flat,
+  and cross-validated against VGPS to 1 km/s -- and described `driftsearch` as a benchmark
+  "with an honest null", withdrawn in #292: it recovers Voyager 1 at S/N ~1000. Both now say
+  what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
+  DC-spike artifact) is still true and is kept.
+
 ## [1.12.0] - 2026-09-26
 
 ### Added

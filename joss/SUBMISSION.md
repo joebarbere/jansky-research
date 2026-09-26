@@ -29,7 +29,7 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 >
 > 1. **Recover-a-known validations + methodology, with honest nulls at scale.** Each tool must
 >    recover an injected or historically established signal (e.g. FRB 20180916B's 16.35-day period,
->    the flat inner Milky Way rotation curve, the Crab's DM, published planetary rotation periods)
+>    the VGPS inner Milky Way terminal-velocity curve, the Crab's DM, published planetary rotation periods)
 >    before being trusted on new data; a large fraction of slices then report bounded non-detections
 >    or "the apparent signal is really a systematic" results rather than manufactured discoveries.
 >    The toolkit doubles as a reproducible reference for what careful, gate-checked amateur analysis
