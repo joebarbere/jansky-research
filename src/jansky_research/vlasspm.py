@@ -49,7 +49,9 @@ from scipy.spatial import cKDTree
 __all__ = [
     "EpochCatalog",
     "collinearity_test",
+    "calibrate_floors",
     "completeness",
+    "epoch_triples",
     "flux_consistent",
     "inject_movers",
     "link_pairs",
@@ -57,6 +59,7 @@ __all__ = [
     "run",
     "scramble_null",
     "search",
+    "search_multi",
     "surface_density_limit",
     "synthetic_epochs",
     "tangent_offsets_arcsec",
@@ -370,24 +373,23 @@ def _mover_track(ra0, dec0, mu_ra, mu_dec, t0, t):
 
 
 def inject_movers(
-    e1: EpochCatalog,
-    e2: EpochCatalog,
-    e3: EpochCatalog,
-    *,
+    *cats: EpochCatalog,
     n: int,
     mu_range: tuple[float, float] = (MU_MIN_ARCSEC_YR, MU_MAX_ARCSEC_YR),
     flux_mjy: float = 3.0,
     seed: int = 0,
     first_ident: int = 10_000_000,
-) -> tuple[EpochCatalog, EpochCatalog, EpochCatalog, np.ndarray]:
-    """Plant ``n`` movers into copies of the three catalogues; return them + injected rates.
+) -> tuple:
+    """Plant ``n`` movers into copies of every catalogue; return ``(*cats, mu)``.
 
-    Each mover borrows the sky position and per-epoch observation times of a random real E1
-    component (so it inherits the real tiling, baselines and Dec distribution), is offset 60-120"
-    from it (into empty sky, not onto a static source), and gets a log-uniform rate in
-    ``mu_range`` with a random direction. Detected positions scatter by that epoch's typical
-    positional error. Injected rows carry ``ident >= first_ident``.
+    Each mover borrows the sky position and observation time of a random real component of the
+    FIRST epoch (so it inherits the real tiling, baselines and Dec distribution), is offset
+    60-120" from it (into empty sky, not onto a static source), and gets a log-uniform rate in
+    ``mu_range`` with a random direction. In later epochs it is observed at the time of the
+    nearest real component (that epoch's tile date). Detected positions scatter by the epoch's
+    median positional error. Injected rows carry ``ident >= first_ident``.
     """
+    e1 = cats[0]
     rng = np.random.default_rng(seed)
     host = rng.integers(0, len(e1), n)
     off = rng.uniform(60.0, 120.0, n) * ARCSEC
@@ -398,40 +400,42 @@ def inject_movers(
     phi = rng.uniform(0, 2 * np.pi, n)
     mu_ra, mu_dec = mu * np.cos(phi), mu * np.sin(phi)
     ids = first_ident + np.arange(n)
-
-    def _epoch_times(cat: EpochCatalog) -> np.ndarray:
-        # The time the injected source is observed in this epoch: the nearest real component's.
-        _, k = cKDTree(_xyz(cat.ra, cat.dec)).query(_xyz(ra0, dec0), k=1)
-        return cat.t_yr[k]
-
     t1 = e1.t_yr[host]
     out = []
-    for cat in (e1, e2, e3):
-        t = t1 if cat is e1 else _epoch_times(cat)
+    for e, cat in enumerate(cats):
+        if e == 0:
+            t = t1
+        else:
+            _, k = cKDTree(_xyz(cat.ra, cat.dec)).query(_xyz(ra0, dec0), k=1)
+            t = cat.t_yr[k]
         err = np.full(n, float(np.median(cat.pos_err)))
         ra, dec = _mover_track(ra0, dec0, mu_ra, mu_dec, t1, t)
         ra = (ra + rng.normal(0, 1, n) * err * ARCSEC / np.cos(np.radians(dec))) % 360.0
         dec = dec + rng.normal(0, 1, n) * err * ARCSEC
         flux = flux_mjy * rng.uniform(0.8, 1.25, n)
         out.append(EpochCatalog.concat([cat, EpochCatalog(ra, dec, t, flux, err, ids)]))
-    return out[0], out[1], out[2], mu
+    return (*out, mu)
 
 
-def completeness(
-    e1: EpochCatalog,
-    e2: EpochCatalog,
-    e3: EpochCatalog,
-    *,
-    n: int = 2000,
-    bins: np.ndarray | None = None,
-    seed: int = 0,
-    flux_mjy: float = 3.0,
-) -> dict:
-    """Fraction of injected movers recovered as candidates, overall and per log-rate bin."""
-    bins = np.geomspace(MU_MIN_ARCSEC_YR, MU_MAX_ARCSEC_YR, 6) if bins is None else bins
-    first = 10_000_000
-    i1, i2, i3, mu = inject_movers(e1, e2, e3, n=n, seed=seed, flux_mjy=flux_mjy, first_ident=first)
-    res = search(i1, i2, i3)
+def epoch_triples(n_epochs: int) -> list[tuple[int, int, int]]:
+    """Every time-ordered triple of epoch indices (E1-E2-E3, E1-E2-E4, ... for four epochs)."""
+    from itertools import combinations
+
+    return list(combinations(range(n_epochs), 3))
+
+
+def search_multi(
+    cats: list[EpochCatalog],
+    triples: list[tuple[int, int, int]] | None = None,
+    **kw,
+) -> dict[tuple[int, int, int], SearchResult]:
+    """:func:`search` on each epoch triple. A source absent from one epoch (a flare star below
+    the limit, a tile gap) can still be found through the triples that skip that epoch."""
+    triples = epoch_triples(len(cats)) if triples is None else triples
+    return {t: search(cats[t[0]], cats[t[1]], cats[t[2]], **kw) for t in triples}
+
+
+def _recovered_idents(res: SearchResult, first: int) -> np.ndarray:
     a, b, c = res.orphans
     cand = res.candidates
     # A recovery = a candidate whose three components are the SAME injected source.
@@ -440,8 +444,27 @@ def completeness(
         & (a.ident[cand.i] == b.ident[cand.j])
         & (b.ident[cand.j] == c.ident[cand.k])
     )
+    return a.ident[cand.i][same] - first
+
+
+def completeness(
+    *cats: EpochCatalog,
+    n: int = 2000,
+    bins: np.ndarray | None = None,
+    seed: int = 0,
+    flux_mjy: float = 3.0,
+    triples: list[tuple[int, int, int]] | None = None,
+) -> dict:
+    """Fraction of injected movers recovered by ANY epoch triple, overall and per log-rate bin."""
+    bins = np.geomspace(MU_MIN_ARCSEC_YR, MU_MAX_ARCSEC_YR, 6) if bins is None else bins
+    first = 10_000_000
+    *inj, mu = inject_movers(*cats, n=n, seed=seed, flux_mjy=flux_mjy, first_ident=first)
     found = np.zeros(n, dtype=bool)
-    found[a.ident[cand.i][same] - first] = True
+    per_triple = {}
+    for t, res in search_multi(list(inj), triples).items():
+        rec = _recovered_idents(res, first)
+        found[rec] = True
+        per_triple["-".join(f"E{x + 1}" for x in t)] = float(np.unique(rec).size / n)
     idx = np.digitize(mu, bins) - 1
     per_bin = [
         float(found[idx == k].mean()) if np.any(idx == k) else float("nan")
@@ -453,6 +476,52 @@ def completeness(
         "overall": float(found.mean()),
         "bin_edges": [float(x) for x in bins],
         "per_bin": per_bin,
+        "per_triple": per_triple,
+    }
+
+
+def calibrate_floors(
+    cats: list[EpochCatalog],
+    *,
+    flux_min_mjy: float = 10.0,
+    radius_arcsec: float = STATIC_MATCH_ARCSEC,
+) -> dict:
+    """Per-epoch astrometric floor, measured from bright static sources, not assumed.
+
+    For every epoch pair, bright components (peak >= ``flux_min_mjy``, where catalogue fitting
+    errors are negligible) are matched within ``radius_arcsec`` and the robust per-axis scatter
+    of their offsets gives ``s_ab^2 = f_a^2 + f_b^2``. With three or more epochs the per-epoch
+    ``f`` follow by least squares. Proper motions of bright extragalactic sources are zero, so
+    the scatter is astrometry.
+    """
+    k = len(cats)
+    rows, rhs, pair_sigma = [], [], {}
+    for a in range(k):
+        for b in range(a + 1, k):
+            ca = cats[a].subset(cats[a].flux >= flux_min_mjy)
+            cb = cats[b].subset(cats[b].flux >= flux_min_mjy)
+            if len(ca) < 10 or len(cb) < 10:
+                continue
+            d, j = cKDTree(_xyz(cb.ra, cb.dec)).query(
+                _xyz(ca.ra, ca.dec), k=1, distance_upper_bound=_chord(radius_arcsec)
+            )
+            ok = np.isfinite(d)
+            if ok.sum() < 10:
+                continue
+            dx, dy = tangent_offsets_arcsec(ca.ra[ok], ca.dec[ok], cb.ra[j[ok]], cb.dec[j[ok]])
+            mad = np.concatenate([dx - np.median(dx), dy - np.median(dy)])
+            s = float(1.4826 * np.median(np.abs(mad)))
+            pair_sigma[f"E{a + 1}-E{b + 1}"] = s
+            row = np.zeros(k)
+            row[[a, b]] = 1.0
+            rows.append(row)
+            rhs.append(s**2)
+    if len(rows) < k:
+        return {"pair_sigma_arcsec": pair_sigma, "floor_arcsec": None}
+    sol, *_ = np.linalg.lstsq(np.asarray(rows), np.asarray(rhs), rcond=None)
+    return {
+        "pair_sigma_arcsec": pair_sigma,
+        "floor_arcsec": [float(np.sqrt(max(x, 0.0))) for x in sol],
     }
 
 
@@ -474,19 +543,22 @@ def synthetic_epochs(
     n_movers: int = 25,
     n_variable: int = 3_000,
     area_side_deg: float = 10.0,
-    pos_err: tuple[float, float, float] = (0.5, 0.3, 0.15),
+    pos_err: tuple[float, ...] = (0.5, 0.3, 0.15),
+    epochs_t: tuple[float, ...] = (2018.5, 2021.5, 2024.0),
     seed: int = 0,
-) -> tuple[EpochCatalog, EpochCatalog, EpochCatalog, np.ndarray]:
+) -> tuple:
     """Offline fixture: statics, planted movers, and variable-source orphans in three epochs.
 
     Positional errors default to the real per-epoch floors (E1 ~0.5", E2 ~0.3", E3 ~0.15";
     VLASS Memo 22). Variable sources appear in a random subset of epochs at random positions,
-    which is what produces chance orphan pairs in real data. Returns the epochs and the planted
-    movers' true rates (arcsec/yr); movers carry ``ident`` 0..n_movers-1.
+    which is what produces chance orphan pairs in real data. Returns ``(*epochs, mu)`` -- one
+    catalogue per entry of ``epochs_t`` plus the planted movers' true rates (arcsec/yr); movers
+    carry ``ident`` 0..n_movers-1.
     """
+    if len(pos_err) != len(epochs_t):
+        raise ValueError("pos_err and epochs_t must have one entry per epoch")
     rng = np.random.default_rng(seed)
     half = area_side_deg / 2
-    epochs_t = (2018.5, 2021.5, 2024.0)
 
     def _sky(n):
         return rng.uniform(180 - half, 180 + half, n), rng.uniform(-half, half, n)
@@ -499,7 +571,7 @@ def synthetic_epochs(
     mflux = rng.uniform(2.0, 6.0, n_movers)
     vra, vdec = _sky(n_variable)
     vflux = rng.lognormal(np.log(1.2), 0.3, n_variable)
-    seen = rng.random((n_variable, 3)) < 0.5
+    seen = rng.random((n_variable, len(epochs_t))) < 0.5
 
     cats = []
     for e, t in enumerate(epochs_t):
@@ -526,7 +598,7 @@ def synthetic_epochs(
             (ra + noise_ra) % 360.0, dec + noise_dec, tt, flux, np.full(ra.size, err), ident
         )
         cats.append(cat.subset(keep))
-    return cats[0], cats[1], cats[2], mu
+    return (*cats, mu)
 
 
 # ------------------------------------------------------------------------------------------ run

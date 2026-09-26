@@ -167,3 +167,65 @@ def test_e3_residuals_are_calibrated():
         res += t.resid_sigma[same].tolist()
     assert len(res) > 300
     assert np.median(res) == pytest.approx(np.sqrt(2 * np.log(2)), abs=0.08)
+
+
+def test_epoch_triples():
+    assert v.epoch_triples(3) == [(0, 1, 2)]
+    assert v.epoch_triples(4) == [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
+
+
+def test_synthetic_epochs_rejects_mismatched_lengths():
+    with pytest.raises(ValueError):
+        v.synthetic_epochs(pos_err=(0.5, 0.3), epochs_t=(2018.0, 2021.0, 2024.0))
+
+
+def test_mover_absent_from_first_epoch_found_through_later_triple():
+    """The UV Ceti case: undetected in E1, present in E2-E4, recovered via the E2-E3-E4 triple."""
+    *cats, mu = v.synthetic_epochs(
+        n_movers=10,
+        n_static=3000,
+        n_variable=0,
+        seed=8,
+        pos_err=(0.5, 0.3, 0.2, 0.2),
+        epochs_t=(2018.5, 2021.5, 2024.0, 2026.0),
+    )
+    k = int(np.argmax(mu))  # the fastest mover, so the recovery assertion always applies
+    assert mu[k] > 1.5
+    cats[0] = cats[0].subset(cats[0].ident != k)  # drop it from E1 entirely
+    res = v.search_multi(cats)
+    found = {t: set(r.orphans[0].ident[r.candidates.i].tolist()) for t, r in res.items()}
+    assert all(k not in found[t] for t in found if t[0] == 0)  # no triple using E1 has it
+    assert k in found[(1, 2, 3)]
+
+
+def test_completeness_reports_per_triple():
+    *cats, _ = v.synthetic_epochs(
+        n_movers=0,
+        n_static=3000,
+        n_variable=0,
+        seed=9,
+        pos_err=(0.5, 0.3, 0.2, 0.2),
+        epochs_t=(2018.5, 2021.5, 2024.0, 2026.0),
+    )
+    comp = v.completeness(*cats, n=300, seed=10)
+    assert set(comp["per_triple"]) == {"E1-E2-E3", "E1-E2-E4", "E1-E3-E4", "E2-E3-E4"}
+    assert comp["overall"] >= max(comp["per_triple"].values())  # union beats any one triple
+
+
+def test_calibrate_floors_recovers_injected_astrometric_errors():
+    *cats, _ = v.synthetic_epochs(
+        n_movers=0,
+        n_variable=0,
+        n_static=20000,
+        seed=11,
+        pos_err=(0.6, 0.35, 0.15),
+        epochs_t=(2018.5, 2021.5, 2024.0),
+    )
+    cal = v.calibrate_floors(cats, flux_min_mjy=0.0)
+    assert cal["floor_arcsec"] == pytest.approx([0.6, 0.35, 0.15], abs=0.04)
+    assert set(cal["pair_sigma_arcsec"]) == {"E1-E2", "E1-E3", "E2-E3"}
+
+
+def test_calibrate_floors_underdetermined():
+    a = _cat([1.0], [0.0], 2018.0)
+    assert v.calibrate_floors([a, a])["floor_arcsec"] is None
