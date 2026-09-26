@@ -249,3 +249,33 @@ def test_search_isolation_removes_split_extended_sources():
     c = _cat([ra0, ra0 + 20 / 3600], [dec0 + 11 / 3600, dec0 + 11 / 3600], 2023.5)
     assert len(v.search(a, b, c, isolation_arcsec=None).candidates) == 2
     assert len(v.search(a, b, c).candidates) == 0
+
+
+def test_calibrate_floors_banded_sees_a_worse_southern_epoch():
+    """E1 twice as noisy south of Dec -20: the banded fit must see it; the all-sky fit cannot."""
+    rng = np.random.default_rng(12)
+    n = 30000
+    ra = rng.uniform(0, 60, n)
+    dec = rng.uniform(-38, 28, n)
+    south = dec < -20
+    cats = []
+    for e, (fn, fs) in enumerate([(0.3, 0.9), (0.2, 0.2), (0.15, 0.15)]):
+        err = np.where(south, fs, fn)
+        cats.append(
+            v.EpochCatalog(
+                ra + rng.normal(0, 1, n) * err / 3600 / np.cos(np.radians(dec)),
+                dec + rng.normal(0, 1, n) * err / 3600,
+                np.full(n, 2018.0 + 3 * e),
+                np.full(n, 20.0),
+                err,
+            )
+        )
+    band = v.calibrate_floors_banded(cats, flux_min_mjy=0.0)
+    south_band = next(b for b in band["bands"] if b["lo"] == -40.0)
+    north_band = next(b for b in band["bands"] if b["lo"] == 0.0)
+    assert south_band["floor_arcsec"][0] == pytest.approx(0.9, abs=0.08)
+    assert north_band["floor_arcsec"][0] == pytest.approx(0.3, abs=0.05)
+    f = v.banded_floor(np.array([-30.0, 10.0, 80.0]), 0, band, fallback=0.5)
+    assert f[0] == pytest.approx(south_band["floor_arcsec"][0])
+    assert f[1] == pytest.approx(north_band["floor_arcsec"][0])
+    assert f[2] == 0.5  # empty band (Dec >= 30 here) falls back

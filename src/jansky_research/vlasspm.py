@@ -49,7 +49,9 @@ from scipy.spatial import cKDTree
 __all__ = [
     "EpochCatalog",
     "collinearity_test",
+    "banded_floor",
     "calibrate_floors",
+    "calibrate_floors_banded",
     "completeness",
     "epoch_triples",
     "flux_consistent",
@@ -548,6 +550,44 @@ def calibrate_floors(
         "pair_sigma_arcsec": pair_sigma,
         "floor_arcsec": [float(np.sqrt(max(x, 0.0))) for x in sol],
     }
+
+
+DEC_BAND_EDGES = (-40.0, -20.0, 0.0, 30.0, 90.0)  # E1 astrometry degrades south of Dec -20
+
+
+def calibrate_floors_banded(
+    cats: list[EpochCatalog],
+    *,
+    dec_edges: tuple[float, ...] = DEC_BAND_EDGES,
+    flux_min_mjy: float = 10.0,
+) -> dict:
+    """:func:`calibrate_floors` separately in each declination band.
+
+    VLASS epoch-1 astrometry is documented to be worse in the south (~1" below Dec -20 vs ~0.5"
+    north; Memo 22). A single all-sky floor then understates southern errors, and a
+    faint southern offset looks significant. Returns ``{"edges": [...], "bands": [{lo, hi,
+    floor_arcsec, pair_sigma_arcsec}, ...]}``; a band with too few bright matches gets
+    ``floor_arcsec = None`` and callers fall back to the all-sky floor there.
+    """
+    bands = []
+    for lo, hi in zip(dec_edges[:-1], dec_edges[1:], strict=True):
+        sub = [c.subset((c.dec >= lo) & (c.dec < hi)) for c in cats]
+        cal = calibrate_floors(sub, flux_min_mjy=flux_min_mjy)
+        bands.append({"lo": lo, "hi": hi, **cal})
+    return {"edges": list(dec_edges), "bands": bands}
+
+
+def banded_floor(dec: np.ndarray, epoch: int, banded: dict, fallback: float) -> np.ndarray:
+    """Per-component floor for epoch index ``epoch`` from :func:`calibrate_floors_banded`."""
+    dec = np.asarray(dec, float)
+    out = np.full(dec.size, float(fallback))
+    for band in banded["bands"]:
+        f = band.get("floor_arcsec")
+        if f is None:
+            continue
+        sel = (dec >= band["lo"]) & (dec < band["hi"])
+        out[sel] = f[epoch]
+    return out
 
 
 def surface_density_limit(n_found: int, area_deg2: float, completeness_frac: float) -> float:

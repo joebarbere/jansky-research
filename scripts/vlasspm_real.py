@@ -182,11 +182,23 @@ def stage_load(work: Path) -> None:
         )
 
 
-def catalogs(work: Path, floors: list[float] | None) -> list[v.EpochCatalog]:
+def catalogs(
+    work: Path, floors: list[float] | None, banded: dict | None = None
+) -> list[v.EpochCatalog]:
+    """Clean epochs with per-component errors = hypot(catalogue error, floor).
+
+    With ``banded`` (from :func:`vlasspm.calibrate_floors_banded`) the floor depends on the
+    component's declination band; bands without enough bright matches use the all-sky floor.
+    """
     cats = []
     for k, e in enumerate(EPOCHS):
         d = np.load(work / f"epoch{e}.npz")
-        err = d["err"] if floors is None else np.hypot(d["err"], floors[k])
+        if floors is None:
+            err = d["err"]
+        elif banded is None:
+            err = np.hypot(d["err"], floors[k])
+        else:
+            err = np.hypot(d["err"], v.banded_floor(d["dec"], k, banded, fallback=floors[k]))
         cats.append(v.EpochCatalog(d["ra"], d["dec"], d["t"], d["flux"], err, d["row"]))
     return cats
 
@@ -238,7 +250,18 @@ def main() -> int:
         _save(f, v.calibrate_floors(catalogs(work, None), flux_min_mjy=10.0))
     floors = json.loads(f.read_text())
     log(f"  floors (arcsec): {floors['floor_arcsec']}; pairs: {floors['pair_sigma_arcsec']}")
-    cats = catalogs(work, floors["floor_arcsec"])
+    f = work / "floors_banded.json"
+    if not f.exists():
+        log("floors: per declination band ...")
+        _save(f, v.calibrate_floors_banded(catalogs(work, None), flux_min_mjy=10.0))
+    banded = json.loads(f.read_text())
+    for b in banded["bands"]:
+        fl = b["floor_arcsec"]
+        log(
+            f"  Dec [{b['lo']:+.0f},{b['hi']:+.0f}): "
+            + (str([round(x, 3) for x in fl]) if fl else "too few")
+        )
+    cats = catalogs(work, floors["floor_arcsec"], banded)
     triples = v.epoch_triples(len(cats))
 
     f = work / "search.json"
@@ -466,6 +489,7 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
             for e in EPOCHS
         },
         "real_floors": floors,
+        "real_floors_banded": json.loads((work / "floors_banded.json").read_text()),
         "real_per_triple": search["per_triple"],
         "real_null": {
             k: {kk: vv for kk, vv in n.items() if kk != "candidates_per_rep"}
