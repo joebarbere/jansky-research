@@ -10,16 +10,7 @@ recommend the next version number.
 
 ## [Unreleased]
 
-### Fixed
-- **`driftsearch`: why the asserted Voyager-1 frequency missed, now measured instead of guessed.**
-  The 8420.216 MHz the withdrawn "null" searched at is Estevez's (2021) *measurement* in a
-  different Breakthrough Listen recording (2015 December 30); the benchmark file was recorded
-  on 2016 September 19. `annual_doppler_offset` computes the change in the Earth's orbital
-  velocity toward Voyager between the two dates (32.5 km/s, with JPL Horizons positions): it
-  predicts 0.91 MHz of the 0.92 MHz offset (99%). Both papers replace "a frame difference we
-  have not confirmed" with this, from new macros; the `estevez2021` bib note no longer makes an
-  untrue claim about this file; and `data.py` no longer labels the file with the other
-  recording's date (2015-12-30), which is probably how the two were conflated.
+## [1.12.0] - 2026-09-26
 
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
@@ -30,25 +21,6 @@ recommend the next version number.
   Evidence in `results/cuda_validation_2026-09-26.json`; `infra/terraform/` (a free,
   self-terminating GPU launch template, SSM-only) and `infra/jobs/cuda_validation.sh`
   reproduce it. No committed metrics or paper macros changed.
-
-### Removed
-- **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
-  seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new
-  [`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo's Terraform, imported from the live
-  account with a post-import plan showing no changes. `infra/seatbelt.json`,
-  `scripts/check_seatbelt.py` and `make seatbelt-check` are removed: `terraform plan` in
-  `aws-cloud` is the drift check now. `infra/README.md` and plan 96 say what lives where.
-
-### Changed
-- **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
-  data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,
-  CHIME Cat 2 baseband, Gaia DR4 and IPTA DR3 are not), a scoop re-check of every unstarted plan
-  (10 open, plans 51 and 52 partly scooped), seven new leads, the compute policy (core stays
-  CPU-reproducible; GPU and cloud are accelerators with a CPU parity path), and the
-  machine-learning opportunities sorted by scientific value. All 48 files that referenced the old
-  name point at the new one; released CHANGELOG entries keep the old name.
-
-### Added
 - **`plans/96-aws-infrastructure.md`** — a cost-gated AWS plan for the two constraints the
   workstation cannot meet (70 GB free disk; CUDA-only tools), with us-east-1 prices pulled from
   AWS's public price list on 2026-09-26, worked costs per use, a Terraform layout mirroring the
@@ -68,7 +40,31 @@ recommend the next version number.
   I+V photometry at β Pic in five RACS epochs returned no detection (5σ V limits 0.7–1.2 mJy).
   Recorded so the next idea scan does not propose a RACS/VLASS imaged-planet census.
 
+### Changed
+- **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
+  data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,
+  CHIME Cat 2 baseband, Gaia DR4 and IPTA DR3 are not), a scoop re-check of every unstarted plan
+  (10 open, plans 51 and 52 partly scooped), seven new leads, the compute policy (core stays
+  CPU-reproducible; GPU and cloud are accelerators with a CPU parity path), and the
+  machine-learning opportunities sorted by scientific value. All 48 files that referenced the old
+  name point at the new one; released CHANGELOG entries keep the old name.
+- **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
+  seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new
+  [`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo's Terraform, imported from the live
+  account with a post-import plan showing no changes. `infra/seatbelt.json`,
+  `scripts/check_seatbelt.py` and `make seatbelt-check` are removed: `terraform plan` in
+  `aws-cloud` is the drift check now. `infra/README.md` and plan 96 say what lives where.
+
 ### Fixed
+- **`driftsearch`: why the asserted Voyager-1 frequency missed, now measured instead of guessed.**
+  The 8420.216 MHz the withdrawn "null" searched at is Estevez's (2021) *measurement* in a
+  different Breakthrough Listen recording (2015 December 30); the benchmark file was recorded
+  on 2016 September 19. `annual_doppler_offset` computes the change in the Earth's orbital
+  velocity toward Voyager between the two dates (32.5 km/s, with JPL Horizons positions): it
+  predicts 0.91 MHz of the 0.92 MHz offset (99%). Both papers replace "a frame difference we
+  have not confirmed" with this, from new macros; the `estevez2021` bib note no longer makes an
+  untrue claim about this file; and `data.py` no longer labels the file with the other
+  recording's date (2015-12-30), which is probably how the two were conflated.
 - **`driftsearch` used "cell" for two different things.** Five uses meant a box in the
   (S/N, drift) grid ("30 trials per cell", the standard idiom); five meant the whole fixed
   benchmark specimen ("a single reproducible cell that fixes both the injection model and the
