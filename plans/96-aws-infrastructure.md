@@ -144,6 +144,14 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
    repo; a cost-anomaly monitor; attach a merged seatbelt (aws-ai's statements + the EC2
    allowlist and NAT/p4d/p5 denies) to the permission set. Test the seatbelt by trying to
    launch a denied instance type and confirming the deny.
+   **Done 2026-09-26 (steps 1–3, via the AWS CLI, owner-approved):** `Project` and `ManagedBy`
+   activated as cost-allocation tags (split visible from this date only); budgets
+   `account-monthly-25` ($25/month, account-wide) plus `jansky-research-monthly` and
+   `aws-ai-monthly` ($25 each, filtered on `user:Project`) — **alerts only**, email at 50/80/100%
+   actual and 100% forecast; cost-anomaly monitor `services-anomaly-monitor` (per service) with a
+   daily email for anomalies ≥ $5. These were made by hand, so the `budget` module must
+   `terraform import` them rather than create duplicates. **Still open:** attaching the merged
+   seatbelt (changes the admin permission set — confirm separately).
 1. **Storage — ~$0 until used.** `storage` module; upload nothing yet. Verify the public-access
    block and lifecycle rules with `aws s3api get-bucket-*`.
 2. **One CUDA validation run — ~$2.50.** `compute` module, g6.xlarge on-demand, the `torchfdmt`
@@ -167,5 +175,5 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
 ## Owner decisions needed before phase 0
 
 - ~~Separate member account or shared?~~ **Decided 2026-09-26: shared account, tag-separated.**
-- Monthly budget ceiling and alert email.
-- Whether budget *actions* (auto-attach a deny policy at 100%) are wanted, or alerts only.
+- ~~Budget and alert mode~~ **Decided 2026-09-26: $25/month account-wide, alerts only.**
+- Attach the merged seatbelt to the `AdministratorAccess` permission set? (pending)
