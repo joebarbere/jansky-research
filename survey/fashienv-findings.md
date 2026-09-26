@@ -125,3 +125,42 @@ off the one systematic that matters; the α–M* covariance, discarded by keepin
 every metrics dict by an `isinstance(v, float)` filter; the EdS distance-frame variant quoted
 as "~1σ" with no committed number; and `FASHI_FLUX_LIMIT = 0.30`, which sets every V_max and
 appears nowhere in the paper.
+
+## DR2 leg (2026-09-26) — option B weighting; the paper's headline number changes
+
+DR2 is public (not on VizieR): Table 2 CSV from the CSTCloud share linked at
+zcp521.github.io/fashi.html (`fetch_fashi_dr2`; two POST calls, signed URL). 156,411 sources;
+DR1 is ~95% contained (position + velocity match). DR2's `distance` convention differs from DR1's
+(matched sources ~2.5% farther), so absolute masses are not interchangeable across releases.
+286 sources with z <= 0 are excluded (no comoving position).
+
+**Weighting changed (owner decision, "option B"):** each galaxy weighted by 1/(C * Vmax) with
+DR2's own per-source completeness C and Vmax (over 19,482 deg^2), on the DR2 HIMF sample
+C >= 0.5 ("above the 50% flux completeness limit"; 110,520 sources vs the paper's ">109,000" —
+DR2 does not publish the W20/f_sigma cut columns). This replaces the single 0.30 Jy km/s flux
+cut the referee flagged. The old weighting on the same DR2 data is kept as `optA_*`, so the
+method change and the sample change are visible separately.
+
+| | DR1 committed (flux cut) | DR2 A (flux cut) | DR2 B (1/(C Vmax)) |
+|---|---|---|---|
+| N | 41,741 | 155,983 | 110,520 |
+| global log M* / alpha | 9.944 / -1.732 | 10.048 / -1.780 | **9.907 +/- 0.021 / -1.328 +/- 0.032** |
+| void - wall knee | -0.256 +/- 0.087 (2.9 sig) | -0.252 +/- 0.092 (2.7) | **-0.154 +/- 0.052 (3.0)** |
+| void jackknife err | 0.039 | — | 0.041 (409 occupied voids) |
+| group - field knee | +0.192 +/- 0.073 (2.6) | +0.208 +/- 0.068 (3.1) | **+0.141 +/- 0.039 (3.6)** |
+
+1. **Recover-a-known passes:** B's global HIMF reproduces the DR2 paper's own
+   (log M* = 9.89 +/- 0.02, alpha = -1.31 +/- 0.02). The single-cut weighting's alpha ~ -1.75 was
+   the bias the paper already disclosed; it persists on DR2 (A), so it was the method.
+2. **The environment effects survive the corrected weighting but shrink:** void offset by 40%,
+   group offset by 27%. A barely moves vs DR1, so the change is the weighting, not N. Part of
+   the published -0.256 was a weighting artefact. B's -0.154 sits inside the Moorman+2014
+   0.1-0.2 dex range.
+3. Still not addressed by B: the void-volume Vmax bias the referee raised (the per-source Vmax is
+   survey-wide, not restricted to the void/wall volume), and the SDSS-cap footprint (the
+   classifiable region is the void catalogue's bounding box).
+
+Evidence: `results/fashienv_dr2_preview.json` (its own file until the paper is revised; the
+committed `fashienv_metrics.json` and macros still hold the DR1 numbers under the DR1 prose).
+**Next:** revise `papers/fashienv/` to DR2 + option B, then a presenter/referee round — the
+headline number changes, so this is a revision, not a data refresh.

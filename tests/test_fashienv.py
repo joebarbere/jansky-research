@@ -174,3 +174,45 @@ def test_comparison_bin_size_is_committed():
     # if the wall bin ever stops matching the global fit, the "void versus everything"
     # framing in the paper needs revisiting
     assert abs(m["himf_wall"]["log_m_star"] - m["himf_global"]["log_m_star"]) < 0.05
+
+
+def test_vmax_from_catalogue_is_completeness_weighted_per_sr():
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    v = fe.vmax_from_catalogue(np.array([1e6, 2e6, np.nan, 5e5]), np.array([0.5, 1.0, 0.9, 0.0]))
+    assert v[0] == pytest.approx(0.5e6 / omega)
+    assert v[1] == pytest.approx(2e6 / omega)
+    assert v[2] == 0.0 and v[3] == 0.0  # non-finite / zero completeness drop out of himf
+    # multiplied back by the survey area it is C * Vmax: the DR2 1/(C * Vmax) weight
+    assert v[0] * omega == pytest.approx(0.5e6)
+
+
+def test_load_fashi_dr2_maps_columns_and_units(tmp_path):
+    p = tmp_path / "t2.csv"
+    p.write_text(
+        "ra,dec,v_opt,z_opt,W_50,S_sum,distance,mass,completeness,Vmax\n"
+        "10.0,5.0,3000.0,0.01,120.0,450.0,43.0,9.1,0.8,2.5e6\n"
+        "11.0,6.0,bad,0.02,100.0,,86.0,9.5,,\n"
+    )
+    d = fe.load_fashi_dr2(p)
+    assert d["ra"].tolist() == [10.0, 11.0]
+    assert d["flux"][0] == pytest.approx(0.45)  # mJy km/s -> Jy km/s
+    assert d["cz"][0] == 3000.0 and np.isnan(d["cz"][1])
+    assert d["completeness"][0] == 0.8 and np.isnan(d["completeness"][1])
+    assert d["vmax_mpc3"][0] == 2.5e6 and np.isnan(d["vmax_mpc3"][1])
+    assert set(d) >= {"ra", "dec", "cz", "z", "w50", "flux", "dist_mpc", "log_mhi"}
+
+
+def test_himf_and_fit_uses_supplied_vmax():
+    cat = fe.synthetic_environment_catalogue()
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    v1 = fe.vmax_1vmax(lm, dd, ff)
+    h_default, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"])
+    h_same, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], vmax=v1)
+    h_half, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], vmax=2.0 * v1)
+    np.testing.assert_allclose(h_same["phi"], h_default["phi"])
+    np.testing.assert_allclose(h_half["phi"], 0.5 * h_default["phi"])  # twice the volume
+    mask = cat["is_void"]
+    h_m, _ = fe._himf_and_fit(lm, dd, ff, cat["area_sr"], mask=mask, vmax=v1)
+    lm_m = lm[mask & (v1 > 0)]
+    in_bins = (lm_m >= 6.5) & (lm_m < 11.0)  # himf's default bin range
+    assert h_m["counts"].sum() == int(in_bins.sum())  # exactly the masked sources, no others

@@ -44,6 +44,8 @@ __all__ = [
     "assign_groups",
     "clustercentric_radius",
     "vmax_1vmax",
+    "vmax_from_catalogue",
+    "load_fashi_dr2",
     "himf",
     "fit_schechter",
     "schechter",
@@ -55,7 +57,14 @@ __all__ = [
 FASHI_DR1_VIZIER = "J/other/SCPMA/67.19511/table2"  # 41,741 extragalactic HI sources
 TEMPEL_VIZIER = "J/A+A/602/A100"  # SDSS groups (table1 galaxies, table2 groups)
 DOUGLASS_VIZIER = "J/ApJS/265/7"  # voids (table1 VoidFinder spheres, table5 V2 membership)
-FASHI_DR2_PORTAL = "https://zcp521.github.io/fashi"  # DR2 catalogue, public ~Aug 2026
+FASHI_DR2_PORTAL = "https://zcp521.github.io/fashi.html"  # links the CSTCloud share below
+# DR2 (arXiv:2606.31539; Sci. China PMA 2026-09-08) is NOT on VizieR; the tables are on a public
+# CSTCloud share. Download = POST shareGetInfo (list files) then shareDownloadRequest (a signed
+# URL valid 24 h). Cached at data/fashi_dr2/.
+FASHI_DR2_SHARE = "XfSZ82LQc4"
+FASHI_DR2_TABLE = "Table2_FASHI_DR2_Extragalactic_Hi_Source_Catalog.csv"
+FASHI_DR2_AREA_DEG2 = 19482.0  # the area DR2's own Vmax column is computed over (paper Sect. 5)
+FASHI_DR2_C_MIN = 0.5  # "only galaxies above the 50% flux completeness limit" (DR2 HIMF sample)
 
 C_KM_S = 299792.458
 H0 = 70.0  # km/s/Mpc, the FASHI DR1 distance convention (h70)
@@ -209,6 +218,27 @@ def vmax_1vmax(
     d_lim = d * np.sqrt(np.maximum(f, 1e-12) / flux_limit)
     d_hi = np.clip(d_lim, d_min, d_max)
     return np.maximum(d_hi**3 - d_min**3, 0.0) / 3.0  # per steradian
+
+
+def vmax_from_catalogue(
+    vmax_mpc3: np.ndarray,
+    completeness: np.ndarray,
+    *,
+    survey_area_deg2: float = FASHI_DR2_AREA_DEG2,
+) -> np.ndarray:
+    """Per-steradian EFFECTIVE volume from a catalogue's own Vmax and completeness: C * Vmax / Omega.
+
+    FASHI DR2 publishes, per source, the comoving Vmax over its survey area and the completeness
+    C at that source's flux and line width; the survey's HIMF weights each galaxy by
+    1/(C * Vmax). Returned per steradian so it drops into :func:`himf` exactly like
+    :func:`vmax_1vmax` (the caller's ``area_sr`` multiplies it back). Non-finite or non-positive
+    inputs give 0, which :func:`himf` excludes.
+    """
+    v = np.asarray(vmax_mpc3, float)
+    c = np.asarray(completeness, float)
+    omega = survey_area_deg2 * (np.pi / 180.0) ** 2
+    good = np.isfinite(v) & np.isfinite(c) & (v > 0) & (c > 0)
+    return np.where(good, c * v, 0.0) / omega
 
 
 def himf(
@@ -367,6 +397,90 @@ def fetch_fashi_dr1() -> dict:  # pragma: no cover - network
     }
 
 
+def load_fashi_dr2(path: str | Path) -> dict:
+    """Read the FASHI DR2 Table 2 CSV into the same keys as :func:`fetch_fashi_dr1`, plus
+    ``completeness`` and ``vmax_mpc3``.
+
+    Column map (DR1 VizieR -> DR2 CSV): RAJ2000->ra, DEJ2000->dec, cz->v_opt, z->z_opt,
+    W50->W_50, Ssum->S_sum (both mJy km/s), Dist->distance, logMass->mass. Note DR2's
+    ``distance`` convention differs from DR1's (matched sources are ~2.5% farther in DR2), so
+    DR1 and DR2 absolute masses are not interchangeable; relative offsets within one release are.
+    """
+    import csv
+
+    cols = {
+        "ra": "ra", "dec": "dec", "cz": "v_opt", "z": "z_opt", "w50": "W_50", "flux": "S_sum",
+        "dist_mpc": "distance", "log_mhi": "mass", "completeness": "completeness",
+        "vmax_mpc3": "Vmax",
+    }  # fmt: skip
+    vals: dict[str, list[float]] = {k: [] for k in cols}
+    with Path(path).open(newline="") as fh:
+        for r in csv.DictReader(fh):
+            for k, c in cols.items():
+                try:
+                    vals[k].append(float(r[c]))
+                except (TypeError, ValueError):
+                    vals[k].append(np.nan)
+    out = {k: np.asarray(v, float) for k, v in vals.items()}
+    out["flux"] = out["flux"] / 1000.0  # mJy km/s -> Jy km/s, as for DR1
+    return out
+
+
+def fetch_fashi_dr2(cache_dir: str | Path | None = None) -> dict:  # pragma: no cover - network
+    """FASHI DR2 Table 2 (156,411 sources) from the public CSTCloud share, cached on disk."""
+    import json
+    import urllib.request
+
+    from . import data as _data
+
+    d = Path(cache_dir) if cache_dir else _data.data_dir() / "fashi_dr2"
+    target = d / FASHI_DR2_TABLE
+    if not target.exists():
+        d.mkdir(parents=True, exist_ok=True)
+
+        def _post(api: str, body: dict) -> dict:
+            req = urllib.request.Request(
+                f"https://pan.cstcloud.cn/s/api/{api}",
+                data=json.dumps(body).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read())
+
+        info = _post("shareGetInfo", {"shareId": FASHI_DR2_SHARE})
+        fid = next(
+            (f["fid"] for f in _walk_share_files(info) if f.get("name") == FASHI_DR2_TABLE), None
+        )
+        if fid is None:
+            raise RuntimeError("FASHI DR2 table not found in the CSTCloud share listing")
+        dl = _post("shareDownloadRequest", {"shareId": FASHI_DR2_SHARE, "fid": fid})
+        url = next(v for v in _walk_values(dl) if isinstance(v, str) and v.startswith("http"))
+        urllib.request.urlretrieve(url, target)
+    return load_fashi_dr2(target)
+
+
+def _walk_share_files(obj):  # pragma: no cover - network helper
+    if isinstance(obj, dict):
+        if "fid" in obj and "name" in obj:
+            yield obj
+        for v in obj.values():
+            yield from _walk_share_files(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _walk_share_files(v)
+
+
+def _walk_values(obj):  # pragma: no cover - network helper
+    if isinstance(obj, dict):
+        for v in obj.values():
+            yield from _walk_values(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _walk_values(v)
+    else:
+        yield obj
+
+
 def fetch_tempel_groups() -> dict:  # pragma: no cover - network
     """Fetch Tempel+2017 SDSS groups: member GroupID/Ngal (table1) + group R200/M200 (table2)."""
     from astroquery.vizier import Vizier
@@ -421,11 +535,16 @@ def _offset_stats(name: str, fit_a: dict, fit_b: dict) -> dict:
     }
 
 
-def _himf_and_fit(cat_logm, cat_dist, cat_flux, area_sr, mask=None):
+def _himf_and_fit(cat_logm, cat_dist, cat_flux, area_sr, mask=None, vmax=None):
+    """HIMF + Schechter fit. ``vmax`` (per sr, e.g. :func:`vmax_from_catalogue`) overrides the
+    single-flux-cut :func:`vmax_1vmax` weighting when given."""
     lm = cat_logm if mask is None else cat_logm[mask]
-    dd = cat_dist if mask is None else cat_dist[mask]
-    ff = cat_flux if mask is None else cat_flux[mask]
-    vmax = vmax_1vmax(lm, dd, ff)
+    if vmax is not None:
+        vmax = vmax if mask is None else vmax[mask]
+    else:
+        dd = cat_dist if mask is None else cat_dist[mask]
+        ff = cat_flux if mask is None else cat_flux[mask]
+        vmax = vmax_1vmax(lm, dd, ff)
     h = himf(lm, vmax, area_sr=area_sr)
     fit = fit_schechter(h)
     return h, fit
@@ -482,6 +601,7 @@ def void_jackknife_offset(
     sphere_xyz: np.ndarray,
     sphere_radius: np.ndarray,
     classifiable: np.ndarray,
+    vmax: np.ndarray | None = None,
 ) -> dict:  # pragma: no cover - real leg only
     """Delete-one-void jackknife on the void-wall knee offset.
 
@@ -508,8 +628,8 @@ def void_jackknife_offset(
         keep = np.ones(n_v, bool)
         keep[k] = False
         in_void_k = member[:, keep].any(axis=1)
-        _hv, fv = _himf_and_fit(lm, dd, ff, area, mask=classifiable & in_void_k)
-        _hw, fw = _himf_and_fit(lm, dd, ff, area, mask=classifiable & ~in_void_k)
+        _hv, fv = _himf_and_fit(lm, dd, ff, area, mask=classifiable & in_void_k, vmax=vmax)
+        _hw, fw = _himf_and_fit(lm, dd, ff, area, mask=classifiable & ~in_void_k, vmax=vmax)
         if np.isfinite(fv.get("log_m_star", np.nan)) and np.isfinite(fw.get("log_m_star", np.nan)):
             offsets.append(float(fv["log_m_star"] - fw["log_m_star"]))
     if len(offsets) < 3:
@@ -534,52 +654,79 @@ def void_jackknife_offset(
 
 
 def _real_leg():  # pragma: no cover - network + VizieR catalogues
-    """FASHI DR1 x Tempel groups x Douglass voids: environment-split HIMF + R/R200 gradient."""
-    fashi = fetch_fashi_dr1()
-    area = 7600.0 * (np.pi / 180.0) ** 2  # FASHI DR1 sky area ~7600 deg^2 (Zhang+2024); note
-    # this only sets the never-quoted phi* normalisation and cancels in every knee/slope offset
-    finite = np.isfinite(fashi["log_mhi"]) & np.isfinite(fashi["dist_mpc"]) & (fashi["flux"] > 0)
+    """FASHI DR2 x Tempel groups x Douglass voids: the environment-split HIMF.
+
+    Headline weighting (option B, 2026-09-26): DR2's own per-source completeness and Vmax,
+    weight 1/(C * Vmax), on the DR2 HIMF sample (C >= 0.5, "above the 50% flux completeness
+    limit"). This replaces the single 0.30 Jy km/s flux cut the referee flagged as unstated.
+    The old single-cut weighting on the same DR2 catalogue is reported alongside (``optA_*``) so
+    the effect of the METHOD change is visible separately from the effect of the larger sample.
+    """
+    fashi = fetch_fashi_dr2()
+    area = FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2  # DR2's own Vmax area
+    finite = (
+        np.isfinite(fashi["log_mhi"])
+        & np.isfinite(fashi["dist_mpc"])
+        & (fashi["flux"] > 0)
+        & (fashi["z"] > 0)  # 286 sources have z <= 0: no comoving position, excluded
+    )
+    n_dr2 = int(fashi["ra"].size)
     lm, dd, ff = fashi["log_mhi"][finite], fashi["dist_mpc"][finite], fashi["flux"][finite]
     ra, dec, z, cz = (fashi[k][finite] for k in ("ra", "dec", "z", "cz"))
+    comp, vcat = fashi["completeness"][finite], fashi["vmax_mpc3"][finite]
+    # Option B sample + weights; option A uses every finite source with the single-cut Vmax.
+    samp_b = np.isfinite(comp) & (comp >= FASHI_DR2_C_MIN) & np.isfinite(vcat) & (vcat > 0)
+    vmax_b = vmax_from_catalogue(vcat, comp)
 
-    _h_all, fit_all = _himf_and_fit(lm, dd, ff, area)
-
-    # voids (VoidFinder spheres, SDSS-cap overlap only). The spheres are Mpc/h, so place the
-    # FASHI galaxies in the same H0-independent Mpc/h frame (h0=100) for the membership test.
     spheres = fetch_voidfinder_spheres()
     gal_xyz = comoving_xyz(ra, dec, z, h0=100.0)
     in_void = void_membership(gal_xyz, spheres["sphere_xyz"], spheres["sphere_radius"])
-    # only galaxies within the void catalogue's comoving volume can be classified: a galaxy
-    # outside every sphere but inside the SDSS-cap volume is a wall galaxy; a galaxy beyond that
-    # volume (most of FASHI's southern/high-z sky) is unclassifiable and excluded -- the honest
-    # footprint caveat, quantified by n_classifiable_void.
     classifiable = _within_void_footprint(gal_xyz, spheres["sphere_xyz"])
-    _h_v, fit_void = _himf_and_fit(lm, dd, ff, area, mask=classifiable & in_void)
-    _h_w, fit_wall = _himf_and_fit(lm, dd, ff, area, mask=classifiable & ~in_void)
-
-    # group-member vs field HIMF (Tempel groups; a galaxy within R200+dv of any group is a
-    # "group member", the rest are "field") -- the density-split HIMF, cleaner than the
-    # selection-biased median-HI-vs-radius the plan proposed (dropped; see the module docstring)
     grp = fetch_tempel_groups()
     gidx = assign_groups(ra, dec, cz, grp["grp_ra"], grp["grp_dec"], grp["grp_cz"], grp["grp_r200"])
     in_group = gidx >= 0
-    # restrict the field/group split to the same SDSS-cap footprint (else "field" is dominated
-    # by FASHI's southern sky where no Tempel groups exist -- an apples-to-oranges comparison)
-    cap = classifiable
-    _h_g, fit_group = _himf_and_fit(lm, dd, ff, area, mask=cap & in_group)
-    _h_f, fit_field = _himf_and_fit(lm, dd, ff, area, mask=cap & ~in_group)
 
+    def _split(base: np.ndarray, vmax: np.ndarray | None) -> dict:
+        _h_all, f_all = _himf_and_fit(lm, dd, ff, area, mask=base, vmax=vmax)
+        h_v, f_v = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & in_void, vmax=vmax)
+        h_w, f_w = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & ~in_void, vmax=vmax)
+        _h_g, f_g = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & in_group, vmax=vmax)
+        _h_f, f_f = _himf_and_fit(lm, dd, ff, area, mask=base & classifiable & ~in_group, vmax=vmax)
+        rnd = lambda f: {k: round(v, 3) for k, v in f.items() if isinstance(v, float)}  # noqa: E731
+        return {
+            "n_sources": int(base.sum()),
+            "n_classifiable_void": int((base & classifiable).sum()),
+            "n_in_void": int((base & classifiable & in_void).sum()),
+            "n_wall": int((base & classifiable & ~in_void).sum()),
+            "n_group_members": int((base & classifiable & in_group).sum()),
+            "n_field": int((base & classifiable & ~in_group).sum()),
+            "himf_global": rnd(f_all),
+            "himf_void": rnd(f_v),
+            "himf_wall": rnd(f_w),
+            "himf_group": rnd(f_g),
+            "himf_field": rnd(f_f),
+            **_offset_stats("void", f_v, f_w),
+            **_offset_stats("group", f_g, f_f),
+            "_fig": (h_v, h_w, f_v, f_w),
+        }
+
+    all_finite = np.ones(lm.size, bool)
+    b = _split(samp_b, vmax_b)
+    a = _split(all_finite, None)
+    figdata = b.pop("_fig")
+    a.pop("_fig")
     metrics = {
-        "source": "FASHI DR1 (VizieR J/other/SCPMA/67.19511) x Tempel+2017 groups x Douglass+2023 voids",
+        "source": (
+            "FASHI DR2 (arXiv:2606.31539, CSTCloud share) x Tempel+2017 groups x "
+            "Douglass+2023 voids; weights 1/(C*Vmax) from the DR2 catalogue (C >= 0.5)"
+        ),
         "is_real": True,
-        "n_sources": int(lm.size),
-        "n_classifiable_void": int(classifiable.sum()),
-        "n_in_void": int((classifiable & in_void).sum()),
-        # The comparison bin's own size, which was never committed: the "wall" sample is every
-        # classifiable galaxy outside a void sphere, and the classifiable region is the
-        # Cartesian bounding box of the SDSS cap, not the cap itself.
-        "n_wall": int((classifiable & ~in_void).sum()),
-        "n_field": int((cap & ~in_group).sum()),
+        "release": "DR2",
+        "n_dr2_catalogue": n_dr2,
+        "n_finite_z_pos": int(lm.size),
+        "weighting": "DR2 per-source completeness x Vmax (option B)",
+        "c_min": FASHI_DR2_C_MIN,
+        **b,
         "void_jackknife": void_jackknife_offset(
             lm,
             dd,
@@ -588,19 +735,12 @@ def _real_leg():  # pragma: no cover - network + VizieR catalogues
             gal_xyz=gal_xyz,
             sphere_xyz=spheres["sphere_xyz"],
             sphere_radius=spheres["sphere_radius"],
-            classifiable=classifiable,
+            classifiable=classifiable & samp_b,
+            vmax=vmax_b,
         ),
-        "n_group_members": int((cap & in_group).sum()),
-        "himf_global": {k: round(v, 3) for k, v in fit_all.items() if isinstance(v, float)},
-        "himf_void": {k: round(v, 3) for k, v in fit_void.items() if isinstance(v, float)},
-        "himf_wall": {k: round(v, 3) for k, v in fit_wall.items() if isinstance(v, float)},
-        "himf_group": {k: round(v, 3) for k, v in fit_group.items() if isinstance(v, float)},
-        "himf_field": {k: round(v, 3) for k, v in fit_field.items() if isinstance(v, float)},
-        **_offset_stats("void", fit_void, fit_wall),
-        **_offset_stats("group", fit_group, fit_field),
-        "dr2_followon": "swap fetch_fashi_dr1 -> DR2 table when it publishes (~Aug 2026)",
+        "optA_single_flux_cut": a,
     }
-    return metrics, (_h_v, _h_w, fit_void, fit_wall)
+    return metrics, figdata
 
 
 def _within_void_footprint(gal_xyz, sphere_xyz, pad_mpc=20.0):  # pragma: no cover - network path
