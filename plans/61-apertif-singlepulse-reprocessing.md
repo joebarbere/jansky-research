@@ -25,15 +25,19 @@ request tape staging (turnaround undocumented, "best effort").
   each [inferred], so they are GPU-bound; 2019 files are download-bound. FDMT only — the
   boxcar single-pulse search is extra and not yet timed.
 - **Recover-a-known set [M]:** ATNF psrcat v2.8.1 vs 98,491 CB centres: 166 pulsars (9 RRATs)
-  within 0.25 deg, in 1,077 obs / 3,489 CBs; **489 pulsar-calibrator observations** (B0531+21 x189,
-  B1933+16 x182, B0950+08 x78, B0329+54 x11), 5.9 TB, 466 of them <= 10 min.
+  within 0.25 deg, in 1,077 obs / 3,489 CBs; **~486 pulsar-calibrator observations** (B0531+21 x189,
+  B1933+16 x182, B0950+08 x78, B0329+54 x11), 466 of them <= 10 min. The pulsar is in CB00:
+  **CB00 alone is 0.15 TB (5,796 files)**; the 5.8 TB figure is all 40 beams, 39 of which point
+  at empty sky beside the pulsar (re-measured 2026-09-26 — the first draft of this plan and of
+  the staging request called 5.9 TB "CB00 only", a 40x overstatement).
 
 | subset | size | stream time at 24-28 MB/s |
 |---|---|---|
 | whole release | 761.7 TB | 315-367 days — infeasible |
 | obs containing a pulsar (all beams) | 230.7 TB | 95-111 days |
 | **only the CBs containing a pulsar** | **7.5 TB** | 3.1-3.6 days |
-| **pulsar-calibrator obs** | **5.9 TB** | ~2.5-2.8 days |
+| **pulsar-calibrator obs, CB00 only** | **0.15 TB** | ~1.5-2 h |
+| pulsar-calibrator obs, all 40 beams (not needed) | 5.8 TB | ~2.5-2.8 days |
 | online now, no staging | 3.9 TB | ~45 h |
 
 **Cost:** stream -> process -> delete on the workstation is **$0** (download is free, 67 GB
@@ -41,8 +45,9 @@ free disk holds a wave). AWS adds nothing but speed for this; it is worth it onl
 Heimdall (CUDA-only) cross-check on a sample (a few dollars on spot). The earlier $170 estimate
 assumed 2 TB and is superseded.
 
-**Re-scoped deliverable:** (1) the recover-a-known on the 489 pulsar-calibrator observations
-(does the pure-PyTorch stack redetect B0531+21/B1933+16/B0950+08/B0329+54 across ~2 years of
+**Re-scoped deliverable:** (1) the recover-a-known on the ~486 pulsar-calibrator observations
+(CB00 only, 0.15 TB)
+— does the pure-PyTorch stack redetect B0531+21/B1933+16/B0950+08/B0329+54 across ~2 years of
 heterogeneous 1-bit data?); (2) the blind single-pulse census of the 3,489 pulsar-field CBs
 (7.5 TB) — RRAT/known-pulsar redetection statistics + candidate trains; (3) the Heimdall
 cross-check (software note). The "archive-wide census" framing below is withdrawn.
