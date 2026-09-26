@@ -338,3 +338,25 @@ computation. Two are my misreadings of my own regression, recorded as such:
 **Recommended single change:** rebuild the "no unique baseline" argument on what the rows show
 (no density match; offsets track occupancy and redshift; the preferred-weighting residual is
 -0.063, 1.5-1.9 sigma against the real bin's noise) and conclude "we cannot attribute".
+
+### Response (run `fashienv-round4`; every earlier number reproduced exactly)
+
+All fourteen findings addressed in text. Three new diagnostics were computed rather than asserted:
+
+- **Regression, recomputed in the pipeline** (`void_null_constrained.B_regression`): overlap
+  0.280-0.367; R^2 overlap alone 0.072, occupancy + z 0.199, all three 0.200; overlap coefficient
+  under controls 0.056; the fitted overlap line moves **0.031 dex** over the sampled range. The
+  zero-overlap intercept is gone from the paper.
+- **Group-null diagnostics:** placed group regions hold a median **1,949** galaxies at z 0.0225,
+  against **18,696** at z 0.031 for the real groups, with a median 0.43 real-group overlap. So
+  44/200 is a weak test, not evidence of no group effect. The paper now says "neither confirms
+  nor excludes" (this phrase is the triage LOW "overclaim" hit, which is a false positive).
+- **No-overlap trial in the pipeline** (seed 67, 500 tries): **688/1163** voids unplaced (the
+  one-off test earlier gave 687, a different draw order). Reported as a single seeded trial, not a
+  reproducible constant.
+
+Text: "cannot attribute" replaces "no environmental dependence survives"; the volumes keep the
+catalogues' radial selection; Moorman+2014 used 2DSWML (verified), so the ALFALFA contrast is
+narrowed; DR1 -0.256 never null-tested; the single-limit weighting is demoted (global alpha -1.73,
+reduced chi2 190); Fig. 1 caption states the fitted bins (void points below log M ~ 8 lie below the
+curve, checked on the rendered figure); fashi_groups year 2026; stale WeightingShiftPct removed.

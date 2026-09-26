@@ -17,10 +17,11 @@ recommend the next version number.
   group-field +0.166 dex -- but randomly relocated voids give -0.087 +/- 0.017 and randomly
   relocated groups +0.126 +/- 0.056, so arbitrary volume splits shift the fitted knee by as much
   as published void effects. The group offset is reached by 44/200 random placements. The void
-  offset lies beyond all 1,000 placements, but the null's mean moves with where the volumes land
-  (0.35 dex per unit overlap with the real voids) and the residual depends on the weighting
-  (-0.063 vs -0.160), so no environmental dependence is claimed. Two referee rounds (both MAJOR)
-  drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  offset lies beyond all 1,000 placements, but the placements hold 25-32k galaxies against the
+  real voids' 17k, so the null is not density-matched and the residual (-0.063, 1.5-1.9 sigma)
+  cannot be attributed to environment. The group null is weak (its regions hold a tenth of the
+  real groups' galaxies), and a no-overlap void placement is infeasible (688/1163 unplaced).
+  Three referee rounds (all MAJOR) drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
   unconstrained void null with per-placement diagnostics, a group null, a KD-tree
   `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
   The DR1 paper's -0.256 is disclosed as the old estimator's value.
