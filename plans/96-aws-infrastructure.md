@@ -117,7 +117,7 @@ infra/terraform/
                               shutdown_behavior = terminate + a hard max-lifetime in user-data
     sagemaker/   gated off    execution role + bucket access for managed-spot training jobs only
                               (plan 51); no domain, no endpoints — those bill hourly
-  seatbelt.json               # extends aws-ai's: region lock; deny ec2:RunInstances unless
+  ../seatbelt.json            # ATTACHED 2026-09-26 (infra/seatbelt.json); extends aws-ai's: region lock; deny ec2:RunInstances unless
                               # instance type ∈ allowlist above; deny NAT gateway, p4d/p5,
                               # SageMaker endpoints, OpenSearch Serverless, Kendra
 ```
@@ -150,8 +150,19 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
    `aws-ai-monthly` ($25 each, filtered on `user:Project`) — **alerts only**, email at 50/80/100%
    actual and 100% forecast; cost-anomaly monitor `services-anomaly-monitor` (per service) with a
    daily email for anomalies ≥ $5. These were made by hand, so the `budget` module must
-   `terraform import` them rather than create duplicates. **Still open:** attaching the merged
-   seatbelt (changes the admin permission set — confirm separately).
+   `terraform import` them rather than create duplicates.
+   **Seatbelt attached 2026-09-26 (owner-approved):** `infra/seatbelt.json` is the inline policy
+   on the `AdministratorAccess` permission set, provisioned to the account. It is `aws-ai`'s
+   `iam/cost-seatbelt.json` (region lock to us-east-1; no Kendra / OpenSearch Serverless /
+   SageMaker endpoints / RDS) **plus** an EC2 instance-type allowlist and denies on NAT gateways,
+   fleets, legacy spot requests, dedicated hosts, reservations and Savings Plans. **The attached
+   policy is the source of truth; `aws-ai`'s file is now a subset of it.** Access Analyzer: no
+   findings. Proven by dry-run, not assumed: `p5.48xlarge` and `g6e.2xlarge` → denied;
+   `g6.xlarge`, `g5.xlarge` spot, `t3.micro` → allowed; `create-nat-gateway` on a real
+   default-VPC subnet → denied; `request-spot-instances` → denied; any call in `us-west-2` →
+   denied; STS and Budgets still work. Spot runs go through `run-instances
+   --instance-market-options`, which the allowlist governs. To change it: edit the file,
+   `put-inline-policy-to-permission-set`, then `provision-permission-set`.
 1. **Storage — ~$0 until used.** `storage` module; upload nothing yet. Verify the public-access
    block and lifecycle rules with `aws s3api get-bucket-*`.
 2. **One CUDA validation run — ~$2.50.** `compute` module, g6.xlarge on-demand, the `torchfdmt`
@@ -176,4 +187,4 @@ home with `aws s3 sync` and are committed as evidence exactly like local runs �
 
 - ~~Separate member account or shared?~~ **Decided 2026-09-26: shared account, tag-separated.**
 - ~~Budget and alert mode~~ **Decided 2026-09-26: $25/month account-wide, alerts only.**
-- Attach the merged seatbelt to the `AdministratorAccess` permission set? (pending)
+- ~~Attach the merged seatbelt?~~ **Done 2026-09-26** (see phase 0).

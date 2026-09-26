@@ -23,7 +23,12 @@ recommend the next version number.
 - **`plans/96-aws-infrastructure.md`** — a cost-gated AWS plan for the two constraints the
   workstation cannot meet (70 GB free disk; CUDA-only tools), with us-east-1 prices pulled from
   AWS's public price list on 2026-09-26, worked costs per use, a Terraform layout mirroring the
-  `aws-ai` repo, and phases. Nothing is provisioned.
+  `aws-ai` repo, and phases. Phase 0 guardrails are live in the shared account (cost-allocation
+  tags, a $25/month alerts-only budget, an anomaly monitor); no compute or storage is provisioned.
+- **`infra/seatbelt.json`** — the explicit-deny policy now attached to the account's admin
+  permission set: region lock, no hourly-billed managed services, an EC2 instance-type allowlist,
+  and no NAT gateways, fleets, dedicated hosts or purchase commitments. Each deny was proven by a
+  dry-run call.
 
 - **`fable-ideas.md` closes the exoplanet-radio-in-surveys door.** β Pic b's MeerKAT emission
   (arXiv:2609.16720; brightest burst 307 µJy) is ≥3× below RACS snapshot limits, and forced
