@@ -44,6 +44,8 @@ __all__ = [
     "void_membership_holes",
     "cmb_to_helio_cz",
     "random_void_positions",
+    "random_group_positions",
+    "knee_offset_common_bins",
     "assign_groups",
     "clustercentric_radius",
     "vmax_1vmax",
@@ -70,6 +72,7 @@ FASHI_DR2_AREA_DEG2 = 19482.0  # the area DR2's own Vmax column is computed over
 FASHI_DR2_C_MIN = 0.5  # "only galaxies above the 50% flux completeness limit" (DR2 HIMF sample)
 
 C_KM_S = 299792.458
+TEMPEL_H0 = 67.8  # Tempel+2017 quote comoving distances and R200 for H0 = 67.8 (VizieR ReadMe)
 H0 = 70.0  # km/s/Mpc, the FASHI DR1 distance convention (h70)
 FASHI_FLUX_LIMIT = 0.30  # Jy km/s integrated-flux limit for the 1/Vmax weighting. A single-cut
 # order-of-magnitude value (FAST is deeper than ALFALFA's ~0.7 Jy km/s); it is NOT FASHI's full
@@ -201,32 +204,142 @@ def random_void_positions(
     rng: np.random.Generator,
     *,
     cell_deg: float = 2.0,
-) -> np.ndarray:
+    hole_radius: np.ndarray | None = None,
+    constrained: bool = False,
+    box: tuple[np.ndarray, np.ndarray] | None = None,
+    max_tries: int = 500,
+    no_overlap: bool = False,
+) -> tuple[np.ndarray, dict]:
     """Move every void RIGIDLY (all its holes together) to a random direction inside the footprint.
 
     Each void keeps its radial distance, size and internal shape; only its sky position (and a
-    random roll about the line of sight) changes. The target direction is uniform on the sphere,
-    accepted only where the footprint (cells occupied by ``footprint_ra/dec``) has coverage. This
-    is the random-void null: it preserves the void population's radial profile and volume
-    fraction, so any void-wall offset it produces is the estimator's and geometry's own bias.
+    random roll about the line of sight) changes.
+
+    Unconstrained (the first-round null): only the void CENTRE's direction must be in the
+    footprint (cells occupied by ``footprint_ra/dec``), so holes can spill outside it and placed
+    voids can overlap each other. ``constrained=True`` (second referee round) additionally
+    requires EVERY hole's direction to be in the footprint and every hole centre inside ``box``
+    (the classifiable region). ``no_overlap=True`` further forbids any hole overlapping a hole
+    of an already-placed void, as real VoidFinder voids are disjoint -- but measured on the
+    Douglass catalogue that is infeasible: 687 of 1163 voids could not be placed (the voids fill
+    too much of the volume to be re-scattered disjointly), so the real-data null does not use
+    it and instead measures overlap through occupancy and the real-void overlap fraction. A void
+    that cannot be placed in ``max_tries`` is left unplaced (its holes set to NaN) and counted.
+
+    Returns the moved holes and diagnostics: the fraction of holes whose direction falls outside
+    the footprint, and the number of voids left unplaced.
     """
     cells = _sky_cells(footprint_ra, footprint_dec, cell_deg)
     hole_xyz = np.asarray(hole_xyz, float)
-    out = np.empty_like(hole_xyz)
+    rad = np.zeros(len(hole_xyz)) if hole_radius is None else np.asarray(hole_radius, float)
+    out = np.full_like(hole_xyz, np.nan)
+    placed_xyz: list[np.ndarray] = []
+    placed_r: list[np.ndarray] = []
+    n_unplaced = 0
+
+    def in_footprint(pts: np.ndarray) -> np.ndarray:
+        d = np.linalg.norm(pts, axis=1)
+        ra = np.degrees(np.arctan2(pts[:, 1], pts[:, 0])) % 360.0
+        dec = np.degrees(np.arcsin(np.clip(pts[:, 2] / d, -1, 1)))
+        keys = zip(*_cells_arrays(ra, dec, cell_deg), strict=True)
+        return np.fromiter((k in cells for k in keys), bool, count=len(pts))
+
     for vid in np.unique(void_id):
         sel = np.flatnonzero(void_id == vid)
         centre = _unit(hole_xyz[sel].mean(axis=0))
-        while True:
+        ok_any = False
+        for _ in range(max_tries if constrained else 10_000):
             z = rng.uniform(-1, 1)
             phi = rng.uniform(0, 2 * np.pi)
             tgt = np.array([np.sqrt(1 - z * z) * np.cos(phi), np.sqrt(1 - z * z) * np.sin(phi), z])
-            ra = np.degrees(np.arctan2(tgt[1], tgt[0])) % 360.0
-            dec = np.degrees(np.arcsin(tgt[2]))
-            if next(iter(_sky_cells(np.array([ra]), np.array([dec]), cell_deg))) in cells:
-                break
-        rot = _rotation_to(centre, tgt, rng.uniform(0, 2 * np.pi))
-        out[sel] = hole_xyz[sel] @ rot.T
-    return out
+            if not in_footprint(tgt[None, :])[0]:
+                continue
+            moved = hole_xyz[sel] @ _rotation_to(centre, tgt, rng.uniform(0, 2 * np.pi)).T
+            if constrained:
+                if not in_footprint(moved).all():
+                    continue
+                if box is not None and not np.all((moved >= box[0]) & (moved <= box[1])):
+                    continue
+                if no_overlap and placed_xyz:
+                    px = np.concatenate(placed_xyz)
+                    pr = np.concatenate(placed_r)
+                    dd = np.linalg.norm(moved[:, None, :] - px[None, :, :], axis=2)
+                    if np.any(dd < rad[sel][:, None] + pr[None, :]):
+                        continue
+            out[sel] = moved
+            placed_xyz.append(moved)
+            placed_r.append(rad[sel])
+            ok_any = True
+            break
+        if not ok_any:
+            n_unplaced += 1
+    good = np.all(np.isfinite(out), axis=1)
+    spill = float(np.mean(~in_footprint(out[good]))) if good.any() else float("nan")
+    return out, {"spill_frac": spill, "n_unplaced": n_unplaced}
+
+
+def _cells_arrays(ra_deg: np.ndarray, dec_deg: np.ndarray, cell_deg: float) -> tuple:
+    ds = np.radians(cell_deg)
+    nra = int(round(360.0 / cell_deg))
+    ira = (np.asarray(ra_deg, float) // cell_deg).astype(int) % nra
+    idec = np.floor(np.sin(np.radians(np.asarray(dec_deg, float))) / ds).astype(int)
+    return ira.tolist(), idec.tolist()
+
+
+def random_group_positions(
+    grp_ra: np.ndarray,
+    grp_dec: np.ndarray,
+    footprint_ra: np.ndarray,
+    footprint_dec: np.ndarray,
+    rng: np.random.Generator,
+    *,
+    cell_deg: float = 2.0,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Random sky positions inside the footprint for every group (velocity and R200 kept)."""
+    cells = _sky_cells(footprint_ra, footprint_dec, cell_deg)
+    n = len(grp_ra)
+    ra_out, dec_out = np.empty(n), np.empty(n)
+    filled = 0
+    while filled < n:
+        k = 4 * (n - filled) + 16
+        z = rng.uniform(-1, 1, k)
+        ra = rng.uniform(0, 360, k)
+        dec = np.degrees(np.arcsin(z))
+        keys = zip(*_cells_arrays(ra, dec, cell_deg), strict=True)
+        ok = np.fromiter((c in cells for c in keys), bool, count=k)
+        take = np.flatnonzero(ok)[: n - filled]
+        ra_out[filled : filled + take.size] = ra[take]
+        dec_out[filled : filled + take.size] = dec[take]
+        filled += take.size
+    return ra_out, dec_out
+
+
+def knee_offset_common_bins(
+    cat: dict, area: float, mask_a: np.ndarray, mask_b: np.ndarray, vmax
+) -> dict:
+    """Knee offset (a - b) with both Schechter fits restricted to the mass bins BOTH populate.
+
+    The void and wall HIMFs can cover different mass ranges (fits need >= 3 counts per bin); with
+    poor fits (reduced chi2 >> 1) the knee then depends on the range fitted. Fitting both over
+    the common bins removes that difference.
+    """
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    v = vmax if vmax is not None else vmax_1vmax(lm, dd, ff)
+    ha = himf(lm[mask_a], v[mask_a], area_sr=area)
+    hb = himf(lm[mask_b], v[mask_b], area_sr=area)
+    common = (ha["counts"] >= 3) & (hb["counts"] >= 3) & (ha["phi"] > 0) & (hb["phi"] > 0)
+
+    def restrict(h: dict) -> dict:
+        return {**h, "counts": np.where(common, h["counts"], 0)}
+
+    fa, fb = fit_schechter(restrict(ha)), fit_schechter(restrict(hb))
+    return {
+        "n_common_bins": int(common.sum()),
+        "logm_range": [float(ha["logm"][common].min()), float(ha["logm"][common].max())]
+        if common.any()
+        else None,
+        **_offset_stats("common", fa, fb),
+    }
 
 
 def void_members(
@@ -310,36 +423,49 @@ def assign_groups(
     grp_r200_mpc: np.ndarray,
     *,
     dv_max: float = 1000.0,
+    h0: float = H0,
 ) -> np.ndarray:
     """Nearest group within R200 (projected) and ``dv_max`` (km/s): index into groups, or -1.
 
     Projected separation uses the small-angle sky distance at the group's redshift; a galaxy is
     assigned to the group whose (projected sep / R200) is smallest among groups passing the
-    velocity cut. Returns a per-galaxy group index (-1 = field).
+    velocity cut. Returns a per-galaxy group index (-1 = field). ``h0`` sets the distance scale
+    the group R200 values are quoted in (Tempel+2017: H0 = 67.8).
+
+    KD-tree implementation (each group queries the galaxies within its own angular R200, then
+    the velocity cut and the nearest-in-R200-units rule are applied); identical results to the
+    brute-force loop it replaced (tested), fast enough to rerun inside a random-placement null.
     """
-    ra = np.radians(np.asarray(gal_ra, float))
-    dec = np.radians(np.asarray(gal_dec, float))
+    from scipy.spatial import cKDTree
+
+    def xyz(ra, dec):
+        r, d = np.radians(np.asarray(ra, float)), np.radians(np.asarray(dec, float))
+        return np.column_stack([np.cos(d) * np.cos(r), np.cos(d) * np.sin(r), np.sin(d)])
+
     cz = np.asarray(gal_cz, float)
-    gra = np.radians(np.asarray(grp_ra, float))
-    gdec = np.radians(np.asarray(grp_dec, float))
     gcz = np.asarray(grp_cz, float)
     r200 = np.asarray(grp_r200_mpc, float)
     out = np.full(len(cz), -1, int)
-    for i in range(len(cz)):
-        dv = np.abs(cz[i] - gcz)
-        near = dv <= dv_max
-        if not near.any():
+    if len(cz) == 0 or len(gcz) == 0:
+        return out
+    gx, qx = xyz(gal_ra, gal_dec), xyz(grp_ra, grp_dec)
+    dist = np.maximum(gcz / h0, 1e-6)
+    theta = np.maximum(r200, 1e-6) / dist  # angular R200 (rad)
+    chord = 2.0 * np.sin(np.minimum(theta, np.pi) / 2.0)
+    best = np.full(len(cz), np.inf)
+    hits = cKDTree(gx).query_ball_point(qx, r=chord)
+    for g, members in enumerate(hits):
+        if not members:
             continue
-        # angular separation (haversine), projected to Mpc at the group's distance
-        sdlat = np.sin((gdec - dec[i]) / 2.0)
-        sdlon = np.sin((gra - ra[i]) / 2.0)
-        h = sdlat**2 + np.cos(dec[i]) * np.cos(gdec) * sdlon**2
-        sep_rad = 2.0 * np.arcsin(np.sqrt(np.clip(h, 0, 1)))
-        sep_mpc = sep_rad * (gcz / H0)
-        ratio = np.where(near, sep_mpc / np.maximum(r200, 1e-6), np.inf)
-        j = int(np.argmin(ratio))
-        if ratio[j] <= 1.0:
-            out[i] = j
+        m = np.asarray(members)
+        m = m[np.abs(cz[m] - gcz[g]) <= dv_max]
+        if m.size == 0:
+            continue
+        cosang = np.clip(gx[m] @ qx[g], -1.0, 1.0)
+        ratio = np.arccos(cosang) * dist[g] / max(r200[g], 1e-6)
+        better = (ratio <= 1.0) & ((ratio < best[m]) | ((ratio == best[m]) & (g < out[m])))
+        best[m[better]] = ratio[better]
+        out[m[better]] = g
     return out
 
 
@@ -907,6 +1033,7 @@ def _environments(cat: dict, voids: dict, grp: dict, *, q0: float = _Q0) -> dict
         grp["grp_dec"],
         grp["grp_cz"],
         grp["grp_r200"],
+        h0=TEMPEL_H0,
     )
     return {
         "xyz": xyz,
@@ -914,6 +1041,110 @@ def _environments(cat: dict, voids: dict, grp: dict, *, q0: float = _Q0) -> dict
         "classifiable": _within_void_footprint(xyz, voids["sphere_xyz"]),
         "in_group": gidx >= 0,
     }
+
+
+def void_null(
+    cat: dict,
+    area: float,
+    env: dict,
+    voids: dict,
+    footprint: tuple[np.ndarray, np.ndarray],
+    weights: dict,
+    *,
+    n: int,
+    seed: int,
+    constrained: bool,
+    n_jackknife: int = 0,
+) -> dict:
+    """Random-void null: per-placement void-wall offsets and the diagnostics that test fairness.
+
+    For each placement (see :func:`random_void_positions`) the void/wall split is recomputed
+    under every weighting in ``weights`` (label -> (base_mask, vmax_or_None)), and recorded with:
+    the void-bin occupancy and number of fitted bins, the median redshift of void members, the
+    fraction of null-void galaxies that are REAL void members (signal leaking into the null),
+    and the fraction of holes outside the footprint. The first ``n_jackknife`` placements also
+    get a delete-one-void jackknife, so the null's own noise can be compared with the real bin's.
+    """
+    rng = np.random.default_rng(seed)
+    box = (voids["sphere_xyz"].min(axis=0) - 20.0, voids["sphere_xyz"].max(axis=0) + 20.0)
+    lm, dd, ff, z = cat["log_mhi"], cat["dist_mpc"], cat["flux"], cat["z"]
+    cl, real_iv = env["classifiable"], env["in_void"]
+    rows = []
+    for k in range(n):
+        moved, diag = random_void_positions(
+            voids["sphere_xyz"], voids["void_id"], footprint[0], footprint[1], rng,
+            hole_radius=voids["sphere_radius"], constrained=constrained, box=box,
+        )  # fmt: skip
+        ok = np.all(np.isfinite(moved), axis=1)
+        iv = void_membership_holes(env["xyz"], moved[ok], voids["sphere_radius"][ok])
+        row: dict = {**diag}
+        for lab, (base, vmax) in weights.items():
+            _hv, fv = _himf_and_fit(lm, dd, ff, area, mask=base & cl & iv, vmax=vmax)
+            _hw, fw = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ~iv, vmax=vmax)
+            row[f"{lab}_offset"] = fv.get("log_m_star", np.nan) - fw.get("log_m_star", np.nan)
+            if lab == "B":
+                sel = base & cl & iv
+                row["n_in_void"] = int(sel.sum())
+                row["n_bins_void"] = int(fv.get("n_bins", 0))
+                row["median_z_void"] = float(np.median(z[sel])) if sel.any() else np.nan
+                row["real_overlap_frac"] = float(np.mean(real_iv[sel])) if sel.any() else np.nan
+        if k < n_jackknife:
+            vm = void_members(
+                env["xyz"], moved[ok], voids["sphere_radius"][ok], voids["void_id"][ok]
+            )
+            jkk = void_jackknife(cat, area, iv, cl, vm, {"B": weights["B"]})
+            row["B_jackknife_err"] = jkk.get("B_jackknife_err")
+        rows.append(row)
+        if (k + 1) % 50 == 0 or k + 1 == n:
+            import sys
+
+            print(
+                f"[void_null constrained={constrained}] {k + 1}/{n} placements",
+                file=sys.stderr,
+                flush=True,
+            )
+
+    def col(key: str) -> np.ndarray:
+        return np.array([r.get(key, np.nan) for r in rows], float)
+
+    out: dict = {"n_reps": n, "constrained": constrained, "seed": seed}
+    for lab in weights:
+        a = col(f"{lab}_offset")
+        a = a[np.isfinite(a)]
+        out[lab] = {
+            "n_ok": int(a.size),
+            "mean": round(float(a.mean()), 4) if a.size else None,
+            "std": round(float(a.std(ddof=1)), 4) if a.size > 1 else None,
+            "min": round(float(a.min()), 4) if a.size else None,
+            "max": round(float(a.max()), 4) if a.size else None,
+        }
+    for key in (
+        "n_in_void",
+        "n_bins_void",
+        "median_z_void",
+        "real_overlap_frac",
+        "spill_frac",
+        "n_unplaced",
+    ):
+        a = col(key)
+        a = a[np.isfinite(a)]
+        out[f"{key}_median"] = round(float(np.median(a)), 4) if a.size else None
+    jk = col("B_jackknife_err")
+    jk = jk[np.isfinite(jk)]
+    out["B_jackknife_err_placements"] = [round(float(x), 4) for x in jk]
+    # Overlap regression: null offset vs fraction of null-void galaxies that are real-void members.
+    b, ov = col("B_offset"), col("real_overlap_frac")
+    good = np.isfinite(b) & np.isfinite(ov)
+    if good.sum() > 10 and np.ptp(ov[good]) > 0:
+        slope, icpt = np.polyfit(ov[good], b[good], 1)
+        out["B_vs_overlap"] = {
+            "slope": round(float(slope), 4),
+            "intercept_at_zero_overlap": round(float(icpt), 4),
+        }
+    out["rows"] = [
+        {k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()} for r in rows
+    ]
+    return out
 
 
 def _match_releases(
@@ -958,7 +1189,9 @@ def _clean(cat: dict) -> dict:
     return {k: np.asarray(v)[ok] for k, v in cat.items()}
 
 
-def _real_leg(n_null: int = 100):  # pragma: no cover - network + VizieR catalogues
+def _real_leg(
+    n_null: int = 1000, n_group_null: int = 200
+):  # pragma: no cover - network + VizieR catalogues
     """FASHI DR2 x Tempel groups x Douglass voids: the environment-split HIMF.
 
     Headline weighting: DR2's own 1/(C * Vmax) on the C >= 0.5 sample. Since the DR2 referee
@@ -1021,55 +1254,129 @@ def _real_leg(n_null: int = 100):  # pragma: no cover - network + VizieR catalog
         {"optA_same": (samp_b, vmax_a), "B": (samp_b, vmax_b)},
     )  # fmt: skip
 
-    # Random-void null: voids moved rigidly within the Tempel (SDSS) footprint.
-    rng = np.random.default_rng(64)
-    null = []
-    for _ in range(n_null):
-        moved = random_void_positions(
-            voids["sphere_xyz"], voids["void_id"], grp["gal_ra"], grp["gal_dec"], rng
-        )
-        iv = void_membership_holes(env["xyz"], moved, voids["sphere_radius"])
-        _hv, fv = _himf_and_fit(
-            cat["log_mhi"],
-            cat["dist_mpc"],
-            cat["flux"],
+    # Random-void nulls (second referee round): unconstrained (centre-in-footprint, as round 1)
+    # and constrained (every hole in the footprint and the classifiable box, no mutual overlap),
+    # each with per-placement occupancy / overlap / spill diagnostics, both weightings, and a
+    # delete-one-void jackknife on a few placements for the null's own noise.
+    footprint = (grp["gal_ra"], grp["gal_dec"])
+    wts = {"B": (samp_b, vmax_b), "optA_same": (samp_b, vmax_a)}
+    measured = b["void_knee_offset"]
+
+    def summarise(nl: dict) -> dict:
+        offs_b = np.array([r.get("B_offset", np.nan) for r in nl["rows"]], float)
+        offs_b = offs_b[np.isfinite(offs_b)]
+        mean_b = nl["B"]["mean"]
+        return {
+            **{k: v for k, v in nl.items() if k != "rows"},
+            "n_le_measured": int(np.sum(offs_b <= measured)),
+            "p_le_measured": round(float((np.sum(offs_b <= measured) + 1) / (offs_b.size + 1)), 4),
+            "measured_minus_null_mean": round(measured - mean_b, 3) if mean_b is not None else None,
+            "eds_percentile": round(100.0 * float(np.mean(offs_b <= b_eds["void_knee_offset"])), 1),
+            "rows": nl["rows"],
+        }
+
+    null_u = summarise(
+        void_null(
+            cat,
             area,
-            mask=samp_b & env["classifiable"] & iv,
-            vmax=vmax_b,
+            env,
+            voids,
+            footprint,
+            wts,
+            n=n_null,
+            seed=64,
+            constrained=False,
+            n_jackknife=10,
         )
-        _hw, fw = _himf_and_fit(
-            cat["log_mhi"],
-            cat["dist_mpc"],
-            cat["flux"],
-            area,
-            mask=samp_b & env["classifiable"] & ~iv,
-            vmax=vmax_b,
-        )
-        d = fv.get("log_m_star", np.nan) - fw.get("log_m_star", np.nan)
-        if np.isfinite(d):
-            null.append(float(d))
-    na = np.asarray(null)
-    null_out = {
-        "n_reps": n_null,
-        "n_ok": int(na.size),
-        "mean": round(float(na.mean()), 4) if na.size else None,
-        "std": round(float(na.std(ddof=1)), 4) if na.size > 1 else None,
-        # fraction of null offsets at least as negative as the measured one (one-sided p)
-        "p_le_measured": round(float((np.sum(na <= b["void_knee_offset"]) + 1) / (na.size + 1)), 4)
-        if na.size
-        else None,
-        "offsets": [round(x, 4) for x in null],
-    }
-    null_out["measured_minus_null_mean"] = (
-        round(b["void_knee_offset"] - null_out["mean"], 3) if null_out["mean"] is not None else None
     )
+    null_c = summarise(
+        void_null(
+            cat,
+            area,
+            env,
+            voids,
+            footprint,
+            wts,
+            n=n_null,
+            seed=65,
+            constrained=True,
+            n_jackknife=10,
+        )
+    )
+
+    # Group null: every group moved to a random footprint position (velocity, R200 kept).
+    rng_g = np.random.default_rng(66)
+    goffs = []
+    for _ in range(n_group_null):
+        gra, gdec = random_group_positions(grp["grp_ra"], grp["grp_dec"], *footprint, rng_g)
+        ig = (
+            assign_groups(
+                cat["ra"],
+                cat["dec"],
+                cat["cz"],
+                gra,
+                gdec,
+                grp["grp_cz"],
+                grp["grp_r200"],
+                h0=TEMPEL_H0,
+            )
+            >= 0
+        )
+        _hg, fg = _himf_and_fit(
+            cat["log_mhi"],
+            cat["dist_mpc"],
+            cat["flux"],
+            area,
+            mask=samp_b & env["classifiable"] & ig,
+            vmax=vmax_b,
+        )
+        _hf, ffd = _himf_and_fit(
+            cat["log_mhi"],
+            cat["dist_mpc"],
+            cat["flux"],
+            area,
+            mask=samp_b & env["classifiable"] & ~ig,
+            vmax=vmax_b,
+        )
+        d = fg.get("log_m_star", np.nan) - ffd.get("log_m_star", np.nan)
+        if np.isfinite(d):
+            goffs.append(float(d))
+        if len(goffs) % 50 == 0:
+            import sys
+
+            print(f"[group_null] {len(goffs)}/{n_group_null}", file=sys.stderr, flush=True)
+    ga = np.asarray(goffs)
+    group_null = {
+        "n_reps": n_group_null,
+        "n_ok": int(ga.size),
+        "mean": round(float(ga.mean()), 4) if ga.size else None,
+        "std": round(float(ga.std(ddof=1)), 4) if ga.size > 1 else None,
+        "n_ge_measured": int(np.sum(ga >= b["group_knee_offset"])),
+        "measured_minus_null_mean": round(b["group_knee_offset"] - float(ga.mean()), 3)
+        if ga.size
+        else None,
+        "offsets": [round(x, 4) for x in goffs],
+    }
+
+    common = knee_offset_common_bins(
+        cat, area, samp_b & env["classifiable"] & env["in_void"],
+        samp_b & env["classifiable"] & ~env["in_void"], vmax_b,
+    )  # fmt: skip
 
     dr1 = _clean(fetch_fashi_dr1())
     dr1_env = _environments(dr1, voids, grp)
-    d1 = _environment_split(
-        dr1, np.ones(dr1["ra"].size, bool), None, 7600.0 * (np.pi / 180.0) ** 2, dr1_env
-    )
+    area1 = 7600.0 * (np.pi / 180.0) ** 2
+    d1 = _environment_split(dr1, np.ones(dr1["ra"].size, bool), None, area1, dr1_env)
     d1.pop("_fig")
+    # DR1 with the OLD void definition (maximal spheres), to disclose the classification shift.
+    dr1_env_max = {
+        **dr1_env,
+        "in_void": void_membership_holes(
+            dr1_env["xyz"], spheres1["sphere_xyz"], spheres1["sphere_radius"]
+        ),
+    }
+    d1_max = _environment_split(dr1, np.ones(dr1["ra"].size, bool), None, area1, dr1_env_max)
+    d1_max.pop("_fig")
     xm = _match_releases(dr1, cat)
 
     def keep(d: dict, *keys: str) -> dict:
@@ -1104,7 +1411,10 @@ def _real_leg(n_null: int = 100):  # pragma: no cover - network + VizieR catalog
                            "alpha_err": 0.02, "ref": "arXiv:2606.31539 abstract"},
         **b,
         "void_jackknife": jk,
-        "random_void_null": null_out,
+        "random_void_null": null_u,
+        "random_void_null_constrained": null_c,
+        "random_group_null": group_null,
+        "void_offset_common_bins": common,
         "eds_void_knee_offset": b_eds["void_knee_offset"],
         "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
         "eds_void_knee_offset_sigma": b_eds["void_knee_offset_sigma"],
@@ -1115,6 +1425,7 @@ def _real_leg(n_null: int = 100):  # pragma: no cover - network + VizieR catalog
         "optA_same_sample": keep(a_same, *offs),
         "optA_single_flux_cut": keep(a_all, *offs),
         "dr1_optA_single_flux_cut": keep(d1, *offs),
+        "dr1_optA_maxsphere": keep(d1_max, *offs),
         "dr1_dr2_match": xm,
         # Same sample, only the weighting differs: the effect of the weighting alone.
         "weighting_effect_same_sample": round(b["void_knee_offset"] - a_same["void_knee_offset"], 3),
@@ -1252,11 +1563,38 @@ def _write_macros(m: dict, path) -> None:
             ("OptASameGroupKneeOffset", "optA_same_sample.group_knee_offset"),
             ("MaxSphereVoidKneeOffset", "maxsphere_void_knee_offset"),
             ("MaxSphereNInVoid", "maxsphere_n_in_void"),
-            ("NullReps", "random_void_null.n_ok"),
-            ("NullMean", "random_void_null.mean"),
-            ("NullStd", "random_void_null.std"),
-            ("NullP", "random_void_null.p_le_measured"),
+            ("NullReps", "random_void_null.B.n_ok"),
+            ("NullMean", "random_void_null.B.mean"),
+            ("NullStd", "random_void_null.B.std"),
+            ("NullNLe", "random_void_null.n_le_measured"),
             ("NullExcess", "random_void_null.measured_minus_null_mean"),
+            ("NullNInVoid", "random_void_null.n_in_void_median"),
+            ("NullOverlap", "random_void_null.real_overlap_frac_median"),
+            ("NullCReps", "random_void_null_constrained.B.n_ok"),
+            ("NullCMean", "random_void_null_constrained.B.mean"),
+            ("NullCStd", "random_void_null_constrained.B.std"),
+            ("NullCNLe", "random_void_null_constrained.n_le_measured"),
+            ("NullCExcess", "random_void_null_constrained.measured_minus_null_mean"),
+            ("NullCNInVoid", "random_void_null_constrained.n_in_void_median"),
+            ("NullCNBins", "random_void_null_constrained.n_bins_void_median"),
+            ("NullCOverlap", "random_void_null_constrained.real_overlap_frac_median"),
+            (
+                "NullCIntercept",
+                "random_void_null_constrained.B_vs_overlap.intercept_at_zero_overlap",
+            ),
+            ("NullCOptAMean", "random_void_null_constrained.optA_same.mean"),
+            ("EdsPercentile", "random_void_null_constrained.eds_percentile"),
+            ("GroupNullReps", "random_group_null.n_ok"),
+            ("GroupNullMean", "random_group_null.mean"),
+            ("GroupNullStd", "random_group_null.std"),
+            ("GroupNullNGe", "random_group_null.n_ge_measured"),
+            ("GroupNullExcess", "random_group_null.measured_minus_null_mean"),
+            ("CommonKneeOffset", "void_offset_common_bins.common_knee_offset"),
+            ("CommonKneeErr", "void_offset_common_bins.common_knee_offset_err"),
+            ("CommonNBins", "void_offset_common_bins.n_common_bins"),
+            ("VoidNBins", "himf_void.n_bins"),
+            ("WallNBins", "himf_wall.n_bins"),
+            ("DROneMaxVoidKneeOffset", "dr1_optA_maxsphere.void_knee_offset"),
             ("GlobalRedChi", "himf_global.red_chi2"),
             ("VoidRedChi", "himf_void.red_chi2"),
             ("WallRedChi", "himf_wall.red_chi2"),
@@ -1264,23 +1602,34 @@ def _write_macros(m: dict, path) -> None:
         ):
             lines.append(rf"\newcommand{{\feReal{macro}}}{{{nested(key)}}}")
     if m.get("is_real") and m.get("release") == "DR2":
-        rn = m.get("random_void_null") or {}
+        rc = m.get("random_void_null_constrained") or {}
         jk2 = m.get("void_jackknife") or {}
-        ex, sd, je = rn.get("measured_minus_null_mean"), rn.get("std"), jk2.get("B_jackknife_err")
+        ex = rc.get("measured_minus_null_mean")
+        sd = (rc.get("B") or {}).get("std")
+        je, fe_ = jk2.get("B_jackknife_err"), m.get("void_knee_offset_err")
         we, wee = m.get("weighting_effect_same_sample"), jk2.get("B_minus_optA_same_jackknife_err")
+        jk_pl = rc.get("B_jackknife_err_placements") or []
         flips = m.get("eds_void_status_changes") or {}
         lo, hi = flips.get("z0.00-0.02") or {}, flips.get("z0.06-0.09") or {}
+        a_same = (m.get("optA_same_sample") or {}).get("void_knee_offset")
+        a_null = (rc.get("optA_same") or {}).get("mean")
 
         def ratio(a_, b_, fmt="{:.1f}"):
             return fmt.format(abs(a_) / b_) if a_ is not None and b_ else "--"
 
+        def pct(a_, b_):
+            return f"{100.0 * a_ / b_:.0f}" if a_ is not None and b_ else "--"
+
         lines += [
-            rf"\newcommand{{\feRealNullExcessSigma}}{{{ratio(ex, sd)}}}",
-            rf"\newcommand{{\feRealNullExcessJkSigma}}{{{ratio(ex, je)}}}",
+            rf"\newcommand{{\feRealNullCExcessSigmaNull}}{{{ratio(ex, sd)}}}",
+            rf"\newcommand{{\feRealNullCExcessSigmaFit}}{{{ratio(ex, fe_)}}}",
+            rf"\newcommand{{\feRealNullCExcessSigmaJk}}{{{ratio(ex, je)}}}",
+            rf"\newcommand{{\feRealNullCJkErr}}{{{f'{np.median(jk_pl):.3f}' if jk_pl else '--'}}}",
+            rf"\newcommand{{\feRealNullCBiasPct}}{{{pct((rc.get('B') or {}).get('mean'), m.get('void_knee_offset'))}}}",
             rf"\newcommand{{\feRealWeightEffectSigma}}{{{ratio(we, wee)}}}",
-            rf"\newcommand{{\feRealNullBiasPct}}{{{ratio(rn.get('mean'), abs(m.get('void_knee_offset') or 0) / 100 if m.get('void_knee_offset') else None, '{:.0f}')}}}",
-            rf"\newcommand{{\feRealEdsChangedLowZPct}}{{{ratio(lo.get('n_changed'), lo.get('n_void', 0) / 100 if lo.get('n_void') else None, '{:.0f}')}}}",
-            rf"\newcommand{{\feRealEdsChangedHighZPct}}{{{ratio(hi.get('n_changed'), hi.get('n_void', 0) / 100 if hi.get('n_void') else None, '{:.0f}')}}}",
+            rf"\newcommand{{\feRealOptANullExcess}}{{{f'{a_same - a_null:.3f}' if a_same is not None and a_null is not None else '--'}}}",
+            rf"\newcommand{{\feRealEdsChangedLowZPct}}{{{pct(lo.get('n_changed'), lo.get('n_void'))}}}",
+            rf"\newcommand{{\feRealEdsChangedHighZPct}}{{{pct(hi.get('n_changed'), hi.get('n_void'))}}}",
         ]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

@@ -279,7 +279,8 @@ def test_random_void_positions_is_rigid_and_stays_in_footprint():
     vid = np.array([1, 1, 1, 2, 2, 2])
     fra = rng.uniform(150, 200, 5000)  # footprint: a patch of sky
     fdec = rng.uniform(10, 40, 5000)
-    moved = fe.random_void_positions(base, vid, fra, fdec, rng)
+    moved, diag = fe.random_void_positions(base, vid, fra, fdec, rng)
+    assert diag["n_unplaced"] == 0
     for v in (1, 2):
         a, b = base[vid == v], moved[vid == v]
         np.testing.assert_allclose(np.linalg.norm(b, axis=1), np.linalg.norm(a, axis=1), rtol=1e-9)
@@ -320,3 +321,130 @@ def test_fit_schechter_reports_fit_quality():
     h, fit = fe._himf_and_fit(cat["log_mhi"], cat["dist_mpc"], cat["flux"], cat["area_sr"])
     assert fit["n_bins"] >= 4 and np.isfinite(fit["red_chi2"]) and fit["red_chi2"] > 0
     assert -1.0 <= fit["corr_mstar_alpha"] <= 1.0
+
+
+def _assign_groups_bruteforce(gra, gdec, gcz, pra, pdec, pcz, r200, dv_max=1000.0, h0=70.0):
+    """The original O(N_gal x N_grp) loop, kept as the oracle for the KD-tree version."""
+    ra, dec = np.radians(gra), np.radians(gdec)
+    qra, qdec = np.radians(pra), np.radians(pdec)
+    out = np.full(len(gcz), -1, int)
+    for i in range(len(gcz)):
+        near = np.abs(gcz[i] - pcz) <= dv_max
+        if not near.any():
+            continue
+        h = (
+            np.sin((qdec - dec[i]) / 2) ** 2
+            + np.cos(dec[i]) * np.cos(qdec) * np.sin((qra - ra[i]) / 2) ** 2
+        )
+        sep = 2 * np.arcsin(np.sqrt(np.clip(h, 0, 1))) * (pcz / h0)
+        ratio = np.where(near, sep / np.maximum(r200, 1e-6), np.inf)
+        j = int(np.argmin(ratio))
+        if ratio[j] <= 1.0:
+            out[i] = j
+    return out
+
+
+@pytest.mark.parametrize("h0", [70.0, 67.8])
+def test_assign_groups_kdtree_matches_the_bruteforce_oracle(h0):
+    rng = np.random.default_rng(21)
+    n, m = 3000, 400
+    gra, gdec = rng.uniform(150, 170, n), rng.uniform(10, 25, n)
+    gcz = rng.uniform(3000, 15000, n)
+    pra, pdec = rng.uniform(150, 170, m), rng.uniform(10, 25, m)
+    pcz, r200 = rng.uniform(3000, 15000, m), rng.uniform(0.3, 1.5, m)
+    fast = fe.assign_groups(gra, gdec, gcz, pra, pdec, pcz, r200, h0=h0)
+    slow = _assign_groups_bruteforce(gra, gdec, gcz, pra, pdec, pcz, r200, h0=h0)
+    np.testing.assert_array_equal(fast, slow)
+    assert (fast >= 0).sum() > 50  # the test exercises real assignments, not just -1s
+
+
+def test_random_void_positions_constrained_keeps_holes_in_footprint_and_apart():
+    rng = np.random.default_rng(31)
+    # 12 voids of 3 holes each, radius 5, at distances 80-120
+    base, vid = [], []
+    for k in range(12):
+        c = rng.normal(0, 1, 3)
+        c = c / np.linalg.norm(c) * rng.uniform(80, 120)
+        for _ in range(3):
+            base.append(c + rng.normal(0, 3, 3))
+            vid.append(k)
+    base, vid = np.asarray(base), np.asarray(vid)
+    rad = np.full(len(base), 5.0)
+    fra, fdec = rng.uniform(140, 220, 20000), rng.uniform(0, 50, 20000)
+    moved, diag = fe.random_void_positions(
+        base, vid, fra, fdec, rng, hole_radius=rad, constrained=True, no_overlap=True
+    )
+    assert diag["n_unplaced"] == 0 and diag["spill_frac"] == 0.0
+    ra = np.degrees(np.arctan2(moved[:, 1], moved[:, 0])) % 360
+    dec = np.degrees(np.arcsin(moved[:, 2] / np.linalg.norm(moved, axis=1)))
+    assert np.all(
+        (ra >= 138) & (ra <= 222) & (dec >= -2) & (dec <= 52)
+    )  # every hole, not just centre
+    for a in range(12):
+        for b in range(a + 1, 12):
+            d = np.linalg.norm(moved[vid == a][:, None] - moved[vid == b][None], axis=2)
+            assert d.min() >= 10.0 - 1e-9  # radius 5 + radius 5: no overlap between voids
+
+
+def test_random_group_positions_land_in_footprint():
+    rng = np.random.default_rng(41)
+    fra, fdec = rng.uniform(150, 200, 5000), rng.uniform(10, 40, 5000)
+    ra, dec = fe.random_group_positions(np.zeros(300), np.zeros(300), fra, fdec, rng)
+    assert ra.size == 300 and np.all((ra >= 148) & (ra <= 202) & (dec >= 8) & (dec <= 42))
+
+
+def test_knee_offset_common_bins_uses_only_shared_bins():
+    cat = fe.synthetic_environment_catalogue()
+    v, w = cat["is_void"], ~cat["is_void"]
+    out = fe.knee_offset_common_bins(cat, cat["area_sr"], v, w, None)
+    assert out["n_common_bins"] >= 4
+    assert np.isfinite(out["common_knee_offset"])
+    assert out["common_knee_offset"] < 0  # the mock's void knee is injected below the wall's
+
+
+def test_void_null_runs_both_variants_and_reports_fairness_diagnostics():
+    cat = fe.synthetic_environment_catalogue()
+    n = cat["log_mhi"].size
+    rng = np.random.default_rng(51)
+    # galaxies on a sky patch, at their catalogue distances (Mpc/h-ish frame is irrelevant here)
+    ra, dec = rng.uniform(150, 210, n), rng.uniform(5, 45, n)
+    d = np.asarray(cat["dist_mpc"], float) * 0.7
+    r_, d_ = np.radians(ra), np.radians(dec)
+    xyz = (
+        np.column_stack([np.cos(d_) * np.cos(r_), np.cos(d_) * np.sin(r_), np.sin(d_)]) * d[:, None]
+    )
+    holes, vid = [], []
+    for k in range(15):
+        c = xyz[rng.integers(n)]
+        for _ in range(2):
+            holes.append(c + rng.normal(0, 2, 3))
+            vid.append(k)
+    voids = {
+        "sphere_xyz": np.asarray(holes),
+        "sphere_radius": np.full(30, 8.0),
+        "void_id": np.asarray(vid),
+    }
+    in_void = fe.void_membership_holes(xyz, voids["sphere_xyz"], voids["sphere_radius"])
+    env = {"xyz": xyz, "in_void": in_void, "classifiable": np.ones(n, bool)}
+    v1 = fe.vmax_1vmax(cat["log_mhi"], cat["dist_mpc"], cat["flux"])
+    wts = {"B": (np.ones(n, bool), v1), "optA_same": (np.ones(n, bool), 2 * v1)}
+    for constrained in (False, True):
+        out = fe.void_null(
+            cat, cat["area_sr"], env, voids, (ra, dec), wts,
+            n=6, seed=3, constrained=constrained, n_jackknife=1,
+        )  # fmt: skip
+        assert out["n_reps"] == 6 and len(out["rows"]) == 6
+        assert out["B"]["n_ok"] >= 3
+        row = out["rows"][0]
+        for key in ("n_in_void", "n_bins_void", "real_overlap_frac", "spill_frac", "B_offset"):
+            assert key in row
+        assert len(out["B_jackknife_err_placements"]) <= 1
+        # scaling Vmax by a constant cannot move a knee: where both fits are well posed
+        # (sensible offsets), the two weightings agree placement by placement
+        sane = [
+            r for r in out["rows"]
+            if abs(r["B_offset"]) < 1.0 and abs(r["optA_same_offset"]) < 1.0
+        ]  # fmt: skip
+        assert sane, "no well-posed placements -- the test would be vacuous"
+        for r in sane:
+            assert r["B_offset"] == pytest.approx(r["optA_same_offset"], abs=1e-3)
