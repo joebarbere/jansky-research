@@ -26,5 +26,18 @@
     "note": "the earlier 'Voyager null' searched here: blank sky"
   },
   "blank_snr": 4.59,
-  "recovered": true
+  "recovered": true,
+  "file_mjd": 57650.78209,
+  "legacy_reference": {
+    "freq_mhz": 8420.216454,
+    "mjd": 57386.0,
+    "recording": "blc3_guppi_57386_VOYAGER1_0004.0000.raw",
+    "source": "Estevez 2021, 'Decoding Voyager 1', destevez.net"
+  },
+  "annual_doppler": {
+    "velocity_change_kms": 32.45,
+    "predicted_shift_mhz": -0.9114,
+    "observed_shift_mhz": -0.9195,
+    "fraction_explained": 0.991
+  }
 }
