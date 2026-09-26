@@ -1,14 +1,14 @@
 # 61 — Apertif Time-Domain DR2 single-pulse reprocessing (torch-fdmt's real-data leg 2)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — probe the ASTRON
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — probe the ASTRON
 tape-staging request turnaround (free helpdesk) before committing to a schedule
 
 ## Context
 
 Apertif Time-Domain DR2 (1,666 pointings, ~0.48 GB/pointing, 1-bit Stokes-I PSRFITS) was
 FRB-searched with AMBER/ALERT (arXiv:2406.00482) but has no published archive-wide single-pulse
-RRAT / known-pulsar census (fable-ideas F24). This slice is the second real-data leg for the
+RRAT / known-pulsar census (ideas.md F24). This slice is the second real-data leg for the
 merged `torchfdmt` slice: `fdmt.py` (GPU dedispersion, ROCm-verified at 24× vs CPU) +
 `singlepulse.py` over staged pointings, with ATNF position-matched folding as the ground truth.
 Honest framing per the idea's own risk field: the ceiling is modest — this is tooling validation

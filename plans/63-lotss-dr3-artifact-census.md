@@ -1,13 +1,13 @@
 # 63 — LoTSS DR3 artifact archaeology: exhaustive offset-vector ghost/duplicate census
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — read the DR3 QA
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — read the DR3 QA
 section first and scope this census strictly against what it already covers
 
 ## Context
 
 Mega-catalogue QA sections sample; nobody publishes exhaustive small-separation pair statistics
-over an entire 13.7M-source catalogue (fable-ideas F26). This slice runs a GPU-chunked all-pairs
+over an entire 13.7M-source catalogue (ideas.md F26). This slice runs a GPU-chunked all-pairs
 search within 10′ over the full LoTSS DR3 source list, clusters the offset vectors in two frames
 — relative to the nearest bright source, and in the mosaic-tile frame — and identifies ghost
 families as repeated offset/PA excesses (calibration ghosts, mosaic-overlap duplicates,

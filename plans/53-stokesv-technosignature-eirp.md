@@ -1,7 +1,7 @@
 # 53 — Broadband technosignature EIRP limits from survey Stokes V (empty haystack cell)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: confirm
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — specifically: confirm
 no survey-V EIRP-limit paper has landed since the Lenc+2018 lineage, and re-read the narrowband
 haystack anchors (arXiv:2103.16250, 2606.04304) full-text
 
@@ -18,7 +18,7 @@ haystack anchors (arXiv:2103.16250, 2606.04304) full-text
 All published technosignature EIRP-limit work is narrowband (BL GBT, MeerKAT commensal
 arXiv:2103.16250, OVRO-LWA narrowband arXiv:2606.04304). Lenc+2018 showed Stokes V isolates
 artificial emitters, but nobody has converted survey-V non-detections into broadband
-technosignature limits — an empty haystack cell (fable-ideas F16). Data: RACS-low/mid V via
+technosignature limits — an empty haystack cell (ideas.md F16). Data: RACS-low/mid V via
 CASDA (verified access pattern, OPAL + `~/.casda_pw`); targets from the Gaia CNS 100 pc sample.
 Near-total reuse of the merged `stokesv`/`stokesv_discovery` slices (`measure_circular_pol`,
 per-field leakage floor, exclusion list). This merges naturally with F22's RACS-V UCD cutout
@@ -44,7 +44,7 @@ sweep (plans/59) — same cutout I/O, so run both target lists in one CASDA pass
    CASDA-I/O-bound, resumable, ~a week wall-clock — executed as one pass with the plans/59
    UCD sweep (same cutout I/O). Cross-check detections against the `stokesv_discovery`
    exclusion list (known V stars are astrophysical, not candidates).
-3. GATE-2 science review naming the fable-ideas caveats: broadband-transmitter priors are
+3. GATE-2 science review naming the ideas.md caveats: broadband-transmitter priors are
    contestable — frame strictly as parameter-space cartography; the per-beam leakage floor
    sets the depth and must be quoted as such.
 4. Paper: haystack-cell limits table + figure; RNAAS/arXiv-able.

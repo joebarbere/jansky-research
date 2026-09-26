@@ -6,7 +6,7 @@ to date is source-count/flux based (Böhme+ arXiv:2509.16732; arXiv:2509.18689; 
 arXiv:2505.23526; Mittal & Lewis arXiv:2605.27520); SPICE-RACS DR2 (arXiv:2605.16917) is the
 first RM catalogue big enough to change that.
 
-## GATE 0 (full-text pass, 2026-07-05 — the fable-ideas scan ran egress-blocked)
+## GATE 0 (full-text pass, 2026-07-05 — the ideas.md scan ran egress-blocked)
 
 - All five load-bearing arXiv IDs verified against their abstract/full-text pages; none does an
   RM dipole. The DR2 release paper itself contains no dipole/isotropy analysis ("dipole",

@@ -1,7 +1,7 @@
 # 49 — Five-archive simultaneous type III event at cycle-25 max (completes `type3synthesis`)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm all five
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — confirm all five
 archives (e-Callisto, OVRO-LWA, Wind/WAVES, PSP/RFS, SolO/RPW) are simultaneously live
 
 ## Context

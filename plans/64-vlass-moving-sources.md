@@ -20,7 +20,7 @@ E1–E3 ≈5.5–6 yr. Remaining standing item: same-week ADS re-search before f
 
 Every published radio proper motion starts from a known object — the field is Gaia-anchored
 (arXiv:2409.18466); no blind, radio-only moving-source search across the three VLASS epochs
-exists (fable-ideas F27). Method: GPU all-pairs linkage between the E1 and E2 component
+exists (ideas.md F27). Method: GPU all-pairs linkage between the E1 and E2 component
 catalogues in the 0.3–5″/yr annulus, E3 collinearity confirmation (three epochs on a line, with
 consistent rate), flux/morphology consistency cuts — and only *then* exclusion of Gaia/WISE
 counterparts. The survivors are optically-dark movers (Y dwarfs, high-proper-motion pulsars) or,

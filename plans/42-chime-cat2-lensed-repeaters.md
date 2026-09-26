@@ -17,7 +17,7 @@ Theory fully specifies how a strongly-lensed one-off FRB masquerades as a "repea
 fixed pattern of mutual delays (Dai & Lu 2017, 10.3847/1538-4357/aa8873; Li+2018, Nat. Comm.
 9:3833; review arXiv:2412.01536) — but no observational catalogue-level search has been
 published. CHIME's own lensing searches are intra-burst/microsecond baseband work (Leung+2022 /
-Kader+2022 — a different regime, listed as a closed door in fable-ideas.md's Corrections for
+Kader+2022 — a different regime, listed as a closed door in ideas.md's Corrections for
 sub-second echoes; this slice is the burst-to-burst regime they did not cover). Cat 2
 (arXiv:2601.09399) is the first dataset big enough. Data is the same as plan 39 (per-burst TOAs,
 DMs, morphologies, exposure functions) — bundle the mirror. Expected yield ≈ 0 (lensing optical

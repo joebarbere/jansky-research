@@ -1,7 +1,7 @@
 # 52 — SSL/anomaly sweep of a survey nobody has swept (RACS continuum or LoTSS DR3)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: read
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — specifically: read
 STRADAViT (arXiv:2603.29660) + the LoTSS DR3 paper full-text for "in prep" claims, and check the
 unverified HF checkpoint `ISSA-ML/stradavit-base`
 
@@ -17,7 +17,7 @@ unverified HF checkpoint `ISSA-ML/stradavit-base`
 ## Context
 
 SSL/SOM/anomaly sweeps exist for MGCLS, EMU-pilot, LoTSS DR1/DR2, and partial VLASS-QL — but
-(per the fable-ideas F15 verification, July 2026) **none for RACS continuum and none for LoTSS
+(per the ideas.md F15 verification, July 2026) **none for RACS continuum and none for LoTSS
 DR3** (a ~5-month window). The recipe is established and ROCm-safe: BYOL/DINO features →
 Astronomaly-Protege active anomaly ranking (arXiv:2411.04188, 2602.15930); arXiv:2409.11175
 shows generic DINOv2 ViTs already transfer to radio morphology at F1 0.72–0.88, so a

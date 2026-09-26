@@ -1,13 +1,13 @@
 # 67 — MALS DR3 Galactic HI-absorption demographics: covering fraction and optical-depth stats
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 MALS DR3 (arXiv:2504.00097; own portal `mals.iucaa.in`) released 3,640 Galactic HI-absorption
 features across 19,130 sightlines — the largest homogeneous 21-cm absorption set yet. The release
-paper is catalogue-first; the plain demographic questions are open (fable-ideas F30): covering
+paper is catalogue-first; the plain demographic questions are open (ideas.md F30): covering
 fraction of absorption vs Galactic |b| and ℓ, and the optical-depth distribution compared against
 21-SPONGE. This is deliberately a low-ceiling, zero-drama slice — a clean statistical companion
 to the release, not a discovery hunt — and the plan says so plainly. Spectral-line muscle memory

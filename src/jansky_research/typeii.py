@@ -1,4 +1,4 @@
-"""Metric/decametric type II solar radio burst census on OVRO-LWA (plan 50, fable-ideas F13).
+"""Metric/decametric type II solar radio burst census on OVRO-LWA (plan 50, ideas.md F13).
 
 Type II bursts are slow-drifting radio emission from CME-driven coronal shocks --- the radio
 signature of a shock climbing through the corona. They differ from the fast type III beam bursts

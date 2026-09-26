@@ -1,13 +1,13 @@
 # 72 — e-Callisto fine-structure census: network-scale spikes, J-bursts, and U-bursts
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 Solar radio fine structure — spikes, J-bursts, U-bursts — is studied on single high-cadence
 instruments (the LOFAR spike-pair result, Nat. Comm. 2026, is the fresh anchor); no
-network-scale census exists across the e-Callisto archive (fable-ideas F35). This repo already
+network-scale census exists across the e-Callisto archive (ideas.md F35). This repo already
 streams that archive (`airflow/` e-Callisto ingest) and owns the census statistics and
 coverage-correction machinery from the merged `ecallisto_census` slice — the new piece is a
 sub-2-s fine-structure detector run network-wide. e-Callisto cadence (typically 0.25 s) sits at

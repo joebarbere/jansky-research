@@ -1,7 +1,7 @@
 # 73 — Juno/Waves HOM occurrence census + moon-induced-emission incidence table (0.3–3 MHz)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
@@ -10,7 +10,7 @@ Density CDFs (doi:10.25935/6jg4-mk86): reader, background-threshold activity det
 Horizons-based Juno-frame CML, Io phase, occurrence maps. Re-banding the same CDFs to
 0.3–3 MHz opens hectometric (HOM) emission — an occurrence census plus a moon-induced-emission
 incidence table, with the Louis+2023 moon-footprint encounter detections as positive controls
-(fable-ideas F36). This space is crowded: the LESIA team owns the physics papers on this exact
+(ideas.md F36). This space is crowded: the LESIA team owns the physics papers on this exact
 dataset — so the slice is scoped narrowly and explicitly as the *occurrence-statistics
 complement* to their event-physics work, not a competitor. Data risk ≈ 0 (same verified daily
 CDFs, ~37 MB/day, no auth).

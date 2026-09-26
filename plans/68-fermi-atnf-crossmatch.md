@@ -1,13 +1,13 @@
 # 68 — Fermi 4FGL-DR4 × ATNF: a from-scratch cross-match and vetted unassociated-source list
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 Fermi 4FGL-DR4 and the ATNF pulsar catalogue are both public and both continuously updated, but
 associations propagate from pipeline lore; an independent from-scratch positional + Ė/d²
-plausibility cross-match is a reproducibility exercise with a useful by-product (fable-ideas
+plausibility cross-match is a reproducibility exercise with a useful by-product (ideas.md
 F31): a small vetted list of known radio pulsars sitting inside *unassociated* 4FGL error
 ellipses with gamma-ray-plausible spin-down flux. The hard validation anchor is built in — the
 match machinery must recover all ~294 known gamma-ray pulsars before any new-candidate claim.

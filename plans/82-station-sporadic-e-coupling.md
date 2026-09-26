@@ -29,7 +29,7 @@ satellite-glint excision falls out as a by-product. This is a ≥6-month campaig
 ## Approach
 
 0. GATE 0: plan 81's station on air and logging; GIRO Wallops foEs and Madrigal TEC access
-   paths live-verified (standing fable-ideas GATE-0: no data path was verified in the scan).
+   paths live-verified (standing ideas.md GATE-0: no data path was verified in the scan).
 1. Tooling + synthetic recover-a-known, ahead of the campaign: `synthetic_campaign` injects a
    known meteor→foEs lag on top of seasonal/tidal/geomagnetic confounders; the pipeline must
    recover the lag only after `confound_model` residualization — and report a null when the

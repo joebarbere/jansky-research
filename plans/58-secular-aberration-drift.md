@@ -1,7 +1,7 @@
 # 58 — Secular aberration drift from the public ICRF3×Gaia DR3 cross-match
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — confirm the public
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — confirm the public
 ICRF3 and Gaia DR3 AGN cross-match tables and check no post-2503.03389 reproduction exists
 
 ## Context
@@ -10,7 +10,7 @@ The solar system's Galactocentric acceleration shows up as a secular aberration 
 glide in AGN proper motions toward the Galactic centre, measured by Gaia (Klioner+2021) with
 refinements in arXiv:2503.03389. Both underlying tables are public (ICRF3 via IERS/CDS; Gaia DR3
 AGN astrometry via the archive), yet no independent-pipeline reproducibility note exists from the
-public cross-match alone. This slice is the cleanest quick win in fable-ideas.md (F21): a VSH/glide
+public cross-match alone. This slice is the cleanest quick win in ideas.md (F21): a VSH/glide
 fit on the cross-matched proper motions, extending the merged `offsets` slice (radio–optical
 cross-match + offset statistics, ~90% reuse) with near-zero new data access. Recover-a-known *is*
 the result: an independent reproduction of the glide amplitude and direction, with the Gaia AGN

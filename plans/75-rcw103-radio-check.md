@@ -1,13 +1,13 @@
 # 75 — RCW 103 (6.67-hr ultra-slow magnetar): a one-target radio counterpart check
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 1E 161348−5055 in RCW 103 is the 6.67-hr ultra-slow magnetar — the period sits squarely in
 long-period-transient territory, yet no systematic radio counterpart check at its position has
-been *stated* in the literature (fable-ideas F38: a never-stated gap). This is a one-target
+been *stated* in the literature (ideas.md F38: a never-stated gap). This is a one-target
 appendix in the pattern of the merged `stokesv` and `lpt` slices: forced Stokes I+V photometry
 at the known X-ray position across every available RACS epoch (CASDA, verified access) plus
 VLASS quick-look cone checks, with leakage vetting. The expected outcome is a clean null — and

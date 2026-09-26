@@ -1,4 +1,4 @@
-# Findings — e-CALLISTO as an accidental 15-year RFI observatory (plan 54, fable-ideas F17)
+# Findings — e-CALLISTO as an accidental 15-year RFI observatory (plan 54, ideas.md F17)
 
 `jansky_research.rfitrend`: a burst-immune, gain-cancelling occupancy metric applied to the
 continuous e-CALLISTO FITS archive 2012–2026, trending the Starlink unintended-emission (UEM) band

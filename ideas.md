@@ -1,4 +1,11 @@
-# fable-ideas.md — deep opportunity re-scan (2026-07-05)
+# ideas.md — the research idea list
+
+*Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
+dated **Update** sections at the top record what changed since. Newest update first.*
+
+- [Update 2026-09-26](#update-2026-09-26--releases-scoop-re-check-compute-cloud-ml): data
+  releases, scoop re-check of every unstarted plan, new leads, compute policy, AWS, ML.
+
 
 A fresh, ground-up hunt for new/innovative research slices, run as **12 parallel deep-research
 agent sweeps** (FRB/time-domain, LPTs/coherent transients, catalogue cosmology/statistics,
@@ -14,6 +21,153 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-09-26 — releases, scoop re-check, compute, cloud, ML
+
+Source: one literature/data agent sweep (ADS + arXiv + release pages, 2026-09-26), plus live
+checks in this session. Three citations were re-verified against ADS by hand (arXiv:2606.31539,
+2609.03779, 2607.07382); the rest carry the agent's primary-source links and have **not** been
+independently re-checked, so the standing GATE-0 still applies to anything planned from here.
+
+### Data releases since the July scan
+
+| Dataset | Status 2026-09-26 | Source | Unblocks |
+|---|---|---|---|
+| **FASHI DR2** (156,411 HI sources) | **Released** — paper published 2026-09-08; catalogue page answers 200 (file download not yet confirmed) | arXiv:2606.31539; fast.bao.ac.cn/cms/article/271/ | `fashienv` DR2 leg (plan 45 said "a one-line source change") |
+| **Apertif Time-Domain DR2** | **Released** — 2020–22, 1,666 pointings, ~0.8 PB PSRFITS via ALTA/VO | science.astron.nl/sdc/astron-data-explorer/data-releases/apertif-time-domain-dr2/ | plan 61 (subset only — see disk) |
+| **LoTSS DR3** | Released (13.67M sources) | A&A, 10.1051/0004-6361/202557749 | plans 63, 70 |
+| **RACS-low2** (887.5 MHz, I+V) | Accepted ~2026-07 | arXiv:2606.16182 | plan 59, plan 53 |
+| **RACS-mid epoch 2** | Released via CASDA ~2026-03 — **but** tile ASKAP-67275 (β Pic) returned "no access" on 2026-09-24, so coverage is not yet complete | ATNF daily picture 2026-03-06 | already used by `stokesv_discovery` |
+| **SPICE-RACS DR2** | Released; CSIRO DAP 10.25919/PBV3-WE20 | arXiv:2605.16917 | plans 55, 56, 57 |
+| **VAST extragalactic DR1** | Released | arXiv:2602.22739 | — |
+| **MIDAS DR1** (MWA 215 MHz deep, 2 fields) | Released; zero follow-up papers yet | 10.57891/z19a-2n41 | new lead L3 |
+| VLASS epoch 4 | Partial — QL images rolling, no catalogue paper | 2026AAS...24744103M | plan 64 (a 4th epoch would strengthen it later) |
+| WALLABY full survey | **Not** released (Pilot DR2 only) | IAUS 392 (2026) | plan 65 stays blocked |
+| CHIME/FRB Cat 2 baseband | **Not** public; portal still rebuilding | arXiv:2609.21074 (calibration paper only) | — |
+| Gaia DR4 | **Not** out; date confirmed **2026-12-02** | ESA | plan 58 sharpens after |
+| NANOGrav 20-yr / IPTA DR3 | **Not** public | 2026ApJ..1005...58J | closed door stands |
+
+### Scoop re-check of the unstarted plans
+
+| Plan | Idea | Verdict | Evidence |
+|---|---|---|---|
+| 51 | FAST-FREX external benchmark + open-weights classifier | **Partly scooped** — a zero-shot VLM-vs-SwinYNet benchmark exists; **no open-weights classifier** yet | arXiv:2607.07382 |
+| 52 | SSL / anomaly sweep of RACS or LoTSS DR3 | **Partly scooped** — LoTSS DR3 has SSL *morphology clustering*, explicitly not anomaly detection; **RACS untouched** | arXiv:2609.03779 |
+| 53 | Broadband technosignature EIRP limits from RACS V | Open | BRaTs arXiv:2605.10212 is a framework only |
+| 55 | Polarized-flux dipole, SPICE-RACS DR2 | Open | — |
+| 56 | RM² stacking on DESI groups/clusters | Open (Mg II axis closed, as recorded) | arXiv:2605.16924 |
+| 58 | Secular aberration drift, ICRF3 × Gaia DR3 | Open | — |
+| 59 | RACS-V two-epoch census of Gaia UCDs | Open (RACS-low2 stellar-V paper is single-epoch, not UCD-targeted) | — |
+| 61 | Apertif TD single-pulse reprocessing | Open, and now has data | — |
+| 64 | Blind VLASS moving-source search | Open | — |
+| 63 / 70 | LoTSS DR3 artefact census / count injection check | Open | — |
+| 49 | Five-archive type III at cycle-25 max | Open | — |
+| 72 | e-Callisto fine-structure census | Open (single-station catalogues only, e.g. arXiv:2609.26535) | — |
+
+### New leads (Jul–Sep 2026)
+
+- **L1. `fashienv` DR2 leg (top priority, CPU, days).** Not a new idea — the DR1 slice was built
+  to swap to DR2. The paper's referee round located its limits in *bias, not variance*; a 3.7×
+  larger sample is the direct test of whether the knee offset survives. GATE-0: confirm the DR2
+  catalogue files actually download and carry the environment inputs the DR1 leg used.
+- **L2. FASHI DR2 outlier sweep (GPU).** Autoencoder / contrastive model over HI *profiles* to
+  flag anomalous kinematics. **GATE-0 is load-bearing:** it needs the spectra, not just the
+  catalogue — if only catalogue parameters are public, this collapses to a much weaker
+  tabular-outlier exercise and should be dropped.
+- **L3. MIDAS DR1 (MWA 215 MHz).** Days-old deep survey with no follow-up; spectral-index /
+  peaked-source work with `peaked`/`southern` reuse is the natural fit. Scoop risk low today,
+  rising weekly.
+- **L4. CHIME sidelobe calibration → `frbwait` extension.** arXiv:2609.21074 makes off-beam bursts
+  usable; could enlarge the exposure-corrected duty-cycle census. Medium scoop risk (CHIME/FRB
+  is the natural author). CPU.
+- **L5. SBI on the LPT population (GPU, `svsbi` sibling).** Four-plus new LPTs since July
+  (e.g. arXiv:2603.07857, 2606.20067, 2609.11068). The July note said "pick one, don't do all
+  three" — the LPT sample is now the one growing fastest. Small N remains the main risk.
+- **L6. CUDA-only cross-checks on rented NVIDIA hardware.** The local rule "pure PyTorch runs;
+  anything shipping CUDA kernels does not" is a *hardware* constraint, not a scientific one.
+  With cloud GPUs, Heimdall / AstroAccelerate become available as **independent oracles** for
+  `torchfdmt`/`singlepulse` on the plan-61 Apertif subset, and the `torchfdmt` paper's
+  "device-portable" claim can be tested on a second vendor (it has only run on CPU + ROCm).
+- **L7. Legacy-catalogue digitization (Textract).** Pre-VizieR radio catalogue tables that exist
+  only as scanned pages. Unvetted: GATE-0 must find a specific table that is (a) not already
+  digitized and (b) scientifically useful, before any of this is worth doing.
+- **Rejected on arrival:** "RACS-mid two-epoch circular-polarization variability census" — the
+  agent proposed it as new, but this repo already did it (`stokesv_discovery` uses both
+  RACS-mid epochs). The survivor is plan 59 (same method, Gaia UCD targets).
+
+### Compute policy: the core stays CPU-reproducible; GPU and cloud are accelerators
+
+The repo is **not** CPU-only today: `torchfdmt`, `torchdsp` and `svsbi` all have GPU legs, run
+from `~/.venvs/rocm-test` (verified 2026-09-26: PyTorch 2.12.1 + ROCm 7.1 on the RX 7600 XT,
+`sbi` 0.26.1). What is CPU-only is the *default install and CI*, by design:
+
+1. **Reproducibility for readers.** A referee without an AMD GPU (or an AWS account) must be able
+   to re-derive every committed number. So far the GPU has only ever made results faster, and
+   each GPU kernel has a CPU oracle-parity test.
+2. **CI.** GitHub runners have no AMD GPU; ROCm wheels are multi-GB.
+3. **Python pin.** The ROCm venv is Python 3.14, outside the repo's `<3.13` pin.
+
+Keep that rule and extend it to the cloud: **every GPU or cloud result must have a CPU path that
+reproduces it at small scale, and no committed number may depend on which device or provider
+produced it** (the `torchdsp` `benchmark_device` lesson in CLAUDE.md is the same idea). What
+should change is that the GPU path becomes first-class rather than ad hoc — a `make rocm-env`
+target and a documented CUDA/cloud equivalent (plan 96).
+
+### Cloud (AWS) — see `plans/96-aws-infrastructure.md`
+
+Two real constraints motivate it: **disk** (70 GB free) and **CUDA-only tooling** (L6). Compute
+throughput is *not* one: most ideas above are CASDA-bound or small enough for the local GPU. The
+plan's headline numbers (us-east-1 list prices pulled 2026-09-26): S3 Standard **$0.023/GB-mo**
+(~$24/TB-mo), Standard-IA $0.0125, Glacier Instant Retrieval $0.004; **egress $0.09/GB** after
+the 100 GB/month free tier — so compute must live next to the data and only results come home.
+GPU spot: g6.xlarge (L4 24 GB) ~$0.62/h, g5.xlarge (A10G 24 GB) ~$0.50/h. Idle cost of the
+proposed stack: ~$0–1/month.
+
+### Machine-learning opportunities (and how they map to AWS AIF-C01 study)
+
+Sorted by scientific value, not exam value. The exam overlap is a bonus, never the reason.
+
+**Worth doing as science**
+
+| Idea | ML shape | Local or cloud | AIF-C01 concepts it exercises |
+|---|---|---|---|
+| Plan 51: open-weights FRB burst classifier on FAST-FREX | supervised CNN/ViT; publish weights + model card | local ROCm; cloud spot only for CUDA baselines | training jobs, managed spot, model cards, evaluation metrics (precision/recall/F1 under class imbalance) |
+| Plan 52: RACS anomaly sweep | self-supervised embeddings + outlier scoring | local (cutouts are small: 10⁶ × 64² float32 ≈ 16 GB) | unsupervised learning, embeddings, batch inference |
+| L2: FASHI DR2 profile outliers | autoencoder on 1-D spectra | local | anomaly detection, reconstruction error, data quality |
+| L5: LPT population SBI | neural posterior estimation | local | probabilistic models; why a posterior is not a point estimate |
+| e-Callisto detector drift monitoring | monitoring a deployed classifier as the solar cycle shifts the input distribution | local (Airflow ingest exists) | Model Monitor concepts: data drift vs concept drift, baselines |
+
+**Useful as tooling, with a hard rule**
+
+- **GATE-0 literature triage with an LLM** (Bedrock, or Claude directly): rank ADS abstracts for a
+  novelty pass. Rule from CLAUDE.md applies — *a search summary is not a source*; an LLM ranking
+  decides what a human reads, never what the paper claims. RAG store cost if it lives in AWS:
+  OpenSearch Serverless ~$350/month vs Aurora pgvector ~$43/month (both from the `aws-ai` repo's
+  cost table) vs a local FAISS index at $0 — **local wins**.
+- **Textract for L7** (legacy tables) — only after GATE-0 names a specific table worth freeing.
+
+**Exam practice only — not worth doing for the science**
+
+Rekognition Custom Labels on dynamic spectra (a CNN we own is reproducible and better
+characterised), Comprehend, Lex, Polly, Transcribe, Kendra (~$810/month). Do these in the
+`aws-ai` repo, not here.
+
+**Reproducibility rules for any ML result:** publish weights and the training script; the model
+must retrain locally at reduced scale; LLM outputs are non-deterministic and are never evidence.
+
+### Revised suggested order (2026-09-26)
+
+1. **L1 `fashienv` DR2** — cheap, unblocked, tests the paper's own open question.
+2. **Plan 64 VLASS moving sources** — GATE-0 already discharged; catalogue-scale all-pairs, the
+   best *local* GPU fit; fits in 70 GB.
+3. **Plan 59 RACS-V UCD census** and **plan 53 EIRP limits** — both reuse `stokesv_discovery`.
+4. **Plan 96 phase 0–2** (AWS account, budget, one CUDA validation run) in parallel with the
+   above, since it costs almost nothing idle and unblocks L6 and plan 61.
+5. Then the ML slices: plan 51 (open-weights classifier) or plan 52 (RACS anomaly sweep).
+
+---
+
+# July 2026 deep re-scan (original body)
 
 ## ⚠️ Standing caveat: this scan could not fetch primary sources
 
@@ -37,7 +191,8 @@ stage). Web *search* worked; page/PDF *fetch* did not. Consequences:
   see the GPU addendum in `survey/opportunity-scan-2026-07.md`): FFT 9×, gather-style
   dedispersion 24× vs CPU. Rule: **pure PyTorch runs; anything shipping CUDA kernels does not**
   (Heimdall, dedisp, AstroAccelerate, CuPy-locked tools, RAPIDS).
-- **Disk:** ~275 GB free. **Owner explicitly OK with multi-day/multi-week jobs** — ideas that
+- **Disk:** ~275 GB free *in July*; **70 GB free on 2026-09-26** (93% full) — see Update
+  2026-09-26 and `plans/96-aws-infrastructure.md` before planning anything data-heavy. **Owner explicitly OK with multi-day/multi-week jobs** — ideas that
   need "compute nobody bothers to spend" (all-pairs statistics over 13.7M-source catalogues,
   long SSL training, week-long forced-photometry sweeps) are in-scope and several below exploit
   exactly that.

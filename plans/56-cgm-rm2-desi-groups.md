@@ -1,7 +1,7 @@
 # 56 — CGM/halo magnetization: RM² stacking behind DESI group/cluster halos (SPICE-RACS DR2)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: read
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — specifically: read
 arXiv:2605.16924 full-text (the Mg II angle is CLOSED there), confirm the group/cluster-halo
 tracer variant remains unclaimed, and verify DESI DR1 group-catalogue access
 
@@ -9,7 +9,7 @@ tracer variant remains unclaimed, and verify DESI DR1 group-catalogue access
 
 CGM magnetization via RM stacking on **Mg II absorbers is closed** — Van Eck/Malik et al., A&A
 2026, arXiv:2605.16924 (SPICE-RACS DR2, 612 sightlines; the Corrections fence). What survives
-(fable-ideas F19) is the **halo-mass/group tracer variant**: stacking RM² behind DESI DR1
+(ideas.md F19) is the **halo-mass/group tracer variant**: stacking RM² behind DESI DR1
 group/cluster halos by richness, asking whether magnetized halo gas shows up when selected by
 halo mass rather than by cool-gas absorption. Data: the SPICE-RACS DR2 RM table (CSIRO DAP
 `csiro:64891`, already on disk from the merged `rmstructure` slice) + a public DESI DR1
@@ -37,7 +37,7 @@ slice; same catalogue, and the `rmstructure` Galactic-floor machinery is the for
    annulus-GRM subtraction on the same DR2 table — the pipeline is not trusted until it does.
 3. Real leg: stack RM² behind DESI DR1 groups/clusters in richness × impact-parameter bins;
    quote per-bin sightline counts; bootstrap + control-stack (random-position) errors.
-4. GATE-2 science review naming the fable-ideas caveat: small N behind massive groups — a null
+4. GATE-2 science review naming the ideas.md caveat: small N behind massive groups — a null
    must not be spun as contradicting the Mg II detection (different tracer, different gas
    phase); pre-register the null framing.
 5. Paper: first halo-mass-selected RM² stacking measurement (or honest bounded null).

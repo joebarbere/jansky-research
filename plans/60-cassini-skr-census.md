@@ -26,7 +26,7 @@ S~10.8/N~10.6; late-mission N~10.79/S~10.68 — state the epoch). Horizons: TARG
 
 Fischer+2015's Saturn Kilometric Radiation dual-period tracking stops in early 2013; nobody has
 run the RPWS-flux dual-period census through the 2017 proximal (Grand Finale) orbits, and nobody
-has asked whether the `junodam` ~180× proximity occurrence law holds for SKR (fable-ideas F23 —
+has asked whether the `junodam` ~180× proximity occurrence law holds for SKR (ideas.md F23 —
 a direct port of the merged `junodam` census pattern to Saturn). Note the fence: the Saturn SED
 (lightning) census is closed (Fischer et al. 2025, 10.1029/2024JA033560) — this slice is SKR
 occurrence/periodicity, not lightning. Data: PDS-PPI RPWS 60-s key parameters,

@@ -1,4 +1,4 @@
-# Findings — OVRO-LWA type II burst detector + census (plan 50, fable-ideas F13)
+# Findings — OVRO-LWA type II burst detector + census (plan 50, ideas.md F13)
 
 `jansky_research.typeii`: a slow-drift + fundamental/harmonic type II solar radio burst detector
 for the OVRO-LWA archive, with a synthetic recover-a-known and a CME cross-match. The published

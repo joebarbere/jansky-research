@@ -27,7 +27,7 @@ in-station UEM-vs-control comparison is the load-bearing systematics gate.
 ## Context
 
 The only RFI-trend precedent on this archive stops in 2019 — the year Starlink launches began
-(Pérez+2020, SoPh 295:11; the fence noted in fable-ideas' F17 entry). Dedicated-instrument
+(Pérez+2020, SoPh 295:11; the fence noted in ideas.md's F17 entry). Dedicated-instrument
 satellite-RFI studies (LOFAR arXiv:2307.02316, SKA-Low arXiv:2506.02831) do not touch archival
 spectrograph records, so the 2012–2026 e-Callisto record is an unexamined 15-year RFI
 observatory spanning the entire megaconstellation era. Data: the e-Callisto FITS archive —
@@ -57,7 +57,7 @@ citable spectrum-management result.
 2. Real leg: run the occupancy metric over 10–20 configuration-stable stations, 2012–2026;
    trend the documented unintended-emission bands; attribute candidate trends to constellation
    growth via TLE pass-window coincidence; report per-station and network-differential results.
-3. GATE-2 science review naming the fable-ideas caveat: station hardware changes can masquerade
+3. GATE-2 science review naming the ideas.md caveat: station hardware changes can masquerade
    as trends — the differential in-station band comparison must gate every trend claim.
 4. Paper: 15-year occupancy trends + attribution + honest per-station systematics table.
 

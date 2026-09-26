@@ -49,7 +49,7 @@ tight number — posterior widths are reported honestly. GPU: NPE training is ex
    leakage-floor fidelity as the selection function, prior sensitivity.
 4. Paper: first SBI population inference for coherent circularly-polarized emitters. Do NOT
    also start the two sibling SBI slices (RM-structure-function turbulence; LPT population via
-   the arXiv:2509.06315 completeness) — pick one later, per fable-ideas.
+   the arXiv:2509.06315 completeness) — pick one later, per ideas.md.
 
 ## Verification
 

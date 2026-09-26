@@ -16,7 +16,7 @@ CHIME/FRB Catalog 2 (arXiv:2601.09399; 4,539 bursts, 83 repeaters) has had its o
 population angles closed — injection debiasing (arXiv:2606.26334), 80-repeater uniform rates +
 DM drift (arXiv:2605.08410), spectral split (arXiv:2601.16048), ML repeater classification
 (arXiv:2509.02645, 2512.08308), polarization dichotomy (arXiv:2401.17378 + companion); the
-Corrections section of fable-ideas.md fences all of these off. What survives: no paper computes
+Corrections section of ideas.md fences all of these off. What survives: no paper computes
 one uniform statistic — Weibull clustering k + exposure-corrected activity-window/duty-cycle —
 across all ~83 repeaters from the public table. All periodicity results are single-source
 campaigns (20240209A arXiv:2502.11215; 20240114A ~112.9 d; 20220912A arXiv:2604.09098). Extends
@@ -56,7 +56,7 @@ checks green; GATE-2 sign-off.
 
 ## Risks & mitigations
 
-- **Highest scoop risk in fable-ideas.md** — CHIME/FRB is the natural author. Move fast or not
+- **Highest scoop risk in ideas.md** — CHIME/FRB is the natural author. Move fast or not
   at all: mirror data the day the site recovers, ship bounded.
 - **Exposure-blind FAPs are not rigorous** (Cat-1 lesson) → the catalogue's own exposure maps
   are mandatory inputs, not optional refinements.

@@ -1,13 +1,13 @@
 # 66 — Cycle-25 prediction test: Compagnino & Zuccarello 2021 vs the real cycle past maximum
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there)
+(the ideas.md scan ran egress-blocked; see the standing caveat there)
 
 ## Context
 
 Compagnino & Zuccarello 2021 (arXiv:2103.13699) published a falsifiable cycle-25 prediction —
 radio-loud and halo-CME rates extrapolated from cycle-24 correlations. Cycle 25 is now past
-maximum and nobody has published a check against the realized cycle (fable-ideas F29: "fastest
+maximum and nobody has published a check against the realized cycle (ideas.md F29: "fastest
 honest note"). Data are three public lists: LASCO CME catalogue v2, SILSO sunspot numbers, and
 RSTN radio-burst event lists — all no-auth, all already familiar from the merged solar slices.
 Near-zero new code: the occurrence-rate/correlation statistics reuse `ecallisto_census` almost

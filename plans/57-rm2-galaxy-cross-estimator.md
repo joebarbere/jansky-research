@@ -1,7 +1,7 @@
 # 57 — First real-data application of the ⟨RM²×g⟩ cross-correlation estimator (SPICE-RACS DR2)
 
 Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the fable-ideas scan ran egress-blocked; see the standing caveat there) — specifically: read
+(the ideas.md scan ran egress-blocked; see the standing caveat there) — specifically: read
 Zhang & Lidz (arXiv:2512.06584) full-text — it is an SKA forecast only — and confirm no
 real-data application of the estimator has appeared since
 
@@ -9,7 +9,7 @@ real-data application of the estimator has appeared since
 
 Zhang & Lidz (arXiv:2512.06584) define an ⟨RM²×g⟩ estimator — cross-correlating rotation-measure
 variance with galaxy overdensity to probe magnetized large-scale-structure gas — but published
-it as an **SKA forecast only**; no real-data application exists (fable-ideas F20). SPICE-RACS
+it as an **SKA forecast only**; no real-data application exists (ideas.md F20). SPICE-RACS
 DR2 (arXiv:2605.16917; CSIRO DAP `csiro:64891`, on disk from the merged `rmstructure` slice)
 has ~30× fewer RMs than the forecast assumes, so the honest headline is likely a first **upper
 limit** — said up front. Hardest of the three plan-38 siblings (with plans/55, 56); a stretch
@@ -40,7 +40,7 @@ crowded — RM-based statistics are the open differentiators this cluster owns.
 2. Real leg: DR2 RM² residuals × galaxy overdensity; covariance from footprint-preserving RA
    scrambles + jackknife; report a measurement or a first upper limit with the injection-based
    sensitivity curve alongside it.
-3. GATE-2 science review naming the fable-ideas caveats: likely an upper limit at DR2 size
+3. GATE-2 science review naming the ideas.md caveats: likely an upper limit at DR2 size
    (30× fewer RMs than the forecast) — framed as such from the abstract down; Galactic-residual
    leakage into RM² is the dominant systematic.
 4. Paper: first real-data application of the estimator — method port + limit + the honest
