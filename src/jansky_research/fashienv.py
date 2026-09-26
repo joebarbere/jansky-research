@@ -913,6 +913,8 @@ def run(out: str = ".", *, offline: bool = True) -> dict:
 
     write_results(metrics, op / "results" / "fashienv_metrics.json")
     _figure(figdata, op / "papers" / "fashienv" / "figures")
+    if metrics.get("is_real") and "random_group_null" in metrics:  # pragma: no cover - real leg
+        _null_figure(metrics, op / "papers" / "fashienv" / "figures")
     _write_macros(metrics, op / "papers" / "fashienv" / "generated" / "macros.tex")
     return metrics
 
@@ -1480,6 +1482,35 @@ def _figure(figdata, out_dir) -> None:
     plt.close(fig)
 
 
+def _null_figure(m: dict, out_dir) -> None:
+    """Measured void-wall and group-field knee offsets against their random-placement nulls."""
+    from .report import _agg
+
+    plt = _agg()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9.0, 3.6))
+    for key, lab, col in (
+        ("random_void_null", "voids, centre in footprint", "0.6"),
+        ("random_void_null_constrained", "voids, all holes in footprint", "C0"),
+    ):
+        offs = [r["B_offset"] for r in m[key]["rows"] if np.isfinite(r.get("B_offset", np.nan))]
+        a1.hist(offs, bins=40, histtype="step", color=col, lw=1.3, label=lab)
+    a1.axvline(m["void_knee_offset"], color="C3", lw=1.5, label="measured")
+    a1.set(
+        xlabel=r"void $-$ wall $\Delta\log M^*$ (dex)", ylabel="placements", title="Random voids"
+    )
+    a1.legend(fontsize=7)
+    g = m["random_group_null"]["offsets"]
+    a2.hist(g, bins=30, histtype="step", color="C0", lw=1.3, label="random groups")
+    a2.axvline(m["group_knee_offset"], color="C3", lw=1.5, label="measured")
+    a2.set(xlabel=r"group $-$ field $\Delta\log M^*$ (dex)", title="Random groups")
+    a2.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out / "fashienv_nulls.pdf")
+    plt.close(fig)
+
+
 def _write_macros(m: dict, path) -> None:
     def g(d: str, key: str | None) -> str:
         sub = m.get(d)
@@ -1530,7 +1561,11 @@ def _write_macros(m: dict, path) -> None:
             cur: object = m
             for k in path_.split("."):
                 cur = cur.get(k) if isinstance(cur, dict) else None
-            return "--" if cur is None else cur
+            if cur is None:
+                return "--"
+            if isinstance(cur, float):  # integers as integers, other values to 3 decimals
+                return str(int(cur)) if cur.is_integer() else f"{cur:.3f}"
+            return cur
 
         for macro, key in (
             ("NDRTwo", "n_dr2_catalogue"),
@@ -1583,6 +1618,10 @@ def _write_macros(m: dict, path) -> None:
                 "random_void_null_constrained.B_vs_overlap.intercept_at_zero_overlap",
             ),
             ("NullCOptAMean", "random_void_null_constrained.optA_same.mean"),
+            ("NullCSlope", "random_void_null_constrained.B_vs_overlap.slope"),
+            ("NullIntercept", "random_void_null.B_vs_overlap.intercept_at_zero_overlap"),
+            ("NullSlope", "random_void_null.B_vs_overlap.slope"),
+            ("NullCOptAStd", "random_void_null_constrained.optA_same.std"),
             ("EdsPercentile", "random_void_null_constrained.eds_percentile"),
             ("GroupNullReps", "random_group_null.n_ok"),
             ("GroupNullMean", "random_group_null.mean"),

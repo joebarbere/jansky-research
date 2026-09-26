@@ -11,25 +11,19 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
-- **`fashienv` reads FASHI DR2 and uses DR2's own completeness weighting.** DR2 (156,411
-  sources) comes from the survey's public CSTCloud share (`fetch_fashi_dr2` / `load_fashi_dr2`).
-  Each galaxy is weighted by 1/(C x Vmax) from the catalogue (`vmax_from_catalogue`, C >= 0.5),
-  replacing the single 0.30 Jy km/s flux cut; the old weighting is kept alongside (`optA_*`).
-  The new weighting reproduces the DR2 paper's own HIMF (log M* 9.907 vs 9.89, alpha -1.328 vs
-  -1.31). The void-wall knee offset shrinks from the published -0.256 to -0.154 +/- 0.052
-  (3.0 sigma) and group-field from +0.192 to +0.141 +/- 0.039 (3.6 sigma) -- the weighting, not
-  the sample size, moves them. The paper is revised to DR2: the Einstein-de Sitter distance
-  check, recomputed under the new weighting, takes the void offset to -0.021 (0.43 sigma), so
-  the abstract now reports it as a tentative upper bound rather than a detection.
-  After the referee round on the revision (MAJOR, 12 findings) that framing is itself replaced:
-  voids are full VoidFinder unions, a random-void null (100 rigid relocations within the
-  footprint) reproduces -0.091 +/- 0.018 of the -0.150 +/- 0.043 offset, and the real-void excess
-  of -0.059 dex (3.3 sigma vs the null scatter, 1.8 sigma vs the void jackknife) is reported as
-  tentative. The weighting alone moves the offset by +0.078 +/- 0.018 on the same sample. The
-  group offset (+0.165, frame-corrected) is no longer attributed to survivor bias. Two of the
-  revision's own claims -- EdS as evidence of fragility, and a comparison "on the same data" that
-  was not -- are retracted in the findings.
-
+- **`fashienv` is rewritten as a methodological caution: environment-split HI mass functions
+  need random-placement nulls.** On FASHI DR2 (156,411 sources, DR2's own 1/(C Vmax) weighting,
+  which reproduces the published global HIMF), the void-wall knee offset is -0.150 and the
+  group-field +0.166 dex -- but randomly relocated voids give -0.087 +/- 0.017 and randomly
+  relocated groups +0.126 +/- 0.056, so arbitrary volume splits shift the fitted knee by as much
+  as published void effects. The group offset is reached by 44/200 random placements. The void
+  offset lies beyond all 1,000 placements, but the null's mean moves with where the volumes land
+  (0.35 dex per unit overlap with the real voids) and the residual depends on the weighting
+  (-0.063 vs -0.160), so no environmental dependence is claimed. Two referee rounds (both MAJOR)
+  drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  unconstrained void null with per-placement diagnostics, a group null, a KD-tree
+  `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
+  The DR1 paper's -0.256 is disclosed as the old estimator's value.
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
