@@ -478,3 +478,51 @@ carries a `_merge` block listing the whole file as "retained from a previous run
 
 Length: 111-word abstract, ~1,270 words of text in the two sections (pdftotext, including the
 figure caption), over the ~1,000 target and under the RNAAS 1,500 limit.
+
+## Referee round 2 on the RNAAS note (2026-09-27): MINOR revision
+
+All 12 round-1 findings are addressed. All 86 macros resolve with no `--`; the ~60 traced match
+the JSON; the figure matches; the three new DOIs match Crossref. RNAAS guideline (fetched): at
+most 1,500 words and a single figure or table, so the note is within the limit.
+
+1. **(major) "1.6 sigma from the system" compares magnitudes only.** The vectors are radio
+   (3.391, 0.385) vs SIMBAD/UCAC4 system (3.296, 0.564): |d| = 0.20"/yr, chi2 = 13 for 2 dof.
+   The orbital scale, UV - BL in Gaia, is 0.21"/yr. Parallax cannot explain it: it is fixed in the
+   fit, and the UV/BL parallax difference is about 0.014". Drop SysSigma; give the vector offset
+   next to the orbital scale, and name orbital motion and blending. Fixing the parallax is right;
+   +/-0.04 is a fair statistical error (0.05 scaled); component switching would show at >= 6 sigma.
+   The findings' scalar sigmas vs BL and UV should become vector values (chi2 6.2 and 35.5).
+2. **(major, framing) Lead with 1.1-5"/yr.** Every fine bin there is >= 0.967 complete, giving a
+   worst-bin limit of 9.15e-5, the same 9.2e-5 with no rate prior. The averaged, worst-coarse and
+   edge limits can leave the text. At 1.5 mJy there are no fine bins (worst coarse bin 0.896 ->
+   9.9e-5): run fine bins at 1.5 mJy, or quote it as averaged.
+3. The co-moving rule text should say "0.5" floor added in quadrature" (radius >= 1.5"). The 0.03
+   chance rate is a lower bound (0.048 at 2", 0.10 at 3"). The PM clause never fired. The
+   positional clause flags 4 static candidates as "co-moving". Not applying it to injections is
+   correct.
+4. The 8 pc domain is computed correctly. Say what it means physically (v_t > 36 km/s at
+   >= 0.92"/yr) and put "beyond ~8 pc" in the abstract. Check "fast pulsars" as an example (the
+   rate domain far exceeds typical pulsar PMs).
+5. The tail bound is an estimate, not "at most": pair offsets vs a three-position residual gives
+   ~1.5x, so about 1% and 2-3%.
+6. "No by-eye step" depends on the 2-of-3 rule winning: under "all at 1.6", J314.1 would need
+   images. Legitimate (pre-stated, decided on statics); fold it into one clause.
+7. Add "persistent (three-epoch)" to the abstract's domain (no flux-ratio cut; 0.8-1.25x spread).
+8-10 (nits):
+   - units on "system motion 3.34";
+   - "at least 0.97" vs 0.967;
+   - "rises across 0.92-1.1" wording;
+   - Atri+2022 selected compact flat-spectrum variable Galactic-plane sources (no counterpart was
+     a result, not the selection).
+
+**Cuts proposed** (~-230 words, to ~950-1,000):
+- the synthetic-field sentence;
+- the chance-coincidence numbers;
+- the worst-bin and edge limits;
+- the fine-bin number chain;
+- "16 expected by chance" and the "all at 1.6" numbers;
+- "3.36 without parallax" and the component values;
+- the "reproduces catalogue errors" and 5 sigma clauses;
+- the scramble 0.02 sentence;
+- the without-cut completeness pairs;
+- the long Reproducibility data list.
