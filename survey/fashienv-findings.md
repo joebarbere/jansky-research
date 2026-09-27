@@ -762,3 +762,48 @@ The major findings are in the reasoning added in round 6:
   by more than 0.001 dex.
 - **#10-12.** "FWHM used as a radius"; "normally one of them its counterpart"; the survey-wide
   numbers are reduced to one clause.
+
+## Eighth referee round (2026-09-27): MINOR revision
+
+"The paper claims neither offset as environmental, and its evidence supports that." All 38
+macros match the JSON, every sigma was recomputed by hand, the figure matches, and four DOIs
+check out on Crossref. What remains is in the group half, and all of it changes what the
+abstract should say:
+
+1. **The group placement sigma should leave the abstract.** Its null is occupancy-biased, not
+   just noisy: the restricted-weighting offset rises 0.021 dex per 100 members (corr +0.45),
+   and the null mean moves -0.098 -> +0.054 across its own occupancy range. At the real 18,683
+   members an occupancy-matched null would likely sit closer to the measurement. Describe it as
+   uninformative, with the trend.
+2. **The line-width classes overlap, and there is no counterpart matching.** "ring" and
+   "isolated" share 449 group members (1,110 field). A source with no Tempel counterpart and
+   one galaxy in its aperture is called isolated although it is exactly a blending candidate.
+   Match the counterpart explicitly; give no-counterpart sources their own class; make the
+   classes disjoint.
+3. **Residual mass mismatch inside the 0.25-dex cells** (0.02-0.04 dex x slope 0.41) is as
+   large as the quoted +/-0.006. It biases inner toward broader, so the corrected difference is
+   more negative, which is what a small-offset blend predicts (summed mass, individual widths).
+   Report the within-cell dM and dz; try 0.1-dex cells.
+4. **The group interpretation is incomplete.**
+   (a) R/R200 0.35 vs 0.52 is a selection effect under both readings; drop "nearer centres"
+       from the abstract or say it follows from the selection.
+   (b) The data support discriminators before interferometry: HI mass at fixed optical
+       luminosity (needs Tempel r-band); the inner class split by neighbour velocity offset,
+       plus W20/W50; knee vs R/R200 for ring + isolated members only.
+   (c) Missing candidates: optically dark HI (tidal or intragroup gas); fit shape (group alpha
+       -1.13 vs field -1.32, chi2nu 15/13), so show the offset with a common alpha.
+   (d) Check whether Jones+2018 found the knee RISING with density. If so it is the precedent
+       for a positive offset and the wrong citation for stripping.
+5. **The headline exclusion uses the W50-dependent window the paper recommends against.** Use
+   fixed300 throughout (29.1%, +0.044 +/- 0.035, 2.0 sigma). Carry the mass-truncation caveat
+   into the abstract.
+6. **Say why depth conditioning barely matters.** C and Vmax already track rms_beam at fixed z
+   and M (corr -0.4 to -0.55), and the weights carry most of the depth dependence. rms_beam is
+   an acceptable proxy.
+7. **The strict-footprint check can hardly fail.** It removes 0.4% of the pool. Use 50% of the
+   median cell count, or 0.5-degree cells.
+8-10 (nits):
+   - The void placement sentence mixes the 1,000-placement and 200-placement nulls.
+   - "For 99.4% the neighbour is in the same group" overstates the any-two test.
+   - Void RR macros render as "--" (unused).
+   - The abstract chains four sigmas; results paragraph 1 chains about 12 numbers.
