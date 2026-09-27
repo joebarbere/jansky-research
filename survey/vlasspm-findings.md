@@ -374,3 +374,45 @@ of a size-0 and a size-2" injection; the size-noise draw supersedes both.
 **Unresolved.** The reference sample is small (303) and pools epochs; the size noise is
 calibrated on stars, and a population with different S/N or position-in-tile distribution could
 differ. The 0.53-0.92"/yr bin misses the 95% target.
+
+## Referee round 1 on the RNAAS note (2026-09-27): MINOR revision
+
+The limit is verified: 2.996 / (33,838.5 deg^2 x 0.9645) = 9.18e-5, matching the JSON; every
+macro checked, the figure matches, and all 10 DOIs match Crossref. There is also a property the
+paper does not claim: with the cut, no by-eye step lies between the data and "0 new movers".
+Claim strength and definitions need work:
+
+1. **(major) The UV Ceti rate is a two-epoch number with parallax ignored.** The triplet rate is
+   the E2->E3 pair rate; E2->E4 gives 3.364, and 3.41 once parallax (374 mas) is removed.
+   Parallax alone moves two-epoch rates by 0.14-0.23"/yr, the size of the whole "7%
+   discrepancy". UV Cet and BL Cet are 2.26" apart (confirmed, Gaia DR3 2016.0); both have RUWE
+   10-12 and orbital motion, and the system value is 3.344. The radio positions drift toward BL
+   Cet's prediction, so the component cannot be assigned. **Fix:** a three-epoch,
+   parallax-aware rate with an uncertainty, compared with the system motion; call it a detection
+   of the unresolved Luyten 726-8 system.
+2. **(major) "Optically dark" is positional coincidence within 5".** A 5" circle contains
+   >= 1 Gaia or CatWISE source about 42% of the time; 5 of the 10 static candidates had one. A
+   truly dark mover would be called "not dark" about 40% of the time. It cost nothing here (the
+   counterpart step removed no candidate), but the definition must say "no co-moving
+   counterpart", or fold the coincidence rate in (limit ~1.5e-4).
+3. Rate domain and weighting: the completeness is an unweighted mean over log bins (a log-uniform
+   rate prior), and the worst bin gives 9.6e-5. The figure's line joins imply ~0.55 at the
+   0.92"/yr edge; use steps and state the weighting.
+4. The cut's threshold was set on injections, but the idea came after the vetted candidates, and
+   one commit holds everything. Say so, give the 0.02 margin (J198.1 survives at 1.0, J314.1 at
+   1.1), and claim the real strength: no by-eye step in the limit's chain.
+5. Error tails overstate completeness by at most ~1% (3 mJy) or ~2% (1.5 mJy); one sentence.
+6. Straight-line injections ignore parallax. State the distance below which completeness does
+   not apply (~5 pc; UV Cet's parallax adds ~1.2" to its E3 residual).
+7. The scramble null underpredicted false positives about 500-fold; say what it can and cannot
+   see.
+8. E4 covers only half the sky (~17,300 deg^2), so "four epochs" needs qualifying.
+9. Prior work: Atri et al. 2022 (MNRAS 517, 5810; VLBA proper motions of compact variable radio
+   sources without optical counterparts; targeted, not blind). Narrow "so far" to survey-scale
+   searches and cite it. ADS finds no earlier blind survey-scale search.
+10-12 (nits):
+   - flux domain: steady 2.4-3.75 mJy per epoch, or state >= 1.5 mJy;
+   - "whole sky" assumes isotropy;
+   - explain "17 of 25";
+   - the size-noise sample is thin at S/N < 7;
+   - the 0.53-0.92 sentence could be cut.
