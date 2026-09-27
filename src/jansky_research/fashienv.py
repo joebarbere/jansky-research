@@ -724,19 +724,22 @@ def confusion_counts(
     opt_dec: np.ndarray,
     opt_cz: np.ndarray,
     *,
-    beam_arcmin: float = FAST_BEAM_ARCMIN,
+    beam_arcmin: float | np.ndarray = FAST_BEAM_ARCMIN,
     dv_pad_kms: float = 100.0,
     half_window_kms: float | None = None,
+    inner_arcmin: float | np.ndarray | None = None,
 ) -> np.ndarray:
-    """Optical galaxies inside each HI source's beam and line window (a blending proxy).
+    """Optical galaxies inside each HI source's search radius and line window (a blending proxy).
 
-    Counts spectroscopic galaxies within ``beam_arcmin`` (one FWHM) of the HI position and
-    within W50/2 + ``dv_pad_kms`` of its velocity. One of them is normally the counterpart, so
-    a count of 2 or more flags a source whose HI may include a neighbour's. The optical
-    catalogue's depth sets how complete the flag is; fainter companions are missed.
+    Counts spectroscopic galaxies within ``beam_arcmin`` (scalar, or one radius per source) of
+    the HI position and within W50/2 + ``dv_pad_kms`` of its velocity. One of them is normally
+    the counterpart, so a count of 2 or more flags a source whose HI may include a neighbour's.
+    The optical catalogue's depth sets how complete the flag is; fainter companions are missed.
 
-    W50 grows with HI mass, so the default window flags massive sources more readily; pass
-    ``half_window_kms`` for a fixed, mass-independent window.
+    W50 grows with HI mass and a broad source admits more neighbours, so the default window
+    selects on line width; pass ``half_window_kms`` for a fixed, outcome-independent window.
+    ``inner_arcmin`` (scalar or per source) counts only galaxies BEYOND that radius -- an annulus,
+    which excludes the counterpart, so there a count of 1 or more means a neighbour.
     """
     from scipy.spatial import cKDTree
 
@@ -744,17 +747,31 @@ def confusion_counts(
         r, d = np.radians(np.asarray(r, float)), np.radians(np.asarray(d, float))
         return np.column_stack([np.cos(d) * np.cos(r), np.cos(d) * np.sin(r), np.sin(d)])
 
-    chord = 2.0 * np.sin(np.radians(beam_arcmin / 60.0) / 2.0)
-    hits = cKDTree(unit(opt_ra, opt_dec)).query_ball_point(unit(ra, dec), r=chord)
+    n = len(np.atleast_1d(ra))
+    rad = np.broadcast_to(np.asarray(beam_arcmin, float), (n,))
+    chord = 2.0 * np.sin(np.radians(rad / 60.0) / 2.0)
+    src, opt = unit(ra, dec), unit(opt_ra, opt_dec)
+    hits = cKDTree(opt).query_ball_point(src, r=chord)
     ocz = np.asarray(opt_cz, float)
     if half_window_kms is not None:
-        win = np.full(len(np.atleast_1d(ra)), float(half_window_kms))
+        win = np.full(n, float(half_window_kms))
     else:
         win = np.nan_to_num(np.asarray(w50, float), nan=0.0) / 2.0 + dv_pad_kms
     czs = np.asarray(cz, float)
-    return np.array(
-        [int(np.sum(np.abs(ocz[h] - czs[i]) <= win[i])) if h else 0 for i, h in enumerate(hits)]
-    )
+    inner = None
+    if inner_arcmin is not None:
+        inner = np.broadcast_to(np.asarray(inner_arcmin, float), (n,))
+        inner_chord = 2.0 * np.sin(np.radians(inner / 60.0) / 2.0)
+    out = np.zeros(n, int)
+    for i, h in enumerate(hits):
+        if not h:
+            continue
+        h = np.asarray(h)
+        keep = np.abs(ocz[h] - czs[i]) <= win[i]
+        if inner is not None:
+            keep &= np.linalg.norm(opt[h] - src[i], axis=1) > inner_chord[i]
+        out[i] = int(keep.sum())
+    return out
 
 
 def himf(
@@ -934,7 +951,8 @@ def load_fashi_dr2(path: str | Path) -> dict:
     cols = {
         "ra": "ra", "dec": "dec", "cz": "v_opt", "z": "z_opt", "w50": "W_50", "flux": "S_sum",
         "dist_mpc": "distance", "log_mhi": "mass", "completeness": "completeness",
-        "vmax_mpc3": "Vmax", "rms": "rms", "w20": "W_20",
+        "vmax_mpc3": "Vmax", "rms": "rms", "w20": "W_20", "rms_beam": "rms_beam",
+        "ell_maj": "ell_maj",
     }  # fmt: skip
     vals: dict[str, list[float]] = {k: [] for k in cols}
     with Path(path).open(newline="") as fh:
@@ -1699,6 +1717,49 @@ def confused_same_group(
     return out
 
 
+def matched_median_diff(
+    x: np.ndarray,
+    flagged: np.ndarray,
+    ref: np.ndarray,
+    log_m: np.ndarray,
+    z: np.ndarray,
+    *,
+    dm: float = 0.25,
+    dz: float = 0.01,
+    min_n: int = 3,
+) -> dict:
+    """Median of x in ``flagged`` minus ``ref``, taken within (log M, z) cells, count-weighted.
+
+    Holding mass and redshift fixed cell by cell removes the mass mismatch between flagged and
+    reference sets that a single residual fit only models. The standard error combines the
+    per-cell errors (1.2533 sigma / sqrt(n) for a median) in quadrature with the cell weights.
+    """
+    xx, lm, zz = (np.asarray(a, float) for a in (x, log_m, z))
+    ok = np.isfinite(xx) & np.isfinite(lm) & np.isfinite(zz)
+    cm = np.floor(lm / dm).astype(np.int64) * 100_000 + np.floor(zz / dz).astype(np.int64)
+    f, r = ok & np.asarray(flagged, bool), ok & np.asarray(ref, bool)
+    diffs, vars_, wts = [], [], []
+    for c in np.unique(cm[f]):
+        a, b = xx[f & (cm == c)], xx[r & (cm == c)]
+        if a.size < min_n or b.size < min_n:
+            continue
+        diffs.append(float(np.median(a) - np.median(b)))
+        va = (1.2533 * a.std(ddof=1)) ** 2 / a.size
+        vb = (1.2533 * b.std(ddof=1)) ** 2 / b.size
+        vars_.append(va + vb)
+        wts.append(a.size)
+    if not wts:
+        return {"n_flagged": int(f.sum()), "n_cells": 0}
+    w = np.asarray(wts, float) / np.sum(wts)
+    d = float(np.dot(w, diffs))
+    se = float(np.sqrt(np.dot(w**2, vars_)))
+    return {
+        "n_flagged": int(f.sum()), "n_ref": int(r.sum()), "n_cells": len(wts),
+        "n_flagged_matched": int(np.sum(wts)), "median_diff": round(d, 4), "se": round(se, 4),
+        "sigma": round(d / se, 2) if se > 0 else None,
+    }  # fmt: skip
+
+
 def robustness_leg(
     cat: dict,
     area: float,
@@ -1714,22 +1775,30 @@ def robustness_leg(
     n_shuffle: int,
     seed_rand: int = 68,
     seed_shuffle: int = 69,
+    strict_min_per_cell: int = 5,
 ) -> dict:
     """Occupancy/redshift/depth-matched nulls and a beam-blending test, on the classifiable pool.
 
     1. :func:`label_shuffle_null` for voids and groups under both weightings, stratified by
-       redshift AND survey depth (terciles of the per-source rms) -- the headline -- and by
-       redshift alone for comparison (sixth referee round: at fixed z the mass floor follows
-       the local noise, so a z-only shuffle scrambles depth differences into the null).
-    2. :func:`confusion_counts` against the Tempel SDSS galaxies (r < 17.77): the flagged
-       fraction by environment at three beam radii, the offsets with flagged sources removed
-       (and their OWN fit errors), the shuffle null on the unflagged sample, how often a flag
-       is two members of one catalogued group (:func:`confused_same_group`), and the W50
-       residual of flagged vs unflagged sources at fixed mass and redshift
-       (:func:`linewidth_residual`), the test that separates blending from mass selection.
-
-    ``measured`` holds the measured offsets (:func:`measured_offsets`). Randoms are drawn as in
-    :func:`env_vmax_leg` (same seed, frame-corrected); ``env["classifiable"]`` is the pool.
+       redshift AND per-source detection sensitivity (quintiles of ``rms_beam``; the headline),
+       with terciles and redshift alone for comparison. Seventh round: ``rms`` is noise
+       integrated over the source's aperture, so it scales with source size (and so with mass
+       and with blending) -- stratifying on it partly conditions on the outcome.
+    2. Blending: flagged fractions, the offsets with flagged sources removed (own fit errors),
+       the shuffle on the unflagged sample, and line-width tests built so that blending and
+       neighbour density make DIFFERENT predictions, all with a fixed +/-300 km/s window (the
+       W50 window selects broad sources at fixed mass):
+         * ``inner``: a neighbour inside the measurement (the source's flux-integration radius
+           ell_maj/2 plus half a beam) -- can be blended;
+         * ``ring``: no neighbour there, but one within a further 3 arcmin -- cannot be blended,
+           yet marks the same kind of neighbourhood;
+       each against isolated sources (no neighbour out to the ring's outer edge), both as a
+       residual from a log W50 ~ log M + z fit on the isolated sources and cell-matched in
+       (log M, z) (:func:`matched_median_diff`). Blending predicts inner >> ring ~ 0;
+       density-related broadening predicts inner ~ ring > 0.
+    3. Projected R/R200 of flagged vs unflagged group members (are flagged members in cores?).
+    4. Footprint edges: the offsets again using only SDSS cells with at least
+       ``strict_min_per_cell`` Tempel galaxies.
     """
     import sys
 
@@ -1742,9 +1811,8 @@ def robustness_leg(
     rnd = survey_randoms(cat["ra"], cat["dec"], n_rand, rng, d_max_mpc=d_top)
     lo = voids["sphere_xyz"].min(axis=0) - 20.0
     hi = voids["sphere_xyz"].max(axis=0) + 20.0
-    r_cl = np.all((rnd["xyz_h"] >= lo) & (rnd["xyz_h"] <= hi), axis=1) & in_sdss_footprint(
-        rnd["ra"], rnd["dec"], grp
-    )
+    r_box = np.all((rnd["xyz_h"] >= lo) & (rnd["xyz_h"] <= hi), axis=1)
+    r_cl = r_box & in_sdss_footprint(rnd["ra"], rnd["dec"], grp)
     r_env = {
         "void": void_membership_holes(rnd["xyz_h"], voids["sphere_xyz"], voids["sphere_radius"]),
         "group": assign_groups(
@@ -1757,34 +1825,49 @@ def robustness_leg(
     vmax_b = vmax_from_catalogue(vcat, comp)
     lm, z = cat["log_mhi"], cat["z"]
     rs = np.random.default_rng(seed_shuffle)
-    rms = np.asarray(cat.get("rms", np.full(lm.size, np.nan)), float)
-    edges = np.nanpercentile(rms[pool], [100 / 3, 200 / 3])
-    depth = np.digitize(np.nan_to_num(rms, nan=float(np.nanmedian(rms[pool]))), edges)
+
+    def quantile_labels(x: np.ndarray, k: int) -> tuple[np.ndarray, list]:
+        xx = np.asarray(x, float)
+        edges = list(np.nanpercentile(xx[pool], np.linspace(0, 100, k + 1)[1:-1]))
+        return np.digitize(np.nan_to_num(xx, nan=float(np.nanmedian(xx[pool]))), edges), edges
+
+    rms_beam = np.asarray(cat.get("rms_beam", np.full(lm.size, np.nan)), float)
+    depth5, edges5 = quantile_labels(rms_beam, 5)
+    depth3, _e3 = quantile_labels(rms_beam, 3)
 
     opt = (grp["gal_ra"], grp["gal_dec"], grp["gal_cz"])
-    radii = (1.5, FAST_BEAM_ARCMIN, 4.5)
-    flags_r = {
-        r: confusion_counts(cat["ra"], cat["dec"], cat["cz"], cat["w50"], *opt, beam_arcmin=r) >= 2
-        for r in radii
-    }
-    flags = {
-        "w50": flags_r[FAST_BEAM_ARCMIN],
-        "fixed300": confusion_counts(
-            cat["ra"], cat["dec"], cat["cz"], cat["w50"], *opt, half_window_kms=300.0
-        ) >= 2,
-    }  # fmt: skip
-    same = confused_same_group(
-        cat["ra"], cat["dec"], cat["cz"], cat["w50"], *opt, grp["gal_group_id"], grp["gal_ngal"]
-    )
-    with np.errstate(divide="ignore", invalid="ignore"):
-        lw = np.log10(np.asarray(cat["w50"], float))
-        w20_50 = np.asarray(cat.get("w20", np.full(lm.size, np.nan)), float) / np.asarray(
-            cat["w50"], float
-        )
+    cz_, w50_ = cat["cz"], cat["w50"]
 
-    def weights(name: str) -> dict:
+    def count(**kw) -> np.ndarray:
+        return confusion_counts(cat["ra"], cat["dec"], cz_, w50_, *opt, **kw)
+
+    flags = {
+        "w50": count() >= 2,
+        "fixed300": count(half_window_kms=300.0) >= 2,
+    }
+    fixed_r = {r: count(beam_arcmin=r, half_window_kms=300.0) >= 2 for r in (1.5, 2.9, 4.5)}
+    ell = np.asarray(cat.get("ell_maj", np.full(lm.size, np.nan)), float)
+    r_ap = np.nan_to_num(ell, nan=FAST_BEAM_ARCMIN) / 2.0 + FAST_BEAM_ARCMIN / 2.0
+    inner = count(beam_arcmin=r_ap, half_window_kms=300.0) >= 2
+    ring = (count(beam_arcmin=r_ap + 3.0, half_window_kms=300.0, inner_arcmin=r_ap) >= 1) & ~inner
+    isolated = count(beam_arcmin=r_ap + 3.0, half_window_kms=300.0) <= 1
+    same = confused_same_group(cat["ra"], cat["dec"], cz_, w50_, *opt,
+                               grp["gal_group_id"], grp["gal_ngal"])  # fmt: skip
+    with np.errstate(divide="ignore", invalid="ignore"):
+        lw = np.log10(np.asarray(w50_, float))
+
+    gidx = assign_groups(
+        cat["ra"], cat["dec"], cz_, grp["grp_ra"], grp["grp_dec"], grp["grp_cz"],
+        grp["grp_r200"], h0=TEMPEL_H0,
+    )  # fmt: skip
+    rr200 = clustercentric_radius(
+        cat["ra"], cat["dec"], cz_, gidx, grp["grp_ra"], grp["grp_dec"], grp["grp_cz"],
+        grp["grp_r200"],
+    )  # fmt: skip
+
+    def weights(name: str, r_mask: np.ndarray) -> dict:
         v_in, v_out = env_restricted_vmax(
-            vcat, comp, rnd["d_mpc"], r_cl, r_env[name], frame_ratio=ratio
+            vcat, comp, rnd["d_mpc"], r_mask, r_env[name], frame_ratio=ratio
         )
         return {"survey": (vmax_b, vmax_b), "env": (v_in, v_out)}
 
@@ -1794,10 +1877,8 @@ def robustness_leg(
         st = _offset_stats("x", fi, fo)
         return st["x_knee_offset"], st["x_knee_offset_err"]
 
-    def shuffle(sel, gal_in, w, meas: float, err: float, strata=None) -> dict:
-        offs = label_shuffle_null(
-            lm, z, sel, gal_in, w[0], w[1], area, rs, n=n_shuffle, strata=strata
-        )
+    def shuffle(sel, gal_in, w, meas: float, err: float, strata=None, n: int = n_shuffle) -> dict:
+        offs = label_shuffle_null(lm, z, sel, gal_in, w[0], w[1], area, rs, n=n, strata=strata)
         a = offs[np.isfinite(offs)]
         if a.size < 2:
             return {"n_ok": int(a.size)}
@@ -1813,48 +1894,67 @@ def robustness_leg(
             "excess_sigma_quadrature": round(abs(meas - a.mean()) / float(np.hypot(err, a.std(ddof=1))), 2),
         }  # fmt: skip
 
-    def med_diff(x: np.ndarray, a: np.ndarray, b: np.ndarray) -> dict:
-        xa, xb = x[a & np.isfinite(x)], x[b & np.isfinite(x)]
-        if xa.size < 5 or xb.size < 5:
-            return {"n_flagged": int(xa.size), "n_unflagged": int(xb.size)}
-        se = 1.2533 * float(
-            np.hypot(xa.std(ddof=1) / np.sqrt(xa.size), xb.std(ddof=1) / np.sqrt(xb.size))
-        )
-        d = float(np.median(xa) - np.median(xb))
-        return {"n_flagged": int(xa.size), "n_unflagged": int(xb.size), "median_diff": round(d, 4),
-                "se": round(se, 4), "sigma": round(d / se, 2) if se > 0 else None}  # fmt: skip
+    def summary(sel: np.ndarray) -> dict:
+        return {
+            "n": int(sel.sum()),
+            "median_logm": round(float(np.median(lm[sel])), 3) if sel.any() else None,
+            "median_z": round(float(np.median(z[sel])), 4) if sel.any() else None,
+        }
+
+    # Strict footprint: only cells holding >= strict_min_per_cell Tempel galaxies.
+    ira, idec = _cells_arrays(grp["gal_ra"], grp["gal_dec"], SDSS_CELL_DEG)
+    from collections import Counter
+
+    cell_n = Counter(zip(ira, idec, strict=True))
+    dense = {c for c, k in cell_n.items() if k >= strict_min_per_cell}
+
+    def in_dense(ra_: np.ndarray, dec_: np.ndarray) -> np.ndarray:
+        keys = zip(*_cells_arrays(ra_, dec_, SDSS_CELL_DEG), strict=True)
+        return np.fromiter((c in dense for c in keys), bool, count=len(ra_))
+
+    g_dense, r_dense = in_dense(cat["ra"], cat["dec"]), in_dense(rnd["ra"], rnd["dec"])
 
     out: dict = {
         "shuffle_method": (
             "environment labels given to the real number of members per stratum, drawn at random "
-            "from the classifiable C>=0.5 pool; strata = dz=0.0025 redshift bin x rms tercile "
-            "(headline) or redshift bin alone ('shuffle_z_only'); knee offset in - out"
+            "from the classifiable C>=0.5 pool; strata = dz=0.0025 redshift bin x rms_beam "
+            "quintile (headline), rms_beam tercile, or redshift alone; knee offset in - out"
         ),
         "n_shuffle": n_shuffle,
         "seed_shuffle": seed_shuffle,
-        "rms_tercile_edges_mjy": [round(float(x), 3) for x in edges],
+        "rms_beam_quintile_edges_mjy": [round(float(x), 3) for x in edges5],
         "n_pool": int(pool.sum()),
         "shuffle": {},
+        "shuffle_rms_beam_terciles": {},
         "shuffle_z_only": {},
         "blending": {
             "method": (
-                "Tempel+2017 SDSS galaxies within one FAST FWHM (2.9 arcmin; also 1.5 and 4.5) and "
-                "W50/2 + 100 km/s ('w50') or a fixed +/-300 km/s ('fixed300'); flagged = 2 or "
-                "more (one is the counterpart); line-width residual from a log W50 ~ log M + z fit "
-                "on unflagged sources"
+                "Tempel+2017 SDSS galaxies (r < 17.77) in a velocity window of W50/2 + 100 km/s "
+                "('w50') or a fixed +/-300 km/s ('fixed300'), within one FAST FWHM (2.9 arcmin); "
+                "line-width classes use the fixed window: inner = neighbour within ell_maj/2 + "
+                "1.45 arcmin, ring = none there but one within a further 3 arcmin, isolated = "
+                "none out to that edge"
             ),
             "n_pool": int(pool.sum()),
         },
+        "footprint_strict": {
+            "min_tempel_per_cell": strict_min_per_cell,
+            "n_pool": int((pool & g_dense).sum()),
+        },  # fmt: skip
     }
-    res = linewidth_residual(lw, lm, z, pool & ~flags["w50"])
+    res = linewidth_residual(lw, lm, z, pool & isolated)
+    res_old = linewidth_residual(lw, lm, z, pool & ~flags["w50"])
     for name in ("void", "group"):
-        w = weights(name)
+        w = weights(name, r_cl)
         m_ = measured[name]
         gi = g_env[name]
-        out["shuffle"][name], out["shuffle_z_only"][name] = {}, {}
+        out["shuffle"][name], out["shuffle_rms_beam_terciles"][name] = {}, {}
+        out["shuffle_z_only"][name] = {}
         for wk in ("survey", "env"):
-            out["shuffle"][name][wk] = shuffle(pool, gi, w[wk], m_[wk], m_[f"{wk}_err"], depth)
-            out["shuffle_z_only"][name][wk] = shuffle(pool, gi, w[wk], m_[wk], m_[f"{wk}_err"])
+            args = (pool, gi, w[wk], m_[wk], m_[f"{wk}_err"])
+            out["shuffle"][name][wk] = shuffle(*args, depth5)
+            out["shuffle_rms_beam_terciles"][name][wk] = shuffle(*args, depth3, n=n_shuffle // 2)
+            out["shuffle_z_only"][name][wk] = shuffle(*args, None, n=n_shuffle // 2)
             print(f"[robustness shuffle {name} {wk}]", file=sys.stderr, flush=True)
         bl: dict = {}
         for wk in ("survey", "env"):
@@ -1875,27 +1975,45 @@ def robustness_leg(
                 )
             v["env_shuffle_unflagged"] = shuffle(
                 clean, gi, w["env"], v["env_offset_unflagged"], v["env_offset_unflagged_err"],
-                depth,
+                depth5,
             )  # fmt: skip
             bl[fk] = v
-        bl["flagged_frac_by_radius"] = {
-            f"{r}": {
-                "in": round(float(f[pool & gi].mean()), 4),
-                "out": round(float(f[pool & ~gi].mean()), 4),
-            }
-            for r, f in flags_r.items()
-        }
         fl = flags["w50"]
         bl["flagged_same_group_frac"] = (
             round(float(same[pool & gi & fl].mean()), 4) if (pool & gi & fl).any() else None
         )
-        bl["linewidth"] = {
-            "in_log_w50_resid": med_diff(res, pool & gi & fl, pool & gi & ~fl),
-            "out_log_w50_resid": med_diff(res, pool & ~gi & fl, pool & ~gi & ~fl),
-            "in_w20_over_w50": med_diff(w20_50, pool & gi & fl, pool & gi & ~fl),
-            "by_radius_in_log_w50_resid": {
-                f"{r}": med_diff(res, pool & gi & f, pool & gi & ~f) for r, f in flags_r.items()
-            },
+        # Line widths: classes where blending and neighbourhood density predict differently.
+        lwd: dict = {"classes": {}}
+        for cname, cls in (("inner", inner), ("ring", ring), ("isolated", isolated)):
+            lwd["classes"][cname] = {
+                "in": summary(pool & gi & cls),
+                "out": summary(pool & ~gi & cls),
+            }
+        for side, sm in (("in", gi), ("out", ~gi)):
+            for cname, cls in (("inner", inner), ("ring", ring)):
+                a, b = pool & sm & cls, pool & sm & isolated
+                lwd[f"{side}_{cname}_resid"] = matched_median_diff(
+                    res, a, b, lm, z, dm=10.0, dz=10.0
+                )  # one cell = the plain residual median difference
+                lwd[f"{side}_{cname}_matched"] = matched_median_diff(lw, a, b, lm, z)
+            for r, f in fixed_r.items():
+                lwd[f"{side}_fixed300_r{r}_matched"] = matched_median_diff(
+                    lw, pool & sm & f, pool & sm & isolated, lm, z
+                )
+            lwd[f"{side}_w50_r2.9_resid_oldfit"] = matched_median_diff(
+                res_old, pool & sm & fl, pool & sm & ~fl, lm, z, dm=10.0, dz=10.0
+            )
+        bl["linewidth"] = lwd
+        if name == "group":
+            gm = pool & gi & np.isfinite(rr200)
+            bl["r_over_r200"] = {
+                "median_flagged": round(float(np.median(rr200[gm & fl])), 3) if (gm & fl).any() else None,
+                "median_unflagged": round(float(np.median(rr200[gm & ~fl])), 3) if (gm & ~fl).any() else None,
+            }  # fmt: skip
+        ws = weights(name, r_cl & r_dense)
+        out["footprint_strict"][name] = {
+            wk: dict(zip(("offset", "offset_err"), offset(pool & g_dense, gi, ws[wk]), strict=True))
+            for wk in ("survey", "env")
         }
         print(f"[robustness blending {name}]", file=sys.stderr, flush=True)
         out["blending"][name] = bl
@@ -2346,8 +2464,22 @@ def _null_figure(m: dict, out_dir) -> None:
     plt.close(fig)
 
 
+def _strict_max_shift(m: dict) -> str:
+    """Largest |offset change| when the footprint keeps only well-populated SDSS cells."""
+    st = (m.get("robustness") or {}).get("footprint_strict") or {}
+    ev = m.get("env_vmax") or {}
+    shifts = []
+    for name in ("void", "group"):
+        base = {"survey": m.get(f"{name}_knee_offset"), "env": (ev.get(name) or {}).get("offset")}
+        for wk, b0 in base.items():
+            s = ((st.get(name) or {}).get(wk) or {}).get("offset")
+            if isinstance(s, (int, float)) and isinstance(b0, (int, float)):
+                shifts.append(abs(s - b0))
+    return f"{max(shifts):.3f}" if shifts else "--"
+
+
 def _robustness_macros(rob: dict) -> list[str]:
-    """Macros for the shuffle nulls and the blending test (the ``robustness`` block)."""
+    """Macros for the shuffle nulls, the blending tests and the footprint check."""
 
     def num(x, fmt: str = "{:.3f}") -> str:
         return fmt.format(x) if isinstance(x, (int, float)) else "--"
@@ -2359,33 +2491,28 @@ def _robustness_macros(rob: dict) -> list[str]:
         return rf"\newcommand{{\feReal{name}}}{{{val}}}"
 
     out: list[str] = []
-    rad = {"1.5": "Rsmall", "4.5": "Rlarge"}
     for name, nm in (("void", "Void"), ("group", "Group")):
         for wk, wn in (("survey", "Survey"), ("env", "Env")):
             s = ((rob.get("shuffle") or {}).get(name) or {}).get(wk) or {}
-            sz = ((rob.get("shuffle_z_only") or {}).get(name) or {}).get(wk) or {}
             out += [
                 mac(f"Shuf{nm}{wn}Mean", num(s.get("mean"))),
                 mac(f"Shuf{nm}{wn}Std", num(s.get("std"))),
                 mac(f"Shuf{nm}{wn}Excess", num(s.get("excess"))),
                 mac(f"Shuf{nm}{wn}Sigma", num(s.get("excess_sigma_quadrature"), "{:.1f}")),
                 mac(f"Shuf{nm}{wn}NReach", s.get("n_reaching_measured", "--")),
-                mac(f"ShufZ{nm}{wn}Mean", num(sz.get("mean"))),
-                mac(f"ShufZ{nm}{wn}Excess", num(sz.get("excess"))),
-                mac(f"ShufZ{nm}{wn}Sigma", num(sz.get("excess_sigma_quadrature"), "{:.1f}")),
             ]
+            for key, pre in (("shuffle_z_only", "ShufZ"), ("shuffle_rms_beam_terciles", "ShufT")):
+                sz = ((rob.get(key) or {}).get(name) or {}).get(wk) or {}
+                out += [
+                    mac(f"{pre}{nm}{wn}Excess", num(sz.get("excess"))),
+                    mac(f"{pre}{nm}{wn}Sigma", num(sz.get("excess_sigma_quadrature"), "{:.1f}")),
+                ]
         bl = (rob.get("blending") or {}).get(name) or {}
         out += [
             mac(f"Blend{nm}EnvAll", num(bl.get("env_offset_all"))),
             mac(f"Blend{nm}EnvAllErr", num(bl.get("env_offset_all_err"))),
             mac(f"Blend{nm}SameGroupPct", pct(bl.get("flagged_same_group_frac"))),
         ]
-        for r, rn in rad.items():
-            fr = (bl.get("flagged_frac_by_radius") or {}).get(r) or {}
-            out += [
-                mac(f"Blend{nm}{rn}In", pct(fr.get("in"))),
-                mac(f"Blend{nm}{rn}Out", pct(fr.get("out"))),
-            ]
         for fk, fn in (("w50", "Wfifty"), ("fixed300", "Fixed")):
             v = bl.get(fk) or {}
             sh = v.get("env_shuffle_unflagged") or {}
@@ -2400,22 +2527,41 @@ def _robustness_macros(rob: dict) -> list[str]:
                 mac(f"Blend{nm}{fn}LogMClean", num(v.get("median_logm_in_unflagged"), "{:.2f}")),
             ]
         lw = bl.get("linewidth") or {}
-        for key, kn in (("in_log_w50_resid", "LwIn"), ("out_log_w50_resid", "LwOut"),
-                        ("in_w20_over_w50", "WtwentyIn")):  # fmt: skip
-            d = lw.get(key) or {}
+        for side, sn in (("in", "In"), ("out", "Out")):
+            for cname, cn in (("inner", "Inner"), ("ring", "Ring")):
+                d = lw.get(f"{side}_{cname}_matched") or {}
+                out += [
+                    mac(f"Blend{nm}Lw{sn}{cn}Diff", num(d.get("median_diff"))),
+                    mac(f"Blend{nm}Lw{sn}{cn}Se", num(d.get("se"))),
+                    mac(f"Blend{nm}Lw{sn}{cn}Sigma", num(d.get("sigma"), "{:.1f}")),
+                    mac(f"Blend{nm}Lw{sn}{cn}N", d.get("n_flagged_matched", "--")),
+                ]
+            for r, rn in (("1.5", "Rone"), ("2.9", "Rtwo"), ("4.5", "Rthree")):
+                d = lw.get(f"{side}_fixed300_r{r}_matched") or {}
+                out.append(mac(f"Blend{nm}Lw{sn}{rn}Diff", num(d.get("median_diff"))))
+        cls = lw.get("classes") or {}
+        for cname, cn in (("inner", "Inner"), ("ring", "Ring"), ("isolated", "Isolated")):
+            c = (cls.get(cname) or {}).get("in") or {}
             out += [
-                mac(f"Blend{nm}{kn}Diff", num(d.get("median_diff"))),
-                mac(f"Blend{nm}{kn}Se", num(d.get("se"))),
-                mac(f"Blend{nm}{kn}Sigma", num(d.get("sigma"), "{:.1f}")),
+                mac(f"Blend{nm}{cn}N", c.get("n", "--")),
+                mac(f"Blend{nm}{cn}LogM", num(c.get("median_logm"), "{:.2f}")),
             ]
-        for r, rn in rad.items():
-            d = (lw.get("by_radius_in_log_w50_resid") or {}).get(r) or {}
-            out.append(mac(f"Blend{nm}Lw{rn}Diff", num(d.get("median_diff"))))
+        rr = bl.get("r_over_r200") or {}
+        out += [
+            mac(f"Blend{nm}RRFlag", num(rr.get("median_flagged"), "{:.2f}")),
+            mac(f"Blend{nm}RRClean", num(rr.get("median_unflagged"), "{:.2f}")),
+        ]
+        st = (rob.get("footprint_strict") or {}).get(name) or {}
+        for wk, wn in (("survey", "Survey"), ("env", "Env")):
+            out.append(mac(f"Strict{nm}{wn}Offset", num((st.get(wk) or {}).get("offset"))))
     out.append(mac("BlendNPool", (rob.get("blending") or {}).get("n_pool", "--")))
+    out.append(mac("StrictNPool", (rob.get("footprint_strict") or {}).get("n_pool", "--")))
+    out.append(
+        mac(
+            "StrictMinPerCell", (rob.get("footprint_strict") or {}).get("min_tempel_per_cell", "--")
+        )
+    )
     out.append(mac("ShufReps", rob.get("n_shuffle", "--")))
-    edges = rob.get("rms_tercile_edges_mjy") or []
-    out.append(mac("RmsEdgeLo", num(edges[0], "{:.2f}") if len(edges) == 2 else "--"))
-    out.append(mac("RmsEdgeHi", num(edges[1], "{:.2f}") if len(edges) == 2 else "--"))
     return out
 
 
@@ -2692,6 +2838,7 @@ def _write_macros(m: dict, path) -> None:
         p_one = (n_reach_g + 1) / (n_eg + 1) if n_reach_g is not None and n_eg else None
         lines += [
             *_robustness_macros(m.get("robustness") or {}),
+            rf"\newcommand{{\feRealStrictMaxShift}}{{{_strict_max_shift(m)}}}",
             rf"\newcommand{{\feRealEnvVoidShareFirst}}{{{share(0)}}}",
             rf"\newcommand{{\feRealEnvVoidShareAll}}{{{share(-1)}}}",
             rf"\newcommand{{\feRealEnvGroupShellFirst}}{{{f'{100 * gshell[0]:.0f}' if gshell and gshell[0] is not None else '--'}}}",

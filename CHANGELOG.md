@@ -31,9 +31,12 @@ recommend the next version number.
   (`label_shuffle_null`) is stratified by redshift AND survey depth, and a FAST-beam blending test
   (`confusion_counts`, `confused_same_group`, `linewidth_residual`, `robustness_leg`) checks line
   widths at fixed mass. With restricted Vmax the void offset exceeds the two nulls by 1.1-2.4
-  sigma and the group offset by 2.2-3.2 sigma; the group excess sits in compact cores whose
-  line-width excess grows with search radius, which beam blending does not predict. Neither is
-  claimed as environmental. Now an RNAAS-length note titled "...Against Two Null Tests". Six
+  sigma and the group offset by 2.2-3.5 sigma (the shuffle stratified on per-source detection
+  sensitivity, `rms_beam`). The group excess lies in the most massive members, nearer their group
+  centres, with a group neighbour in the beam; with a fixed velocity window their line widths
+  match isolated galaxies of the same HI mass (the earlier apparent broadening came from a
+  W50-dependent window), which cannot separate blending from mass segregation. Neither offset is
+  claimed as environmental. Now an RNAAS-length note titled "...Against Two Null Tests". Seven
   referee rounds drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
   unconstrained void null with per-placement diagnostics, a group null, a KD-tree
   `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.

@@ -24293,108 +24293,156 @@
     }
   },
   "robustness": {
-    "shuffle_method": "environment labels given to the real number of members per stratum, drawn at random from the classifiable C>=0.5 pool; strata = dz=0.0025 redshift bin x rms tercile (headline) or redshift bin alone ('shuffle_z_only'); knee offset in - out",
+    "shuffle_method": "environment labels given to the real number of members per stratum, drawn at random from the classifiable C>=0.5 pool; strata = dz=0.0025 redshift bin x rms_beam quintile (headline), rms_beam tercile, or redshift alone; knee offset in - out",
     "n_shuffle": 1000,
     "seed_shuffle": 69,
-    "rms_tercile_edges_mjy": [
-      0.81,
-      1.19
+    "rms_beam_quintile_edges_mjy": [
+      0.4,
+      0.47,
+      0.55,
+      0.66
     ],
     "n_pool": 55893,
     "shuffle": {
       "void": {
         "survey": {
           "n_ok": 1000,
-          "mean": -0.081,
-          "std": 0.0155,
+          "mean": -0.0784,
+          "std": 0.0152,
           "measured": -0.171,
           "measured_err": 0.047,
-          "excess": -0.09,
+          "excess": -0.093,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 1.82
+          "excess_sigma_quadrature": 1.88
         },
         "env": {
           "n_ok": 1000,
-          "mean": 0.0129,
-          "std": 0.0164,
+          "mean": 0.0153,
+          "std": 0.0156,
           "measured": -0.088,
           "measured_err": 0.038,
-          "excess": -0.101,
+          "excess": -0.103,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 2.44
+          "excess_sigma_quadrature": 2.51
         }
       },
       "group": {
         "survey": {
           "n_ok": 1000,
-          "mean": 0.0886,
-          "std": 0.0132,
+          "mean": 0.0771,
+          "std": 0.0134,
           "measured": 0.2,
           "measured_err": 0.043,
-          "excess": 0.111,
+          "excess": 0.123,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 2.48
+          "excess_sigma_quadrature": 2.73
         },
         "env": {
           "n_ok": 1000,
-          "mean": 0.0052,
-          "std": 0.0137,
+          "mean": -0.0055,
+          "std": 0.0123,
           "measured": 0.123,
           "measured_err": 0.034,
-          "excess": 0.118,
+          "excess": 0.128,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 3.21
+          "excess_sigma_quadrature": 3.55
+        }
+      }
+    },
+    "shuffle_rms_beam_terciles": {
+      "void": {
+        "survey": {
+          "n_ok": 500,
+          "mean": -0.0797,
+          "std": 0.0151,
+          "measured": -0.171,
+          "measured_err": 0.047,
+          "excess": -0.091,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 1.85
+        },
+        "env": {
+          "n_ok": 500,
+          "mean": 0.0147,
+          "std": 0.0168,
+          "measured": -0.088,
+          "measured_err": 0.038,
+          "excess": -0.103,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 2.47
+        }
+      },
+      "group": {
+        "survey": {
+          "n_ok": 500,
+          "mean": 0.0768,
+          "std": 0.014,
+          "measured": 0.2,
+          "measured_err": 0.043,
+          "excess": 0.123,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 2.72
+        },
+        "env": {
+          "n_ok": 500,
+          "mean": -0.006,
+          "std": 0.0126,
+          "measured": 0.123,
+          "measured_err": 0.034,
+          "excess": 0.129,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 3.56
         }
       }
     },
     "shuffle_z_only": {
       "void": {
         "survey": {
-          "n_ok": 1000,
-          "mean": -0.0702,
-          "std": 0.0154,
+          "n_ok": 500,
+          "mean": -0.0709,
+          "std": 0.0153,
           "measured": -0.171,
           "measured_err": 0.047,
-          "excess": -0.101,
+          "excess": -0.1,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 2.04
+          "excess_sigma_quadrature": 2.02
         },
         "env": {
-          "n_ok": 1000,
-          "mean": 0.0227,
-          "std": 0.0164,
+          "n_ok": 500,
+          "mean": 0.0219,
+          "std": 0.0169,
           "measured": -0.088,
           "measured_err": 0.038,
-          "excess": -0.111,
+          "excess": -0.11,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 2.67
+          "excess_sigma_quadrature": 2.64
         }
       },
       "group": {
         "survey": {
-          "n_ok": 1000,
+          "n_ok": 500,
           "mean": 0.0672,
-          "std": 0.0135,
+          "std": 0.0138,
           "measured": 0.2,
           "measured_err": 0.043,
           "excess": 0.133,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 2.95
+          "excess_sigma_quadrature": 2.94
         },
         "env": {
-          "n_ok": 1000,
-          "mean": -0.0159,
-          "std": 0.0133,
+          "n_ok": 500,
+          "mean": -0.0156,
+          "std": 0.0138,
           "measured": 0.123,
           "measured_err": 0.034,
           "excess": 0.139,
           "n_reaching_measured": 0,
-          "excess_sigma_quadrature": 3.81
+          "excess_sigma_quadrature": 3.78
         }
       }
     },
     "blending": {
-      "method": "Tempel+2017 SDSS galaxies within one FAST FWHM (2.9 arcmin; also 1.5 and 4.5) and W50/2 + 100 km/s ('w50') or a fixed +/-300 km/s ('fixed300'); flagged = 2 or more (one is the counterpart); line-width residual from a log W50 ~ log M + z fit on unflagged sources",
+      "method": "Tempel+2017 SDSS galaxies (r < 17.77) in a velocity window of W50/2 + 100 km/s ('w50') or a fixed +/-300 km/s ('fixed300'), within one FAST FWHM (2.9 arcmin); line-width classes use the fixed window: inner = neighbour within ell_maj/2 + 1.45 arcmin, ring = none there but one within a further 3 arcmin, isolated = none out to that edge",
       "n_pool": 55893,
       "void": {
         "survey_offset_all": -0.171,
@@ -24412,13 +24460,13 @@
           "env_offset_unflagged_err": 0.036,
           "env_shuffle_unflagged": {
             "n_ok": 1000,
-            "mean": 0.0125,
-            "std": 0.0177,
+            "mean": 0.0137,
+            "std": 0.0173,
             "measured": -0.078,
             "measured_err": 0.036,
-            "excess": -0.09,
+            "excess": -0.092,
             "n_reaching_measured": 0,
-            "excess_sigma_quadrature": 2.26
+            "excess_sigma_quadrature": 2.29
           }
         },
         "fixed300": {
@@ -24432,74 +24480,198 @@
           "env_offset_unflagged_err": 0.036,
           "env_shuffle_unflagged": {
             "n_ok": 1000,
-            "mean": 0.0147,
-            "std": 0.0177,
+            "mean": 0.0149,
+            "std": 0.0176,
             "measured": -0.08,
             "measured_err": 0.036,
             "excess": -0.095,
             "n_reaching_measured": 0,
-            "excess_sigma_quadrature": 2.36
-          }
-        },
-        "flagged_frac_by_radius": {
-          "1.5": {
-            "in": 0.0376,
-            "out": 0.0531
-          },
-          "2.9": {
-            "in": 0.0681,
-            "out": 0.1076
-          },
-          "4.5": {
-            "in": 0.1005,
-            "out": 0.1601
+            "excess_sigma_quadrature": 2.37
           }
         },
         "flagged_same_group_frac": 0.9853,
         "linewidth": {
-          "in_log_w50_resid": {
-            "n_flagged": 1155,
-            "n_unflagged": 15799,
-            "median_diff": 0.0145,
-            "se": 0.0076,
-            "sigma": 1.92
-          },
-          "out_log_w50_resid": {
-            "n_flagged": 4190,
-            "n_unflagged": 34749,
-            "median_diff": 0.0307,
-            "se": 0.0041,
-            "sigma": 7.44
-          },
-          "in_w20_over_w50": {
-            "n_flagged": 1155,
-            "n_unflagged": 15799,
-            "median_diff": 0.0437,
-            "se": 0.0274,
-            "sigma": 1.59
-          },
-          "by_radius_in_log_w50_resid": {
-            "1.5": {
-              "n_flagged": 638,
-              "n_unflagged": 16316,
-              "median_diff": 0.0093,
-              "se": 0.0099,
-              "sigma": 0.94
+          "classes": {
+            "inner": {
+              "in": {
+                "n": 1443,
+                "median_logm": 9.856,
+                "median_z": 0.04
+              },
+              "out": {
+                "n": 5365,
+                "median_logm": 9.907,
+                "median_z": 0.041
+              }
             },
-            "2.9": {
-              "n_flagged": 1155,
-              "n_unflagged": 15799,
-              "median_diff": 0.0145,
-              "se": 0.0076,
-              "sigma": 1.92
+            "ring": {
+              "in": {
+                "n": 1578,
+                "median_logm": 9.589,
+                "median_z": 0.0369
+              },
+              "out": {
+                "n": 5571,
+                "median_logm": 9.635,
+                "median_z": 0.036
+              }
             },
-            "4.5": {
-              "n_flagged": 1704,
-              "n_unflagged": 15250,
-              "median_diff": 0.023,
-              "se": 0.0064,
-              "sigma": 3.59
+            "isolated": {
+              "in": {
+                "n": 14323,
+                "median_logm": 9.458,
+                "median_z": 0.0334
+              },
+              "out": {
+                "n": 29172,
+                "median_logm": 9.465,
+                "median_z": 0.031
+              }
             }
+          },
+          "in_inner_resid": {
+            "n_flagged": 1443,
+            "n_ref": 14323,
+            "n_cells": 2,
+            "n_flagged_matched": 1443,
+            "median_diff": -0.0096,
+            "se": 0.0073,
+            "sigma": -1.32
+          },
+          "in_inner_matched": {
+            "n_flagged": 1443,
+            "n_ref": 14323,
+            "n_cells": 49,
+            "n_flagged_matched": 1417,
+            "median_diff": -0.0066,
+            "se": 0.0074,
+            "sigma": -0.9
+          },
+          "in_ring_resid": {
+            "n_flagged": 1578,
+            "n_ref": 14323,
+            "n_cells": 2,
+            "n_flagged_matched": 1578,
+            "median_diff": 0.0189,
+            "se": 0.0068,
+            "sigma": 2.77
+          },
+          "in_ring_matched": {
+            "n_flagged": 1578,
+            "n_ref": 14323,
+            "n_cells": 54,
+            "n_flagged_matched": 1563,
+            "median_diff": 0.0148,
+            "se": 0.0069,
+            "sigma": 2.14
+          },
+          "in_fixed300_r1.5_matched": {
+            "n_flagged": 682,
+            "n_ref": 14323,
+            "n_cells": 39,
+            "n_flagged_matched": 656,
+            "median_diff": -0.0065,
+            "se": 0.0102,
+            "sigma": -0.64
+          },
+          "in_fixed300_r2.9_matched": {
+            "n_flagged": 1272,
+            "n_ref": 14323,
+            "n_cells": 48,
+            "n_flagged_matched": 1246,
+            "median_diff": -0.0017,
+            "se": 0.0077,
+            "sigma": -0.22
+          },
+          "in_fixed300_r4.5_matched": {
+            "n_flagged": 1902,
+            "n_ref": 14323,
+            "n_cells": 56,
+            "n_flagged_matched": 1882,
+            "median_diff": 0.0036,
+            "se": 0.0064,
+            "sigma": 0.56
+          },
+          "in_w50_r2.9_resid_oldfit": {
+            "n_flagged": 1155,
+            "n_ref": 15799,
+            "n_cells": 2,
+            "n_flagged_matched": 1155,
+            "median_diff": -0.0014,
+            "se": 0.0077,
+            "sigma": -0.18
+          },
+          "out_inner_resid": {
+            "n_flagged": 5365,
+            "n_ref": 29172,
+            "n_cells": 2,
+            "n_flagged_matched": 5365,
+            "median_diff": -0.002,
+            "se": 0.0041,
+            "sigma": -0.5
+          },
+          "out_inner_matched": {
+            "n_flagged": 5365,
+            "n_ref": 29172,
+            "n_cells": 64,
+            "n_flagged_matched": 5321,
+            "median_diff": -0.0025,
+            "se": 0.0042,
+            "sigma": -0.6
+          },
+          "out_ring_resid": {
+            "n_flagged": 5571,
+            "n_ref": 29172,
+            "n_cells": 2,
+            "n_flagged_matched": 5571,
+            "median_diff": 0.0109,
+            "se": 0.004,
+            "sigma": 2.76
+          },
+          "out_ring_matched": {
+            "n_flagged": 5571,
+            "n_ref": 29172,
+            "n_cells": 71,
+            "n_flagged_matched": 5554,
+            "median_diff": 0.0087,
+            "se": 0.0039,
+            "sigma": 2.19
+          },
+          "out_fixed300_r1.5_matched": {
+            "n_flagged": 2317,
+            "n_ref": 29172,
+            "n_cells": 54,
+            "n_flagged_matched": 2286,
+            "median_diff": -0.0008,
+            "se": 0.0058,
+            "sigma": -0.13
+          },
+          "out_fixed300_r2.9_matched": {
+            "n_flagged": 4760,
+            "n_ref": 29172,
+            "n_cells": 63,
+            "n_flagged_matched": 4724,
+            "median_diff": -0.0005,
+            "se": 0.0044,
+            "sigma": -0.12
+          },
+          "out_fixed300_r4.5_matched": {
+            "n_flagged": 7124,
+            "n_ref": 29172,
+            "n_cells": 65,
+            "n_flagged_matched": 7078,
+            "median_diff": 0.0072,
+            "se": 0.0037,
+            "sigma": 1.95
+          },
+          "out_w50_r2.9_resid_oldfit": {
+            "n_flagged": 4190,
+            "n_ref": 34749,
+            "n_cells": 2,
+            "n_flagged_matched": 4190,
+            "median_diff": 0.0129,
+            "se": 0.0043,
+            "sigma": 3.01
           }
         }
       },
@@ -24519,13 +24691,13 @@
           "env_offset_unflagged_err": 0.035,
           "env_shuffle_unflagged": {
             "n_ok": 1000,
-            "mean": -0.0169,
-            "std": 0.0155,
+            "mean": -0.0241,
+            "std": 0.0146,
             "measured": 0.038,
             "measured_err": 0.035,
-            "excess": 0.055,
+            "excess": 0.062,
             "n_reaching_measured": 0,
-            "excess_sigma_quadrature": 1.44
+            "excess_sigma_quadrature": 1.64
           }
         },
         "fixed300": {
@@ -24539,75 +24711,227 @@
           "env_offset_unflagged_err": 0.035,
           "env_shuffle_unflagged": {
             "n_ok": 1000,
-            "mean": -0.0255,
-            "std": 0.0168,
+            "mean": -0.0316,
+            "std": 0.0158,
             "measured": 0.044,
             "measured_err": 0.035,
-            "excess": 0.07,
+            "excess": 0.076,
             "n_reaching_measured": 0,
-            "excess_sigma_quadrature": 1.79
-          }
-        },
-        "flagged_frac_by_radius": {
-          "1.5": {
-            "in": 0.1332,
-            "out": 0.0059
-          },
-          "2.9": {
-            "in": 0.2553,
-            "out": 0.0155
-          },
-          "4.5": {
-            "in": 0.3616,
-            "out": 0.0318
+            "excess_sigma_quadrature": 1.97
           }
         },
         "flagged_same_group_frac": 0.9941,
         "linewidth": {
-          "in_log_w50_resid": {
-            "n_flagged": 4770,
-            "n_unflagged": 13913,
-            "median_diff": 0.0187,
-            "se": 0.0043,
-            "sigma": 4.36
-          },
-          "out_log_w50_resid": {
-            "n_flagged": 575,
-            "n_unflagged": 36635,
-            "median_diff": 0.0133,
-            "se": 0.0107,
-            "sigma": 1.25
-          },
-          "in_w20_over_w50": {
-            "n_flagged": 4770,
-            "n_unflagged": 13913,
-            "median_diff": 0.0339,
-            "se": 0.0221,
-            "sigma": 1.53
-          },
-          "by_radius_in_log_w50_resid": {
-            "1.5": {
-              "n_flagged": 2488,
-              "n_unflagged": 16195,
-              "median_diff": 0.0094,
-              "se": 0.0053,
-              "sigma": 1.78
+          "classes": {
+            "inner": {
+              "in": {
+                "n": 6051,
+                "median_logm": 9.887,
+                "median_z": 0.0395
+              },
+              "out": {
+                "n": 757,
+                "median_logm": 9.957,
+                "median_z": 0.0506
+              }
             },
-            "2.9": {
-              "n_flagged": 4770,
-              "n_unflagged": 13913,
-              "median_diff": 0.0187,
-              "se": 0.0043,
-              "sigma": 4.36
+            "ring": {
+              "in": {
+                "n": 4419,
+                "median_logm": 9.598,
+                "median_z": 0.0328
+              },
+              "out": {
+                "n": 2730,
+                "median_logm": 9.667,
+                "median_z": 0.044
+              }
             },
-            "4.5": {
-              "n_flagged": 6756,
-              "n_unflagged": 11927,
-              "median_diff": 0.031,
-              "se": 0.004,
-              "sigma": 7.8
+            "isolated": {
+              "in": {
+                "n": 8662,
+                "median_logm": 9.325,
+                "median_z": 0.0241
+              },
+              "out": {
+                "n": 34833,
+                "median_logm": 9.491,
+                "median_z": 0.0333
+              }
             }
+          },
+          "in_inner_resid": {
+            "n_flagged": 6051,
+            "n_ref": 8662,
+            "n_cells": 2,
+            "n_flagged_matched": 6051,
+            "median_diff": -0.0096,
+            "se": 0.0053,
+            "sigma": -1.81
+          },
+          "in_inner_matched": {
+            "n_flagged": 6051,
+            "n_ref": 8662,
+            "n_cells": 62,
+            "n_flagged_matched": 5952,
+            "median_diff": -0.0065,
+            "se": 0.0056,
+            "sigma": -1.17
+          },
+          "in_ring_resid": {
+            "n_flagged": 4419,
+            "n_ref": 8662,
+            "n_cells": 2,
+            "n_flagged_matched": 4419,
+            "median_diff": 0.0089,
+            "se": 0.0051,
+            "sigma": 1.76
+          },
+          "in_ring_matched": {
+            "n_flagged": 4419,
+            "n_ref": 8662,
+            "n_cells": 67,
+            "n_flagged_matched": 4398,
+            "median_diff": 0.01,
+            "se": 0.0052,
+            "sigma": 1.92
+          },
+          "in_fixed300_r1.5_matched": {
+            "n_flagged": 2770,
+            "n_ref": 8662,
+            "n_cells": 53,
+            "n_flagged_matched": 2705,
+            "median_diff": -0.0082,
+            "se": 0.0067,
+            "sigma": -1.22
+          },
+          "in_fixed300_r2.9_matched": {
+            "n_flagged": 5432,
+            "n_ref": 8662,
+            "n_cells": 60,
+            "n_flagged_matched": 5345,
+            "median_diff": -0.0054,
+            "se": 0.0057,
+            "sigma": -0.95
+          },
+          "in_fixed300_r4.5_matched": {
+            "n_flagged": 7772,
+            "n_ref": 8662,
+            "n_cells": 62,
+            "n_flagged_matched": 7669,
+            "median_diff": 0.0014,
+            "se": 0.005,
+            "sigma": 0.28
+          },
+          "in_w50_r2.9_resid_oldfit": {
+            "n_flagged": 4770,
+            "n_ref": 13913,
+            "n_cells": 2,
+            "n_flagged_matched": 4770,
+            "median_diff": 0.0094,
+            "se": 0.0047,
+            "sigma": 2.02
+          },
+          "out_inner_resid": {
+            "n_flagged": 757,
+            "n_ref": 34833,
+            "n_cells": 2,
+            "n_flagged_matched": 757,
+            "median_diff": -0.0137,
+            "se": 0.0094,
+            "sigma": -1.46
+          },
+          "out_inner_matched": {
+            "n_flagged": 757,
+            "n_ref": 34833,
+            "n_cells": 42,
+            "n_flagged_matched": 740,
+            "median_diff": -0.0271,
+            "se": 0.0095,
+            "sigma": -2.85
+          },
+          "out_ring_resid": {
+            "n_flagged": 2730,
+            "n_ref": 34833,
+            "n_cells": 2,
+            "n_flagged_matched": 2730,
+            "median_diff": 0.0025,
+            "se": 0.0052,
+            "sigma": 0.48
+          },
+          "out_ring_matched": {
+            "n_flagged": 2730,
+            "n_ref": 34833,
+            "n_cells": 59,
+            "n_flagged_matched": 2714,
+            "median_diff": -0.0005,
+            "se": 0.0053,
+            "sigma": -0.09
+          },
+          "out_fixed300_r1.5_matched": {
+            "n_flagged": 229,
+            "n_ref": 34833,
+            "n_cells": 29,
+            "n_flagged_matched": 215,
+            "median_diff": -0.0115,
+            "se": 0.0171,
+            "sigma": -0.67
+          },
+          "out_fixed300_r2.9_matched": {
+            "n_flagged": 600,
+            "n_ref": 34833,
+            "n_cells": 40,
+            "n_flagged_matched": 585,
+            "median_diff": -0.0272,
+            "se": 0.0107,
+            "sigma": -2.54
+          },
+          "out_fixed300_r4.5_matched": {
+            "n_flagged": 1254,
+            "n_ref": 34833,
+            "n_cells": 47,
+            "n_flagged_matched": 1240,
+            "median_diff": 0.0003,
+            "se": 0.0073,
+            "sigma": 0.04
+          },
+          "out_w50_r2.9_resid_oldfit": {
+            "n_flagged": 575,
+            "n_ref": 36635,
+            "n_cells": 2,
+            "n_flagged_matched": 575,
+            "median_diff": -0.0066,
+            "se": 0.0107,
+            "sigma": -0.61
           }
+        },
+        "r_over_r200": {
+          "median_flagged": 0.354,
+          "median_unflagged": 0.515
+        }
+      }
+    },
+    "footprint_strict": {
+      "min_tempel_per_cell": 5,
+      "n_pool": 55651,
+      "void": {
+        "survey": {
+          "offset": -0.172,
+          "offset_err": 0.048
+        },
+        "env": {
+          "offset": -0.088,
+          "offset_err": 0.038
+        }
+      },
+      "group": {
+        "survey": {
+          "offset": 0.2,
+          "offset_err": 0.043
+        },
+        "env": {
+          "offset": 0.124,
+          "offset_err": 0.034
         }
       }
     }

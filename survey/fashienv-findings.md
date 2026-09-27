@@ -724,3 +724,41 @@ The major findings are in the reasoning added in round 6:
 10-12 (nits): the 2.9' FWHM used as a radius reaches the 6% response point; "one is normally
     the counterpart"; the results paragraph chains 16 numbers, so move the survey-wide ones
     to the JSON.
+
+### Response (run `fashienv-round7`: the robustness leg rebuilt; headline JSON unchanged)
+
+- **#1 settled, and the referee was right.** Line widths use a fixed +/-300 km/s window,
+  compared within (log M, z) cells (`matched_median_diff`) against isolated sources. Classes:
+  inner (neighbour inside ell_maj/2 + 1.45'), ring (neighbour only in a 3' ring beyond it;
+  cannot be blended), isolated.
+  - Group members: inner **-0.006 +/- 0.006 dex**, ring +0.010 +/- 0.005.
+  - Fixed-window radius series: -0.008 / -0.005 / +0.001 at 1.5 / 2.9 / 4.5'. Flat.
+  - **The round-6 0.019 dex broadening and its rise with radius were produced by the
+    W50-dependent window** (finding 1b), not by anything physical. The "blending does not
+    predict" sentence is retracted.
+  - Equal widths at fixed mass also cannot exclude blending, because a blend's mass and width
+    grow together. The paper says so.
+- **#2 accepted; the sign was wrong.** The HI-deficiency sentence is gone. The Discussion names
+  the two readings that fit a POSITIVE knee: blending, and massive galaxies concentrated towards
+  group centres.
+- **#3 fixed.** The shuffle is stratified on `rms_beam` (per-source detection sensitivity)
+  quintiles, edges 0.40 / 0.47 / 0.55 / 0.66 mJy; terciles give the same result (converged).
+  - Restricted weighting: void -0.103 (2.5 sigma), group +0.128 (3.5 sigma).
+  - z-only: -0.110 / +0.139.
+  - With the right column, depth conditioning barely moves anything. The earlier `rms` strata
+    had moved the nulls because they tracked source size.
+  - New unit test: a stratifier that tracks mass absorbs a real offset; an independent one does
+    not.
+- **#4.** The group placement null's occupancy is stated (1,909 at z 0.022 vs 18,683 at 0.031),
+  "weak by construction", and the conservative-end argument is limited to voids.
+- **#5.** The exclusion is stated as a mass truncation: "a drop that removing the most massive
+  members would cause whatever its origin".
+- **#6.** Flagged group members sit at median R/R200 **0.35 vs 0.52**, so they are nearer group
+  centres.
+- **#7.** Cell-matched comparisons are the headline; the residual-fit versions are in the JSON.
+- **#8.** The recommendation is narrowed: two nulls with occupancy, plus confusion flags built
+  with a line-width-independent window.
+- **#9.** A strict footprint (at least 5 Tempel galaxies per cell; pool 55,651) moves no offset
+  by more than 0.001 dex.
+- **#10-12.** "FWHM used as a radius"; "normally one of them its counterpart"; the survey-wide
+  numbers are reduced to one clause.

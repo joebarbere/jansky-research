@@ -658,7 +658,8 @@ def test_robustness_leg_runs_on_mock():
     cz = fe.C_KM_S * z
     cat = {"ra": ra, "dec": dec, "z": z, "cz": cz, "log_mhi": lm, "dist_mpc": d,
            "flux": 10**lm / (2.356e5 * d**2), "w50": 10 ** (0.25 * (lm - 9.0) + 2.3),
-           "w20": 1.2 * 10 ** (0.25 * (lm - 9.0) + 2.3), "rms": rng.uniform(0.5, 2.5, n)}  # fmt: skip
+           "w20": 1.2 * 10 ** (0.25 * (lm - 9.0) + 2.3), "rms": rng.uniform(0.5, 2.5, n),
+           "rms_beam": rng.uniform(0.3, 1.5, n), "ell_maj": rng.uniform(2.9, 5.0, n)}  # fmt: skip
     xyz = fe.comoving_xyz(ra, dec, z, h0=100.0)
     holes = xyz[rng.choice(n, 30, replace=False)]
     voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
@@ -690,7 +691,8 @@ def test_robustness_leg_runs_on_mock():
         for wk in ("survey", "env"):
             s = out["shuffle"][name][wk]
             assert s["n_ok"] == 4 and np.isfinite(s["mean"])
-        assert out["shuffle_z_only"][name]["env"]["n_ok"] == 4
+        assert out["shuffle_z_only"][name]["env"]["n_ok"] == 2  # comparison runs use n // 2
+        assert out["shuffle_rms_beam_terciles"][name]["env"]["n_ok"] == 2
         for fk in ("w50", "fixed300"):
             bl = out["blending"][name][fk]
             # roughly every 10th source has a planted companion
@@ -701,8 +703,11 @@ def test_robustness_leg_runs_on_mock():
         b = out["blending"][name]
         # every planted companion shares its counterpart's group id
         assert b["flagged_same_group_frac"] is None or b["flagged_same_group_frac"] > 0.9
-        assert set(b["flagged_frac_by_radius"]) == {"1.5", "2.9", "4.5"}
-        assert "median_diff" in b["linewidth"]["out_log_w50_resid"]
+        lw = b["linewidth"]
+        assert set(lw["classes"]) == {"inner", "ring", "isolated"}
+        assert "out_inner_matched" in lw and "out_fixed300_r4.5_matched" in lw
+        assert set(out["footprint_strict"][name]) == {"survey", "env"}
+    assert "median_flagged" in out["blending"]["group"]["r_over_r200"]
 
 
 def test_measured_offsets_reads_both_weightings():
@@ -725,8 +730,9 @@ def test_robustness_macros_values_and_placeholders():
                      "group": {"env_offset_all": 0.123, "flagged_same_group_frac": 0.8,
                                "w50": {"flagged_frac_in": 0.2553, "flagged_frac_out": 0.0155,
                                        "env_offset_unflagged": 0.038},
-                               "linewidth": {"in_log_w50_resid": {"median_diff": 0.021,
-                                                                  "se": 0.005, "sigma": 4.2}}}},
+                               "linewidth": {"in_inner_matched": {"median_diff": 0.021, "se": 0.005,
+                                                                  "sigma": 4.2,
+                                                                  "n_flagged_matched": 900}}}},
     }  # fmt: skip
     text = "\n".join(fe._robustness_macros(rob))
     assert r"\feRealShufVoidEnvExcess}{-0.119}" in text
@@ -734,7 +740,8 @@ def test_robustness_macros_values_and_placeholders():
     assert r"\feRealBlendGroupWfiftyFlagIn}{25.5}" in text
     assert r"\feRealBlendGroupWfiftyFlagOut}{1.6}" in text
     assert r"\feRealBlendGroupSameGroupPct}{80.0}" in text
-    assert r"\feRealBlendGroupLwInDiff}{0.021}" in text
+    assert r"\feRealBlendGroupLwInInnerDiff}{0.021}" in text
+    assert r"\feRealBlendGroupLwInInnerN}{900}" in text
     assert r"\feRealShufGroupSurveyMean}{--}" in text  # absent -> placeholder, never a crash
     assert r"\feRealBlendNPool}{55893}" in text
 
@@ -797,3 +804,69 @@ def test_confused_same_group_needs_two_members_of_one_group():
     ngal = np.array([3, 3, 1, 1])
     got = fe.confused_same_group(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz, gid, ngal)
     assert got.tolist() == [True, False]
+
+
+def test_matched_median_diff_removes_a_mass_mismatch():
+    rng = np.random.default_rng(13)
+    n = 20_000
+    lm = rng.uniform(8.0, 10.5, n)
+    z = rng.uniform(0.01, 0.05, n)
+    x = 0.25 * lm + rng.normal(0, 0.05, n)  # x rises with mass; no class effect at all
+    flagged = rng.uniform(size=n) < 1 / (1 + np.exp(-(lm - 9.8) * 4))  # flagged are massive
+    naive = np.median(x[flagged]) - np.median(x[~flagged])
+    m = fe.matched_median_diff(x, flagged, ~flagged, lm, z)
+    assert naive > 0.1  # the raw comparison is dominated by the mass mismatch
+    assert abs(m["median_diff"]) < 3 * m["se"] and m["n_cells"] > 5
+    assert fe.matched_median_diff(x, np.zeros(n, bool), ~flagged, lm, z)["n_cells"] == 0
+
+
+def test_confusion_counts_annulus_and_per_source_radius():
+    ra, dec = np.array([180.0, 180.0]), np.array([30.0, 30.0])
+    cz, w50 = np.array([5000.0, 5000.0]), np.array([200.0, 200.0])
+    d = 1.0 / 60.0
+    opt_ra = np.full(3, 180.0)
+    opt_dec = np.array([30.0, 30.0 + 2 * d, 30.0 + 4 * d])  # counterpart, 2', 4'
+    opt_cz = np.full(3, 5000.0)
+    kw = {"half_window_kms": 300.0}
+    # per-source radii: 3' sees two, 5' sees three
+    got = fe.confusion_counts(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz,
+                              beam_arcmin=np.array([3.0, 5.0]), **kw)  # fmt: skip
+    assert got.tolist() == [2, 3]
+    # an annulus 2.5-5' excludes the counterpart and the 2' neighbour
+    ring = fe.confusion_counts(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz, beam_arcmin=5.0,
+                               inner_arcmin=2.5, **kw)  # fmt: skip
+    assert ring.tolist() == [1, 1]
+
+
+def test_shuffle_on_an_outcome_tracking_stratifier_absorbs_a_real_offset():
+    """Seventh round: DR2's rms scales with source size, hence with mass. A true mass offset
+    between members and the rest survives a shuffle stratified on a mass-independent depth, and
+    is absorbed by one stratified on a mass-tracking 'depth'."""
+    cat, vcat, omega, rng = _distance_split_mock(n=300_000, seed=14)
+    lm = cat["log_mhi"]
+    n = lm.size
+    z = cat["dist_mpc"] * fe.H0 / fe.C_KM_S
+    vm = fe.vmax_from_catalogue(vcat, np.ones(n))
+    rank = np.argsort(np.argsort(lm - np.log10(cat["dist_mpc"])))
+    members = rank > 0.8 * n  # members truly more massive at fixed distance
+    _a, fi = fe._himf_and_fit(lm, None, None, omega, mask=members, vmax=vm)
+    _b, fo = fe._himf_and_fit(lm, None, None, omega, mask=~members, vmax=vm)
+    measured = fi["log_m_star"] - fo["log_m_star"]
+    pool = np.ones(n, bool)
+    honest = rng.integers(0, 3, n)  # depth independent of mass
+    tracking = np.digitize(lm - np.log10(cat["dist_mpc"]),
+                           np.quantile(lm - np.log10(cat["dist_mpc"]), [0.2, 0.4, 0.6, 0.8]))  # fmt: skip
+    null_h = fe.label_shuffle_null(lm, z, pool, members, vm, vm, omega, rng, n=20, strata=honest)
+    null_t = fe.label_shuffle_null(lm, z, pool, members, vm, vm, omega, rng, n=20, strata=tracking)
+    assert measured - null_h.mean() > 2 * null_h.std()
+    assert abs(measured - null_t.mean()) < abs(measured - null_h.mean()) / 2
+
+
+def test_strict_max_shift():
+    m = {"void_knee_offset": -0.171, "group_knee_offset": 0.2,
+         "env_vmax": {"void": {"offset": -0.088}, "group": {"offset": 0.123}},
+         "robustness": {"footprint_strict": {
+             "void": {"survey": {"offset": -0.172}, "env": {"offset": -0.088}},
+             "group": {"survey": {"offset": 0.2}, "env": {"offset": 0.124}}}}}  # fmt: skip
+    assert fe._strict_max_shift(m) == "0.001"
+    assert fe._strict_max_shift({}) == "--"
