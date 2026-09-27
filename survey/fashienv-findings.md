@@ -677,3 +677,50 @@ improvement is a (z, depth)-conditioned shuffle, not a better placement.
   - Knee offsets print at three decimals.
 - About 900 prose words plus the caption; 133-word abstract; one figure; triage and prose lint
   clean.
+
+## Seventh referee round (2026-09-27): MAJOR revision
+
+The round-6 fixes are all present (a single 55,893 pool, clean-sample errors, bracket sigmas,
+placement-only dilution, occupancy sign, figure error bars). Every macro matches the JSON, the
+sigmas were recomputed by hand, the figure matches, and the headline claims are pitched correctly.
+The major findings are in the reasoning added in round 6:
+
+1. **(major) "Grows with search radius, which beam blending does not predict" is not
+   supported.** It refutes only a fixed-kernel, main-lobe blending model. Alternatives that
+   can produce a rising trend:
+   (a) DR2 integrates flux over an `ell_maj` aperture (3.5-5.2' in the first rows), not the
+       beam, so neighbours at 2.9-4.5' can be inside the measurement;
+   (b) the |dv| <= W50/2+100 window selects broader sources at fixed mass. Estimated
+       0.012-0.046 dex for residual scatter 0.10-0.20, the size of the effect, plausibly
+       growing with radius. The width test never used the fixed +/-300 flags;
+   (c) the 4.5' flag is a density proxy (faint companions Tempel misses);
+   (d) the samples are nested and there are no errors on the differences.
+   Voids show the same trend (0.009/0.015/0.023) and flagged walls are broader (0.031, 7.4
+   sigma) than flagged group members, so the effect is not specific to dense cores. **Tests:**
+   the radius series with the fixed window; an annulus class (4.5' & ~2.9'); an aperture-aware
+   flag (beyond ell_maj/2 + 1.45'); median log M and z per radius set.
+2. **(major) HI deficiency has the wrong sign for the offset.** It lowers HI mass, so it
+   predicts a LOWER group knee; the measured offset is +0.123/+0.200. It can explain the widths
+   but not the sign. The environmental reading that fits the sign is segregation of massive
+   galaxies into cores; otherwise only blending explains a raised knee. **My round-6 sentence
+   was wrong in sign.**
+3. **(major) "Depth" (`rms`) is aperture-integrated spectral noise, not depth.**
+   rms/rms_beam = 1.47 x (ell_maj/2.9), so at fixed z it tracks source size and mass, and
+   blending. Stratifying on it partly conditions on the outcome. `rms_beam` ("per-source
+   detection sensitivity") is the depth. The terciles are coarse, and the unit test cannot
+   catch this. **Fix:** stratify on rms_beam, with finer bins; say whether C/Vmax already
+   include sensitivity.
+4. **(major) The group placement null holds a tenth of the members** (1,909 vs 18,683, z 0.0225
+   vs 0.031). Its spread (0.056) is 4x the shuffle's, so the 2.2 sigma end is mostly noise, and
+   the "conservative end" argument holds for voids only. Report the occupancy and median z; say
+   the group placement null is weak by construction.
+5. The exclusion is a mass truncation (flagged median log M 9.92 vs 9.47); restore that caveat.
+6. "Compact group cores" is untested; `confused_same_group` checks any two window galaxies, not
+   counterpart plus neighbour. Use `clustercentric_radius` or write "close pairs within groups".
+7. Residual model: compare in matched (M, z) bins; refit on the 4.5'-unflagged set.
+8. Reduce the recommendation to what was shown: two nulls with occupancy, plus a confusion test
+   with a fixed, outcome-independent window.
+9. Footprint edge cells admit unsearched sky; check 0.5-degree cells or a minimum N per cell.
+10-12 (nits): the 2.9' FWHM used as a radius reaches the 6% response point; "one is normally
+    the counterpart"; the results paragraph chains 16 numbers, so move the survey-wide ones
+    to the JSON.
