@@ -542,6 +542,110 @@ def vmax_from_catalogue(
     return np.where(good, c * v, 0.0) / omega
 
 
+def dmax_from_vmax(vmax_mpc3: np.ndarray, *, area_deg2: float = FASHI_DR2_AREA_DEG2) -> np.ndarray:
+    """Distance out to which a catalogue Vmax reaches: Vmax = (Omega/3) dmax^3 over ``area_deg2``."""
+    omega = area_deg2 * (np.pi / 180.0) ** 2
+    v = np.clip(np.asarray(vmax_mpc3, float), 0.0, None)
+    return np.cbrt(3.0 * v / omega)
+
+
+def environment_volume_fraction(
+    rand_d: np.ndarray, rand_in_env: np.ndarray, d_eval: np.ndarray
+) -> np.ndarray:
+    """g(D): fraction of the survey volume within distance D that belongs to an environment.
+
+    ``rand_d`` are distances of randoms uniform in volume over the footprint, ``rand_in_env``
+    whether each lies in the environment (under the SAME rules that classify galaxies). The
+    environment-restricted Vmax of a galaxy reaching ``dmax`` is then ``Vmax * g(dmax)``: the
+    part of its accessible volume that the environment actually occupies. With g the same at
+    every D the restriction is a constant and cannot move a knee; a g that changes with D is
+    exactly the bias a survey-wide Vmax imports into an environment split.
+    """
+    d = np.asarray(rand_d, float)
+    order = np.argsort(d)
+    ds = d[order]
+    cum = np.cumsum(np.asarray(rand_in_env, bool)[order])
+    k = np.searchsorted(ds, np.asarray(d_eval, float), side="right")
+    return np.where(k > 0, cum[np.maximum(k - 1, 0)] / np.maximum(k, 1), 0.0)
+
+
+def survey_randoms(
+    footprint_ra: np.ndarray,
+    footprint_dec: np.ndarray,
+    n: int,
+    rng: np.random.Generator,
+    *,
+    d_max_mpc: float,
+    cell_deg: float = 1.0,
+    h0: float = H0,
+    q0: float = _Q0,
+) -> dict:
+    """Randoms uniform in comoving volume out to ``d_max_mpc`` over the occupied-cell footprint.
+
+    Returns sky position, distance (Mpc at ``h0``), redshift and heliocentric-free cz (from
+    inverting :func:`_comoving_distance_mpc`), and the Mpc/h Cartesian frame of the void holes.
+    """
+    cells = _sky_cells(footprint_ra, footprint_dec, cell_deg)
+    ra_l, dec_l = [], []
+    got = 0
+    while got < n:
+        k = 2 * (n - got) + 64
+        s = rng.uniform(-1, 1, k)
+        ra = rng.uniform(0, 360, k)
+        dec = np.degrees(np.arcsin(s))
+        keys = zip(*_cells_arrays(ra, dec, cell_deg), strict=True)
+        ok = np.flatnonzero(np.fromiter((c in cells for c in keys), bool, count=k))[: n - got]
+        ra_l.append(ra[ok])
+        dec_l.append(dec[ok])
+        got += ok.size
+    ra, dec = np.concatenate(ra_l), np.concatenate(dec_l)
+    d = d_max_mpc * np.cbrt(rng.uniform(0, 1, n))
+    a = 0.5 * (1.0 + q0)
+    x = d * h0 / C_KM_S
+    z = (1.0 - np.sqrt(1.0 - 4.0 * a * x)) / (2.0 * a)
+    return {
+        "ra": ra, "dec": dec, "d_mpc": d, "z": z, "cz": C_KM_S * z,
+        "xyz_h": comoving_xyz(ra, dec, z, h0=100.0, q0=q0),
+    }  # fmt: skip
+
+
+def env_vmax_offset(
+    cat: dict,
+    area: float,
+    base: np.ndarray,
+    gal_cl: np.ndarray,
+    gal_in: np.ndarray,
+    vcat: np.ndarray,
+    comp: np.ndarray,
+    rand_d: np.ndarray,
+    rand_cl: np.ndarray,
+    rand_in: np.ndarray,
+) -> dict:
+    """Knee offset (in - out) with each side weighted by its OWN environment's accessible volume.
+
+    Galaxies in the environment get C * Vmax * g_in(dmax); galaxies in the complement (within
+    the classifiable region) get C * Vmax * g_out(dmax), g from :func:`environment_volume_fraction`.
+    """
+    dmax = dmax_from_vmax(vcat)
+    g_in = environment_volume_fraction(rand_d, rand_cl & rand_in, dmax)
+    g_out = environment_volume_fraction(rand_d, rand_cl & ~rand_in, dmax)
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+    _hi, f_in = _himf_and_fit(
+        lm, dd, ff, area, mask=base & gal_cl & gal_in, vmax=vmax_from_catalogue(vcat * g_in, comp)
+    )
+    _ho, f_out = _himf_and_fit(
+        lm, dd, ff, area, mask=base & gal_cl & ~gal_in, vmax=vmax_from_catalogue(vcat * g_out, comp)
+    )
+    st = _offset_stats("env", f_in, f_out)
+    return {
+        "offset": st["env_knee_offset"],
+        "offset_err": st["env_knee_offset_err"],
+        "offset_sigma": st["env_knee_offset_sigma"],
+        "fit_in": {k: v for k, v in f_in.items() if isinstance(v, (int, float))},
+        "fit_out": {k: v for k, v in f_out.items() if isinstance(v, (int, float))},
+    }
+
+
 def himf(
     log_mhi: np.ndarray,
     vmax_per_sr: np.ndarray,
@@ -1176,6 +1280,181 @@ def void_null(
     return out
 
 
+_PCT_ONE_DECIMAL = {"WallPct", "EdsPercentile", "MatchedPct"}
+_FRAC_AS_PCT = {"NullCOverlap", "NullOverlap", "GroupNullOverlap"}
+
+ENV_VMAX_D_GRID = (50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 380.0)
+
+
+def env_vmax_leg(
+    cat: dict,
+    area: float,
+    env: dict,
+    voids: dict,
+    grp: dict,
+    base: np.ndarray,
+    vcat: np.ndarray,
+    comp: np.ndarray,
+    survey_footprint: tuple[np.ndarray, np.ndarray],
+    placement_footprint: tuple[np.ndarray, np.ndarray],
+    *,
+    n_rand: int,
+    n_void: int,
+    n_group: int,
+    seed_rand: int = 68,
+    seed_void: int = 65,
+    seed_group: int = 66,
+) -> dict:
+    """Fourth referee round: redo the splits AND the nulls with environment-restricted Vmax.
+
+    The headline weighting gives every galaxy the survey-wide C * Vmax, which assumes it could
+    have sat anywhere in the survey volume; an environment member can only sit in that
+    environment. Here each side of each split is weighted by its own environment's accessible
+    volume (:func:`env_vmax_offset`), for the real voids and groups and for the same random
+    placements as the committed nulls (same seeds, so each placement is paired with its
+    survey-wide-Vmax row). Randoms classify volume with the galaxies' own rules: the void-survey
+    box, VoidFinder holes, and :func:`assign_groups` on a random's own cz.
+    """
+    import sys
+
+    rng = np.random.default_rng(seed_rand)
+    d_top = float(np.nanmax(dmax_from_vmax(vcat[base]))) * 1.001
+    rnd = survey_randoms(*survey_footprint, n_rand, rng, d_max_mpc=d_top)
+    lo = voids["sphere_xyz"].min(axis=0) - 20.0
+    hi = voids["sphere_xyz"].max(axis=0) + 20.0
+    r_cl = np.all((rnd["xyz_h"] >= lo) & (rnd["xyz_h"] <= hi), axis=1)
+    r_iv = void_membership_holes(rnd["xyz_h"], voids["sphere_xyz"], voids["sphere_radius"])
+
+    def r_groups(gra: np.ndarray, gdec: np.ndarray) -> np.ndarray:
+        idx = assign_groups(
+            rnd["ra"], rnd["dec"], rnd["cz"], gra, gdec, grp["grp_cz"], grp["grp_r200"],
+            h0=TEMPEL_H0,
+        )  # fmt: skip
+        return idx >= 0
+
+    r_ig = r_groups(grp["grp_ra"], grp["grp_dec"])
+    rd = rnd["d_mpc"]
+    grid = np.asarray(ENV_VMAX_D_GRID)
+
+    def profile(r_in: np.ndarray) -> list:
+        return [round(float(x), 4) for x in environment_volume_fraction(rd, r_cl & r_in, grid)]
+
+    def shell(r_in: np.ndarray) -> list:
+        edges = np.concatenate([[0.0], grid])
+        out = []
+        for a, b in zip(edges[:-1], edges[1:], strict=True):
+            s = r_cl & (rd >= a) & (rd < b)
+            out.append(round(float(np.mean(r_in[s])), 4) if s.any() else None)
+        return out
+
+    def env_off(gal_in: np.ndarray, r_in: np.ndarray) -> dict:
+        return env_vmax_offset(
+            cat, area, base, env["classifiable"], gal_in, vcat, comp, rd, r_cl, r_in
+        )
+
+    vmax_b = vmax_from_catalogue(vcat, comp)
+    lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
+
+    def survey_off(gal_in: np.ndarray) -> float:
+        cl = env["classifiable"]
+        _a, fi = _himf_and_fit(lm, dd, ff, area, mask=base & cl & gal_in, vmax=vmax_b)
+        _b, fo = _himf_and_fit(lm, dd, ff, area, mask=base & cl & ~gal_in, vmax=vmax_b)
+        return float(fi.get("log_m_star", np.nan) - fo.get("log_m_star", np.nan))
+
+    out: dict = {
+        "method": (
+            "each side weighted by C*Vmax*g_env(dmax), g_env = fraction of the survey volume "
+            "within dmax (dmax from the catalogue Vmax over the DR2 area) that the environment "
+            "occupies, from randoms uniform in volume over the DR2 occupied-cell footprint"
+        ),
+        "n_rand": int(n_rand),
+        "seed_rand": seed_rand,
+        "d_max_randoms_mpc": round(d_top, 1),
+        "rand_classifiable_frac": round(float(r_cl.mean()), 4),
+        "d_grid_mpc": list(ENV_VMAX_D_GRID),
+        "g_void_cumulative": profile(r_iv),
+        "g_wall_cumulative": profile(~r_iv),
+        "void_frac_of_classifiable_shell": shell(r_iv),
+        "g_group_cumulative": profile(r_ig),
+        "group_frac_of_classifiable_shell": shell(r_ig),
+        "void": env_off(env["in_void"], r_iv),
+        "group": env_off(env["in_group"], r_ig),
+    }
+    meas_v, meas_g = out["void"]["offset"], out["group"]["offset"]
+
+    # Void null, constrained, same seed as random_void_null_constrained -> same placements.
+    rng_v = np.random.default_rng(seed_void)
+    box = (voids["sphere_xyz"].min(axis=0) - 20.0, voids["sphere_xyz"].max(axis=0) + 20.0)
+    vrows = []
+    for k in range(n_void):
+        moved, _diag = random_void_positions(
+            voids["sphere_xyz"], voids["void_id"], *placement_footprint, rng_v,
+            hole_radius=voids["sphere_radius"], constrained=True, box=box,
+        )  # fmt: skip
+        ok = np.all(np.isfinite(moved), axis=1)
+        iv = void_membership_holes(env["xyz"], moved[ok], voids["sphere_radius"][ok])
+        riv = void_membership_holes(rnd["xyz_h"], moved[ok], voids["sphere_radius"][ok])
+        vrows.append(
+            {"survey_vmax": round(survey_off(iv), 4), "env_vmax": env_off(iv, riv)["offset"]}
+        )
+        if (k + 1) % 20 == 0 or k + 1 == n_void:
+            print(f"[env_vmax void] {k + 1}/{n_void}", file=sys.stderr, flush=True)
+
+    rng_g = np.random.default_rng(seed_group)
+    grows = []
+    for k in range(n_group):
+        gra, gdec = random_group_positions(
+            grp["grp_ra"], grp["grp_dec"], *placement_footprint, rng_g
+        )
+        ig = (
+            assign_groups(
+                cat["ra"],
+                cat["dec"],
+                cat["cz"],
+                gra,
+                gdec,
+                grp["grp_cz"],
+                grp["grp_r200"],
+                h0=TEMPEL_H0,
+            )  # fmt: skip
+            >= 0
+        )
+        grows.append(
+            {
+                "survey_vmax": round(survey_off(ig), 4),
+                "env_vmax": env_off(ig, r_groups(gra, gdec))["offset"],
+            }
+        )
+        if (k + 1) % 20 == 0 or k + 1 == n_group:
+            print(f"[env_vmax group] {k + 1}/{n_group}", file=sys.stderr, flush=True)
+
+    def summ(rows: list, measured: float, sign: int) -> dict:
+        s: dict = {"n_reps": len(rows)}
+        for key in ("survey_vmax", "env_vmax"):
+            a = np.array([r[key] for r in rows], float)
+            a = a[np.isfinite(a)]
+            s[key] = {
+                "n_ok": int(a.size),
+                "mean": round(float(a.mean()), 4) if a.size else None,
+                "std": round(float(a.std(ddof=1)), 4) if a.size > 1 else None,
+                "min": round(float(a.min()), 4) if a.size else None,
+                "max": round(float(a.max()), 4) if a.size else None,
+            }
+        e = np.array([r["env_vmax"] for r in rows], float)
+        e = e[np.isfinite(e)]
+        beyond = int(np.sum(e <= measured)) if sign < 0 else int(np.sum(e >= measured))
+        s["n_reaching_measured_env"] = beyond
+        s["measured_env_minus_null_env_mean"] = (
+            round(measured - float(e.mean()), 3) if e.size else None
+        )
+        s["rows"] = rows
+        return s
+
+    out["void_null_constrained"] = summ(vrows, meas_v, -1)
+    out["group_null"] = summ(grows, meas_g, +1)
+    return out
+
+
 def _match_releases(
     dr1: dict, dr2: dict, *, sep_arcmin: float = 1.5, dv_kms: float = 100.0
 ) -> dict:
@@ -1219,7 +1498,7 @@ def _clean(cat: dict) -> dict:
 
 
 def _real_leg(
-    n_null: int = 1000, n_group_null: int = 200
+    n_null: int = 1000, n_group_null: int = 200, n_env_null: int = 200
 ):  # pragma: no cover - network + VizieR catalogues
     """FASHI DR2 x Tempel groups x Douglass voids: the environment-split HIMF.
 
@@ -1423,6 +1702,11 @@ def _real_leg(
         samp_b & env["classifiable"] & ~env["in_void"], vmax_b,
     )  # fmt: skip
 
+    env_vmax = env_vmax_leg(
+        cat, area, env, voids, grp, samp_b, vcat, comp, (cat["ra"], cat["dec"]), footprint,
+        n_rand=2_000_000, n_void=n_env_null, n_group=n_env_null,
+    )  # fmt: skip
+
     dr1 = _clean(fetch_fashi_dr1())
     dr1_env = _environments(dr1, voids, grp)
     area1 = 7600.0 * (np.pi / 180.0) ** 2
@@ -1475,6 +1759,7 @@ def _real_leg(
         "random_void_null_constrained": null_c,
         "random_group_null": group_null,
         "no_overlap_trial": no_overlap_trial,
+        "env_vmax": env_vmax,
         "void_offset_common_bins": common,
         "eds_void_knee_offset": b_eds["void_knee_offset"],
         "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
@@ -1548,23 +1833,37 @@ def _null_figure(m: dict, out_dir) -> None:
     plt = _agg()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    ev = m.get("env_vmax") or {}
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(9.0, 3.6))
-    for key, lab, col in (
-        ("random_void_null", "voids, centre in footprint", "0.6"),
-        ("random_void_null_constrained", "voids, all holes in footprint", "C0"),
-    ):
-        offs = [r["B_offset"] for r in m[key]["rows"] if np.isfinite(r.get("B_offset", np.nan))]
-        a1.hist(offs, bins=40, histtype="step", color=col, lw=1.3, label=lab)
-    a1.axvline(m["void_knee_offset"], color="C3", lw=1.5, label="measured")
-    a1.set(
-        xlabel=r"void $-$ wall $\Delta\log M^*$ (dex)", ylabel="placements", title="Random voids"
-    )
-    a1.legend(fontsize=7)
-    g = m["random_group_null"]["offsets"]
-    a2.hist(g, bins=30, histtype="step", color="C0", lw=1.3, label="random groups")
-    a2.axvline(m["group_knee_offset"], color="C3", lw=1.5, label="measured")
-    a2.set(xlabel=r"group $-$ field $\Delta\log M^*$ (dex)", title="Random groups")
-    a2.legend(fontsize=7)
+    # The same 200 placements under both weightings (env_vmax leg; survey-wide rows reproduce
+    # the committed nulls exactly), with each weighting's own measured offset.
+    panels = (
+        (a1, "void_null_constrained", "void", m.get("void_knee_offset"), r"void $-$ wall", "Random voids"),
+        (a2, "group_null", "group", m.get("group_knee_offset"), r"group $-$ field", "Random groups"),
+    )  # fmt: skip
+    for ax, key, env_key, survey_meas, xlab, title in panels:
+        rows = (ev.get(key) or {}).get("rows") or []
+        for col_key, lab, col in (
+            ("survey_vmax", r"survey-wide $V_{\rm max}$", "0.55"),
+            ("env_vmax", r"environment $V_{\rm max}$", "C0"),
+        ):
+            offs = [r[col_key] for r in rows if np.isfinite(r.get(col_key, np.nan))]
+            if offs:
+                ax.hist(offs, bins=25, histtype="step", color=col, lw=1.3, label=lab)
+        env_meas = (ev.get(env_key) or {}).get("offset")
+        xs = [
+            r[c] for r in rows for c in ("survey_vmax", "env_vmax") if np.isfinite(r.get(c, np.nan))
+        ]
+        xs += [x for x in (survey_meas, env_meas) if x is not None]
+        if survey_meas is not None:
+            ax.axvline(survey_meas, color="0.55", lw=1.3, ls="--", label="measured (survey-wide)")
+        if env_meas is not None:
+            ax.axvline(env_meas, color="C0", lw=1.5, ls="--", label="measured (environment)")
+        if xs:
+            pad = 0.08 * (max(xs) - min(xs))
+            ax.set_xlim(min(xs) - pad, max(xs) + pad)
+        ax.set(xlabel=xlab + r" $\Delta\log M^*$ (dex)", ylabel="placements", title=title)
+        ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(out / "fashienv_nulls.pdf")
     plt.close(fig)
@@ -1731,7 +2030,15 @@ def _write_macros(m: dict, path) -> None:
             ("WallRedChi", "himf_wall.red_chi2"),
             ("DistRatio", "dr1_dr2_match.median_dist_ratio_dr2_over_dr1"),
         ):
-            lines.append(rf"\newcommand{{\feReal{macro}}}{{{nested(key)}}}")
+            val = nested(key)
+            # Percentages and fractions quoted as percentages: no false 3-decimal precision.
+            if macro in _PCT_ONE_DECIMAL and isinstance(val, str) and val != "--":
+                val = f"{float(val):.1f}".removesuffix(".0")
+            elif macro in _FRAC_AS_PCT and isinstance(val, str) and val != "--":
+                val = f"{100.0 * float(val):.0f}"
+            elif macro == "CMin" and isinstance(val, str) and val != "--":
+                val = f"{float(val):g}"
+            lines.append(rf"\newcommand{{\feReal{macro}}}{{{val}}}")
     if m.get("is_real") and m.get("release") == "DR2":
         rc = m.get("random_void_null_constrained") or {}
         jk2 = m.get("void_jackknife") or {}
@@ -1751,7 +2058,56 @@ def _write_macros(m: dict, path) -> None:
         def pct(a_, b_):
             return f"{100.0 * a_ / b_:.0f}" if a_ is not None and b_ else "--"
 
+        rows = rc.get("rows") or []
+        occ = np.array([r.get("n_in_void", np.nan) for r in rows], float)
+        off = np.array([r.get("B_offset", np.nan) for r in rows], float)
+        okr = np.isfinite(occ) & np.isfinite(off)
+        if okr.sum() > 20:
+            occ_corr = f"{np.corrcoef(occ[okr], off[okr])[0, 1]:.2f}"
+            occ_slope = f"{1000.0 * np.polyfit(occ[okr], off[okr], 1)[0]:.3f}"
+        else:
+            occ_corr = occ_slope = "--"
+        ev = m.get("env_vmax") or {}
+        evv, evg = ev.get("void") or {}, ev.get("group") or {}
+        evn = ev.get("void_null_constrained") or {}
+        egn = ev.get("group_null") or {}
+
+        def f3(x):
+            return f"{x:.3f}" if isinstance(x, (int, float)) else "--"
+
+        def g_range(key: str) -> tuple[str, str]:
+            a = [x for x in (ev.get(key) or []) if x is not None]
+            return (f"{100 * min(a):.0f}", f"{100 * max(a):.0f}") if a else ("--", "--")
+
+        vlo, vhi = g_range("void_frac_of_classifiable_shell")
+        glo, ghi = g_range("group_frac_of_classifiable_shell")
+        n_ev = (evn.get("env_vmax") or {}).get("n_ok")
+        n_eg = (egn.get("env_vmax") or {}).get("n_ok")
+        n_reach_g = egn.get("n_reaching_measured_env")
         lines += [
+            rf"\newcommand{{\feRealEnvVoidOffset}}{{{f3(evv.get('offset'))}}}",
+            rf"\newcommand{{\feRealEnvVoidErr}}{{{f3(evv.get('offset_err'))}}}",
+            rf"\newcommand{{\feRealEnvGroupOffset}}{{{f3(evg.get('offset'))}}}",
+            rf"\newcommand{{\feRealEnvGroupErr}}{{{f3(evg.get('offset_err'))}}}",
+            rf"\newcommand{{\feRealEnvNullReps}}{{{n_ev if n_ev is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvNullMean}}{{{f3((evn.get('env_vmax') or {}).get('mean'))}}}",
+            rf"\newcommand{{\feRealEnvNullStd}}{{{f3((evn.get('env_vmax') or {}).get('std'))}}}",
+            rf"\newcommand{{\feRealEnvNullNLe}}{{{evn.get('n_reaching_measured_env', '--')}}}",
+            rf"\newcommand{{\feRealEnvNullExcess}}{{{f3(evn.get('measured_env_minus_null_env_mean'))}}}",
+            rf"\newcommand{{\feRealEnvNullExcessSigma}}{{{ratio(evn.get('measured_env_minus_null_env_mean'), evv.get('offset_err'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullReps}}{{{n_eg if n_eg is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvGroupNullMean}}{{{f3((egn.get('env_vmax') or {}).get('mean'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullStd}}{{{f3((egn.get('env_vmax') or {}).get('std'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullNGe}}{{{n_reach_g if n_reach_g is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvGroupNullP}}{{{f'{(n_reach_g + 1) / (n_eg + 1):.2f}' if n_reach_g is not None and n_eg else '--'}}}",
+            rf"\newcommand{{\feRealEnvGroupNullExcessSigma}}{{{ratio(egn.get('measured_env_minus_null_env_mean'), evg.get('offset_err'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullExcess}}{{{f3(egn.get('measured_env_minus_null_env_mean'))}}}",
+            rf"\newcommand{{\feRealEnvVoidShellLo}}{{{vlo}}}",
+            rf"\newcommand{{\feRealEnvVoidShellHi}}{{{vhi}}}",
+            rf"\newcommand{{\feRealEnvGroupShellLo}}{{{glo}}}",
+            rf"\newcommand{{\feRealEnvGroupShellHi}}{{{ghi}}}",
+            rf"\newcommand{{\feRealNullCOccCorr}}{{{occ_corr}}}",
+            rf"\newcommand{{\feRealNullCOccSlope}}{{{occ_slope}}}",
             rf"\newcommand{{\feRealNullCExcessSigmaNull}}{{{ratio(ex, sd)}}}",
             rf"\newcommand{{\feRealNullCExcessSigmaFit}}{{{ratio(ex, fe_)}}}",
             rf"\newcommand{{\feRealNullCExcessSigmaJk}}{{{ratio(ex, je)}}}",

@@ -478,3 +478,104 @@ def test_void_null_regression_block_with_enough_placements():
     assert reg["r2_occupancy_z"] <= reg["r2_occupancy_z_overlap"] + 1e-12
     lo, hi = reg["overlap_range_minmax"]
     assert 0.0 <= lo <= hi <= 1.0
+
+
+def test_dmax_from_vmax_roundtrip():
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    d = np.array([10.0, 100.0, 350.0])
+    assert np.allclose(fe.dmax_from_vmax(omega / 3.0 * d**3), d)
+
+
+def test_environment_volume_fraction_inner_sphere():
+    rng = np.random.default_rng(3)
+    rd = 300.0 * np.cbrt(rng.uniform(0, 1, 400_000))
+    g = fe.environment_volume_fraction(rd, rd < 100.0, np.array([50.0, 100.0, 200.0, 300.0]))
+    assert np.allclose(g, [1.0, 1.0, (100 / 200) ** 3, (100 / 300) ** 3], atol=0.01)
+    assert fe.environment_volume_fraction(rd, rd < 100.0, np.array([0.0]))[0] == 0.0
+
+
+def test_survey_randoms_in_footprint_and_uniform_in_volume():
+    rng = np.random.default_rng(4)
+    fra = rng.uniform(150, 210, 5000)
+    fdec = np.degrees(np.arcsin(rng.uniform(0, np.sin(np.radians(50)), 5000)))
+    r = fe.survey_randoms(fra, fdec, 20_000, rng, d_max_mpc=300.0)
+    cells = fe._sky_cells(fra, fdec, 1.0)
+    keys = zip(*fe._cells_arrays(r["ra"], r["dec"], 1.0), strict=True)
+    assert all(c in cells for c in keys)
+    assert abs(np.median(r["d_mpc"]) - 300.0 * 0.5 ** (1 / 3)) < 3.0
+    # z inverts the distance relation; the Mpc/h frame is d * h
+    assert np.allclose(fe._comoving_distance_mpc(r["z"], fe.H0), r["d_mpc"], rtol=1e-6)
+    assert np.allclose(np.linalg.norm(r["xyz_h"], axis=1), r["d_mpc"] * fe.H0 / 100.0, rtol=1e-6)
+
+
+def _distance_split_mock(n=60_000, seed=5):
+    """One Schechter HIMF everywhere; the 'environment' is simply the far half of the volume."""
+    rng = np.random.default_rng(seed)
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    d = 300.0 * np.cbrt(rng.uniform(0, 1, n))
+    lm = rng.uniform(7.0, 10.9, 20 * n)
+    w = fe.schechter(lm, 0.0, 9.9, -1.3)
+    lm = rng.choice(lm, size=n, p=w / w.sum())
+    s_lim = 0.3
+    flux = 10**lm / (2.356e5 * d**2)
+    dmax = np.minimum(np.sqrt(10**lm / (2.356e5 * s_lim)), 300.0)
+    keep = flux > s_lim
+    cat = {"log_mhi": lm[keep], "dist_mpc": d[keep], "flux": flux[keep]}
+    vcat = omega / 3.0 * dmax[keep] ** 3
+    return cat, vcat, omega, rng
+
+
+def test_env_vmax_offset_removes_distance_selection_bias():
+    cat, vcat, omega, rng = _distance_split_mock()
+    n = cat["log_mhi"].size
+    far = cat["dist_mpc"] > 150.0
+    ones, comp = np.ones(n, bool), np.ones(n)
+    rd = 300.0 * np.cbrt(rng.uniform(0, 1, 400_000))
+    env = fe.env_vmax_offset(cat, omega, ones, ones, far, vcat, comp, rd, rd >= 0, rd > 150.0)
+    vm = fe.vmax_from_catalogue(vcat, comp)
+    _a, fi = fe._himf_and_fit(cat["log_mhi"], None, None, omega, mask=far, vmax=vm)
+    _b, fo = fe._himf_and_fit(cat["log_mhi"], None, None, omega, mask=~far, vmax=vm)
+    survey = fi["log_m_star"] - fo["log_m_star"]
+    # Same HIMF in both 'environments': the survey-wide Vmax manufactures an offset, the
+    # environment-restricted one does not.
+    assert abs(survey) > 0.1
+    assert abs(env["offset"]) < 0.05
+    assert set(env) >= {"offset", "offset_err", "offset_sigma", "fit_in", "fit_out"}
+
+
+def test_env_vmax_leg_runs_and_pairs_placements():
+    rng = np.random.default_rng(6)
+    n = 4000
+    ra = rng.uniform(150, 210, n)
+    dec = np.degrees(np.arcsin(rng.uniform(0, np.sin(np.radians(50)), n)))
+    d = 250.0 * np.cbrt(rng.uniform(0, 1, n))
+    a = 0.5 * (1.0 + fe._Q0)
+    x = d * fe.H0 / fe.C_KM_S
+    z = (1.0 - np.sqrt(1.0 - 4.0 * a * x)) / (2.0 * a)
+    lm = rng.uniform(8.5, 10.5, n)
+    cat = {"ra": ra, "dec": dec, "z": z, "cz": fe.C_KM_S * z, "log_mhi": lm, "dist_mpc": d,
+           "flux": 10**lm / (2.356e5 * d**2)}  # fmt: skip
+    xyz = fe.comoving_xyz(ra, dec, z, h0=100.0)
+    holes = xyz[rng.choice(n, 30, replace=False)]
+    voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
+    gi = rng.choice(n, 40, replace=False)
+    grp = {"grp_ra": ra[gi], "grp_dec": dec[gi], "grp_cz": cat["cz"][gi],
+           "grp_r200": np.full(40, 1.0)}  # fmt: skip
+    env = {
+        "xyz": xyz,
+        "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
+        "classifiable": np.ones(n, bool),
+        "in_group": fe.assign_groups(ra, dec, cat["cz"], grp["grp_ra"], grp["grp_dec"],
+                                     grp["grp_cz"], grp["grp_r200"], h0=fe.TEMPEL_H0) >= 0,
+    }  # fmt: skip
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    vcat = omega / 3.0 * np.full(n, 250.0) ** 3
+    out = fe.env_vmax_leg(
+        cat, omega, env, voids, grp, np.ones(n, bool), vcat, np.ones(n), (ra, dec), (ra, dec),
+        n_rand=50_000, n_void=2, n_group=2,
+    )  # fmt: skip
+    assert len(out["g_void_cumulative"]) == len(fe.ENV_VMAX_D_GRID)
+    assert 0.0 < out["rand_classifiable_frac"] <= 1.0
+    for k in ("void_null_constrained", "group_null"):
+        assert out[k]["n_reps"] == 2 and len(out[k]["rows"]) == 2
+        assert set(out[k]["rows"][0]) == {"survey_vmax", "env_vmax"}

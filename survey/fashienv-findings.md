@@ -391,3 +391,45 @@ resolved; #3 is partial and #5 is fixed in the body but not the abstract. Nothin
 8. Three-decimal false precision ("C >= 0.500", "51.300%", "91.700 percentile").
 9. The Fig. 2 caption doesn't name the weighting.
 10. `README.md:95,195` and the stale DR1 arXiv tarball still carry the -0.26 dex claim.
+
+### Response: environment-restricted Vmax (run `fashienv-envvmax`; `env_vmax` block)
+
+Round-4 #1 was run, not just scoped. Each side of each split was reweighted by
+C * Vmax * g_E(dmax). Here g_E(D) is the fraction of the volume within D that environment E
+occupies, from 2x10^6 randoms uniform in volume over the DR2 footprint, classified by the
+galaxies' own rules (`env_vmax_offset`, `environment_volume_fraction`, `survey_randoms`). A
+unit test shows the method's point: a distance-only "environment" with one HIMF gives >0.1 dex
+under survey-wide Vmax and <0.05 dex restricted. The nulls reuse the same seeds, so the 200 void
+and 200 group placements are the committed ones. The survey-wide offsets reproduce the committed
+rows with **max |diff| = 0**.
+
+| | survey-wide Vmax: measured / null | env-restricted Vmax: measured / null |
+|---|---|---|
+| void - wall | -0.150 / -0.087 +/- 0.017 | **-0.098 +/- 0.034 / -0.046 +/- 0.016**, 0/200 reach |
+| group - field | +0.166 / +0.126 +/- 0.056 | **+0.088 +/- 0.029 / -0.025 +/- 0.049**, 3/200 reach |
+
+- **The restriction removes the group null offset and halves the void one.** Groups' share of
+  the classifiable volume falls from 3% within 50 Mpc to 1% beyond 200 Mpc, because Tempel groups
+  are found in a flux-limited sample. That trend was the group bias. The void share is 30-44%
+  with no trend, so the half of the void bias that remains is not a Vmax-bookkeeping effect.
+  The referee's hypothesis ("the null offset may be mostly the misapplication") holds for groups
+  and half-holds for voids.
+- **The void residual barely moves:** -0.063 before, -0.052 now (1.5 sigma against the fit
+  error). Still not attributable.
+- **The group offset changes status:** within the null before (44/200), now in its tail
+  (3/200, p ~ 0.02; +0.113 dex excess). Not claimed, because the null regions hold a tenth of
+  the real groups' galaxies. FAST-beam blending also grows with density and would raise the
+  group knee, which is the sign seen. That makes it the first systematic to test.
+- The paper is rebuilt around this as an RNAAS-length note: 868 body words, one figure (both
+  weightings on the same 200 placements).
+  - #2: added the occupancy direction (corr -0.42; emptier gives less negative; not
+    extrapolated), and "tracks" became "correlates weakly".
+  - #4: the hedging is cut.
+  - #5: denominators are named, with the reason.
+  - #6: the abstract now has the two-cause wording.
+  - #7: the redshift sentence is gone.
+  - #8: percent macros are formatted.
+  - #9: the caption names both weightings.
+  - #10: the README rows are updated. The gitignored DR1 arXiv tarball is stale and must be
+    rebuilt (`make arxiv`) before any submission.
+- Fig. 1 (void/wall HIMF) is no longer in the paper; `figures/fashienv.pdf` is still generated.

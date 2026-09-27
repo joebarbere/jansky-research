@@ -21,7 +21,10 @@ recommend the next version number.
   real voids' 17k, so the null is not density-matched and the residual (-0.063, 1.5-1.9 sigma)
   cannot be attributed to environment. The group null is weak (its regions hold a tenth of the
   real groups' galaxies), and a no-overlap void placement is infeasible (688/1163 unplaced).
-  Three referee rounds (all MAJOR) drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  Environment-restricted Vmax (each side weighted by its own environment's volume, from 2e6
+  classified randoms) removes the group null offset and halves the void one: measured -0.098 vs
+  null -0.046 (voids, 0/200) and +0.088 vs -0.025 (groups, 3/200), neither attributed. Now an
+  RNAAS-length note. Four referee rounds (the fourth MINOR) drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
   unconstrained void null with per-placement diagnostics, a group null, a KD-tree
   `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
   The DR1 paper's -0.256 is disclosed as the old estimator's value.
