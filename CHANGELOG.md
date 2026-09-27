@@ -10,6 +10,22 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **`vlasspm`: shape-aware astrometric errors (run 4).** Per-component Condon (1997) error
+  ellipses from fitted Maj/Min/PA, beam and peak S/N (identical to the catalogues' quoted
+  errors -- which exposed a run 1-3 bug: `E_RA` is already on-sky and was being multiplied by
+  cos dec, understating RA errors by up to 2.7x), finer southern floor bands, and a structure
+  systematic calibrated on 4.9 M matched static sources (k_struct = 0.10 of the deconvolved
+  FWHM; a beam-change term is not required once size is modelled). The statics' 3-sigma tail
+  goes from 3.7x Rayleigh to 0.93x; the model still fails beyond ~4 sigma (heavy tail), south of
+  Dec -35 (2.3x) and for compact sources (1.6x), all reported. Injections now draw scatter from
+  the same model and half are placed at random sky positions: the isolation cost is measured at
+  ~1%. Rerun: UV Ceti recovered (E3 residual 1.79 sigma); two run-3 false positives drop below
+  the linkage cut, but the wider E3 tolerance admits six new resolved static sources (11
+  candidates); image vetting finds zero new movers. Limit < 9.3e-5 per deg^2 (run 3: 9.2e-5).
+  `scripts/vlasspm_vet_images.py` is parametrised; the radio-cutout skill uses https for
+  CADC's registry (port 80 stopped answering).
+
 ### Added
 - **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
   Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole

@@ -1,7 +1,9 @@
 # Findings — blind VLASS proper motions across four epochs (plan 64)
 
-`jansky_research.vlasspm` + `scripts/vlasspm_real.py`. Status 2026-09-26: **pipeline validated
-on its recover-a-known; five unexplained candidates, not yet vetted — no discovery claim.**
+`jansky_research.vlasspm` + `scripts/vlasspm_real.py`. Status 2026-09-27 (run 4, shape-aware
+errors): **UV Ceti recovered blind; 11 candidates, all others vetted as static extended sources;
+zero new movers; limit < 9.3e-5 per deg^2** -- see the last section. (Earlier status lines below
+are kept as the record of runs 1-3.)
 
 ## GATE 0 refresh (2026-09-26)
 
@@ -135,3 +137,149 @@ faint mover near other emission is overstated. The isolation cut (no neighbour w
 also removes real movers that pass near other sources; the injections, placed 60-120" from
 real components, do not pay that cost. A shape-aware (beam-deconvolved) astrometric error
 model is the fix before a paper.
+
+## Shape-aware astrometric errors (run 4, 2026-09-27)
+
+The fix the caveats above called for: per-component error ellipses, an empirically calibrated
+systematic for resolved sources, and injections that pay the isolation cost. Evidence:
+`results/vlasspm_metrics.json` (`real_calibration`, `real_ablation_measurement_only`,
+`real_run3_candidates_rescored`, `real_previous_run3`), `results/vlasspm_candidates.csv`
+(`vlasspm_candidates_run3.csv` keeps the old list), `results/vlasspm_vetting.json`,
+`results/vlasspm_vetting_montage.png`.
+
+### What the catalogues provide (per epoch)
+
+All four tables carry the same PyBDSF shape set per component: fitted `Maj`/`Min`/`PA`,
+deconvolved `DC_Maj`/`DC_Min`/`DC_PA`, the restoring beam `BMAJ`/`BMIN`/`BPA` (arcsec, deg),
+`Peak_flux` and `Isl_rms`. E1/E2 are the CIRADA CSVs (no `SNR` column; S/N = Peak/Isl_rms),
+E3/E4 the NRAO QL FITS (`SNR` equals Peak/Isl_rms). No image headers are needed. Deconvolved
+size is exactly 0 for 26% (E1), 25% (E2), 23% (E3), 20% (E4) of clean components.
+
+### The thermal term was already in the catalogue -- and runs 1-3 read it wrong
+
+Condon (1997, PASP 109, 166), eq. 21, with the effective S/N of Condon et al. (1998, AJ 115,
+1693), eq. 26: `8 ln2 sigma^2(x0)/theta_M^2 = 2/rho^2` with (aM, am) = (5/2, 1/2) along the fitted
+major axis and (1/2, 5/2) along the minor; theta = fitted (convolved) FWHM, theta_N^2 = bmaj*bmin.
+Exponents checked against Prandoni et al. (2000, A&AS 146, 41, App. A) and PyBDSF's
+`get_errors`, which produced these catalogues. Recomputed from the columns, it reproduces the
+catalogue `E_DEC` to 1 part in 10^5 (median) in every epoch, and `E_RA` likewise **only without a
+cos(dec) factor**: `E_RA` is already an on-sky angle. The run 1-3 loader multiplied it by
+cos(dec), shrinking RA errors by 1.15x at Dec -30 and up to 2.7x at Dec +68. So the "Condon
+model" adds no new thermal information; what changed is (a) the RA bug, (b) the ellipse and the
+RA-Dec correlation are kept instead of a circularised error, (c) the floor bands.
+
+The run-3 floor bands (-40,-20,0,30,90) left Dec < -40 on the all-sky floor and averaged
+0.26" (Dec < -35) with 0.12" (-25..-20). Fine southern bands (-90,-35,-30,-25,-20,0,30,90),
+still from >= 10 mJy statics, flatten the statics' Dec dependence (table below).
+
+### The systematic, measured on statics
+
+Statics: components isolated (no other within 30") in both epochs, matched within 5" (wider
+than the 2.5" orphan radius, so the tail that *creates* orphans is in the sample), all six
+epoch pairs, 4.87 M pairs. Fit on even 1-degree RA strips, validated on odd ones. Model per
+detection: `Condon ellipse + floor^2 I + k^2 * (deconvolved shape FWHM^2 covariance) + q^2 *
+|beam - mean beam|`. Exploration showed the excess scatter is along the *source's* major axis
+(0.40" vs 0.21" across it for 4-8" sources, S/N > 15) and grows with deconvolved size far more
+than with beam change -- hence the shape covariance, not an isotropic term. Fit target: the 3-sigma
+tail (P(z>3) = 0.0111 for Rayleigh), per (size x S/N) and (size x beam-change) bin, because the
+search's decisions are 3-sigma cuts.
+
+**Result: k_struct = 0.10 (a resolved source's centroid wanders by 10% of its deconvolved FWHM
+along each axis), q_beam = 0.0** -- once size is modelled, the beam-change term does not reduce
+the loss (a random-subsample fit during exploration gave 0.02-0.03; it is poorly constrained).
+
+Validation half (2.43 M pairs), fraction beyond 3 sigma (Rayleigh 0.0111):
+
+| error model | all | size 0-1" | 4-6" | 6-10" | Dec < -35 | -35..-30 | P(z>5) all |
+|---|---|---|---|---|---|---|---|
+| runs 1-3 (cos-dec bug, circular, old bands) | 0.041 | 0.025 | 0.082 | 0.126 | 0.146 | 0.069 | 0.0084 |
+| catalogue ellipse + fine floors | 0.032 | 0.020 | 0.063 | 0.101 | 0.058 | 0.039 | 0.0069 |
+| + k_struct = 0.10 | **0.0103** | 0.018 | 0.011 | 0.019 | 0.025 | 0.015 | 0.0012 |
+
+Where the calibration **fails** (reported, not tuned away):
+- **The core and the far tail cannot both be matched by a Gaussian.** With the 3-sigma tail right,
+  the median z is 0.81 (Rayleigh 1.18): errors are ~30% too large for the typical static. And
+  P(z>5) is 0.0012 against 3.7e-6 -- a heavy tail ~300x Gaussian in every bin. The model is
+  conservative in the core and still optimistic beyond ~4 sigma.
+- **Dec < -35: 2.3x** too many 3-sigma outliers (0.025); -35..-30: 1.4x. The southern
+  systematic is not fully captured by size + floor.
+- **Compact sources (deconvolved size < 1"): 1.6x** (0.018); these have the smallest errors, so
+  the floor's own non-Gaussian tail dominates.
+- **Bright, large sources (S/N 15-50, size 6-10"): 3.8x** (0.042).
+- Beam change > 0.8 (fractional): 1.2x (0.014) even with q = 0 preferred overall.
+
+### Run 4: search, null, candidates
+
+| | run 3 | measurement-only (ablation) | run 4 (k = 0.10) |
+|---|---|---|---|
+| E1-E2 pairs | 1,336 | 1,334 | 1,142 |
+| candidates (all triples) | 7 | 7 | **11** |
+| scramble null (E1-E2-E3, per scramble) | 0.02 | -- | 0.02 |
+
+Larger errors cut both ways: they make a static source's apparent shift less significant
+(fewer pairs), but they also widen the E3 tolerance for resolved sources, which admits more
+static-source triplets. The net was *more* candidates, not fewer. The null did not move, so
+the excess over it is still the correlated static population the scramble cannot see.
+
+**The run-3 false positives became less significant, as they should** (E1->E2 shift, sigma,
+measurement-only -> run 4): c0 10.4 -> 9.1, c1 4.35 -> **1.99**, c2 9.1 -> 5.1, c3 11.5 -> 4.9,
+c4 6.5 -> 3.4, c5 15.7 -> **2.59**. c1 and c5 now fall below the 3-sigma linkage cut; c0, c2, c3,
+c4 still pass. Their E3 residuals shrink too (e.g. c2 2.32 -> 1.14), which is the loosening
+described above -- the E3 test does not reject them under either model.
+
+**UV Ceti: still recovered** (E2-E3-E4, 3.45"/yr), E3 residual **1.79 sigma** (run 3: 2.2).
+
+**Six new candidates** (J170.9129+76.8236, J198.1384-39.1432, J202.1059-35.0560,
+J38.2031-30.7428, J275.6343+64.9963, J102.1962-37.9361), every one with a deconvolved size of
+7-15" in at least one epoch, four of six south of Dec -30. **Image vetting: all six are static
+extended sources** -- emission persists at the first-detection position in the later epochs
+(S/N 4.3-47); J198.1384-39.1432 is the c2/c4 pattern again (2024 beam 4.89" x 1.77", source
+stretched N-S). J202.1059-35.0560 also has Gaia and CatWISE sources within 5".
+**Result unchanged: UV Ceti, and zero new movers among 11 candidates.**
+
+### Completeness and the limit
+
+Injections now (i) draw their positional scatter from the same model -- the Condon ellipse the
+catalogue would quote at the local beam and noise for the assumed flux and size, plus the local
+floor, plus k^2 x shape -- and carry that covariance into the search; (ii) half are placed at a
+random sky position (uniform over a 15' disc round a host) instead of 60-120" from one.
+
+**The isolation cost turned out to be ~1%, and the old injections were already paying most of
+it.** Only 1.3% of random sky positions have a component within 30" in E1: the 25-36%
+non-isolated fraction of *real components* reflects multi-component sources, and a mover is not
+one. The 60-120" placement only kept injections away from their own host, not from other
+sources, so its neighbour fraction was the same 1.3%. Realistic and isolated classes agree to
+within the binomial noise.
+
+Completeness per rate bin (0.30, 0.53, 0.92, 1.62, 2.85, 5.0"/yr), 3 mJy, 20,000 injections:
+
+| | 0.30-0.53 | 0.53-0.92 | 0.92-1.62 | 1.62-2.85 | 2.85-5.0 |
+|---|---|---|---|---|---|
+| run 3 (isolated, old errors) | 0.000 | 0.092 | 0.915 | 0.986 | 0.983 |
+| run 4, realistic placement, point source | 0.000 | 0.065 | 0.917 | 0.986 | 0.981 |
+| run 4, realistic, 2" deconvolved size | 0.000 | 0.143 | 0.890 | 0.985 | 0.985 |
+
+The 2" variant exists because a faint point source does not come out of PyBDSF with size 0
+(UV Ceti: 1.2", 0, 2.9"); size 0 gives an injection the smallest structure term the model
+allows. It raises the 0.53-0.92 bin (larger tolerance) and lowers 0.92-1.62 (weaker linkage
+significance). 1.5 mJy is indistinguishable from 3 mJy, as in run 3.
+
+**Limit (95%, 0 new movers, 0.92-5"/yr, E1-E2-E3 area 33,838.5 deg^2): < 9.3 x 10^-5 per deg^2**
+(the weaker of point: 9.21e-5, mean completeness 0.961; 2": 9.29e-5, 0.953), i.e. < 3.8 across
+the whole sky. Run 3 quoted 9.2e-5 -- **the limit is effectively unchanged** (1% weaker). The
+completeness above ~1"/yr is insensitive to the error model because fast movers are displaced
+many sigma under any of them.
+
+### What this does and does not fix
+
+- Fixed: the RA-error bug; circularised errors; the southern floor bands; resolved-source
+  optimism in the 3-sigma tail (4x -> 1x overall); injections that did not share the error
+  model; the isolation cost is now measured rather than assumed.
+- Not fixed: the heavy >4-sigma tail (300x Gaussian); the Dec < -35 excess (2.3x); the E3 test's
+  loss of power for resolved sources, which is why candidates went *up*. Every candidate in runs
+  3 and 4 other than UV Ceti has been a resolved, often southern, static source. A **compactness
+  requirement** (deconvolved size consistent with zero given `E_DC_Maj`, calibrated on
+  injections with the measured faint-source size noise) is the natural next cut, and would
+  also let the structure term be dropped for the survivors -- not done here.
+- The scramble null remains blind to the static-source false positives by construction; the
+  vetting, not the null, is what bounds them.

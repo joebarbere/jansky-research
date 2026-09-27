@@ -279,3 +279,250 @@ def test_calibrate_floors_banded_sees_a_worse_southern_epoch():
     assert f[0] == pytest.approx(south_band["floor_arcsec"][0])
     assert f[1] == pytest.approx(north_band["floor_arcsec"][0])
     assert f[2] == 0.5  # empty band (Dec >= 30 here) falls back
+
+
+# ------------------------------------------------------------ shape-aware error model (run 4)
+
+
+def test_condon_point_source_limit():
+    """Point source in a round beam: rho^2 = 2 SNR^2, so sigma = (FWHM / sqrt(8 ln2)) / SNR."""
+    fwhm, snr = 2.5, 20.0
+    sM, sm = v.condon_position_errors(fwhm, fwhm, fwhm, fwhm, snr)
+    expect = fwhm / np.sqrt(8 * np.log(2)) / snr
+    assert float(sM) == pytest.approx(expect, rel=1e-12)
+    assert float(sm) == pytest.approx(expect, rel=1e-12)
+    # and it scales as 1/SNR
+    s2, _ = v.condon_position_errors(fwhm, fwhm, fwhm, fwhm, 2 * snr)
+    assert float(s2) == pytest.approx(expect / 2, rel=1e-12)
+
+
+def test_condon_resolved_source_has_larger_error():
+    beam = (3.0, 2.0)
+    point = v.condon_position_errors(3.0, 2.0, *beam, 10.0)
+    resolved = v.condon_position_errors(6.0, 2.5, *beam, 10.0)  # same peak S/N, extended
+    assert resolved[0] > point[0] and resolved[1] > point[1]
+    # an elongated fit is less certain along its long axis
+    assert resolved[0] > resolved[1]
+
+
+def test_condon_reproduces_the_vlass_catalogue_errors():
+    """Row 0 of QL3.1 (VLASS3QL J083036.46-241605.9): the catalogue's E_RA/E_DEC (deg) are this
+    formula rotated by PA, and E_RA is on-sky (no cos dec) --- the run 1-3 loader got that wrong."""
+    cov = v.condon_cov(
+        3.6592156526759996,
+        2.50531610598,
+        152.8896549865025,
+        2.43607401847836,
+        1.77422451972948,
+        10.97892573861 / 0.16255225636999998,
+    )
+    # 0.25%: PyBDSF used the rms map at the source, the catalogue quotes the island rms
+    assert np.sqrt(cov[0, 0]) == pytest.approx(5.05267868e-06 * 3600, rel=5e-3)
+    assert np.sqrt(cov[0, 1]) == pytest.approx(7.09375924e-06 * 3600, rel=5e-3)
+    assert np.sqrt(cov[0, 0]) != pytest.approx(
+        5.05267868e-06 * 3600 * np.cos(np.radians(24.27)), rel=5e-2
+    )
+
+
+def test_ellipse_cov_rotation_by_pa():
+    # PA 0: major axis north (y); PA 90: east (x); PA 45: correlated
+    c0 = v.ellipse_cov(2.0, 1.0, 0.0)[0]
+    c90 = v.ellipse_cov(2.0, 1.0, 90.0)[0]
+    c45 = v.ellipse_cov(2.0, 1.0, 45.0)[0]
+    assert c0 == pytest.approx([1.0, 4.0, 0.0], abs=1e-12)
+    assert c90 == pytest.approx([4.0, 1.0, 0.0], abs=1e-12)
+    assert c45 == pytest.approx([2.5, 2.5, 1.5], abs=1e-12)
+    a, b, pa = v.cov_axes(v.ellipse_cov([2.0, 3.0], [1.0, 0.5], [30.0, -60.0]))
+    assert a == pytest.approx([2.0, 3.0]) and b == pytest.approx([1.0, 0.5])
+    assert pa == pytest.approx([30.0, -60.0])
+
+
+def test_abs_cov_and_chi2():
+    m = np.array([[3.0, -1.0, 0.0]])  # indefinite: grew in x, shrank in y
+    assert v.abs_cov(m)[0] == pytest.approx([3.0, 1.0, 0.0])
+    r = v.ellipse_cov(2.0, 1.0, 30.0) - v.ellipse_cov(1.0, 2.0, 30.0)  # eigen +3/-3
+    ax = v.cov_axes(v.abs_cov(r))
+    assert ax[0][0] == pytest.approx(np.sqrt(3.0)) and ax[1][0] == pytest.approx(np.sqrt(3.0))
+    iso = np.array([[0.04, 0.04, 0.0]])
+    assert v.chi2_2d(0.3, 0.4, iso)[0] == pytest.approx(0.25 / 0.04)
+    # an offset along an elongated error ellipse is less significant than across it
+    el = v.ellipse_cov(1.0, 0.1, 0.0)
+    assert v.chi2_2d(0.0, 0.5, el)[0] < v.chi2_2d(0.5, 0.0, el)[0]
+
+
+def test_error_model_sys_cov():
+    shape = v.ellipse_cov(4.0, 2.0, 0.0)
+    beam_a, beam_b = v.ellipse_cov(4.8, 1.7, 0.0), v.ellipse_cov(3.5, 2.2, 0.0)
+    ref = 0.5 * (beam_a + beam_b)
+    assert v.NO_MODEL.sys_cov(shape, beam_a, ref) == pytest.approx(np.zeros((1, 3)))
+    s = v.ErrorModel(0.1, 0.0).sys_cov(shape, beam_a, ref)
+    assert s[0] == pytest.approx([0.04, 0.16, 0.0])  # 0.1 x the FWHM along each source axis
+    b = v.ErrorModel(0.0, 0.1).sys_cov(np.zeros((1, 3)), beam_a, ref)
+    assert (b[0, :2] > 0).all()  # a beam change moves a centroid on both axes
+
+
+def test_link_significance_uses_the_error_ellipse():
+    """A 1.2" shift along a static source's long, uncertain axis is not significant; across it,
+    it is. The run 1-3 circularised error could not tell these apart."""
+    ra0, dec0 = 100.0, 10.0
+    cov = v.ellipse_cov(0.5, 0.1, 0.0)  # long axis north
+    a = v.EpochCatalog([ra0], [dec0], [2018.0], [3.0], [0.36], cov=cov)
+    b_n = v.EpochCatalog([ra0], [dec0 + 1.2 / 3600], [2021.0], [3.0], [0.36], cov=cov)
+    east = ra0 + 1.2 / 3600 / np.cos(np.radians(dec0))
+    b_e = v.EpochCatalog([east], [dec0], [2021.0], [3.0], [0.36], cov=cov)
+    assert len(v.link_pairs(a, b_n)) == 0
+    assert len(v.link_pairs(a, b_e)) == 1
+
+
+def test_fit_error_model_recovers_injected_systematics():
+    a, b = v.synthetic_statics(seed=3)
+    terms = v.static_pair_terms(a, b, v.match_statics(a, b))
+    model, surface = v.fit_error_model(terms)
+    assert model.k_struct == pytest.approx(0.1, abs=0.02)
+    assert model.q_beam == pytest.approx(0.03, abs=0.03)
+    assert np.asarray(surface["loss"]).shape == (31, 21)
+    rows = v.calibration_table(terms, model, by="size", edges=v.SIZE_BIN_EDGES)
+    for r in rows:
+        if r["n"] > 1000:
+            assert r["f_gt3"] == pytest.approx(v.RAYLEIGH_TAIL_3SIGMA, abs=0.006)
+            assert r["median_z"] == pytest.approx(v.RAYLEIGH_MEDIAN, abs=0.08)
+
+
+def test_measurement_only_errors_are_caught_being_optimistic_for_resolved_sources():
+    """The run 1-3 failure mode: faint, resolved statics scatter more than the catalogue says.
+    The calibration table must flag it (tail far above Rayleigh), and the fitted model fix it."""
+    a, b = v.synthetic_statics(seed=4)
+    terms = v.static_pair_terms(a, b, v.match_statics(a, b))
+    big = v.calibration_table(terms, v.NO_MODEL, by="size", edges=(3.0, np.inf))[0]
+    assert big["f_gt3"] > 10 * v.RAYLEIGH_TAIL_3SIGMA  # flagged
+    model, _ = v.fit_error_model(terms)
+    fixed = v.calibration_table(terms, model, by="size", edges=(3.0, np.inf))[0]
+    assert fixed["f_gt3"] < 2 * v.RAYLEIGH_TAIL_3SIGMA  # handled
+    # ... and it is what makes static sources look like movers: link significance >= 3
+    resolved = np.flatnonzero(v.cov_axes(a.shape)[0] > 3.0)[:300]
+    z_old = [v.triplet_significance(a, i, b, i, b, i)["z_12"] for i in resolved]
+    z_new = [v.triplet_significance(a, i, b, i, b, i, model)["z_12"] for i in resolved]
+    assert np.mean(np.array(z_old) >= 3) > 0.15
+    assert np.mean(np.array(z_new) >= 3) < 0.04
+
+
+def test_triplet_significance_on_a_true_mover():
+    ra0, dec0 = 40.0, -5.0
+    a = _cat([ra0], [dec0], 2018.0)
+    b = _cat([ra0], [dec0 + 6 / 3600], 2021.0)
+    c = _cat([ra0], [dec0 + 11 / 3600], 2023.5)
+    s = v.triplet_significance(a, 0, b, 0, c, 0)
+    assert s["z_12"] == pytest.approx(6 / np.hypot(0.2, 0.2))
+    assert s["z_13"] == pytest.approx(11 / np.hypot(0.2, 0.2))
+    assert s["resid"] == pytest.approx(0.0, abs=1e-6)
+
+
+def _shaped_field(seed=0, n=4000, n_epochs=3, crowd=False):
+    """A shaped static field (for injections): beams, rms and floors on every component."""
+    cats = v.synthetic_statics(n=n, n_epochs=n_epochs, seed=seed, area_side_deg=4.0)
+    if crowd:  # add a 2nd component 10-20" from every source: non-isolated pairs everywhere
+        out = []
+        for c in cats:
+            off = np.random.default_rng(seed).uniform(10, 20, len(c)) / 3600
+            extra = c.subset(np.ones(len(c), bool))
+            extra.dec = extra.dec + off
+            extra.ident = extra.ident + 10**6
+            out.append(v.EpochCatalog.concat([c, extra]))
+        cats = out
+    return cats
+
+
+def test_injected_scatter_follows_the_quoted_errors_plus_model():
+    cats = _shaped_field(seed=5)
+    assert all(c.has_shape for c in cats)
+    model = v.ErrorModel(0.1, 0.03)
+    out, mu, _, _ = v._inject(
+        *cats, n=3000, seed=6, size_arcsec=3.0, model=model, mu_range=(1.0, 1.0001)
+    )
+    # E1 -> E2 offset minus the true motion, normalised by the pair covariance (with the model)
+    a, b = out[0], out[1]
+    ia = np.flatnonzero(a.ident >= 10_000_000)
+    ib = np.flatnonzero(b.ident >= 10_000_000)
+    assert (a.ident[ia] == b.ident[ib]).all()
+    dx, dy = v.tangent_offsets_arcsec(a.ra[ia], a.dec[ia], b.ra[ib], b.dec[ib])
+    dt = b.t_yr[ib] - a.t_yr[ia]
+    sep = np.hypot(dx, dy)
+    assert sep.mean() == pytest.approx(float(np.mean(mu * dt)), rel=0.05)
+    # the quoted per-detection covariance is the Condon ellipse for a 3" source + floor
+    maj = v.cov_axes(a.cov[ia])[0]
+    point_out, _, _, _ = v._inject(*cats, n=3000, seed=6, size_arcsec=0.0)
+    maj_pt = v.cov_axes(point_out[0].cov[point_out[0].ident >= 10_000_000])[0]
+    assert np.median(maj) > np.median(maj_pt)  # a resolved injection is quoted a larger error
+
+
+def test_injected_static_offsets_are_rayleigh_under_the_model():
+    """Zero-motion injections: their epoch-to-epoch offsets, normalised by exactly the covariance
+    the search uses (measurement + model with the pair-mean beam), must be Rayleigh(1)."""
+    cats = _shaped_field(seed=7, n_epochs=2)
+    model = v.ErrorModel(0.1, 0.03)
+    out, _, _, _ = v._inject(
+        *cats, n=4000, seed=8, size_arcsec=2.0, model=model, mu_range=(1e-9, 1.1e-9)
+    )
+    a, b = out
+    ia = np.flatnonzero(a.ident >= 10_000_000)
+    ib = np.flatnonzero(b.ident >= 10_000_000)
+    dx, dy = v.tangent_offsets_arcsec(a.ra[ia], a.dec[ia], b.ra[ib], b.dec[ib])
+    z = np.sqrt(v.chi2_2d(dx, dy, v._pair_cov(a, ia, b, ib, model)))
+    # with a two-epoch field the injection's beam reference IS the pair mean, as in linkage
+    assert np.median(z) == pytest.approx(v.RAYLEIGH_MEDIAN, abs=0.06)
+    assert np.mean(z > 3) == pytest.approx(v.RAYLEIGH_TAIL_3SIGMA, abs=0.006)
+    zo = np.sqrt(v.chi2_2d(dx, dy, a.cov[ia] + b.cov[ib]))  # measurement-only: too optimistic
+    assert np.mean(zo > 3) > 3 * v.RAYLEIGH_TAIL_3SIGMA
+
+
+def test_realistic_placement_pays_the_isolation_cost():
+    """Realistic injections sit at random sky positions, so their nearest-neighbour distances
+    follow the field's (not the 60-120" the run 1-3 injections were given), and the ones that
+    land within 30" of a real component are lost to the isolation cut, as a real mover would be."""
+    cats = _shaped_field(seed=9, n=6000, crowd=True)
+    first = 10_000_000
+    out, mu, realistic, nn = v._inject(
+        *cats, n=3000, seed=10, realistic_frac=0.5, mu_range=(2.0, 3.0)
+    )
+    assert realistic.mean() == pytest.approx(0.5, abs=0.05)
+    rng = np.random.default_rng(11)  # random points in the (shrunk) field for comparison
+    e1 = cats[0]
+    pts_ra = rng.uniform(e1.ra.min() + 0.3, e1.ra.max() - 0.3, 20000)
+    pts_dec = rng.uniform(e1.dec.min() + 0.3, e1.dec.max() - 0.3, 20000)
+    d, _ = v.cKDTree(v._xyz(e1.ra, e1.dec)).query(v._xyz(pts_ra, pts_dec), k=1)
+    nn_random = np.degrees(2 * np.arcsin(d / 2)) * 3600
+    assert np.median(nn[realistic]) == pytest.approx(np.median(nn_random), rel=0.1)
+    res = v.search_multi(out)
+    found = set()
+    for r in res.values():
+        found |= {int(x) for x in v._recovered_idents(r, first)}
+    found_arr = np.array(sorted(found))
+    assert found_arr.size > 100
+    # a mover with a neighbour inside 30" is never found (1" slack: detections scatter)
+    assert (nn[found_arr] >= v.ISOLATION_ARCSEC - 1.0).all()
+    lost_near = realistic & (nn < v.ISOLATION_ARCSEC)
+    assert lost_near.sum() > 20  # the realistic class DOES land near sources
+    res2 = v.completeness(*cats, n=600, seed=10, realistic_frac=0.5)
+    assert res2["realistic"]["n"] + res2["isolated"]["n"] == 600
+    assert res2["realistic_frac"] == 0.5 and res2["size_arcsec"] == 0.0
+
+
+def test_scramble_and_search_accept_a_model():
+    e1, e2, e3, _ = v.synthetic_epochs(seed=2)
+    model = v.ErrorModel(0.1, 0.0)  # shapes are zero in this fixture: identical to no model
+    r0 = v.search(e1, e2, e3)
+    r1 = v.search(e1, e2, e3, model=model)
+    assert len(r0.candidates) == len(r1.candidates)
+    null = v.scramble_null(r1.orphans, n_reps=2, seed=3, model=model)
+    assert null["n_reps"] == 2
+
+
+def test_epochcatalog_carries_shape_fields_through_subset_and_concat():
+    cats = v.synthetic_statics(n=50, seed=1)
+    c = v.EpochCatalog.concat([cats[0], cats[1]])
+    assert c.cov.shape == (100, 3) and c.beam.shape == (100, 3) and c.rms.shape == (100,)
+    s = c.subset(np.arange(100) < 10)
+    assert s.shape.shape == (10, 3) and s.floor.shape == (10,)
+    plain = _cat([1.0], [0.0], 2018.0)
+    assert not plain.has_shape
+    assert plain.cov[0] == pytest.approx([0.04, 0.04, 0.0])
