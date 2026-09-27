@@ -1,8 +1,8 @@
 # Findings — blind VLASS proper motions across four epochs (plan 64)
 
-`jansky_research.vlasspm` + `scripts/vlasspm_real.py`. Status 2026-09-27 (run 4, shape-aware
-errors): **UV Ceti recovered blind; 11 candidates, all others vetted as static extended sources;
-zero new movers; limit < 9.3e-5 per deg^2** -- see the last section. (Earlier status lines below
+`jansky_research.vlasspm` + `scripts/vlasspm_real.py`. Status 2026-09-27 (run 5, shape-aware
+errors + compactness cut): **UV Ceti recovered blind and the only candidate left; zero new
+movers; limit < 9.2e-5 per deg^2 (>= 3 mJy, point sources)** -- see the last two sections. (Earlier status lines below
 are kept as the record of runs 1-3.)
 
 ## GATE 0 refresh (2026-09-26)
@@ -283,3 +283,94 @@ many sigma under any of them.
   also let the structure term be dropped for the survivors -- not done here.
 - The scramble null remains blind to the static-source false positives by construction; the
   vetting, not the null, is what bounds them.
+
+## Compactness cut (run 5, 2026-09-27)
+
+Every run 3-4 candidate except UV Ceti was a resolved static source, so run 5 asks the obvious
+question: does a mover have to look like a point source? Evidence: `real_run5_compactness` in
+`results/vlasspm_metrics.json`, `run5_compactness` in `results/vlasspm_vetting.json`.
+
+**Metric.** Per detection, `c = DC_Maj / BMAJ`: the catalogue's deconvolved major axis over the
+restoring beam's major axis (0 where PyBDSF could not deconvolve). Threshold and cross-epoch rule
+are parameters (`search(..., compact_max, compact_rule)`), applied after the E3 test, so the cut
+only removes.
+
+**Pre-stated criterion** (in `scripts/vlasspm_real.py` before the cut touched any real
+candidate): threshold = the *smallest* value on the grid 0.3-3.0 (step 0.1) keeping >= 95% of
+recovered injected point movers overall **and** in every S/N bin with >= 200 recoveries; rule =
+"all three detections compact" vs "at least two of three", whichever rejects the larger fraction
+of isolated static sources seen in E1, E2 and E3 (the population false candidates come from, not
+the candidates), ties within 0.02 going to "all". ("Loosest threshold that keeps >= 95%" read as
+"loosest *requirement*": the most aggressive cut that still meets the keep target -- any larger
+threshold trivially keeps more.)
+
+**Realistic size noise.** Faint point sources do not come out of PyBDSF at size 0. Reference
+sample: GCNS stars (Gaia EDR3, < 100 pc; VizieR J/A+A/649/A6), proper-motion-propagated to each
+component's epoch, matched within 1.0" -- **303 detections** (E1 73, E2 83, E3 102, E4 45); the
+same match with stars shifted 2' gives **16** chance matches (5%, likely background AGN, which
+if anything widens the size distribution and loosens the threshold). Their `c` has
+95th percentiles of 1.60 (S/N < 7), 1.15 (7-10), 1.09 (10-15), 0.83 (15-25), 0.54 (25-50),
+0.32 (> 50); 33-39% are exactly 0 in every bin. Injections draw (DC_Maj, DC_Min)/BMAJ from the
+same epoch and S/N bin (epochs pooled below 30 detections -- which, with 303 in total, is most
+bins: the epoch dependence is not resolved by this sample).
+
+**Calibration** (40,000 injections at 1, 1.5, 3, 6 mJy, random-sky placement, 23,932 recovered).
+Kept fraction of recovered point movers:
+
+| threshold | all: overall | all: S/N < 7 | 2of3: overall | 2of3: S/N < 7 |
+|---|---|---|---|---|
+| 0.7 | 0.724 | 0.403 | 0.921 | 0.785 |
+| 0.9 | 0.890 | 0.714 | **0.984** | **0.951** |
+| 1.0 | 0.915 | 0.785 | 0.990 | 0.971 |
+| 1.2 | 0.960 | 0.881 | 0.997 | 0.990 |
+| 1.6 | **0.984** | **0.953** | 0.999 | 0.998 |
+| 2.0 | 0.997 | 0.987 | 1.000 | 1.000 |
+
+Criterion thresholds: **all -> 1.6; 2of3 -> 0.9.** Rejection of 953,850 E1-E2-E3 statics:
+all@1.6 6.6%, 2of3@0.9 **14.1%** (of statics larger than 2 beams in some epoch: 100% vs 89%).
+**Chosen: 2 of 3 detections with c <= 0.9.** One noisy faint detection is tolerated, which is
+what lets the threshold be tight; "all" has to stay loose to survive the single worst of three
+noisy sizes.
+
+Per rate bin (2of3 @ 0.9): 0.931 at 0.53-0.92"/yr, 0.983 / 0.987 / 0.989 above 0.92"/yr (the
+0.30-0.53 bin has 10 recoveries). **The 95% target is missed in the 0.53-0.92 bin (93%)** -- the
+criterion was stated per S/N bin, not per rate bin, so this is reported rather than re-tuned.
+
+**UV Ceti survives.** Its c values are 0.41 (E2), 0 (E3), 1.46 (E4) -- 1.2", 0 and 2.9" against
+beams of 2.84", 2.14" and 2.0". The E4 detection alone fails 0.9; two of three pass. (Under
+"all" it would also have passed at 1.6.) It is a real point mover with a 2.9"-deconvolved
+detection, which is exactly the size noise the calibration was built for.
+
+**Real search.** Run 4: 11 candidates -> run 5: **1 (UV Ceti)**. No new candidates (the cut only
+removes). All 10 image-vetted static sources are removed. Their c triples, for the record:
+several sit close to the threshold -- J198.1384-39.1432 (0.92, 0, 1.77) would survive at 1.0, and
+run-3 c0 = J314.1346-32.6145 (1.01, 0, 1.12) at 1.1 -- so the clean sweep depends on the grid step
+the criterion landed on, and the images, not the cut, are what established these as static.
+
+**Null.** Scramble chance candidates with the cut: 0.02 / 0 / 0 / 0 per scramble (unchanged).
+
+**Completeness and limit** (20,000 realistic-placement point-source injections with size noise;
+mean over the 0.92-5"/yr bins; E1-E2-E3 area 33,838.5 deg^2; 0 new movers):
+
+| | no cut | with cut |
+|---|---|---|
+| 3 mJy | 0.9648 -> 9.18e-5 / deg^2 | 0.9645 -> **9.18e-5** |
+| 1.5 mJy | 0.9610 -> 9.21e-5 | 0.9520 -> **9.30e-5** |
+
+The cut costs ~0 at 3 mJy (S/N ~ 20, where stars are compact) and 1% at 1.5 mJy; the limit is
+**< 9.2e-5 per deg^2 (>= 3 mJy)** and < 9.3e-5 at 1.5 mJy. Run 4 quoted 9.3e-5, using the weaker
+of a size-0 and a size-2" injection; the size-noise draw supersedes both.
+
+**What the cut excludes, physically.** The limit now applies to movers unresolved at 2.5":
+- moving objects with resolved radio emission -- a pulsar-wind-nebula bow shock or trail around a
+  high-velocity pulsar, a star with extended wind/jet emission;
+- radio-emitting binaries whose separation is a sizeable fraction of the beam (~1-3"): blended,
+  they fit as one elongated Gaussian. UV/BL Cet (~2") passed, but only because the cut tolerates
+  one resolved detection; a pair emitting comparably in two epochs would fail;
+- a mover blended with unrelated background emission in two of its three epochs (also removed by
+  the isolation cut in most cases);
+- faint movers: the keep fraction is 95% by construction at S/N < 7 and 93% at 0.53-0.92"/yr.
+
+**Unresolved.** The reference sample is small (303) and pools epochs; the size noise is
+calibrated on stars, and a population with different S/N or position-in-tile distribution could
+differ. The 0.53-0.92"/yr bin misses the 95% target.

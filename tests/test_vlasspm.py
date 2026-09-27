@@ -526,3 +526,123 @@ def test_epochcatalog_carries_shape_fields_through_subset_and_concat():
     plain = _cat([1.0], [0.0], 2018.0)
     assert not plain.has_shape
     assert plain.cov[0] == pytest.approx([0.04, 0.04, 0.0])
+
+
+# ------------------------------------------------------------------ compactness cut (run 5)
+
+
+def _star_sizes(seed=0, n=400):
+    """A stand-in point-source reference: noisy deconvolved sizes, larger at low S/N."""
+    rng = np.random.default_rng(seed)
+    snr = rng.uniform(5, 60, n)
+    rmaj = np.where(rng.random(n) < 0.35, 0.0, rng.gamma(2.0, 0.25, n) * 10 / snr)
+    return np.column_stack([rng.integers(0, 3, n), snr, rmaj, rmaj * rng.uniform(0.2, 1, n)])
+
+
+def test_compactness_metric_and_rules():
+    cat = v.EpochCatalog(
+        np.zeros(3),
+        np.zeros(3),
+        np.zeros(3),
+        np.ones(3),
+        np.ones(3),
+        shape=v.ellipse_cov([0.0, 1.5, 9.0], [0.0, 1.0, 3.0], [0, 0, 0]),
+        beam=v.ellipse_cov([3.0, 3.0, 3.0], [2.0, 2.0, 2.0], [0, 0, 0]),
+        rms=np.full(3, 0.14),
+    )
+    assert v.compactness(cat) == pytest.approx([0.0, 0.5, 3.0])
+    assert v.compactness(_cat([1.0], [0.0], 2018.0))[0] == 0.0  # no beam: treated as compact
+    c = np.array([[0.2, 0.4, 0.9], [0.2, 2.0, 0.3], [2.0, 2.5, 0.1]])
+    assert v.compact_keep(c, 1.0, "all").tolist() == [True, False, False]
+    assert v.compact_keep(c, 1.0, "2of3").tolist() == [True, True, False]
+    assert v.compact_keep(c, None).all()
+    with pytest.raises(ValueError):
+        v.compact_keep(c, 1.0, "any")
+
+
+def test_size_noise_draw_follows_the_reference_by_snr_and_epoch():
+    smp = _star_sizes()
+    model = v.SizeNoiseModel(smp, min_count=20)
+    rng = np.random.default_rng(1)
+    lo, _ = model.draw(np.full(4000, 6.0), 0, rng)
+    hi, _ = model.draw(np.full(4000, 55.0), 0, rng)
+    assert np.mean(lo) > 2 * np.mean(hi)  # faint point sources come out with bigger sizes
+    assert 0.05 < np.mean(lo == 0) < 0.6  # PyBDSF's "not deconvolvable" zeros are resampled
+    # every draw is an actual reference value from that S/N bin (epoch pooled when sparse)
+    b = model._bin(np.array([6.0]))[0]
+    rows = model.pool(0, int(b))
+    assert set(np.round(lo, 12)) <= set(np.round(smp[rows, 2], 12))
+    rmaj, rmin = model.draw(np.array([500.0]), 2, rng)  # beyond the reference: nearest bin
+    assert rmin[0] <= rmaj[0]
+    with pytest.raises(ValueError):
+        v.SizeNoiseModel(np.zeros((0, 4))).pool(0, 0)
+
+
+def test_injections_with_size_noise_carry_the_drawn_sizes():
+    cats = _shaped_field(seed=12, n_epochs=3)
+    sn = v.SizeNoiseModel(_star_sizes(), min_count=20)
+    out, _, _, _ = v._inject(*cats, n=500, seed=3, size_noise=sn)
+    inj = out[1].subset(out[1].ident >= 10_000_000)
+    c = v.compactness(inj)
+    assert np.mean(c == 0) > 0.1 and c.max() > 0.3  # zeros and noisy sizes, not all zero
+    assert c.max() <= _star_sizes()[:, 2].max() + 1e-9
+
+
+def test_compactness_cut_removes_resolved_static_keeps_noisy_point_mover():
+    """A planted resolved 'static' that mimics a mover (split extended source) is removed by the
+    cut; a real point mover whose catalogue sizes carry realistic noise survives it."""
+    ra0, dec0 = 60.0, 10.0
+    beam = v.ellipse_cov(3.0, 2.0, 0.0)
+
+    def det(ra, dec, t, size, ident):
+        return v.EpochCatalog(
+            [ra],
+            [dec],
+            [t],
+            [3.0],
+            [0.2],
+            [ident],
+            shape=v.ellipse_cov(size, size / 2, 30.0),
+            beam=beam,
+            rms=[0.14],
+        )
+
+    step = 6 / 3600
+    # mover (UV Ceti-like noisy sizes 1.2", 0, 2.9" against a 3" beam) and a resolved blob
+    mv = [det(ra0, dec0 + k * step, 2018 + 3 * k, s, 1) for k, s in enumerate((1.2, 0.0, 2.9))]
+    ext = [
+        det(ra0 + 1.0, dec0 + k * step, 2018 + 3 * k, s, 2) for k, s in enumerate((9.0, 8.0, 11.0))
+    ]
+    e1, e2, e3 = (v.EpochCatalog.concat([mv[k], ext[k]]) for k in range(3))
+    assert len(v.search(e1, e2, e3).candidates) == 2
+    kept = v.search(e1, e2, e3, compact_max=1.0, compact_rule="all").candidates
+    assert len(kept) == 1 and e1.ident[kept.i[0]] == 1
+    assert len(v.search(e1, e2, e3, compact_max=1.0, compact_rule="2of3").candidates) == 1
+    null = v.scramble_null(
+        v.search(e1, e2, e3).orphans, n_reps=2, compact_max=1.0, compact_rule="all"
+    )
+    assert null["n_reps"] == 2
+
+
+def test_compactness_calibration_on_injections_and_threshold_choice():
+    cats = _shaped_field(seed=13, n=4000, n_epochs=3)
+    sn = v.SizeNoiseModel(_star_sizes(), min_count=20)
+    inj = v.injection_compactness(*cats, n=800, flux_mjy=2.0, size_noise=sn, seed=4)
+    assert inj["recovered"].sum() > 200
+    grid = [0.2, 0.5, 1.0, 2.0, 5.0]
+    tab = v.compactness_keep_table(inj, grid)
+    for rule in v.COMPACT_RULES:
+        fr = [r["overall"] for r in tab["rules"][rule]]
+        assert fr == sorted(fr)  # looser threshold keeps more
+        assert fr[-1] == pytest.approx(1.0)
+        thr = v.choose_threshold(tab, rule, min_count=50)
+        assert thr is not None
+        row = next(r for r in tab["rules"][rule] if r["threshold"] == thr)
+        assert row["overall"] >= 0.95
+    # 2of3 tolerates one noisy detection, so it never needs a looser threshold than "all"
+    assert v.choose_threshold(tab, "2of3", min_count=50) <= v.choose_threshold(
+        tab, "all", min_count=50
+    )
+    assert v.choose_threshold(tab, "all", keep_min=1.01) is None
+    comp = v.completeness(*cats, n=300, size_noise=sn, compact_max=1.0, realistic_frac=1.0)
+    assert comp["compact_max"] == 1.0 and comp["size_noise"] is True

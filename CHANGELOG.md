@@ -11,6 +11,15 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **`vlasspm`: compactness cut (run 5).** Per-detection DC_Maj/BMAJ; injections carry
+  realistic point-source size noise drawn from 303 detections of nearby Gaia (GCNS) stars by
+  S/N. Threshold and cross-epoch rule chosen by a criterion stated before the real candidates
+  were examined (tightest threshold keeping >= 95% of injected point movers in every S/N bin;
+  rule by rejection of general static sources): at least 2 of 3 detections with DC_Maj/BMAJ <= 0.9
+  (keeps 98.4%; 93% in the 0.53-0.92"/yr bin). UV Ceti survives (0.41, 0, 1.46); the 10
+  image-vetted static candidates are all removed (11 -> 1); null unchanged; limit < 9.2e-5 per
+  deg^2 at 3 mJy (< 9.3e-5 at 1.5 mJy, where the cut costs 1% completeness).
+
 - **`vlasspm`: shape-aware astrometric errors (run 4).** Per-component Condon (1997) error
   ellipses from fitted Maj/Min/PA, beam and peak S/N (identical to the catalogues' quoted
   errors -- which exposed a run 1-3 bug: `E_RA` is already on-sky and was being multiplied by

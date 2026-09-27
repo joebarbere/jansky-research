@@ -474,6 +474,296 @@ def rescore_previous(cats: list[v.EpochCatalog], model: v.ErrorModel) -> list[di
     return out
 
 
+# --------------------------------------------------------------- run 5: compactness cut
+#
+# PRE-STATED CRITERION (written before the cut was applied to any real candidate):
+#   threshold: for each rule, the SMALLEST compactness threshold (DC_Maj / BMAJ, grid 0.3-3.0
+#     in steps of 0.1) that keeps >= 95% of recovered injected point movers overall AND in every
+#     S/N bin holding >= 200 recovered injections. Injected sizes are drawn from nearby Gaia
+#     stars' measured deconvolved sizes (per epoch and S/N).
+#   rule: "all" (compact in all three detections) vs "2of3": the one that, at its own
+#     threshold, rejects the larger fraction of isolated static sources seen in E1, E2 and E3
+#     (the population the false candidates come from, not the candidates); within 0.02, "all".
+COMPACT_GRID = tuple(round(0.3 + 0.1 * i, 2) for i in range(28))
+KEEP_MIN, KEEP_MIN_COUNT = 0.95, 200
+STAR_MATCH_ARCSEC = 1.0
+CALIB_FLUXES = (1.0, 1.5, 3.0, 6.0)
+
+
+def star_detections(cats: list[v.EpochCatalog], shift_arcsec: float = 0.0) -> dict:
+    """Components within STAR_MATCH_ARCSEC of a GCNS star (Gaia EDR3, parallax > 10 mas),
+    propagated by its proper motion to each component's own epoch. ``shift_arcsec`` offsets the
+    stars in Dec to count chance matches."""
+    from astropy.table import Table
+    from scipy.spatial import cKDTree
+
+    g = Table.read(REPO / "data/vlass/stars/gcns.fits")
+    ra, dec = np.asarray(g["RA_ICRS"], float), np.asarray(g["DE_ICRS"], float) + shift_arcsec / 3600
+    pmra = np.nan_to_num(np.asarray(g["pmRA"], float)) / 1000
+    pmde = np.nan_to_num(np.asarray(g["pmDE"], float)) / 1000
+    rows = []
+    for e, c in enumerate(cats):
+        r0, d0 = v._mover_track(ra, dec, pmra, pmde, 2016.0, float(np.median(c.t_yr)))
+        hits = cKDTree(v._xyz(c.ra, c.dec)).query_ball_point(v._xyz(r0, d0), r=v._chord(15.0))
+        si = np.repeat(np.arange(ra.size), [len(h) for h in hits])
+        ci = np.fromiter((x for h in hits for x in h), dtype=np.int64, count=si.size)
+        rr, dd = v._mover_track(ra[si], dec[si], pmra[si], pmde[si], 2016.0, c.t_yr[ci])
+        sep = np.hypot(*v.tangent_offsets_arcsec(rr, dd, c.ra[ci], c.dec[ci]))
+        ok = sep < STAR_MATCH_ARCSEC
+        comp = np.unique(ci[ok])
+        dcmaj, dcmin = v.cov_axes(c.shape[comp])[:2]
+        bmaj = v.cov_axes(c.beam[comp])[0]
+        rows.append(
+            np.column_stack(
+                [np.full(comp.size, e), c.flux[comp] / c.rms[comp], dcmaj / bmaj, dcmin / bmaj]
+            )
+        )
+    samples = np.concatenate(rows)
+    return {"samples": samples.tolist(), "n_per_epoch": [int(len(x)) for x in rows]}
+
+
+def stage_stars(cats: list[v.EpochCatalog]) -> dict:
+    real = star_detections(cats)
+    chance = star_detections(cats, shift_arcsec=120.0)
+    smp = np.asarray(real["samples"])
+    edges = v.SizeNoiseModel(smp).snr_edges
+    per_bin = []
+    for lo, hi in zip(edges[:-1], edges[1:], strict=True):
+        sel = (smp[:, 1] >= lo) & (smp[:, 1] < hi)
+        per_bin.append(
+            {
+                "snr_lo": lo,
+                "snr_hi": hi,
+                "n": int(sel.sum()),
+                "compactness_p50_p90_p95": [
+                    float(x) for x in np.percentile(smp[sel, 2], [50, 90, 95])
+                ]
+                if sel.sum() >= 5
+                else None,
+                "frac_zero": float(np.mean(smp[sel, 2] == 0)) if sel.any() else None,
+            }
+        )
+    return {
+        "reference": "GCNS (Gaia EDR3 stars within 100 pc; VizieR J/A+A/649/A6), PM-propagated, "
+        f"matched within {STAR_MATCH_ARCSEC} arcsec",
+        "samples": real["samples"],
+        "n_per_epoch": real["n_per_epoch"],
+        "n_chance_expected": int(sum(chance["n_per_epoch"])),
+        "chance_note": "same match with the stars shifted 2' in Dec",
+        "per_snr_bin": per_bin,
+    }
+
+
+def static_triple_compactness(cats: list[v.EpochCatalog], t=(0, 1, 2)) -> np.ndarray:
+    """(n, 3) compactness of isolated static sources seen in all three epochs of ``t``."""
+    a, b, c = (cats[x] for x in t)
+    m_ab = v.match_statics(a, b, radius_arcsec=v.STATIC_MATCH_ARCSEC)
+    m_ac = v.match_statics(a, c, radius_arcsec=v.STATIC_MATCH_ARCSEC)
+    jb = dict(zip(m_ab["i"].tolist(), m_ab["j"].tolist(), strict=True))
+    kc = dict(zip(m_ac["i"].tolist(), m_ac["j"].tolist(), strict=True))
+    both = sorted(set(jb) & set(kc))
+    ia = np.asarray(both, dtype=np.int64)
+    return np.column_stack(
+        [
+            v.compactness(a)[ia],
+            v.compactness(b)[[jb[i] for i in both]],
+            v.compactness(c)[[kc[i] for i in both]],
+        ]
+    )
+
+
+def stage_compact_calibrate(cats, model, size_noise, n_inject: int) -> dict:
+    parts = []
+    for n, flux in enumerate(CALIB_FLUXES):
+        log(f"  injections at {flux} mJy ...")
+        parts.append(
+            v.injection_compactness(
+                *cats, n=n_inject, flux_mjy=flux, size_noise=size_noise, model=model, seed=500 + n
+            )
+        )
+    inj = {
+        "mu": np.concatenate([p["mu"] for p in parts]),
+        "recovered": np.concatenate([p["recovered"] for p in parts]),
+        "snr": np.concatenate([p["snr"] for p in parts]),
+        "c": np.concatenate([p["c"] for p in parts], axis=1),
+    }
+    table = v.compactness_keep_table(inj, COMPACT_GRID)
+    statics = static_triple_compactness(cats)
+    choice = {}
+    for rule in v.COMPACT_RULES:
+        thr = v.choose_threshold(table, rule, keep_min=KEEP_MIN, min_count=KEEP_MIN_COUNT)
+        rej = float(1 - v.compact_keep(statics, thr, rule).mean()) if thr is not None else 0.0
+        big = statics.max(axis=1) > 2.0
+        choice[rule] = {
+            "threshold": thr,
+            "static_rejected_fraction": rej,
+            "static_rejected_fraction_maxsize_gt2beam": float(
+                1 - v.compact_keep(statics[big], thr, rule).mean()
+            )
+            if thr is not None and big.any()
+            else None,
+        }
+        log(f"  rule {rule}: threshold {thr}, rejects {rej:.3f} of E1-E2-E3 statics")
+    ra_, rb_ = choice["all"]["static_rejected_fraction"], choice["2of3"]["static_rejected_fraction"]
+    rule = "2of3" if rb_ > ra_ + 0.02 else "all"
+    return {
+        "criterion": (
+            f"smallest threshold on {COMPACT_GRID[0]}-{COMPACT_GRID[-1]} keeping >= {KEEP_MIN} of "
+            f"recovered injected point movers overall and in every S/N bin with >= "
+            f"{KEEP_MIN_COUNT} recoveries; rule = higher static rejection (tie within 0.02: all)"
+        ),
+        "fluxes_mjy": list(CALIB_FLUXES),
+        "n_injected": int(inj["mu"].size),
+        "table": table,
+        "n_statics_e1e2e3": int(statics.shape[0]),
+        "static_compactness_p50_p90": [
+            float(x) for x in np.percentile(statics.max(axis=1), [50, 90])
+        ],
+        "choice": choice,
+        "rule": rule,
+        "threshold": choice[rule]["threshold"],
+    }
+
+
+def run5(work: Path, out: Path, cats, triples, model, search: dict, args) -> None:
+    from jansky_research.report import write_results
+
+    f = work / "run5_stars.json"
+    if not f.exists():
+        log("run 5: point-source size noise from nearby Gaia stars ...")
+        _save(f, stage_stars(cats))
+    stars = json.loads(f.read_text())
+    size_noise = v.SizeNoiseModel(np.asarray(stars["samples"]))
+    log(f"  {len(stars['samples'])} star detections; chance ~{stars['n_chance_expected']}")
+
+    f = work / "run5_calibration.json"
+    if not f.exists():
+        log("run 5: calibrating the compactness threshold on injections (criterion pre-stated) ...")
+        _save(f, stage_compact_calibrate(cats, model, size_noise, args.n_inject // 2))
+    cal = json.loads(f.read_text())
+    thr, rule = cal["threshold"], cal["rule"]
+    log(f"  chosen: rule {rule}, threshold {thr}")
+
+    f = work / "run5_search.json"
+    if not f.exists():
+        log("run 5: search with the compactness cut ...")
+        res = v.search_multi(cats, triples, model=model, compact_max=thr, compact_rule=rule)
+        per, cands = {}, []
+        for t, r in res.items():
+            a, b, c = r.orphans
+            per[_tname(t)] = {"n_triplets": len(r.triplets), "n_candidates": len(r.candidates)}
+            for n in range(len(r.candidates)):
+                row = _cand_row(t, a, b, c, r.candidates, n)
+                i, j, k = r.candidates.i[n], r.candidates.j[n], r.candidates.k[n]
+                row["compactness"] = [
+                    float(v.compactness(a)[i]),
+                    float(v.compactness(b)[j]),
+                    float(v.compactness(c)[k]),
+                ]
+                cands.append(row)
+        # compactness of every run-4 candidate, for the before/after table
+        idx = [{int(rw): n for n, rw in enumerate(cc.ident)} for cc in cats]
+        before = []
+        for c4 in search["candidates"]:
+            ep = [int(x[1]) - 1 for x in c4["triple"].split("-")]
+            vals = [
+                float(v.compactness(cats[e])[idx[e][int(c4[f"row{m + 1}"])]])
+                for m, e in enumerate(ep)
+            ]
+            before.append(
+                {
+                    "key": f"J{c4['ra2']:.4f}_{c4['dec2']:+.4f}",
+                    "triple": c4["triple"],
+                    "compactness": vals,
+                    "passes": bool(v.compact_keep(np.array([vals]), thr, rule)[0]),
+                }
+            )
+        _save(f, {"per_triple": per, "candidates": cands, "run4_candidates": before})
+    s5 = json.loads(f.read_text())
+    log(f"  {len(s5['candidates'])} candidates after the cut (run 4: {len(search['candidates'])})")
+
+    for t in triples:
+        f = work / f"run5_null_{_tname(t)}.json"
+        if f.exists():
+            continue
+        r = v.search(cats[t[0]], cats[t[1]], cats[t[2]], model=model)
+        _save(
+            f,
+            v.scramble_null(
+                r.orphans,
+                n_reps=args.n_null,
+                seed=hash(t) % 2**31,
+                model=model,
+                compact_max=thr,
+                compact_rule=rule,
+            ),
+        )
+        log(f"  null {_tname(t)}: {json.loads(f.read_text())['candidates_mean']:.3f}")
+
+    for flux in (3.0, 1.5):
+        for label, cut in (("nocut", None), ("cut", thr)):
+            f = work / f"run5_completeness_{flux:g}mJy_{label}.json"
+            if f.exists():
+                continue
+            log(f"run 5: completeness {flux} mJy, size noise, {label} ...")
+            _save(
+                f,
+                v.completeness(
+                    *cats,
+                    n=args.n_inject,
+                    flux_mjy=flux,
+                    seed=int(flux * 10) + 7,
+                    realistic_frac=1.0,
+                    model=model,
+                    size_noise=size_noise,
+                    compact_max=cut,
+                    compact_rule=rule,
+                ),
+            )
+            log(f"  overall {json.loads(f.read_text())['overall']:.3f}")
+
+    comp = {
+        p.stem[len("run5_completeness_") :]: json.loads(p.read_text())
+        for p in sorted(work.glob("run5_completeness_*.json"))
+    }
+    area = max(pt["area_deg2"] for pt in search["per_triple"].values())
+    limits = {}
+    for k, c in comp.items():
+        mean = float(np.mean(c["per_bin"][2:]))
+        limits[k] = {
+            "completeness_mean_0p92_5": mean,
+            "limit_per_deg2_95": v.surface_density_limit(0, area, mean),
+        }
+    nulls = {
+        p.stem[len("run5_null_") :]: {
+            kk: vv for kk, vv in json.loads(p.read_text()).items() if kk != "candidates_per_rep"
+        }
+        for p in sorted(work.glob("run5_null_*.json"))
+    }
+    cal_out = {k: vv for k, vv in cal.items()}
+    metrics = {
+        "source": "real: VLASS Quick-Look epochs 1, 2, 3 (QL3.1+3.2) and 4.1 component catalogues",
+        "is_real": True,
+        "real_run5_compactness": {
+            "metric": "DC_Maj / BMAJ per detection (0 = not deconvolvable)",
+            "size_noise_reference": {k: vv for k, vv in stars.items() if k != "samples"},
+            "calibration": cal_out,
+            "rule": rule,
+            "threshold": thr,
+            "per_triple": s5["per_triple"],
+            "n_candidates": len(s5["candidates"]),
+            "candidates": s5["candidates"],
+            "run4_candidates": s5["run4_candidates"],
+            "null": nulls,
+            "completeness": comp,
+            "limits": limits,
+            "area_deg2": area,
+        },
+    }
+    write_results(metrics, out / "results" / "vlasspm_metrics.json")
+    log("run 5 written")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", default=str(REPO / "data/vlass/work"))
@@ -615,6 +905,7 @@ def main() -> int:
         _save(f, vet_counterparts(search["candidates"]))
 
     write_outputs(work, Path(args.out), floors, search)
+    run5(work, Path(args.out), cats, triples, model, search, args)
     log("done")
     return 0
 

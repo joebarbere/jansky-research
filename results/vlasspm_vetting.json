@@ -728,5 +728,39 @@
    "all_sky_equivalent_95": 3.8,
    "note": "95% Poisson (2.996) / (area x mean completeness over the 0.92-5 arcsec/yr bins); optically-dark = no Gaia DR3/CatWISE2020 counterpart; applies to isolated compact sources >~3 mJy at 3 GHz"
   }
+ },
+ "run5_compactness": {
+  "rule": "2of3",
+  "threshold": 0.9,
+  "n_candidates_after_cut": 1,
+  "survivors": [
+   "J24.7787_-17.9467"
+  ],
+  "note": "the cut only removes; the survivor is UV Ceti. Removed: all 10 image-vetted static sources.",
+  "limit": {
+   "mu_range_arcsec_yr": [
+    0.92,
+    5.0
+   ],
+   "area_deg2": 33838.5,
+   "n_new": 0,
+   "point_sources_3mJy_with_cut": {
+    "completeness_mean": 0.9645,
+    "upper_limit_per_deg2_95": 9.18e-05
+   },
+   "point_sources_3mJy_no_cut": {
+    "completeness_mean": 0.9648,
+    "upper_limit_per_deg2_95": 9.18e-05
+   },
+   "point_sources_1p5mJy_with_cut": {
+    "completeness_mean": 0.952,
+    "upper_limit_per_deg2_95": 9.3e-05
+   },
+   "point_sources_1p5mJy_no_cut": {
+    "completeness_mean": 0.961,
+    "upper_limit_per_deg2_95": 9.21e-05
+   },
+   "note": "injections are point sources whose catalogue sizes are drawn from nearby Gaia stars (realistic placement); the limit applies to movers that are unresolved at 2.5 arcsec -- the cut excludes resolved movers by construction"
+  }
  }
 }

@@ -49,6 +49,12 @@ from scipy.spatial import cKDTree
 __all__ = [
     "EpochCatalog",
     "ErrorModel",
+    "SizeNoiseModel",
+    "choose_threshold",
+    "compact_keep",
+    "compactness",
+    "compactness_keep_table",
+    "injection_compactness",
     "abs_cov",
     "calibration_table",
     "chi2_2d",
@@ -129,6 +135,7 @@ class EpochCatalog:
         for k in ("ra", "dec", "t_yr", "flux", "pos_err"):
             setattr(self, k, np.asarray(getattr(self, k), dtype=float))
         n = self.ra.size
+        self.ident = np.asarray(self.ident)
         if self.ident.size == 0:
             self.ident = np.full(n, -1, dtype=np.int64)
         self.ident = np.asarray(self.ident)
@@ -545,6 +552,87 @@ def flux_consistent(
     return np.isfinite(r) & (r <= max_ratio)
 
 
+# ----------------------------------------------------------------------------- compactness
+#
+# Every candidate in runs 3 and 4 other than UV Ceti was a resolved static source. Stars and
+# pulsars are unresolved at 2.5", so a mover should be compact in its detections. The metric is
+# the catalogue's own deconvolved major axis over the restoring beam's major axis, per detection
+# (0 where PyBDSF could not deconvolve, i.e. the fit is no larger than the beam). A faint point
+# source does NOT come out at 0 -- its deconvolved size is noisy -- so the threshold must be
+# calibrated on injections whose sizes carry that noise (:class:`SizeNoiseModel`).
+
+COMPACT_RULES = ("all", "2of3")
+
+
+def compactness(cat: EpochCatalog) -> np.ndarray:
+    """Deconvolved major FWHM / beam major FWHM per component (0 = unresolved or no beam)."""
+    dc = cov_axes(cat.shape)[0]
+    bm = cov_axes(cat.beam)[0]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(bm > 0, dc / bm, 0.0)
+
+
+def compact_keep(c: np.ndarray, threshold: float | None, rule: str = "all") -> np.ndarray:
+    """Which detection triples pass the cut. ``c`` is (n, 3) compactness; ``rule`` is ``"all"``
+    (every detection <= threshold) or ``"2of3"`` (at least two). ``threshold=None``: no cut."""
+    c = np.atleast_2d(np.asarray(c, float))
+    if threshold is None:
+        return np.ones(c.shape[0], dtype=bool)
+    n_ok = np.sum(c <= threshold, axis=1)
+    if rule == "all":
+        return n_ok == c.shape[1]
+    if rule == "2of3":
+        return n_ok >= 2
+    raise ValueError(f"unknown compactness rule {rule!r}; use one of {COMPACT_RULES}")
+
+
+@dataclass
+class SizeNoiseModel:
+    """Empirical deconvolved sizes of POINT sources, by epoch and peak S/N.
+
+    ``samples`` is (m, 4): ``[epoch_index, snr, dcmaj/bmaj, dcmin/bmaj]`` for detections of a
+    reference population known to be point-like at 2.5" (e.g. nearby Gaia stars). :meth:`draw`
+    resamples the ratio pair from the same epoch and S/N bin, pooling epochs when that bin holds
+    fewer than ``min_count`` detections, and the nearest populated bin when the S/N is outside
+    the reference range.
+    """
+
+    samples: np.ndarray
+    snr_edges: tuple[float, ...] = (0.0, 7.0, 10.0, 15.0, 25.0, 50.0, np.inf)
+    min_count: int = 30
+
+    def _bin(self, snr: np.ndarray) -> np.ndarray:
+        return np.clip(np.digitize(snr, self.snr_edges) - 1, 0, len(self.snr_edges) - 2)
+
+    def pool(self, epoch: int, snr_bin: int) -> np.ndarray:
+        """Row indices into ``samples`` used for one (epoch, S/N bin)."""
+        sb = self._bin(self.samples[:, 1])
+        own = np.flatnonzero((self.samples[:, 0] == epoch) & (sb == snr_bin))
+        if own.size >= self.min_count:
+            return own
+        pooled = np.flatnonzero(sb == snr_bin)
+        if pooled.size >= self.min_count:
+            return pooled
+        filled = [b for b in range(len(self.snr_edges) - 1) if np.sum(sb == b) >= 1]
+        if not filled:
+            raise ValueError("empty size-noise reference sample")
+        nearest = min(filled, key=lambda b: abs(b - snr_bin))
+        return np.flatnonzero(sb == nearest)
+
+    def draw(
+        self, snr: np.ndarray, epoch: int, rng: np.random.Generator
+    ) -> tuple[np.ndarray, np.ndarray]:
+        snr = np.asarray(snr, float)
+        rmaj, rmin = np.zeros(snr.size), np.zeros(snr.size)
+        bins = self._bin(snr)
+        for b in np.unique(bins):
+            sel = np.flatnonzero(bins == b)
+            rows = self.pool(epoch, int(b))
+            pick = rows[rng.integers(0, rows.size, sel.size)]
+            rmaj[sel], rmin[sel] = self.samples[pick, 2], self.samples[pick, 3]
+        return rmaj, np.minimum(rmin, rmaj)
+
+
 @dataclass
 class SearchResult:
     n_orphans: tuple[int, int, int]
@@ -564,8 +652,12 @@ def search(
     isolation_arcsec: float | None = ISOLATION_ARCSEC,
     max_flux_ratio: float | None = FLUX_RATIO_MAX,
     model: ErrorModel = NO_MODEL,
+    compact_max: float | None = None,
+    compact_rule: str = "all",
 ) -> SearchResult:
-    """Steps 1-4: isolated orphans, E1 x E2 linkage, E3 collinearity, (optional) flux cut."""
+    """Steps 1-4: isolated orphans, E1 x E2 linkage, E3 collinearity, (optional) flux cut, and
+    (optional) compactness cut on the three detections (:func:`compact_keep`). The cut only
+    removes: ``triplets`` is unchanged, ``candidates`` is the subset that passes."""
     o1, o2 = orphan_masks(e1, e2)
     # An E3 orphan must be unmatched in BOTH earlier epochs (a mover's E3 position is new sky).
     o3a, _ = orphan_masks(e3, e1)
@@ -579,6 +671,11 @@ def search(
     pairs = link_pairs(a, b, mu_min=mu_min, mu_max=mu_max, model=model)
     trip = collinearity_test(a, b, c, pairs, mu_max=mu_max, model=model)
     fok = flux_consistent(a.flux[trip.i], b.flux[trip.j], c.flux[trip.k], max_ratio=max_flux_ratio)
+    if compact_max is not None:
+        cvals = np.column_stack(
+            [compactness(a)[trip.i], compactness(b)[trip.j], compactness(c)[trip.k]]
+        )
+        fok &= compact_keep(cvals, compact_max, compact_rule)
     cand = Triplets(
         trip.i[fok],
         trip.j[fok],
@@ -605,6 +702,8 @@ def scramble_null(
     mu_min: float = MU_MIN_ARCSEC_YR,
     mu_max: float = MU_MAX_ARCSEC_YR,
     model: ErrorModel = NO_MODEL,
+    compact_max: float | None = None,
+    compact_rule: str = "all",
 ) -> dict:
     """Chance pairs/triplets/candidates per scramble, from RA-rotated E2 and E3 orphans.
 
@@ -614,6 +713,7 @@ def scramble_null(
     """
     a, b, c = orphans
     rng = np.random.default_rng(seed)
+    k_a, k_b, k_c = compactness(a), compactness(b), compactness(c)
     n_pairs, n_trip, n_cand = [], [], []
     for _ in range(n_reps):
         s2, s3 = rng.uniform(*shift_arcmin, size=2) / 60.0 * rng.choice([-1, 1], size=2)
@@ -621,6 +721,9 @@ def scramble_null(
         p = link_pairs(a, bb, mu_min=mu_min, mu_max=mu_max, model=model)
         t = collinearity_test(a, bb, cc, p, mu_max=mu_max, model=model)
         f = flux_consistent(a.flux[t.i], bb.flux[t.j], cc.flux[t.k])
+        f &= compact_keep(
+            np.column_stack([k_a[t.i], k_b[t.j], k_c[t.k]]), compact_max, compact_rule
+        )
         n_pairs.append(len(p))
         n_trip.append(len(t))
         n_cand.append(int(f.sum()))
@@ -649,28 +752,30 @@ def _injected_errors(
     cat: EpochCatalog,
     near: np.ndarray,
     flux_mjy: np.ndarray,
-    size_arcsec: float,
+    size_arcsec: float | tuple[np.ndarray, np.ndarray],
+    rng: np.random.Generator | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Measurement covariance etc. for injected detections observed like component ``near``.
 
-    The injected source is a circular Gaussian of deconvolved FWHM ``size_arcsec`` at peak
-    ``flux_mjy``, imaged with the neighbour's beam and noise and given the neighbour's floor, so
-    its Condon ellipse is what the real catalogue would have quoted for it.
+    The injected source is a Gaussian of deconvolved FWHM ``size_arcsec`` (a scalar: circular;
+    or a ``(dcmaj, dcmin)`` pair of arrays: the MEASURED noisy size of each detection, at a random
+    PA) at peak ``flux_mjy``, imaged with the neighbour's beam and noise and given the
+    neighbour's floor, so its Condon ellipse is what the real catalogue would have quoted.
     """
     beam = cat.beam[near]
     bmaj, bmin, bpa = cov_axes(beam)
-    maj, mn = np.hypot(bmaj, size_arcsec), np.hypot(bmin, size_arcsec)
+    if isinstance(size_arcsec, tuple):
+        dcmaj, dcmin = size_arcsec
+        pa = (rng or np.random.default_rng(0)).uniform(-90.0, 90.0, near.size)
+    else:
+        dcmaj = dcmin = np.full(near.size, float(size_arcsec))
+        pa = np.zeros(near.size)
+    maj, mn = np.hypot(bmaj, dcmaj), np.hypot(bmin, dcmin)
     snr = flux_mjy / cat.rms[near]
     cov = condon_cov(maj, mn, bpa, bmaj, bmin, snr) + (cat.floor[near] ** 2)[:, None] * np.array(
         [1.0, 1.0, 0.0]
     )
-    shape = np.column_stack(
-        [
-            np.full(near.size, size_arcsec**2),
-            np.full(near.size, size_arcsec**2),
-            np.zeros(near.size),
-        ]
-    )
+    shape = ellipse_cov(dcmaj, dcmin, pa)
     return cov, shape, beam, cat.rms[near], cat.floor[near]
 
 
@@ -684,8 +789,14 @@ def _inject(
     realistic_frac: float = 0.0,
     size_arcsec: float = 0.0,
     model: ErrorModel = NO_MODEL,
+    size_noise: SizeNoiseModel | None = None,
 ) -> tuple[list[EpochCatalog], np.ndarray, np.ndarray, np.ndarray]:
-    """:func:`inject_movers` plus the placement class and each mover's E1 neighbour distance."""
+    """:func:`inject_movers` plus the placement class and each mover's E1 neighbour distance.
+
+    With ``size_noise`` each detection's MEASURED deconvolved size is drawn from the point-source
+    reference sample at that detection's S/N and epoch (``size_arcsec`` is then ignored): the
+    injection is a point source that the catalogue would nevertheless report with a noisy size.
+    """
     e1 = cats[0]
     rng = np.random.default_rng(seed)
     host = rng.integers(0, len(e1), n)
@@ -718,7 +829,12 @@ def _inject(
         t = t1 if e == 0 else cat.t_yr[near]
         flux = flux_mjy * rng.uniform(0.8, 1.25, n)
         if shaped:
-            cov, shape, beam, rms, floor = _injected_errors(cat, near, flux, size_arcsec)
+            size: float | tuple[np.ndarray, np.ndarray] = size_arcsec
+            if size_noise is not None:
+                rmaj, rmin = size_noise.draw(flux / cat.rms[near], e, rng)
+                bmaj_e = cov_axes(cat.beam[near])[0]
+                size = (rmaj * bmaj_e, rmin * bmaj_e)
+            cov, shape, beam, rms, floor = _injected_errors(cat, near, flux, size, rng)
             scatter = cov + model.sys_cov(shape, beam, beam_ref)
         else:  # the synthetic isotropic fixture: the epoch's median error, as in runs 1-3
             err0 = float(np.median(cat.pos_err))
@@ -806,6 +922,9 @@ def completeness(
     realistic_frac: float = 0.0,
     size_arcsec: float = 0.0,
     model: ErrorModel = NO_MODEL,
+    size_noise: SizeNoiseModel | None = None,
+    compact_max: float | None = None,
+    compact_rule: str = "all",
 ) -> dict:
     """Fraction of injected movers recovered by ANY epoch triple, overall and per log-rate bin.
 
@@ -825,10 +944,12 @@ def completeness(
         realistic_frac=realistic_frac,
         size_arcsec=size_arcsec,
         model=model,
+        size_noise=size_noise,
     )
     found = np.zeros(n, dtype=bool)
     per_triple = {}
-    for t, res in search_multi(list(inj), triples, model=model).items():
+    kw = {"model": model, "compact_max": compact_max, "compact_rule": compact_rule}
+    for t, res in search_multi(list(inj), triples, **kw).items():
         rec = _recovered_idents(res, first)
         found[rec] = True
         per_triple["-".join(f"E{x + 1}" for x in t)] = float(np.unique(rec).size / n)
@@ -845,6 +966,9 @@ def completeness(
         "flux_mjy": flux_mjy,
         "size_arcsec": size_arcsec,
         "model": {"k_struct": model.k_struct, "q_beam": model.q_beam},
+        "size_noise": size_noise is not None,
+        "compact_max": compact_max,
+        "compact_rule": compact_rule,
         "overall": float(found.mean()),
         "bin_edges": [float(x) for x in bins],
         "per_bin": _per_bin(np.ones(n, bool)),
@@ -862,6 +986,124 @@ def completeness(
                 else float("nan"),
             }
     return out
+
+
+def injection_compactness(
+    *cats: EpochCatalog,
+    n: int,
+    flux_mjy: float,
+    size_noise: SizeNoiseModel,
+    model: ErrorModel = NO_MODEL,
+    seed: int = 0,
+    realistic_frac: float = 1.0,
+    triples: list[tuple[int, int, int]] | None = None,
+) -> dict:
+    """Point-source movers with realistic size noise, searched WITHOUT the compactness cut.
+
+    Returns per injection: ``mu``, ``recovered``, ``snr`` (lowest detection S/N of its first
+    recovering triple) and ``c`` (n_triples, n, 3) compactness of each recovering triple's
+    detections (NaN where that triple did not recover it) -- everything
+    :func:`compactness_keep_table` needs to evaluate any threshold and rule afterwards.
+    """
+    first = 10_000_000
+    inj, mu, _, _ = _inject(
+        *cats,
+        n=n,
+        seed=seed,
+        flux_mjy=flux_mjy,
+        first_ident=first,
+        realistic_frac=realistic_frac,
+        model=model,
+        size_noise=size_noise,
+    )
+    res = search_multi(list(inj), triples, model=model)
+    c = np.full((len(res), n, 3), np.nan)
+    snr = np.full(n, np.nan)
+    for t_i, r in enumerate(res.values()):
+        a, b, cc = r.orphans
+        cand = r.candidates
+        same = (
+            (a.ident[cand.i] >= first)
+            & (a.ident[cand.i] == b.ident[cand.j])
+            & (b.ident[cand.j] == cc.ident[cand.k])
+        )
+        idx = a.ident[cand.i][same] - first
+        ii, jj, kk = cand.i[same], cand.j[same], cand.k[same]
+        c[t_i, idx] = np.column_stack([compactness(a)[ii], compactness(b)[jj], compactness(cc)[kk]])
+        s3 = np.min(
+            np.column_stack(
+                [a.flux[ii] / a.rms[ii], b.flux[jj] / b.rms[jj], cc.flux[kk] / cc.rms[kk]]
+            ),
+            axis=1,
+        )
+        fill = np.isnan(snr[idx])
+        snr[idx[fill]] = s3[fill]
+    return {"mu": mu, "recovered": ~np.all(np.isnan(c[..., 0]), axis=0), "snr": snr, "c": c}
+
+
+def _kept(c: np.ndarray, threshold: float, rule: str) -> np.ndarray:
+    """Injection kept if ANY triple that recovered it passes the cut."""
+    out = np.zeros(c.shape[1], dtype=bool)
+    for t in range(c.shape[0]):
+        ok = ~np.isnan(c[t, :, 0])
+        out[ok] |= compact_keep(c[t, ok], threshold, rule)
+    return out
+
+
+def compactness_keep_table(
+    inj: dict,
+    thresholds,
+    *,
+    rules: tuple[str, ...] = COMPACT_RULES,
+    snr_edges=(0.0, 7.0, 10.0, 15.0, 25.0, np.inf),
+    mu_edges=None,
+) -> dict:
+    """Fraction of RECOVERED injected point movers the cut keeps, per rule and threshold:
+    overall, per S/N bin and per rate bin, with the counts behind each fraction."""
+    mu_edges = np.geomspace(MU_MIN_ARCSEC_YR, MU_MAX_ARCSEC_YR, 6) if mu_edges is None else mu_edges
+    rec = inj["recovered"]
+    sb = np.digitize(inj["snr"], snr_edges) - 1
+    mb = np.digitize(inj["mu"], mu_edges) - 1
+    out: dict = {
+        "n_recovered": int(rec.sum()),
+        "snr_edges": [float(x) for x in snr_edges],
+        "mu_edges": [float(x) for x in mu_edges],
+        "snr_counts": [int(np.sum(rec & (sb == k))) for k in range(len(snr_edges) - 1)],
+        "mu_counts": [int(np.sum(rec & (mb == k))) for k in range(len(mu_edges) - 1)],
+        "rules": {},
+    }
+    for rule in rules:
+        rows = []
+        for thr in thresholds:
+            kept = _kept(inj["c"], float(thr), rule)
+
+            def frac(sel: np.ndarray, kept: np.ndarray = kept) -> float:
+                m = rec & sel
+                return float(kept[m].mean()) if m.any() else float("nan")
+
+            rows.append(
+                {
+                    "threshold": float(thr),
+                    "overall": frac(np.ones(rec.size, bool)),
+                    "per_snr": [frac(sb == k) for k in range(len(snr_edges) - 1)],
+                    "per_mu": [frac(mb == k) for k in range(len(mu_edges) - 1)],
+                }
+            )
+        out["rules"][rule] = rows
+    return out
+
+
+def choose_threshold(
+    table: dict, rule: str, *, keep_min: float = 0.95, min_count: int = 200
+) -> float | None:
+    """The pre-stated criterion: the SMALLEST (most aggressive) threshold on the grid at which the
+    cut keeps >= ``keep_min`` of recovered injected point movers overall AND in every S/N bin
+    holding >= ``min_count`` recovered injections. None if no threshold on the grid qualifies."""
+    ok_bins = [k for k, nk in enumerate(table["snr_counts"]) if nk >= min_count]
+    for row in table["rules"][rule]:  # thresholds ascending
+        if row["overall"] >= keep_min and all(row["per_snr"][k] >= keep_min for k in ok_bins):
+            return float(row["threshold"])
+    return None
 
 
 def calibrate_floors(
