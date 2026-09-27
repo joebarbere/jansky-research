@@ -807,3 +807,59 @@ abstract should say:
    - "For 99.4% the neighbour is in the same group" overstates the any-two test.
    - Void RR macros render as "--" (unused).
    - The abstract chains four sigmas; results paragraph 1 chains about 12 numbers.
+
+### Response (run `fashienv-round8`: the robustness leg rebuilt again; headline JSON unchanged)
+
+**The discriminator the referee asked for exists in the data, and it points to blending.**
+- **HI at fixed optical luminosity** (`hi_at_fixed_optical`: Tempel rMAG of an explicitly
+  matched counterpart; cells of 0.25 mag x 0.01 z), relative to isolated sources:
+
+  | | neighbour inside the flux aperture | neighbour only in the ring beyond it |
+  |---|---|---|
+  | group members | **+0.160 +/- 0.007 dex** (21 sigma) | +0.026 +/- 0.008 |
+  | field | **+0.142 +/- 0.013** | +0.025 +/- 0.009 |
+
+  The HI excess appears when the neighbour is INSIDE the measurement, which is what blending
+  predicts (the neighbour's HI added to the counterpart's).
+- **Line shape.** Blendable pairs within 100 km/s have narrower cores at fixed mass (log W50
+  -0.019 +/- 0.006) and broader wings (W20/W50 +0.102 +/- 0.029): a summed mass at an individual
+  width, as the referee predicted. At |dv| >= 100 km/s neither is significant.
+- **No segregation among unblendable members** (`segregation_unblendable`, ring + isolated
+  members, R/R200 < 0.5 vs >= 0.5 at fixed z): 0.002 +/- 0.012 dex.
+- **Caveat kept in the paper:** the aperture also selects the closest pairs, so a physical HI
+  excess in the closest pairs is not excluded by this test.
+- **Result:** the group offset is attributed to neither environment nor blending with certainty,
+  but blending is now the favoured reading, with evidence.
+
+**Per-finding changes:**
+1. The group placement sigma is removed. Across the null's own occupancy range (1,553-2,270)
+   its mean runs -0.098 -> +0.054 (0.021 dex per 100 members): "uninformative, no significance
+   quoted".
+2. `optical_classes` matches the counterpart explicitly (nearest within half a beam, +/-300
+   km/s) and gives disjoint classes, including no_counterpart. Group members: inner 5,795,
+   ring 3,497, isolated 6,387, no counterpart 3,004. There is no overlap by construction; a
+   unit test checks it.
+3. `matched_median_diff` now reports within-cell dlogM and dz. For group inner: 0.009 dex at
+   0.25-dex cells, 0.002 at 0.1-dex cells. The width difference is stable (-0.012 vs -0.011).
+4. (a) R/R200 moved to the Results as neighbour-selected, not as evidence. (b) Two of the three
+   suggested tests were run: HI at fixed optical luminosity, and the dv split with W20/W50, plus
+   segregation among unblendable members. (c) Optically dark HI is mentioned as possible
+   residual blending. **Common alpha: with alpha fixed at -1.379 the offsets become void -0.139
+   +/- 0.030 and group +0.260 +/- 0.061 (fits poor, chi2nu up to 66).** The knee offset depends
+   on the model, and the abstract says so. (d) Jones+2018 (ADS abstract): no density trend in
+   the knee; it reports a low-mass-slope difference between the void and Virgo fields plus a
+   locally suppressed knee. It is re-cited for exactly that and removed as a stripping
+   reference.
+5. The headline exclusion uses fixed300 (29.1% vs 1.6%; +0.044 +/- 0.035, 2.0 sigma), with the
+   most-massive caveat in the Results.
+6. Not added. The referee's C/Vmax-vs-rms_beam correlation was an in-memory figure, and the
+   paper quotes only pipeline numbers. The convergence is quoted as a macro instead (strata move
+   no excess by more than 0.011 dex).
+7. The strict footprint uses half the median cell count (at least 37 per cell; pool 54,314); max
+   shift 0.002 dex.
+8-10.
+   - The void placement occupancy now comes from the same 200-placement null that sets the sigma.
+   - "Same group" is dropped from the text.
+   - Void RR macros are no longer emitted.
+   - The published DR2 values are macros from the JSON.
+   - VizieR fetchers fall back to the CfA mirror when CDS is down (`_vizier`).

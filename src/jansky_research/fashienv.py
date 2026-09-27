@@ -815,37 +815,56 @@ def schechter(logm: np.ndarray, log_phi_star: float, log_m_star: float, alpha: f
     return np.log(10.0) * (10.0**log_phi_star) * x ** (alpha + 1.0) * np.exp(-x)
 
 
-def fit_schechter(h: dict, *, p0: tuple = (-2.5, 9.9, -1.3)) -> dict:
-    """Least-squares Schechter fit (log phi*, logM*, alpha) to a 1/Vmax HIMF (log-space)."""
+def fit_schechter(
+    h: dict, *, p0: tuple = (-2.5, 9.9, -1.3), alpha_fixed: float | None = None
+) -> dict:
+    """Least-squares Schechter fit (log phi*, logM*, alpha) to a 1/Vmax HIMF (log-space).
+
+    ``alpha_fixed`` holds the low-mass slope at a given value, so two HIMFs can be compared at
+    a common shape (the knee and slope are correlated; an offset in one can hide in the other).
+    """
     from scipy.optimize import curve_fit
 
     lm = h["logm"]
     phi = h["phi"]
     err = h["phi_err"]
     good = (phi > 0) & (h["counts"] >= 3) & np.isfinite(err) & (err > 0)
+    nan = {"log_phi_star": np.nan, "log_m_star": np.nan, "alpha": np.nan, "n_bins": int(good.sum())}
     if good.sum() < 4:
-        return {
-            "log_phi_star": np.nan,
-            "log_m_star": np.nan,
-            "alpha": np.nan,
-            "n_bins": int(good.sum()),
-        }
+        return nan
 
     def model(lmv, lps, lms, a):
         return np.log10(np.maximum(schechter(lmv, lps, lms, a), 1e-30))
 
     sigma = err[good] / (np.log(10.0) * phi[good])  # error on log10(phi)
+    if alpha_fixed is not None:
+        af = float(alpha_fixed)
+
+        def model2(lmv, lps, lms):
+            return model(lmv, lps, lms, af)
+
+        try:
+            popt2, pcov2 = curve_fit(
+                model2, lm[good], np.log10(phi[good]), p0=p0[:2], sigma=sigma, maxfev=20000
+            )
+        except (RuntimeError, ValueError):
+            return nan
+        perr2 = np.sqrt(np.diag(pcov2))
+        resid = (np.log10(phi[good]) - model2(lm[good], *popt2)) / sigma
+        return {
+            "log_phi_star": float(popt2[0]),
+            "log_m_star": float(popt2[1]),
+            "alpha": af,
+            "log_m_star_err": float(perr2[1]),
+            "n_bins": int(good.sum()),
+            "red_chi2": float(np.sum(resid**2) / max(int(good.sum()) - 2, 1)),
+        }
     try:
         popt, pcov = curve_fit(
             model, lm[good], np.log10(phi[good]), p0=p0, sigma=sigma, maxfev=20000
         )
     except (RuntimeError, ValueError):
-        return {
-            "log_phi_star": np.nan,
-            "log_m_star": np.nan,
-            "alpha": np.nan,
-            "n_bins": int(good.sum()),
-        }
+        return nan
     perr = np.sqrt(np.diag(pcov))
     resid = (np.log10(phi[good]) - model(lm[good], *popt)) / sigma
     dof = max(int(good.sum()) - 3, 1)
@@ -920,9 +939,8 @@ def synthetic_environment_catalogue(
 
 def fetch_fashi_dr1() -> dict:  # pragma: no cover - network
     """Fetch FASHI DR1 (VizieR J/other/SCPMA/67.19511/table2): 41,741 HI sources."""
-    from astroquery.vizier import Vizier
 
-    v = Vizier(columns=["RAJ2000", "DEJ2000", "cz", "z", "W50", "Ssum", "Dist", "logMass"])
+    v = _vizier(columns=["RAJ2000", "DEJ2000", "cz", "z", "W50", "Ssum", "Dist", "logMass"])
     v.ROW_LIMIT = -1
     t = v.get_catalogs(FASHI_DR1_VIZIER)[0]
     return {
@@ -1022,14 +1040,41 @@ def _walk_values(obj):  # pragma: no cover - network helper
         yield obj
 
 
-def fetch_tempel_groups() -> dict:  # pragma: no cover - network
-    """Fetch Tempel+2017 SDSS groups: member GroupID/Ngal (table1) + group R200/M200 (table2)."""
+VIZIER_MIRRORS = ("vizier.cds.unistra.fr", "vizier.cfa.harvard.edu")
+
+
+def _use_reachable_vizier() -> str | None:  # pragma: no cover - network
+    """Point astroquery at the first VizieR mirror that answers (the CDS host has outages)."""
+    import urllib.request
+
+    from astroquery.vizier import conf
+
+    for host in VIZIER_MIRRORS:
+        try:
+            url = f"https://{host}/viz-bin/asu-tsv?-source={DOUGLASS_VIZIER}/table1&-out.max=1"
+            urllib.request.urlopen(url, timeout=20)
+        except Exception:  # noqa: BLE001, S112 - any failure means "try the next mirror"
+            continue
+        conf.server = host
+        return host
+    return None
+
+
+def _vizier(**kw):  # pragma: no cover - network
+    """A Vizier query object on a reachable mirror (the server is bound per instance)."""
     from astroquery.vizier import Vizier
 
-    vg = Vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zcmb", "R200", "M200"])
+    host = _use_reachable_vizier()
+    return Vizier(vizier_server=host, **kw) if host else Vizier(**kw)
+
+
+def fetch_tempel_groups() -> dict:  # pragma: no cover - network
+    """Fetch Tempel+2017 SDSS groups: member GroupID/Ngal (table1) + group R200/M200 (table2)."""
+
+    vg = _vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zcmb", "R200", "M200"])
     vg.ROW_LIMIT = -1
     grp = vg.get_catalogs(f"{TEMPEL_VIZIER}/table2")[0]
-    vgal = Vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zobs"])  # table1: galaxies
+    vgal = _vizier(columns=["GroupID", "Ngal", "RAJ2000", "DEJ2000", "zobs", "rMAG"])  # galaxies
     vgal.ROW_LIMIT = -1
     gal = vgal.get_catalogs(f"{TEMPEL_VIZIER}/table1")[0]
     return {
@@ -1051,6 +1096,7 @@ def fetch_tempel_groups() -> dict:  # pragma: no cover - network
         "gal_cz": np.asarray(gal["zobs"], float) * C_KM_S,
         "gal_group_id": np.asarray(gal["GroupID"], int),
         "gal_ngal": np.asarray(gal["Ngal"], int),
+        "gal_rmag_abs": np.asarray(gal["rMAG"], float),  # k+e-corrected absolute r (Tempel)
     }
 
 
@@ -1062,10 +1108,8 @@ def fetch_voidfinder_spheres(*, all_holes: bool = True) -> dict:  # pragma: no c
     (table1) classifies void-outskirt galaxies as wall. ``void_id`` groups holes into voids, for
     the delete-one-void jackknife and for moving whole voids in the random-void null.
     """
-    from astroquery.vizier import Vizier
-
     table = "table2" if all_holes else "table1"
-    v = Vizier(columns=["x", "y", "z", "Rad", "Cosmo", "void"])
+    v = _vizier(columns=["x", "y", "z", "Rad", "Cosmo", "void"])
     v.ROW_LIMIT = -1
     t = v.get_catalogs(f"{DOUGLASS_VIZIER}/{table}")[0]
     # (verified 2026-07: RA/Dec reconstructed from x,y,z match the catalogue's own RA/Dec)
@@ -1678,6 +1722,70 @@ def linewidth_residual(
     return res
 
 
+OPT_CLASS = {"no_counterpart": 0, "inner": 1, "ring": 2, "isolated": 3}
+
+
+def optical_classes(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    cz: np.ndarray,
+    opt_ra: np.ndarray,
+    opt_dec: np.ndarray,
+    opt_cz: np.ndarray,
+    r_ap_arcmin: np.ndarray,
+    *,
+    ring_arcmin: float = 3.0,
+    half_window_kms: float = 300.0,
+    counterpart_arcmin: float = FAST_BEAM_ARCMIN / 2.0,
+) -> dict:
+    """Disjoint optical-neighbourhood classes, with the counterpart matched explicitly.
+
+    The counterpart is the nearest optical galaxy within ``counterpart_arcmin`` and the velocity
+    window. Neighbours are all OTHER window galaxies. Classes (``OPT_CLASS``): no counterpart;
+    inner (a neighbour within ``r_ap_arcmin``, the flux aperture plus half a beam: can be
+    blended); ring (none there, one within a further ``ring_arcmin``: cannot be); isolated.
+    Also returns the counterpart index and the smallest |dv| of an inner neighbour.
+    """
+    from scipy.spatial import cKDTree
+
+    def unit(r: np.ndarray, d: np.ndarray) -> np.ndarray:
+        r, d = np.radians(np.asarray(r, float)), np.radians(np.asarray(d, float))
+        return np.column_stack([np.cos(d) * np.cos(r), np.cos(d) * np.sin(r), np.sin(d)])
+
+    def chord(a: np.ndarray | float) -> np.ndarray:
+        return 2.0 * np.sin(np.radians(np.asarray(a, float) / 60.0) / 2.0)
+
+    n = len(np.atleast_1d(ra))
+    r_ap = np.broadcast_to(np.asarray(r_ap_arcmin, float), (n,))
+    src, opt = unit(ra, dec), unit(opt_ra, opt_dec)
+    ocz, czs = np.asarray(opt_cz, float), np.asarray(cz, float)
+    hits = cKDTree(opt).query_ball_point(src, r=chord(r_ap + ring_arcmin))
+    cls = np.full(n, OPT_CLASS["isolated"], int)
+    cp = np.full(n, -1, int)
+    min_dv = np.full(n, np.nan)
+    c_cp = float(chord(counterpart_arcmin))
+    for i, h in enumerate(hits):
+        h = np.asarray(h, int)
+        if h.size:
+            h = h[np.abs(ocz[h] - czs[i]) <= half_window_kms]
+        d = np.linalg.norm(opt[h] - src[i], axis=1) if h.size else np.empty(0)
+        near = d <= c_cp
+        if not near.any():
+            cls[i] = OPT_CLASS["no_counterpart"]
+            continue
+        j = int(np.argmin(np.where(near, d, np.inf)))
+        cp[i] = int(h[j])
+        others = np.ones(h.size, bool)
+        others[j] = False
+        inner = others & (d <= chord(r_ap[i]))
+        if inner.any():
+            cls[i] = OPT_CLASS["inner"]
+            min_dv[i] = float(np.min(np.abs(ocz[h[inner]] - czs[i])))
+        elif others.any():
+            cls[i] = OPT_CLASS["ring"]
+    return {"cls": cls, "counterpart": cp, "min_dv_inner": min_dv}
+
+
 def confused_same_group(
     ra: np.ndarray,
     dec: np.ndarray,
@@ -1738,12 +1846,15 @@ def matched_median_diff(
     ok = np.isfinite(xx) & np.isfinite(lm) & np.isfinite(zz)
     cm = np.floor(lm / dm).astype(np.int64) * 100_000 + np.floor(zz / dz).astype(np.int64)
     f, r = ok & np.asarray(flagged, bool), ok & np.asarray(ref, bool)
-    diffs, vars_, wts = [], [], []
+    diffs, vars_, wts, dms, dzs = [], [], [], [], []
     for c in np.unique(cm[f]):
-        a, b = xx[f & (cm == c)], xx[r & (cm == c)]
+        sa, sb = f & (cm == c), r & (cm == c)
+        a, b = xx[sa], xx[sb]
         if a.size < min_n or b.size < min_n:
             continue
         diffs.append(float(np.median(a) - np.median(b)))
+        dms.append(float(lm[sa].mean() - lm[sb].mean()))
+        dzs.append(float(zz[sa].mean() - zz[sb].mean()))
         va = (1.2533 * a.std(ddof=1)) ** 2 / a.size
         vb = (1.2533 * b.std(ddof=1)) ** 2 / b.size
         vars_.append(va + vb)
@@ -1757,6 +1868,9 @@ def matched_median_diff(
         "n_flagged": int(f.sum()), "n_ref": int(r.sum()), "n_cells": len(wts),
         "n_flagged_matched": int(np.sum(wts)), "median_diff": round(d, 4), "se": round(se, 4),
         "sigma": round(d / se, 2) if se > 0 else None,
+        # what matching leaves: count-weighted mean within-cell difference of the matched variables
+        "within_cell_dlogm": round(float(np.dot(w, dms)), 4),
+        "within_cell_dz": round(float(np.dot(w, dzs)), 5),
     }  # fmt: skip
 
 
@@ -1845,12 +1959,23 @@ def robustness_leg(
         "w50": count() >= 2,
         "fixed300": count(half_window_kms=300.0) >= 2,
     }
-    fixed_r = {r: count(beam_arcmin=r, half_window_kms=300.0) >= 2 for r in (1.5, 2.9, 4.5)}
     ell = np.asarray(cat.get("ell_maj", np.full(lm.size, np.nan)), float)
     r_ap = np.nan_to_num(ell, nan=FAST_BEAM_ARCMIN) / 2.0 + FAST_BEAM_ARCMIN / 2.0
-    inner = count(beam_arcmin=r_ap, half_window_kms=300.0) >= 2
-    ring = (count(beam_arcmin=r_ap + 3.0, half_window_kms=300.0, inner_arcmin=r_ap) >= 1) & ~inner
-    isolated = count(beam_arcmin=r_ap + 3.0, half_window_kms=300.0) <= 1
+    oc = optical_classes(cat["ra"], cat["dec"], cz_, *opt, r_ap)
+    inner = oc["cls"] == OPT_CLASS["inner"]
+    ring = oc["cls"] == OPT_CLASS["ring"]
+    isolated = oc["cls"] == OPT_CLASS["isolated"]
+    no_cp = oc["cls"] == OPT_CLASS["no_counterpart"]
+    # optical luminosity of the matched counterpart (Tempel k+e-corrected absolute r)
+    rmag = np.full(lm.size, np.nan)
+    has_cp = oc["counterpart"] >= 0
+    rmag[has_cp] = np.asarray(grp.get("gal_rmag_abs", np.full(len(grp["gal_ra"]), np.nan)), float)[
+        oc["counterpart"][has_cp]
+    ]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        w2050 = np.asarray(cat.get("w20", np.full(lm.size, np.nan)), float) / np.asarray(
+            cat["w50"], float
+        )
     same = confused_same_group(cat["ra"], cat["dec"], cz_, w50_, *opt,
                                grp["gal_group_id"], grp["gal_ngal"])  # fmt: skip
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -1906,7 +2031,9 @@ def robustness_leg(
     from collections import Counter
 
     cell_n = Counter(zip(ira, idec, strict=True))
-    dense = {c for c, k in cell_n.items() if k >= strict_min_per_cell}
+    # Relative threshold (eighth round): an absolute minimum of 5 only dropped near-empty cells.
+    strict_min = max(strict_min_per_cell, int(0.5 * np.median(list(cell_n.values()))))
+    dense = {c for c, k in cell_n.items() if k >= strict_min}
 
     def in_dense(ra_: np.ndarray, dec_: np.ndarray) -> np.ndarray:
         keys = zip(*_cells_arrays(ra_, dec_, SDSS_CELL_DEG), strict=True)
@@ -1931,19 +2058,33 @@ def robustness_leg(
             "method": (
                 "Tempel+2017 SDSS galaxies (r < 17.77) in a velocity window of W50/2 + 100 km/s "
                 "('w50') or a fixed +/-300 km/s ('fixed300'), within one FAST FWHM (2.9 arcmin); "
-                "line-width classes use the fixed window: inner = neighbour within ell_maj/2 + "
-                "1.45 arcmin, ring = none there but one within a further 3 arcmin, isolated = "
-                "none out to that edge"
+                "line-width classes (optical_classes) use the fixed window and an explicitly "
+                "matched counterpart (nearest within 1.45 arcmin): inner = another galaxy within "
+                "ell_maj/2 + 1.45 arcmin, ring = none there but one within a further 3 arcmin, "
+                "isolated = none out to that edge, no_counterpart = no optical match"
             ),
             "n_pool": int(pool.sum()),
         },
         "footprint_strict": {
-            "min_tempel_per_cell": strict_min_per_cell,
+            "min_tempel_per_cell": strict_min,
             "n_pool": int((pool & g_dense).sum()),
         },  # fmt: skip
     }
-    res = linewidth_residual(lw, lm, z, pool & isolated)
-    res_old = linewidth_residual(lw, lm, z, pool & ~flags["w50"])
+    # Common-shape fits: knee offsets with alpha held at the pool's own (survey-wide) value.
+    _hg, fglob = _himf_and_fit(lm, None, None, area, mask=pool, vmax=vmax_b)
+    alpha_common = fglob.get("alpha", np.nan)
+
+    def offset_fixed_alpha(sel: np.ndarray, gal_in: np.ndarray, w: tuple) -> dict:
+        fi = fit_schechter(
+            himf(lm[sel & gal_in], w[0][sel & gal_in], area_sr=area), alpha_fixed=alpha_common
+        )
+        fo = fit_schechter(
+            himf(lm[sel & ~gal_in], w[1][sel & ~gal_in], area_sr=area), alpha_fixed=alpha_common
+        )
+        st = _offset_stats("x", fi, fo)
+        return {"offset": st["x_knee_offset"], "offset_err": st["x_knee_offset_err"],
+                "red_chi2_in": fi.get("red_chi2"), "red_chi2_out": fo.get("red_chi2")}  # fmt: skip
+
     for name in ("void", "group"):
         w = weights(name, r_cl)
         m_ = measured[name]
@@ -1982,34 +2123,57 @@ def robustness_leg(
         bl["flagged_same_group_frac"] = (
             round(float(same[pool & gi & fl].mean()), 4) if (pool & gi & fl).any() else None
         )
-        # Line widths: classes where blending and neighbourhood density predict differently.
+        # Line widths: disjoint classes where blending and neighbourhood density predict
+        # differently, compared within (log M, z) cells at two cell sizes.
         lwd: dict = {"classes": {}}
-        for cname, cls in (("inner", inner), ("ring", ring), ("isolated", isolated)):
+        for cname, cls in (("inner", inner), ("ring", ring), ("isolated", isolated),
+                           ("no_counterpart", no_cp)):  # fmt: skip
             lwd["classes"][cname] = {
                 "in": summary(pool & gi & cls),
                 "out": summary(pool & ~gi & cls),
             }
         for side, sm in (("in", gi), ("out", ~gi)):
-            for cname, cls in (("inner", inner), ("ring", ring)):
-                a, b = pool & sm & cls, pool & sm & isolated
-                lwd[f"{side}_{cname}_resid"] = matched_median_diff(
-                    res, a, b, lm, z, dm=10.0, dz=10.0
-                )  # one cell = the plain residual median difference
-                lwd[f"{side}_{cname}_matched"] = matched_median_diff(lw, a, b, lm, z)
-            for r, f in fixed_r.items():
-                lwd[f"{side}_fixed300_r{r}_matched"] = matched_median_diff(
-                    lw, pool & sm & f, pool & sm & isolated, lm, z
+            ref = pool & sm & isolated
+            for cname, cls in (("inner", inner), ("ring", ring), ("no_counterpart", no_cp)):
+                a = pool & sm & cls
+                lwd[f"{side}_{cname}_matched"] = matched_median_diff(lw, a, ref, lm, z)
+                lwd[f"{side}_{cname}_matched_fine"] = matched_median_diff(
+                    lw, a, ref, lm, z, dm=0.1, dz=0.005
                 )
-            lwd[f"{side}_w50_r2.9_resid_oldfit"] = matched_median_diff(
-                res_old, pool & sm & fl, pool & sm & ~fl, lm, z, dm=10.0, dz=10.0
-            )
+            # blending of a small-|dv| neighbour sums masses at the source's own width
+            for tag, sel_dv in (("dvlt100", oc["min_dv_inner"] < 100.0),
+                                ("dvge100", oc["min_dv_inner"] >= 100.0)):  # fmt: skip
+                a = pool & sm & inner & sel_dv
+                lwd[f"{side}_inner_{tag}_matched"] = matched_median_diff(lw, a, ref, lm, z)
+                lwd[f"{side}_inner_{tag}_w20w50"] = matched_median_diff(w2050, a, ref, lm, z)
         bl["linewidth"] = lwd
+        # HI mass at fixed optical luminosity: blending adds a neighbour's HI to the source.
+        opt_l: dict = {}
+        for side, sm in (("in", gi), ("out", ~gi)):
+            ref = pool & sm & isolated & np.isfinite(rmag)
+            for cname, cls in (("inner", inner), ("ring", ring)):
+                opt_l[f"{side}_{cname}_logm_at_fixed_rmag"] = matched_median_diff(
+                    lm, pool & sm & cls & np.isfinite(rmag), ref, rmag, z, dm=0.25, dz=0.01
+                )
+        bl["hi_at_fixed_optical"] = opt_l
+        # Knee offsets at a common low-mass slope.
+        bl["common_alpha"] = {
+            "alpha": round(float(alpha_common), 3) if np.isfinite(alpha_common) else None,
+            **{wk: offset_fixed_alpha(pool, gi, w[wk]) for wk in ("survey", "env")},
+        }
         if name == "group":
             gm = pool & gi & np.isfinite(rr200)
+            fx = flags["fixed300"]
             bl["r_over_r200"] = {
-                "median_flagged": round(float(np.median(rr200[gm & fl])), 3) if (gm & fl).any() else None,
-                "median_unflagged": round(float(np.median(rr200[gm & ~fl])), 3) if (gm & ~fl).any() else None,
+                "median_flagged": round(float(np.median(rr200[gm & fx])), 3) if (gm & fx).any() else None,
+                "median_unflagged": round(float(np.median(rr200[gm & ~fx])), 3) if (gm & ~fx).any() else None,
             }  # fmt: skip
+            # Segregation among members that cannot be blended (ring + isolated): are central
+            # members more massive at fixed redshift?
+            nb = gm & (ring | isolated)
+            bl["segregation_unblendable"] = matched_median_diff(
+                lm, nb & (rr200 < 0.5), nb & (rr200 >= 0.5), lm * 0.0, z, dm=10.0, dz=0.01
+            )
         ws = weights(name, r_cl & r_dense)
         out["footprint_strict"][name] = {
             wk: dict(zip(("offset", "offset_err"), offset(pool & g_dense, gi, ws[wk]), strict=True))
@@ -2464,6 +2628,34 @@ def _null_figure(m: dict, out_dir) -> None:
     plt.close(fig)
 
 
+def _placement_occupancy_macros(m: dict) -> list[str]:
+    """Occupancy range and occupancy trend of the paired (200-placement) env-weighting nulls."""
+    ev = m.get("env_vmax") or {}
+    out: list[str] = []
+    for key, nm in (("void_null_constrained", "Void"), ("group_null", "Group")):
+        rows = (ev.get(key) or {}).get("rows") or []
+        n_in = np.array([r.get("n_in", np.nan) for r in rows], float)
+        off = np.array([r.get("env_vmax", np.nan) for r in rows], float)
+        ok = np.isfinite(n_in) & np.isfinite(off)
+        vals = {
+            "OccLo": "--",
+            "OccHi": "--",
+            "SlopeHundred": "--",
+            "MeanAtLo": "--",
+            "MeanAtHi": "--",
+        }
+        if ok.sum() > 10 and np.ptp(n_in[ok]) > 0:
+            slope, icpt = np.polyfit(n_in[ok], off[ok], 1)
+            lo, hi = float(n_in[ok].min()), float(n_in[ok].max())
+            vals = {
+                "OccLo": f"{lo:.0f}", "OccHi": f"{hi:.0f}",
+                "SlopeHundred": f"{100 * slope:.3f}",
+                "MeanAtLo": f"{slope * lo + icpt:.3f}", "MeanAtHi": f"{slope * hi + icpt:.3f}",
+            }  # fmt: skip
+        out += [rf"\newcommand{{\feRealEnvPlace{nm}{k}}}{{{v}}}" for k, v in vals.items()]
+    return out
+
+
 def _strict_max_shift(m: dict) -> str:
     """Largest |offset change| when the footprint keeps only well-populated SDSS cells."""
     st = (m.get("robustness") or {}).get("footprint_strict") or {}
@@ -2528,32 +2720,78 @@ def _robustness_macros(rob: dict) -> list[str]:
             ]
         lw = bl.get("linewidth") or {}
         for side, sn in (("in", "In"), ("out", "Out")):
-            for cname, cn in (("inner", "Inner"), ("ring", "Ring")):
+            for cname, cn in (("inner", "Inner"), ("ring", "Ring"), ("no_counterpart", "NoCp")):
                 d = lw.get(f"{side}_{cname}_matched") or {}
+                df = lw.get(f"{side}_{cname}_matched_fine") or {}
                 out += [
                     mac(f"Blend{nm}Lw{sn}{cn}Diff", num(d.get("median_diff"))),
                     mac(f"Blend{nm}Lw{sn}{cn}Se", num(d.get("se"))),
                     mac(f"Blend{nm}Lw{sn}{cn}Sigma", num(d.get("sigma"), "{:.1f}")),
                     mac(f"Blend{nm}Lw{sn}{cn}N", d.get("n_flagged_matched", "--")),
+                    mac(f"Blend{nm}Lw{sn}{cn}DM", num(d.get("within_cell_dlogm"))),
+                    mac(f"Blend{nm}Lw{sn}{cn}FineDiff", num(df.get("median_diff"))),
+                    mac(f"Blend{nm}Lw{sn}{cn}FineSe", num(df.get("se"))),
+                    mac(f"Blend{nm}Lw{sn}{cn}FineDM", num(df.get("within_cell_dlogm"))),
                 ]
-            for r, rn in (("1.5", "Rone"), ("2.9", "Rtwo"), ("4.5", "Rthree")):
-                d = lw.get(f"{side}_fixed300_r{r}_matched") or {}
-                out.append(mac(f"Blend{nm}Lw{sn}{rn}Diff", num(d.get("median_diff"))))
+            for tag, tn in (("dvlt100", "DvLt"), ("dvge100", "DvGe")):
+                d = lw.get(f"{side}_inner_{tag}_matched") or {}
+                dw = lw.get(f"{side}_inner_{tag}_w20w50") or {}
+                out += [
+                    mac(f"Blend{nm}Lw{sn}{tn}Diff", num(d.get("median_diff"))),
+                    mac(f"Blend{nm}Lw{sn}{tn}Se", num(d.get("se"))),
+                    mac(f"Blend{nm}Wtwenty{sn}{tn}Diff", num(dw.get("median_diff"))),
+                    mac(f"Blend{nm}Wtwenty{sn}{tn}Se", num(dw.get("se"))),
+                ]
+        ho = bl.get("hi_at_fixed_optical") or {}
+        for side, sn in (("in", "In"), ("out", "Out")):
+            for cname, cn in (("inner", "Inner"), ("ring", "Ring")):
+                d = ho.get(f"{side}_{cname}_logm_at_fixed_rmag") or {}
+                out += [
+                    mac(f"Blend{nm}Opt{sn}{cn}Diff", num(d.get("median_diff"))),
+                    mac(f"Blend{nm}Opt{sn}{cn}Se", num(d.get("se"))),
+                    mac(f"Blend{nm}Opt{sn}{cn}Sigma", num(d.get("sigma"), "{:.1f}")),
+                ]
+        ca = bl.get("common_alpha") or {}
+        out += [
+            mac(f"Blend{nm}CommonAlpha", num(ca.get("alpha"))),
+            mac(f"Blend{nm}CommonEnvOffset", num((ca.get("env") or {}).get("offset"))),
+            mac(f"Blend{nm}CommonEnvErr", num((ca.get("env") or {}).get("offset_err"))),
+            mac(f"Blend{nm}CommonSurveyOffset", num((ca.get("survey") or {}).get("offset"))),
+        ]
+        sg = bl.get("segregation_unblendable")
+        if sg:  # groups only
+            out += [
+                mac(f"Blend{nm}SegDiff", num(sg.get("median_diff"))),
+                mac(f"Blend{nm}SegSe", num(sg.get("se"))),
+                mac(f"Blend{nm}SegSigma", num(sg.get("sigma"), "{:.1f}")),
+            ]
         cls = lw.get("classes") or {}
-        for cname, cn in (("inner", "Inner"), ("ring", "Ring"), ("isolated", "Isolated")):
+        for cname, cn in (("inner", "Inner"), ("ring", "Ring"), ("isolated", "Isolated"),
+                          ("no_counterpart", "NoCp")):  # fmt: skip
             c = (cls.get(cname) or {}).get("in") or {}
             out += [
                 mac(f"Blend{nm}{cn}N", c.get("n", "--")),
                 mac(f"Blend{nm}{cn}LogM", num(c.get("median_logm"), "{:.2f}")),
             ]
-        rr = bl.get("r_over_r200") or {}
-        out += [
-            mac(f"Blend{nm}RRFlag", num(rr.get("median_flagged"), "{:.2f}")),
-            mac(f"Blend{nm}RRClean", num(rr.get("median_unflagged"), "{:.2f}")),
-        ]
+        rr = bl.get("r_over_r200")
+        if rr:  # groups only: a void has no R200
+            out += [
+                mac(f"Blend{nm}RRFlag", num(rr.get("median_flagged"), "{:.2f}")),
+                mac(f"Blend{nm}RRClean", num(rr.get("median_unflagged"), "{:.2f}")),
+            ]
         st = (rob.get("footprint_strict") or {}).get(name) or {}
         for wk, wn in (("survey", "Survey"), ("env", "Env")):
             out.append(mac(f"Strict{nm}{wn}Offset", num((st.get(wk) or {}).get("offset"))))
+    # How far the comparison strata (terciles, redshift alone) move any excess from the headline.
+    diffs = []
+    for name in ("void", "group"):
+        for wk in ("survey", "env"):
+            h = (((rob.get("shuffle") or {}).get(name) or {}).get(wk) or {}).get("excess")
+            for key in ("shuffle_rms_beam_terciles", "shuffle_z_only"):
+                c = (((rob.get(key) or {}).get(name) or {}).get(wk) or {}).get("excess")
+                if isinstance(h, (int, float)) and isinstance(c, (int, float)):
+                    diffs.append(abs(c - h))
+    out.append(mac("ShufStrataMaxDiff", f"{max(diffs):.3f}" if diffs else "--"))
     out.append(mac("BlendNPool", (rob.get("blending") or {}).get("n_pool", "--")))
     out.append(mac("StrictNPool", (rob.get("footprint_strict") or {}).get("n_pool", "--")))
     out.append(
@@ -2630,6 +2868,8 @@ def _write_macros(m: dict, path) -> None:
 
         for macro, key in (
             ("NDRTwo", "n_dr2_catalogue"),
+            ("DRTwoPaperLogMStar", "dr2_paper_himf.log_m_star"),
+            ("DRTwoPaperAlpha", "dr2_paper_himf.alpha"),
             ("NZNonpos", "n_dr2_z_nonpositive"),
             ("CMin", "c_min"),
             ("WallPct", "wall_pct_of_sample"),
@@ -2738,6 +2978,8 @@ def _write_macros(m: dict, path) -> None:
                 val = f"{100.0 * float(val):.0f}"
             elif macro.endswith("RedChi") and isinstance(val, str) and val != "--":
                 val = f"{float(val):.0f}"
+            elif macro.startswith("DRTwoPaper") and isinstance(val, str) and val != "--":
+                val = f"{float(val):.2f}"  # quoted from the DR2 paper at its own precision
             elif macro == "CMin" and isinstance(val, str) and val != "--":
                 val = f"{float(val):g}"
             lines.append(rf"\newcommand{{\feReal{macro}}}{{{val}}}")
@@ -2839,6 +3081,7 @@ def _write_macros(m: dict, path) -> None:
         lines += [
             *_robustness_macros(m.get("robustness") or {}),
             rf"\newcommand{{\feRealStrictMaxShift}}{{{_strict_max_shift(m)}}}",
+            *_placement_occupancy_macros(m),
             rf"\newcommand{{\feRealEnvVoidShareFirst}}{{{share(0)}}}",
             rf"\newcommand{{\feRealEnvVoidShareAll}}{{{share(-1)}}}",
             rf"\newcommand{{\feRealEnvGroupShellFirst}}{{{f'{100 * gshell[0]:.0f}' if gshell and gshell[0] is not None else '--'}}}",

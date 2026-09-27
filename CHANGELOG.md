@@ -32,12 +32,14 @@ recommend the next version number.
   (`confusion_counts`, `confused_same_group`, `linewidth_residual`, `robustness_leg`) checks line
   widths at fixed mass. With restricted Vmax the void offset exceeds the two nulls by 1.1-2.4
   sigma and the group offset by 2.2-3.5 sigma (the shuffle stratified on per-source detection
-  sensitivity, `rms_beam`). The group excess lies in the most massive members, nearer their group
-  centres, with a group neighbour in the beam; with a fixed velocity window their line widths
-  match isolated galaxies of the same HI mass (the earlier apparent broadening came from a
-  W50-dependent window), which cannot separate blending from mass segregation. Neither offset is
-  claimed as environmental. Now an RNAAS-length note titled "...Against Two Null Tests". Seven
-  referee rounds drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  sensitivity, `rms_beam`). The group excess is carried by sources whose flux aperture holds
+  another galaxy: at fixed optical luminosity they carry 0.16 dex more HI than isolated galaxies,
+  against 0.03 dex when the neighbour lies just outside the aperture, and close-in-velocity pairs
+  show narrower cores with broader wings -- the signature of blending in FAST's beam
+  (`optical_classes`, `matched_median_diff`). Knee offsets also depend on the fitted slope.
+  Neither offset is claimed as environmental. VizieR fetches fall back to the CfA mirror when
+  CDS is down. Now an RNAAS-length note titled "...Against Two Null Tests". Eight referee rounds
+  drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
   unconstrained void null with per-placement diagnostics, a group null, a KD-tree
   `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
   The DR1 paper's -0.256 is disclosed as the old estimator's value.

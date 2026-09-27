@@ -671,7 +671,8 @@ def test_robustness_leg_runs_on_mock():
            "gal_dec": np.concatenate([dec, dec[comp_i] + 0.5 / 60.0]),
            "gal_cz": np.concatenate([cz, cz[comp_i] + 50.0]),
            "gal_group_id": np.concatenate([np.arange(n), comp_i]),
-           "gal_ngal": np.full(n + comp_i.size, 2)}  # fmt: skip
+           "gal_ngal": np.full(n + comp_i.size, 2),
+           "gal_rmag_abs": rng.uniform(-22, -17, n + comp_i.size)}  # fmt: skip
     env = {
         "xyz": xyz,
         "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
@@ -704,10 +705,13 @@ def test_robustness_leg_runs_on_mock():
         # every planted companion shares its counterpart's group id
         assert b["flagged_same_group_frac"] is None or b["flagged_same_group_frac"] > 0.9
         lw = b["linewidth"]
-        assert set(lw["classes"]) == {"inner", "ring", "isolated"}
-        assert "out_inner_matched" in lw and "out_fixed300_r4.5_matched" in lw
+        assert set(lw["classes"]) == {"inner", "ring", "isolated", "no_counterpart"}
+        assert "out_inner_matched_fine" in lw and "in_inner_dvlt100_w20w50" in lw
+        assert "in_inner_logm_at_fixed_rmag" in b["hi_at_fixed_optical"]
+        assert set(b["common_alpha"]) == {"alpha", "survey", "env"}
         assert set(out["footprint_strict"][name]) == {"survey", "env"}
     assert "median_flagged" in out["blending"]["group"]["r_over_r200"]
+    assert "n_cells" in out["blending"]["group"]["segregation_unblendable"]
 
 
 def test_measured_offsets_reads_both_weightings():
@@ -870,3 +874,52 @@ def test_strict_max_shift():
              "group": {"survey": {"offset": 0.2}, "env": {"offset": 0.124}}}}}  # fmt: skip
     assert fe._strict_max_shift(m) == "0.001"
     assert fe._strict_max_shift({}) == "--"
+
+
+def test_optical_classes_are_disjoint_and_match_the_counterpart():
+    d = 1.0 / 60.0
+    # four sources at Dec 30, 35, 40, 45 (well separated)
+    ra = np.full(4, 180.0)
+    dec = np.array([30.0, 35.0, 40.0, 45.0])
+    cz = np.full(4, 5000.0)
+    opt_ra = np.full(6, 180.0)
+    opt_dec = np.array(
+        [
+            30.0,
+            30.0 + 2 * d,  # src0: counterpart + inner neighbour (2')
+            35.0,
+            35.0 + 6 * d,  # src1: counterpart + ring neighbour (6')
+            40.0,  # src2: counterpart only -> isolated
+            45.0 + 3 * d,
+        ]
+    )  # src3: no counterpart within 1.45'
+    opt_cz = np.array([5000.0, 5050.0, 5000.0, 5000.0, 5000.0, 5000.0])
+    got = fe.optical_classes(ra, dec, cz, opt_ra, opt_dec, opt_cz, np.full(4, 4.0))
+    oc = fe.OPT_CLASS
+    assert got["cls"].tolist() == [oc["inner"], oc["ring"], oc["isolated"], oc["no_counterpart"]]
+    assert got["counterpart"].tolist() == [0, 2, 4, -1]
+    assert got["min_dv_inner"][0] == 50.0 and np.isnan(got["min_dv_inner"][1])
+
+
+def test_fit_schechter_fixed_alpha_recovers_the_knee():
+    lm = np.arange(7.0, 11.0, 0.25) + 0.125
+    phi = fe.schechter(lm, -2.5, 9.9, -1.3)
+    h = {"logm": lm, "phi": phi, "phi_err": 0.05 * phi, "counts": np.full(lm.size, 50)}
+    f = fe.fit_schechter(h, alpha_fixed=-1.3)
+    assert abs(f["log_m_star"] - 9.9) < 1e-3 and f["alpha"] == -1.3
+    g = fe.fit_schechter(h, alpha_fixed=-1.0)  # a wrong slope moves the knee
+    assert abs(g["log_m_star"] - 9.9) > 0.01
+    assert np.isnan(
+        fe.fit_schechter({**h, "counts": np.zeros(lm.size)}, alpha_fixed=-1.3)["log_m_star"]
+    )
+
+
+def test_placement_occupancy_macros_fit_the_trend():
+    n_in = np.linspace(1500, 2300, 50)
+    rows = [{"n_in": float(x), "env_vmax": 0.0002 * (x - 1500) - 0.1} for x in n_in]
+    m = {"env_vmax": {"group_null": {"rows": rows}, "void_null_constrained": {"rows": []}}}
+    text = "\n".join(fe._placement_occupancy_macros(m))
+    assert r"\feRealEnvPlaceGroupSlopeHundred}{0.020}" in text
+    assert r"\feRealEnvPlaceGroupMeanAtLo}{-0.100}" in text
+    assert r"\feRealEnvPlaceGroupMeanAtHi}{0.060}" in text
+    assert r"\feRealEnvPlaceVoidOccLo}{--}" in text
