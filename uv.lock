@@ -2172,7 +2172,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26" },
     { name = "pyvo", marker = "extra == 'vlass'", specifier = ">=1.4" },
     { name = "requests", specifier = ">=2.31" },
-    { name = "sbi", marker = "extra == 'sbi'", specifier = ">=0.26,<0.27" },
+    { name = "sbi", marker = "extra == 'sbi'", specifier = ">=0.26,<0.28" },
     { name = "scipy", specifier = ">=1.11" },
     { name = "snakemake", marker = "python_full_version >= '3.11' and extra == 'workflow'", specifier = ">=8.0" },
     { name = "torch", marker = "extra == 'fdmt'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cpu" },
@@ -4741,7 +4741,7 @@ wheels = [
 
 [[package]]
 name = "sbi"
-version = "0.26.1"
+version = "0.27.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
@@ -4764,9 +4764,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "zuko" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/38/50/5ab2aa359d0089a97ab855a47c6349166d1bb9a654f7a3496e57be895063/sbi-0.26.1.tar.gz", hash = "sha256:bcdcd9f19318815e8e6314523f23b727b509f02c8e657cf3696c30231d23fc07", size = 4133653, upload-time = "2026-04-09T10:08:56.967Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/d0/6fe33c4d16a0c699e28f631b632cfcb3c7e281a61d65dfa0455211c28d7a/sbi-0.27.0.tar.gz", hash = "sha256:3e59c832d37612bcd308c24207706e7f47250e7471fd15609f08f91e31b0f17c", size = 4199692, upload-time = "2026-08-04T14:04:13.333Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/9c/dfec7c59a04e1656c3e71daa0fce2dfc74362fe8819a60ff6e66c3b9c21d/sbi-0.26.1-py3-none-any.whl", hash = "sha256:3d18b78f79bb2005154f02bb5ec7cd281873e6e2def72e989dd486019d85dd40", size = 517907, upload-time = "2026-04-09T10:08:54.859Z" },
+    { url = "https://files.pythonhosted.org/packages/67/72/1a7b04d07ea9fb4a7c09831f0f7612017afe54b7b585161bfbfef161c152/sbi-0.27.0-py3-none-any.whl", hash = "sha256:e7ef7800d531fe64b6fecbcb589f8228bbec64f71dd25a889e45198a2127e0b8", size = 545162, upload-time = "2026-08-04T14:04:11.139Z" },
 ]
 
 [[package]]
