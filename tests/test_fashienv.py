@@ -700,3 +700,22 @@ def test_measured_offsets_reads_both_weightings():
     assert got["void"] == {"survey": -0.15, "survey_err": 0.04, "env": -0.09, "env_err": 0.035}
     assert got["group"]["env"] == 0.09
     assert fe.measured_offsets({**m, "env_vmax": {}})["group"]["env"] is None
+
+
+def test_robustness_macros_values_and_placeholders():
+    rob = {
+        "n_shuffle": 1000,
+        "shuffle": {"void": {"env": {"mean": 0.027, "std": 0.014, "excess": -0.119,
+                                     "excess_sigma_quadrature": 3.16, "n_reaching_measured": 0}}},
+        "blending": {"n_sdss_classifiable": 55893,
+                     "group": {"env_offset_sdss_all": 0.123,
+                               "w50": {"confused_frac_in": 0.2553, "confused_frac_out": 0.0155,
+                                       "env_offset_sdss_unconfused": 0.038}}},
+    }  # fmt: skip
+    text = "\n".join(fe._robustness_macros(rob))
+    assert r"\feRealShufVoidEnvExcess}{-0.119}" in text
+    assert r"\feRealShufVoidEnvSigma}{3.2}" in text
+    assert r"\feRealBlendGroupWfiftyConfIn}{26}" in text
+    assert r"\feRealBlendGroupWfiftyConfOut}{1.6}" in text
+    assert r"\feRealShufGroupSurveyMean}{--}" in text  # absent -> placeholder, never a crash
+    assert r"\feRealBlendNSdss}{55893}" in text

@@ -562,3 +562,21 @@ placements), which dilutes the null toward the signal.
 - **Group.** Not attributable. It is carried by the quarter of members that are blending
   candidates, and exclusion cannot tell blending from selection. Resolving it needs
   interferometric HI or a forward model of FAST-beam confusion.
+
+### Reframing (2026-09-27)
+
+The paper is rebuilt around the two nulls and the blending test. It is RNAAS-length: about 920
+prose words, a 158-word abstract and one figure. The figure now adds the shuffle nulls as
+mean +/- 1 sigma bands.
+- **Void:** "reported as 0.05-0.12 dex beyond the two nulls rather than as a detection". The
+  argument: the shuffle matches occupancy and redshift but not coherence; placement keeps
+  coherence but not occupancy. A void is defined by being emptier than any random placement, so
+  no placement can match both.
+- **Group:** "carried largely by the quarter of members with a neighbour inside the beam";
+  exclusion cannot separate blending from mass selection, so it is not attributed.
+  Interferometric HI or a confusion forward model would decide it.
+- **Recommendation:** for single-dish environment-split 1/Vmax HIMFs, use both nulls plus a
+  confusion test, with each null's occupancy reported.
+- **Removed from the text** (still in the JSON): the frame-ratio detail and the per-shell
+  volume shares. The weighting-dependence of the group residual against placement now survives
+  only as the two placement excesses quoted side by side.

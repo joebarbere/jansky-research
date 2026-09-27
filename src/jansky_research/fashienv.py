@@ -2157,8 +2157,8 @@ def _null_figure(m: dict, out_dir) -> None:
     # The same 200 placements under both weightings (env_vmax leg; survey-wide rows reproduce
     # the committed nulls exactly), with each weighting's own measured offset.
     panels = (
-        (a1, "void_null_constrained", "void", m.get("void_knee_offset"), r"void $-$ wall", "Random voids"),
-        (a2, "group_null", "group", m.get("group_knee_offset"), r"group $-$ field", "Random groups"),
+        (a1, "void_null_constrained", "void", m.get("void_knee_offset"), r"void $-$ wall", "Voids"),
+        (a2, "group_null", "group", m.get("group_knee_offset"), r"group $-$ field", "Groups"),
     )  # fmt: skip
     for ax, key, env_key, survey_meas, xlab, title in panels:
         rows = (ev.get(key) or {}).get("rows") or []
@@ -2169,11 +2169,22 @@ def _null_figure(m: dict, out_dir) -> None:
             offs = [r[col_key] for r in rows if np.isfinite(r.get(col_key, np.nan))]
             if offs:
                 ax.hist(offs, bins=25, histtype="step", color=col, lw=1.3, label=lab)
+        shuf = ((m.get("robustness") or {}).get("shuffle") or {}).get(env_key) or {}
+        for wk, col in (("survey", "0.55"), ("env", "C0")):
+            s = shuf.get(wk) or {}
+            if isinstance(s.get("mean"), (int, float)) and isinstance(s.get("std"), (int, float)):
+                ax.axvspan(
+                    s["mean"] - s["std"], s["mean"] + s["std"], color=col, alpha=0.18, lw=0,
+                    label=f"label shuffle ({'survey-wide' if wk == 'survey' else 'environment'})",
+                )  # fmt: skip
         env_meas = (ev.get(env_key) or {}).get("offset")
         xs = [
             r[c] for r in rows for c in ("survey_vmax", "env_vmax") if np.isfinite(r.get(c, np.nan))
         ]
         xs += [x for x in (survey_meas, env_meas) if x is not None]
+        for s in shuf.values():
+            if isinstance(s, dict) and isinstance(s.get("mean"), (int, float)):
+                xs += [s["mean"] - (s.get("std") or 0.0), s["mean"] + (s.get("std") or 0.0)]
         if survey_meas is not None:
             ax.axvline(survey_meas, color="0.55", lw=1.3, ls="--", label="measured (survey-wide)")
         if env_meas is not None:
@@ -2181,12 +2192,56 @@ def _null_figure(m: dict, out_dir) -> None:
         if xs:
             pad = 0.08 * (max(xs) - min(xs))
             ax.set_xlim(min(xs) - pad, max(xs) + pad)
+        ax.xaxis.set_major_locator(plt.MaxNLocator(6))
         ax.set(xlabel=xlab + r" $\Delta\log M^*$ (dex)", ylabel="placements", title=title)
         ax.legend(fontsize=6.5, loc="upper left", frameon=False)
         ax.set_ylim(top=ax.get_ylim()[1] * 1.45)  # headroom so the legend clears the histograms
     fig.tight_layout()
     fig.savefig(out / "fashienv_nulls.pdf")
     plt.close(fig)
+
+
+def _robustness_macros(rob: dict) -> list[str]:
+    """Macros for the shuffle null and the blending test (post-round-5 ``robustness`` block)."""
+
+    def num(x, fmt: str = "{:.3f}") -> str:
+        return fmt.format(x) if isinstance(x, (int, float)) else "--"
+
+    def pct(x) -> str:
+        return f"{100 * x:.0f}" if isinstance(x, (int, float)) else "--"
+
+    out: list[str] = []
+    cap = {"void": "Void", "group": "Group"}
+    for name, nm in cap.items():
+        for wk, wn in (("survey", "Survey"), ("env", "Env")):
+            s = ((rob.get("shuffle") or {}).get(name) or {}).get(wk) or {}
+            out += [
+                rf"\newcommand{{\feRealShuf{nm}{wn}Mean}}{{{num(s.get('mean'))}}}",
+                rf"\newcommand{{\feRealShuf{nm}{wn}Std}}{{{num(s.get('std'))}}}",
+                rf"\newcommand{{\feRealShuf{nm}{wn}Excess}}{{{num(s.get('excess'))}}}",
+                rf"\newcommand{{\feRealShuf{nm}{wn}Sigma}}{{{num(s.get('excess_sigma_quadrature'), '{:.1f}')}}}",
+                rf"\newcommand{{\feRealShuf{nm}{wn}NReach}}{{{s.get('n_reaching_measured', '--')}}}",
+            ]
+        bl = (rob.get("blending") or {}).get(name) or {}
+        out.append(
+            rf"\newcommand{{\feRealBlend{nm}EnvAll}}{{{num(bl.get('env_offset_sdss_all'))}}}"
+        )
+        for fk, fn in (("w50", "Wfifty"), ("fixed300", "Fixed")):
+            v = bl.get(fk) or {}
+            sh = v.get("env_shuffle_unconfused") or {}
+            out += [
+                rf"\newcommand{{\feRealBlend{nm}{fn}ConfIn}}{{{pct(v.get('confused_frac_in'))}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}ConfOut}}{{{num(100 * v['confused_frac_out'], '{:.1f}') if isinstance(v.get('confused_frac_out'), (int, float)) else '--'}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}EnvClean}}{{{num(v.get('env_offset_sdss_unconfused'))}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}ShufExcess}}{{{num(sh.get('excess'))}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}ShufSigma}}{{{num(sh.get('excess_sigma_quadrature'), '{:.1f}')}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}LogMConf}}{{{num(v.get('median_logm_in_confused'), '{:.2f}')}}}",
+                rf"\newcommand{{\feRealBlend{nm}{fn}LogMClean}}{{{num(v.get('median_logm_in_unconfused'), '{:.2f}')}}}",
+            ]
+    nsd = (rob.get("blending") or {}).get("n_sdss_classifiable")
+    out.append(rf"\newcommand{{\feRealBlendNSdss}}{{{nsd if nsd is not None else '--'}}}")
+    out.append(rf"\newcommand{{\feRealShufReps}}{{{rob.get('n_shuffle', '--')}}}")
+    return out
 
 
 def _write_macros(m: dict, path) -> None:
@@ -2423,6 +2478,25 @@ def _write_macros(m: dict, path) -> None:
 
         vnf, gnf = ev.get("void_frame_uncorrected") or {}, ev.get("group_frame_uncorrected") or {}
 
+        def sig1(x):
+            return f"{x:.1f}" if isinstance(x, (int, float)) else "--"
+
+        def quad(e_, a_, b_):
+            if not all(isinstance(v, (int, float)) for v in (e_, a_, b_)):
+                return "--"
+            return f"{abs(e_) / float(np.hypot(a_, b_)):.1f}"
+
+        # The void excess over the two nulls under both weightings: the range the paper quotes.
+        shv = ((m.get("robustness") or {}).get("shuffle") or {}).get("void") or {}
+        vex = [
+            rc.get("measured_minus_null_mean"),
+            evn.get("measured_env_minus_null_env_mean"),
+            (shv.get("survey") or {}).get("excess"),
+            (shv.get("env") or {}).get("excess"),
+        ]
+        vex_ok = [abs(x) for x in vex if isinstance(x, (int, float))]
+        bracket = (f"{min(vex_ok):.2f}", f"{max(vex_ok):.2f}") if len(vex_ok) == 4 else ("--", "--")
+
         def corr2(x):
             return f"{x:.2f}" if isinstance(x, (int, float)) else "--"
 
@@ -2438,12 +2512,18 @@ def _write_macros(m: dict, path) -> None:
         gshell = ev.get("group_frac_of_classifiable_shell") or []
         p_one = (n_reach_g + 1) / (n_eg + 1) if n_reach_g is not None and n_eg else None
         lines += [
+            *_robustness_macros(m.get("robustness") or {}),
             rf"\newcommand{{\feRealEnvVoidShareFirst}}{{{share(0)}}}",
             rf"\newcommand{{\feRealEnvVoidShareAll}}{{{share(-1)}}}",
             rf"\newcommand{{\feRealEnvGroupShellFirst}}{{{f'{100 * gshell[0]:.0f}' if gshell and gshell[0] is not None else '--'}}}",
             rf"\newcommand{{\feRealEnvGroupShellLast}}{{{f'{100 * gshell[-1]:.0f}' if gshell and gshell[-1] is not None else '--'}}}",
-            rf"\newcommand{{\feRealEnvVoidQuadSigma}}{{{evn.get('excess_sigma_quadrature', '--')}}}",
-            rf"\newcommand{{\feRealEnvGroupQuadSigma}}{{{egn.get('excess_sigma_quadrature', '--')}}}",
+            rf"\newcommand{{\feRealEnvVoidQuadSigma}}{{{sig1(evn.get('excess_sigma_quadrature'))}}}",
+            rf"\newcommand{{\feRealEnvGroupQuadSigma}}{{{sig1(egn.get('excess_sigma_quadrature'))}}}",
+            rf"\newcommand{{\feRealNullCExcessSigmaQuad}}{{{quad(ex, m.get('void_knee_offset_err'), sd)}}}",
+            rf"\newcommand{{\feRealGroupNullExcessSigmaQuad}}{{{quad((m.get('random_group_null') or {}).get('measured_minus_null_mean'), m.get('group_knee_offset_err'), (m.get('random_group_null') or {}).get('std'))}}}",
+            rf"\newcommand{{\feRealVoidBaseRatePct}}{{{pct(m.get('n_in_void'), m.get('n_classifiable_void'))}}}",
+            rf"\newcommand{{\feRealVoidBracketLo}}{{{bracket[0]}}}",
+            rf"\newcommand{{\feRealVoidBracketHi}}{{{bracket[1]}}}",
             rf"\newcommand{{\feRealEnvGroupNullMeanSe}}{{{f3(egn.get('null_env_mean_se'))}}}",
             rf"\newcommand{{\feRealEnvGroupNullPTwo}}{{{f'{min(1.0, 2 * p_one):.2f}' if p_one is not None else '--'}}}",
             rf"\newcommand{{\feRealEnvVoidNullShift}}{{{sub((evn.get('env_vmax') or {}).get('mean'), (evn.get('survey_vmax') or {}).get('mean'))}}}",
