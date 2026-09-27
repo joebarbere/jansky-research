@@ -629,3 +629,51 @@ headline has three holes and one mis-stated bracket.
 
 On "no placement can match occupancy": the argument is sound for rigid placements. The feasible
 improvement is a (z, depth)-conditioned shuffle, not a better placement.
+
+### Response (run `fashienv-round6`: the full real leg, everything on the in-footprint pool)
+
+- **#1 fixed at the source.** "Classifiable" is now the padded box AND the SDSS footprint (1 deg
+  cells holding Tempel galaxies) for galaxies and randoms alike (`in_sdss_footprint`). The pool
+  is 55,893; all nulls, weightings and the blending test use it.
+  - Headline offsets move: void -0.150 -> **-0.171 +/- 0.047**; group +0.166 -> **+0.200 +/-
+    0.043**. Env-restricted: -0.088 +/- 0.038 and +0.123 +/- 0.034. The wall is 35.2% of the
+    sample.
+  - `test_comparison_bin_size_is_committed` had asserted the wall knee matched the global one to
+    0.05 dex. That was true only because the box padded the wall with unclassifiable galaxies, so
+    the test locked the defect in. It now asserts pool consistency.
+- **#2.** The shuffle is stratified by (z bin x rms tercile; edges 0.81, 1.19 mJy); z-only is
+  kept for comparison. Depth conditioning lowers every excess by 0.01-0.02 dex, as the referee
+  predicted. A unit test now shows a pure depth confound fooling a z-only shuffle and not a
+  (z, depth) one, but only when the Vmax is depth-blind: a Vmax that knows local depth already
+  removes the confound. That is what the null can and cannot see.
+- **#3 confirmed and tested.**
+  - 99.4% of flagged group members' window galaxies are in the same Tempel group
+    (`confused_same_group`), so the flag marks compact group cores.
+  - Line-width test (`linewidth_residual`, log W50 on log M + z fitted to unflagged sources):
+    flagged group members are broader by **0.019 +/- 0.004 dex** at fixed mass and z. The excess
+    **grows with search radius**: 0.009 / 0.019 / 0.031 at 1.5 / 2.9 / 4.5 arcmin. Beam
+    blending predicts the opposite (a neighbour outside the beam cannot broaden the profile).
+    HI deficiency in dense cores (broader lines at fixed HI mass) predicts this direction.
+  - So the round-6 draft's "carried by blending candidates" leaned the wrong way. The paper now
+    says the group excess sits in compact cores and the data cannot separate blending from the
+    core environment.
+- **#4.** Excesses are quoted with sigmas throughout. With the restricted weighting, void 1.1
+  (placements) to 2.4 sigma (shuffles); group 2.2 to 3.2 sigma. The void is weaker than in
+  round 6 (the depth and footprint fixes each took some); **the group is now the more significant
+  offset.**
+- **#5.** Real-member dilution is stated for placements only: 33% in the placed voids against
+  30% of the sample.
+- **#6.** Clean-sample fit errors are used. The group without flagged sources is +0.038 +/-
+  0.035 (1.4 sigma over the shuffles); the void without them is -0.078 (2.3 sigma).
+- **#7.** The occupancy sign and "weakly" are restored: correlation -0.26 restricted, -0.45
+  survey-wide. The placement end is the conservative one.
+- **#8-12.**
+  - "About half" is dropped: the text gives the excesses directly.
+  - Void blending is no longer claimed.
+  - The figure has measured fit-error bars and the legend below the panels.
+  - A depth-confound test is added.
+  - The title is now "...Against Two Null Tests"; percent precision is unified; "a typical"
+    randomly placed volume.
+  - Knee offsets print at three decimals.
+- About 900 prose words plus the caption; 133-word abstract; one figure; triage and prose lint
+  clean.

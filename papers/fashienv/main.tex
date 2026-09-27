@@ -1,27 +1,25 @@
 \documentclass[twocolumn]{aastex631}
 \input{generated/macros}
 \newcommand{\code}[1]{\texttt{#1}}
-\shorttitle{Random-placement nulls for environment-split HIMFs}
+\shorttitle{Environment-split HIMFs and two null tests}
 \shortauthors{Barbere}
 \begin{document}
-\title{Environment-Split HI Mass Functions in FASHI DR2 and Random-Placement Null Tests}
+\title{Environment-Split HI Mass Functions in FASHI DR2 Against Two Null Tests}
 \author[0009-0008-3289-4447]{Joseph Barbere}
 \affiliation{Independent researcher}
 
 \begin{abstract}
-We split the HI mass function of FASHI DR2 by environment and compare the knee offsets with two
-null tests: void- and group-shaped volumes placed at random, and environment labels shuffled
-among galaxies at fixed redshift with the real number of members. With the survey-wide
-$1/(C\,V_{\rm max})$ weighting the void$-$wall and group$-$field offsets are
-$\feRealVoidKneeOffset$ and $+\feRealGroupKneeOffset$~dex; the random placements give
-$\feRealNullCMean$ and $+\feRealGroupNullMean$~dex and the shuffles $\feRealShufVoidSurveyMean$
-and $+\feRealShufGroupSurveyMean$~dex, so the two nulls disagree about the baseline. The void
-offset exceeds the shuffle null by \feRealShufVoidSurveySigma--\feRealShufVoidEnvSigma$\sigma$
-under two weightings and is unchanged when beam-confused sources are removed, but exceeds the
-random placements by only \feRealEnvVoidQuadSigma--\feRealNullCExcessSigmaQuad$\sigma$. A quarter of
-group members have an optical neighbour inside the FAST beam, against \feRealBlendGroupWfiftyConfOut\% of field galaxies, and
-without them most of the group offset disappears. We report the void offset as bracketed by the
-two nulls and do not attribute the group offset to environment.
+We split the HI mass function of FASHI DR2 by environment inside the SDSS footprint, where voids
+and groups are catalogued, and compare the knee offsets with two nulls: void- and group-shaped
+volumes placed at random, and environment labels shuffled among galaxies at fixed redshift and
+survey depth with the real number of members. With each galaxy's $V_{\rm max}$ restricted to its
+environment, the void$-$wall offset of $\feRealEnvVoidOffset$~dex exceeds the two nulls by
+\feRealEnvVoidQuadSigma\ and \feRealShufVoidEnvSigma$\sigma$, and the group$-$field offset of
+$+\feRealEnvGroupOffset$~dex by \feRealEnvGroupQuadSigma\ and \feRealShufGroupEnvSigma$\sigma$. The
+group excess lies in members with a neighbour of the same group inside the FAST beam; without them
+the offset is $+\feRealBlendGroupWfiftyEnvClean$~dex. Their line-width excess grows with the
+neighbour search radius, which beam blending does not predict. We claim neither offset as
+environmental.
 \end{abstract}
 
 \keywords{HI line emission (690), Galaxy environments (2029), Large-scale structure of the
@@ -34,91 +32,94 @@ estimator that does not assume uniform density, found the ALFALFA void knee $\si
 The FAST All Sky HI Survey \citep[FASHI;][]{fashi_dr1,fashi_dr2} now provides \feRealNDRTwo\
 sources with a completeness $C$ and accessible volume $V_{\rm max}$ for each; the one environment
 study on FASHI data used 230 group galaxies \citep{fashi_groups}. Environment splits of a
-flux-limited $1/V_{\rm max}$ HIMF also select in distance and structure, so we compare them with
-two null tests that fail in different ways, and test the one systematic that follows density
-directly, blending in FAST's beam. An earlier version of this analysis, on DR1 with a single
-flux-limit weighting, reported a void offset of $\feRealDROneMaxVoidKneeOffset$~dex without a
-null test.
+flux-limited $1/V_{\rm max}$ HIMF also select in distance, depth and structure, so we compare them
+with two nulls that fail in different ways, and test blending in FAST's beam. An earlier version
+of this analysis, on DR1 with a single flux-limit weighting, reported a void offset of
+$\feRealDROneMaxVoidKneeOffset$~dex without a null test.
 
 \section{Data and Method}
 \label{sec:data}
-We keep the \feN\ sources of Table~2 of \citet{fashi_dr2} with $C\geq\feRealCMin$, the sample of
-the survey's own HIMF; weights $1/(C_i V_i)$ reproduce the published global HIMF
+We keep the sources of Table~2 of \citet{fashi_dr2} with $C\geq\feRealCMin$, the sample of the
+survey's own HIMF; weights $1/(C_i V_i)$ reproduce the published global HIMF
 ($\log M^*=\feRealGlobalLogMStar$, $\alpha=\feRealGlobalAlpha$, against 9.89 and $-1.31$).
 Schechter fits are formally poor (reduced $\chi^2$ up to \feRealGlobalRedChi); their errors are
-scaled accordingly. Void members lie inside any hole of a Douglass+2023 VoidFinder void
-\citep{douglass2023}, and walls are the rest of a padded box around the voids. Group members lie
-within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of a Tempel+2017 group \citep{tempel2017}.
-Besides the survey-wide weighting we restrict each galaxy's $V_{\rm max}$ to its environment,
-$C_i V_i\,g_E(d_{\max,i})$, where $g_E(D)$ is the share of the volume within $D$ occupied by
+scaled accordingly. We use the \feRealBlendNPool\ sources inside both a padded box around the
+Douglass+2023 VoidFinder voids \citep{douglass2023} and the SDSS footprint (1$^\circ$ cells
+holding Tempel+2017 galaxies). Void members lie inside any void hole and walls are the rest; group
+members lie within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of a Tempel+2017 group
+\citep{tempel2017}. Besides the survey-wide weighting we weight each galaxy by
+$C_i V_i\,g_E(d_{\max,i})$, where $g_E(D)$ is the share of the volume within $D$ occupied by its
 environment $E$, from $2\times10^6$ randoms classified by the same rules.
 
-The first null moves each void rigidly to a random position with all its holes in the SDSS
-footprint, and each group to a random footprint position with its velocity and $R_{200}$
-(\feRealNullCReps\ and \feRealGroupNullReps\ placements). The second gives the environment label
-to the real number of members in each $\Delta z=0.0025$ bin, drawn at random from the sample
-(\feRealShufReps\ shuffles); it matches the occupancy and redshift distribution exactly but has no
-spatial coherence. For blending, a source is confused when two or more Tempel SDSS galaxies
-($r<17.77$), one of them its counterpart, lie within one FAST beam (2.9~arcmin) and $W_{50}/2+100$
-km\,s$^{-1}$ of it; we use the \feRealBlendNSdss\ sources inside the SDSS footprint. Each excess
-over a null is divided by the measured offset's fit error and the null spread in quadrature.
+The first null moves each void rigidly to a random position with all its holes in the footprint,
+and each group to a random position with its velocity and $R_{200}$. The second gives the
+environment label to the real number of members in each cell of redshift ($\Delta z=0.0025$) and
+survey depth (terciles of the catalogue rms, split at \feRealRmsEdgeLo\ and \feRealRmsEdgeHi\
+mJy), drawn at random (\feRealShufReps\ shuffles). A source is flagged as possibly blended when two
+or more SDSS galaxies ($r<17.77$), one its counterpart, lie within one FAST beam (2.9~arcmin) and
+$W_{50}/2+100$~km\,s$^{-1}$ of it. Each excess over a null is divided by the measured offset's fit
+error and the null spread in quadrature.
 
 \section{Results}
 \label{sec:results}
 The measured offsets are $\feRealVoidKneeOffset\pm\feRealVoidKneeErr$ (void) and
 $+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex (group) with the survey-wide weighting, and
 $\feRealEnvVoidOffset\pm\feRealEnvVoidErr$ and $+\feRealEnvGroupOffset\pm\feRealEnvGroupErr$~dex
-with the restricted one. Against the shuffles the void excess is $\feRealShufVoidSurveyExcess$ and
-$\feRealShufVoidEnvExcess$~dex (\feRealShufVoidSurveySigma\ and \feRealShufVoidEnvSigma$\sigma$) and
-the group excess $+\feRealShufGroupSurveyExcess$ and $+\feRealShufGroupEnvExcess$~dex
-(\feRealShufGroupSurveySigma\ and \feRealShufGroupEnvSigma$\sigma$); no shuffle reaches either.
-Against the random placements the void excess is $\feRealNullCExcess$ and
-$\feRealEnvNullExcess$~dex (\feRealNullCExcessSigmaQuad\ and \feRealEnvVoidQuadSigma$\sigma$), and the group excess
-$+\feRealGroupNullExcess$ and $+\feRealEnvGroupNullExcess$~dex (\feRealGroupNullExcessSigmaQuad\ and \feRealEnvGroupQuadSigma$\sigma$; Figure~\ref{fig:nulls}).
+with the restricted one. Against the placements the void excess is $\feRealNullCExcess$ and
+$\feRealEnvNullExcess$~dex (\feRealNullCExcessSigmaQuad\ and \feRealEnvVoidQuadSigma$\sigma$) and the
+group excess $+\feRealGroupNullExcess$ and $+\feRealEnvGroupNullExcess$~dex
+(\feRealGroupNullExcessSigmaQuad\ and \feRealEnvGroupQuadSigma$\sigma$). Against the shuffles they
+are $\feRealShufVoidSurveyExcess$ and $\feRealShufVoidEnvExcess$~dex (\feRealShufVoidSurveySigma\
+and \feRealShufVoidEnvSigma$\sigma$) and $+\feRealShufGroupSurveyExcess$ and
+$+\feRealShufGroupEnvExcess$~dex (\feRealShufGroupSurveySigma\ and \feRealShufGroupEnvSigma$\sigma$);
+shuffling on redshift alone gives larger excesses ($\feRealShufZVoidEnvExcess$ and
+$+\feRealShufZGroupEnvExcess$~dex restricted).
 
-The two nulls differ in what they hold fixed. The random void placements contain
+The two nulls hold different things fixed. The random void placements hold
 \feRealNullCNInVoidMin--\feRealNullCNInVoidMax\ galaxies against \feRealNInVoid\ in the real voids,
-and the random group regions a median \feRealGroupNullNInGroup\ against \feRealGroupNInGroupReal;
-their offsets correlate with occupancy and redshift, which the shuffles match. The shuffles lack
-the spatial coherence of a real volume. Both include real members, at \feRealVoidBaseRatePct\% (void shuffles) and a median
-\feRealNullCOverlap\% (void placements), which pulls each null towards the measurement.
+and their offsets correlate weakly with occupancy (correlation $\feRealEnvNullCorrOccEnv$
+restricted, $\feRealEnvNullCorrOccSurvey$ survey-wide), emptier placements giving less negative
+offsets; the placed voids also contain real void members at \feRealNullCOverlap\%, against
+\feRealVoidBaseRatePct\% of the sample. Both effects make the placement excess the conservative
+end. The shuffles match occupancy, redshift and depth but not spatial coherence.
 
-Of the group members, \feRealBlendGroupWfiftyConfIn\% are confused, against
-\feRealBlendGroupWfiftyConfOut\% of field galaxies; for voids and walls the fractions are
-\feRealBlendVoidWfiftyConfIn\% and \feRealBlendVoidWfiftyConfOut\%. Removing confused sources
-changes the restricted group offset from $+\feRealBlendGroupEnvAll$ to
-$+\feRealBlendGroupWfiftyEnvClean$~dex, leaving $+\feRealBlendGroupWfiftyShufExcess$~dex
-(\feRealBlendGroupWfiftyShufSigma$\sigma$) over the shuffle null; the void offset moves from
-$\feRealBlendVoidEnvAll$ to $\feRealBlendVoidWfiftyEnvClean$~dex and keeps a
-\feRealBlendVoidWfiftyShufSigma$\sigma$ excess. A fixed $\pm300$~km\,s$^{-1}$ window gives
-$+\feRealBlendGroupFixedEnvClean$ and $\feRealBlendVoidFixedEnvClean$~dex. The flag selects in
-mass under either window: confused group members have a median $\log M=\feRealBlendGroupWfiftyLogMConf$
-against \feRealBlendGroupWfiftyLogMClean\ for the rest.
+Of the group members, \feRealBlendGroupWfiftyFlagIn\% are flagged, against
+\feRealBlendGroupWfiftyFlagOut\% of field galaxies, and for \feRealBlendGroupSameGroupPct\% of the
+flagged members the neighbour belongs to the same group, so the flag largely marks compact group
+cores. Without flagged sources the restricted group offset is
+$+\feRealBlendGroupWfiftyEnvClean\pm\feRealBlendGroupWfiftyEnvCleanErr$~dex
+(\feRealBlendGroupWfiftyShufSigma$\sigma$ over the shuffles) and the void offset
+$\feRealBlendVoidWfiftyEnvClean$~dex (\feRealBlendVoidWfiftyShufSigma$\sigma$). At fixed HI mass and
+redshift, flagged group members have $\log W_{50}$ larger by
+$\feRealBlendGroupLwInDiff\pm\feRealBlendGroupLwInSe$~dex; the excess is \feRealBlendGroupLwRsmallDiff,
+\feRealBlendGroupLwInDiff\ and \feRealBlendGroupLwRlargeDiff~dex for search radii of 1.5, 2.9 and
+4.5~arcmin.
 
 \begin{figure}
 \plotone{figures/fashienv_nulls.pdf}
 \caption{Knee offsets from \feRealEnvNullReps\ random placements of the voids (left) and groups
-(right) under the survey-wide (grey) and environment-restricted (blue) weightings; shaded bands
-are the label-shuffle nulls (mean $\pm1\sigma$) and dashed lines the measured offsets.}
+(right) under the survey-wide (grey) and environment-restricted (blue) weightings. Shaded bands are
+the shuffle nulls (mean $\pm1\sigma$); dashed lines and error bars are the measured offsets and
+their fit errors.}
 \label{fig:nulls}
 \end{figure}
 
 \section{Discussion}
 \label{sec:discussion}
-The void offset is not explained by the redshift and occupancy of the void sample, and it does
-not depend on beam confusion, but volumes of the same shapes placed at random reproduce most of
-it. Placement preserves spatial structure and the shuffle does not; neither holds both occupancy
-and structure fixed, and a void is defined by being emptier than any randomly placed volume, so
-no placement can. We therefore report the void offset as \feRealVoidBracketLo--\feRealVoidBracketHi~dex beyond the two nulls
-rather than as a detection.
+The void excess is \feRealEnvVoidQuadSigma--\feRealShufVoidEnvSigma$\sigma$ depending on the null,
+and we do not report it as a detection. The two nulls cannot be reconciled directly: a void is
+emptier than a typical randomly placed volume, so no rigid placement matches its occupancy, and the
+shuffle that does match it has no spatial structure.
 
-The group offset is carried largely by the quarter of members that have a neighbour inside the
-beam. Removing them also removes massive galaxies, whose neighbours are more often bright enough
-for the optical catalogue, so the test cannot separate blending, which raises the HI mass, from
-this selection. Interferometric HI for a subset of group members, or a forward model of confusion
-in FAST's beam, would decide it; until then the group offset is not attributed to environment.
-For environment-split $1/V_{\rm max}$ HIMFs from single-dish surveys we recommend both nulls and a
-confusion test, with each null's occupancy reported.
+The group excess is larger, \feRealEnvGroupQuadSigma--\feRealShufGroupEnvSigma$\sigma$ with the
+restricted weighting, and it sits in compact group cores. Blending of neighbours in the beam would
+raise the HI mass there, but a neighbour outside the beam cannot broaden the profile, and the
+line-width excess grows with search radius instead of falling; broader lines at fixed HI mass are
+also expected of gas-poor galaxies in dense cores. The present data do not separate the two, so we
+do not attribute the group offset to environment; interferometric HI for flagged members would.
+For environment-split $1/V_{\rm max}$ HIMFs from single-dish surveys we recommend both nulls,
+conditioned on redshift and depth and reported with their occupancy, and a confusion test that
+holds mass fixed and varies the search radius.
 
 Reproducibility: \code{jansky\_research.fashienv}; every number derived from the data is
 pipeline-generated (\code{results/fashienv\_metrics.json} $\to$ macros); survey constants and

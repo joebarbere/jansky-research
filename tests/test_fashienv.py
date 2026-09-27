@@ -157,7 +157,7 @@ def test_void_jackknife_measures_sample_variance_and_is_committed():
 
 
 def test_comparison_bin_size_is_committed():
-    """The "wall" bin is a bounding box, not a footprint, and holds most of the catalogue.
+    """The comparison ("wall") bin's size is committed, and it is the in-footprint pool.
 
     n_wall and n_field were absent from the evidence file, so a reader could not learn how big
     the comparison sample was -- and it is 58% of all of DR1, with a knee 0.010 dex from the
@@ -171,9 +171,13 @@ def test_comparison_bin_size_is_committed():
     m = json.loads(path.read_text())
     assert "n_wall" in m and "n_field" in m
     assert m["n_wall"] + m["n_in_void"] == m["n_classifiable_void"]
-    # if the wall bin ever stops matching the global fit, the "void versus everything"
-    # framing in the paper needs revisiting
-    assert abs(m["himf_wall"]["log_m_star"] - m["himf_global"]["log_m_star"]) < 0.05
+    # Sixth referee round: the comparison sample is the in-SDSS-footprint pool, not the padded
+    # box (which put 24.5% unclassifiable galaxies into wall AND field). This used to assert the
+    # wall knee matched the global fit to 0.05 dex -- true only BECAUSE the box pool padded the
+    # wall with out-of-footprint galaxies, so it locked the defect in. The robustness leg must
+    # use the same pool as the headline split.
+    assert m["n_classifiable_void"] == m["robustness"]["n_pool"]
+    assert m["wall_pct_of_sample"] < 50.0
 
 
 def test_vmax_from_catalogue_is_completeness_weighted_per_sr():
@@ -518,7 +522,7 @@ def _distance_split_mock(n=60_000, seed=5):
     lm = rng.choice(lm, size=n, p=w / w.sum())
     s_lim = 0.3
     flux = 10**lm / (2.356e5 * d**2)
-    dmax = np.minimum(np.sqrt(10**lm / (2.356e5 * s_lim)), 300.0)
+    dmax = np.minimum(np.sqrt(10**lm / (2.356e5 * 0.3)), 300.0)  # depth-blind Vmax
     keep = flux > s_lim
     cat = {"log_mhi": lm[keep], "dist_mpc": d[keep], "flux": flux[keep]}
     vcat = omega / 3.0 * dmax[keep] ** 3
@@ -562,7 +566,7 @@ def test_env_vmax_leg_runs_and_pairs_placements():
     voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
     gi = rng.choice(n, 150, replace=False)
     grp = {"grp_ra": ra[gi], "grp_dec": dec[gi], "grp_cz": cat["cz"][gi],
-           "grp_r200": np.full(150, 6.0)}  # fmt: skip
+           "grp_r200": np.full(150, 6.0), "gal_ra": ra, "gal_dec": dec}  # fmt: skip
     env = {
         "xyz": xyz,
         "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
@@ -653,7 +657,8 @@ def test_robustness_leg_runs_on_mock():
     lm = rng.choice(grid, size=n, p=w / w.sum())
     cz = fe.C_KM_S * z
     cat = {"ra": ra, "dec": dec, "z": z, "cz": cz, "log_mhi": lm, "dist_mpc": d,
-           "flux": 10**lm / (2.356e5 * d**2), "w50": np.full(n, 200.0)}  # fmt: skip
+           "flux": 10**lm / (2.356e5 * d**2), "w50": 10 ** (0.25 * (lm - 9.0) + 2.3),
+           "w20": 1.2 * 10 ** (0.25 * (lm - 9.0) + 2.3), "rms": rng.uniform(0.5, 2.5, n)}  # fmt: skip
     xyz = fe.comoving_xyz(ra, dec, z, h0=100.0)
     holes = xyz[rng.choice(n, 30, replace=False)]
     voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
@@ -663,7 +668,9 @@ def test_robustness_leg_runs_on_mock():
     grp = {"grp_ra": ra[gi], "grp_dec": dec[gi], "grp_cz": cz[gi], "grp_r200": np.full(150, 6.0),
            "gal_ra": np.concatenate([ra, ra[comp_i]]),
            "gal_dec": np.concatenate([dec, dec[comp_i] + 0.5 / 60.0]),
-           "gal_cz": np.concatenate([cz, cz[comp_i] + 50.0])}  # fmt: skip
+           "gal_cz": np.concatenate([cz, cz[comp_i] + 50.0]),
+           "gal_group_id": np.concatenate([np.arange(n), comp_i]),
+           "gal_ngal": np.full(n + comp_i.size, 2)}  # fmt: skip
     env = {
         "xyz": xyz,
         "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
@@ -683,12 +690,19 @@ def test_robustness_leg_runs_on_mock():
         for wk in ("survey", "env"):
             s = out["shuffle"][name][wk]
             assert s["n_ok"] == 4 and np.isfinite(s["mean"])
+        assert out["shuffle_z_only"][name]["env"]["n_ok"] == 4
         for fk in ("w50", "fixed300"):
             bl = out["blending"][name][fk]
             # roughly every 10th source has a planted companion
-            assert 0.05 < bl["confused_frac_out"] < 0.2
-            assert np.isfinite(bl["survey_offset_sdss_unconfused"])
-            assert "n_ok" in bl["env_shuffle_unconfused"]
+            assert 0.05 < bl["flagged_frac_out"] < 0.2
+            assert np.isfinite(bl["survey_offset_unflagged"])
+            assert bl["survey_offset_unflagged_err"] > 0
+            assert "n_ok" in bl["env_shuffle_unflagged"]
+        b = out["blending"][name]
+        # every planted companion shares its counterpart's group id
+        assert b["flagged_same_group_frac"] is None or b["flagged_same_group_frac"] > 0.9
+        assert set(b["flagged_frac_by_radius"]) == {"1.5", "2.9", "4.5"}
+        assert "median_diff" in b["linewidth"]["out_log_w50_resid"]
 
 
 def test_measured_offsets_reads_both_weightings():
@@ -707,15 +721,79 @@ def test_robustness_macros_values_and_placeholders():
         "n_shuffle": 1000,
         "shuffle": {"void": {"env": {"mean": 0.027, "std": 0.014, "excess": -0.119,
                                      "excess_sigma_quadrature": 3.16, "n_reaching_measured": 0}}},
-        "blending": {"n_sdss_classifiable": 55893,
-                     "group": {"env_offset_sdss_all": 0.123,
-                               "w50": {"confused_frac_in": 0.2553, "confused_frac_out": 0.0155,
-                                       "env_offset_sdss_unconfused": 0.038}}},
+        "blending": {"n_pool": 55893,
+                     "group": {"env_offset_all": 0.123, "flagged_same_group_frac": 0.8,
+                               "w50": {"flagged_frac_in": 0.2553, "flagged_frac_out": 0.0155,
+                                       "env_offset_unflagged": 0.038},
+                               "linewidth": {"in_log_w50_resid": {"median_diff": 0.021,
+                                                                  "se": 0.005, "sigma": 4.2}}}},
     }  # fmt: skip
     text = "\n".join(fe._robustness_macros(rob))
     assert r"\feRealShufVoidEnvExcess}{-0.119}" in text
     assert r"\feRealShufVoidEnvSigma}{3.2}" in text
-    assert r"\feRealBlendGroupWfiftyConfIn}{26}" in text
-    assert r"\feRealBlendGroupWfiftyConfOut}{1.6}" in text
+    assert r"\feRealBlendGroupWfiftyFlagIn}{25.5}" in text
+    assert r"\feRealBlendGroupWfiftyFlagOut}{1.6}" in text
+    assert r"\feRealBlendGroupSameGroupPct}{80.0}" in text
+    assert r"\feRealBlendGroupLwInDiff}{0.021}" in text
     assert r"\feRealShufGroupSurveyMean}{--}" in text  # absent -> placeholder, never a crash
-    assert r"\feRealBlendNSdss}{55893}" in text
+    assert r"\feRealBlendNPool}{55893}" in text
+
+
+def test_label_shuffle_depth_strata_remove_a_pure_depth_confound():
+    """Members sit in a shallow region with NO intrinsic mass difference, and the weights use the
+    survey-wide flux limit (a Vmax that does not know about local depth -- the case that
+    matters). A z-only shuffle is fooled (it scrambles depth into the null); a (z, depth)
+    shuffle is not."""
+    rng = np.random.default_rng(11)
+    n = 300_000
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    d = 300.0 * np.cbrt(rng.uniform(0, 1, n))
+    grid = rng.uniform(7.0, 10.9, 20 * n)
+    w = fe.schechter(grid, 0.0, 9.9, -1.3)
+    lm = rng.choice(grid, size=n, p=w / w.sum())
+    shallow = rng.uniform(size=n) < 0.3  # the "environment" is simply a shallower sky region
+    s_lim = np.where(shallow, 0.9, 0.3)  # 3x worse flux limit there
+    keep = 10**lm / (2.356e5 * d**2) > s_lim
+    lm, d, shallow, s_lim = lm[keep], d[keep], shallow[keep], s_lim[keep]
+    dmax = np.minimum(np.sqrt(10**lm / (2.356e5 * 0.3)), 300.0)  # depth-blind Vmax
+    vm = fe.vmax_from_catalogue(omega / 3.0 * dmax**3, np.ones(lm.size))
+    z = d * fe.H0 / fe.C_KM_S
+    pool = np.ones(lm.size, bool)
+    _a, fi = fe._himf_and_fit(lm, None, None, omega, mask=shallow, vmax=vm)
+    _b, fo = fe._himf_and_fit(lm, None, None, omega, mask=~shallow, vmax=vm)
+    measured = fi["log_m_star"] - fo["log_m_star"]
+    z_only = fe.label_shuffle_null(lm, z, pool, shallow, vm, vm, omega, rng, n=20)
+    depth = fe.label_shuffle_null(
+        lm, z, pool, shallow, vm, vm, omega, rng, n=20, strata=shallow.astype(int)
+    )
+    # z-only: the measured offset looks significant; (z, depth): it is inside the null
+    assert abs(measured - z_only.mean()) > 3 * z_only.std()
+    assert abs(measured - depth.mean()) < 3 * max(depth.std(), 1e-3)
+
+
+def test_linewidth_residual_flags_broadened_profiles_at_fixed_mass():
+    rng = np.random.default_rng(12)
+    n = 5000
+    lm = rng.uniform(8, 10.5, n)
+    z = rng.uniform(0.01, 0.05, n)
+    lw = 2.3 + 0.25 * (lm - 9.0) + rng.normal(0, 0.05, n)
+    blended = rng.uniform(size=n) < 0.2
+    lw_b = lw + np.where(blended, 0.1, 0.0)  # blending broadens by 0.1 dex
+    res = fe.linewidth_residual(lw_b, lm, z, ~blended)
+    assert abs(np.median(res[~blended])) < 0.01
+    assert abs(np.median(res[blended]) - 0.1) < 0.01
+    assert np.isnan(fe.linewidth_residual(np.array([np.nan, 2.0, 2.1, 2.2]), np.array([9.0, 9.0, 9.5, 10.0]),
+                                          np.array([0.02] * 4), np.ones(4, bool))[0])  # fmt: skip
+
+
+def test_confused_same_group_needs_two_members_of_one_group():
+    ra, dec = np.array([180.0, 180.0]), np.array([30.0, 40.0])
+    cz, w50 = np.array([5000.0, 5000.0]), np.array([200.0, 200.0])
+    d = 1.0 / 60.0
+    opt_ra = np.array([180.0, 180.0, 180.0, 180.0])
+    opt_dec = np.array([30.0, 30.0 + d, 40.0, 40.0 + d])
+    opt_cz = np.array([5000.0, 5100.0, 5000.0, 5100.0])
+    gid = np.array([7, 7, 8, 9])  # source 0: same group; source 1: two different groups
+    ngal = np.array([3, 3, 1, 1])
+    got = fe.confused_same_group(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz, gid, ngal)
+    assert got.tolist() == [True, False]
