@@ -19,6 +19,14 @@ recommend the next version number.
   what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
   DC-spike artifact) is still true and is kept.
 
+### Changed
+- **Plan 61 re-scoped by a measured access probe.** Apertif Time-Domain DR2 is 0.76 PB in
+  2,582 observations, not the ~0.8 TB the plan assumed; only 3.9 TB is online without a tape
+  request. Measured 24 MB/s to the workstation and ~21 s of GPU FDMT per 3-h 2019 file (522x
+  real time). The feasible slice is the pulsar-calibrator observations' central beam
+  (0.15 TB) plus the pulsar-field compound beams (~7.3 TB), streamed and deleted locally at $0;
+  the $170 AWS estimate is superseded.
+
 ## [1.12.0] - 2026-09-26
 
 ### Added

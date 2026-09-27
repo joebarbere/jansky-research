@@ -1,8 +1,56 @@
 # 61 — Apertif Time-Domain DR2 single-pulse reprocessing (torch-fdmt's real-data leg 2)
 
-Status: 📋 planned (not started) — GATE 0 pending: full-text novelty pass + data-URL verification
-(the ideas.md scan ran egress-blocked; see the standing caveat there) — probe the ASTRON
-tape-staging request turnaround (free helpdesk) before committing to a schedule
+Status: 📋 **re-scoped after the GATE-0 access probe (2026-09-26)** — the whole-archive census as
+written is infeasible (the release is **0.76 PB**, not ~0.8 TB); a pulsar-field slice is feasible
+and costs $0 on the local GPU. **Blocked on one owner action:** an ASTRON helpdesk account to
+request tape staging (turnaround undocumented, "best effort").
+
+## GATE-0 access probe (2026-09-26) — M = measured, D = documented
+
+- **Volume [M]:** VO table `arts_dr2.frb_obs` (TAP https://vo.astron.nl/tap): 1,181,886 files in
+  **2,582 observations** (not 1,666), MJD 58667-59618. 1-bit Stokes-I PSRFITS search mode, one
+  file per tied-array beam (40 CB x 12 TAB = 480 files/obs). 3-h file: 318.7 MB (pre-2020-05,
+  384 ch x 2.048 ms) or 1.36-1.40 GB (768 ch x 0.8 ms). Sum of `filesize` = **761.7 TB**. The
+  "0.48 GB/pointing" below was wrong by ~10^5 per observation (it matches one 2019 *file*).
+- **Access [M]:** online files are anonymous HTTPS WebDAV
+  (`https://alta.astron.nl/webdav/APERTIF_DR2_TimeDomain/<obsid>/CBxx/ARTSxxx_CBxx_TABxx.fits`).
+  Only **11 of 24** FRB-detection observations actually download (3.9 TB; 13 return HTTP 500);
+  everything else is on tape via the ASTRON Jira helpdesk (account required).
+- **Throughput [M]:** 23.9 MB/s single stream to the workstation; ~28 MB/s with 4 streams, but
+  two parallel downloads ended short **without error** — the ledger must check Content-Length.
+- **Reader [M]:** astropy's TDIM (1,384,1,500) does not match the 24000-byte rows; unpack bits
+  with `np.unpackbits` (5.7 s per 3-h 2019 file).
+- **Processing [M]:** FDMT to DM 500 on the RX 7600 XT (ROCm): **~21 s per 3-h 2019 file (522x
+  real time)**; CPU ~69 s. Post-2020 files (~4x samples, 2x channels) are estimated at ~3 min
+  each [inferred], so they are GPU-bound; 2019 files are download-bound. FDMT only — the
+  boxcar single-pulse search is extra and not yet timed.
+- **Recover-a-known set [M]:** ATNF psrcat v2.8.1 vs 98,491 CB centres: 166 pulsars (9 RRATs)
+  within 0.25 deg, in 1,077 obs / 3,489 CBs; **~486 pulsar-calibrator observations** (B0531+21 x189,
+  B1933+16 x182, B0950+08 x78, B0329+54 x11), 466 of them <= 10 min. The pulsar is in CB00:
+  **CB00 alone is 0.15 TB (5,796 files)**; the 5.8 TB figure is all 40 beams, 39 of which point
+  at empty sky beside the pulsar (re-measured 2026-09-26 — the first draft of this plan and of
+  the staging request called 5.9 TB "CB00 only", a 40x overstatement).
+
+| subset | size | stream time at 24-28 MB/s |
+|---|---|---|
+| whole release | 761.7 TB | 315-367 days — infeasible |
+| obs containing a pulsar (all beams) | 230.7 TB | 95-111 days |
+| **only the CBs containing a pulsar** | **7.5 TB** | 3.1-3.6 days |
+| **pulsar-calibrator obs, CB00 only** | **0.15 TB** | ~1.5-2 h |
+| pulsar-calibrator obs, all 40 beams (not needed) | 5.8 TB | ~2.5-2.8 days |
+| online now, no staging | 3.9 TB | ~45 h |
+
+**Cost:** stream -> process -> delete on the workstation is **$0** (download is free, 67 GB
+free disk holds a wave). AWS adds nothing but speed for this; it is worth it only for the
+Heimdall (CUDA-only) cross-check on a sample (a few dollars on spot). The earlier $170 estimate
+assumed 2 TB and is superseded.
+
+**Re-scoped deliverable:** (1) the recover-a-known on the ~486 pulsar-calibrator observations
+(CB00 only, 0.15 TB)
+— does the pure-PyTorch stack redetect B0531+21/B1933+16/B0950+08/B0329+54 across ~2 years of
+heterogeneous 1-bit data?); (2) the blind single-pulse census of the 3,489 pulsar-field CBs
+(7.5 TB) — RRAT/known-pulsar redetection statistics + candidate trains; (3) the Heimdall
+cross-check (software note). The "archive-wide census" framing below is withdrawn.
 
 ## Context
 
