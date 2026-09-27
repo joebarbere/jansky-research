@@ -11,6 +11,17 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`vlasspm` note: referee round 1 applied.** A covariance-weighted three-epoch track fit with
+  parallax (`fit_track`, `parallax_factors`) gives UV/BL Ceti 3.41 +/- 0.04"/yr with the Gaia
+  parallax (system 3.34, 1.6 sigma); the note calls it the unresolved Luyten 726-8 system.
+  "Optically dark" is now "no co-moving counterpart" (`comoving`) in the code, the counterpart
+  step and the paper; a 5" circle holds a chance Gaia/CatWISE source at 28% of 500 random
+  positions (3% within the co-moving rule's 1.5"). Fine-bin completeness across the 0.92"/yr
+  edge (0.65 at 0.92-1.0), the log-uniform weighting, the worst-bin limit (9.6e-5), a tail
+  bound (0.6% / 1.9%), the parallax floor (8 pc) and the E4 area are new evidence in
+  `results/vlasspm_referee1.json` (`scripts/vlasspm_referee1.py`), all reaching the note by
+  macro. Atri et al. 2022, UCAC4 and SIMBAD added to the bibliography (Crossref-verified). The
+  figure plots steps per bin with the fine bins.
 - **`papers/vlasspm/`: an RNAAS-length upper-limit note, "No Optically Dark Compact Radio
   Movers in Four VLASS Epochs".** Every data-derived number is a `vpmReal*` macro written by
   `vlasspm.write_real_paper` from `results/vlasspm_metrics.json` + `vlasspm_vetting.json`

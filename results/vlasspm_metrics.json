@@ -282,7 +282,7 @@
     }
   },
   "real_n_candidates": 11,
-  "real_n_optically_dark": 5,
+  "real_n_optically_dark": 6,
   "real_n_gaia_pm_agree": 0,
   "real_n_gaia_pm_disagree": 0,
   "real_uvcet": {
@@ -3689,26 +3689,6 @@
     },
     "area_deg2": 33838.5
   },
-  "_merge": {
-    "retained_from_previous_run": [
-      "real_ablation_measurement_only",
-      "real_area_deg2_max_triple",
-      "real_calibration",
-      "real_completeness",
-      "real_epochs",
-      "real_error_model",
-      "real_floors",
-      "real_floors_banded",
-      "real_n_candidates",
-      "real_n_gaia_pm_agree",
-      "real_n_gaia_pm_disagree",
-      "real_n_optically_dark",
-      "real_null",
-      "real_per_triple",
-      "real_previous_run3",
-      "real_run3_candidates_rescored",
-      "real_uvcet"
-    ],
-    "note": "These keys are not from the run that wrote the rest of this file. They were carried over so a partial re-run could not delete them; treat any comparison spanning them as cross-run."
-  }
+  "real_dark_definition": "no CO-MOVING Gaia DR3 / CatWISE2020 counterpart (at the track's predicted position at the catalogue epoch within 3 sigma + 0.5 arcsec floor, or proper motion within 30% of the radio rate); positional-only counts within 5 arcsec kept for comparison",
+  "real_n_dark_positional": 5
 }

@@ -657,7 +657,7 @@ def _real_results(tmp_path):
 
     root = Path(__file__).resolve().parents[1] / "results"
     (tmp_path / "results").mkdir()
-    for f in ("vlasspm_metrics.json", "vlasspm_vetting.json"):
+    for f in ("vlasspm_metrics.json", "vlasspm_vetting.json", "vlasspm_referee1.json"):
         shutil.copy(root / f, tmp_path / "results" / f)
 
 
@@ -681,8 +681,10 @@ def test_paper_macros_both_legs_accumulate_and_never_blank(tmp_path):
     v.write_real_paper(tmp_path)  # real leg
     both = _macros(mac)
     assert both["vpmSynNMovers"] == str(syn["syn_n_movers"])  # not blanked by the real leg
-    for name in v.REAL_MACRO_NAMES:
+    for name in v.REAL_MACRO_NAMES + v.REF1_MACRO_NAMES:
         assert both[f"vpmReal{name}"] != "--", name
+    assert both["vpmSynNMissed"] == str(len(syn["syn_missed_mu"]))
+    assert max(syn["syn_missed_mu"]) < 1.2  # the fixture's misses are the slow movers
     assert both["vpmRealNCandAfter"] == "1" and both["vpmRealNNewMovers"] == "0"
     assert "real" in both["vpmSource"]
     v._write_macros(syn, mac)  # a later offline rebuild must not touch the real values
@@ -702,3 +704,95 @@ def test_macro_formatters():
     assert v._fmt_sci(9.18e-5) == r"9.2\times10^{-5}"
     assert v._syn_macro_values({"is_real": True}) == {}
     assert v._real_macro_values({"is_real": False}, None) == {}
+    assert v._ref1_macro_values({"is_real": True}, None) == {}
+
+
+# ------------------------------------------------------------ referee round 1 additions
+
+
+def test_parallax_factors_match_the_geometric_displacement():
+    """Offset of a star at 10 pc seen from the Earth vs the barycentre, done by hand."""
+    from astropy.coordinates import get_body_barycentric
+    from astropy.time import Time
+
+    ra, dec, t = 120.0, -30.0, 2021.3
+    pa, pd = v.parallax_factors(ra, dec, t)
+    au_per_pc = 206264.806
+    a, d = np.radians(ra), np.radians(dec)
+    u = np.array([np.cos(d) * np.cos(a), np.cos(d) * np.sin(a), np.sin(d)])
+    e = get_body_barycentric("earth", Time(t, format="decimalyear")).xyz.to_value("au")
+    r = 10 * au_per_pc * u - e
+    r /= np.linalg.norm(r)
+    ra2 = np.degrees(np.arctan2(r[1], r[0])) % 360
+    dec2 = np.degrees(np.arcsin(r[2]))
+    dx, dy = v.tangent_offsets_arcsec(ra, dec, ra2, dec2)
+    plx = 0.1  # arcsec at 10 pc
+    assert float(dx) == pytest.approx(plx * pa[0], abs=2e-4)
+    assert float(dy) == pytest.approx(plx * pd[0], abs=2e-4)
+    assert np.hypot(pa[0], pd[0]) <= 1.02  # never more than ~1 AU
+
+
+def _synthetic_track(plx, mu=(2.0, -1.0), n=8, err=0.02, seed=0, ra0=45.0, dec0=20.0):
+    rng = np.random.default_rng(seed)
+    t = np.sort(rng.uniform(2018, 2026, n))
+    pa, pd = v.parallax_factors(ra0, dec0, t)
+    x = mu[0] * (t - t.mean()) + plx * pa + rng.normal(0, err, n)
+    y = mu[1] * (t - t.mean()) + plx * pd + rng.normal(0, err, n)
+    dec = dec0 + y / 3600
+    ra = ra0 + x / 3600 / np.cos(np.radians(dec0))
+    cov = np.tile([err**2, err**2, 0.0], (n, 1))
+    return ra, dec, t, cov
+
+
+def test_fit_track_recovers_a_known_parallax_and_motion():
+    ra, dec, t, cov = _synthetic_track(0.25)
+    free = v.fit_track(ra, dec, t, cov, parallax_arcsec=None)
+    assert free["parallax_arcsec"] == pytest.approx(0.25, abs=4 * free["parallax_err_arcsec"])
+    assert free["mu_ra"] == pytest.approx(2.0, abs=0.02) and free["mu_dec"] == pytest.approx(
+        -1.0, abs=0.02
+    )
+    fixed = v.fit_track(ra, dec, t, cov, parallax_arcsec=0.25)
+    assert fixed["mu"] == pytest.approx(np.hypot(2, 1), abs=3 * fixed["mu_err"] + 1e-3)
+    assert fixed["dof"] == 2 * 8 - 4 and free["dof"] == 2 * 8 - 5
+    wrong = v.fit_track(ra, dec, t, cov, parallax_arcsec=0.0)
+    assert wrong["chi2"] > 10 * fixed["chi2"] + 10  # ignoring a 0.25" parallax is visible
+    ra_p, dec_p, pcov = v.predict_track(fixed, float(ra[0]), float(dec[0]), float(t.mean()))
+    assert pcov.shape == (2, 2) and np.isfinite(ra_p) and np.isfinite(dec_p)
+
+
+def test_parallax_residual_factor_is_zero_for_a_distant_source_and_scales():
+    f = v.parallax_residual_factor(24.77, -17.95, [2020.8], [2023.4], [2026.1])
+    assert 0.0 < f[0] < 5.0
+    # same dates one year apart each: parallax repeats, so the line through E1,E2 hits E3
+    g = v.parallax_residual_factor(24.77, -17.95, [2020.5], [2021.5], [2022.5])
+    assert g[0] == pytest.approx(0.0, abs=0.05)
+
+
+def test_comoving_rule_ignores_unrelated_sources():
+    pcov = np.array([[0.04, 0.0], [0.0, 0.04]])
+    ra0, dec0 = 100.0, 10.0
+    near = (ra0, dec0 + 0.3 / 3600)  # at the predicted position
+    far = (ra0, dec0 + 4.0 / 3600)  # inside a 5" circle, off the track
+    co = v.comoving(
+        ra0, dec0, pcov, (1.0, 0.0), np.array([near[0], far[0]]), np.array([near[1], far[1]])
+    )
+    assert co.tolist() == [True, False]
+    # an off-position source with a matching proper motion is co-moving; a static one is not
+    co = v.comoving(
+        ra0,
+        dec0,
+        pcov,
+        (1.0, 0.0),
+        np.array([far[0], far[0]]),
+        np.array([far[1], far[1]]),
+        np.array([0.95, 0.0]),
+        np.array([0.05, np.nan]),
+    )
+    assert co.tolist() == [True, False]
+    assert v.chance_within([0.4, 2.0, np.inf, 4.9], (1.0, 5.0)) == [0.25, 0.75]
+
+
+def test_completeness_accepts_custom_rate_bins():
+    e1, e2, e3, _ = v.synthetic_epochs(n_movers=0, n_static=3000, n_variable=0, seed=21)
+    comp = v.completeness(e1, e2, e3, n=300, bins=np.array([0.8, 1.0, 2.0, 5.0]), seed=3)
+    assert len(comp["per_bin"]) == 3 and sum(comp["n_per_bin"]) == 300

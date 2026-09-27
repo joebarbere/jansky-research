@@ -84,6 +84,12 @@ __all__ = [
     "surface_density_limit",
     "synthetic_epochs",
     "synthetic_statics",
+    "chance_within",
+    "comoving",
+    "fit_track",
+    "parallax_factors",
+    "parallax_residual_factor",
+    "predict_track",
     "tangent_offsets_arcsec",
     "triplet_significance",
 ]
@@ -540,6 +546,173 @@ def triplet_significance(
     }
 
 
+# ------------------------------------------------------- tracks with parallax (referee 1)
+
+
+def parallax_factors(ra_deg, dec_deg, t_yr) -> tuple[np.ndarray, np.ndarray]:
+    """Parallax factors (P_alpha*, P_delta): the apparent offset in arcsec per arcsec of
+    parallax at decimal years ``t_yr``, from the Earth's barycentric position (astropy's
+    built-in ephemeris). Standard form, e.g. Green (1985):
+    ``P_a = X sin a - Y cos a``, ``P_d = X cos a sin d + Y sin a sin d - Z cos d``."""
+    from astropy.coordinates import get_body_barycentric
+    from astropy.time import Time
+
+    t = np.atleast_1d(np.asarray(t_yr, float))
+    xyz = get_body_barycentric("earth", Time(t, format="decimalyear")).xyz.to_value("au")
+    x, y, z = xyz
+    a, d = np.radians(ra_deg), np.radians(dec_deg)
+    pa = x * np.sin(a) - y * np.cos(a)
+    pd = x * np.cos(a) * np.sin(d) + y * np.sin(a) * np.sin(d) - z * np.cos(d)
+    return np.asarray(pa, float), np.asarray(pd, float)
+
+
+def fit_track(
+    ra_deg,
+    dec_deg,
+    t_yr,
+    cov: np.ndarray,
+    *,
+    parallax_arcsec: float | None = 0.0,
+    t_ref: float | None = None,
+) -> dict:
+    """Weighted least-squares straight line (+ parallax) through a multi-epoch radio track.
+
+    Each epoch is weighted by its full 2x2 positional covariance ``cov`` ((n, 3) arcsec^2).
+    ``parallax_arcsec``: a fixed parallax (0 = none) or ``None`` to fit it. Returns the proper
+    motion (arcsec/yr), its covariance and 1-sigma error on |mu|, the position at ``t_ref``,
+    chi^2, degrees of freedom and, for a free fit, the parallax and its error.
+    """
+    ra, dec, t = (np.atleast_1d(np.asarray(x, float)) for x in (ra_deg, dec_deg, t_yr))
+    cov = np.atleast_2d(cov)
+    n = ra.size
+    t_ref = float(np.mean(t)) if t_ref is None else float(t_ref)
+    ra0, dec0 = float(ra[0]), float(dec[0])
+    dx, dy = tangent_offsets_arcsec(ra0, dec0, ra, dec)
+    pa, pd = parallax_factors(ra0, dec0, t)
+    free = parallax_arcsec is None
+    plx = 0.0 if parallax_arcsec is None else float(parallax_arcsec)
+    npar = 5 if free else 4
+    a_mat = np.zeros((2 * n, npar))
+    b = np.zeros(2 * n)
+    w = np.zeros((2 * n, 2 * n))
+    for k in range(n):
+        dt = t[k] - t_ref
+        a_mat[2 * k, [0, 2]] = [1.0, dt]
+        a_mat[2 * k + 1, [1, 3]] = [1.0, dt]
+        if free:
+            a_mat[2 * k, 4], a_mat[2 * k + 1, 4] = pa[k], pd[k]
+            b[2 * k], b[2 * k + 1] = dx[k], dy[k]
+        else:
+            b[2 * k] = dx[k] - plx * pa[k]
+            b[2 * k + 1] = dy[k] - plx * pd[k]
+        c = np.array([[cov[k, 0], cov[k, 2]], [cov[k, 2], cov[k, 1]]])
+        w[2 * k : 2 * k + 2, 2 * k : 2 * k + 2] = np.linalg.inv(c)
+    normal = a_mat.T @ w @ a_mat
+    pcov = np.linalg.inv(normal)
+    sol = pcov @ a_mat.T @ w @ b
+    resid = b - a_mat @ sol
+    chi2 = float(resid @ w @ resid)
+    mu_ra, mu_dec = float(sol[2]), float(sol[3])
+    mu = float(np.hypot(mu_ra, mu_dec))
+    grad = np.array([mu_ra, mu_dec]) / max(mu, 1e-12)
+    mu_err = float(np.sqrt(grad @ pcov[2:4, 2:4] @ grad))
+    out = {
+        "n_epochs": int(n),
+        "t_ref": t_ref,
+        "mu_ra": mu_ra,
+        "mu_dec": mu_dec,
+        "mu": mu,
+        "mu_err": mu_err,
+        "mu_cov": pcov[2:4, 2:4].tolist(),
+        "x0": float(sol[0]),
+        "y0": float(sol[1]),
+        "pos_cov_ref": pcov[0:2, 0:2].tolist(),
+        "chi2": chi2,
+        "dof": int(2 * n - npar),
+        "parallax_fixed_arcsec": None if free else plx,
+    }
+    if free:
+        out["parallax_arcsec"] = float(sol[4])
+        out["parallax_err_arcsec"] = float(np.sqrt(pcov[4, 4]))
+    return out
+
+
+def predict_track(fit: dict, ra0: float, dec0: float, t: float) -> tuple[float, float, np.ndarray]:
+    """Position (deg) and 2x2 covariance (arcsec^2) of a :func:`fit_track` line at epoch ``t``
+    (no parallax term: used to place a counterpart at its catalogue epoch)."""
+    dt = t - fit["t_ref"]
+    j = np.array([[1.0, 0.0, dt, 0.0], [0.0, 1.0, 0.0, dt]])
+    full = np.zeros((4, 4))
+    full[:2, :2] = np.asarray(fit["pos_cov_ref"])
+    full[2:, 2:] = np.asarray(fit["mu_cov"])
+    # the position-rate covariance is not stored; t_ref at the mean epoch makes it ~0
+    x = fit["x0"] + fit["mu_ra"] * dt
+    y = fit["y0"] + fit["mu_dec"] * dt
+    dec = dec0 + y / 3600.0
+    ra = ra0 + x / 3600.0 / np.cos(np.radians(dec0))
+    return float(ra % 360.0), float(dec), j @ full @ j.T
+
+
+def parallax_residual_factor(ra_deg, dec_deg, t1, t2, t3) -> np.ndarray:
+    """|E3 straight-line residual| per arcsec of parallax for detections at t1 < t2 < t3: the
+    search's line through E1 and E2 ignores parallax, so a nearby source misses its E3 position
+    by ``parallax x`` this factor (arcsec/arcsec)."""
+    t1, t2, t3 = (np.asarray(x, float) for x in (t1, t2, t3))
+    r = (t3 - t2) / (t2 - t1)
+    p1, p2, p3 = (np.column_stack(parallax_factors(ra_deg, dec_deg, t)) for t in (t1, t2, t3))
+    res = -p1 * r[:, None] + p2 * (1.0 + r)[:, None] - p3
+    return np.hypot(res[:, 0], res[:, 1])
+
+
+# ---------------------------------------------------------- counterparts (referee 1)
+
+COUNTERPART_RADIUS_ARCSEC = 5.0  # the vet_counterparts search radius
+COMOVING_NSIGMA = 3.0
+COMOVING_POS_FLOOR_ARCSEC = 0.5  # catalogue astrometry + epoch-propagation floor
+COMOVING_PM_FRAC = 0.3  # |mu_cat - mu_radio| < 30% of |mu_radio| also counts as co-moving
+
+
+def comoving(
+    pred_ra: float,
+    pred_dec: float,
+    pred_cov: np.ndarray,
+    mu_radio: tuple[float, float],
+    cat_ra: np.ndarray,
+    cat_dec: np.ndarray,
+    cat_pmra: np.ndarray | None = None,
+    cat_pmdec: np.ndarray | None = None,
+) -> np.ndarray:
+    """Which catalogue sources are CO-MOVING counterparts of a radio track.
+
+    A source counts if (a) its position at its own catalogue epoch lies within
+    ``COMOVING_NSIGMA`` of where the radio track predicts the mover at that epoch (prediction
+    covariance + a ``COMOVING_POS_FLOOR_ARCSEC`` floor), or (b) its catalogue proper motion
+    agrees with the radio rate to ``COMOVING_PM_FRAC`` of |mu|. An unrelated source that merely
+    falls inside the 5" search circle does neither, so it no longer makes a mover "not dark".
+    """
+    cat_ra, cat_dec = np.atleast_1d(cat_ra).astype(float), np.atleast_1d(cat_dec).astype(float)
+    dx, dy = tangent_offsets_arcsec(pred_ra, pred_dec, cat_ra, cat_dec)
+    c = np.asarray(pred_cov, float)
+    f2 = COMOVING_POS_FLOOR_ARCSEC**2
+    cov3 = np.array([[c[0, 0] + f2, c[1, 1] + f2, c[0, 1]]])
+    pos_ok = chi2_2d(dx, dy, np.repeat(cov3, dx.size, axis=0)) <= COMOVING_NSIGMA**2
+    pm_ok = np.zeros(dx.size, dtype=bool)
+    if cat_pmra is not None and cat_pmdec is not None:
+        pmra = np.atleast_1d(np.asarray(cat_pmra, float))
+        pmde = np.atleast_1d(np.asarray(cat_pmdec, float))
+        mu = float(np.hypot(*mu_radio))
+        diff = np.hypot(pmra - mu_radio[0], pmde - mu_radio[1])
+        pm_ok = np.isfinite(diff) & (diff < COMOVING_PM_FRAC * mu)
+    return pos_ok | pm_ok
+
+
+def chance_within(distances_arcsec: list, radii) -> list[float]:
+    """P(at least one catalogue source within r) for each r, from nearest-source distances at
+    random positions (``inf`` where none was found within the query radius)."""
+    d = np.asarray(distances_arcsec, float)
+    return [float(np.mean(d <= r)) for r in radii]
+
+
 def flux_consistent(
     fa: np.ndarray, fb: np.ndarray, fc: np.ndarray, *, max_ratio: float | None = FLUX_RATIO_MAX
 ) -> np.ndarray:
@@ -744,6 +917,7 @@ def _mover_track(ra0, dec0, mu_ra, mu_dec, t0, t):
     return ra, dec
 
 
+INJ_FLUX_SPREAD = (0.8, 1.25)  # per-epoch peak = flux x U(0.8, 1.25): a mildly variable source
 PLACE_ISOLATED_ARCSEC = (60.0, 120.0)  # runs 1-3: into empty sky, never near a real component
 PLACE_RANDOM_ARCSEC = 900.0  # "realistic": uniform over a 15' disc round a host = random sky
 
@@ -827,7 +1001,7 @@ def _inject(
     for e, cat in enumerate(cats):
         near = nears[e]
         t = t1 if e == 0 else cat.t_yr[near]
-        flux = flux_mjy * rng.uniform(0.8, 1.25, n)
+        flux = flux_mjy * rng.uniform(*INJ_FLUX_SPREAD, n)
         if shaped:
             size: float | tuple[np.ndarray, np.ndarray] = size_arcsec
             if size_noise is not None:
@@ -925,8 +1099,12 @@ def completeness(
     size_noise: SizeNoiseModel | None = None,
     compact_max: float | None = None,
     compact_rule: str = "all",
+    mu_range: tuple[float, float] | None = None,
 ) -> dict:
     """Fraction of injected movers recovered by ANY epoch triple, overall and per log-rate bin.
+
+    Rates are drawn log-uniformly over ``mu_range`` (default: the bin range), so an average over
+    equal-width log bins is a log-uniform (scale-free) rate prior.
 
     With ``realistic_frac > 0`` the result also splits by placement class: ``isolated``
     (60-120" from a real component, the runs 1-3 injections) and ``realistic`` (random sky,
@@ -938,6 +1116,7 @@ def completeness(
     inj, mu, realistic, nn = _inject(
         *cats,
         n=n,
+        mu_range=(float(bins[0]), float(bins[-1])) if mu_range is None else mu_range,
         seed=seed,
         flux_mjy=flux_mjy,
         first_ident=first,
@@ -974,6 +1153,7 @@ def completeness(
         "per_bin": _per_bin(np.ones(n, bool)),
         "per_triple": per_triple,
     }
+    out["n_per_bin"] = [int(np.sum(idx == k)) for k in range(len(bins) - 1)]
     if realistic_frac > 0:
         out["realistic_frac"] = realistic_frac
         for name, sel in (("isolated", ~realistic), ("realistic", realistic)):
@@ -1517,6 +1697,12 @@ def _syn_macro_values(m: dict) -> dict[str, str]:
         "Completeness": f"{m['syn_completeness']:.2f}",
         "NullCand": f"{m['syn_null_candidates_mean']:.2f}",
     }
+    if m.get("syn_missed_mu") is not None:
+        out |= {
+            "NMissed": str(len(m["syn_missed_mu"])),
+            "MissedMuMax": f"{max(m['syn_missed_mu'], default=0.0):.1f}",
+            "NMissedNotIsolated": str(m["syn_n_missed_not_isolated"]),
+        }
     if m.get("syn_calib_k_struct_fit") is not None:
         out |= {
             "KTrue": f"{m['syn_calib_k_struct_true']:.2f}",
@@ -1605,6 +1791,26 @@ def _real_macro_values(m: dict, vet: dict | None) -> dict[str, str]:
         "LimOneFive": _fmt_sci(lim["1.5mJy_cut"]["limit_per_deg2_95"]),
         "AllSky": f"{lim['3mJy_cut']['limit_per_deg2_95'] * 4 * np.pi * (180 / np.pi) ** 2:.1f}",
     }
+    # How close the removed candidates came: the threshold at which each would have passed the
+    # chosen rule (for 2 of 3, its second-smallest compactness), smallest two first.
+    need = sorted(
+        (
+            (
+                sorted(c["compactness"])[len(c["compactness"]) - 2]
+                if r5["rule"] == "2of3"
+                else max(c["compactness"])
+            ),
+            c["key"],
+        )
+        for c in r5["run4_candidates"]
+        if not c["passes"]
+    )
+    for tag, (thr, key) in zip(("A", "B"), need[:2], strict=False):
+        ra_part, dec_part = key[1:].split("_")
+        out[f"Margin{tag}Name"] = f"J{float(ra_part):.1f}${dec_part[0]}${abs(float(dec_part)):.1f}"
+        out[f"Margin{tag}Thr"] = f"{thr:.2f}"
+    out["FluxThree"] = f"{comp['3mJy_cut']['flux_mjy']:g}"
+    out["FluxOneFive"] = f"{comp['1.5mJy_cut']['flux_mjy']:g}"
     if vet:
         out["NVetted"] = str(vet.get("n_candidates"))
         out["NNewMovers"] = str(vet.get("n_new_movers"))
@@ -1672,6 +1878,12 @@ REAL_MACRO_NAMES = (
     "NVetted",
     "NNewMovers",
     "NSouthVetted",
+    "MarginAName",
+    "MarginAThr",
+    "MarginBName",
+    "MarginBThr",
+    "FluxThree",
+    "FluxOneFive",
 )
 SYN_MACRO_NAMES = (
     "NMovers",
@@ -1679,6 +1891,9 @@ SYN_MACRO_NAMES = (
     "NFalse",
     "Completeness",
     "NullCand",
+    "NMissed",
+    "MissedMuMax",
+    "NMissedNotIsolated",
     "KTrue",
     "KFit",
     "TailOld",
@@ -1686,14 +1901,110 @@ SYN_MACRO_NAMES = (
 )
 
 
-def _write_macros(m: dict, path, vet: dict | None = None) -> None:
+def _ref1_macro_values(m: dict, ref1: dict | None) -> dict[str, str]:
+    """Referee-round-1 numbers (results/vlasspm_referee1.json): the UV Ceti track fit, the
+    chance-coincidence rates, fine-bin completeness, tail bound, parallax floor, worst-bin
+    limits, and the flux and sky domains."""
+    if not ref1 or not m.get("is_real"):
+        return {}
+    uv = ref1["uvcet"]
+    g = uv["gaia"]
+    fx, fn, ff = (uv["fits"][k] for k in ("fixed_gaia_parallax", "no_parallax", "free_parallax"))
+    sysmu = g["system"]["mu_arcsec_yr"]
+    ch = ref1["chance_coincidence"]
+    radii = ch["radii_arcsec"]
+    co_r = COMOVING_NSIGMA * COMOVING_POS_FLOOR_ARCSEC
+    fine = ref1["fine_completeness_3mJy_cut"]
+    fe = fine["bin_edges"]
+    tb = ref1["tail_completeness_bound"]
+    lim = ref1["limits"]
+    per = m["real_per_triple"]
+    area4 = max(v["area_deg2"] for k, v in per.items() if "E4" in k)
+    above = [p for p, lo in zip(fine["per_bin"], fe[:-1], strict=True) if lo >= 1.1 - 1e-9]
+    return {
+        "UVFitMu": f"{fx['mu']:.2f}",
+        "UVFitErr": f"{fx['mu_err']:.2f}",
+        "UVFitChi": f"{fx['chi2']:.1f}",
+        "UVNoPlxMu": f"{fn['mu']:.2f}",
+        "UVFreePlx": f"{1000 * ff['parallax_arcsec']:.0f}",
+        "UVFreePlxErr": f"{1000 * ff['parallax_err_arcsec']:.0f}",
+        "UVGaiaPlx": f"{1000 * uv['parallax_used_arcsec']:.0f}",
+        "SysMu": f"{sysmu:.2f}",
+        "SysSigma": f"{abs(fx['mu'] - sysmu) / fx['mu_err']:.1f}",
+        "BLMu": f"{g['components']['BL Cet']['mu_arcsec_yr']:.2f}",
+        "RuweMin": f"{min(c['ruwe'] for c in g['components'].values()):.0f}",
+        "RuweMax": f"{max(c['ruwe'] for c in g['components'].values()):.0f}",
+        "UVPlxResid": f"{uv['e3_parallax_residual_arcsec']:.1f}",
+        "CompSep": f"{np.hypot(*tangent_offsets_arcsec(*(g['components'][n][k] for n in ('UV Cet', 'BL Cet') for k in ('ra', 'dec')))):.1f}",
+        "ChanceFive": f"{ch['p_either'][radii.index(COUNTERPART_RADIUS_ARCSEC)]:.2f}",
+        "ChanceComoving": f"{ch['p_either'][radii.index(co_r)]:.2f}",
+        "ComovingRadius": f"{co_r:.1f}",
+        "NChance": str(ch["n_positions"]),
+        "FineEdgeLo": f"{fe[1]:.2f}",
+        "FineEdgeMid": f"{fe[2]:.1f}",
+        "FineEdgeHi": f"{fe[3]:.1f}",
+        "FineCompA": f"{fine['per_bin'][1]:.2f}",
+        "FineCompB": f"{fine['per_bin'][2]:.2f}",
+        "FineCompAboveMin": f"{min(above):.2f}",
+        "LimWorstBin": _fmt_sci(lim["worst_bin_limit_per_deg2_95"]),
+        "LimEdge": _fmt_sci(lim["worst_fine_bin_limit_per_deg2_95"]),
+        "TailBoundThree": f"{100 * tb['3mJy']['max_excess']:.1f}",
+        "TailBoundOneFive": f"{100 * tb['1.5mJy']['max_excess']:.1f}",
+        "PlxDistMin": f"{ref1['parallax_floor']['distance_min_pc']:.0f}",
+        "AreaFour": _fmt_int(area4),
+        "FluxLoThree": f"{3.0 * INJ_FLUX_SPREAD[0]:.1f}",
+        "FluxHiThree": f"{3.0 * INJ_FLUX_SPREAD[1]:.2f}",
+        "FluxLoOneFive": f"{1.5 * INJ_FLUX_SPREAD[0]:.1f}",
+        "FluxHiOneFive": f"{1.5 * INJ_FLUX_SPREAD[1]:.1f}",
+    }
+
+
+REF1_MACRO_NAMES = (
+    "UVFitMu",
+    "UVFitErr",
+    "UVFitChi",
+    "UVNoPlxMu",
+    "UVFreePlx",
+    "UVFreePlxErr",
+    "UVGaiaPlx",
+    "SysMu",
+    "SysSigma",
+    "BLMu",
+    "RuweMin",
+    "RuweMax",
+    "UVPlxResid",
+    "CompSep",
+    "ChanceFive",
+    "ChanceComoving",
+    "ComovingRadius",
+    "NChance",
+    "FineEdgeLo",
+    "FineEdgeMid",
+    "FineEdgeHi",
+    "FineCompA",
+    "FineCompB",
+    "FineCompAboveMin",
+    "LimWorstBin",
+    "LimEdge",
+    "TailBoundThree",
+    "TailBoundOneFive",
+    "PlxDistMin",
+    "AreaFour",
+    "FluxLoThree",
+    "FluxHiThree",
+    "FluxLoOneFive",
+    "FluxHiOneFive",
+)
+
+
+def _write_macros(m: dict, path, vet: dict | None = None, ref1: dict | None = None) -> None:
     """Both namespaces always emitted; the inactive one as placeholders, merged by
     :func:`report.preserve_live_macros` so neither leg can blank or overwrite the other."""
     from .report import MACRO_PLACEHOLDER, preserve_live_macros
 
-    real = _real_macro_values(m, vet)
+    real = _real_macro_values(m, vet) | _ref1_macro_values(m, ref1)
     syn = _syn_macro_values(m)
-    names_real, names_syn = REAL_MACRO_NAMES, SYN_MACRO_NAMES
+    names_real, names_syn = REAL_MACRO_NAMES + REF1_MACRO_NAMES, SYN_MACRO_NAMES
     lines = [
         "% Auto-generated by jansky_research.vlasspm._write_macros -- do not edit.",
         "% vpmReal* come from results/vlasspm_metrics.json + vlasspm_vetting.json (real leg);",
@@ -1711,9 +2022,9 @@ def _write_macros(m: dict, path, vet: dict | None = None) -> None:
     p.write_text(text)
 
 
-def _paper_figure(m: dict, path) -> Path:
-    """Completeness vs proper-motion rate, 1.5 and 3 mJy, with and without the compactness cut,
-    UV Ceti's measured rate marked."""
+def _paper_figure(m: dict, path, ref1: dict | None = None) -> Path:
+    """Completeness per rate bin (steps), 1.5 and 3 mJy, with and without the compactness cut;
+    the fine bins near the 0.92"/yr edge (3 mJy, cut) as points; UV Ceti's rate marked."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -1723,19 +2034,33 @@ def _paper_figure(m: dict, path) -> Path:
     r5 = m["real_run5_compactness"]
     comp = r5["completeness"]
     edges = np.asarray(comp["3mJy_cut"]["bin_edges"])
-    centres = np.sqrt(edges[:-1] * edges[1:])
     fig, ax = plt.subplots(figsize=(3.4, 2.6))
     styles = {
-        "3mJy_nocut": ("3 mJy, no cut", "C0", "--", "o"),
-        "3mJy_cut": ("3 mJy, cut", "C0", "-", "o"),
-        "1.5mJy_nocut": ("1.5 mJy, no cut", "C1", "--", "s"),
-        "1.5mJy_cut": ("1.5 mJy, cut", "C1", "-", "s"),
+        "3mJy_nocut": ("3 mJy, no cut", "C0", "--"),
+        "3mJy_cut": ("3 mJy, cut", "C0", "-"),
+        "1.5mJy_nocut": ("1.5 mJy, no cut", "C1", "--"),
+        "1.5mJy_cut": ("1.5 mJy, cut", "C1", "-"),
     }
-    for key, (lab, col, ls, mk) in styles.items():
-        ax.plot(centres, comp[key]["per_bin"], ls=ls, marker=mk, color=col, ms=3.5, lw=1, label=lab)
-    for x in edges:
-        ax.axvline(x, color="0.9", lw=0.6, zorder=0)
+    for key, (lab, col, ls) in styles.items():
+        y = np.asarray(comp[key]["per_bin"])
+        ax.stairs(y, edges, color=col, ls=ls, lw=1.1, label=lab, baseline=None)
+    if ref1:
+        fine = ref1["fine_completeness_3mJy_cut"]
+        fe = np.asarray(fine["bin_edges"])
+        fc = np.sqrt(fe[:-1] * fe[1:])
+        ax.errorbar(
+            fc,
+            fine["per_bin"],
+            xerr=[fc - fe[:-1], fe[1:] - fc],
+            fmt="o",
+            color="k",
+            ms=2.5,
+            lw=0.7,
+            label="3 mJy, cut, fine bins",
+        )
     mu_uv = m["real_uvcet"]["hits"][0]["mu"]
+    if ref1:
+        mu_uv = ref1["uvcet"]["fits"]["fixed_gaia_parallax"]["mu"]
     ax.axvline(mu_uv, color="k", lw=0.8, ls=":")
     ax.text(mu_uv * 0.96, 0.05, "UV Cet", rotation=90, ha="right", va="bottom", fontsize=7)
     ax.set_xscale("log")
@@ -1747,7 +2072,7 @@ def _paper_figure(m: dict, path) -> Path:
     ax.set_ylim(-0.02, 1.05)
     ax.set_xlabel(r"proper motion (arcsec yr$^{-1}$)")
     ax.set_ylabel("completeness")
-    ax.legend(fontsize=6.5, loc="upper left", frameon=False)
+    ax.legend(fontsize=6, loc="upper left", frameon=False)
     fig.tight_layout()
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -1764,10 +2089,12 @@ def write_real_paper(out: str | Path = ".") -> dict:
     m = json.loads((op / "results" / "vlasspm_metrics.json").read_text())
     vp = op / "results" / "vlasspm_vetting.json"
     vet = json.loads(vp.read_text()) if vp.exists() else None
+    rp = op / "results" / "vlasspm_referee1.json"
+    ref1 = json.loads(rp.read_text()) if rp.exists() else None
     if not m.get("is_real"):
         raise ValueError("results/vlasspm_metrics.json is not real evidence; refusing to build")
-    _write_macros(m, op / "papers" / "vlasspm" / "generated" / "macros.tex", vet)
-    _paper_figure(m, op / "papers" / "vlasspm" / "figures" / "vlasspm_completeness.pdf")
+    _write_macros(m, op / "papers" / "vlasspm" / "generated" / "macros.tex", vet, ref1)
+    _paper_figure(m, op / "papers" / "vlasspm" / "figures" / "vlasspm_completeness.pdf", ref1)
     return m
 
 
@@ -1791,6 +2118,12 @@ def run(out: str = ".", *, offline: bool = True, n_null: int = 20, n_inject: int
         & (b.ident[cand.j] == c.ident[cand.k])
     )
     n_movers = int(mu_true.size)
+    found_ids = set(np.unique(a.ident[cand.i][same]).tolist())
+    missed = np.array([k not in found_ids for k in range(n_movers)])
+    iso_all = np.ones(n_movers, dtype=bool)
+    for e in (e1, e2, e3):
+        iso_ids = set(e.ident[isolated_mask(e)].tolist())
+        iso_all &= np.array([k in iso_ids for k in range(n_movers)])
     null = scramble_null(res.orphans, n_reps=n_null)
     comp = completeness(e1, e2, e3, n=n_inject)
     sa, sb = synthetic_statics()
@@ -1804,6 +2137,10 @@ def run(out: str = ".", *, offline: bool = True, n_null: int = 20, n_inject: int
         "syn_n_movers": n_movers,
         "syn_n_recovered": int(np.unique(a.ident[cand.i][same]).size),
         "syn_n_false": int((~same).sum()),
+        "syn_missed_mu": [float(x) for x in np.sort(mu_true[missed])],
+        "syn_n_missed_not_isolated": int(np.sum(missed & ~iso_all)),
+        "syn_n_missed_isolated_slow": int(np.sum(missed & iso_all & (mu_true < 1.0))),
+        "syn_n_missed_isolated_fast": int(np.sum(missed & iso_all & (mu_true >= 1.0))),
         "syn_n_orphans": list(res.n_orphans),
         "syn_n_pairs": len(res.pairs),
         "syn_n_triplets": len(res.triplets),

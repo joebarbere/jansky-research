@@ -760,7 +760,11 @@ def run5(work: Path, out: Path, cats, triples, model, search: dict, args) -> Non
             "area_deg2": area,
         },
     }
-    write_results(metrics, out / "results" / "vlasspm_metrics.json")
+    # Add to the file write_outputs just wrote, as ONE payload: a partial dict would make
+    # preserve_live_results list every other key as "retained from a previous run".
+    path = out / "results" / "vlasspm_metrics.json"
+    full = {k: vv for k, vv in json.loads(path.read_text()).items() if not k.startswith("_")}
+    write_results(full | metrics, path)
     log("run 5 written")
     v.write_real_paper(out)  # papers/vlasspm/generated/macros.tex + figures/, from the evidence
     log("paper macros + figure written")
@@ -904,7 +908,7 @@ def main() -> int:
     f = work / "vet.json"
     if not f.exists():
         log(f"vet: Gaia/CatWISE counterparts for {len(search['candidates'])} candidates ...")
-        _save(f, vet_counterparts(search["candidates"]))
+        _save(f, vet_counterparts(search["candidates"], cats, model))
 
     write_outputs(work, Path(args.out), floors, search)
     run5(work, Path(args.out), cats, triples, model, search, args)
@@ -973,59 +977,102 @@ def uvcet_check(cands: list[dict], cats: list | None = None) -> dict:  # network
     }
 
 
-def vet_counterparts(cands: list[dict], radius_arcsec: float = 5.0) -> list[dict]:  # network
-    """Gaia DR3 / CatWISE2020 near each candidate's track at the catalogue epoch.
+def candidate_detections(c: dict, cats: list[v.EpochCatalog], model: v.ErrorModel, idx=None):
+    """The three catalogue detections of a candidate (by catalogue row) with their full
+    covariance (measurement + model systematics, beam reference = the triple's mean beam)."""
+    ep = [int(x[1]) - 1 for x in c["triple"].split("-")]
+    idx = idx or [{int(r): n for n, r in enumerate(cc.ident)} for cc in cats]
+    rows = [idx[e][int(c[f"row{m + 1}"])] for m, e in enumerate(ep)]
+    ref = np.mean([cats[e].beam[k] for e, k in zip(ep, rows, strict=True)], axis=0)
+    ra = np.array([cats[e].ra[k] for e, k in zip(ep, rows, strict=True)])
+    dec = np.array([cats[e].dec[k] for e, k in zip(ep, rows, strict=True)])
+    t = np.array([cats[e].t_yr[k] for e, k in zip(ep, rows, strict=True)])
+    cov = np.array(
+        [
+            cats[e].cov[k]
+            + model.sys_cov(cats[e].shape[k : k + 1], cats[e].beam[k : k + 1], ref)[0]
+            for e, k in zip(ep, rows, strict=True)
+        ]
+    )
+    return ra, dec, t, cov
 
-    For Gaia, the NEAREST match's proper motion is recorded and compared with the radio one:
-    agreement (vector difference < 30% of |mu|) marks a known star recovered blind -- the
-    positive control. Disagreement or no match leaves the candidate unexplained.
+
+GAIA_EPOCH, CATWISE_EPOCH = 2016.0, 2015.4  # Gaia DR3 reference epoch; CatWISE2020 RAPM/DEPM
+
+
+def vet_counterparts(
+    cands: list[dict],
+    cats: list[v.EpochCatalog] | None = None,
+    model: v.ErrorModel = v.NO_MODEL,
+    radius_arcsec: float = v.COUNTERPART_RADIUS_ARCSEC,
+) -> list[dict]:  # network
+    """Gaia DR3 / CatWISE2020 sources within ``radius_arcsec`` of each candidate's track at the
+    catalogue epoch, and which of them are CO-MOVING (:func:`vlasspm.comoving`).
+
+    Referee round 1: a 5" circle holds an unrelated Gaia or CatWISE source a large fraction of the
+    time, so "no source within 5 arcsec" would call a truly dark mover "not dark" by chance. The
+    operational definition is therefore **optically dark = no co-moving counterpart**: no source
+    at the track's predicted position at its catalogue epoch (3 sigma, with the track-fit
+    covariance plus a 0.5" floor) and none whose proper motion matches the radio rate to 30%.
+    The positional counts are kept (``gaia``, ``catwise``) for comparison.
     """
     from astropy import units as u
     from astropy.coordinates import SkyCoord
     from astroquery.vizier import Vizier
 
-    gaia = Vizier(columns=["RA_ICRS", "DE_ICRS", "pmRA", "pmDE", "Gmag"], row_limit=20)
-    wise = Vizier(columns=["*"], row_limit=20)
+    gaia = Vizier(columns=["RA_ICRS", "DE_ICRS", "pmRA", "pmDE", "Gmag"], row_limit=50)
+    wise = Vizier(columns=["RAPMdeg", "DEPMdeg", "pmRA", "pmDE"], row_limit=50)
+    idx = [{int(r): n for n, r in enumerate(cc.ident)} for cc in cats] if cats else None
     out = []
     for n, c in enumerate(cands):
         rec: dict = {"index": n}
-        ra, dec = _track(c, 2016.0)
-        try:
-            r = gaia.query_region(
-                SkyCoord(ra * u.deg, dec * u.deg),
-                radius=radius_arcsec * u.arcsec,
-                catalog="I/355/gaiadr3",
-            )
-            rec["gaia"] = int(len(r[0])) if len(r) else 0
-            if rec["gaia"]:
-                t = r[0]
-                dx, dy = v.tangent_offsets_arcsec(
-                    ra, dec, np.asarray(t["RA_ICRS"]), np.asarray(t["DE_ICRS"])
+        fit = None
+        if cats is not None:
+            ra3, dec3, t3, cov3 = candidate_detections(c, cats, model, idx)
+            fit = v.fit_track(ra3, dec3, t3, cov3, parallax_arcsec=0.0)
+            rec["track_fit"] = {k: fit[k] for k in ("mu", "mu_err", "chi2", "dof")}
+        for name, cat, epoch, cols, pm_scale in (
+            ("gaia", gaia, GAIA_EPOCH, ("RA_ICRS", "DE_ICRS"), 1e-3),
+            ("catwise", wise, CATWISE_EPOCH, ("RAPMdeg", "DEPMdeg"), 1.0),
+        ):
+            if fit is not None:
+                pra, pdec, pcov = v.predict_track(fit, float(ra3[0]), float(dec3[0]), epoch)
+            else:
+                pra, pdec = _track(c, epoch)
+                pcov = np.eye(2)
+            try:
+                r = cat.query_region(
+                    SkyCoord(pra * u.deg, pdec * u.deg),
+                    radius=radius_arcsec * u.arcsec,
+                    catalog="I/355/gaiadr3" if name == "gaia" else "II/365/catwise",
                 )
-                k = int(np.argmin(np.hypot(dx, dy)))
-                pmra, pmde = float(t["pmRA"][k]) / 1000, float(t["pmDE"][k]) / 1000  # arcsec/yr
-                rec |= {
-                    "gaia_sep": float(np.hypot(dx[k], dy[k])),
-                    "gaia_pmra": pmra,
-                    "gaia_pmde": pmde,
-                    "gaia_gmag": float(t["Gmag"][k]),
-                }
-                if np.isfinite(pmra) and np.isfinite(pmde):
-                    diff = float(np.hypot(c["mu_ra"] - pmra, c["mu_dec"] - pmde))
-                    rec["pm_diff"] = diff
-                    rec["pm_agree"] = bool(diff < 0.3 * max(c["mu"], 1e-9))
-        except Exception as exc:  # noqa: BLE001
-            rec["gaia"] = f"error: {exc!r}"
-        ra, dec = _track(c, 2015.4)
-        try:
-            r = wise.query_region(
-                SkyCoord(ra * u.deg, dec * u.deg),
-                radius=radius_arcsec * u.arcsec,
-                catalog="II/365/catwise",
-            )
-            rec["catwise"] = int(len(r[0])) if len(r) else 0
-        except Exception as exc:  # noqa: BLE001
-            rec["catwise"] = f"error: {exc!r}"
+                t = r[0] if len(r) else None
+                rec[name] = int(len(t)) if t is not None else 0
+                if t is not None and len(t):
+                    tra = np.asarray(t[cols[0]], float)
+                    tde = np.asarray(t[cols[1]], float)
+                    pmra = np.asarray(np.ma.filled(t["pmRA"], np.nan), float) * pm_scale
+                    pmde = np.asarray(np.ma.filled(t["pmDE"], np.nan), float) * pm_scale
+                    co = v.comoving(
+                        pra, pdec, pcov, (c["mu_ra"], c["mu_dec"]), tra, tde, pmra, pmde
+                    )
+                    dx, dy = v.tangent_offsets_arcsec(pra, pdec, tra, tde)
+                    k = int(np.argmin(np.hypot(dx, dy)))
+                    rec[f"{name}_sep"] = float(np.hypot(dx[k], dy[k]))
+                    rec[f"{name}_comoving"] = int(co.sum())
+                    if name == "gaia":
+                        rec["gaia_pmra"], rec["gaia_pmde"] = float(pmra[k]), float(pmde[k])
+                        rec["gaia_gmag"] = float(t["Gmag"][k])
+                        if np.isfinite(pmra[k]) and np.isfinite(pmde[k]):
+                            diff = float(np.hypot(c["mu_ra"] - pmra[k], c["mu_dec"] - pmde[k]))
+                            rec["pm_diff"] = diff
+                            rec["pm_agree"] = bool(diff < v.COMOVING_PM_FRAC * max(c["mu"], 1e-9))
+                else:
+                    rec[f"{name}_comoving"] = 0
+            except Exception as exc:  # noqa: BLE001
+                rec[name] = f"error: {exc!r}"
+        rec["dark_positional"] = rec.get("gaia") == 0 and rec.get("catwise") == 0
+        rec["dark"] = rec.get("gaia_comoving") == 0 and rec.get("catwise_comoving") == 0
         out.append(rec)
     return out
 
@@ -1044,9 +1091,7 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
     abl = json.loads((work / "search_ablation.json").read_text())
     prev = json.loads((work / "previous_candidates.json").read_text())
     dark = [
-        c | {"vet": vt}
-        for c, vt in zip(search["candidates"], vet, strict=True)
-        if vt.get("gaia") == 0 and vt.get("catwise") == 0
+        c | {"vet": vt} for c, vt in zip(search["candidates"], vet, strict=True) if vt.get("dark")
     ]
     area = max(pt["area_deg2"] for pt in search["per_triple"].values())
     res_path = out / "results" / "vlasspm_metrics.json"
@@ -1096,6 +1141,12 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
         "real_completeness": comp,
         "real_n_candidates": len(search["candidates"]),
         "real_n_optically_dark": len(dark),
+        "real_dark_definition": (
+            "no CO-MOVING Gaia DR3 / CatWISE2020 counterpart (at the track's predicted position "
+            "at the catalogue epoch within 3 sigma + 0.5 arcsec floor, or proper motion within "
+            "30% of the radio rate); positional-only counts within 5 arcsec kept for comparison"
+        ),
+        "real_n_dark_positional": sum(1 for vt in vet if vt.get("dark_positional")),
         "real_n_gaia_pm_agree": sum(1 for vt in vet if vt.get("pm_agree") is True),
         "real_n_gaia_pm_disagree": sum(1 for vt in vet if vt.get("pm_agree") is False),
         "real_uvcet": uv,
@@ -1125,6 +1176,10 @@ def write_outputs(work: Path, out: Path, floors: dict, search: dict) -> None:
             "gaia_gmag",
             "pm_diff",
             "pm_agree",
+            "gaia_comoving",
+            "catwise_comoving",
+            "dark",
+            "dark_positional",
         ]
         w = csv.DictWriter(fh, fieldnames=keys + extra)
         w.writeheader()

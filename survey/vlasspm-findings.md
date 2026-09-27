@@ -416,3 +416,65 @@ Claim strength and definitions need work:
    - explain "17 of 25";
    - the size-noise sample is thin at S/N < 7;
    - the 0.53-0.92 sentence could be cut.
+
+## Response to referee round 1 (2026-09-27)
+
+New evidence: `results/vlasspm_referee1.json` (from `scripts/vlasspm_referee1.py --out .`), the
+re-vetted counterparts in `results/vlasspm_metrics.json` / `vlasspm_candidates.csv`, and
+`vpmReal*` / `vpmSyn*` macros for every number below that the note quotes.
+
+1. **UV Ceti rate (major).** `vlasspm.fit_track` fits a straight line plus parallax to the three
+   committed E2/E3/E4 detections, each weighted by its full covariance (catalogue ellipse + floor
+   + structure term); parallax factors from astropy's Earth ephemeris (`parallax_factors`, tested
+   against the geometric displacement; a synthetic 8-epoch track with a 0.25" parallax is
+   recovered). Results: **3.413 +/- 0.042"/yr with the Gaia DR3 parallax (374 mas) fixed**
+   (chi^2 2.9, 2 dof); 3.363 +/- 0.043 without parallax; free parallax 192 +/- 113 mas (1 dof),
+   3.389. Gaia DR3 (queried by TAP): UV Cet 3.232 (RUWE 10.5), BL Cet 3.429 (RUWE 12.4), 2.3"
+   apart; SIMBAD's system motion (GJ 65 / G 272-61, UCAC4) 3.344. The fixed-parallax rate is
+   1.6 sigma from the system and 0.4 sigma from BL Cet's Gaia value, 4.3 sigma from UV Cet's.
+   The note now calls it a detection of the unresolved Luyten 726-8 system and lists parallax,
+   orbital motion and blending as the effects that can move a three-epoch rate at this level;
+   the component is not assigned. Parallax alone moves UV Cet's E3 point by 1.2".
+2. **"Optically dark" (major).** Measured at 500 random footprint positions (seed 20260927, a
+   random E1 component displaced 2-5'): P(>= 1 source within 5") = **0.28** (Gaia 0.14,
+   CatWISE 0.24), lower than the review's ~42% estimate; within 1.5" 0.032, within 1" 0.010.
+   Adopted definition, now in `vet_counterparts` and `vlasspm.comoving`: **dark = no co-moving
+   counterpart** (a Gaia/CatWISE source within 3 sigma + 0.5" of the three-epoch track's
+   prediction at the catalogue epoch, or with proper motion within 30% of the radio rate). The
+   run-4 list re-vetted: 6 of 11 dark under the co-moving rule vs 5 under the 5" rule (one
+   candidate had only an off-track source inside 5"); the four static candidates with a
+   CatWISE source *at* the track position are most likely the hosts of those static radio
+   sources. After the compactness cut only UV Ceti reaches this step (three co-moving Gaia sources), so the step
+   removed no candidate and chance coincidence cost nothing.
+3. **Rate weighting and the edge.** Stated: the average is an unweighted mean over the log bins
+   (log-uniform prior). Worst coarse bin: 0.921 -> 9.6e-5. Fine bins (3 mJy, cut, 20,000
+   injections over 0.8-5"/yr): 0.26 (0.80-0.92), **0.65 (0.92-1.0)**, 0.87 (1.0-1.1), >= 0.97
+   above 1.1. A mover just above 0.92"/yr is constrained only to < 1.4e-4. The figure is now
+   steps per bin with the fine bins as points.
+4. **Provenance of the cut.** The note now says the idea followed the vetted candidates, the
+   threshold and rule were fixed on injections, and gives the margins (J198.1-39.1 passes at
+   0.92, J314.1-32.6 at 1.01, against 0.9), then claims the property the review identified: no
+   by-eye step lies between the catalogues and the limit.
+5. **Tails.** `tail_bound` takes the largest excess of the compact statics' 3-sigma tail over
+   Rayleigh among the S/N bins a detection at that flux can occupy (per-epoch peak 0.8-1.25 x
+   flux over the 10th-90th percentile rms): **0.6% at 3 mJy, 1.9% at 1.5 mJy**. An upper bound,
+   quoted as such.
+6. **Parallax domain.** `parallax_floor`: over 2,000 E1-E2-E3 positions and dates, the median
+   E3 residual per arcsec of parallax is 2.35 and the median E3 standard error for a 3 mJy point
+   source 0.26"; parallax exceeds one standard error inside **8 pc** (the review estimated ~5).
+7. **Scramble null.** One sentence on what it measures (chance alignments of unrelated orphans)
+   and cannot (a static source whose centroid shifts).
+8. **Four epochs.** E4 area from `real_per_triple`: 17,301 deg^2.
+9. **Prior work.** Atri et al. 2022 cited (Crossref-verified); the sentence is narrowed to
+   survey-scale searches.
+10-12. Flux domain stated per epoch (2.4-3.75 mJy for the 3 mJy injections, 1.2-1.9 mJy for
+   1.5 mJy; from `INJ_FLUX_SPREAD`); "whole sky" now says "if movers are isotropic"; the
+   synthetic 17 of 25 is explained from the offline run (all 8 missed movers are slower than
+   1.1"/yr, one of them also not isolated; `vpmSynNMissed`, `vpmSynMissedMuMax`); the
+   0.53-0.92 sentence is cut (that bin is below the limit's rate range).
+
+Side fix: `vlasspm_real.run5` now writes the metrics file as one payload, so it no longer
+carries a `_merge` block listing the whole file as "retained from a previous run".
+
+Length: 111-word abstract, ~1,270 words of text in the two sections (pdftotext, including the
+figure caption), over the ~1,000 target and under the RNAAS 1,500 limit.
