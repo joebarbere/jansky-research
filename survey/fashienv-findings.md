@@ -580,3 +580,52 @@ mean +/- 1 sigma bands.
 - **Removed from the text** (still in the JSON): the frame-ratio detail and the per-shell
   volume shares. The weighting-dependence of the group residual against placement now survives
   only as the two placement excesses quoted side by side.
+
+## Sixth referee round, on the reframing (2026-09-27): MAJOR revision
+
+The conclusions are pitched at about the right strength. Macros, figure and citations are
+correct (Crossref: moorman2014, douglass2023, tempel2017, fashi_groups). The evidence under the
+headline has three holes and one mis-stated bracket.
+
+1. **(major) A quarter of wall/field galaxies have no environment classification.**
+   "Classifiable" is a padded box, not the SDSS sky: 74,024 in the box against 55,893 in the
+   SDSS cells. All 18,131 outside galaxies (24.5%) are labelled wall AND field. The headline
+   offsets and both nulls use the box pool; the blending test uses the footprint pool. The
+   offsets differ: group +0.089 (box) vs +0.123 (footprint); void survey -0.150 vs -0.171. The
+   paper quotes both as "the restricted group offset". The shuffle excess before (+0.095, box)
+   and after (+0.064, footprint) confused-source removal differs in two ways at once. This
+   round-1 item was never closed. **Fix:** move everything to the in-footprint pool.
+2. **(major) The shuffle is conditioned on redshift, not depth.** DR2's rms spans 0.48-2.45
+   mJy (5-95%), and the mass floor at fixed z follows it. The docstring claim "mass is the only
+   thing that can differ at fixed z" is false. Depth differences between void regions and the
+   rest would inflate the 3.2 sigma end, and could explain the gap between the nulls (placements
+   keep sky position; shuffles do not). **Fix:** stratify by (z, rms) or (z, sky cell).
+3. **(major) The blending flag largely restates the Tempel group definition.** Two SDSS galaxies
+   within 2.9' (~0.1 Mpc) and ~300 km/s are almost necessarily FoF-linked, so 25.5% vs 1.6% is
+   largely by construction. Exclusion also removes close pairs, so it cannot separate blending
+   from mass selection OR from close-pair environment. **Sharper tests with existing data:**
+   W50 and W20/W50 residuals of flagged vs unflagged sources at fixed mass and z (blending
+   broadens lines); dependence on beam radius; HI mass at fixed optical luminosity. A random
+   exclusion matched in z and mass would be tautological.
+4. **(major) The bracket is quoted without significances, and its low end (1.3 sigma) is
+   consistent with zero.** "Bracketed by the two nulls" also misstates what is bracketed: it is
+   the excess, not the offset. **Fix:** "an excess of 0.05 dex (1.3 sigma, placements) to 0.12
+   dex (3.2 sigma, shuffles)".
+5. "Real members pull each null towards the measurement" is wrong for the shuffle, which puts
+   members in and out at the same rate. It holds for placements only (0.325 in vs 0.175 out).
+6. The post-exclusion sigmas use the full-sample fit error, not the clean sample's, so they are
+   overstated.
+7. The round-4 occupancy sign regressed out of the text. Emptier placements give less negative
+   offsets, so the placement end of the bracket is the conservative one; restore "weakly".
+8. "Reproduce most of it" holds for one weighting only (58% survey-wide, 44% restricted); say
+   "about half".
+9. "Does not depend on beam confusion" overstates a test that is weak for voids (7-11% flagged;
+   blind to faint companions). Say "insensitive to excluding sources with an SDSS-bright
+   companion".
+10. The figure's shuffle bands carry no measured-offset error, so it reads as ~8 sigma.
+11. The shuffle unit test cannot fail. Add a depth-confound case.
+12. Nits: ConfIn/ConfOut precision mismatch; 2.5 vs 2.6; "emptier than a typical randomly placed
+    volume"; the title still says one null.
+
+On "no placement can match occupancy": the argument is sound for rigid placements. The feasible
+improvement is a (z, depth)-conditioned shuffle, not a better placement.
