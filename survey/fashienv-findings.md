@@ -433,3 +433,42 @@ rows with **max |diff| = 0**.
   - #10: the README rows are updated. The gitignored DR1 arXiv tarball is stale and must be
     rebuilt (`make arxiv`) before any submission.
 - Fig. 1 (void/wall HIMF) is no longer in the paper; `figures/fashienv.pdf` is still generated.
+
+## Fifth referee round (2026-09-26): MINOR revision
+
+The env-restricted Vmax implementation was verified wherever it could be checked:
+- The DR2 Vmax inverts exactly to FASHI's comoving distance, so there is no lower distance limit.
+- Galaxies and randoms use the same classifiable box and group-cylinder rules.
+- All 46 macros match the JSON; the figure matches its rows; Crossref confirms both FASHI bib
+  entries.
+
+9 of 10 round-4 findings are resolved; #5 is partial. The problems are interpretive, and all
+lean the same way:
+
+1. **(major) "Without a trend" is false.** The void share of classifiable volume per shell is
+   0.30 within 50 Mpc and ~0.42 beyond. Cumulative g_void/g_wall goes 0.44 -> 0.72. That trend
+   is WHY the restriction moved the void numbers (constant g cannot move a knee, per the
+   docstring). **My inference in the round-4 response was therefore wrong:** "no trend, so the
+   remaining void bias is not Vmax bookkeeping" rested on a false premise.
+2. **(major) "Necessary but not sufficient" / "does not remove the void bias" assume the
+   remaining null offset is bias.** The null contains real structure, so part of it may be
+   signal. "Necessary" is not shown either: the null-subtracted void residual was -0.063 before
+   the restriction and -0.052 after (a 0.011 change). The Discussion's opening is single-cause
+   again (round-4 #6 regressed).
+3. **(major) The group tail status is created by the weighting change.** The restriction moved
+   the group null by -0.151 but the measurement by only -0.078. Under survey-wide weighting the
+   residual was +0.040 (44/200); under the restriction it is +0.113 (3/200), so two-thirds of
+   the excess is the differential response. The env null mean is -0.025 +/- 0.003, not zero:
+   "removes" should read "reduces to". The paired rows do not explain the differential response
+   (r = 0.00 with occupancy). The real groups lie outside the null on z, occupancy and overlap.
+   The blending caveat has the right sign, and would also depress the void knee.
+4. Use one significance yardstick for both environments. In quadrature: void 1.4 sigma, group
+   2.0 sigma. Two tests make p ~ 0.02 into ~ 0.04.
+5. The distance frames are mismatched: FASHI comoving vs h70 has median ratio 0.951, and 10.4%
+   of galaxies have dmax below their own h70 distance. The effect is estimated at << 0.01 dex
+   but not measured. Rerun with dmax rescaled into the randoms' frame, in a worktree.
+6. The occupancy correlation -0.42 comes from the survey-wide rows. On the paired 200 rows it is
+   -0.39 survey-wide and -0.22 restricted. Group diagnostics are collinear and give no direction.
+7-9 (nits): write "first 200 of the same seeded placements"; the runner writes the results
+   JSON directly with no `--out`; "41.492" should be "41"; the figure legend overlaps the void
+   histograms.
