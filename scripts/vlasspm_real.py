@@ -762,6 +762,8 @@ def run5(work: Path, out: Path, cats, triples, model, search: dict, args) -> Non
     }
     write_results(metrics, out / "results" / "vlasspm_metrics.json")
     log("run 5 written")
+    v.write_real_paper(out)  # papers/vlasspm/generated/macros.tex + figures/, from the evidence
+    log("paper macros + figure written")
 
 
 def main() -> int:

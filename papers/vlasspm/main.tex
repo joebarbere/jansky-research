@@ -1,0 +1,140 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A blind VLASS proper-motion search}
+\shortauthors{Barbere}
+\begin{document}
+\title{No Optically Dark Compact Radio Movers in Four VLASS Epochs}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+We searched the four VLASS Quick Look component catalogues for sources that move, without
+using optical or infrared positions until the last step. The search recovers UV~Ceti at
+\vpmRealUVMu~arcsec~yr$^{-1}$ (Gaia: \vpmRealUVGaiaMu) and finds no other mover. Positional
+errors are the catalogue's elliptical Gaussian errors plus floors and a structure term
+calibrated on \vpmRealNStaticPairs~million pairs of static detections, and a compactness cut calibrated on
+the measured sizes of nearby Gaia stars reduces \vpmRealNCandBefore\ candidates to UV~Ceti alone;
+the other \vpmRealNStaticVetted\ are static extended sources in the images. For compact sources
+above 3~mJy moving at \vpmRealRateMid--\vpmRealRateMax~arcsec~yr$^{-1}$ with no Gaia or CatWISE
+counterpart, the 95\% upper limit is $\vpmRealLimThree$~deg$^{-2}$ over
+\vpmRealAreaDeg~deg$^2$.
+\end{abstract}
+
+\keywords{Proper motions (1295) --- Radio astrometry (1337) --- Sky surveys (1464) ---
+Radio continuum emission (1340)}
+
+\section{Search}
+\label{sec:search}
+Radio proper motions have so far been measured for objects already known to move: stars
+selected by their Gaia or optical proper motions and then found in radio surveys
+\citep{driessen2023,de2024}. A blind search asks the reverse question and can find movers with
+no optical counterpart, such as cool brown dwarfs or high-velocity pulsars. The VLA Sky Survey
+\citep[VLASS;][]{lacy2020} has now covered the sky north of Dec $-40^\circ$ four times at
+3~GHz with a 2.5-arcsec beam. We used the CIRADA component tables for epochs 1 and 2
+\citep{gordon2021} and the NRAO Quick Look lists for epochs 3 and 4, all fitted by PyBDSF
+\citep{pybdsf}: after the quality cuts they hold \vpmRealNEOne, \vpmRealNETwo, \vpmRealNEThree\
+and \vpmRealNEFour\ components observed between \vpmRealTStart\ and \vpmRealTEnd.
+
+A component with no counterpart within 2.5~arcsec in another epoch is an orphan, and only
+orphans with no other component within 30~arcsec in their own epoch are used, because split
+extended sources produce correlated orphans. Orphans in two epochs are linked when the implied
+rate lies between \vpmRealRateMin\ and \vpmRealRateMax~arcsec~yr$^{-1}$ and the shift is
+significant at $3\sigma$; a third epoch must then contain an orphan within $3\sigma$ of the
+extrapolated straight line at its own observing date. Every triple of epochs is searched.
+
+Each component's positional error is the elliptical Gaussian error of \citet{condon1997}, with
+the effective signal-to-noise of \citet{condon1998} and the exponents as in \citet{prandoni2000},
+computed from its fitted axes, position angle, beam and peak signal-to-noise. It reproduces the
+catalogue errors. To it we add an astrometric floor measured from bright static sources in
+declination bands (\vpmRealFloorMin--\vpmRealFloorMax~arcsec) and a structure term: a resolved
+source's centroid moves between epochs by a fraction \vpmRealKStruct\ of its deconvolved size
+along each of its axes. That fraction was fitted to the offsets of \vpmRealNStaticPairs~million
+pairs of isolated static sources matched between epochs, so that their $3\sigma$ tail matches a Rayleigh
+distribution, and checked on a held-out half of the sky: the fraction of static sources beyond
+$3\sigma$ falls from \vpmRealTailMeas\ with the catalogue errors to \vpmRealTailFit\ (expected
+0.011). The calibrated errors remain too narrow beyond about $4\sigma$ (a fraction
+\vpmRealTailFitFive\ of static sources lies beyond $5\sigma$) and south of Dec $-35^\circ$
+(\vpmRealTailSouthRatio\ times the Rayleigh fraction beyond $3\sigma$), and too wide in the core
+(median normalised offset \vpmRealMedZFit, against 1.18).
+
+Nearly all false candidates are resolved static sources, whereas stars and pulsars are
+unresolved at 2.5~arcsec, so we also require compact detections, with compactness defined as the
+deconvolved major axis divided by the beam major axis. A faint point source is not fitted with
+zero size, and the threshold was set on injected point sources whose catalogue sizes were drawn,
+by signal-to-noise, from \vpmRealNStars\ detections of stars within 100~pc in the Gaia
+Catalogue of Nearby Stars \citep{gcns2021} (about \vpmRealNStarChance\ expected by chance). The
+criterion was fixed before the cut was applied to the data: the smallest threshold that keeps at
+least 95\% of the recovered injections overall and in every signal-to-noise bin, with the
+cross-epoch rule chosen by its rejection of the general static population. Requiring two of
+three detections below \vpmRealCutThr\ keeps \vpmRealKeepAll\ of the injections
+(\vpmRealKeepLowSNR\ below signal-to-noise 7) and removes \vpmRealStaticRej\% of static sources;
+requiring all three needs a threshold of \vpmRealCutThrAll\ and removes \vpmRealStaticRejAll\%.
+Between \vpmRealRateLo\ and \vpmRealRateMid~arcsec~yr$^{-1}$ the cut keeps only \vpmRealKeepSlow\
+of the injections, because the target was set per signal-to-noise bin rather than per rate, and
+the star sample is too small to show whether the size noise differs between epochs.
+Rotating the later epochs by a few arcminutes in right ascension gives the expected number of
+chance alignments, and \vpmRealNInj\ movers injected at random sky positions with the same
+errors and size noise give the completeness. On a synthetic field the pipeline recovers
+\vpmSynNRecovered\ of \vpmSynNMovers\ planted movers with \vpmSynNFalse\ false candidates.
+
+\section{Results}
+\label{sec:results}
+UV~Ceti is recovered from epochs 2--4 at \vpmRealUVMu~arcsec~yr$^{-1}$ with a straight-line
+residual of \vpmRealUVResid$\sigma$; it is below the epoch-1 detection limit. Gaia DR3
+\citep{gaiadr3} gives \vpmRealUVGaiaMu~arcsec~yr$^{-1}$; the difference may come from the
+companion BL~Cet, about 2~arcsec away and blended in the VLASS beam. Its compactness in the three epochs is \vpmRealUVCompA, \vpmRealUVCompB\
+and \vpmRealUVCompC, so it passes on two detections.
+
+Before the compactness cut the search returns \vpmRealNCandBefore\ candidates. Cutouts of the
+other \vpmRealNStaticVetted\ show emission persisting at the first-epoch position; most are
+extended, and \vpmRealNSouthVetted\ lie south of Dec $-35^\circ$, where the beam in some epochs
+is strongly elongated. The cut removes all \vpmRealNStaticVetted\ and leaves UV~Ceti alone. The scrambled
+catalogues give at most \vpmRealNullCand\ chance candidates per trial in any triple of epochs.
+
+At 3~mJy the completeness is \vpmRealCompFloorThreeCut\ below \vpmRealRateLo~arcsec~yr$^{-1}$
+and \vpmRealCompSlowThreeCut\ between \vpmRealRateLo\ and \vpmRealRateMid~arcsec~yr$^{-1}$,
+because a slower mover stays within the 2.5-arcsec static match radius (Figure~\ref{fig:comp}). Averaged over \vpmRealRateMid--\vpmRealRateMax~arcsec~yr$^{-1}$ it is
+\vpmRealCompThreeCut\ at 3~mJy (\vpmRealCompThreeNoCut\ without the cut) and
+\vpmRealCompOneFiveCut\ at 1.5~mJy (\vpmRealCompOneFiveNoCut). With no new mover, and no Gaia DR3
+or CatWISE2020 \citep{catwise2020} counterpart required, the 95\% upper limits on the surface
+density of compact movers in that range are $\vpmRealLimThree$~deg$^{-2}$ at 3~mJy and
+$\vpmRealLimOneFive$~deg$^{-2}$ at 1.5~mJy, or fewer than \vpmRealAllSky\ over the whole sky.
+The limit applies only to movers unresolved at 2.5~arcsec: the cut removes a mover with resolved
+emission, such as a pulsar with a bow-shock nebula, and a binary a few tenths of a beam wide that
+is fitted as one elongated source in two epochs.
+
+\begin{figure}
+\plotone{figures/vlasspm_completeness.pdf}
+\caption{Fraction of injected point-source movers recovered, against proper motion, at 3 and
+1.5~mJy with (solid) and without (dashed) the compactness cut; points are at the centres of the
+rate bins (grey lines). The dotted line marks the rate measured for UV~Ceti.}
+\label{fig:comp}
+\end{figure}
+
+Reproducibility: \code{jansky\_research.vlasspm} and \code{scripts/vlasspm\_real.py}; every number
+derived from the data is pipeline-generated (\code{results/vlasspm\_metrics.json} and
+\code{vlasspm\_vetting.json} $\to$ macros); survey and method constants are typed. Data: CIRADA
+VLASS epoch 1 and 2 component and subtile tables (CANFAR), NRAO VLASS Quick Look component lists
+QL3.1, QL3.2 and QL4.1, the Gaia Catalogue of Nearby Stars (VizieR \code{J/A+A/649/A6}), Gaia
+DR3 and CatWISE2020 via VizieR, and VLASS image cutouts from CADC; no authentication is needed.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (models Claude Opus~4.x and 5.5, accessed 2026). Claude contributed to
+the design, implementation, and testing of the \code{vlasspm} module and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+We used the VLASS Quick Look images and catalogues (NRAO, with CIRADA and CADC), Gaia DR3 and
+the Gaia Catalogue of Nearby Stars (ESA), and CatWISE2020; the analysis builds on the
+\code{jansky} project. The author acknowledges the collaborative contribution of Anthropic's
+Claude.
+\end{acknowledgments}
+
+\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude},
+PyBDSF \citep{pybdsf}, astroquery, Astropy, NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliography{refs}
+\end{document}

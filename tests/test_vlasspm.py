@@ -646,3 +646,59 @@ def test_compactness_calibration_on_injections_and_threshold_choice():
     assert v.choose_threshold(tab, "all", keep_min=1.01) is None
     comp = v.completeness(*cats, n=300, size_noise=sn, compact_max=1.0, realistic_frac=1.0)
     assert comp["compact_max"] == 1.0 and comp["size_noise"] is True
+
+
+# ------------------------------------------------------------------------- paper macros
+
+
+def _real_results(tmp_path):
+    import shutil
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    (tmp_path / "results").mkdir()
+    for f in ("vlasspm_metrics.json", "vlasspm_vetting.json"):
+        shutil.copy(root / f, tmp_path / "results" / f)
+
+
+def _macros(path):
+    import re
+
+    pat = re.compile(r"\\newcommand\{\\([A-Za-z]+)\}\{(.*)\}\s*$")
+    return {
+        m.group(1): m.group(2) for line in path.read_text().splitlines() if (m := pat.match(line))
+    }
+
+
+def test_paper_macros_both_legs_accumulate_and_never_blank(tmp_path):
+    _real_results(tmp_path)
+    mac = tmp_path / "papers" / "vlasspm" / "generated" / "macros.tex"
+    syn = v.run(str(tmp_path / "offline"), n_null=2, n_inject=200)  # offline leg: its own dir
+    v._write_macros(syn, mac)  # synthetic first: real namespace is placeholders
+    first = _macros(mac)
+    assert first["vpmSynNMovers"] == str(syn["syn_n_movers"])
+    assert first["vpmRealNCandAfter"] == "--"
+    v.write_real_paper(tmp_path)  # real leg
+    both = _macros(mac)
+    assert both["vpmSynNMovers"] == str(syn["syn_n_movers"])  # not blanked by the real leg
+    for name in v.REAL_MACRO_NAMES:
+        assert both[f"vpmReal{name}"] != "--", name
+    assert both["vpmRealNCandAfter"] == "1" and both["vpmRealNNewMovers"] == "0"
+    assert "real" in both["vpmSource"]
+    v._write_macros(syn, mac)  # a later offline rebuild must not touch the real values
+    assert _macros(mac) == both
+    assert (tmp_path / "papers" / "vlasspm" / "figures" / "vlasspm_completeness.pdf").stat().st_size
+    assert (tmp_path / "offline" / "papers" / "vlasspm" / "generated" / "macros.tex").exists()
+
+
+def test_write_real_paper_refuses_synthetic_evidence(tmp_path):
+    v.run(str(tmp_path), n_null=2, n_inject=200)
+    with pytest.raises(ValueError):
+        v.write_real_paper(tmp_path)
+
+
+def test_macro_formatters():
+    assert v._fmt_int(33838.5) in ("33{,}838", "33{,}839")
+    assert v._fmt_sci(9.18e-5) == r"9.2\times10^{-5}"
+    assert v._syn_macro_values({"is_real": True}) == {}
+    assert v._real_macro_values({"is_real": False}, None) == {}

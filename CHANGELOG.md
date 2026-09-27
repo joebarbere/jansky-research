@@ -11,6 +11,14 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`papers/vlasspm/`: an RNAAS-length upper-limit note, "No Optically Dark Compact Radio
+  Movers in Four VLASS Epochs".** Every data-derived number is a `vpmReal*` macro written by
+  `vlasspm.write_real_paper` from `results/vlasspm_metrics.json` + `vlasspm_vetting.json`
+  (the real script calls it; `run(offline=False)` regenerates it); the offline fixture writes
+  `vpmSyn*`, both merged through `preserve_live_macros`. One generated figure (completeness vs
+  rate, 1.5 and 3 mJy, with and without the compactness cut). The ten journal references were
+  checked field by field against Crossref (PyBDSF against ADS). `vlasspm` joins the Makefile `SLICES`
+  and the offline Snakefile DAG.
 - **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
   Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole
   survey), confirmed by a straight-line third detection, with an RA-scramble null, injection

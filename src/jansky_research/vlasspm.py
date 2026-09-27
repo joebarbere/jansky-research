@@ -1494,13 +1494,293 @@ def synthetic_statics(
 # ------------------------------------------------------------------------------------------ run
 
 
+# ----------------------------------------------------------------------------- paper
+
+
+def _fmt_int(x) -> str:
+    return f"{int(round(float(x))):,}".replace(",", "{,}")
+
+
+def _fmt_sci(x: float, digits: int = 2) -> str:
+    mant, exp = f"{x:.{digits - 1}e}".split("e")
+    return rf"{mant}\times10^{{{int(exp)}}}"
+
+
+def _syn_macro_values(m: dict) -> dict[str, str]:
+    """Offline-fixture numbers for the vpmSyn* namespace (empty for a real metrics dict)."""
+    if m.get("is_real") or "syn_n_movers" not in m:
+        return {}
+    out = {
+        "NMovers": str(m["syn_n_movers"]),
+        "NRecovered": str(m["syn_n_recovered"]),
+        "NFalse": str(m["syn_n_false"]),
+        "Completeness": f"{m['syn_completeness']:.2f}",
+        "NullCand": f"{m['syn_null_candidates_mean']:.2f}",
+    }
+    if m.get("syn_calib_k_struct_fit") is not None:
+        out |= {
+            "KTrue": f"{m['syn_calib_k_struct_true']:.2f}",
+            "KFit": f"{m['syn_calib_k_struct_fit']:.2f}",
+            "TailOld": f"{m['syn_calib_resolved_f_gt3_measurement_only']:.2f}",
+            "TailFit": f"{m['syn_calib_resolved_f_gt3_fitted']:.3f}",
+        }
+    return out
+
+
+def _real_macro_values(m: dict, vet: dict | None) -> dict[str, str]:
+    """Every data-derived number the paper quotes, from the committed real evidence."""
+    if not m.get("is_real") or "real_run5_compactness" not in m:
+        return {}
+    r5 = m["real_run5_compactness"]
+    cal = m["real_calibration"]
+    val = cal["validation"]
+    ep = m["real_epochs"]
+    uv = m["real_uvcet"]["hits"][0]
+    floors = [f for b in m["real_floors_banded"]["bands"] for f in (b.get("floor_arcsec") or [])]
+    dec_rows = {(r["lo"], r["hi"]): r for r in val["fitted_model"]["dec"]}
+    south = dec_rows[(-90.0, -35.0)]
+    tab = r5["calibration"]["table"]
+    rule_rows = {r["threshold"]: r for r in tab["rules"][r5["rule"]]}
+    kept = rule_rows[r5["threshold"]]
+    slow_bin = 1  # 0.53-0.92 arcsec/yr
+    uv5 = next(c for c in r5["run4_candidates"] if c["triple"] == uv["triple"] and c["passes"])
+    comp = r5["completeness"]
+    lim = r5["limits"]
+    null = max(v["candidates_mean"] for v in r5["null"].values())
+    edges = comp["3mJy_cut"]["bin_edges"]
+    n_static_pairs = cal["n_pairs_fit"] + cal["n_pairs_validate"]
+    stars = r5["size_noise_reference"]
+    out = {
+        "NEOne": _fmt_int(ep["E1"]["n_clean"]),
+        "NETwo": _fmt_int(ep["E2"]["n_clean"]),
+        "NEThree": _fmt_int(ep["E3"]["n_clean"]),
+        "NEFour": _fmt_int(ep["E4"]["n_clean"]),
+        "TStart": f"{ep['E1']['t_min']:.1f}",
+        "TEnd": f"{ep['E4']['t_max']:.1f}",
+        "AreaDeg": _fmt_int(r5["area_deg2"]),
+        "FloorMin": f"{min(floors):.2f}",
+        "FloorMax": f"{max(floors):.2f}",
+        "NStaticPairs": f"{n_static_pairs / 1e6:.1f}",
+        "KStruct": f"{cal['model']['k_struct']:.2f}",
+        "TailLegacy": f"{val['legacy_runs1to3']['all']['f_gt3']:.3f}",
+        "TailMeas": f"{val['measurement_only']['all']['f_gt3']:.3f}",
+        "TailFit": f"{val['fitted_model']['all']['f_gt3']:.4f}",
+        "TailFitFive": f"{val['fitted_model']['all']['f_gt5']:.4f}",
+        "MedZFit": f"{val['fitted_model']['all']['median_z']:.2f}",
+        "TailSouth": f"{south['f_gt3']:.3f}",
+        "TailSouthRatio": f"{south['f_gt3'] / RAYLEIGH_TAIL_3SIGMA:.1f}",
+        "UVMu": f"{uv['mu']:.2f}",
+        "UVGaiaMu": f"{uv['gaia_mu']:.2f}",
+        "UVResid": f"{uv['resid_sigma']:.2f}",
+        "UVCompA": f"{uv5['compactness'][0]:.2f}",
+        "UVCompB": f"{uv5['compactness'][1]:.2f}",
+        "UVCompC": f"{uv5['compactness'][2]:.2f}",
+        "NCandBefore": str(len(r5["run4_candidates"])),
+        "NCandAfter": str(r5["n_candidates"]),
+        "NStaticVetted": str(len(r5["run4_candidates"]) - r5["n_candidates"]),
+        "NullCand": f"{null:.2f}",
+        "NStars": str(sum(stars["n_per_epoch"])),
+        "NStarChance": str(stars["n_chance_expected"]),
+        "CutThr": f"{r5['threshold']:.1f}",
+        "CutThrAll": f"{r5['calibration']['choice']['all']['threshold']:.1f}",
+        "NInjCal": _fmt_int(r5["calibration"]["n_injected"]),
+        "NRecCal": _fmt_int(tab["n_recovered"]),
+        "KeepAll": f"{kept['overall']:.3f}",
+        "KeepLowSNR": f"{kept['per_snr'][0]:.3f}",
+        "KeepSlow": f"{kept['per_mu'][slow_bin]:.2f}",
+        "StaticRej": f"{100 * r5['calibration']['choice'][r5['rule']]['static_rejected_fraction']:.0f}",
+        "StaticRejAll": f"{100 * r5['calibration']['choice']['all']['static_rejected_fraction']:.1f}",
+        "NInj": _fmt_int(comp["3mJy_cut"]["n_injected"]),
+        "CompThreeCut": f"{lim['3mJy_cut']['completeness_mean_0p92_5']:.3f}",
+        "CompThreeNoCut": f"{lim['3mJy_nocut']['completeness_mean_0p92_5']:.3f}",
+        "CompOneFiveCut": f"{lim['1.5mJy_cut']['completeness_mean_0p92_5']:.3f}",
+        "CompOneFiveNoCut": f"{lim['1.5mJy_nocut']['completeness_mean_0p92_5']:.3f}",
+        "CompSlowThreeCut": f"{comp['3mJy_cut']['per_bin'][slow_bin]:.2f}",
+        "CompFloorThreeCut": f"{comp['3mJy_cut']['per_bin'][0]:.2f}",
+        "RateLo": f"{edges[1]:.2f}",
+        "RateMid": f"{edges[2]:.2f}",
+        "RateMin": f"{edges[0]:.1f}",
+        "RateMax": f"{edges[-1]:.0f}",
+        "LimThree": _fmt_sci(lim["3mJy_cut"]["limit_per_deg2_95"]),
+        "LimOneFive": _fmt_sci(lim["1.5mJy_cut"]["limit_per_deg2_95"]),
+        "AllSky": f"{lim['3mJy_cut']['limit_per_deg2_95'] * 4 * np.pi * (180 / np.pi) ** 2:.1f}",
+    }
+    if vet:
+        out["NVetted"] = str(vet.get("n_candidates"))
+        out["NNewMovers"] = str(vet.get("n_new_movers"))
+        cands = (vet.get("candidates") or {}).values()
+        out["NSouthVetted"] = str(
+            sum(1 for c in cands if c["dec"] < -35.0 and c["verdict"].startswith("static"))
+        )
+    return out
+
+
+REAL_MACRO_NAMES = (
+    "NEOne",
+    "NETwo",
+    "NEThree",
+    "NEFour",
+    "TStart",
+    "TEnd",
+    "AreaDeg",
+    "FloorMin",
+    "FloorMax",
+    "NStaticPairs",
+    "KStruct",
+    "TailLegacy",
+    "TailMeas",
+    "TailFit",
+    "TailFitFive",
+    "MedZFit",
+    "TailSouth",
+    "TailSouthRatio",
+    "UVMu",
+    "UVGaiaMu",
+    "UVResid",
+    "UVCompA",
+    "UVCompB",
+    "UVCompC",
+    "NCandBefore",
+    "NCandAfter",
+    "NStaticVetted",
+    "NullCand",
+    "NStars",
+    "NStarChance",
+    "CutThr",
+    "CutThrAll",
+    "NInjCal",
+    "NRecCal",
+    "KeepAll",
+    "KeepLowSNR",
+    "KeepSlow",
+    "StaticRej",
+    "StaticRejAll",
+    "NInj",
+    "CompThreeCut",
+    "CompThreeNoCut",
+    "CompOneFiveCut",
+    "CompOneFiveNoCut",
+    "CompSlowThreeCut",
+    "CompFloorThreeCut",
+    "RateLo",
+    "RateMid",
+    "RateMin",
+    "RateMax",
+    "LimThree",
+    "LimOneFive",
+    "AllSky",
+    "NVetted",
+    "NNewMovers",
+    "NSouthVetted",
+)
+SYN_MACRO_NAMES = (
+    "NMovers",
+    "NRecovered",
+    "NFalse",
+    "Completeness",
+    "NullCand",
+    "KTrue",
+    "KFit",
+    "TailOld",
+    "TailFit",
+)
+
+
+def _write_macros(m: dict, path, vet: dict | None = None) -> None:
+    """Both namespaces always emitted; the inactive one as placeholders, merged by
+    :func:`report.preserve_live_macros` so neither leg can blank or overwrite the other."""
+    from .report import MACRO_PLACEHOLDER, preserve_live_macros
+
+    real = _real_macro_values(m, vet)
+    syn = _syn_macro_values(m)
+    names_real, names_syn = REAL_MACRO_NAMES, SYN_MACRO_NAMES
+    lines = [
+        "% Auto-generated by jansky_research.vlasspm._write_macros -- do not edit.",
+        "% vpmReal* come from results/vlasspm_metrics.json + vlasspm_vetting.json (real leg);",
+        "% vpmSyn* from the offline fixture. The inactive namespace is written as placeholders",
+        "% and preserve_live_macros keeps the other leg's live values.",
+        rf"\newcommand{{\vpmSource}}{{{m['source']}}}",
+    ]
+    lines += [rf"\newcommand{{\vpmSyn{k}}}{{{syn.get(k, MACRO_PLACEHOLDER)}}}" for k in names_syn]
+    lines += [
+        rf"\newcommand{{\vpmReal{k}}}{{{real.get(k, MACRO_PLACEHOLDER)}}}" for k in names_real
+    ]
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    text = preserve_live_macros("\n".join(lines) + "\n", p)
+    p.write_text(text)
+
+
+def _paper_figure(m: dict, path) -> Path:
+    """Completeness vs proper-motion rate, 1.5 and 3 mJy, with and without the compactness cut,
+    UV Ceti's measured rate marked."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker
+
+    r5 = m["real_run5_compactness"]
+    comp = r5["completeness"]
+    edges = np.asarray(comp["3mJy_cut"]["bin_edges"])
+    centres = np.sqrt(edges[:-1] * edges[1:])
+    fig, ax = plt.subplots(figsize=(3.4, 2.6))
+    styles = {
+        "3mJy_nocut": ("3 mJy, no cut", "C0", "--", "o"),
+        "3mJy_cut": ("3 mJy, cut", "C0", "-", "o"),
+        "1.5mJy_nocut": ("1.5 mJy, no cut", "C1", "--", "s"),
+        "1.5mJy_cut": ("1.5 mJy, cut", "C1", "-", "s"),
+    }
+    for key, (lab, col, ls, mk) in styles.items():
+        ax.plot(centres, comp[key]["per_bin"], ls=ls, marker=mk, color=col, ms=3.5, lw=1, label=lab)
+    for x in edges:
+        ax.axvline(x, color="0.9", lw=0.6, zorder=0)
+    mu_uv = m["real_uvcet"]["hits"][0]["mu"]
+    ax.axvline(mu_uv, color="k", lw=0.8, ls=":")
+    ax.text(mu_uv * 0.96, 0.05, "UV Cet", rotation=90, ha="right", va="bottom", fontsize=7)
+    ax.set_xscale("log")
+    ax.set_xlim(edges[0], edges[-1])
+    ticks = [0.3, 0.5, 1, 2, 5]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([f"{t:g}" for t in ticks])
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.set_ylim(-0.02, 1.05)
+    ax.set_xlabel(r"proper motion (arcsec yr$^{-1}$)")
+    ax.set_ylabel("completeness")
+    ax.legend(fontsize=6.5, loc="upper left", frameon=False)
+    fig.tight_layout()
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(p)
+    plt.close(fig)
+    return p
+
+
+def write_real_paper(out: str | Path = ".") -> dict:
+    """Paper macros + figure from the committed real evidence under ``out/results``."""
+    import json
+
+    op = Path(out)
+    m = json.loads((op / "results" / "vlasspm_metrics.json").read_text())
+    vp = op / "results" / "vlasspm_vetting.json"
+    vet = json.loads(vp.read_text()) if vp.exists() else None
+    if not m.get("is_real"):
+        raise ValueError("results/vlasspm_metrics.json is not real evidence; refusing to build")
+    _write_macros(m, op / "papers" / "vlasspm" / "generated" / "macros.tex", vet)
+    _paper_figure(m, op / "papers" / "vlasspm" / "figures" / "vlasspm_completeness.pdf")
+    return m
+
+
 def run(out: str = ".", *, offline: bool = True, n_null: int = 20, n_inject: int = 2000) -> dict:
     """Offline: the synthetic recover-a-known (planted movers found; null predicts chance count).
 
-    The real leg is ``scripts/vlasspm_real.py`` (full-sky catalogues, checkpointed, run detached).
+    The real leg is ``scripts/vlasspm_real.py`` (full-sky catalogues, checkpointed, run detached);
+    it ends by calling :func:`write_real_paper`, which ``run(offline=False)`` also calls to
+    regenerate the paper's macros and figure from the committed results. Both legs write
+    ``papers/vlasspm/generated/macros.tex`` under ``out``, merged so neither blanks the other.
     """
-    if not offline:  # pragma: no cover - the real leg is a separate, long, resumable job
-        raise SystemExit("the real leg is scripts/vlasspm_real.py; run() is the offline fixture")
+    if not offline:  # pragma: no cover - reads the committed real evidence
+        return write_real_paper(out)
     e1, e2, e3, mu_true = synthetic_epochs()
     res = search(e1, e2, e3)
     a, b, c = res.orphans
@@ -1544,6 +1824,7 @@ def run(out: str = ".", *, offline: bool = True, n_null: int = 20, n_inject: int
     from .report import write_results
 
     write_results(metrics, op / "results" / "vlasspm_metrics.json")
+    _write_macros(metrics, op / "papers" / "vlasspm" / "generated" / "macros.tex")
     return metrics
 
 
