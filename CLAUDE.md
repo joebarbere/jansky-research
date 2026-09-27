@@ -337,6 +337,39 @@ now prints that number rather than skipping them silently.
 is `SLICES`). Make does not warn about unused command-line variables. `SLICE` now narrows
 `SLICES` and errors on an unknown name.
 
+**A selection window that scales with the outcome manufactures the effect.** `fashienv` flagged
+possible beam blends with a velocity window of W50/2 + 100 km/s, then compared flagged and
+unflagged line widths at fixed mass: flagged sources were broader by 0.019 dex (4.4 sigma), more so
+at larger search radii, and a whole paragraph of physics was built on the trend. A broad source
+admits more neighbours into a window that grows with its width, so the flag selected on the
+quantity being measured. With a fixed +/-300 km/s window the difference was -0.006 +/- 0.006.
+**Before comparing a quantity across a flag, check that the flag's definition does not contain it.**
+
+**Read a catalogue column's definition before conditioning on it.** The "depth" stratifier in the
+same slice was DR2's `rms`, which the readme defines as noise integrated over the source's own
+aperture -- it scales with source size, hence with mass and with blending, so stratifying on it
+partly conditioned on the outcome. `rms_beam` ("per-source detection sensitivity") is the depth.
+One line of the readme would have prevented a referee round.
+
+**A mechanism must predict the sign, not just a side effect.** Invoked to explain broader lines in
+group cores, HI deficiency fits the widths but lowers HI mass, so it predicts a *lower* group knee
+against a measured *positive* offset. Check every proposed explanation against the sign of the
+headline number before writing it down.
+
+**When one observable cannot discriminate, hold it fixed and measure another.** Line width at
+fixed HI mass could not separate blending from mass segregation, because a blend's mass and width
+rise together. HI mass at fixed *optical* luminosity could: sources with a neighbour inside the
+flux aperture carried 0.16 dex more HI, sources with one just outside it 0.03. The decisive
+comparison was a control class that shares the neighbourhood but cannot share the systematic.
+
+**A null that cannot match the sample's occupancy is biased, not just noisy.** `fashienv`'s random
+group placements held a tenth of the real members, and their offset rose 0.02 dex per 100
+members; quoting a sigma against that null folded a trend into a spread. Fit the null against its
+own occupancy first; if the real sample lies outside the range, the null is uninformative, and
+the paper should say so rather than quote it. Likewise a "classifiable" mask must be the sky that
+was actually searched: a padded box put 24.5% of galaxies with no possible classification into
+both comparison bins, and the test asserting "wall knee equals global knee" passed *because* of it.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

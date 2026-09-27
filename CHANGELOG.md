@@ -10,6 +10,20 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
+  Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole
+  survey), confirmed by a straight-line third detection, with an RA-scramble null, injection
+  completeness and per-epoch astrometric floors measured from bright static sources.
+  UV Ceti is recovered blind at 3.45"/yr (Gaia 3.23"/yr); completeness is 0.92-0.99 above
+  ~0.9"/yr and ~0 below 0.5"/yr. Image-level vetting finds **zero new movers**: every other
+  candidate is a static extended source, most of them south of Dec -15 where the low-elevation
+  beam elongates differently between epochs and moves fitted centroids. 95% limit: < 9.2e-5
+  optically dark movers per deg^2 at 0.92-5"/yr (>~3 mJy, 33,838 deg^2). The failed first run (746 candidates from split extended
+  sources and a flux cut that rejected flare stars) is recorded in `survey/vlasspm-findings.md`.
+  `scripts/vlasspm_real.py` is the checkpointed real leg; it runs detached under
+  `systemd-run --user`.
+
 ### Changed
 - **`vlasspm`: compactness cut (run 5).** Per-detection DC_Maj/BMAJ; injections carry
   realistic point-source size noise drawn from 303 detections of nearby Gaia (GCNS) stars by
@@ -34,20 +48,59 @@ recommend the next version number.
   candidates); image vetting finds zero new movers. Limit < 9.3e-5 per deg^2 (run 3: 9.2e-5).
   `scripts/vlasspm_vet_images.py` is parametrised; the radio-cutout skill uses https for
   CADC's registry (port 80 stopped answering).
+- **`fashienv` is rewritten as a methodological caution: environment-split HI mass functions
+  need random-placement nulls.** On FASHI DR2 (156,411 sources, DR2's own 1/(C Vmax) weighting,
+  which reproduces the published global HIMF), the void-wall knee offset is -0.150 and the
+  group-field +0.166 dex -- but randomly relocated voids give -0.087 +/- 0.017 and randomly
+  relocated groups +0.126 +/- 0.056, so arbitrary volume splits shift the fitted knee by as much
+  as published void effects. The group offset is reached by 44/200 random placements. The void
+  offset lies beyond all 1,000 placements, but the placements hold 25-32k galaxies against the
+  real voids' 17k, so the null is not density-matched and the residual (-0.063, 1.5-1.9 sigma)
+  cannot be attributed to environment. The group null is weak (its regions hold a tenth of the
+  real groups' galaxies), and a no-overlap void placement is infeasible (688/1163 unplaced).
+  Environment-restricted Vmax (each side weighted by its own environment's volume, from 2e6
+  classified randoms, dmax rescaled into the randoms' distance frame) moves the null means to
+  -0.040 (voids) and -0.019 (groups). The void residual barely depends on the weighting (-0.063
+  vs -0.052, 1.3 sigma); the group residual grows from +0.040 to +0.108 (1.7 sigma, 4/200)
+  because the restriction moves the group null twice as far as the measurement, so it is not
+  claimed. After six referee rounds the comparison sample is the in-SDSS-footprint pool (the
+  padded box had put 24.5% unclassifiable galaxies into wall and field), the label-shuffle null
+  (`label_shuffle_null`) is stratified by redshift AND survey depth, and a FAST-beam blending test
+  (`confusion_counts`, `confused_same_group`, `linewidth_residual`, `robustness_leg`) checks line
+  widths at fixed mass. With restricted Vmax the void offset exceeds the two nulls by 1.1-2.4
+  sigma and the group offset by 2.2-3.5 sigma (the shuffle stratified on per-source detection
+  sensitivity, `rms_beam`). The group excess is carried by sources whose flux aperture holds
+  another galaxy: at fixed optical luminosity they carry 0.16 dex more HI than isolated galaxies,
+  against 0.03 dex when the neighbour lies just outside the aperture, and close-in-velocity pairs
+  show narrower cores with broader wings -- the signature of blending in FAST's beam
+  (`optical_classes`, `matched_median_diff`). Knee offsets also depend on the fitted slope.
+  Neither offset is claimed as environmental. VizieR fetches fall back to the CfA mirror when
+  CDS is down. Now an RNAAS-length note titled "...Against Two Null Tests". Eight referee rounds
+  drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  unconstrained void null with per-placement diagnostics, a group null, a KD-tree
+  `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
+  The DR1 paper's -0.256 is disclosed as the old estimator's value.
+- **CLAUDE.md gains five lessons from the fashienv referee rounds**: outcome-scaled selection
+  windows, reading column definitions before conditioning, checking a mechanism against the
+  sign, control classes that share the neighbourhood but not the systematic, and nulls biased by
+  occupancy.
+- **Plan 61 re-scoped by a measured access probe.** Apertif Time-Domain DR2 is 0.76 PB in
+  2,582 observations, not the ~0.8 TB the plan assumed; only 3.9 TB is online without a tape
+  request. Measured 24 MB/s to the workstation and ~21 s of GPU FDMT per 3-h 2019 file (522x
+  real time). The feasible slice is the pulsar-calibrator observations' central beam
+  (0.15 TB) plus the pulsar-field compound beams (~7.3 TB), streamed and deleted locally at $0;
+  the $170 AWS estimate is superseded.
 
-### Added
-- **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
-  Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole
-  survey), confirmed by a straight-line third detection, with an RA-scramble null, injection
-  completeness and per-epoch astrometric floors measured from bright static sources.
-  UV Ceti is recovered blind at 3.45"/yr (Gaia 3.23"/yr); completeness is 0.92-0.99 above
-  ~0.9"/yr and ~0 below 0.5"/yr. Image-level vetting finds **zero new movers**: every other
-  candidate is a static extended source, most of them south of Dec -15 where the low-elevation
-  beam elongates differently between epochs and moves fitted centroids. 95% limit: < 9.2e-5
-  optically dark movers per deg^2 at 0.92-5"/yr (>~3 mJy, 33,838 deg^2). The failed first run (746 candidates from split extended
-  sources and a flux cut that rejected flare stars) is recorded in `survey/vlasspm-findings.md`.
-  `scripts/vlasspm_real.py` is the checkpointed real leg; it runs detached under
-  `systemd-run --user`.
+### Fixed
+- **The archive description stopped repeating two withdrawn claims.** `.zenodo.json` (the text
+  Zenodo shows for every version, including v1.12.0) and the JOSS paper still called the `hi`
+  curve "flat", which #304 retracted -- the paper says it is far from Keplerian but *not* flat,
+  and cross-validated against VGPS to 1 km/s -- and described `driftsearch` as a benchmark
+  "with an honest null", withdrawn in #292: it recovers Voyager 1 at S/N ~1000. Both now say
+  what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
+  DC-spike artifact) is still true and is kept.
+
+## [1.12.0] - 2026-09-26
 
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
@@ -58,25 +111,6 @@ recommend the next version number.
   Evidence in `results/cuda_validation_2026-09-26.json`; `infra/terraform/` (a free,
   self-terminating GPU launch template, SSM-only) and `infra/jobs/cuda_validation.sh`
   reproduce it. No committed metrics or paper macros changed.
-
-### Removed
-- **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
-  seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new
-  [`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo's Terraform, imported from the live
-  account with a post-import plan showing no changes. `infra/seatbelt.json`,
-  `scripts/check_seatbelt.py` and `make seatbelt-check` are removed: `terraform plan` in
-  `aws-cloud` is the drift check now. `infra/README.md` and plan 96 say what lives where.
-
-### Changed
-- **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
-  data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,
-  CHIME Cat 2 baseband, Gaia DR4 and IPTA DR3 are not), a scoop re-check of every unstarted plan
-  (10 open, plans 51 and 52 partly scooped), seven new leads, the compute policy (core stays
-  CPU-reproducible; GPU and cloud are accelerators with a CPU parity path), and the
-  machine-learning opportunities sorted by scientific value. All 48 files that referenced the old
-  name point at the new one; released CHANGELOG entries keep the old name.
-
-### Added
 - **`plans/96-aws-infrastructure.md`** — a cost-gated AWS plan for the two constraints the
   workstation cannot meet (70 GB free disk; CUDA-only tools), with us-east-1 prices pulled from
   AWS's public price list on 2026-09-26, worked costs per use, a Terraform layout mirroring the
@@ -96,7 +130,31 @@ recommend the next version number.
   I+V photometry at β Pic in five RACS epochs returned no detection (5σ V limits 0.7–1.2 mJy).
   Recorded so the next idea scan does not propose a RACS/VLASS imaged-planet census.
 
+### Changed
+- **`fable-ideas.md` is now `ideas.md`**, with a dated *Update 2026-09-26* section at the top:
+  data releases since the July scan (FASHI DR2 and Apertif TD DR2 are out; WALLABY full survey,
+  CHIME Cat 2 baseband, Gaia DR4 and IPTA DR3 are not), a scoop re-check of every unstarted plan
+  (10 open, plans 51 and 52 partly scooped), seven new leads, the compute policy (core stays
+  CPU-reproducible; GPU and cloud are accelerators with a CPU parity path), and the
+  machine-learning opportunities sorted by scientific value. All 48 files that referenced the old
+  name point at the new one; released CHANGELOG entries keep the old name.
+- **The seatbelt copy and its drift checker moved out.** Account-wide AWS resources (the cost
+  seatbelt, cost-allocation tags, all budgets, the anomaly monitor) now live in the new
+  [`aws-cloud`](https://github.com/joebarbere/aws-cloud) repo's Terraform, imported from the live
+  account with a post-import plan showing no changes. `infra/seatbelt.json`,
+  `scripts/check_seatbelt.py` and `make seatbelt-check` are removed: `terraform plan` in
+  `aws-cloud` is the drift check now. `infra/README.md` and plan 96 say what lives where.
+
 ### Fixed
+- **`driftsearch`: why the asserted Voyager-1 frequency missed, now measured instead of guessed.**
+  The 8420.216 MHz the withdrawn "null" searched at is Estevez's (2021) *measurement* in a
+  different Breakthrough Listen recording (2015 December 30); the benchmark file was recorded
+  on 2016 September 19. `annual_doppler_offset` computes the change in the Earth's orbital
+  velocity toward Voyager between the two dates (32.5 km/s, with JPL Horizons positions): it
+  predicts 0.91 MHz of the 0.92 MHz offset (99%). Both papers replace "a frame difference we
+  have not confirmed" with this, from new macros; the `estevez2021` bib note no longer makes an
+  untrue claim about this file; and `data.py` no longer labels the file with the other
+  recording's date (2015-12-30), which is probably how the two were conflated.
 - **`driftsearch` used "cell" for two different things.** Five uses meant a box in the
   (S/N, drift) grid ("30 trials per cell", the standard idiom); five meant the whole fixed
   benchmark specimen ("a single reproducible cell that fixes both the injection model and the
