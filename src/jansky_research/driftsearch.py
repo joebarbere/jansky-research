@@ -367,6 +367,21 @@ def _write_macros(m: dict | None, path, voyager: dict | None = None) -> None:
             rf"\newcommand{{\dsVoyLegacyFreq}}{{{voyager['legacy_asserted']['freq_mhz']}}}",
             rf"\newcommand{{\dsVoyBlankSnr}}{{{voyager['blank_snr']:.2f}}}",
         ]
+        ad = voyager.get("annual_doppler")
+        if ad:
+            from astropy.time import Time
+
+            def _date(mjd: float) -> str:
+                return str(Time(mjd, format="mjd").strftime("%Y %B %d")).replace(" 0", " ")
+
+            lines += [
+                rf"\newcommand{{\dsVoyLegacyDate}}{{{_date(voyager['legacy_reference']['mjd'])}}}",
+                rf"\newcommand{{\dsVoyFileDate}}{{{_date(voyager['file_mjd'])}}}",
+                rf"\newcommand{{\dsVoyOffset}}{{{abs(ad['observed_shift_mhz']):.2f}}}",
+                rf"\newcommand{{\dsVoyDopplerDv}}{{{ad['velocity_change_kms']:.1f}}}",
+                rf"\newcommand{{\dsVoyDopplerPred}}{{{abs(ad['predicted_shift_mhz']):.2f}}}",
+                rf"\newcommand{{\dsVoyDopplerPct}}{{{100 * ad['fraction_explained']:.0f}}}",
+            ]
     else:
         lines += [
             rf"\newcommand{{\dsVoy{k}}}{{--}}"
@@ -430,10 +445,72 @@ def _heatmap(res: RecoveryResult, out_dir) -> None:
 
 
 # The frequency an earlier version of this module ASSERTED for the Voyager-1 carrier and
-# searched at. In this file that frequency maps to blank sky: the actual carrier sits ~0.92 MHz
-# away (v/c ~ 33 km/s at X band — the scale of a topocentric/barycentric frame difference), a
-# lesson kept on the record. The carrier is now LOCATED in the data, never asserted.
+# searched at. It is a genuine measurement -- Estevez (2021) found the carrier at 8420.216454 MHz
+# in a DIFFERENT Breakthrough Listen recording (blc3_guppi_57386_VOYAGER1_0004, 2015-12-30),
+# whereas this file was recorded on 2016-09-19 (its own tstart). Between the two dates Earth's
+# orbital motion along the line to Voyager changed by ~33 km/s, which moves the received carrier
+# by ~0.9 MHz at X band (see :func:`annual_doppler_offset`); in this file the asserted frequency
+# is blank sky. The carrier is now LOCATED in the data, never asserted.
 LEGACY_ASSERTED_CARRIER_MHZ = 8420.216
+LEGACY_REF_FREQ_MHZ = 8420.216454  # where the asserted number came from, measured there to 1 Hz
+LEGACY_REF_MJD = 57386.0
+LEGACY_REFERENCE = {
+    "freq_mhz": LEGACY_REF_FREQ_MHZ,
+    "mjd": LEGACY_REF_MJD,
+    "recording": "blc3_guppi_57386_VOYAGER1_0004.0000.raw",
+    "source": "Estevez 2021, 'Decoding Voyager 1', destevez.net",
+}
+# Voyager 1's geocentric apparent RA/Dec (deg) at the two recording epochs, from JPL Horizons
+# (id -31, location 500@399), queried 2026-09-26. Per-epoch because the ~0.5 deg annual
+# parallax at ~135 AU is not negligible for a line-of-sight velocity.
+VOYAGER1_RADEC = {57386.0: (257.98907, 11.94819), 57650.78209: (257.51945, 12.18263)}
+# Green Bank Telescope, geodetic (hard-coded so the check needs no network site registry).
+GBT_LON_DEG, GBT_LAT_DEG, GBT_HEIGHT_M = -79.8398, 38.4331, 807.0
+
+
+def annual_doppler_offset(
+    ref_mjd: float,
+    ref_freq_mhz: float,
+    ref_radec: tuple[float, float],
+    obs_mjd: float,
+    obs_freq_mhz: float,
+    obs_radec: tuple[float, float],
+) -> dict:
+    """Does Earth's motion explain a transmitter's frequency changing between two recordings?
+
+    The received frequency of a steady transmitter scales as (1 - v_r/c), with v_r the observer's
+    line-of-sight velocity away from it. Voyager's own velocity barely changes between two dates
+    months apart; Earth's orbital velocity along the line to it changes by tens of km/s. The
+    barycentric correction (astropy, offline ephemeris) at each date and site gives the
+    observer's velocity toward the target; its change predicts the frequency shift, compared
+    here with the observed shift. Returns the predicted and observed shifts (MHz), the implied
+    velocity change (km/s), and the fraction of the observed shift explained.
+    """
+    import astropy.units as u
+    from astropy.coordinates import EarthLocation, SkyCoord
+    from astropy.time import Time
+
+    site = EarthLocation.from_geodetic(GBT_LON_DEG * u.deg, GBT_LAT_DEG * u.deg, GBT_HEIGHT_M * u.m)
+    c_kms = 299792.458
+
+    def corr(mjd: float, radec: tuple[float, float]) -> float:
+        sc = SkyCoord(radec[0] * u.deg, radec[1] * u.deg, frame="icrs")
+        t = Time(mjd, format="mjd")
+        return float(
+            sc.radial_velocity_correction(kind="barycentric", obstime=t, location=site)
+            .to(u.km / u.s)
+            .value
+        )
+
+    dv = corr(ref_mjd, ref_radec) - corr(obs_mjd, obs_radec)  # extra recession at obs, km/s
+    pred = -dv / c_kms * ref_freq_mhz
+    obs = obs_freq_mhz - ref_freq_mhz
+    return {
+        "velocity_change_kms": round(dv, 2),
+        "predicted_shift_mhz": round(pred, 4),
+        "observed_shift_mhz": round(obs, 4),
+        "fraction_explained": round(pred / obs, 3) if obs else None,
+    }
 
 
 def locate_carrier(wf: np.ndarray, *, dc_halfwidth: int = 2048) -> dict:
@@ -490,8 +567,10 @@ def validate_voyager(
     brighter than the carrier, so a brightest-channel search reports the artifact at S/N ~10^5
     and is wrong. An earlier version asserted the carrier frequency
     (:data:`LEGACY_ASSERTED_CARRIER_MHZ`) instead of locating it; in this file that frequency is
-    blank sky, and the resulting "null" was a targeting error — the legacy numbers are kept in
-    the output as the record of that lesson. Requires the optional ``voyager`` extra
+    blank sky, because it was measured in a different recording nine months earlier and Earth's
+    orbit moves the received carrier by ~0.9 MHz between the dates (``annual_doppler``); the
+    resulting "null" was a targeting error, and the legacy numbers are kept in the output as the
+    record of that lesson. Requires the optional ``voyager`` extra
     (``h5py`` + ``hdf5plugin``).
     """
     import h5py
@@ -506,6 +585,7 @@ def validate_voyager(
         fch1 = float(f["data"].attrs["fch1"])
         foff = float(f["data"].attrs["foff"])
         tsamp = float(f["data"].attrs["tsamp"])
+        tstart = float(f["data"].attrs["tstart"])
     n = wf.shape[1]
     drifts = np.linspace(-8.0, 8.0, 321)
 
@@ -552,6 +632,17 @@ def validate_voyager(
         },
         "blank_snr": round(blank_snr, 2),
         "recovered": bool(carrier_snr > blank_snr + 3.0),
+        # Why the asserted frequency missed: a different recording, a different date.
+        "file_mjd": round(tstart, 5),
+        "legacy_reference": LEGACY_REFERENCE,
+        "annual_doppler": annual_doppler_offset(
+            LEGACY_REF_MJD,
+            LEGACY_REF_FREQ_MHZ,
+            VOYAGER1_RADEC[LEGACY_REF_MJD],
+            tstart,
+            round(fch1 + foff * loc["channel"], 5),
+            VOYAGER1_RADEC[min(VOYAGER1_RADEC, key=lambda m: abs(m - tstart))],
+        ),
     }
 
 

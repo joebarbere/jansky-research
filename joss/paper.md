@@ -42,7 +42,7 @@ a few exemplars each, is:
 - **Pulsars** — the steep mean radio spectrum and the $P$–$\dot P$ diagram from the
   ATNF catalogue (`pulsarspec`, `ppdot`), giant-pulse heavy-tail tests (`pte2`), and
   a monitoring-gap-robust glitch waiting-time classification (`glitchpop`);
-- **HI & spectral line** — the flat inner Milky Way rotation curve from the
+- **HI & spectral line** — the inner Milky Way terminal-velocity curve from the
   Leiden/Argentine/Bonn survey [@kalberla2005] with modern Galactic constants
   [@reid2019] (`hi`), and an environment-split HI mass function from FASHI
   (`fashienv`);
@@ -60,8 +60,8 @@ a few exemplars each, is:
   Stokes-V coherent-emitter searches (`vlass`, `vlbi`, `stacking`, `sourcecounts`,
   `peaked`, `southern`, `offsets`, `stokesv`);
 - **SETI** — a seedable injection–recovery benchmark for narrowband Doppler-drift
-  searches, complementary to signal-injection tools such as `setigen` [@brzycki2022]
-  (`driftsearch`);
+  searches, complementary to signal-injection tools such as `setigen` [@brzycki2022],
+  that recovers Voyager 1 in public Breakthrough Listen data (`driftsearch`);
 - **GPU / machine learning** — a device-portable, pure-PyTorch [@pytorch] Fast DM
   Transform and coherent-DSP suite that runs identically on CPU and on an AMD (ROCm)
   GPU (`fdmt`, `torchdsp`), and neural simulation-based inference [@sbi_toolkit] of a
@@ -96,7 +96,7 @@ small-scale research at scale. Every slice is put through an adversarial
 science-review gate before write-up, and the project reports negatives and limits
 rather than over-claiming. Two pillars recur across the whole toolkit. The first is
 recover-a-known validation — each tool must recover an injected or historically
-established signal (FRB 20180916B's period, the flat rotation curve, the Crab's DM,
+established signal (FRB 20180916B's period, the VGPS terminal-velocity curve, the Crab's DM,
 published planetary rotation periods) before it is trusted on new data. The second is
 an honest null: a large body of slices report bounded non-detections or systematics
 rather than manufactured discoveries — the SETI detector fooled by a band-centre

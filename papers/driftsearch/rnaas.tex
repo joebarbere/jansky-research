@@ -68,10 +68,11 @@ walk, against a blank-window \dsVoyBlankSnr.
 
 The second pitfall is the reason this note exists. An earlier version of the underlying
 analysis searched at an asserted carrier frequency of \dsVoyLegacyFreq~MHz
-\citep{estevez2021} and reported a ``Voyager-1 null'' (S/N~\dsVoyLegacySnr). In this file
-that frequency is blank sky, $\sim$0.92~MHz from the carrier (the scale of a
-topocentric/barycentric frame difference at X band, though the mechanism is not confirmed
-here); the null was a targeting error, not a property of the detector, and the earlier
+\citep{estevez2021} and reported a ``Voyager-1 null'' (S/N~\dsVoyLegacySnr). That frequency
+was measured in a recording made on \dsVoyLegacyDate; this file dates from \dsVoyFileDate, and
+the change in the Earth's orbital velocity toward Voyager between the two
+(\dsVoyDopplerDv~km\,s$^{-1}$) accounts for \dsVoyDopplerPct\% of the \dsVoyOffset~MHz offset.
+In this file the asserted frequency is blank sky; the null was a targeting error, not a property of the detector, and the earlier
 version's claim of it is withdrawn, with the wrong frequency kept in the committed evidence as
 the lesson. Both failure modes
 carry the same moral: what separates a toy detector from purpose-built SETI software

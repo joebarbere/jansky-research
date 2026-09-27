@@ -99,8 +99,12 @@ spacecraft, at three orders of magnitude above the noise floor, once it is point
 
 An earlier version of this paper reported a ``Voyager-1 null'': it searched at an asserted
 carrier frequency of \dsVoyLegacyFreq~MHz \citep{estevez2021} and found noise
-(S/N~\dsVoyLegacySnr). In this file that frequency maps to blank sky $\sim$0.92~MHz from the carrier (the scale of a topocentric/barycentric frame difference at X band, though we have not confirmed the mechanism), so the null was a targeting error, not a property of the detector,
-and we withdraw it. The lesson is kept in the committed evidence (the \code{legacy\_asserted}
+(S/N~\dsVoyLegacySnr). That frequency is a genuine measurement, but of a different recording,
+made on \dsVoyLegacyDate; this file was recorded on \dsVoyFileDate. Between the two dates the
+Earth's orbital velocity along the line to Voyager changed by \dsVoyDopplerDv~km\,s$^{-1}$, which
+predicts a shift of \dsVoyDopplerPred~MHz at this frequency against the \dsVoyOffset~MHz observed
+(\dsVoyDopplerPct\% of it). In this file the asserted frequency is therefore blank sky, and the
+null was a targeting error, not a property of the detector; we withdraw it. The lesson is kept in the committed evidence (the \code{legacy\_asserted}
 block) and in the pipeline's design: the carrier is now found in the data, never assumed. What
 remains true, and matters more: a search that ranks by raw brightness reports the instrumental
 artifact, so artifact handling, not sensitivity, is what separates a toy detector from
