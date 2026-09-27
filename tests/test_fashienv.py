@@ -600,3 +600,103 @@ def test_env_vmax_offset_unit_frame_ratio_is_identity():
     c = fe.env_vmax_offset(*args, frame_ratio=np.full(n, 0.5))
     assert a["offset"] == b["offset"]
     assert c["offset"] != a["offset"]  # the lookup distance matters
+
+
+def test_label_shuffle_null_keeps_redshift_occupancy_and_flags_mass_difference():
+    cat, vcat, omega, rng = _distance_split_mock(n=300_000, seed=8)
+    n = cat["log_mhi"].size
+    z = cat["dist_mpc"] * fe.H0 / fe.C_KM_S
+    vm = fe.vmax_from_catalogue(vcat, np.ones(n))
+    pool = np.ones(n, bool)
+    rand_in = rng.uniform(size=n) < 0.3
+    offs = fe.label_shuffle_null(cat["log_mhi"], z, pool, rand_in, vm, vm, omega, rng, n=15)
+    assert np.all(np.isfinite(offs)) and abs(np.mean(offs)) < 0.05
+    # members biased to high mass at fixed z: the measured offset sits far outside the null
+    rank = np.argsort(np.argsort(cat["log_mhi"] - 0.5 * np.log10(cat["dist_mpc"] ** 2)))
+    heavy = rank > 0.8 * n
+    _a, fi = fe._himf_and_fit(cat["log_mhi"], None, None, omega, mask=heavy, vmax=vm)
+    _b, fo = fe._himf_and_fit(cat["log_mhi"], None, None, omega, mask=~heavy, vmax=vm)
+    null = fe.label_shuffle_null(cat["log_mhi"], z, pool, heavy, vm, vm, omega, rng, n=30)
+    measured = fi["log_m_star"] - fo["log_m_star"]
+    assert measured > np.max(null)
+    assert measured - np.mean(null) > 3 * np.std(null)
+
+
+def test_confusion_counts_beam_and_velocity_window():
+    ra, dec = np.array([180.0]), np.array([30.0])
+    cz, w50 = np.array([5000.0]), np.array([200.0])
+    d = 1.0 / 60.0  # 1 arcmin in Dec
+    opt_ra = np.array([180.0, 180.0, 180.0, 180.0])
+    opt_dec = np.array([30.0, 30.0 + d, 30.0 + 2 * d, 30.0 + d])
+    opt_cz = np.array([5000.0, 5150.0, 5000.0, 5300.0])
+    # counterpart + a neighbour at 1' inside W50/2+100 = 200 km/s; the 2' one is inside one
+    # FWHM (2.9') too; the 300 km/s one is outside the line window
+    n = fe.confusion_counts(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz)
+    assert n.tolist() == [3]
+    assert fe.confusion_counts(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz, beam_arcmin=1.5)[0] == 2
+    assert fe.confusion_counts(ra + 10, dec, cz, w50, opt_ra, opt_dec, opt_cz)[0] == 0
+    # a fixed +/-350 km/s window also admits the 300 km/s neighbour
+    kw = {"half_window_kms": 350.0}
+    assert fe.confusion_counts(ra, dec, cz, w50, opt_ra, opt_dec, opt_cz, **kw)[0] == 4
+
+
+def test_robustness_leg_runs_on_mock():
+    rng = np.random.default_rng(9)
+    n = 8000
+    ra = rng.uniform(150, 210, n)
+    dec = np.degrees(np.arcsin(rng.uniform(0, np.sin(np.radians(50)), n)))
+    d = 250.0 * np.cbrt(rng.uniform(0, 1, n))
+    a = 0.5 * (1.0 + fe._Q0)
+    z = (1.0 - np.sqrt(1.0 - 4.0 * a * d * fe.H0 / fe.C_KM_S)) / (2.0 * a)
+    grid = rng.uniform(7.5, 10.9, 20 * n)
+    w = fe.schechter(grid, 0.0, 9.9, -1.3)
+    lm = rng.choice(grid, size=n, p=w / w.sum())
+    cz = fe.C_KM_S * z
+    cat = {"ra": ra, "dec": dec, "z": z, "cz": cz, "log_mhi": lm, "dist_mpc": d,
+           "flux": 10**lm / (2.356e5 * d**2), "w50": np.full(n, 200.0)}  # fmt: skip
+    xyz = fe.comoving_xyz(ra, dec, z, h0=100.0)
+    holes = xyz[rng.choice(n, 30, replace=False)]
+    voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
+    gi = rng.choice(n, 150, replace=False)
+    # optical catalogue = the galaxies themselves plus a close companion for every 10th one
+    comp_i = np.arange(0, n, 10)
+    grp = {"grp_ra": ra[gi], "grp_dec": dec[gi], "grp_cz": cz[gi], "grp_r200": np.full(150, 6.0),
+           "gal_ra": np.concatenate([ra, ra[comp_i]]),
+           "gal_dec": np.concatenate([dec, dec[comp_i] + 0.5 / 60.0]),
+           "gal_cz": np.concatenate([cz, cz[comp_i] + 50.0])}  # fmt: skip
+    env = {
+        "xyz": xyz,
+        "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
+        "classifiable": np.ones(n, bool),
+        "in_group": fe.assign_groups(ra, dec, cz, grp["grp_ra"], grp["grp_dec"], grp["grp_cz"],
+                                     grp["grp_r200"], h0=fe.TEMPEL_H0) >= 0,
+    }  # fmt: skip
+    omega = fe.FASHI_DR2_AREA_DEG2 * (np.pi / 180.0) ** 2
+    vcat = omega / 3.0 * np.full(n, 250.0) ** 3
+    meas = {k: {"survey": 0.0, "survey_err": 0.03, "env": 0.0, "env_err": 0.03}
+            for k in ("void", "group")}  # fmt: skip
+    out = fe.robustness_leg(
+        cat, omega, env, voids, grp, np.ones(n, bool), vcat, np.ones(n), meas,
+        n_rand=50_000, n_shuffle=4,
+    )  # fmt: skip
+    for name in ("void", "group"):
+        for wk in ("survey", "env"):
+            s = out["shuffle"][name][wk]
+            assert s["n_ok"] == 4 and np.isfinite(s["mean"])
+        for fk in ("w50", "fixed300"):
+            bl = out["blending"][name][fk]
+            # roughly every 10th source has a planted companion
+            assert 0.05 < bl["confused_frac_out"] < 0.2
+            assert np.isfinite(bl["survey_offset_sdss_unconfused"])
+            assert "n_ok" in bl["env_shuffle_unconfused"]
+
+
+def test_measured_offsets_reads_both_weightings():
+    m = {"void_knee_offset": -0.15, "void_knee_offset_err": 0.04, "group_knee_offset": 0.17,
+         "group_knee_offset_err": 0.04,
+         "env_vmax": {"void": {"offset": -0.09, "offset_err": 0.035},
+                      "group": {"offset": 0.09, "offset_err": 0.032}}}  # fmt: skip
+    got = fe.measured_offsets(m)
+    assert got["void"] == {"survey": -0.15, "survey_err": 0.04, "env": -0.09, "env_err": 0.035}
+    assert got["group"]["env"] == 0.09
+    assert fe.measured_offsets({**m, "env_vmax": {}})["group"]["env"] is None

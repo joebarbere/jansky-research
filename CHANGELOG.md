@@ -26,7 +26,12 @@ recommend the next version number.
   -0.040 (voids) and -0.019 (groups). The void residual barely depends on the weighting (-0.063
   vs -0.052, 1.3 sigma); the group residual grows from +0.040 to +0.108 (1.7 sigma, 4/200)
   because the restriction moves the group null twice as far as the measurement, so it is not
-  claimed. Now an RNAAS-length note. Five referee rounds (the last two MINOR) drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
+  claimed. A redshift- and occupancy-matched label-shuffle null (`label_shuffle_null`) and a
+  FAST-beam blending test (`confusion_counts`, `robustness_leg`) followed: the void residual is
+  -0.10 to -0.12 against the shuffle null (2.4-3.2 sigma) and survives excluding confused
+  sources; a quarter of group members are blending candidates and excluding them removes most
+  of the group offset (+0.12 -> +0.04). Now an RNAAS-length note. Five referee rounds (the last
+  two MINOR) drove this: full VoidFinder voids, a paired same-sample weighting test, a constrained and an
   unconstrained void null with per-placement diagnostics, a group null, a KD-tree
   `assign_groups` (oracle-tested) on Tempel's H0 and frame, and the Crossref-corrected DR2 bib.
   The DR1 paper's -0.256 is disclosed as the old estimator's value.

@@ -503,3 +503,62 @@ lean the same way:
   an integer; the figure legend has headroom. The blending caveat now names both signs (it
   raises the group knee and lowers the void knee).
 - About 960 prose words plus the caption; one figure; triage and lint clean.
+
+## Post-round-5 tests (2026-09-27): occupancy/redshift-matched null + beam blending (`robustness`)
+
+Both were named as next steps in the paper. Run `fashienv-robust2`; code `label_shuffle_null`,
+`confusion_counts`, `robustness_leg`; runner `scripts/fashienv_robustness.py --out`.
+
+**Shuffle null.** Environment labels are given to the real number of members per dz = 0.0025
+bin, drawn at random from the classifiable sample, 1,000 replicates. This matches occupancy and
+redshift exactly, which random placement could not, but has no spatial coherence. The real
+members are included at the base rate (void 23%, group 25%, against 32% overlap for the
+placements), which dilutes the null toward the signal.
+
+| | survey Vmax: meas / null / excess | env Vmax: meas / null / excess |
+|---|---|---|
+| void | -0.150 / -0.043 +/- 0.014 / **-0.107 (2.4 sigma, 0/1000)** | -0.092 / +0.027 +/- 0.014 / **-0.119 (3.2 sigma, 0/1000)** |
+| group | +0.166 / +0.078 +/- 0.012 / **+0.088 (2.0 sigma, 0/1000)** | +0.089 / -0.006 +/- 0.012 / **+0.095 (2.8 sigma, 0/1000)** |
+
+(sigma = excess / quadrature of the fit error and the null spread.)
+
+- Under this null both residuals are larger than under random placement, and neither depends on
+  the weighting. The group residual's weighting-dependence (round 5, #3) was a property of the
+  random-placement null, not of the data.
+- The two nulls disagree about the baseline. Survey-wide void means: -0.087 (placement) vs
+  -0.043 (shuffle). The placement offsets correlate with median z (r = 0.31) and occupancy, both
+  of which the placements get wrong and the shuffle matches. Placements carry spatial coherence
+  (structure at average density); the shuffle does not. Nothing here decides which baseline is
+  "right". They bracket the void residual at -0.05 to -0.12 and the group residual at
+  +0.04 to +0.11.
+
+**Blending**, within the SDSS footprint (55,893 classifiable sources). A source is "confused" if
+2 or more Tempel SDSS galaxies (r < 17.77) lie within 2.9' and the velocity window.
+
+| | confused in / out | env offset all -> unconfused | env shuffle excess, unconfused |
+|---|---|---|---|
+| group, W50/2+100 window | **25.5% / 1.6%** | +0.123 -> **+0.038** | +0.064 (1.8 sigma) |
+| group, fixed +/-300 km/s | 29.1% / 1.6% | +0.123 -> **+0.044** | +0.079 (2.2 sigma) |
+| void, W50/2+100 window | 6.8% / 10.8% | -0.088 -> -0.078 | -0.100 (2.6 sigma) |
+| void, fixed +/-300 km/s | 7.5% / 12.2% | -0.088 -> -0.080 | -0.102 (2.6 sigma) |
+
+- **The mass-independent window gives the same answer.** The drop in the group offset is not
+  caused by W50 scaling with mass.
+- **But the flag is mass-selective under either window:** median log M is 9.9 for confused
+  members against 9.47 for unconfused ones. A source needs an SDSS counterpart plus a bright
+  neighbour, both likelier for distant, massive, optically bright galaxies, and the beam covers
+  more physical area at larger distance. Removing confused sources therefore removes massive
+  group members whether or not their HI is blended. **Excluding them cannot separate blending
+  from "massive galaxies have more neighbours".** The removal is a selection, the dr20radio
+  censoring lesson again. What the test does establish: a quarter of group members are
+  candidates for blending, and without them most of the group offset goes (+0.12 -> +0.04).
+- **The void offset is insensitive to the exclusion** (-0.088 -> -0.078/-0.080) and stays 2.6
+  sigma beyond the shuffle null.
+
+**Where this leaves the claims (not yet in the paper):**
+- **Void.** 2.4-3.2 sigma against the occupancy/redshift-matched null, robust to blending
+  exclusion; 1.3-1.5 sigma against coherent random placement. The honest statement names both
+  baselines and does not choose between them.
+- **Group.** Not attributable. It is carried by the quarter of members that are blending
+  candidates, and exclusion cannot tell blending from selection. Resolving it needs
+  interferometric HI or a forward model of FAST-beam confusion.

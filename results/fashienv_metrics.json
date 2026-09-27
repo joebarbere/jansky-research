@@ -24565,5 +24565,132 @@
       "pairing_check_void_max_abs_diff": 0.0,
       "pairing_check_group_max_abs_diff": 0.0
     }
+  },
+  "robustness": {
+    "shuffle_method": "environment labels given to the real number of members per dz=0.0025 redshift bin, drawn at random from the classifiable C>=0.5 sample; knee offset in - out",
+    "n_shuffle": 1000,
+    "seed_shuffle": 69,
+    "shuffle": {
+      "void": {
+        "survey": {
+          "n_ok": 1000,
+          "mean": -0.0429,
+          "std": 0.0136,
+          "measured": -0.15,
+          "excess": -0.107,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 2.38
+        },
+        "env": {
+          "n_ok": 1000,
+          "mean": 0.0269,
+          "std": 0.0139,
+          "measured": -0.092,
+          "excess": -0.119,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 3.16
+        }
+      },
+      "group": {
+        "survey": {
+          "n_ok": 1000,
+          "mean": 0.0784,
+          "std": 0.0119,
+          "measured": 0.166,
+          "excess": 0.088,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 1.96
+        },
+        "env": {
+          "n_ok": 1000,
+          "mean": -0.0059,
+          "std": 0.0118,
+          "measured": 0.089,
+          "excess": 0.095,
+          "n_reaching_measured": 0,
+          "excess_sigma_quadrature": 2.78
+        }
+      }
+    },
+    "blending": {
+      "method": "Tempel+2017 SDSS galaxies within one FAST FWHM (2.9 arcmin) and a velocity window of W50/2 + 100 km/s ('w50') or a fixed +/-300 km/s ('fixed300', mass-independent); confused = 2 or more (one is the counterpart); restricted to the SDSS footprint",
+      "n_sdss_classifiable": 55893,
+      "void": {
+        "survey_offset_sdss_all": -0.1711,
+        "env_offset_sdss_all": -0.0877,
+        "w50": {
+          "confused_frac_in": 0.0681,
+          "confused_frac_out": 0.1076,
+          "median_logm_in_confused": 9.881,
+          "median_logm_in_unconfused": 9.477,
+          "survey_offset_sdss_unconfused": -0.1671,
+          "env_offset_sdss_unconfused": -0.0782,
+          "env_shuffle_unconfused": {
+            "n_ok": 1000,
+            "mean": 0.0215,
+            "std": 0.0175,
+            "measured": -0.0782,
+            "excess": -0.1,
+            "n_reaching_measured": 0,
+            "excess_sigma_quadrature": 2.55
+          }
+        },
+        "fixed300": {
+          "confused_frac_in": 0.075,
+          "confused_frac_out": 0.1222,
+          "median_logm_in_confused": 9.861,
+          "median_logm_in_unconfused": 9.476,
+          "survey_offset_sdss_unconfused": -0.1692,
+          "env_offset_sdss_unconfused": -0.0802,
+          "env_shuffle_unconfused": {
+            "n_ok": 1000,
+            "mean": 0.0219,
+            "std": 0.0181,
+            "measured": -0.0802,
+            "excess": -0.102,
+            "n_reaching_measured": 0,
+            "excess_sigma_quadrature": 2.59
+          }
+        }
+      },
+      "group": {
+        "survey_offset_sdss_all": 0.1997,
+        "env_offset_sdss_all": 0.1232,
+        "w50": {
+          "confused_frac_in": 0.2553,
+          "confused_frac_out": 0.0155,
+          "median_logm_in_confused": 9.917,
+          "median_logm_in_unconfused": 9.474,
+          "survey_offset_sdss_unconfused": 0.1287,
+          "env_offset_sdss_unconfused": 0.0378,
+          "env_shuffle_unconfused": {
+            "n_ok": 1000,
+            "mean": -0.0262,
+            "std": 0.0167,
+            "measured": 0.0378,
+            "excess": 0.064,
+            "n_reaching_measured": 0,
+            "excess_sigma_quadrature": 1.77
+          }
+        },
+        "fixed300": {
+          "confused_frac_in": 0.2907,
+          "confused_frac_out": 0.0161,
+          "median_logm_in_confused": 9.888,
+          "median_logm_in_unconfused": 9.463,
+          "survey_offset_sdss_unconfused": 0.1354,
+          "env_offset_sdss_unconfused": 0.0444,
+          "env_shuffle_unconfused": {
+            "n_ok": 1000,
+            "mean": -0.0349,
+            "std": 0.0164,
+            "measured": 0.0444,
+            "excess": 0.079,
+            "n_reaching_measured": 0,
+            "excess_sigma_quadrature": 2.21
+          }
+        }
+      }
+    }
   }
 }

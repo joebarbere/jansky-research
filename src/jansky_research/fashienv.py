@@ -630,18 +630,10 @@ def env_vmax_offset(
     ``frame_ratio`` (per galaxy) converts the catalogue-frame dmax into the randoms' distance
     frame before g is looked up; the catalogue Vmax itself is left untouched.
     """
-    dmax = dmax_from_vmax(vcat)
-    if frame_ratio is not None:
-        dmax = dmax * frame_ratio
-    g_in = environment_volume_fraction(rand_d, rand_cl & rand_in, dmax)
-    g_out = environment_volume_fraction(rand_d, rand_cl & ~rand_in, dmax)
+    v_in, v_out = env_restricted_vmax(vcat, comp, rand_d, rand_cl, rand_in, frame_ratio=frame_ratio)
     lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
-    _hi, f_in = _himf_and_fit(
-        lm, dd, ff, area, mask=base & gal_cl & gal_in, vmax=vmax_from_catalogue(vcat * g_in, comp)
-    )
-    _ho, f_out = _himf_and_fit(
-        lm, dd, ff, area, mask=base & gal_cl & ~gal_in, vmax=vmax_from_catalogue(vcat * g_out, comp)
-    )
+    _hi, f_in = _himf_and_fit(lm, dd, ff, area, mask=base & gal_cl & gal_in, vmax=v_in)
+    _ho, f_out = _himf_and_fit(lm, dd, ff, area, mask=base & gal_cl & ~gal_in, vmax=v_out)
     st = _offset_stats("env", f_in, f_out)
     return {
         "offset": st["env_knee_offset"],
@@ -650,6 +642,114 @@ def env_vmax_offset(
         "fit_in": {k: v for k, v in f_in.items() if isinstance(v, (int, float))},
         "fit_out": {k: v for k, v in f_out.items() if isinstance(v, (int, float))},
     }
+
+
+def env_restricted_vmax(
+    vcat: np.ndarray,
+    comp: np.ndarray,
+    rand_d: np.ndarray,
+    rand_cl: np.ndarray,
+    rand_in: np.ndarray,
+    *,
+    frame_ratio: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Per-sr effective volumes for a galaxy counted IN the environment and in its complement.
+
+    ``C * Vmax * g(dmax)`` with g from :func:`environment_volume_fraction` on the randoms; the
+    in-weight uses the environment's volume share, the out-weight the classifiable complement's.
+    """
+    dmax = dmax_from_vmax(vcat)
+    if frame_ratio is not None:
+        dmax = dmax * frame_ratio
+    g_in = environment_volume_fraction(rand_d, rand_cl & rand_in, dmax)
+    g_out = environment_volume_fraction(rand_d, rand_cl & ~rand_in, dmax)
+    return vmax_from_catalogue(vcat * g_in, comp), vmax_from_catalogue(vcat * g_out, comp)
+
+
+def label_shuffle_null(
+    log_mhi: np.ndarray,
+    z: np.ndarray,
+    pool: np.ndarray,
+    gal_in: np.ndarray,
+    vmax_in: np.ndarray,
+    vmax_out: np.ndarray,
+    area: float,
+    rng: np.random.Generator,
+    *,
+    n: int,
+    dz: float = 0.0025,
+) -> np.ndarray:
+    """Knee offsets (in - out) for environment labels shuffled within narrow redshift bins.
+
+    Each replicate gives the label "in" to exactly as many ``pool`` galaxies per redshift bin as
+    the real environment has there, chosen at random, so the null keeps the real occupancy and
+    the real redshift distribution but has no spatial coherence. At fixed redshift a flux-limited
+    sample's mass distribution is then the only thing that can differ between the two sets, so
+    the null asks whether the real members' masses differ from random galaxies' at the same z.
+    ``vmax_in`` / ``vmax_out`` are the per-sr weights a galaxy gets when labelled in / out (equal
+    arrays for the survey-wide weighting; the environment's own shares for the restricted one).
+    """
+    lm = np.asarray(log_mhi, float)
+    pool_idx = np.flatnonzero(pool)
+    zb = np.floor(np.asarray(z, float)[pool_idx] / dz).astype(int)
+    real_in = np.asarray(gal_in, bool)[pool_idx]
+    groups = [(pool_idx[zb == b], int(real_in[zb == b].sum())) for b in np.unique(zb)]
+    offs = np.full(n, np.nan)
+    for k in range(n):
+        lab = np.zeros(lm.size, bool)
+        for idx, n_in in groups:
+            if n_in:
+                lab[rng.choice(idx, size=n_in, replace=False)] = True
+        out = pool & ~lab
+        _a, fi = _himf_and_fit(lm, None, None, area, mask=lab, vmax=vmax_in)
+        _b, fo = _himf_and_fit(lm, None, None, area, mask=out, vmax=vmax_out)
+        offs[k] = fi.get("log_m_star", np.nan) - fo.get("log_m_star", np.nan)
+    return offs
+
+
+FAST_BEAM_ARCMIN = 2.9  # FAST L-band FWHM at 1.4 GHz
+
+
+def confusion_counts(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    cz: np.ndarray,
+    w50: np.ndarray,
+    opt_ra: np.ndarray,
+    opt_dec: np.ndarray,
+    opt_cz: np.ndarray,
+    *,
+    beam_arcmin: float = FAST_BEAM_ARCMIN,
+    dv_pad_kms: float = 100.0,
+    half_window_kms: float | None = None,
+) -> np.ndarray:
+    """Optical galaxies inside each HI source's beam and line window (a blending proxy).
+
+    Counts spectroscopic galaxies within ``beam_arcmin`` (one FWHM) of the HI position and
+    within W50/2 + ``dv_pad_kms`` of its velocity. One of them is normally the counterpart, so
+    a count of 2 or more flags a source whose HI may include a neighbour's. The optical
+    catalogue's depth sets how complete the flag is; fainter companions are missed.
+
+    W50 grows with HI mass, so the default window flags massive sources more readily; pass
+    ``half_window_kms`` for a fixed, mass-independent window.
+    """
+    from scipy.spatial import cKDTree
+
+    def unit(r: np.ndarray, d: np.ndarray) -> np.ndarray:
+        r, d = np.radians(np.asarray(r, float)), np.radians(np.asarray(d, float))
+        return np.column_stack([np.cos(d) * np.cos(r), np.cos(d) * np.sin(r), np.sin(d)])
+
+    chord = 2.0 * np.sin(np.radians(beam_arcmin / 60.0) / 2.0)
+    hits = cKDTree(unit(opt_ra, opt_dec)).query_ball_point(unit(ra, dec), r=chord)
+    ocz = np.asarray(opt_cz, float)
+    if half_window_kms is not None:
+        win = np.full(len(np.atleast_1d(ra)), float(half_window_kms))
+    else:
+        win = np.nan_to_num(np.asarray(w50, float), nan=0.0) / 2.0 + dv_pad_kms
+    czs = np.asarray(cz, float)
+    return np.array(
+        [int(np.sum(np.abs(ocz[h] - czs[i]) <= win[i])) if h else 0 for i, h in enumerate(hits)]
+    )
 
 
 def himf(
@@ -1502,6 +1602,172 @@ def env_vmax_leg(
     return out
 
 
+def measured_offsets(m: dict) -> dict:
+    """The measured void/group offsets and errors, both weightings, from a results dict."""
+    ev = m.get("env_vmax") or {}
+    return {
+        name: {
+            "survey": m[f"{name}_knee_offset"],
+            "survey_err": m[f"{name}_knee_offset_err"],
+            "env": (ev.get(name) or {}).get("offset"),
+            "env_err": (ev.get(name) or {}).get("offset_err"),
+        }
+        for name in ("void", "group")
+    }
+
+
+def robustness_leg(
+    cat: dict,
+    area: float,
+    env: dict,
+    voids: dict,
+    grp: dict,
+    base: np.ndarray,
+    vcat: np.ndarray,
+    comp: np.ndarray,
+    measured: dict,
+    *,
+    n_rand: int,
+    n_shuffle: int,
+    seed_rand: int = 68,
+    seed_shuffle: int = 69,
+    cell_deg: float = 1.0,
+) -> dict:
+    """Sixth-round checks: an occupancy- and redshift-matched null, and a beam-blending test.
+
+    1. :func:`label_shuffle_null` for voids and groups under both weightings: the real number of
+       members per redshift bin, drawn at random from the classifiable sample. This matches the
+       occupancy the random-placement nulls could not.
+    2. :func:`confusion_counts` against the Tempel SDSS galaxies (r < 17.77) inside the SDSS
+       footprint: the confused fraction by environment, and the offsets with confused sources
+       removed, plus the shuffle null on the unconfused sample (the combination that decides
+       whether blending carries the group offset).
+
+    ``measured`` holds the already-measured offsets ``{"void": {"survey": .., "env": ..},
+    "group": {...}}``. Randoms are drawn as in :func:`env_vmax_leg` (same seed, frame-corrected).
+    """
+    import sys
+
+    z_g, d_g = cat["z"], cat["dist_mpc"]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = _comoving_distance_mpc(z_g, H0) / (d_g / (1.0 + z_g))
+    ratio = np.where(np.isfinite(ratio) & (ratio > 0), ratio, 1.0)
+    rng = np.random.default_rng(seed_rand)
+    d_top = float(np.nanmax(dmax_from_vmax(vcat[base]) * ratio[base])) * 1.001
+    rnd = survey_randoms(cat["ra"], cat["dec"], n_rand, rng, d_max_mpc=d_top)
+    lo = voids["sphere_xyz"].min(axis=0) - 20.0
+    hi = voids["sphere_xyz"].max(axis=0) + 20.0
+    r_cl = np.all((rnd["xyz_h"] >= lo) & (rnd["xyz_h"] <= hi), axis=1)
+    r_env = {
+        "void": void_membership_holes(rnd["xyz_h"], voids["sphere_xyz"], voids["sphere_radius"]),
+        "group": assign_groups(
+            rnd["ra"], rnd["dec"], rnd["cz"], grp["grp_ra"], grp["grp_dec"], grp["grp_cz"],
+            grp["grp_r200"], h0=TEMPEL_H0,
+        ) >= 0,
+    }  # fmt: skip
+    g_env = {"void": env["in_void"], "group": env["in_group"]}
+    cl = env["classifiable"]
+    vmax_b = vmax_from_catalogue(vcat, comp)
+    lm, z = cat["log_mhi"], cat["z"]
+    rs = np.random.default_rng(seed_shuffle)
+
+    # SDSS footprint (occupied cells of the Tempel galaxies), for galaxies and randoms alike.
+    sdss_cells = _sky_cells(grp["gal_ra"], grp["gal_dec"], cell_deg)
+
+    def in_cells(ra: np.ndarray, dec: np.ndarray) -> np.ndarray:
+        keys = zip(*_cells_arrays(ra, dec, cell_deg), strict=True)
+        return np.fromiter((c in sdss_cells for c in keys), bool, count=len(ra))
+
+    g_sdss, r_sdss = in_cells(cat["ra"], cat["dec"]), in_cells(rnd["ra"], rnd["dec"])
+    opt = (grp["gal_ra"], grp["gal_dec"], grp["gal_cz"])
+    flags = {
+        "w50": confusion_counts(cat["ra"], cat["dec"], cat["cz"], cat["w50"], *opt) >= 2,
+        "fixed300": confusion_counts(
+            cat["ra"], cat["dec"], cat["cz"], cat["w50"], *opt, half_window_kms=300.0
+        ) >= 2,
+    }  # fmt: skip
+
+    def weights(name: str, r_region: np.ndarray) -> dict:
+        v_in, v_out = env_restricted_vmax(
+            vcat, comp, rnd["d_mpc"], r_cl & r_region, r_env[name], frame_ratio=ratio
+        )
+        return {"survey": (vmax_b, vmax_b), "env": (v_in, v_out)}
+
+    def offset(pool: np.ndarray, gal_in: np.ndarray, w: tuple) -> float:
+        _a, fi = _himf_and_fit(lm, None, None, area, mask=pool & gal_in, vmax=w[0])
+        _b, fo = _himf_and_fit(lm, None, None, area, mask=pool & ~gal_in, vmax=w[1])
+        return round(float(fi.get("log_m_star", np.nan) - fo.get("log_m_star", np.nan)), 4)
+
+    def shuffle(pool: np.ndarray, gal_in: np.ndarray, w: tuple, meas: float, err: float) -> dict:
+        offs = label_shuffle_null(lm, z, pool, gal_in, w[0], w[1], area, rs, n=n_shuffle)
+        a = offs[np.isfinite(offs)]
+        if a.size < 2:
+            return {"n_ok": int(a.size)}
+        sign = np.sign(meas - a.mean())
+        return {
+            "n_ok": int(a.size),
+            "mean": round(float(a.mean()), 4),
+            "std": round(float(a.std(ddof=1)), 4),
+            "measured": meas,
+            "excess": round(float(meas - a.mean()), 3),
+            "n_reaching_measured": int(np.sum(sign * (a - meas) >= 0)),
+            "excess_sigma_quadrature": round(abs(meas - a.mean()) / float(np.hypot(err, a.std(ddof=1))), 2),
+        }  # fmt: skip
+
+    out: dict = {
+        "shuffle_method": (
+            "environment labels given to the real number of members per dz=0.0025 redshift bin, "
+            "drawn at random from the classifiable C>=0.5 sample; knee offset in - out"
+        ),
+        "n_shuffle": n_shuffle,
+        "seed_shuffle": seed_shuffle,
+        "shuffle": {},
+        "blending": {
+            "method": (
+                "Tempel+2017 SDSS galaxies within one FAST FWHM (2.9 arcmin) and a velocity window "
+                "of W50/2 + 100 km/s ('w50') or a fixed +/-300 km/s ('fixed300', mass-independent); "
+                "confused = 2 or more (one is the counterpart); restricted to the SDSS footprint"
+            ),
+            "n_sdss_classifiable": int((base & cl & g_sdss).sum()),
+        },
+    }
+    pool_all = base & cl
+    pool_sdss = base & cl & g_sdss
+    for name in ("void", "group"):
+        w_all = weights(name, np.ones(r_cl.size, bool))
+        w_sdss = weights(name, r_sdss)
+        err = measured[name]
+        sh = {}
+        for wk in ("survey", "env"):
+            sh[wk] = shuffle(pool_all, g_env[name], w_all[wk], err[wk], err[f"{wk}_err"])
+            print(f"[robustness shuffle {name} {wk}]", file=sys.stderr, flush=True)
+        out["shuffle"][name] = sh
+        gi = g_env[name]
+        bl: dict = {}
+        for wk in ("survey", "env"):
+            bl[f"{wk}_offset_sdss_all"] = offset(pool_sdss, gi, w_sdss[wk])
+        for fk, confused in flags.items():
+            clean = pool_sdss & ~confused
+            v: dict = {
+                "confused_frac_in": round(float(confused[pool_sdss & gi].mean()), 4),
+                "confused_frac_out": round(float(confused[pool_sdss & ~gi].mean()), 4),
+                # Is the flag mass-selective? Median log M of flagged vs unflagged members.
+                "median_logm_in_confused": round(float(np.median(lm[pool_sdss & gi & confused])), 3)
+                if (pool_sdss & gi & confused).any() else None,
+                "median_logm_in_unconfused": round(float(np.median(lm[clean & gi])), 3)
+                if (clean & gi).any() else None,
+            }  # fmt: skip
+            for wk in ("survey", "env"):
+                v[f"{wk}_offset_sdss_unconfused"] = offset(clean, gi, w_sdss[wk])
+            v["env_shuffle_unconfused"] = shuffle(
+                clean, gi, w_sdss["env"], v["env_offset_sdss_unconfused"], err["env_err"]
+            )
+            bl[fk] = v
+        print(f"[robustness blending {name}]", file=sys.stderr, flush=True)
+        out["blending"][name] = bl
+    return out
+
+
 def _match_releases(
     dr1: dict, dr2: dict, *, sep_arcmin: float = 1.5, dv_kms: float = 100.0
 ) -> dict:
@@ -1754,6 +2020,11 @@ def _real_leg(
         n_rand=2_000_000, n_void=n_env_null, n_group=n_env_null,
     )  # fmt: skip
 
+    robustness = robustness_leg(
+        cat, area, env, voids, grp, samp_b, vcat, comp,
+        measured_offsets({**b, "env_vmax": env_vmax}), n_rand=2_000_000, n_shuffle=1000,
+    )  # fmt: skip
+
     dr1 = _clean(fetch_fashi_dr1())
     dr1_env = _environments(dr1, voids, grp)
     area1 = 7600.0 * (np.pi / 180.0) ** 2
@@ -1807,6 +2078,7 @@ def _real_leg(
         "random_group_null": group_null,
         "no_overlap_trial": no_overlap_trial,
         "env_vmax": env_vmax,
+        "robustness": robustness,
         "void_offset_common_bins": common,
         "eds_void_knee_offset": b_eds["void_knee_offset"],
         "eds_void_knee_offset_err": b_eds["void_knee_offset_err"],
