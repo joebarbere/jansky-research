@@ -12,13 +12,15 @@
 We split the HI mass function of FASHI DR2 by environment and test the knee offsets against the
 same splits made with voids and groups placed at random. With the survey-wide $1/(C\,V_{\rm max})$
 weighting the void$-$wall and group$-$field offsets are $\feRealVoidKneeOffset$ and
-$+\feRealGroupKneeOffset$~dex, but random placements alone give $\feRealNullCMean$ and
+$+\feRealGroupKneeOffset$~dex, and random placements alone give $\feRealNullCMean$ and
 $+\feRealGroupNullMean$~dex. Restricting each galaxy's $V_{\rm max}$ to its own environment's
-volume removes the group null offset and halves the void one. The void offset then exceeds its null
-by $\feRealEnvNullExcess$~dex ($\feRealEnvNullExcessSigma\sigma$), and the group offset is reached
-by \feRealEnvGroupNullNGe\ of \feRealEnvGroupNullReps\ placements. Neither null is density-matched,
-so we attribute neither offset to environment. We recommend environment-restricted $V_{\rm max}$
-together with random-placement nulls, since the first alone does not remove the void bias.
+volume moves the null means to $\feRealEnvNullMean$ and $\feRealEnvGroupNullMean$~dex. The void
+residual is nearly the same under both weightings ($\feRealNullCExcess$ and
+$\feRealEnvNullExcess$~dex, \feRealEnvVoidQuadSigma$\sigma$). The group residual grows from
+$+\feRealGroupNullExcess$ to $+\feRealEnvGroupNullExcess$~dex (\feRealEnvGroupQuadSigma$\sigma$),
+because the restriction moves the group null about twice as far as the measurement. Neither null is
+density-matched, and we attribute neither offset to environment. Environment-split
+$1/V_{\rm max}$ HIMFs need random-placement nulls, reported under both weightings.
 \end{abstract}
 
 \keywords{HI line emission (690), Galaxy environments (2029), Large-scale structure of the
@@ -26,16 +28,14 @@ universe (902), Luminosity function (942)}
 
 \section{Introduction}
 Void galaxies are expected to have a lower HI mass function (HIMF) knee than wall galaxies, and
-group galaxies to lose gas to stripping \citep{solanes2001,jones2018}. With a two-dimensional
-stepwise maximum-likelihood estimator, which does not assume a uniform density, \citet{moorman2014}
-found the ALFALFA void knee $\sim$0.14~dex below the wall knee. The FAST All Sky HI Survey
+group galaxies to lose gas to stripping \citep{solanes2001,jones2018}; \citet{moorman2014}, with an
+estimator that does not assume uniform density, found the ALFALFA void knee $\sim$0.14~dex lower. The FAST All Sky HI Survey
 \citep[FASHI;][]{fashi_dr1,fashi_dr2} now provides \feRealNDRTwo\ sources, and its catalogue
 supplies a completeness $C$ and accessible volume $V_{\rm max}$ for each; the one environment
 study on FASHI data used 230 group galaxies \citep{fashi_groups}. Weighting environment
 subsamples by that survey-wide volume assumes that each galaxy could have sat anywhere in the
-survey, which an environment member cannot. We measure the environment split under both the
-survey-wide and an environment-restricted $V_{\rm max}$ and test each against random placements.
-An earlier version of this analysis, on DR1 with a single flux-limit weighting, reported a void
+survey, which an environment member cannot. We test splits under both this and an
+environment-restricted $V_{\rm max}$ against random placements. An earlier version of this analysis, on DR1 with a single flux-limit weighting, reported a void
 offset of $\feRealDROneMaxVoidKneeOffset$~dex without any null test.
 
 \section{Data and Method}
@@ -45,9 +45,8 @@ $C\geq\feRealCMin$, the sample of the survey's own HIMF. Weights $1/(C_i V_i)$ r
 published global HIMF ($\log M^*=\feRealGlobalLogMStar$, $\alpha=\feRealGlobalAlpha$, against
 $9.89$ and $-1.31$). A single flux-limit weighting on the same sample fails that check
 ($\alpha=\feRealOptASameGlobalAlpha$) and moves the void offset by
-$\feRealWeightEffect\pm\feRealWeightEffectErr$~dex, so we do not use it. Each HIMF is fitted with a
-Schechter function; the fits are formally poor (reduced $\chi^2$ up to \feRealGlobalRedChi) and the
-fitter scales the errors accordingly.
+$\feRealWeightEffect\pm\feRealWeightEffectErr$~dex, so we do not use it. Schechter fits are formally
+poor (reduced $\chi^2$ up to \feRealGlobalRedChi); their errors are scaled accordingly.
 
 Void members lie inside any hole of a Douglass+2023 VoidFinder void \citep{douglass2023}; wall
 galaxies are the rest of a padded bounding box around the voids (\feRealWallPct\% of the sample).
@@ -55,14 +54,16 @@ Group members lie within the projected $R_{200}$ and 1000~km\,s$^{-1}$ of a Temp
 \citep{tempel2017}, in the heliocentric frame. For the environment-restricted $V_{\rm max}$ we
 draw $2\times10^6$ randoms uniform in volume over the DR2 footprint, classify them with the same
 rules, and weight each galaxy by $C_i V_i\,g_E(d_{\max,i})$, where $g_E(D)$ is the fraction of the
-volume within $D$ that environment $E$ occupies and $d_{\max}$ follows from $V_i=(\Omega/3)\,d_{\max}^3$ over the survey area. Groups occupy \feRealEnvGroupShellHi\% of the classifiable volume within 50~Mpc but
-\feRealEnvGroupShellLo\% beyond 200~Mpc, because the group catalogue thins with distance; the void
-fraction varies between \feRealEnvVoidShellLo\% and \feRealEnvVoidShellHi\% without a trend.
+volume within $D$ that environment $E$ occupies and $d_{\max}$ follows from $V_i=(\Omega/3)\,d_{\max}^3$
+over the survey area. Rescaling each $d_{\max}$ from the survey's distance scale to the randoms' $h=0.70$ scale (median
+ratio \feRealEnvFrameRatio) changes the offsets by at most \feRealEnvFrameMaxShift~dex. The void share of
+the classifiable volume rises from \feRealEnvVoidShareFirst\% within 50~Mpc to
+\feRealEnvVoidShareAll\% overall; the group share falls from \feRealEnvGroupShellFirst\% within
+50~Mpc to \feRealEnvGroupShellLast\% beyond 200~Mpc, as expected of a flux-limited group catalogue.
 
 In the null each void is moved rigidly, with a random orientation, to a random position where all
 its holes lie inside the SDSS footprint and the box; placed voids may overlap. Groups move to random
-footprint positions with their velocities and $R_{200}$. Both nulls reuse the one galaxy sample, so
-their spread omits sample noise.
+footprint positions with their velocities and $R_{200}$.
 
 \section{Results}
 \label{sec:results}
@@ -70,25 +71,32 @@ With the survey-wide weighting the void$-$wall offset is
 $\feRealVoidKneeOffset\pm\feRealVoidKneeErr$~dex (void-jackknife error \feRealJkErr) and the
 group$-$field offset $+\feRealGroupKneeOffset\pm\feRealGroupKneeErr$~dex. The random placements
 give $\feRealNullCMean\pm\feRealNullCStd$ (\feRealNullCReps\ void placements) and
-$+\feRealGroupNullMean\pm\feRealGroupNullStd$ (\feRealGroupNullReps\ groups; mean and standard
-deviation; Figure~\ref{fig:nulls}), comparable to the published void effect.
+$+\feRealGroupNullMean\pm\feRealGroupNullStd$ (\feRealGroupNullReps\ group placements; mean and
+standard deviation), comparable to the published void effect; the residuals are
+$\feRealNullCExcess$ and $+\feRealGroupNullExcess$~dex, and \feRealGroupNullNGe\ group placements
+reach the measured group offset.
 
 With the environment-restricted weighting the offsets are
-$\feRealEnvVoidOffset\pm\feRealEnvVoidErr$ and $+\feRealEnvGroupOffset\pm\feRealEnvGroupErr$~dex,
-and the same \feRealEnvNullReps\ placements give $\feRealEnvNullMean\pm\feRealEnvNullStd$ and
-$\feRealEnvGroupNullMean\pm\feRealEnvGroupNullStd$~dex. No void placement reaches the measured
-offset, but the excess, $\feRealEnvNullExcess$~dex, is \feRealEnvNullExcessSigma\ times the
-measured offset's fit error; we compare with that error because the null spread omits sample
-noise. Of the \feRealEnvGroupNullReps\ group placements, \feRealEnvGroupNullNGe\ reach the
-measured group offset ($p\approx\feRealEnvGroupNullP$), an excess of $+\feRealEnvGroupNullExcess$~dex.
+$\feRealEnvVoidOffset\pm\feRealEnvVoidErr$ and $+\feRealEnvGroupOffset\pm\feRealEnvGroupErr$~dex.
+The first \feRealEnvNullReps\ of the same seeded placements give $\feRealEnvNullMean\pm\feRealEnvNullStd$
+and $\feRealEnvGroupNullMean\pm\feRealEnvGroupNullStd$~dex (Figure~\ref{fig:nulls}). For groups
+the restriction moves the null mean by $\feRealEnvGroupNullShift$~dex but the measurement by only
+$\feRealEnvGroupMeasShift$~dex, and \feRealEnvGroupNullNGe\ placements now reach the measured
+offset. Both residuals are divided by the measured offset's fit error and the null spread in quadrature,
+because the null reuses one galaxy sample.
+The void residual, $\feRealEnvNullExcess$~dex, is \feRealEnvVoidQuadSigma$\sigma$ (no placement
+reaches it); the group residual, $+\feRealEnvGroupNullExcess$~dex, is
+\feRealEnvGroupQuadSigma$\sigma$ (rank $p\approx\feRealEnvGroupNullP$, or \feRealEnvGroupNullPTwo\
+for the two environments tested).
 
 Neither null is density-matched. The random void placements hold
 \feRealNullCNInVoidMin--\feRealNullCNInVoidMax\ galaxies against \feRealNInVoid\ in the real voids,
 and the random group regions a median \feRealGroupNullNInGroup\ against \feRealGroupNInGroupReal.
-Across void placements the offset correlates weakly with occupancy (correlation
-$\feRealNullCOccCorr$), emptier placements giving less negative offsets; extrapolated to the real
-voids this would enlarge the residual, but the real voids lie outside the sampled range, so we do
-not extrapolate.
+Across the paired void placements the offset correlates weakly with occupancy (correlation
+$\feRealEnvNullCorrOccEnv$ under the restricted weighting, $\feRealEnvNullCorrOccSurvey$ under the
+survey-wide one), emptier placements giving less negative offsets; the real voids lie outside the
+sampled range, so we do not extrapolate. The group placements' occupancy, redshift and overlap
+with real groups are collinear, and none of them sets a direction.
 
 \begin{figure}
 \plotone{figures/fashienv_nulls.pdf}
@@ -100,21 +108,20 @@ dashed lines mark the measured offsets under each.}
 
 \section{Discussion}
 \label{sec:discussion}
-Weighting environment subsamples by the survey-wide $V_{\rm max}$ makes volumes of the
-environments' shapes, placed at random, shift the fitted $1/V_{\rm max}$ knee by as much as
-published environmental effects. Restricting $V_{\rm max}$ to each environment removes that shift
-for groups, whose share of the volume falls with distance, but only halves it for voids, so the
-restriction is necessary and not sufficient. The remaining void null offset combines the
-estimator's response to the placed volumes with real structure at those distances.
+Restricting $V_{\rm max}$ to each environment removes
+the part of the null shift that comes from the environment's share of the volume changing with
+distance; what remains combines the estimator's response to the placed volumes with real structure
+at those distances, and the null cannot separate the two. After subtracting the null, the void
+residual barely depends on the weighting, while the group residual almost triples; a group signal
+that appears under only one weighting is not yet a measurement.
 
-The void residual is small against its own error. The group residual is larger, but the placed
-group regions hold a tenth as many galaxies as the real groups, and blending of neighbours in
-FAST's $\sim$3~arcmin beam, which grows with density and would raise the group knee, is untested,
-as is the match between FASHI's $v_{\rm opt}$ frame and the void catalogue's redshifts. We
-therefore attribute neither offset to environment. Environment-split $1/V_{\rm max}$ HIMFs should
-use environment-restricted volumes, be tested against random-placement nulls reported with their
-occupancy, and, for the group signal here, be repeated with density-matched nulls and a
-blending test.
+We attribute neither offset to environment. The placed group regions hold a tenth as many
+galaxies as the real groups. Blending of neighbours in FAST's $\sim$3~arcmin beam grows with
+density, so it would raise the group knee and lower the void knee relative to the wall, the signs
+seen; it is untested, as is the match between FASHI's $v_{\rm opt}$ frame and the void catalogue's
+redshifts. Environment-split $1/V_{\rm max}$ HIMFs should be tested against random-placement nulls
+under both the survey-wide and the environment-restricted volumes, with the null's occupancy
+reported; for the group offset here, density-matched nulls and a blending test come next.
 
 Reproducibility: \code{jansky\_research.fashienv}; every number derived from the data is
 pipeline-generated (\code{results/fashienv\_metrics.json} $\to$ macros); survey constants and

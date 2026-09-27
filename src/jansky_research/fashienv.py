@@ -620,13 +620,19 @@ def env_vmax_offset(
     rand_d: np.ndarray,
     rand_cl: np.ndarray,
     rand_in: np.ndarray,
+    *,
+    frame_ratio: np.ndarray | None = None,
 ) -> dict:
     """Knee offset (in - out) with each side weighted by its OWN environment's accessible volume.
 
     Galaxies in the environment get C * Vmax * g_in(dmax); galaxies in the complement (within
     the classifiable region) get C * Vmax * g_out(dmax), g from :func:`environment_volume_fraction`.
+    ``frame_ratio`` (per galaxy) converts the catalogue-frame dmax into the randoms' distance
+    frame before g is looked up; the catalogue Vmax itself is left untouched.
     """
     dmax = dmax_from_vmax(vcat)
+    if frame_ratio is not None:
+        dmax = dmax * frame_ratio
     g_in = environment_volume_fraction(rand_d, rand_cl & rand_in, dmax)
     g_out = environment_volume_fraction(rand_d, rand_cl & ~rand_in, dmax)
     lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
@@ -1304,6 +1310,7 @@ def env_vmax_leg(
     seed_rand: int = 68,
     seed_void: int = 65,
     seed_group: int = 66,
+    frame_correct: bool = True,
 ) -> dict:
     """Fourth referee round: redo the splits AND the nulls with environment-restricted Vmax.
 
@@ -1314,11 +1321,22 @@ def env_vmax_leg(
     placements as the committed nulls (same seeds, so each placement is paired with its
     survey-wide-Vmax row). Randoms classify volume with the galaxies' own rules: the void-survey
     box, VoidFinder holes, and :func:`assign_groups` on a random's own cz.
+
+    Fifth round: the catalogue's dmax is a FASHI comoving distance (luminosity distance / (1+z))
+    while the randoms use the h=0.70 comoving distance of their redshift; with ``frame_correct``
+    each galaxy's dmax is rescaled by its own ratio of the two before g is looked up, and the
+    uncorrected measured offsets are kept for comparison.
     """
     import sys
 
+    z_g, d_g = cat["z"], cat["dist_mpc"]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = _comoving_distance_mpc(z_g, H0) / (d_g / (1.0 + z_g))
+    ratio = np.where(np.isfinite(ratio) & (ratio > 0), ratio, 1.0)
+    fr = ratio if frame_correct else None
     rng = np.random.default_rng(seed_rand)
-    d_top = float(np.nanmax(dmax_from_vmax(vcat[base]))) * 1.001
+    dmax_cat = dmax_from_vmax(vcat[base])
+    d_top = float(np.nanmax(dmax_cat * (ratio[base] if frame_correct else 1.0))) * 1.001
     rnd = survey_randoms(*survey_footprint, n_rand, rng, d_max_mpc=d_top)
     lo = voids["sphere_xyz"].min(axis=0) - 20.0
     hi = voids["sphere_xyz"].max(axis=0) + 20.0
@@ -1347,10 +1365,11 @@ def env_vmax_leg(
             out.append(round(float(np.mean(r_in[s])), 4) if s.any() else None)
         return out
 
-    def env_off(gal_in: np.ndarray, r_in: np.ndarray) -> dict:
+    def env_off(gal_in: np.ndarray, r_in: np.ndarray, frame: np.ndarray | None = fr) -> dict:
         return env_vmax_offset(
-            cat, area, base, env["classifiable"], gal_in, vcat, comp, rd, r_cl, r_in
-        )
+            cat, area, base, env["classifiable"], gal_in, vcat, comp, rd, r_cl, r_in,
+            frame_ratio=frame,
+        )  # fmt: skip
 
     vmax_b = vmax_from_catalogue(vcat, comp)
     lm, dd, ff = cat["log_mhi"], cat["dist_mpc"], cat["flux"]
@@ -1377,8 +1396,16 @@ def env_vmax_leg(
         "void_frac_of_classifiable_shell": shell(r_iv),
         "g_group_cumulative": profile(r_ig),
         "group_frac_of_classifiable_shell": shell(r_ig),
+        "frame_correct": frame_correct,
+        "frame_ratio_median": round(float(np.median(ratio[base])), 4),
+        "frame_ratio_5_95": [round(float(x), 4) for x in np.percentile(ratio[base], [5, 95])],
+        "frac_dmax_below_own_h70_distance_uncorrected": round(
+            float(np.mean(dmax_cat < _comoving_distance_mpc(z_g[base], H0))), 4
+        ),
         "void": env_off(env["in_void"], r_iv),
         "group": env_off(env["in_group"], r_ig),
+        "void_frame_uncorrected": env_off(env["in_void"], r_iv, None),
+        "group_frame_uncorrected": env_off(env["in_group"], r_ig, None),
     }
     meas_v, meas_g = out["void"]["offset"], out["group"]["offset"]
 
@@ -1394,9 +1421,12 @@ def env_vmax_leg(
         ok = np.all(np.isfinite(moved), axis=1)
         iv = void_membership_holes(env["xyz"], moved[ok], voids["sphere_radius"][ok])
         riv = void_membership_holes(rnd["xyz_h"], moved[ok], voids["sphere_radius"][ok])
-        vrows.append(
-            {"survey_vmax": round(survey_off(iv), 4), "env_vmax": env_off(iv, riv)["offset"]}
-        )
+        sel = base & env["classifiable"] & iv
+        vrows.append({
+            "survey_vmax": round(survey_off(iv), 4), "env_vmax": env_off(iv, riv)["offset"],
+            "n_in": int(sel.sum()),
+            "median_z": round(float(np.median(cat["z"][sel])), 4) if sel.any() else None,
+        })  # fmt: skip
         if (k + 1) % 20 == 0 or k + 1 == n_void:
             print(f"[env_vmax void] {k + 1}/{n_void}", file=sys.stderr, flush=True)
 
@@ -1419,16 +1449,17 @@ def env_vmax_leg(
             )  # fmt: skip
             >= 0
         )
-        grows.append(
-            {
-                "survey_vmax": round(survey_off(ig), 4),
-                "env_vmax": env_off(ig, r_groups(gra, gdec))["offset"],
-            }
-        )
+        selg = base & env["classifiable"] & ig
+        grows.append({
+            "survey_vmax": round(survey_off(ig), 4),
+            "env_vmax": env_off(ig, r_groups(gra, gdec))["offset"],
+            "n_in": int(selg.sum()),
+            "median_z": round(float(np.median(cat["z"][selg])), 4) if selg.any() else None,
+        })  # fmt: skip
         if (k + 1) % 20 == 0 or k + 1 == n_group:
             print(f"[env_vmax group] {k + 1}/{n_group}", file=sys.stderr, flush=True)
 
-    def summ(rows: list, measured: float, sign: int) -> dict:
+    def summ(rows: list, measured: float, meas_err: float, sign: int) -> dict:
         s: dict = {"n_reps": len(rows)}
         for key in ("survey_vmax", "env_vmax"):
             a = np.array([r[key] for r in rows], float)
@@ -1447,11 +1478,27 @@ def env_vmax_leg(
         s["measured_env_minus_null_env_mean"] = (
             round(measured - float(e.mean()), 3) if e.size else None
         )
+        # One yardstick for every environment: the excess over the null mean, against the
+        # measured offset's fit error and the null spread in quadrature (the null reuses one
+        # galaxy sample, so its spread omits sample noise; the fit error omits placement noise).
+        if e.size > 1:
+            q = float(np.hypot(meas_err, e.std(ddof=1)))
+            s["excess_sigma_quadrature"] = round(abs(measured - float(e.mean())) / q, 2)
+            s["null_env_mean_se"] = round(float(e.std(ddof=1) / np.sqrt(e.size)), 4)
+        # Paired diagnostics: does either weighting's null offset follow occupancy / redshift?
+        n_in = np.array([r.get("n_in", np.nan) for r in rows], float)
+        mz = np.array([np.nan if r.get("median_z") is None else r["median_z"] for r in rows], float)
+        for key in ("survey_vmax", "env_vmax"):
+            a = np.array([r[key] for r in rows], float)
+            ok = np.isfinite(a) & np.isfinite(n_in) & np.isfinite(mz)
+            if ok.sum() > 10 and np.ptp(n_in[ok]) > 0 and np.ptp(mz[ok]) > 0:
+                s[f"corr_{key}_occupancy"] = round(float(np.corrcoef(a[ok], n_in[ok])[0, 1]), 3)
+                s[f"corr_{key}_median_z"] = round(float(np.corrcoef(a[ok], mz[ok])[0, 1]), 3)
         s["rows"] = rows
         return s
 
-    out["void_null_constrained"] = summ(vrows, meas_v, -1)
-    out["group_null"] = summ(grows, meas_g, +1)
+    out["void_null_constrained"] = summ(vrows, meas_v, out["void"]["offset_err"], -1)
+    out["group_null"] = summ(grows, meas_g, out["group"]["offset_err"], +1)
     return out
 
 
@@ -1863,7 +1910,8 @@ def _null_figure(m: dict, out_dir) -> None:
             pad = 0.08 * (max(xs) - min(xs))
             ax.set_xlim(min(xs) - pad, max(xs) + pad)
         ax.set(xlabel=xlab + r" $\Delta\log M^*$ (dex)", ylabel="placements", title=title)
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=6.5, loc="upper left", frameon=False)
+        ax.set_ylim(top=ax.get_ylim()[1] * 1.45)  # headroom so the legend clears the histograms
     fig.tight_layout()
     fig.savefig(out / "fashienv_nulls.pdf")
     plt.close(fig)
@@ -2036,6 +2084,8 @@ def _write_macros(m: dict, path) -> None:
                 val = f"{float(val):.1f}".removesuffix(".0")
             elif macro in _FRAC_AS_PCT and isinstance(val, str) and val != "--":
                 val = f"{100.0 * float(val):.0f}"
+            elif macro.endswith("RedChi") and isinstance(val, str) and val != "--":
+                val = f"{float(val):.0f}"
             elif macro == "CMin" and isinstance(val, str) and val != "--":
                 val = f"{float(val):g}"
             lines.append(rf"\newcommand{{\feReal{macro}}}{{{val}}}")
@@ -2084,7 +2134,57 @@ def _write_macros(m: dict, path) -> None:
         n_ev = (evn.get("env_vmax") or {}).get("n_ok")
         n_eg = (egn.get("env_vmax") or {}).get("n_ok")
         n_reach_g = egn.get("n_reaching_measured_env")
+
+        def sub(a_, b_):
+            return (
+                f"{a_ - b_:.3f}"
+                if isinstance(a_, (int, float)) and isinstance(b_, (int, float))
+                else "--"
+            )
+
+        def share(i: int) -> str:
+            gv, gw = ev.get("g_void_cumulative") or [], ev.get("g_wall_cumulative") or []
+            try:
+                return f"{100 * gv[i] / (gv[i] + gw[i]):.0f}"
+            except (IndexError, TypeError, ZeroDivisionError):
+                return "--"
+
+        vnf, gnf = ev.get("void_frame_uncorrected") or {}, ev.get("group_frame_uncorrected") or {}
+
+        def corr2(x):
+            return f"{x:.2f}" if isinstance(x, (int, float)) else "--"
+
+        below = ev.get("frac_dmax_below_own_h70_distance_uncorrected")
+        below_pct = f"{100 * below:.0f}" if isinstance(below, (int, float)) else "--"
+        fs = []
+        for a_, b_ in ((evv, vnf), (evg, gnf)):
+            if isinstance(a_.get("offset"), (int, float)) and isinstance(
+                b_.get("offset"), (int, float)
+            ):
+                fs.append(abs(a_["offset"] - b_["offset"]))
+        frame_shift = f"{max(fs):.3f}" if fs else "--"
+        gshell = ev.get("group_frac_of_classifiable_shell") or []
+        p_one = (n_reach_g + 1) / (n_eg + 1) if n_reach_g is not None and n_eg else None
         lines += [
+            rf"\newcommand{{\feRealEnvVoidShareFirst}}{{{share(0)}}}",
+            rf"\newcommand{{\feRealEnvVoidShareAll}}{{{share(-1)}}}",
+            rf"\newcommand{{\feRealEnvGroupShellFirst}}{{{f'{100 * gshell[0]:.0f}' if gshell and gshell[0] is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvGroupShellLast}}{{{f'{100 * gshell[-1]:.0f}' if gshell and gshell[-1] is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvVoidQuadSigma}}{{{evn.get('excess_sigma_quadrature', '--')}}}",
+            rf"\newcommand{{\feRealEnvGroupQuadSigma}}{{{egn.get('excess_sigma_quadrature', '--')}}}",
+            rf"\newcommand{{\feRealEnvGroupNullMeanSe}}{{{f3(egn.get('null_env_mean_se'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullPTwo}}{{{f'{min(1.0, 2 * p_one):.2f}' if p_one is not None else '--'}}}",
+            rf"\newcommand{{\feRealEnvVoidNullShift}}{{{sub((evn.get('env_vmax') or {}).get('mean'), (evn.get('survey_vmax') or {}).get('mean'))}}}",
+            rf"\newcommand{{\feRealEnvGroupNullShift}}{{{sub((egn.get('env_vmax') or {}).get('mean'), (egn.get('survey_vmax') or {}).get('mean'))}}}",
+            rf"\newcommand{{\feRealEnvVoidMeasShift}}{{{sub(evv.get('offset'), m.get('void_knee_offset'))}}}",
+            rf"\newcommand{{\feRealEnvGroupMeasShift}}{{{sub(evg.get('offset'), m.get('group_knee_offset'))}}}",
+            rf"\newcommand{{\feRealEnvNullCorrOccSurvey}}{{{corr2(evn.get('corr_survey_vmax_occupancy'))}}}",
+            rf"\newcommand{{\feRealEnvNullCorrOccEnv}}{{{corr2(evn.get('corr_env_vmax_occupancy'))}}}",
+            rf"\newcommand{{\feRealEnvFrameRatio}}{{{f3(ev.get('frame_ratio_median'))}}}",
+            rf"\newcommand{{\feRealEnvFrameBelowPct}}{{{below_pct}}}",
+            rf"\newcommand{{\feRealEnvFrameMaxShift}}{{{frame_shift}}}",
+            rf"\newcommand{{\feRealEnvVoidOffsetNoFrame}}{{{f3(vnf.get('offset'))}}}",
+            rf"\newcommand{{\feRealEnvGroupOffsetNoFrame}}{{{f3(gnf.get('offset'))}}}",
             rf"\newcommand{{\feRealEnvVoidOffset}}{{{f3(evv.get('offset'))}}}",
             rf"\newcommand{{\feRealEnvVoidErr}}{{{f3(evv.get('offset_err'))}}}",
             rf"\newcommand{{\feRealEnvGroupOffset}}{{{f3(evg.get('offset'))}}}",

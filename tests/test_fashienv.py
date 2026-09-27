@@ -545,22 +545,24 @@ def test_env_vmax_offset_removes_distance_selection_bias():
 
 def test_env_vmax_leg_runs_and_pairs_placements():
     rng = np.random.default_rng(6)
-    n = 4000
+    n = 8000
     ra = rng.uniform(150, 210, n)
     dec = np.degrees(np.arcsin(rng.uniform(0, np.sin(np.radians(50)), n)))
     d = 250.0 * np.cbrt(rng.uniform(0, 1, n))
     a = 0.5 * (1.0 + fe._Q0)
     x = d * fe.H0 / fe.C_KM_S
     z = (1.0 - np.sqrt(1.0 - 4.0 * a * x)) / (2.0 * a)
-    lm = rng.uniform(8.5, 10.5, n)
+    grid = rng.uniform(7.5, 10.9, 20 * n)
+    w = fe.schechter(grid, 0.0, 9.9, -1.3)
+    lm = rng.choice(grid, size=n, p=w / w.sum())
     cat = {"ra": ra, "dec": dec, "z": z, "cz": fe.C_KM_S * z, "log_mhi": lm, "dist_mpc": d,
            "flux": 10**lm / (2.356e5 * d**2)}  # fmt: skip
     xyz = fe.comoving_xyz(ra, dec, z, h0=100.0)
     holes = xyz[rng.choice(n, 30, replace=False)]
     voids = {"sphere_xyz": holes, "sphere_radius": np.full(30, 12.0), "void_id": np.arange(30) // 3}
-    gi = rng.choice(n, 40, replace=False)
+    gi = rng.choice(n, 150, replace=False)
     grp = {"grp_ra": ra[gi], "grp_dec": dec[gi], "grp_cz": cat["cz"][gi],
-           "grp_r200": np.full(40, 1.0)}  # fmt: skip
+           "grp_r200": np.full(150, 6.0)}  # fmt: skip
     env = {
         "xyz": xyz,
         "in_void": fe.void_membership_holes(xyz, holes, voids["sphere_radius"]),
@@ -572,10 +574,29 @@ def test_env_vmax_leg_runs_and_pairs_placements():
     vcat = omega / 3.0 * np.full(n, 250.0) ** 3
     out = fe.env_vmax_leg(
         cat, omega, env, voids, grp, np.ones(n, bool), vcat, np.ones(n), (ra, dec), (ra, dec),
-        n_rand=50_000, n_void=2, n_group=2,
+        n_rand=50_000, n_void=3, n_group=3,
     )  # fmt: skip
     assert len(out["g_void_cumulative"]) == len(fe.ENV_VMAX_D_GRID)
+    # dist_mpc here IS the h70 comoving distance, so the frame ratio is exactly 1 + z
+    assert out["frame_correct"] and out["frame_ratio_median"] > 1.0
+    assert {"void_frame_uncorrected", "group_frame_uncorrected"} <= set(out)
+    for k in ("void_null_constrained", "group_null"):
+        assert "excess_sigma_quadrature" in out[k] and "null_env_mean_se" in out[k]
     assert 0.0 < out["rand_classifiable_frac"] <= 1.0
     for k in ("void_null_constrained", "group_null"):
-        assert out[k]["n_reps"] == 2 and len(out[k]["rows"]) == 2
-        assert set(out[k]["rows"][0]) == {"survey_vmax", "env_vmax"}
+        assert out[k]["n_reps"] == 3 and len(out[k]["rows"]) == 3
+        assert set(out[k]["rows"][0]) == {"survey_vmax", "env_vmax", "n_in", "median_z"}
+
+
+def test_env_vmax_offset_unit_frame_ratio_is_identity():
+    cat, vcat, omega, rng = _distance_split_mock(n=20_000)
+    n = cat["log_mhi"].size
+    far = cat["dist_mpc"] > 150.0
+    ones, comp = np.ones(n, bool), np.ones(n)
+    rd = 300.0 * np.cbrt(rng.uniform(0, 1, 200_000))
+    args = (cat, omega, ones, ones, far, vcat, comp, rd, rd >= 0, rd > 150.0)
+    a = fe.env_vmax_offset(*args)
+    b = fe.env_vmax_offset(*args, frame_ratio=np.ones(n))
+    c = fe.env_vmax_offset(*args, frame_ratio=np.full(n, 0.5))
+    assert a["offset"] == b["offset"]
+    assert c["offset"] != a["offset"]  # the lookup distance matters

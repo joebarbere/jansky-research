@@ -472,3 +472,34 @@ lean the same way:
 7-9 (nits): write "first 200 of the same seeded placements"; the runner writes the results
    JSON directly with no `--out`; "41.492" should be "41"; the figure legend overlaps the void
    histograms.
+
+### Response (run `fashienv-envvmax2`, frame-corrected; pairing checks still exactly 0)
+
+- **#5, the distance frame: measured, and small.** Each galaxy's dmax is now rescaled into the
+  randoms' h70 frame (median ratio 1.052, 5-95% 0.958-1.156; 10% of galaxies had dmax below
+  their own h70 distance uncorrected). The measured offsets move by <= 0.002 dex; uncorrected
+  values are kept in `void_frame_uncorrected`/`group_frame_uncorrected`. The null means moved
+  by <= 0.006, which mixes the correction with a fresh random draw (the randoms' outer radius
+  changed). The previous run's summaries are kept in `env_vmax.previous`.
+  - Void: measured -0.092 +/- 0.035, null -0.040 +/- 0.017, 0/200 reach it.
+  - Group: measured +0.089 +/- 0.032, null -0.019 +/- 0.053 (SE 0.004), 4/200 reach it.
+- **#1 accepted.** The text now says the void share rises from 30% within 50 Mpc to 42%
+  overall. The retracted inference is gone.
+- **#2 accepted.** "Necessary but not sufficient" and "does not remove the void bias" are gone.
+  The Discussion now says the restriction removes the part of the null shift caused by the
+  environment's volume share changing with distance. What remains is the estimator's response
+  plus real structure, which the null cannot separate. The void residual barely depends on the
+  weighting (-0.063 vs -0.052).
+- **#3 accepted.** The abstract and results say the group residual grows from +0.040 (44/200)
+  to +0.108 because the restriction moves the group null about twice as far as the measurement
+  (-0.145 vs -0.077). "A group signal that appears under only one weighting is not yet a
+  measurement." "Removes" is now "moves the null means to".
+- **#4.** One yardstick for both (`excess_sigma_quadrature`): void 1.34 sigma, group 1.75
+  sigma; rank p ~ 0.02, 0.05 for two environments.
+- **#6.** Correlations are computed on the paired rows under both weightings (-0.22 restricted,
+  -0.39 survey-wide). The group diagnostics are stated as collinear, with no direction.
+- **#7-9.** "First 200 of the same seeded placements"; the runner has `--out`. Nit 8 was
+  already handled: `write_results` merges through `preserve_live_results`. Reduced chi2 is now
+  an integer; the figure legend has headroom. The blending caveat now names both signs (it
+  raises the group knee and lowers the void knee).
+- About 960 prose words plus the caption; one figure; triage and lint clean.
