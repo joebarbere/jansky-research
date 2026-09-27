@@ -360,3 +360,34 @@ catalogues' radial selection; Moorman+2014 used 2DSWML (verified), so the ALFALF
 narrowed; DR1 -0.256 never null-tested; the single-limit weighting is demoted (global alpha -1.73,
 reduced chi2 190); Fig. 1 caption states the fitted bins (void points below log M ~ 8 lie below the
 curve, checked on the rendered figure); fashi_groups year 2026; stale WeightingShiftPct removed.
+
+## Fourth referee round (2026-09-26): MINOR revision
+
+Bookkeeping re-verified in full: every macro against the JSON, including the derived residuals
+and sigmas, both figures, and four citations via Crossref. 13 of 14 third-round findings are
+resolved; #3 is partial and #5 is fixed in the body but not the abstract. Nothing needs new data.
+
+1. **(major) The recommendation is scoped too broadly.** Both environments are weighted by the
+   survey-wide Vmax, never a Vmax restricted to the environment's own volume. This round-1 item
+   was never closed (see the DR2 leg above). The null offset may be mostly that known
+   misapplication. Scope the claim to survey-wide-Vmax splits, name the environment-restricted
+   Vmax as the direct remedy, and list it as next work. Optional: compute the void-volume
+   fraction vs distance with `void_membership_holes` on randoms, and refit.
+2. **(major) The null's one directional hint is omitted.** corr(offset, n_in_void) = -0.42:
+   emptier placements give LESS negative offsets, and the real voids (17k) are emptier than
+   every placement. Extrapolating would enlarge the residual, not remove it. State the sign
+   alongside the refusal to extrapolate. "Tracks" at R^2 = 0.2 should read "correlates weakly".
+3. **(major, venue) Not RNAAS-sized:** about 1,590 body words and two figures against ~1,000
+   and one.
+4. Hedging has accumulated. Cut to the four-sentence contribution. Trim the EdS test, the
+   regression detail, 688/1163 and the duplicated DR1 history. Drop the single-limit weighting
+   from the abstract (it fails the global check) but keep the 0.078 weighting dependence once.
+5. The sigma denominators are the offset's fit and jackknife errors, not "the void bin's"
+   noise. Say why they are used rather than the null std.
+6. The abstract gives the null offsets a single cause (the estimator); the Discussion gives
+   two (estimator plus real structure).
+7. "Redshift distribution is preserved" sits next to the member median-z mismatch (0.0225 vs
+   0.031). Clarify.
+8. Three-decimal false precision ("C >= 0.500", "51.300%", "91.700 percentile").
+9. The Fig. 2 caption doesn't name the weighting.
+10. `README.md:95,195` and the stale DR1 arXiv tarball still carry the -0.26 dex claim.
