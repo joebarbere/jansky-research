@@ -13,7 +13,7 @@ We searched three VLASS Quick Look epochs over the whole survey, and a fourth ov
 \vpmRealAreaFour~deg$^2$, for moving radio sources, consulting optical and infrared catalogues only
 at the end. The search recovers the unresolved UV/BL~Ceti binary at
 $\vpmRealUVFitMu\pm\vpmRealUVFitErr$~arcsec~yr$^{-1}$ (system motion \vpmRealSysMu~arcsec~yr$^{-1}$)
-and finds no other mover. With errors calibrated on static sources, a compactness cut calibrated
+and finds no other mover. With errors calibrated on static sources, a compactness cut set
 on nearby Gaia stars leaves UV~Ceti the only one of \vpmRealNCandBefore\ candidates; the rest are
 static in the images. For persistent (three-epoch) compact sources of
 \vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy beyond \vpmRealPlxDomain~pc, moving at
@@ -67,8 +67,8 @@ sources, more than requiring all three does.
 
 Rotating the later epochs by a few arcminutes in right ascension measures chance alignments of
 unrelated orphans; it cannot see a static source whose fitted centroid shifts between epochs.
-\vpmRealNInj\ movers injected at random sky positions with the same errors, size noise and annual
-parallax give the completeness.
+\vpmRealNInj\ movers injected at random sky positions with the same errors and size noise give the
+completeness; separate runs add annual parallax at 4, 8 and 16~pc.
 
 \section{Results}
 \label{sec:results}
@@ -95,18 +95,18 @@ reaches this step, so chance coincidence cannot have removed a mover.
 
 Completeness is near zero below \vpmRealRateLo~arcsec~yr$^{-1}$, where a mover stays within the
 static match radius, climbs steeply between \vpmRealFineEdgeLo\ and
-\vpmRealFineEdgeHi~arcsec~yr$^{-1}$, and is at least \vpmRealCompPlxNone\ in every bin from
-\vpmRealRateDomLo\ to \vpmRealRateMax~arcsec~yr$^{-1}$ (Figure~\ref{fig:comp}). Parallax lowers the
+\vpmRealFineEdgeHi~arcsec~yr$^{-1}$, and is at least \vpmRealCompPlxNone\ at \vpmRealFluxThree~mJy (\vpmRealCompDomOneFive\ at
+\vpmRealFluxOneFive~mJy) in every bin from \vpmRealRateDomLo\ to \vpmRealRateMax~arcsec~yr$^{-1}$
+(Figure~\ref{fig:comp}). Parallax lowers the
 worst of those bins to \vpmRealCompPlxFour, \vpmRealCompPlxEight\ and \vpmRealCompPlxSixteen\ at
 4, 8 and 16~pc; we adopt \vpmRealPlxDomain~pc, beyond which the loss is below 5\%, meaning
 tangential velocities above \vpmRealVtanMin~km~s$^{-1}$. With no new mover and no rate prior, the
 worst bin gives 95\% upper limits over the \vpmRealAreaDeg~deg$^2$ searched in three epochs of
 $\vpmRealLimDomThree$~deg$^{-2}$ for sources of \vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy per
-epoch beyond \vpmRealPlxDomain~pc, and $\vpmRealLimDomOneFive$~deg$^{-2}$ for
-\vpmRealFluxLoOneFive--\vpmRealFluxHiOneFive~mJy without parallax, or about \vpmRealAllSky\ over the
-whole sky if movers are isotropic. The heavy error tails lower the true completeness by an
-estimated \vpmRealTailBoundThree\% at \vpmRealFluxThree~mJy and \vpmRealTailBoundOneFive\% at
-\vpmRealFluxOneFive~mJy. The limit applies only to movers unresolved at 2.5~arcsec: the cut
+epoch beyond \vpmRealPlxDomain~pc, or about \vpmRealAllSky\ over the whole sky if movers are
+isotropic, and $\vpmRealLimDomOneFive$~deg$^{-2}$ for \vpmRealFluxLoOneFive--\vpmRealFluxHiOneFive~mJy
+for distant movers (the parallax loss was measured at 3~mJy only). The heavy error tails lower the true completeness by roughly \vpmRealTailBoundThree\% at \vpmRealFluxThree~mJy and \vpmRealTailBoundOneFive\% at
+\vpmRealFluxOneFive~mJy, or somewhat more, since the estimate uses two-position offsets. The limit applies only to movers unresolved at 2.5~arcsec: the cut
 removes a mover with resolved emission and a binary a few tenths of a beam wide fitted as one
 elongated source in two epochs.
 

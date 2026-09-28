@@ -1798,9 +1798,6 @@ def _real_macro_values(m: dict, vet: dict | None) -> dict[str, str]:
         "RateMid": f"{edges[2]:.2f}",
         "RateMin": f"{edges[0]:.1f}",
         "RateMax": f"{edges[-1]:.0f}",
-        "LimThree": _fmt_sci(lim["3mJy_cut"]["limit_per_deg2_95"]),
-        "LimOneFive": _fmt_sci(lim["1.5mJy_cut"]["limit_per_deg2_95"]),
-        "AllSky": f"{lim['3mJy_cut']['limit_per_deg2_95'] * 4 * np.pi * (180 / np.pi) ** 2:.1f}",
     }
     # How close the removed candidates came: the threshold at which each would have passed the
     # chosen rule (for 2 of 3, its second-smallest compactness), smallest two first.
@@ -1883,9 +1880,6 @@ REAL_MACRO_NAMES = (
     "RateMid",
     "RateMin",
     "RateMax",
-    "LimThree",
-    "LimOneFive",
-    "AllSky",
     "NVetted",
     "NNewMovers",
     "NSouthVetted",
@@ -1928,7 +1922,6 @@ def _ref1_macro_values(m: dict, ref1: dict | None) -> dict[str, str]:
     fine = ref1["fine_completeness_3mJy_cut"]
     fe = fine["bin_edges"]
     tb = ref1["tail_completeness_bound"]
-    lim = ref1["limits"]
     per = m["real_per_triple"]
     area4 = max(v["area_deg2"] for k, v in per.items() if "E4" in k)
     above = [p for p, lo in zip(fine["per_bin"], fe[:-1], strict=True) if lo >= 1.1 - 1e-9]
@@ -1956,8 +1949,6 @@ def _ref1_macro_values(m: dict, ref1: dict | None) -> dict[str, str]:
         "FineCompA": f"{fine['per_bin'][1]:.2f}",
         "FineCompB": f"{fine['per_bin'][2]:.2f}",
         "FineCompAboveMin": f"{min(above):.3f}",
-        "LimWorstBin": _fmt_sci(lim["worst_bin_limit_per_deg2_95"]),
-        "LimEdge": _fmt_sci(lim["worst_fine_bin_limit_per_deg2_95"]),
         "TailBoundThree": f"{100 * tb['3mJy']['max_excess']:.1f}",
         "TailBoundOneFive": f"{100 * tb['1.5mJy']['max_excess']:.1f}",
         "PlxDistMin": f"{ref1['parallax_floor']['distance_min_pc']:.0f}",
@@ -1993,8 +1984,6 @@ REF1_MACRO_NAMES = (
     "FineCompA",
     "FineCompB",
     "FineCompAboveMin",
-    "LimWorstBin",
-    "LimEdge",
     "TailBoundThree",
     "TailBoundOneFive",
     "PlxDistMin",
@@ -2025,6 +2014,9 @@ def _ref2_macro_values(m: dict, ref2: dict | None) -> dict[str, str]:
         "CompPlxEight": f"{byd['8pc']['worst_1p1_5']:.3f}",
         "CompPlxSixteen": f"{byd['16pc']['worst_1p1_5']:.3f}",
         "LimDomThree": _fmt_sci(lim["limit_3mJy_at_domain_distance"]),
+        # the whole-sky count follows the HEADLINE limit (round 3: it was built from the
+        # averaged limit the text no longer quotes)
+        "AllSky": f"{lim['limit_3mJy_at_domain_distance'] * 4 * np.pi * (180 / np.pi) ** 2:.1f}",
         "CompDomThree": f"{lim['completeness_3mJy_at_domain_distance']:.3f}",
         "LimDomOneFive": _fmt_sci(lim["limit_1p5mJy_no_parallax"]),
         "CompDomOneFive": f"{lim['completeness_1p5mJy_no_parallax']:.3f}",
@@ -2043,6 +2035,7 @@ REF2_MACRO_NAMES = (
     "CompPlxEight",
     "CompPlxSixteen",
     "LimDomThree",
+    "AllSky",
     "CompDomThree",
     "LimDomOneFive",
     "CompDomOneFive",

@@ -582,3 +582,28 @@ so parallax cannot supply the offset. The note names orbital motion and blending
 vetted candidates is also dropped. Length (pdftotext): abstract **117** words; Search + Results
 + Reproducibility **~1,120** words including the 57-word figure caption; the two sections without
 Reproducibility are ~1,080.
+
+## Referee round 3 (final, 2026-09-28): ACCEPT WITH NITS -- ready for RNAAS after F1-F3
+
+All round-2 findings are resolved. The headline 2.996 / (33,838.5 x 0.94889) = 9.33e-5 matches.
+The parallax runs share seed 97 with the reference run, and the parallax shift draws no
+randomness. All 14 REF2 macros match the JSON. The figure matches. Four key DOIs match Crossref.
+
+**Fixes applied:**
+- **F1.** The Search section had said the completeness injections include parallax; only the
+  separate 4/8/16 pc runs do. Now stated.
+- **F2.** `AllSky` was built from the averaged limit the text no longer quotes, and sat after the
+  1.5 mJy limit. It is now computed from `limit_3mJy_at_domain_distance` (still 3.8) and placed
+  after the headline limit.
+- **F3.** "At least 0.967" now names 3 mJy, and quotes 0.937 at 1.5 mJy.
+- **Nits.**
+  - "without parallax" now reads "for distant movers (the parallax loss was measured at 3 mJy
+    only)";
+  - the tail effect is "roughly ... or somewhat more, since the estimate uses two-position
+    offsets";
+  - the stale LimThree, LimOneFive, LimWorstBin and LimEdge macros are dropped;
+  - the doubled "calibrated" in the abstract is fixed.
+- **Checks after the fixes:** regenerated macros differ only by the removals and the moved
+  AllSky; synthetic macros preserved.
+- **Gates:** triage 0/0/0, prose lint clean, 832 tests pass (vlasspm 99%), ruff, mypy and
+  guard-real clean.
