@@ -11,6 +11,9 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`vlasspm` note: final referee round (accept with nits) applied.** The all-sky count now
+  follows the headline limit, the method says which injections carry parallax, and stale limit
+  macros are dropped. Ready for RNAAS.
 - **`vlasspm` note: referee round 2 applied.** Parallax-aware injections (`distance_pc`)
   measure the distance domain directly: over 1.1-5"/yr the worst fine bin falls from 0.967
   (no parallax) to 0.963 / 0.949 / 0.888 at 16 / 8 / 4 pc, so the limit is quoted beyond
