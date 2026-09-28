@@ -964,12 +964,16 @@ def _inject(
     size_arcsec: float = 0.0,
     model: ErrorModel = NO_MODEL,
     size_noise: SizeNoiseModel | None = None,
+    distance_pc: float | None = None,
 ) -> tuple[list[EpochCatalog], np.ndarray, np.ndarray, np.ndarray]:
     """:func:`inject_movers` plus the placement class and each mover's E1 neighbour distance.
 
     With ``size_noise`` each detection's MEASURED deconvolved size is drawn from the point-source
     reference sample at that detection's S/N and epoch (``size_arcsec`` is then ignored): the
     injection is a point source that the catalogue would nevertheless report with a noisy size.
+    With ``distance_pc`` every detection is also displaced by its annual parallax
+    (1/distance arcsec times :func:`parallax_factors` at that detection's date), so the straight
+    line the search fits is tested against a real nearby star's track.
     """
     e1 = cats[0]
     rng = np.random.default_rng(seed)
@@ -1023,6 +1027,10 @@ def _inject(
         g1, g2 = rng.normal(0, 1, n), rng.normal(0, 1, n)
         ex, ey = l11 * g1, l21 * g1 + l22 * g2
         ra, dec = _mover_track(ra0, dec0, mu_ra, mu_dec, t1, t)
+        if distance_pc is not None:
+            pa_f, pd_f = parallax_factors(ra, dec, t)
+            ex = ex + pa_f / distance_pc
+            ey = ey + pd_f / distance_pc
         ra = (ra + ex * ARCSEC / np.cos(np.radians(dec))) % 360.0
         dec = dec + ey * ARCSEC
         err = np.sqrt(0.5 * (cov[:, 0] + cov[:, 1]))
@@ -1100,6 +1108,7 @@ def completeness(
     compact_max: float | None = None,
     compact_rule: str = "all",
     mu_range: tuple[float, float] | None = None,
+    distance_pc: float | None = None,
 ) -> dict:
     """Fraction of injected movers recovered by ANY epoch triple, overall and per log-rate bin.
 
@@ -1124,6 +1133,7 @@ def completeness(
         size_arcsec=size_arcsec,
         model=model,
         size_noise=size_noise,
+        distance_pc=distance_pc,
     )
     found = np.zeros(n, dtype=bool)
     per_triple = {}
@@ -1146,6 +1156,7 @@ def completeness(
         "size_arcsec": size_arcsec,
         "model": {"k_struct": model.k_struct, "q_beam": model.q_beam},
         "size_noise": size_noise is not None,
+        "distance_pc": distance_pc,
         "compact_max": compact_max,
         "compact_rule": compact_rule,
         "overall": float(found.mean()),
@@ -1930,7 +1941,6 @@ def _ref1_macro_values(m: dict, ref1: dict | None) -> dict[str, str]:
         "UVFreePlxErr": f"{1000 * ff['parallax_err_arcsec']:.0f}",
         "UVGaiaPlx": f"{1000 * uv['parallax_used_arcsec']:.0f}",
         "SysMu": f"{sysmu:.2f}",
-        "SysSigma": f"{abs(fx['mu'] - sysmu) / fx['mu_err']:.1f}",
         "BLMu": f"{g['components']['BL Cet']['mu_arcsec_yr']:.2f}",
         "RuweMin": f"{min(c['ruwe'] for c in g['components'].values()):.0f}",
         "RuweMax": f"{max(c['ruwe'] for c in g['components'].values()):.0f}",
@@ -1945,7 +1955,7 @@ def _ref1_macro_values(m: dict, ref1: dict | None) -> dict[str, str]:
         "FineEdgeHi": f"{fe[3]:.1f}",
         "FineCompA": f"{fine['per_bin'][1]:.2f}",
         "FineCompB": f"{fine['per_bin'][2]:.2f}",
-        "FineCompAboveMin": f"{min(above):.2f}",
+        "FineCompAboveMin": f"{min(above):.3f}",
         "LimWorstBin": _fmt_sci(lim["worst_bin_limit_per_deg2_95"]),
         "LimEdge": _fmt_sci(lim["worst_fine_bin_limit_per_deg2_95"]),
         "TailBoundThree": f"{100 * tb['3mJy']['max_excess']:.1f}",
@@ -1968,7 +1978,6 @@ REF1_MACRO_NAMES = (
     "UVFreePlxErr",
     "UVGaiaPlx",
     "SysMu",
-    "SysSigma",
     "BLMu",
     "RuweMin",
     "RuweMax",
@@ -1997,14 +2006,63 @@ REF1_MACRO_NAMES = (
 )
 
 
-def _write_macros(m: dict, path, vet: dict | None = None, ref1: dict | None = None) -> None:
+def _ref2_macro_values(m: dict, ref2: dict | None) -> dict[str, str]:
+    """Referee-round-2 numbers (results/vlasspm_referee2.json): the parallax-aware injections
+    and distance domain, the no-prior 1.1-5"/yr limits, and the UV Ceti vector comparison."""
+    if not ref2 or not m.get("is_real"):
+        return {}
+    dom = ref2["parallax_domain"]
+    lim = ref2["limits"]
+    byd = dom["by_distance"]
+    uv = ref2["uvcet_vectors"]
+    sysc = uv["comparisons"]["system (SIMBAD/UCAC4)"]
+    return {
+        "RateDomLo": f"{lim['rate_range_arcsec_yr'][0]:.1f}",
+        "PlxDomain": f"{dom['distance_min_pc']:g}",
+        "VtanMin": f"{dom['v_tan_min_km_s']:.0f}",
+        "CompPlxNone": f"{byd['none']['worst_1p1_5']:.3f}",
+        "CompPlxFour": f"{byd['4pc']['worst_1p1_5']:.3f}",
+        "CompPlxEight": f"{byd['8pc']['worst_1p1_5']:.3f}",
+        "CompPlxSixteen": f"{byd['16pc']['worst_1p1_5']:.3f}",
+        "LimDomThree": _fmt_sci(lim["limit_3mJy_at_domain_distance"]),
+        "CompDomThree": f"{lim['completeness_3mJy_at_domain_distance']:.3f}",
+        "LimDomOneFive": _fmt_sci(lim["limit_1p5mJy_no_parallax"]),
+        "CompDomOneFive": f"{lim['completeness_1p5mJy_no_parallax']:.3f}",
+        "SysOffset": f"{sysc['offset_abs']:.2f}",
+        "SysChi": f"{sysc['chi2_2dof']:.0f}",
+        "OrbScale": f"{uv['uv_minus_bl_abs']:.2f}",
+    }
+
+
+REF2_MACRO_NAMES = (
+    "RateDomLo",
+    "PlxDomain",
+    "VtanMin",
+    "CompPlxNone",
+    "CompPlxFour",
+    "CompPlxEight",
+    "CompPlxSixteen",
+    "LimDomThree",
+    "CompDomThree",
+    "LimDomOneFive",
+    "CompDomOneFive",
+    "SysOffset",
+    "SysChi",
+    "OrbScale",
+)
+
+
+def _write_macros(
+    m: dict, path, vet: dict | None = None, ref1: dict | None = None, ref2: dict | None = None
+) -> None:
     """Both namespaces always emitted; the inactive one as placeholders, merged by
     :func:`report.preserve_live_macros` so neither leg can blank or overwrite the other."""
     from .report import MACRO_PLACEHOLDER, preserve_live_macros
 
-    real = _real_macro_values(m, vet) | _ref1_macro_values(m, ref1)
+    real = _real_macro_values(m, vet) | _ref1_macro_values(m, ref1) | _ref2_macro_values(m, ref2)
     syn = _syn_macro_values(m)
-    names_real, names_syn = REAL_MACRO_NAMES + REF1_MACRO_NAMES, SYN_MACRO_NAMES
+    names_real = REAL_MACRO_NAMES + REF1_MACRO_NAMES + REF2_MACRO_NAMES
+    names_syn = SYN_MACRO_NAMES
     lines = [
         "% Auto-generated by jansky_research.vlasspm._write_macros -- do not edit.",
         "% vpmReal* come from results/vlasspm_metrics.json + vlasspm_vetting.json (real leg);",
@@ -2091,9 +2149,11 @@ def write_real_paper(out: str | Path = ".") -> dict:
     vet = json.loads(vp.read_text()) if vp.exists() else None
     rp = op / "results" / "vlasspm_referee1.json"
     ref1 = json.loads(rp.read_text()) if rp.exists() else None
+    rp2 = op / "results" / "vlasspm_referee2.json"
+    ref2 = json.loads(rp2.read_text()) if rp2.exists() else None
     if not m.get("is_real"):
         raise ValueError("results/vlasspm_metrics.json is not real evidence; refusing to build")
-    _write_macros(m, op / "papers" / "vlasspm" / "generated" / "macros.tex", vet, ref1)
+    _write_macros(m, op / "papers" / "vlasspm" / "generated" / "macros.tex", vet, ref1, ref2)
     _paper_figure(m, op / "papers" / "vlasspm" / "figures" / "vlasspm_completeness.pdf", ref1)
     return m
 

@@ -11,6 +11,14 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`vlasspm` note: referee round 2 applied.** Parallax-aware injections (`distance_pc`)
+  measure the distance domain directly: over 1.1-5"/yr the worst fine bin falls from 0.967
+  (no parallax) to 0.963 / 0.949 / 0.888 at 16 / 8 / 4 pc, so the limit is quoted beyond
+  8 pc (v_t > 42 km/s): < 9.3e-5 per deg^2 for persistent compact 2.4-3.75 mJy sources at
+  1.1-5"/yr, with no rate prior; 1.5 mJy fine bins give < 9.4e-5. UV Ceti is compared as a
+  vector (0.20"/yr from the system motion, chi^2 13, against a 0.21"/yr UV-BL orbital scale).
+  Evidence in `results/vlasspm_referee2.json` (`scripts/vlasspm_referee2.py`); the note is cut
+  to ~1,080 words.
 - **`vlasspm` note: referee round 1 applied.** A covariance-weighted three-epoch track fit with
   parallax (`fit_track`, `parallax_factors`) gives UV/BL Ceti 3.41 +/- 0.04"/yr with the Gaia
   parallax (system 3.34, 1.6 sigma); the note calls it the unresolved Luyten 726-8 system.

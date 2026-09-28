@@ -526,3 +526,59 @@ most 1,500 words and a single figure or table, so the note is within the limit.
 - the scramble 0.02 sentence;
 - the without-cut completeness pairs;
 - the long Reproducibility data list.
+
+## Response to referee round 2 (2026-09-28)
+
+New evidence: `results/vlasspm_referee2.json` (`scripts/vlasspm_referee2.py --out .`), reaching
+the note through new `vpmReal*` macros; `\vpmRealSysSigma` is removed.
+
+**Run 1: 1.5 mJy fine bins** (cut, 20,000 injections over 0.8-5"/yr): 0.331, 0.640, 0.830,
+**0.937** (1.1-1.25), 0.972, 0.979, 0.976. Worst bin over 1.1-5"/yr 0.937, so the limit for
+1.2-1.9 mJy is **9.4e-5 per deg^2** (no parallax).
+
+**Run 2: parallax-aware injections.** `_inject(..., distance_pc=)` displaces every detection by
+(1/d) x `parallax_factors` at its own date (tested: the displacement equals 0.5 x the factors at
+2 pc; a field whose epochs repeat the season shows no loss, one half a year out of phase does).
+3 mJy, cut, fine bins, same seed; worst fine bin over 1.1-5"/yr:
+
+| distance | none | 16 pc | 8 pc | 4 pc |
+|---|---|---|---|---|
+| completeness | 0.967 | 0.963 | 0.949 | 0.888 |
+| relative loss | -- | 0.4% | 1.9% | 8.2% |
+
+Adopted domain: the smallest tested distance with a loss below 5%, **8 pc** (the 4-8 pc crossing
+is not resolved by this grid; the round-1 one-sigma proxy also gave 8 pc). Physically,
+v_t > 4.74 x 1.1 x 8 = **42 km/s**. The headline limit uses the completeness AT 8 pc (0.949):
+**< 9.3e-5 per deg^2** for persistent compact sources of 2.4-3.75 mJy per epoch at 1.1-5"/yr
+beyond 8 pc, with no rate prior. Without parallax the same range gives 9.15e-5; the averaged,
+worst-coarse and edge limits of round 1 stay in `vlasspm_referee1.json` and leave the text.
+
+**F1, vectors.** Radio (3.391, 0.385) "/yr (fixed Gaia parallax) against:
+- the SIMBAD/UCAC4 system (3.296, 0.564): |d| = **0.20**"/yr, chi^2 = **13.0** (2 dof);
+- BL Cet (Gaia DR3): |d| = 0.16, chi^2 = **6.2**;
+- UV Cet (Gaia DR3): |d| = 0.29, chi^2 = **35.5**.
+
+These replace round 1's scalar 1.6 / 0.4 / 4.3 sigma, which compared magnitudes only. The
+orbital scale |UV - BL| in Gaia is **0.21**"/yr, and the components' parallaxes differ by 6 mas,
+so parallax cannot supply the offset. The note names orbital motion and blending.
+
+**F2-F9.**
+- F2, F7: the abstract leads with the 1.1-5"/yr no-prior limit for persistent (three-epoch)
+  compact sources of 2.4-3.75 mJy beyond 8 pc.
+- F3: the co-moving rule says the 0.5" floor is added in quadrature. The chance-coincidence
+  numbers are dropped ("only UV Ceti reaches this step, so chance coincidence cannot have
+  removed a mover"), and so is the word "co-moving" for the positional clause.
+- F4: the distance domain is expressed as a tangential velocity. "Fast pulsars" is dropped, since
+  the fastest known pulsars move at ~0.1-0.4"/yr, below the range; "nearby cool brown dwarfs,
+  invisible to Gaia" is kept.
+- F5: the tail effect is now "an estimated 0.6% / 1.9%". This is still the pair-offset excess;
+  the review's ~1.5x amplification for a three-position residual would give ~1% and ~3%. That
+  factor is not computed by the pipeline, so it is not quoted.
+- F6: the 2-of-3 dependence is folded into one clause.
+- F8: units on the system motion; 0.967; "climbs steeply between 0.92 and 1.1".
+- F9: Atri+2022's targets described as compact, flat-spectrum, variable Galactic-plane sources.
+
+**Cuts.** Every item in the review's list is applied, and the south-of-Dec -35 sentence on the
+vetted candidates is also dropped. Length (pdftotext): abstract **117** words; Search + Results
++ Reproducibility **~1,120** words including the 57-word figure caption; the two sections without
+Reproducibility are ~1,080.

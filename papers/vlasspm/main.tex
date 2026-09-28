@@ -10,13 +10,15 @@
 
 \begin{abstract}
 We searched three VLASS Quick Look epochs over the whole survey, and a fourth over
-\vpmRealAreaFour~deg$^2$, for moving radio sources, consulting optical and infrared catalogues only at the end. The search recovers the unresolved UV/BL~Ceti binary at
-$\vpmRealUVFitMu\pm\vpmRealUVFitErr$~arcsec~yr$^{-1}$ (three epochs, Gaia parallax; system
-motion \vpmRealSysMu) and finds no other mover. With errors calibrated on static sources, a
-compactness cut calibrated on nearby Gaia stars leaves UV~Ceti the only one of
-\vpmRealNCandBefore\ candidates; the rest are static in the images. For compact sources of
-\vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy moving at \vpmRealRateMid--\vpmRealRateMax~arcsec~yr$^{-1}$
-with no co-moving Gaia or CatWISE counterpart, the 95\% upper limit is $\vpmRealLimThree$~deg$^{-2}$.
+\vpmRealAreaFour~deg$^2$, for moving radio sources, consulting optical and infrared catalogues only
+at the end. The search recovers the unresolved UV/BL~Ceti binary at
+$\vpmRealUVFitMu\pm\vpmRealUVFitErr$~arcsec~yr$^{-1}$ (system motion \vpmRealSysMu~arcsec~yr$^{-1}$)
+and finds no other mover. With errors calibrated on static sources, a compactness cut calibrated
+on nearby Gaia stars leaves UV~Ceti the only one of \vpmRealNCandBefore\ candidates; the rest are
+static in the images. For persistent (three-epoch) compact sources of
+\vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy beyond \vpmRealPlxDomain~pc, moving at
+\vpmRealRateDomLo--\vpmRealRateMax~arcsec~yr$^{-1}$ with no co-moving Gaia or CatWISE counterpart,
+the 95\% upper limit is $\vpmRealLimDomThree$~deg$^{-2}$.
 \end{abstract}
 
 \keywords{Proper motions (1295) --- Radio astrometry (1337) --- Sky surveys (1464) ---
@@ -25,15 +27,15 @@ Radio continuum emission (1340)}
 \section{Search}
 \label{sec:search}
 Radio proper motions from survey data have so far been measured for stars selected by their Gaia
-proper motions \citep{driessen2023,de2024}, and \citet{atri2022} measured VLBA proper motions of
-compact variable radio sources without optical counterparts, a targeted follow-up rather than a
-blind search. A blind search could find movers with no optical counterpart, such as cool brown
-dwarfs or fast pulsars. The VLA Sky Survey \citep[VLASS;][]{lacy2020} has covered the sky
-north of Dec $-40^\circ$ three times at 3~GHz with a 2.5-arcsec beam, and a fourth epoch covers
-\vpmRealAreaFour~deg$^2$ so far. We used the CIRADA component tables for epochs 1 and 2
-\citep{gordon2021} and the NRAO Quick Look lists for epochs 3 and 4, all fitted by PyBDSF
-\citep{pybdsf}: after the quality cuts they hold \vpmRealNEOne, \vpmRealNETwo, \vpmRealNEThree\
-and \vpmRealNEFour\ components observed between \vpmRealTStart\ and \vpmRealTEnd.
+proper motions \citep{driessen2023,de2024}; \citet{atri2022} measured VLBA proper motions of
+compact, flat-spectrum, variable Galactic-plane sources, a targeted rather than a blind search. A
+blind search could find movers invisible to Gaia, such as nearby cool brown dwarfs. The VLA Sky
+Survey \citep[VLASS;][]{lacy2020} has covered the sky north of Dec $-40^\circ$ three times at
+3~GHz with a 2.5-arcsec beam, and a fourth epoch covers \vpmRealAreaFour~deg$^2$ so far. We used
+the CIRADA component tables for epochs 1 and 2 \citep{gordon2021} and the NRAO Quick Look lists
+for epochs 3 and 4, all fitted by PyBDSF \citep{pybdsf}: after the quality cuts they hold
+\vpmRealNEOne, \vpmRealNETwo, \vpmRealNEThree\ and \vpmRealNEFour\ components observed between
+\vpmRealTStart\ and \vpmRealTEnd.
 
 A component with no counterpart within 2.5~arcsec in another epoch is an orphan, and only
 orphans with no other component within 30~arcsec in their own epoch are used, because split
@@ -42,102 +44,85 @@ rate lies between \vpmRealRateMin\ and \vpmRealRateMax~arcsec~yr$^{-1}$ and the 
 significant at $3\sigma$; a third epoch must then contain an orphan within $3\sigma$ of the
 extrapolated straight line at its own observing date. Every triple of epochs is searched.
 
-Each component's positional error is the elliptical Gaussian error of \citet{condon1997}, with
-the effective signal-to-noise of \citet{condon1998} and the exponents as in \citet{prandoni2000},
-computed from its fitted shape, beam and peak signal-to-noise (it reproduces the catalogue
-errors). To it we add an astrometric floor measured from bright static sources in
-declination bands (\vpmRealFloorMin--\vpmRealFloorMax~arcsec) and a structure term: a resolved
-source's centroid moves between epochs by a fraction \vpmRealKStruct\ of its deconvolved size
-along each of its axes. That fraction was fitted to the offsets of \vpmRealNStaticPairs~million
-pairs of isolated static sources so that their $3\sigma$ tail matches a Rayleigh distribution;
-on a held-out half of the sky the fraction beyond $3\sigma$ falls from \vpmRealTailMeas\ with the
-catalogue errors to \vpmRealTailFit\ (expected 0.011). The errors remain too narrow beyond about
-$4\sigma$ (\vpmRealTailFitFive\ of static sources beyond $5\sigma$) and south of Dec $-35^\circ$
-(\vpmRealTailSouthRatio\ times the Rayleigh fraction beyond $3\sigma$).
+Each component's positional error is the elliptical Gaussian error of \citet{condon1997}
+\citep[see also][]{condon1998,prandoni2000}, from its fitted shape, beam and peak
+signal-to-noise. To it we add an astrometric floor
+measured from bright static sources in declination bands
+(\vpmRealFloorMin--\vpmRealFloorMax~arcsec) and a structure term: a resolved source's centroid
+moves between epochs by a fraction \vpmRealKStruct\ of its deconvolved size along each of its
+axes. That fraction was fitted to \vpmRealNStaticPairs~million pairs of isolated static sources
+so that their $3\sigma$ tail matches a Rayleigh distribution; on a held-out half of the sky the
+fraction beyond $3\sigma$ falls from \vpmRealTailMeas\ with the catalogue errors to
+\vpmRealTailFit\ (expected 0.011), though it remains \vpmRealTailSouthRatio\ times too large south
+of Dec $-35^\circ$.
 
-The candidates of an earlier version of the search were almost all resolved static sources, and
-this led us to add a compactness cut (deconvolved major axis over beam major axis). Its threshold
-and rule were then fixed on injections before it was applied to the data. Faint point sources are
-not fitted with zero size, so injected sizes were drawn, by signal-to-noise, from \vpmRealNStars\ detections of stars within
-100~pc in the Gaia Catalogue of Nearby Stars \citep{gcns2021} (about \vpmRealNStarChance\
-expected by chance). The criterion was the smallest threshold keeping at least 95\% of the
-recovered injections overall and in every signal-to-noise bin, with the cross-epoch rule chosen
-by its rejection of the general static population. Two of three detections below \vpmRealCutThr\
-keep \vpmRealKeepAll\ of the injections (\vpmRealKeepLowSNR\ below signal-to-noise 7) and remove
-\vpmRealStaticRej\% of static sources; requiring all three needs \vpmRealCutThrAll\ and removes
-\vpmRealStaticRejAll\%.
+An earlier version of the search returned almost only resolved static sources, which led us to
+add a compactness cut (deconvolved over beam major axis), with threshold and rule fixed on
+injections before it was applied. Faint point sources are not fitted with zero size, so injected
+sizes were drawn, by signal-to-noise, from \vpmRealNStars\
+detections of stars within 100~pc in the Gaia Catalogue of Nearby Stars \citep{gcns2021}. The criterion was the smallest threshold keeping at least 95\% of the recovered injections in
+every signal-to-noise bin, and the rule that rejects more static sources. Two of three detections below \vpmRealCutThr\ keep \vpmRealKeepAll\ of the
+injections (\vpmRealKeepLowSNR\ below signal-to-noise 7) and remove \vpmRealStaticRej\% of static
+sources, more than requiring all three does.
 
 Rotating the later epochs by a few arcminutes in right ascension measures chance alignments of
 unrelated orphans; it cannot see a static source whose fitted centroid shifts between epochs.
-\vpmRealNInj\ movers with log-uniform rates, injected at random sky positions with the same
-errors and size noise, give the completeness. On a synthetic field the pipeline recovers
-\vpmSynNRecovered\ of \vpmSynNMovers\ planted movers with \vpmSynNFalse\ false candidates; all
-\vpmSynNMissed\ missed movers are slower than \vpmSynMissedMuMax~arcsec~yr$^{-1}$, where the static
-match radius removes them.
+\vpmRealNInj\ movers injected at random sky positions with the same errors, size noise and annual
+parallax give the completeness.
 
 \section{Results}
 \label{sec:results}
 The mover found in epochs 2--4 at the position of UV~Ceti is the unresolved Luyten 726-8 system:
 UV and BL~Cet are \vpmRealCompSep~arcsec apart and both have Gaia RUWE of
 \vpmRealRuweMin--\vpmRealRuweMax. A straight line through the three detections, weighted by their
-covariances and with the Gaia DR3 parallax (\vpmRealUVGaiaPlx~mas) fixed, gives
-$\vpmRealUVFitMu\pm\vpmRealUVFitErr$~arcsec~yr$^{-1}$ ($\chi^2=\vpmRealUVFitChi$ for 2 degrees of
-freedom), and \vpmRealUVNoPlxMu\ without parallax. The system moves at \vpmRealSysMu\ (UCAC4,
-\citealt{ucac4}, via SIMBAD, \citealt{simbad}), \vpmRealSysSigma$\sigma$ away; Gaia DR3
-\citep{gaiadr3} gives \vpmRealUVGaiaMu\ for UV~Cet and \vpmRealBLMu\ for BL~Cet. Parallax, orbital
-motion and blending of the two components can each account for differences of this size. Its
-compactness is \vpmRealUVCompA, \vpmRealUVCompB\ and \vpmRealUVCompC, passing on two detections.
+covariances and with the Gaia DR3 \citep{gaiadr3} parallax fixed, gives
+$\vpmRealUVFitMu\pm\vpmRealUVFitErr$~arcsec~yr$^{-1}$. It differs from the system motion
+(\vpmRealSysMu~arcsec~yr$^{-1}$; UCAC4, \citealt{ucac4}, via SIMBAD, \citealt{simbad}) by a vector
+of \vpmRealSysOffset~arcsec~yr$^{-1}$ ($\chi^2=\vpmRealSysChi$ for 2 degrees of freedom), comparable
+with the \vpmRealOrbScale~arcsec~yr$^{-1}$ between the two components' Gaia motions, so orbital
+motion and blending of the two stars account for it. Two of its three compactness values
+(\vpmRealUVCompA, \vpmRealUVCompB, \vpmRealUVCompC) pass the cut.
 
 Before the compactness cut the search returns \vpmRealNCandBefore\ candidates. Cutouts of the
 other \vpmRealNStaticVetted\ show emission persisting at the first-epoch position, so they are
-static; \vpmRealNSouthVetted\ lie south of Dec $-35^\circ$, where the
-beam in some epochs is strongly elongated. The scrambled catalogues predict at most \vpmRealNullCand\ chance candidates per trial. The cut removes all \vpmRealNStaticVetted,
-two of them narrowly: \vpmRealMarginAName\ and \vpmRealMarginBName\ would pass at thresholds of
-\vpmRealMarginAThr\ and \vpmRealMarginBThr. No by-eye step therefore lies in the chain from the
-catalogues to the limit. A candidate is optically dark if no Gaia DR3 or CatWISE2020
-\citep{catwise2020} source is co-moving, that is, within $3\sigma$ (plus 0.5~arcsec) of the
-track's position at the catalogue epoch or with a proper motion within 30\% of the radio rate.
-After the cut this step has only UV~Ceti to classify, so chance coincidence cost nothing here;
-at \vpmRealNChance\ random footprint positions a source lies within 5~arcsec with probability
-\vpmRealChanceFive, and within the co-moving rule's \vpmRealComovingRadius~arcsec with
-\vpmRealChanceComoving.
+static. The cut removes all \vpmRealNStaticVetted, two narrowly (\vpmRealMarginAName\
+and \vpmRealMarginBName\ would pass at \vpmRealMarginAThr\ and \vpmRealMarginBThr), and because the
+pre-stated two-of-three rule won on the static population, no by-eye step lies between the
+catalogues and the limit. A candidate is optically dark if no Gaia DR3 or CatWISE2020
+\citep{catwise2020} source lies within $3\sigma$ of the track's position at the catalogue epoch
+(with a 0.5-arcsec floor added in quadrature) or moves within 30\% of the radio rate. Only UV~Ceti
+reaches this step, so chance coincidence cannot have removed a mover.
 
 Completeness is near zero below \vpmRealRateLo~arcsec~yr$^{-1}$, where a mover stays within the
-static match radius, and rises across \vpmRealFineEdgeLo--\vpmRealFineEdgeHi~arcsec~yr$^{-1}$
-(\vpmRealFineCompA\ at \vpmRealFineEdgeLo--\vpmRealFineEdgeMid, \vpmRealFineCompB\ at
-\vpmRealFineEdgeMid--\vpmRealFineEdgeHi, at least \vpmRealFineCompAboveMin\ above;
-Figure~\ref{fig:comp}). The mean over the three log bins from \vpmRealRateMid\ to
-\vpmRealRateMax~arcsec~yr$^{-1}$, a log-uniform rate weighting, is \vpmRealCompThreeCut\ at
-\vpmRealFluxThree~mJy (\vpmRealCompThreeNoCut\ without the cut) and \vpmRealCompOneFiveCut\ at
-\vpmRealFluxOneFive~mJy (\vpmRealCompOneFiveNoCut). With no new mover, the 95\% upper limit over
-the \vpmRealAreaDeg~deg$^2$ searched in three epochs is $\vpmRealLimThree$~deg$^{-2}$ for sources
-of \vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy per epoch and $\vpmRealLimOneFive$~deg$^{-2}$ for
-\vpmRealFluxLoOneFive--\vpmRealFluxHiOneFive~mJy, or fewer than \vpmRealAllSky\ over the whole sky
-if movers are isotropic. The worst rate bin gives $\vpmRealLimWorstBin$, and movers just above
-\vpmRealFineEdgeLo~arcsec~yr$^{-1}$ $\vpmRealLimEdge$~deg$^{-2}$. The heavy error tails can
-overstate the completeness by at most \vpmRealTailBoundThree\% at \vpmRealFluxThree~mJy and
-\vpmRealTailBoundOneFive\% at \vpmRealFluxOneFive~mJy. The injections move on straight lines, so
-the completeness does not apply within \vpmRealPlxDistMin~pc, where parallax moves the third-epoch
-point by more than one standard error (\vpmRealUVPlxResid~arcsec for UV~Ceti). The limit applies
-only to movers unresolved at 2.5~arcsec: the cut removes a mover with resolved emission, such as
-a pulsar with a bow-shock nebula, and a binary a few tenths of a beam wide fitted as one elongated
-source in two epochs.
+static match radius, climbs steeply between \vpmRealFineEdgeLo\ and
+\vpmRealFineEdgeHi~arcsec~yr$^{-1}$, and is at least \vpmRealCompPlxNone\ in every bin from
+\vpmRealRateDomLo\ to \vpmRealRateMax~arcsec~yr$^{-1}$ (Figure~\ref{fig:comp}). Parallax lowers the
+worst of those bins to \vpmRealCompPlxFour, \vpmRealCompPlxEight\ and \vpmRealCompPlxSixteen\ at
+4, 8 and 16~pc; we adopt \vpmRealPlxDomain~pc, beyond which the loss is below 5\%, meaning
+tangential velocities above \vpmRealVtanMin~km~s$^{-1}$. With no new mover and no rate prior, the
+worst bin gives 95\% upper limits over the \vpmRealAreaDeg~deg$^2$ searched in three epochs of
+$\vpmRealLimDomThree$~deg$^{-2}$ for sources of \vpmRealFluxLoThree--\vpmRealFluxHiThree~mJy per
+epoch beyond \vpmRealPlxDomain~pc, and $\vpmRealLimDomOneFive$~deg$^{-2}$ for
+\vpmRealFluxLoOneFive--\vpmRealFluxHiOneFive~mJy without parallax, or about \vpmRealAllSky\ over the
+whole sky if movers are isotropic. The heavy error tails lower the true completeness by an
+estimated \vpmRealTailBoundThree\% at \vpmRealFluxThree~mJy and \vpmRealTailBoundOneFive\% at
+\vpmRealFluxOneFive~mJy. The limit applies only to movers unresolved at 2.5~arcsec: the cut
+removes a mover with resolved emission and a binary a few tenths of a beam wide fitted as one
+elongated source in two epochs.
 
 \begin{figure}
 \plotone{figures/vlasspm_completeness.pdf}
-\caption{Fraction of injected point-source movers recovered in each rate bin, at \vpmRealFluxThree\ and \vpmRealFluxOneFive~mJy
-with (solid) and without (dashed) the compactness cut. Points with horizontal bars are finer bins
-around the lower edge of the limit's rate range (\vpmRealFluxThree~mJy, with the cut). The dotted line marks the
-three-epoch rate of UV~Ceti.}
+\caption{Fraction of injected point-source movers recovered in each rate bin, at \vpmRealFluxThree\
+and \vpmRealFluxOneFive~mJy with (solid) and without (dashed) the compactness cut, without parallax.
+Points with horizontal bars are finer bins across the completeness edge
+(\vpmRealFluxThree~mJy, with the cut). The dotted line marks the three-epoch rate of UV~Ceti.}
 \label{fig:comp}
 \end{figure}
 
-Reproducibility: \code{jansky\_research.vlasspm} and \code{scripts/vlasspm\_real.py}; every number
-derived from the data is pipeline-generated (\code{results/vlasspm\_metrics.json} and
-\code{vlasspm\_vetting.json} $\to$ macros); survey and method constants are typed. Data: CIRADA
-VLASS epoch 1 and 2 component and subtile tables (CANFAR), NRAO VLASS Quick Look component lists
-QL3.1, QL3.2 and QL4.1, the Gaia Catalogue of Nearby Stars (VizieR \code{J/A+A/649/A6}), Gaia
-DR3 and CatWISE2020 via VizieR, and VLASS image cutouts from CADC; no authentication is needed.
+Reproducibility: \code{jansky\_research.vlasspm} and \code{scripts/vlasspm\_*.py}; every number
+derived from the data is pipeline-generated (\code{results/vlasspm\_*.json} $\to$ macros). The
+VLASS catalogues and cutouts, Gaia DR3, the Gaia Catalogue of Nearby Stars and CatWISE2020 are
+public and need no authentication.
 
 \section*{AI use disclosure}
 This paper was developed collaboratively by the author with Anthropic's Claude

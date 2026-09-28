@@ -657,7 +657,12 @@ def _real_results(tmp_path):
 
     root = Path(__file__).resolve().parents[1] / "results"
     (tmp_path / "results").mkdir()
-    for f in ("vlasspm_metrics.json", "vlasspm_vetting.json", "vlasspm_referee1.json"):
+    for f in (
+        "vlasspm_metrics.json",
+        "vlasspm_vetting.json",
+        "vlasspm_referee1.json",
+        "vlasspm_referee2.json",
+    ):
         shutil.copy(root / f, tmp_path / "results" / f)
 
 
@@ -681,7 +686,7 @@ def test_paper_macros_both_legs_accumulate_and_never_blank(tmp_path):
     v.write_real_paper(tmp_path)  # real leg
     both = _macros(mac)
     assert both["vpmSynNMovers"] == str(syn["syn_n_movers"])  # not blanked by the real leg
-    for name in v.REAL_MACRO_NAMES + v.REF1_MACRO_NAMES:
+    for name in v.REAL_MACRO_NAMES + v.REF1_MACRO_NAMES + v.REF2_MACRO_NAMES:
         assert both[f"vpmReal{name}"] != "--", name
     assert both["vpmSynNMissed"] == str(len(syn["syn_missed_mu"]))
     assert max(syn["syn_missed_mu"]) < 1.2  # the fixture's misses are the slow movers
@@ -705,6 +710,7 @@ def test_macro_formatters():
     assert v._syn_macro_values({"is_real": True}) == {}
     assert v._real_macro_values({"is_real": False}, None) == {}
     assert v._ref1_macro_values({"is_real": True}, None) == {}
+    assert v._ref2_macro_values({"is_real": True}, None) == {}
 
 
 # ------------------------------------------------------------ referee round 1 additions
@@ -796,3 +802,20 @@ def test_completeness_accepts_custom_rate_bins():
     e1, e2, e3, _ = v.synthetic_epochs(n_movers=0, n_static=3000, n_variable=0, seed=21)
     comp = v.completeness(e1, e2, e3, n=300, bins=np.array([0.8, 1.0, 2.0, 5.0]), seed=3)
     assert len(comp["per_bin"]) == 3 and sum(comp["n_per_bin"]) == 300
+
+
+def test_parallax_aware_injections_shift_by_the_parallax_factors():
+    cats = _shaped_field(seed=31, n_epochs=3)
+    a, _, _, _ = v._inject(*cats, n=200, seed=4, mu_range=(1.0, 1.001))
+    b, _, _, _ = v._inject(*cats, n=200, seed=4, mu_range=(1.0, 1.001), distance_pc=2.0)
+    for e in range(3):
+        ia = a[e].subset(a[e].ident >= 10_000_000)
+        ib = b[e].subset(b[e].ident >= 10_000_000)
+        dx, dy = v.tangent_offsets_arcsec(ia.ra, ia.dec, ib.ra, ib.dec)
+        pa, pd = v.parallax_factors(ia.ra, ia.dec, ia.t_yr)
+        assert dx == pytest.approx(0.5 * pa, abs=1e-6)
+        assert dy == pytest.approx(0.5 * pd, abs=1e-6)
+    cats[2].t_yr = cats[2].t_yr + 0.5  # half a year out of phase: parallax no longer repeats
+    near = v.completeness(*cats, n=300, seed=5, distance_pc=1.0, bins=np.array([1.1, 5.0]))
+    far = v.completeness(*cats, n=300, seed=5, bins=np.array([1.1, 5.0]))
+    assert near["distance_pc"] == 1.0 and near["overall"] < far["overall"]
