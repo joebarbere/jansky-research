@@ -10,6 +10,12 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Fixed
+- **README catches up with fashienv and vlasspm.** Both slice rows and both paper rows carried
+  pre-referee numbers and status (fashienv at round 6; vlasspm quoting 3.45"/yr and a 0.92-5"/yr
+  limit, "not yet refereed"). They now match the merged notes, the RNAAS list counts seven notes,
+  fashienv leaves the arXiv queue, and `vlasspm.py` joins the module listing.
+
 ### Added
 - **`vlasspm` note: final referee round (accept with nits) applied.** The all-sky count now
   follows the headline limit, the method says which injections carry parallax, and stale limit
