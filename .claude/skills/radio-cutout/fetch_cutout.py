@@ -44,6 +44,11 @@ def fetch_cadc_cutout(
     from astropy import units as u
     from astropy.coordinates import SkyCoord
     from astroquery.cadc import Cadc
+    from astroquery.cadc import conf as cadc_conf
+
+    # astroquery's default registry URL is plain http://, and CADC's port 80 stopped answering
+    # (2026-09-27: connect timeouts, while https returns 301/200). Always use https.
+    cadc_conf.CADC_REGISTRY_URL = str(cadc_conf.CADC_REGISTRY_URL).replace("http://", "https://")
 
     c = SkyCoord(ra * u.deg, dec * u.deg)
     rad = (size_arcmin / 60.0) * u.deg

@@ -66,6 +66,7 @@ SLICES = {
     "torchdsp": ("torchdsp", "--offline"),
     "lpt": ("lpt", "--offline"),
     "junodam": ("junodam", "--offline"),
+    "vlasspm": ("vlasspm", "--offline"),
     "atlas3i": ("atlas3i", "--paper"),
 }
 

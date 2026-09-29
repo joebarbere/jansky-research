@@ -50,7 +50,7 @@ backlog in `survey/candidate-gaps.md`.
 
 ## Results
 
-Forty-five slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
+Forty-six slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -98,6 +98,7 @@ Forty-five slices, one line each; the long version of every row is `survey/<slic
 | Inner Milky Way RC replication (plan 86) | `jansky_research.innerrc` | ✅ their ρ_DM arithmetic validates, but an interior refit of their own published curve gives 0.24 GeV/cm³ (1σ 0.16–0.31) — the published 0.107 is not uniquely determined by their curve |
 | BL 3I/ATLAS GBT reproduction (plan 85) | `jansky_research.atlas3i` | ✅ the BL null reproduces from the public archive (1.12M raw hits → 261 survivors → 0 confirmed) at a matching 99.2 mW EIRP limit; the survivors are a taxonomy of two-position-filter evasion |
 | DR20 BHM radio-counterpart census (plan 88) | `jansky_research.dr20radio` | ✅ first radio census of SDSS-V BHM quasars: RACS south 3.95%, VLASS north 4.67%; α measured by survival analysis (−0.755 ± 0.012, systematic range −0.55 to −0.90); the contrast is quoted as a ratio (1.47) |
+| Blind VLASS proper-motion search (plan 64) | `jansky_research.vlasspm` | ✅/➖ UV Ceti recovered blind at 3.45"/yr (Gaia 3.23); zero new movers after calibrated errors, a compactness cut and image vetting; 95% limit < 9.2e-5 per deg² on optically dark compact movers at 0.92–5"/yr |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 Most of these are recover-a-known validations and method work. Several are negatives, written up
@@ -194,6 +195,7 @@ against its committed evidence, which is where several of the fixes below came f
 | How often are long-period transients on? (VAST archival; RNAAS note) | `lptduty/` | per-snapshot detection probabilities + implied active fractions for the LPT class | 96% | **major revision** ([referee 2026-08-26](survey/lptduty-findings.md)) | ✅ 2026-08-26 — the weighting's true effect stated (0.02% at observed fluxes); counts fixed at the source (6 no-epoch, 2 published PEPOCHs); Kuiper p implemented + honest ×20 Bonferroni (verdict survives, 0.023); Ṗ folded into GATE-0 (8 stand, 5 unconditionally); the note now leads with implied f_active = p/((w+T)/P) (0.04–0.74; best limit <0.09 = GLEAM-X; one vacuous); \ldFActive carries its 95% interval and PEPOCH conditionality; discovery ephemerides cited; the macro producer is wired and lptduty builds via make |
 | Environment-split HIMFs in FASHI DR2 against two null tests (RNAAS note) | `fashienv/` | random-placement + label-shuffle nulls, environment-restricted Vmax, FAST-beam confusion test; void bracketed 0.05–0.12 dex, group not attributed (supersedes the DR1 −0.26 dex paper) | 91% | **in review** ([referee round 6](survey/fashienv-findings.md)) | ✅ 2026-09-27 — 5 rounds applied; reframed after shuffle null + blending test |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* retracted to a lower limit |
+| No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) radio proper-motion search: UV Ceti recovered at 3.45"/yr; Condon-ellipse + calibrated structure-term errors; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); limit < 9.2e-5 deg⁻² (compact, 0.92–5"/yr, ≥3 mJy) | 99% | **draft** ([findings](survey/vlasspm-findings.md)) | — not yet refereed |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
 job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,

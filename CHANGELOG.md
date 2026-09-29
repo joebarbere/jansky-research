@@ -10,16 +10,74 @@ recommend the next version number.
 
 ## [Unreleased]
 
-### Fixed
-- **The archive description stopped repeating two withdrawn claims.** `.zenodo.json` (the text
-  Zenodo shows for every version, including v1.12.0) and the JOSS paper still called the `hi`
-  curve "flat", which #304 retracted -- the paper says it is far from Keplerian but *not* flat,
-  and cross-validated against VGPS to 1 km/s -- and described `driftsearch` as a benchmark
-  "with an honest null", withdrawn in #292: it recovers Voyager 1 at S/N ~1000. Both now say
-  what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
-  DC-spike artifact) is still true and is kept.
+### Added
+- **`vlasspm` note: final referee round (accept with nits) applied.** The all-sky count now
+  follows the headline limit, the method says which injections carry parallax, and stale limit
+  macros are dropped. Ready for RNAAS.
+- **`vlasspm` note: referee round 2 applied.** Parallax-aware injections (`distance_pc`)
+  measure the distance domain directly: over 1.1-5"/yr the worst fine bin falls from 0.967
+  (no parallax) to 0.963 / 0.949 / 0.888 at 16 / 8 / 4 pc, so the limit is quoted beyond
+  8 pc (v_t > 42 km/s): < 9.3e-5 per deg^2 for persistent compact 2.4-3.75 mJy sources at
+  1.1-5"/yr, with no rate prior; 1.5 mJy fine bins give < 9.4e-5. UV Ceti is compared as a
+  vector (0.20"/yr from the system motion, chi^2 13, against a 0.21"/yr UV-BL orbital scale).
+  Evidence in `results/vlasspm_referee2.json` (`scripts/vlasspm_referee2.py`); the note is cut
+  to ~1,080 words.
+- **`vlasspm` note: referee round 1 applied.** A covariance-weighted three-epoch track fit with
+  parallax (`fit_track`, `parallax_factors`) gives UV/BL Ceti 3.41 +/- 0.04"/yr with the Gaia
+  parallax (system 3.34, 1.6 sigma); the note calls it the unresolved Luyten 726-8 system.
+  "Optically dark" is now "no co-moving counterpart" (`comoving`) in the code, the counterpart
+  step and the paper; a 5" circle holds a chance Gaia/CatWISE source at 28% of 500 random
+  positions (3% within the co-moving rule's 1.5"). Fine-bin completeness across the 0.92"/yr
+  edge (0.65 at 0.92-1.0), the log-uniform weighting, the worst-bin limit (9.6e-5), a tail
+  bound (0.6% / 1.9%), the parallax floor (8 pc) and the E4 area are new evidence in
+  `results/vlasspm_referee1.json` (`scripts/vlasspm_referee1.py`), all reaching the note by
+  macro. Atri et al. 2022, UCAC4 and SIMBAD added to the bibliography (Crossref-verified). The
+  figure plots steps per bin with the fine bins.
+- **`papers/vlasspm/`: an RNAAS-length upper-limit note, "No Optically Dark Compact Radio
+  Movers in Four VLASS Epochs".** Every data-derived number is a `vpmReal*` macro written by
+  `vlasspm.write_real_paper` from `results/vlasspm_metrics.json` + `vlasspm_vetting.json`
+  (the real script calls it; `run(offline=False)` regenerates it); the offline fixture writes
+  `vpmSyn*`, both merged through `preserve_live_macros`. One generated figure (completeness vs
+  rate, 1.5 and 3 mJy, with and without the compactness cut). The ten journal references were
+  checked field by field against Crossref (PyBDSF against ADS). `vlasspm` joins the Makefile `SLICES`
+  and the offline Snakefile DAG.
+- **`vlasspm`: a blind radio proper-motion search across four VLASS epochs (plan 64).**
+  Isolated orphans are linked between epochs with a KD-tree (minutes on a CPU for the whole
+  survey), confirmed by a straight-line third detection, with an RA-scramble null, injection
+  completeness and per-epoch astrometric floors measured from bright static sources.
+  UV Ceti is recovered blind at 3.45"/yr (Gaia 3.23"/yr); completeness is 0.92-0.99 above
+  ~0.9"/yr and ~0 below 0.5"/yr. Image-level vetting finds **zero new movers**: every other
+  candidate is a static extended source, most of them south of Dec -15 where the low-elevation
+  beam elongates differently between epochs and moves fitted centroids. 95% limit: < 9.2e-5
+  optically dark movers per deg^2 at 0.92-5"/yr (>~3 mJy, 33,838 deg^2). The failed first run (746 candidates from split extended
+  sources and a flux cut that rejected flare stars) is recorded in `survey/vlasspm-findings.md`.
+  `scripts/vlasspm_real.py` is the checkpointed real leg; it runs detached under
+  `systemd-run --user`.
 
 ### Changed
+- **`vlasspm`: compactness cut (run 5).** Per-detection DC_Maj/BMAJ; injections carry
+  realistic point-source size noise drawn from 303 detections of nearby Gaia (GCNS) stars by
+  S/N. Threshold and cross-epoch rule chosen by a criterion stated before the real candidates
+  were examined (tightest threshold keeping >= 95% of injected point movers in every S/N bin;
+  rule by rejection of general static sources): at least 2 of 3 detections with DC_Maj/BMAJ <= 0.9
+  (keeps 98.4%; 93% in the 0.53-0.92"/yr bin). UV Ceti survives (0.41, 0, 1.46); the 10
+  image-vetted static candidates are all removed (11 -> 1); null unchanged; limit < 9.2e-5 per
+  deg^2 at 3 mJy (< 9.3e-5 at 1.5 mJy, where the cut costs 1% completeness).
+
+- **`vlasspm`: shape-aware astrometric errors (run 4).** Per-component Condon (1997) error
+  ellipses from fitted Maj/Min/PA, beam and peak S/N (identical to the catalogues' quoted
+  errors -- which exposed a run 1-3 bug: `E_RA` is already on-sky and was being multiplied by
+  cos dec, understating RA errors by up to 2.7x), finer southern floor bands, and a structure
+  systematic calibrated on 4.9 M matched static sources (k_struct = 0.10 of the deconvolved
+  FWHM; a beam-change term is not required once size is modelled). The statics' 3-sigma tail
+  goes from 3.7x Rayleigh to 0.93x; the model still fails beyond ~4 sigma (heavy tail), south of
+  Dec -35 (2.3x) and for compact sources (1.6x), all reported. Injections now draw scatter from
+  the same model and half are placed at random sky positions: the isolation cost is measured at
+  ~1%. Rerun: UV Ceti recovered (E3 residual 1.79 sigma); two run-3 false positives drop below
+  the linkage cut, but the wider E3 tolerance admits six new resolved static sources (11
+  candidates); image vetting finds zero new movers. Limit < 9.3e-5 per deg^2 (run 3: 9.2e-5).
+  `scripts/vlasspm_vet_images.py` is parametrised; the radio-cutout skill uses https for
+  CADC's registry (port 80 stopped answering).
 - **`fashienv` is rewritten as a methodological caution: environment-split HI mass functions
   need random-placement nulls.** On FASHI DR2 (156,411 sources, DR2's own 1/(C Vmax) weighting,
   which reproduces the published global HIMF), the void-wall knee offset is -0.150 and the
@@ -63,9 +121,17 @@ recommend the next version number.
   (0.15 TB) plus the pulsar-field compound beams (~7.3 TB), streamed and deleted locally at $0;
   the $170 AWS estimate is superseded.
 
+### Fixed
+- **The archive description stopped repeating two withdrawn claims.** `.zenodo.json` (the text
+  Zenodo shows for every version, including v1.12.0) and the JOSS paper still called the `hi`
+  curve "flat", which #304 retracted -- the paper says it is far from Keplerian but *not* flat,
+  and cross-validated against VGPS to 1 km/s -- and described `driftsearch` as a benchmark
+  "with an honest null", withdrawn in #292: it recovers Voyager 1 at S/N ~1000. Both now say
+  what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
+  DC-spike artifact) is still true and is kept.
+
 ## [1.12.0] - 2026-09-26
 
-### Added
 ### Added
 - **The first cloud run: torch-fdmt and torch-dsp validated on an NVIDIA GPU** (plan 96 phase 2).
   On an AWS g5.xlarge (A10G) the FDMT plane is bit-identical to the CPU one, the Crab
