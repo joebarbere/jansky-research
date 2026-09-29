@@ -92,13 +92,13 @@ Forty-six slices, one line each; the long version of every row is `survey/<slice
 | torch-dsp: coherent dedispersion + RFI + FFA in pure PyTorch | `jansky_research.torchdsp` | ✅/➖ CHIME baseband burst re-dedispersed to its catalogue DM (conjugate-sign control 1.4 vs 4.0); SK/SumThreshold byte-identical to the CPU oracle, cross-device checked on ROCm; FFA 10.6× on GPU (single-session benchmark); the 2.1-s Crab file gives a period-search null with a measured 2σ/pulse injection limit |
 | Radio survey of 56 WD-pulsar candidates (RACS+VLASS) | `jansky_research.wdpulsar` | ✅/➖ 0/51 candidates detected (I or V) to a median 3σ V limit of 0.41 mJy; AR Sco control re-found; J1912−4410 itself undetected |
 | How often are long-period transients on? (VAST archival) | `jansky_research.lptduty` | ✅/➖ 3 LPTs caught in 1.1–4.5% of snapshots (one common rate, LRT p=0.45); implied active fractions 0.04–0.74 — the class is not uniformly "mostly off"; 2 of 10 constraints void (+3 conditional on Ṗ); 6 discovery papers publish no reference epoch |
-| Environment-split HI mass functions + two null tests (FASHI DR2) | `jansky_research.fashienv` | ➖ void knee 0.05–0.12 dex beyond a random-placement and a redshift/occupancy-matched shuffle null (reported, not claimed); group offset carried by FAST-beam blending candidates (26% of members vs 1.6% of field), not attributed; the DR1 −0.26 dex claim is superseded |
+| Environment-split HI mass functions + two null tests (FASHI DR2) | `jansky_research.fashienv` | ➖ void − wall −0.088 dex, 1.1–2.5σ beyond a random-placement and a redshift × sensitivity label-shuffle null — not a detection; group − field +0.123 dex (3.5σ vs the shuffle) carries a FAST-beam blending signature (+0.16 dex more HI at fixed optical luminosity when a neighbour is inside the flux aperture, +0.03 just outside), not attributed; supersedes the DR1 −0.26 dex claim |
 | SBI population inference for RACS Stokes-V emitters | `jansky_research.svsbi` | ✅/➖ with one detection no model parameter is measured: the LF break is a lower limit (log L* ≳ 13.9), f_beam is prior-located, only the slope median is stable |
 | LPT catalogue v3 + Stokes-V forced photometry | `jansky_research.lptv` | ✅/➖ catalogue extended to 16 members; the ~78-min boundary still not significant (p=0.52); 1 secure + 1 candidate circular burst; uniform V-limit table (0.47 mJy median) |
 | Inner Milky Way RC replication (plan 86) | `jansky_research.innerrc` | ✅ their ρ_DM arithmetic validates, but an interior refit of their own published curve gives 0.24 GeV/cm³ (1σ 0.16–0.31) — the published 0.107 is not uniquely determined by their curve |
 | BL 3I/ATLAS GBT reproduction (plan 85) | `jansky_research.atlas3i` | ✅ the BL null reproduces from the public archive (1.12M raw hits → 261 survivors → 0 confirmed) at a matching 99.2 mW EIRP limit; the survivors are a taxonomy of two-position-filter evasion |
 | DR20 BHM radio-counterpart census (plan 88) | `jansky_research.dr20radio` | ✅ first radio census of SDSS-V BHM quasars: RACS south 3.95%, VLASS north 4.67%; α measured by survival analysis (−0.755 ± 0.012, systematic range −0.55 to −0.90); the contrast is quoted as a ratio (1.47) |
-| Blind VLASS proper-motion search (plan 64) | `jansky_research.vlasspm` | ✅/➖ UV Ceti recovered blind at 3.45"/yr (Gaia 3.23); zero new movers after calibrated errors, a compactness cut and image vetting; 95% limit < 9.2e-5 per deg² on optically dark compact movers at 0.92–5"/yr |
+| Blind VLASS proper-motion search (plan 64) | `jansky_research.vlasspm` | ✅/➖ UV/BL Ceti recovered blind at 3.41 ± 0.04″/yr (three epochs, parallax-aware; system 3.34); zero new movers after calibrated errors and a compactness cut; 95% limit < 9.3e-5 per deg² on persistent compact optically dark movers (2.4–3.75 mJy, beyond 8 pc, 1.1–5″/yr) |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 Most of these are recover-a-known validations and method work. Several are negatives, written up
@@ -193,9 +193,9 @@ against its committed evidence, which is where several of the fixes below came f
 | torch-dsp: the coherent-DSP suite in pure PyTorch | `torchdsp/` | per-kernel oracle validation + real CHIME/Crab legs (CPU) + ROCm benchmarks | 93% | **major revision** ([referee 2026-08-25](survey/torchdsp-findings.md)) | ✅ 2026-08-25 — benchmark re-measured in one `--benchmark-only` session (FFA 10.6×, derived macros, hardware introspected); portability measured (cross-device kernel checks committed); chirp checked against the dispersion law + conjugate-sign trial (1.4 vs 4.0); Crab null given its noise level (5.0) and 2σ/pulse injection limit |
 | A radio survey of the WD-pulsar candidates | `wdpulsar/` | AR Sco recover-a-known + systematic RACS/VLASS non-detection limit table | 94% | **major revision** ([referee 2026-08-13](survey/wdpulsar-findings.md)) | ✅ 2026-08-14 — re-measured forced; null real, bound stated |
 | How often are long-period transients on? (VAST archival; RNAAS note) | `lptduty/` | per-snapshot detection probabilities + implied active fractions for the LPT class | 96% | **major revision** ([referee 2026-08-26](survey/lptduty-findings.md)) | ✅ 2026-08-26 — the weighting's true effect stated (0.02% at observed fluxes); counts fixed at the source (6 no-epoch, 2 published PEPOCHs); Kuiper p implemented + honest ×20 Bonferroni (verdict survives, 0.023); Ṗ folded into GATE-0 (8 stand, 5 unconditionally); the note now leads with implied f_active = p/((w+T)/P) (0.04–0.74; best limit <0.09 = GLEAM-X; one vacuous); \ldFActive carries its 95% interval and PEPOCH conditionality; discovery ephemerides cited; the macro producer is wired and lptduty builds via make |
-| Environment-split HIMFs in FASHI DR2 against two null tests (RNAAS note) | `fashienv/` | random-placement + label-shuffle nulls, environment-restricted Vmax, FAST-beam confusion test; void bracketed 0.05–0.12 dex, group not attributed (supersedes the DR1 −0.26 dex paper) | 91% | **in review** ([referee round 6](survey/fashienv-findings.md)) | ✅ 2026-09-27 — 5 rounds applied; reframed after shuffle null + blending test |
+| Environment-split HIMFs in FASHI DR2 against two null tests (RNAAS note) | `fashienv/` | random-placement + label-shuffle nulls, environment-restricted Vmax, counterpart-matched blending classes; void not detected, group offset shows a blending signature (supersedes the DR1 −0.26 dex paper) | 89% | **ready** ([referee round 8](survey/fashienv-findings.md)); package built | ✅ 2026-09-27 — 8 rounds; the last two MINOR, all applied |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* retracted to a lower limit |
-| No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) radio proper-motion search: UV Ceti recovered at 3.45"/yr; Condon-ellipse + calibrated structure-term errors; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); limit < 9.2e-5 deg⁻² (compact, 0.92–5"/yr, ≥3 mJy) | 99% | **draft** ([findings](survey/vlasspm-findings.md)) | — not yet refereed |
+| No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) survey-scale radio proper-motion search: UV/BL Ceti recovered; calibrated error model; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); parallax-aware completeness; limit < 9.3e-5 deg⁻² | 99% | **ready** ([referee round 3](survey/vlasspm-findings.md)); package built | ✅ 2026-09-28 — 3 rounds; final accept with nits, applied |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
 job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,
@@ -215,17 +215,19 @@ contribution — the tooling and the reproducibility, not a novelty claim:
 
 - **Software / citable archive:** the toolkit is meant for [JOSS](https://joss.theoj.org) (see
   `joss/paper.md`) and a [Zenodo](https://zenodo.org) DOI on release (`.zenodo.json`, `CITATION.cff`).
-- **Short notes:** five results are condensed to
+- **Short notes:** seven results are condensed to
   [Research Notes of the AAS](https://journals.aas.org/research-notes/) — the frbstats validation
   (`papers/frbstats/rnaas.tex`), the WD-pulsar survey (`papers/wdpulsar/rnaas.tex`, refereed and
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
   drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
   refereed and ready to submit), and the LAB/VGPS terminal-velocity comparison
-  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31).
+  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Two are RNAAS-length as
+  their `main.tex`: the FASHI DR2 environment-split caution (`papers/fashienv/`, eight referee
+  rounds) and the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level
-  lensed-repeater search) and `fashienv/`. Recover-a-knowns and method demos stay in the repo +
+  lensed-repeater search). Recover-a-knowns and method demos stay in the repo +
   Zenodo; software-pattern papers (`frbstats/`, `torchdsp/`, `torchfdmt/`, `ecallisto_pipeline/`)
   are JOSS candidates, not science preprints. The pure reproductions are not posted as a preprint
   batch — arXiv moderation expects a contribution, and "I reproduced a known result" belongs in
@@ -313,7 +315,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py vlasspm.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs
