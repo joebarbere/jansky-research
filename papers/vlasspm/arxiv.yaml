@@ -1,0 +1,10 @@
+# Hand-authored arXiv metadata for papers/vlasspm -- TRACKED IN GIT.
+#
+# `make arxiv` regenerates arxiv-submission/metadata.yaml from keywords, so curated values
+# belong here (see papers/atlas3i/arxiv.yaml for why). The keyword fallback inferred
+# astro-ph.IM; the result is a limit on nearby moving stars and brown dwarfs, with the
+# method (radio astrometry) as the cross-list.
+primary_category: astro-ph.SR
+cross_lists: [astro-ph.IM]
+
+comments: '3 pages, 1 figure. Research Note of the AAS. Code and data: doi:10.5281/zenodo.21482378; github.com/joebarbere/jansky-research'

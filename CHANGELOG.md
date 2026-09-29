@@ -11,6 +11,16 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Fixed
+- **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
+  Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
+  bursts (1998)" is the Solar convective zone (seven solar papers), "Fast radio bursts (1313)"
+  Quantum cosmology, "Stokes parameters (1583)" Stellar astronomy -- or no number at all. Each
+  is now the nearest real concept (e.g. Solar radio emission 1522, Radio bursts 1339,
+  Polarimetry 1278); two with no UAT equivalent were dropped. `triage_papers.py` gains a
+  `uat-keyword` check against a vendored `scripts/uat_concepts.tsv`, so it cannot recur silently.
+- **`papers/vlasspm/arxiv.yaml` and `papers/fashienv/arxiv.yaml`** pin the curated arXiv
+  categories (vlasspm: astro-ph.SR, cross IM, not the keyword-inferred IM) and page counts, so a
+  `make arxiv` rebuild cannot revert them.
 - **README catches up with fashienv and vlasspm.** Both slice rows and both paper rows carried
   pre-referee numbers and status (fashienv at round 6; vlasspm quoting 3.45"/yr and a 0.92-5"/yr
   limit, "not yet refereed"). They now match the merged notes, the RNAAS list counts seven notes,
