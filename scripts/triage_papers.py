@@ -20,6 +20,9 @@ Every check here corresponds to a real defect found in a real paper this month:
                       "others. 2025, arXiv e-prints"
   no-evidence         a paper whose results file is missing, or marked is_real: false
   overclaim           a verb this repo has had to retract before, near a number
+  uat-keyword         an AASTeX keyword whose number is not that UAT concept, or has no number
+                      (found 2026-09-28: 30 of 214 were wrong -- "Solar radio bursts (1998)" is
+                      the Solar convective zone, "Fast radio bursts (1313)" Quantum cosmology)
 
 Usage:  uv run python scripts/triage_papers.py [--no-network] [--paper NAME]
 """
@@ -81,6 +84,44 @@ OVERCLAIM = (
     r"\bnominal coverage\b",
     r"\bfully compatible\b",
 )
+
+
+UAT_FILE = Path(__file__).resolve().parent / "uat_concepts.tsv"
+
+
+def _uat() -> dict[str, str]:
+    """UAT concept id -> preferred name, from the vendored table (empty if it is missing)."""
+    if not UAT_FILE.is_file():
+        return {}
+    out = {}
+    for line in UAT_FILE.read_text().splitlines():
+        if line and not line.startswith("#"):
+            k, _, name = line.partition("\t")
+            out[k] = name
+    return out
+
+
+def _uat_norm(s: str) -> str:
+    return re.sub(r"[\s\-]+", " ", s.lower()).strip()
+
+
+def keyword_findings(tex: str, uat: dict[str, str]) -> list[tuple[str, str, str]]:
+    """Each AASTeX keyword must be 'Label (N)' with N the UAT concept whose name is Label."""
+    out: list[tuple[str, str, str]] = []
+    if not uat:
+        return out
+    for block in re.findall(r"\\keywords\{(.*?)\}\s*\n", tex, re.S):
+        for item in re.split(r"\s*---\s*", block.replace("\n", " ")):
+            item = item.strip()
+            if not item:
+                continue
+            m = re.match(r"(.*)\((\d+)\)\s*$", item)
+            if not m:
+                out.append(("MED", "uat-keyword", f"'{item}' has no UAT number"))
+            elif _uat_norm(uat.get(m.group(2), "")) != _uat_norm(m.group(1)):
+                real = uat.get(m.group(2), "no such concept")
+                out.append(("MED", "uat-keyword", f"'{item}': UAT {m.group(2)} is '{real}'"))
+    return out
 
 
 def _macros(paper: Path) -> dict[str, str]:
@@ -224,6 +265,9 @@ def check_paper(
                 if "synthetic" in c.name and has_real:
                     continue
                 out.append(("HIGH", "no-evidence", f"{c.name} has is_real: false"))
+
+    # 7. keywords must be real UAT concepts with matching numbers
+    out.extend(keyword_findings(tex, _uat()))
 
     # 6. retracted verbs, only where a number is nearby
     for pat in OVERCLAIM:
