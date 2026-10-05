@@ -27,6 +27,22 @@ Numbered, each tagged **BLOCKER** / **MAJOR** / **MINOR** / **NIT**, each with: 
 why it matters, and what would fix it. Ground every finding in a file and a line or a quoted
 sentence. No finding may rest on a number you did not verify against the repo.
 
+## Audiences — enumerate them before writing findings
+
+A paper can be true sentence by sentence and still be refereed badly by a community it never
+addressed. Before writing findings, list in the report every audience that could write a report
+on it (adapted from the BootLoops `referee-sim` protocol):
+
+- each community named in the introduction's "this matters to …" sentence;
+- each community whose **methods** or **data** the paper borrows (borrowing invokes their standards);
+- the **incumbent** — whoever already does what the paper claims to do, even if never cited;
+- the **practitioner** who would rely on the result ("what breaks if I use this?");
+- the venue's general reader.
+
+For each, give its strongest **standard** objection on two axes — *correctness* ("does it hold in
+the cases we care about?") and *novelty* ("what is new over what we already do?") — and say where
+the paper answers it, or that it does not. Unanswered rows become findings.
+
 ## What this repo's papers fail on, historically — check these first
 
 - **A claim whose number is not in committed evidence.** Macros rendering as `--`, a value
@@ -46,6 +62,14 @@ sentence. No finding may rest on a number you did not verify against the repo.
   `curl -s https://api.crossref.org/works/<doi>` — no search budget needed. Spot-check the ones
   the argument leans on.
 - **Overreach in the last paragraph.** Contribution claims that outrun what was demonstrated.
+- **Controls designed after the result.** Check `survey/<slice>-findings.md` and the git history:
+  were the nulls, injections and thresholds fixed before the real run, or added afterwards? A
+  post-hoc control is weaker evidence and the paper should say so.
+- **A check certified by what fed it.** Ask whether anything used to certify a result also shaped
+  it (a calibration sample reused for validation, candidates that motivated the cut that removes
+  them).
+- **A fact from a source without a locator,** or attributed to a paper on the strength of its
+  abstract or of memory. Spot-check load-bearing ones against the paper itself.
 
 ## What NOT to do
 

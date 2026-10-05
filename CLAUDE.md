@@ -387,6 +387,27 @@ tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-da
 `# pragma: no cover`) → GATE-2 science review → AASTeX paper (`papers/<slice>/`) → arXiv package
 (`make arxiv`). Plan in `plans/NN-*.md`; findings in `survey/<slice>-findings.md`.
 
+Three rules that make the pattern's checks mean something (ported 2026-10-04 from the BootLoops
+`skills` protocols — `planted-truth`, `acceptance-gate`, `independence-bookkeeping`,
+`reading-contract`, MIT/CC BY 4.0, github.com/BootLoops-ai/skills):
+
+- **Freeze the controls before the first real run.** Write the plants, nulls, injection tests and
+  their pass criteria into the plan *before* real data is opened, with the threshold or rule
+  stated (the `vlasspm` compactness cut's pre-stated keep-95% criterion is the model). A control
+  designed after real output has been seen drifts toward blessing it — `fashienv`'s shuffle null
+  and blending tests were all invented after the results, which is why they took eight rounds.
+  A later control is still worth running; say in the findings that it was post hoc.
+- **An oracle that fed a fit may never certify the result.** Anything that influenced a choice —
+  a fitted parameter, a threshold, which candidates were kept, the decision to add a cut — is on
+  the production side forever; certification draws only from values that could not have shaped
+  it. Record that provenance in the findings when a check is set up (e.g. `vlasspm` calibrated on
+  even RA strips and checked on odd ones; its cut was *motivated* by the candidates it removed,
+  so the images, not the cut, certify those ten as static).
+- **Facts read from a source carry a locator.** A number or claim taken from a paper names where
+  it is (table, equation, section, page — or "abstract" when only the abstract was read), and a
+  claim from memory is labelled as such or checked before it is written. Crossref settles a
+  citation's metadata; it does not settle what the paper says.
+
 Every new slice paper / RNAAS note `\software{}`-cites **`jansky-research`** (the toolkit, Zenodo
 concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{janskyresearch}`
 `refs.bib` entry from `papers/vgpra/` or `papers/spectra/`. See the `research-publish` skill.

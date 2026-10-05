@@ -11,6 +11,11 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- **Three BootLoops protocols ported** (github.com/BootLoops-ai/skills, MIT/CC BY 4.0). CLAUDE.md's
+  slice pattern gains "freeze the controls before the first real run", "an oracle that fed a fit
+  may never certify the result" and "facts read from a source carry a locator"; the
+  `paper-referee` agent gains an audience-enumeration step (from `referee-sim`) and three new
+  historical-failure checks (post-hoc controls, self-certifying checks, locator-less facts).
 - **CLAUDE.md: "done, with one asterisk" is often not done at all.** A fix is finished when the next
   referee round confirms it; the lesson cites Schwartz's account of Claude-driven research and the
   three `fashienv` round-6 "fixes" that round 7 overturned.
