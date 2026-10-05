@@ -370,6 +370,17 @@ the paper should say so rather than quote it. Likewise a "classifiable" mask mus
 was actually searched: a padded box put 24.5% of galaxies with no possible classification into
 both comparison bins, and the test asserting "wall knee equals global knee" passed *because* of it.
 
+**"Done, with one asterisk" is often not done at all — a fix is finished when the next referee
+round confirms it, not when it is written.** Matthew Schwartz's account of three months of
+Claude-driven research (Anthropic, "Claude-shaped science", 2026) names the pattern: *"Claude loves
+to declare victory. 'Done, with one asterisk' is often 'not done at all.'"* `fashienv` reproduced
+it round after round: round 6 shipped a line-width trend "which beam blending does not predict"
+(an artefact of a W50-scaled window), a "depth" stratifier that was aperture noise, and an
+HI-deficiency explanation with the wrong sign — each written as a fix, each overturned by the
+next referee. Report a fix as *applied*, not *resolved*; let the next independent check, not the
+author of the fix, call it closed. When a summary says "with one caveat" or "mostly", read the
+caveat as the result.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

@@ -10,6 +10,11 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- **CLAUDE.md: "done, with one asterisk" is often not done at all.** A fix is finished when the next
+  referee round confirms it; the lesson cites Schwartz's account of Claude-driven research and the
+  three `fashienv` round-6 "fixes" that round 7 overturned.
+
 ### Fixed
 - **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
   Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
