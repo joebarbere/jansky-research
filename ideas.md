@@ -91,6 +91,13 @@ independently re-checked, so the standing GATE-0 still applies to anything plann
 - **L7. Legacy-catalogue digitization (Textract).** Pre-VizieR radio catalogue tables that exist
   only as scanned pages. Unvetted: GATE-0 must find a specific table that is (a) not already
   digitized and (b) scientifically useful, before any of this is worth doing.
+- **L8 (2026-10-05). FASHI × ALFALFA two-beam blending test → `plans/97-hiblend-fashi-alfalfa.md`.**
+  Answers the question `fashienv` could only defer to interferometry: does the group HI excess
+  come from beam blending? The same galaxies were observed with a 2.9′ (FAST) and a ~3.5′
+  (Arecibo) beam, so blending predicts a flux ratio that tracks the beams' differential response
+  to each neighbour (largest near 2′); a physical excess predicts none. CPU, days, both catalogues
+  public. GATE-0 run: data load; nearest prior work is Jones+2015's simulation of confusion, not an
+  empirical two-beam test. Controls and pass criteria frozen in the plan before any real run.
 - **Rejected on arrival:** "RACS-mid two-epoch circular-polarization variability census" — the
   agent proposed it as new, but this repo already did it (`stokesv_discovery` uses both
   RACS-mid epochs). The survivor is plan 59 (same method, Gaia UCD targets).
