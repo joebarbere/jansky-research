@@ -120,3 +120,70 @@ def test_power_reports_detection_fraction():
     assert set(p) == {"n_real", "strength", "detect_frac", "beta_mean", "beta_std"}
     assert p["detect_frac"] == 1.0  # a planted beta = 1 is easy at this sample size
     assert h.power(2000, strength=0.0, n_real=3, seed=5, n_boot=60)["detect_frac"] <= 1 / 3
+
+
+def _two_survey_sky(n=4000, *, strength=1.0, seed=7):
+    """One galaxy population 'observed' by FAST and Arecibo beams, blending at ``strength``."""
+    rng = np.random.default_rng(seed)
+    ra = rng.uniform(150, 200, n)
+    dec = rng.uniform(5, 25, n)
+    # companions for 40% of galaxies at 1-5', mostly in the same velocity window
+    k = int(0.4 * n)
+    host = rng.choice(n, k, replace=False)
+    sep, ang = rng.uniform(1.2, 5.0, k), rng.uniform(0, 2 * np.pi, k)
+    ra = np.concatenate([ra, ra[host] + sep / 60 * np.cos(ang) / np.cos(np.radians(dec[host]))])
+    dec = np.concatenate([dec, dec[host] + sep / 60 * np.sin(ang)])
+    m = ra.size
+    v = rng.uniform(3000, 12000, m)
+    v[n:] = v[host] + rng.normal(0, 50, k)
+    w50 = rng.uniform(80, 300, m)
+    s = 10 ** rng.uniform(-0.3, 1.0, m)
+    gal_nb = h.find_neighbours(ra, dec, v, w50, ra, dec, v, w50, s, self_index=np.arange(m))
+    sa, sf = h.blended_fluxes(s, gal_nb, strength=strength)
+    sig = 0.06
+    fashi = {"ra": ra, "dec": dec, "cz": v, "w50": w50,
+             "flux": sf * 10 ** rng.normal(0, sig, m), "flux_err": sf * sig * np.log(10)}  # fmt: skip
+    jit = rng.normal(0, 0.2 / 60, (2, m))
+    alfalfa = {"ra": ra + jit[0], "dec": dec + jit[1], "v": v + rng.normal(0, 10, m), "w50": w50,
+               "flux": sa * 10 ** rng.normal(0, sig, m), "flux_err": sa * sig * np.log(10),
+               "code": np.ones(m, int)}  # fmt: skip
+    return fashi, alfalfa
+
+
+def test_build_field_matches_and_counts_neighbours_once():
+    fashi, alfalfa = _two_survey_sky(1500)
+    f = h.build_field(fashi, alfalfa)
+    assert len(f["flux_f"]) > 0.9 * len(fashi["ra"])  # nearly every galaxy matched
+    assert f["n_alfalfa_only_neighbours"] < 0.1 * len(alfalfa["ra"])  # matched ones not duplicated
+    assert np.all(f["sig_a_dex"] > 0) and f["nb"].target.max() < len(f["flux_f"])
+    shifted = h.build_field(fashi, alfalfa, shift_dec_arcmin=h.SHIFT_ARCMIN)
+    assert len(shifted["flux_f"]) < 0.01 * len(f["flux_f"])  # C4: chance matches are rare
+
+
+def test_injection_field_plants_into_isolated_targets_only():
+    fashi, alfalfa = _two_survey_sky(3000)
+    f = h.build_field(fashi, alfalfa)
+    rng = np.random.default_rng(4)
+    inj = h.injection_field(f, rng, strength=1.0)
+    masks = h.sample_masks(len(inj["flux_f"]), inj["nb"])
+    assert masks["primary"].sum() > 100 and masks["isolated"].sum() > 100
+    r1 = h.analyse(inj, rng, n_boot=150)["primary"]
+    r0 = h.analyse(h.injection_field(f, rng, strength=0.0), rng, n_boot=150)["primary"]
+    assert abs(r1["beta"] - 1.0) < 0.35 and abs(r0["beta"]) < 3 * r0["beta_se"]
+
+
+def test_run_gated_follows_the_frozen_order():
+    fashi, alfalfa = _two_survey_sky(3000, strength=1.0)
+    f = h.build_field(fashi, alfalfa)
+    s = h.build_field(fashi, alfalfa, shift_dec_arcmin=h.SHIFT_ARCMIN)
+    out = h.run_gated(f, s, np.random.default_rng(5), n_power=4, n_inj=3, n_boot=150)
+    assert list(out["gates"]) == ["C0_power", "C1_planted", "C4_match", "C2_spectral_null"]
+    assert all(g["pass"] for g in out["gates"].values())
+    assert out["outcome"].startswith("blending supported")
+    # an underpowered sample stops at C0 and never computes beta
+    small = h._subset(f, np.arange(len(f["flux_f"])) < 60, f["nb"])
+    small["nb"] = h.find_neighbours(small["ra"], small["dec"], small["v"], small["w50"],
+                                    small["ra"], small["dec"], small["v"], small["w50"],
+                                    small["flux_f"], self_index=np.arange(60))  # fmt: skip
+    stop = h.run_gated(small, s, np.random.default_rng(6), n_power=3, n_inj=2, n_boot=50)
+    assert stop["stopped_at"].startswith("C0") and "primary" not in stop

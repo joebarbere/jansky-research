@@ -81,3 +81,55 @@ slightly low at higher noise.
   each other. This keeps the plan's intent (correlated targets are resampled together).
 - **The beta fit is unweighted OLS.** The plan left the weighting open; unweighted adds no
   modelling assumption about the two surveys' error bars.
+
+## Step 3: the real run (2026-10-06): AMBIGUOUS, the spectral null control (C2) failed
+
+Run `scripts/hiblend_real.py --out .`, seed 97, 42 s; evidence in `results/hiblend_metrics.json`.
+
+- **Inputs.** 156,269 FASHI DR2 sources and 31,500 ALFALFA α.100 detections (25,432 code 1),
+  giving **22,889 matched targets**. The neighbour catalogue holds every FASHI source plus 3,801
+  ALFALFA-only detections.
+- **Samples.** 14,375 isolated (C3 calibration), 2,907 primary, 4,560 null (C2). The bootstrap
+  resamples 2,330 and 3,684 clusters respectively.
+
+| Gate (frozen order) | Result | Pass |
+|---|---|---|
+| C0 power, real geometry, synthetic fluxes | planted 1: β = 1.004 ± 0.038, detected in 20/20; planted 0: −0.007 ± 0.014, 0/20 | yes |
+| C1 planted truth on real isolated targets | planted 1: β = **1.249** ± 0.038; planted 0: −0.012 ± 0.097 | yes (within the frozen ±0.3) |
+| C4 match reliability | 90 of 22,889 matches survive a 10′ shift: 0.39% chance rate | yes |
+| **C2 spectral null control** | **β_null = 0.256 ± 0.087 (2.95σ)**, against the frozen \|β_null\| < 2σ | **no** |
+| Primary β | 0.385 ± 0.136 (2.83σ) | — |
+
+**Outcome, by the frozen rule: ambiguous.** Neighbours that cannot blend (offset by more than
+600 km s⁻¹) produce a positive slope against the R_pred blending *would* give them, of about the
+same size as the primary sample's. So something tied to having a neighbour, but not to spectral
+blending, moves the ALFALFA/FASHI flux ratio. The primary β (0.38 ± 0.14) is not distinguishable
+from it: the difference is 0.13 ± 0.16. **No blending claim is made, and no limit either**,
+because the null result the "not supported" outcome needs is contaminated by the same systematic.
+
+**Recorded alongside, not changing the outcome:**
+- **C1 recovered 1.25, not 1.0, on real isolated targets.** That is inside the frozen tolerance,
+  and the synthetic fixture and C0 both give 1.00. The excess is specific to real fluxes, so the
+  real calibration and flux distributions differ from the synthetic ones in a way that inflates
+  β. That is a second sign the C3 calibration does not fully describe the real survey-to-survey
+  differences.
+- **The C3 coefficients are large and partly cancelling** (log S/N: −1.68, (log S/N)²: +0.37,
+  log S: −0.38). A strongly S/N-dependent flux scale, as FASHI DR2 §5.2 reports (Eddington bias
+  in ALFALFA at SNR ≲ 20), is being fitted on isolated targets and extrapolated to targets with
+  neighbours.
+
+**What could produce C2.** These are hypotheses for a follow-up, not tested here; per the plan
+they would be post-hoc controls and must be reported as such:
+1. **A residual S/N systematic.** R_pred ∝ S_n/S_c, so a large R_pred picks faint targets beside
+   bright neighbours. If the C3 model leaves any S/N dependence in the ratio, it reappears as a
+   slope against R_pred for *any* neighbour, blendable or not.
+2. **Spatial confusion in the source-finding.** ALFALFA's flux extraction (a box in the cube) or
+   its baselines may pick up a bright neighbour's emission at any velocity, for example through
+   baseline ripple or sidelobes. That would be a non-spectral blending the C2 design assumes away.
+3. **Real environment structure.** Targets with neighbours sit in denser regions, where one survey
+   may have systematically different noise or RFI flagging.
+
+Each predicts something different: (1) C2 depends on S_c and vanishes when the primary and null
+samples are matched in target S/N; (2) it depends on the neighbour's brightness, not the
+target's; (3) it depends on local density, not on any single neighbour. Running them would be a
+new, post-hoc test set, and the plan requires it to be labelled that way.

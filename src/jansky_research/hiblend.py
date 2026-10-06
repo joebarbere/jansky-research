@@ -456,3 +456,213 @@ def power(
         "beta_mean": round(float(np.nanmean(betas)), 4),
         "beta_std": round(float(np.nanstd(betas, ddof=1)), 4),
     }
+
+
+# ---------------------------------------------------------------------------------------------
+# The real leg: catalogues -> matched targets + neighbours -> gated controls -> beta
+# ---------------------------------------------------------------------------------------------
+
+
+def build_field(fashi: dict, alfalfa: dict, *, shift_dec_arcmin: float = 0.0) -> dict:
+    """Matched targets (FASHI x ALFALFA code 1) with their neighbours from both catalogues.
+
+    ``fashi`` keys: ra, dec, cz, w50, flux, flux_err (Jy km/s). ``alfalfa`` keys: ra, dec, v,
+    w50, flux, flux_err, code. The neighbour catalogue is every FASHI source plus every ALFALFA
+    detection (code 1 or 2) with no FASHI counterpart, so no galaxy is counted twice; a
+    neighbour's flux comes from FASHI where it has one (the narrower beam), else ALFALFA.
+    ``shift_dec_arcmin`` displaces ALFALFA for the C4 chance-match test.
+    """
+    a_dec = np.asarray(alfalfa["dec"], float) + shift_dec_arcmin / 60.0
+    code1 = np.asarray(alfalfa["code"]) == 1
+    ia1 = np.flatnonzero(code1)
+    i_f, j = crossmatch(
+        fashi["ra"], fashi["dec"], fashi["cz"], alfalfa["ra"][ia1], a_dec[ia1], alfalfa["v"][ia1]
+    )
+    i_a = ia1[j]
+    # ALFALFA detections (any code) with a FASHI counterpart are not separate neighbours
+    _f_any, a_any = crossmatch(
+        fashi["ra"], fashi["dec"], fashi["cz"], alfalfa["ra"], a_dec, alfalfa["v"]
+    )
+    a_only = np.setdiff1d(np.arange(len(a_dec)), a_any)
+    n_ra = np.concatenate([fashi["ra"], alfalfa["ra"][a_only]])
+    n_dec = np.concatenate([fashi["dec"], a_dec[a_only]])
+    n_v = np.concatenate([fashi["cz"], alfalfa["v"][a_only]])
+    n_w50 = np.concatenate([fashi["w50"], alfalfa["w50"][a_only]])
+    n_flux = np.concatenate([fashi["flux"], alfalfa["flux"][a_only]])
+    nb = find_neighbours(
+        fashi["ra"][i_f], fashi["dec"][i_f], fashi["cz"][i_f], fashi["w50"][i_f],
+        n_ra, n_dec, n_v, n_w50, n_flux, self_index=i_f,
+    )  # fmt: skip
+    ln10 = np.log(10.0)
+    fa, fa_e = np.asarray(alfalfa["flux"], float)[i_a], np.asarray(alfalfa["flux_err"], float)[i_a]
+    ff, ff_e = np.asarray(fashi["flux"], float)[i_f], np.asarray(fashi["flux_err"], float)[i_f]
+    return {
+        "ra": np.asarray(fashi["ra"], float)[i_f],
+        "dec": np.asarray(fashi["dec"], float)[i_f],
+        "v": np.asarray(fashi["cz"], float)[i_f],
+        "w50": np.asarray(fashi["w50"], float)[i_f],
+        "flux_a": fa, "flux_f": ff, "flux_err_f": ff_e,
+        "sig_a_dex": fa_e / (fa * ln10), "sig_f_dex": ff_e / (ff * ln10),
+        "nb": nb, "i_fashi": i_f, "i_alfalfa": i_a,
+        "n_alfalfa_code1": int(code1.sum()), "n_alfalfa_only_neighbours": int(a_only.size),
+    }  # fmt: skip
+
+
+def _subset(field: dict, keep: np.ndarray, nb: Neighbours) -> dict:
+    out = {
+        k: (v[keep] if isinstance(v, np.ndarray) and v.shape[:1] == keep.shape else v)
+        for k, v in field.items()
+    }
+    out["nb"] = nb
+    return out
+
+
+def injection_field(field: dict, rng: np.random.Generator, *, strength: float) -> dict:
+    """C1 on real data: split the real ISOLATED targets in half. One half stays as the
+    calibration sample; the other gets one synthetic neighbour each, drawn from the real primary
+    sample's (separation, neighbour/target flux ratio) pairs, and its real measured fluxes are
+    blended per the model at ``strength``. Beta must come back near ``strength``."""
+    masks = sample_masks(len(field["flux_f"]), field["nb"])
+    iso = np.flatnonzero(masks["isolated"])
+    prim = masks["primary"]
+    nb = field["nb"]
+    ring = prim[nb.target] & nb.overlap & (nb.sep_arcmin >= NEIGHBOUR_RMIN_ARCMIN)
+    sep_pool = nb.sep_arcmin[ring]
+    ratio_pool = nb.flux[ring] / field["flux_f"][nb.target[ring]]
+    rng.shuffle(iso)
+    half = iso.size // 2
+    calib, inj = iso[:half], iso[half:]
+    keep = np.concatenate([calib, inj])
+    sub = _subset(field, np.isin(np.arange(len(field["flux_f"])), keep), nb)
+    # re-index: positions of `inj` inside the subset
+    order = np.flatnonzero(np.isin(np.arange(len(field["flux_f"])), keep))
+    pos = np.searchsorted(order, inj)
+    pick = rng.integers(0, sep_pool.size, inj.size)
+    s_c = sub["flux_f"][pos]
+    syn = Neighbours(
+        target=pos, sep_arcmin=sep_pool[pick], dv_kms=np.zeros(inj.size),
+        flux=ratio_pool[pick] * s_c, overlap=np.ones(inj.size, bool),
+    )  # fmt: skip
+    add_a = syn.flux * beam_response(syn.sep_arcmin, ALFA_FWHM_ARCMIN)
+    add_f = syn.flux * beam_response(syn.sep_arcmin, FAST_FWHM_ARCMIN)
+    sub["flux_a"] = sub["flux_a"].copy()
+    sub["flux_f"] = sub["flux_f"].copy()
+    sub["flux_a"][pos] += strength * add_a
+    sub["flux_f"][pos] += strength * add_f
+    sub["nb"] = syn
+    return sub
+
+
+def geometry_power(
+    field: dict,
+    rng: np.random.Generator,
+    *,
+    n_real: int = 20,
+    strength: float = 1.0,
+    n_boot: int = 200,
+) -> dict:
+    """C0 on the real geometry: the real targets, neighbours, neighbour fluxes and flux errors,
+    with SYNTHETIC target fluxes (the geometric-mean flux as truth) blended per the model and
+    re-noised with each survey's own errors. The real flux ratios are never used."""
+    s_true = target_flux_estimate(
+        field["flux_a"], field["flux_f"], field["sig_a_dex"], field["sig_f_dex"], field["nb"],
+        subtract_blend=False,
+    )  # fmt: skip
+    hits, betas = 0, []
+    for _k in range(n_real):
+        sa, sf = blended_fluxes(s_true, field["nb"], strength=strength)
+        sim = dict(field)
+        sim["flux_a"] = sa * 10 ** rng.normal(0, np.nan_to_num(field["sig_a_dex"], nan=0.1))
+        sim["flux_f"] = sf * 10 ** rng.normal(0, np.nan_to_num(field["sig_f_dex"], nan=0.1))
+        b = analyse(sim, rng, n_boot=n_boot)["primary"]
+        betas.append(b.get("beta", np.nan))
+        hits += int((b.get("beta_sigma") or 0) >= 3)
+    return {
+        "n_real": n_real, "strength": strength, "detect_frac": round(hits / n_real, 3),
+        "beta_mean": round(float(np.nanmean(betas)), 4), "beta_std": round(float(np.nanstd(betas, ddof=1)), 4),
+    }  # fmt: skip
+
+
+def run_gated(
+    field: dict,
+    shifted: dict,
+    rng: np.random.Generator,
+    *,
+    n_power: int = 20,
+    n_inj: int = 10,
+    n_boot: int = 1000,
+) -> dict:
+    """The frozen order: C0 power -> C1 planted truth -> C4 match reliability -> (C3 + C2 + beta).
+    A failed gate stops the run and records why; beta is computed only if all gates pass."""
+    out: dict = {"n_targets": len(field["flux_f"]), "gates": {}}
+    c0 = geometry_power(field, rng, n_real=n_power, n_boot=200)
+    c0_null = geometry_power(field, rng, n_real=n_power, strength=0.0, n_boot=200)
+    out["gates"]["C0_power"] = {
+        "planted_1": c0,
+        "planted_0": c0_null,
+        "pass": c0["detect_frac"] >= 0.8,
+    }
+    if not out["gates"]["C0_power"]["pass"]:
+        out["stopped_at"] = "C0: underpowered (detect_frac < 0.8); no real result is quoted"
+        return out
+    inj1 = [
+        analyse(injection_field(field, rng, strength=1.0), rng, n_boot=300)["primary"]
+        for _ in range(n_inj)
+    ]
+    inj0 = [
+        analyse(injection_field(field, rng, strength=0.0), rng, n_boot=300)["primary"]
+        for _ in range(n_inj)
+    ]
+    b1 = np.array([r["beta"] for r in inj1])
+    b0 = np.array([r["beta"] for r in inj0])
+    se0 = np.array([r["beta_se"] for r in inj0])
+    c1_pass = bool(abs(b1.mean() - 1.0) <= 0.3 and abs(b0.mean()) < 2 * np.mean(se0))
+    out["gates"]["C1_planted"] = {
+        "n_inj": n_inj, "beta_planted_1_mean": round(float(b1.mean()), 4), "beta_planted_1_sd": round(float(b1.std(ddof=1)), 4),
+        "beta_planted_0_mean": round(float(b0.mean()), 4), "beta_planted_0_sd": round(float(b0.std(ddof=1)), 4),
+        "pass": c1_pass,
+    }  # fmt: skip
+    if not c1_pass:
+        out["stopped_at"] = "C1: planted truth not recovered (|beta1-1| > 0.3 or beta0 != 0)"
+        return out
+    chance = len(shifted["flux_f"]) / max(len(field["flux_f"]), 1)
+    out["gates"]["C4_match"] = {"n_matched": len(field["flux_f"]), "n_matched_shifted": len(shifted["flux_f"]),
+                               "chance_rate": round(chance, 5), "pass": chance < 0.01}  # fmt: skip
+    if chance >= 0.01:
+        out["stopped_at"] = "C4: chance-match rate >= 1%"
+        return out
+    res = analyse(field, rng, n_boot=n_boot)
+    nul = res["null"]
+    c2_pass = bool(nul.get("beta_se") and abs(nul["beta"]) < 2 * nul["beta_se"])
+    out["gates"]["C2_spectral_null"] = {**nul, "pass": c2_pass}
+    out["C3_calibration_coef"] = res["calibration_coef"]
+    out["samples"] = {k: res[k] for k in ("n_isolated", "n_primary", "n_null")}
+    out["primary"] = res["primary"]
+    b = res["primary"]
+    if not c2_pass:
+        out["outcome"] = "ambiguous: C2 spectral null control is non-zero"
+    elif (b.get("beta_sigma") or 0) >= 3:
+        out["outcome"] = "blending supported: beta > 0 at >= 3 sigma, C1 and C2 pass"
+    else:
+        out["outcome"] = "blending not supported: beta consistent with 0"
+        out["beta_upper_95"] = round(b["beta"] + 1.645 * b["beta_se"], 4)
+    return out
+
+
+def fetch_alfalfa() -> dict:  # pragma: no cover - network
+    """ALFALFA alpha.100 (Haynes et al. 2018; VizieR J/ApJ/861/49/table2), HI centroids."""
+    from .fashienv import _vizier
+
+    v = _vizier(
+        columns=["_RAJ2000", "_DEJ2000", "AGC", "Vhel", "W50", "HIflux", "e_HIflux", "SNR", "HI"]
+    )
+    v.ROW_LIMIT = -1
+    t = v.get_catalogs("J/ApJ/861/49/table2")[0]
+    out = {
+        "ra": np.asarray(t["_RAJ2000"], float), "dec": np.asarray(t["_DEJ2000"], float),
+        "v": np.asarray(t["Vhel"], float), "w50": np.asarray(t["W50"], float),
+        "flux": np.asarray(t["HIflux"], float), "flux_err": np.asarray(t["e_HIflux"], float),
+        "snr": np.asarray(t["SNR"], float), "code": np.asarray(t["HI"], int),
+    }  # fmt: skip
+    ok = np.isfinite(out["flux"]) & (out["flux"] > 0) & (out["flux"] < 999) & (out["flux_err"] > 0)
+    return {k: val[ok] for k, val in out.items()}
