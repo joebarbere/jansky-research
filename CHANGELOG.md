@@ -18,40 +18,10 @@ recommend the next version number.
   the plan's pre-stated rule no blending claim and no limit are made. Three estimator biases were
   found on planted truth and fixed before any real data was opened (logged in
   `survey/hiblend-findings.md`). `fashienv.load_fashi_dr2` now also loads `S_err` and `snr`.
-
-### Added
 - **`plans/97-hiblend-fashi-alfalfa.md`**: a two-beam (FAST 2.9′ vs Arecibo ~3.5′) test of whether
   beam blending carries `fashienv`'s group HI excess, with its prediction, controls (power, planted
   truth, a spectral negative control, a disjoint calibration) and pass criteria frozen before any
   real cross-match. `ideas.md` gains it as lead L8.
-
-### Changed
-- **Three BootLoops protocols ported** (github.com/BootLoops-ai/skills, MIT/CC BY 4.0). CLAUDE.md's
-  slice pattern gains "freeze the controls before the first real run", "an oracle that fed a fit
-  may never certify the result" and "facts read from a source carry a locator"; the
-  `paper-referee` agent gains an audience-enumeration step (from `referee-sim`) and three new
-  historical-failure checks (post-hoc controls, self-certifying checks, locator-less facts).
-- **CLAUDE.md: "done, with one asterisk" is often not done at all.** A fix is finished when the next
-  referee round confirms it; the lesson cites Schwartz's account of Claude-driven research and the
-  three `fashienv` round-6 "fixes" that round 7 overturned.
-
-### Fixed
-- **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
-  Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
-  bursts (1998)" is the Solar convective zone (seven solar papers), "Fast radio bursts (1313)"
-  Quantum cosmology, "Stokes parameters (1583)" Stellar astronomy -- or no number at all. Each
-  is now the nearest real concept (e.g. Solar radio emission 1522, Radio bursts 1339,
-  Polarimetry 1278); two with no UAT equivalent were dropped. `triage_papers.py` gains a
-  `uat-keyword` check against a vendored `scripts/uat_concepts.tsv`, so it cannot recur silently.
-- **`papers/vlasspm/arxiv.yaml` and `papers/fashienv/arxiv.yaml`** pin the curated arXiv
-  categories (vlasspm: astro-ph.SR, cross IM, not the keyword-inferred IM) and page counts, so a
-  `make arxiv` rebuild cannot revert them.
-- **README catches up with fashienv and vlasspm.** Both slice rows and both paper rows carried
-  pre-referee numbers and status (fashienv at round 6; vlasspm quoting 3.45"/yr and a 0.92-5"/yr
-  limit, "not yet refereed"). They now match the merged notes, the RNAAS list counts seven notes,
-  fashienv leaves the arXiv queue, and `vlasspm.py` joins the module listing.
-
-### Added
 - **`vlasspm` note: final referee round (accept with nits) applied.** The all-sky count now
   follows the headline limit, the method says which injections carry parallax, and stale limit
   macros are dropped. Ready for RNAAS.
@@ -96,6 +66,14 @@ recommend the next version number.
   `systemd-run --user`.
 
 ### Changed
+- **Three BootLoops protocols ported** (github.com/BootLoops-ai/skills, MIT/CC BY 4.0). CLAUDE.md's
+  slice pattern gains "freeze the controls before the first real run", "an oracle that fed a fit
+  may never certify the result" and "facts read from a source carry a locator"; the
+  `paper-referee` agent gains an audience-enumeration step (from `referee-sim`) and three new
+  historical-failure checks (post-hoc controls, self-certifying checks, locator-less facts).
+- **CLAUDE.md: "done, with one asterisk" is often not done at all.** A fix is finished when the next
+  referee round confirms it; the lesson cites Schwartz's account of Claude-driven research and the
+  three `fashienv` round-6 "fixes" that round 7 overturned.
 - **`vlasspm`: compactness cut (run 5).** Per-detection DC_Maj/BMAJ; injections carry
   realistic point-source size noise drawn from 303 detections of nearby Gaia (GCNS) stars by
   S/N. Threshold and cross-epoch rule chosen by a criterion stated before the real candidates
@@ -104,7 +82,6 @@ recommend the next version number.
   (keeps 98.4%; 93% in the 0.53-0.92"/yr bin). UV Ceti survives (0.41, 0, 1.46); the 10
   image-vetted static candidates are all removed (11 -> 1); null unchanged; limit < 9.2e-5 per
   deg^2 at 3 mJy (< 9.3e-5 at 1.5 mJy, where the cut costs 1% completeness).
-
 - **`vlasspm`: shape-aware astrometric errors (run 4).** Per-component Condon (1997) error
   ellipses from fitted Maj/Min/PA, beam and peak S/N (identical to the catalogues' quoted
   errors -- which exposed a run 1-3 bug: `E_RA` is already on-sky and was being multiplied by
@@ -163,6 +140,20 @@ recommend the next version number.
   the $170 AWS estimate is superseded.
 
 ### Fixed
+- **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
+  Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
+  bursts (1998)" is the Solar convective zone (seven solar papers), "Fast radio bursts (1313)"
+  Quantum cosmology, "Stokes parameters (1583)" Stellar astronomy -- or no number at all. Each
+  is now the nearest real concept (e.g. Solar radio emission 1522, Radio bursts 1339,
+  Polarimetry 1278); two with no UAT equivalent were dropped. `triage_papers.py` gains a
+  `uat-keyword` check against a vendored `scripts/uat_concepts.tsv`, so it cannot recur silently.
+- **`papers/vlasspm/arxiv.yaml` and `papers/fashienv/arxiv.yaml`** pin the curated arXiv
+  categories (vlasspm: astro-ph.SR, cross IM, not the keyword-inferred IM) and page counts, so a
+  `make arxiv` rebuild cannot revert them.
+- **README catches up with fashienv and vlasspm.** Both slice rows and both paper rows carried
+  pre-referee numbers and status (fashienv at round 6; vlasspm quoting 3.45"/yr and a 0.92-5"/yr
+  limit, "not yet refereed"). They now match the merged notes, the RNAAS list counts seven notes,
+  fashienv leaves the arXiv queue, and `vlasspm.py` joins the module listing.
 - **The archive description stopped repeating two withdrawn claims.** `.zenodo.json` (the text
   Zenodo shows for every version, including v1.12.0) and the JOSS paper still called the `hi`
   curve "flat", which #304 retracted -- the paper says it is far from Keplerian but *not* flat,
@@ -170,6 +161,7 @@ recommend the next version number.
   "with an honest null", withdrawn in #292: it recovers Voyager 1 at S/N ~1000. Both now say
   what the papers say. The JOSS paper's `driftsearch` example of an honest negative (the
   DC-spike artifact) is still true and is kept.
+
 
 ## [1.12.0] - 2026-09-26
 
