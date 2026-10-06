@@ -970,7 +970,7 @@ def load_fashi_dr2(path: str | Path) -> dict:
         "ra": "ra", "dec": "dec", "cz": "v_opt", "z": "z_opt", "w50": "W_50", "flux": "S_sum",
         "dist_mpc": "distance", "log_mhi": "mass", "completeness": "completeness",
         "vmax_mpc3": "Vmax", "rms": "rms", "w20": "W_20", "rms_beam": "rms_beam",
-        "ell_maj": "ell_maj",
+        "ell_maj": "ell_maj", "flux_err": "S_err", "snr": "snr",
     }  # fmt: skip
     vals: dict[str, list[float]] = {k: [] for k in cols}
     with Path(path).open(newline="") as fh:
@@ -982,6 +982,7 @@ def load_fashi_dr2(path: str | Path) -> dict:
                     vals[k].append(np.nan)
     out = {k: np.asarray(v, float) for k, v in vals.items()}
     out["flux"] = out["flux"] / 1000.0  # mJy km/s -> Jy km/s, as for DR1
+    out["flux_err"] = out["flux_err"] / 1000.0
     return out
 
 
