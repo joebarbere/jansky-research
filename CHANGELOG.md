@@ -11,6 +11,15 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- **`hiblend` (plan 97): a two-beam FASHI x ALFALFA test of HI beam blending -- outcome AMBIGUOUS.**
+  22,889 matched galaxies. Power (C0), planted truth on real isolated targets (C1) and match
+  reliability (C4) all pass, but the spectral negative control fails (C2: neighbours that cannot
+  blend give beta_null = 0.26 +/- 0.09), and the primary beta (0.38 +/- 0.14) is no larger, so per
+  the plan's pre-stated rule no blending claim and no limit are made. Three estimator biases were
+  found on planted truth and fixed before any real data was opened (logged in
+  `survey/hiblend-findings.md`). `fashienv.load_fashi_dr2` now also loads `S_err` and `snr`.
+
+### Added
 - **`plans/97-hiblend-fashi-alfalfa.md`**: a two-beam (FAST 2.9′ vs Arecibo ~3.5′) test of whether
   beam blending carries `fashienv`'s group HI excess, with its prediction, controls (power, planted
   truth, a spectral negative control, a disjoint calibration) and pass criteria frozen before any
