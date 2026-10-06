@@ -10,6 +10,12 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- **`plans/97-hiblend-fashi-alfalfa.md`**: a two-beam (FAST 2.9′ vs Arecibo ~3.5′) test of whether
+  beam blending carries `fashienv`'s group HI excess, with its prediction, controls (power, planted
+  truth, a spectral negative control, a disjoint calibration) and pass criteria frozen before any
+  real cross-match. `ideas.md` gains it as lead L8.
+
 ### Changed
 - **Three BootLoops protocols ported** (github.com/BootLoops-ai/skills, MIT/CC BY 4.0). CLAUDE.md's
   slice pattern gains "freeze the controls before the first real run", "an oracle that fed a fit
