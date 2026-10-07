@@ -1,0 +1,88 @@
+{
+  "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
+  "is_real": true,
+  "plan": "plans/97-hiblend-fashi-alfalfa.md (controls frozen 2026-10-05)",
+  "beams_arcmin": {
+    "fast": 2.9,
+    "alfa": 3.5
+  },
+  "match": {
+    "radius_arcmin": 1.5,
+    "dv_kms": 100.0
+  },
+  "n_fashi": 156269,
+  "n_alfalfa": 31500,
+  "n_alfalfa_code1": 25432,
+  "n_alfalfa_only_neighbours": 3801,
+  "seed": 97,
+  "runtime_s": 42.2,
+  "n_targets": 22889,
+  "gates": {
+    "C0_power": {
+      "planted_1": {
+        "n_real": 20,
+        "strength": 1.0,
+        "detect_frac": 1.0,
+        "beta_mean": 1.0037,
+        "beta_std": 0.038
+      },
+      "planted_0": {
+        "n_real": 20,
+        "strength": 0.0,
+        "detect_frac": 0.0,
+        "beta_mean": -0.0074,
+        "beta_std": 0.0143
+      },
+      "pass": true
+    },
+    "C1_planted": {
+      "n_inj": 10,
+      "beta_planted_1_mean": 1.2491,
+      "beta_planted_1_sd": 0.038,
+      "beta_planted_0_mean": -0.0123,
+      "beta_planted_0_sd": 0.0973,
+      "pass": true
+    },
+    "C4_match": {
+      "n_matched": 22889,
+      "n_matched_shifted": 90,
+      "chance_rate": 0.00393,
+      "pass": true
+    },
+    "C2_spectral_null": {
+      "n": 4560,
+      "n_clusters": 3684,
+      "beta": 0.2561,
+      "beta_se": 0.0868,
+      "beta_sigma": 2.95,
+      "intercept": -0.00711,
+      "r_pred_median": 0.0034,
+      "r_pred_max": 0.32147,
+      "pass": false
+    }
+  },
+  "C3_calibration_coef": [
+    1.60817,
+    -1.67997,
+    0.36971,
+    0.18787,
+    -0.37856,
+    -0.06426
+  ],
+  "samples": {
+    "n_isolated": 14375,
+    "n_primary": 2907,
+    "n_null": 4560
+  },
+  "primary": {
+    "n": 2907,
+    "n_clusters": 2330,
+    "beta": 0.3849,
+    "beta_se": 0.1361,
+    "beta_sigma": 2.83,
+    "intercept": -0.01112,
+    "r_pred_median": 0.00208,
+    "r_pred_max": 0.22083
+  },
+  "outcome": "ambiguous: C2 spectral null control is non-zero"
+}

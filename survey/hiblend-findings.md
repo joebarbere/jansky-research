@@ -1,0 +1,135 @@
+# Findings: `hiblend` (plan 97). Does FAST-beam blending inflate HI fluxes?
+
+Plan: `plans/97-hiblend-fashi-alfalfa.md`. The prediction, the five controls (C0–C4) and the
+three outcomes were frozen in the plan on 2026-10-05, before any real cross-match. Every change
+to a frozen value is logged here with its reason, in order.
+
+## Step 1: frozen values verified against the sources (2026-10-05, before any real run)
+
+Each value was read from the paper's own text: arXiv full text, page numbers from `pdftotext`.
+
+| Frozen value | Source and locator | Verdict |
+|---|---|---|
+| FAST FWHM 2.9′ | FASHI DR2 (Zhang et al. 2026, arXiv:2606.31539), p. 4: "half-power beamwidth of 2.′9 at [1420 MHz]" and Table 1 "Beam size (FWHM) 2.′9 at 1420 MHz"; FASHI DR1 (arXiv:2312.06097) Table 1, same | **confirmed** |
+| ALFA FWHM ≈ 3.5′ (3.3′ × 3.8′) | Giovanelli et al. 2005 (AJ 130, 2598; astro-ph/0508301), p. 8: "the beam sizes are 3.3′ along the azimuth direction and 3.8′ along the zenith"; p. 22: "an ALFA beam averaging 3.5′ width at half power" | **confirmed**: 3.5′ is the paper's own average; the ellipse is noted as a first-order simplification |
+| Match radius 1.5′, \|Δv\| ≤ 100 km s⁻¹ | FASHI positional uncertainty ≈ 2.9′ / SNR (FASHI DR2 p. 5, after Koribalski et al. 2004): ≤ 0.6′ at SNR ≥ 5. ALFALFA HI centroids "on average good to only ∼20″ and their accuracy depends on SNR … For low SNR sources, offsets can exceed 1′" (Haynes et al. 2018, arXiv:1805.11499, Col. 3 notes and the matching advice). 1.5′ is ≥ 2.5σ of the combined error at SNR ≥ 5. FASHI DR2's own match used a 3′ × 3′ box with 100 km s⁻¹ (p. 8, §5.2) | **kept unchanged**. The tighter radius is deliberate: targets of interest have neighbours at 1–2′, which a 3′ box would confuse. The chance-match test (C4) checks it |
+
+**The FASHI DR2 paper's own FASHI–ALFALFA comparison** (§5.2, pp. 8–9) cross-matches about
+28,000 common sources. It reports that "Integrated flux densities agree well … for high-SNR
+sources (SNR_FASHI ≳ 30). For faint sources with SNR_FASHI ≲ 20, however, the FASHI flux
+measurements are systematically lower than their ALFALFA counterparts", and attributes this to
+Eddington bias in ALFALFA. It does **not** split the comparison by neighbour separation, so the
+plan's test is not anticipated. **Consequence for the frozen controls (no change needed):** the
+S/N-dependent flux offset is exactly what C3 (the calibration on a disjoint isolated sample, with
+S/N among its covariates) is there to remove. If S/N correlates with environment, C2 (the
+spectral negative control) will show it.
+
+**Recorded detail for the analysis.** Haynes et al. advise matching on optical counterpart (OC)
+positions. This test matches HI to HI, so it uses the ALFALFA HI centroids (`RAJ2000`/`DEJ2000`,
+not `RAO`/`DEO`). Neighbour separations are likewise HI-to-HI.
+
+No frozen value changed in step 1.
+
+## Step 2: three estimator biases found on synthetic data, fixed before any real run (2026-10-05)
+
+The plan states the *model* (R_pred, beta, the samples); this step concerns how its inputs are
+computed. All three changes were found by the planted-truth check on the offline fixture
+(`synthetic_field`, blending planted at the model's own strength, so beta must come back as 1).
+No real data had been opened.
+
+1. **S_c taken from one survey's flux biases beta upward (3.4 for a planted 1).** The target's
+   FAST flux sits in the denominator of the observed ratio *and* sets S_c in R_pred. When FAST
+   measures low, both the ratio and R_pred rise, so the noise itself makes a slope. A
+   noise-free check isolated a second, smaller bias of 1.24 from using an already-blended flux.
+   **Change:** S_c is now the weighted geometric mean of the two surveys' fluxes, with weight
+   w = σ_F² / (σ_A² + σ_F²), chosen so its noise is uncorrelated with the response noise to first
+   order, minus the beam model's own blend contribution (`target_flux_estimate`).
+   Noise-free result: 0.99.
+2. **C3 covariates computed from blended quantities absorb the signal.** Calibrating on the
+   catalogued flux and S/N of the target leaks blending into the correction applied to the
+   primary sample. A first attempt to fix this computed S/N as snr × S_c / S_F, which divided by a
+   measured flux again: beta came out 3.8 even with no blending planted. **Change:** C3 now uses the
+   blend-corrected flux, and an S/N built from the catalogued flux *error* (a noise level, not a
+   noise realization): snr_c = S_c / σ_F.
+
+3. **Subtracting a blend that may not exist biases the null.** With fixes 1–2, the new unit test
+   found beta = −0.32 ± 0.08 (3.8σ) on a field with *no* blending planted. The earlier
+   8-realization mean of −0.19 had hinted at it, and I had read it as scatter. Cause: the C3
+   covariates used the blend-*subtracted* flux, so under the null they shift with R_pred by
+   construction. **Change:** the C3 covariates use the noise-decorrelated geometric-mean flux
+   *without* blend subtraction (`subtract_blend=False`). R_pred keeps the subtraction, which only
+   sets beta's scale if blending is real. If blending is present, the covariates carry some of it
+   and the calibration absorbs a little, which biases beta toward 0 (the conservative direction).
+   C1 measures how much.
+
+**After all three changes** (16 synthetic realizations each, 3,000 targets):
+
+| Scatter (dex) | Planted strength | beta (mean ± sd) | Mean quoted SE | beta_null (C2) |
+|---|---|---|---|---|
+| 0.08 | 1 | 0.992 ± 0.135 | 0.137 | −0.09 ± 0.21 |
+| 0.08 | 0 | −0.014 ± 0.082 (none beyond 3σ) | 0.088 | −0.09 ± 0.21 |
+| 0.15 | 1 | 0.891 ± 0.231 | 0.242 | −0.15 ± 0.40 |
+| 0.15 | 0 | −0.014 ± 0.157 (none beyond 3σ) | 0.161 | −0.15 ± 0.40 |
+
+The estimator is unbiased under the null, and the cluster-bootstrap SE matches the scatter across
+realizations, so the quoted errors are honest. A planted beta of 1 comes back at 0.89–0.99,
+slightly low at higher noise.
+
+**Two implementation clarifications** of the frozen plan, also made before any real run:
+- **Bootstrap units** are connected components of targets linked within 6′, not Tempel groups.
+  Tempel covers only the SDSS footprint, and correlated targets are exactly those within 6′ of
+  each other. This keeps the plan's intent (correlated targets are resampled together).
+- **The beta fit is unweighted OLS.** The plan left the weighting open; unweighted adds no
+  modelling assumption about the two surveys' error bars.
+
+## Step 3: the real run (2026-10-06): AMBIGUOUS, the spectral null control (C2) failed
+
+Run `scripts/hiblend_real.py --out .`, seed 97, 42 s; evidence in `results/hiblend_metrics.json`.
+
+- **Inputs.** 156,269 FASHI DR2 sources and 31,500 ALFALFA α.100 detections (25,432 code 1),
+  giving **22,889 matched targets**. The neighbour catalogue holds every FASHI source plus 3,801
+  ALFALFA-only detections.
+- **Samples.** 14,375 isolated (C3 calibration), 2,907 primary, 4,560 null (C2). The bootstrap
+  resamples 2,330 and 3,684 clusters respectively.
+
+| Gate (frozen order) | Result | Pass |
+|---|---|---|
+| C0 power, real geometry, synthetic fluxes | planted 1: β = 1.004 ± 0.038, detected in 20/20; planted 0: −0.007 ± 0.014, 0/20 | yes |
+| C1 planted truth on real isolated targets | planted 1: β = **1.249** ± 0.038; planted 0: −0.012 ± 0.097 | yes (within the frozen ±0.3) |
+| C4 match reliability | 90 of 22,889 matches survive a 10′ shift: 0.39% chance rate | yes |
+| **C2 spectral null control** | **β_null = 0.256 ± 0.087 (2.95σ)**, against the frozen \|β_null\| < 2σ | **no** |
+| Primary β | 0.385 ± 0.136 (2.83σ) | — |
+
+**Outcome, by the frozen rule: ambiguous.** Neighbours that cannot blend (offset by more than
+600 km s⁻¹) produce a positive slope against the R_pred blending *would* give them, of about the
+same size as the primary sample's. So something tied to having a neighbour, but not to spectral
+blending, moves the ALFALFA/FASHI flux ratio. The primary β (0.38 ± 0.14) is not distinguishable
+from it: the difference is 0.13 ± 0.16. **No blending claim is made, and no limit either**,
+because the null result the "not supported" outcome needs is contaminated by the same systematic.
+
+**Recorded alongside, not changing the outcome:**
+- **C1 recovered 1.25, not 1.0, on real isolated targets.** That is inside the frozen tolerance,
+  and the synthetic fixture and C0 both give 1.00. The excess is specific to real fluxes, so the
+  real calibration and flux distributions differ from the synthetic ones in a way that inflates
+  β. That is a second sign the C3 calibration does not fully describe the real survey-to-survey
+  differences.
+- **The C3 coefficients are large and partly cancelling** (log S/N: −1.68, (log S/N)²: +0.37,
+  log S: −0.38). A strongly S/N-dependent flux scale, as FASHI DR2 §5.2 reports (Eddington bias
+  in ALFALFA at SNR ≲ 20), is being fitted on isolated targets and extrapolated to targets with
+  neighbours.
+
+**What could produce C2.** These are hypotheses for a follow-up, not tested here; per the plan
+they would be post-hoc controls and must be reported as such:
+1. **A residual S/N systematic.** R_pred ∝ S_n/S_c, so a large R_pred picks faint targets beside
+   bright neighbours. If the C3 model leaves any S/N dependence in the ratio, it reappears as a
+   slope against R_pred for *any* neighbour, blendable or not.
+2. **Spatial confusion in the source-finding.** ALFALFA's flux extraction (a box in the cube) or
+   its baselines may pick up a bright neighbour's emission at any velocity, for example through
+   baseline ripple or sidelobes. That would be a non-spectral blending the C2 design assumes away.
+3. **Real environment structure.** Targets with neighbours sit in denser regions, where one survey
+   may have systematically different noise or RFI flagging.
+
+Each predicts something different: (1) C2 depends on S_c and vanishes when the primary and null
+samples are matched in target S/N; (2) it depends on the neighbour's brightness, not the
+target's; (3) it depends on local density, not on any single neighbour. Running them would be a
+new, post-hoc test set, and the plan requires it to be labelled that way.
