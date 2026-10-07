@@ -133,3 +133,34 @@ Each predicts something different: (1) C2 depends on S_c and vanishes when the p
 samples are matched in target S/N; (2) it depends on the neighbour's brightness, not the
 target's; (3) it depends on local density, not on any single neighbour. Running them would be a
 new, post-hoc test set, and the plan requires it to be labelled that way.
+
+## Step 4: post-hoc diagnostics of the C2 failure: predictions stated before running (2026-10-06)
+
+**These are post-hoc.** They were designed after C2 failed, to locate its cause, and cannot
+change step 3's outcome. Per CLAUDE.md (*freeze the controls before the first real run*), each
+diagnostic's distinguishing prediction is written here **before** it is run.
+
+All diagnostics use the step-3 samples and the same C3 calibration. "Residual" means the
+calibrated log ratio, as in β.
+
+- **D0. Out-of-sample calibration check.** Fit C3 on a random half of the isolated sample and
+  look at the other half's residual against target S/N (5 bins).
+  *If C3 is adequate:* every bin's median residual is within 2σ of 0.
+  *If a residual S/N trend remains:* the faint bins deviate. Hypothesis (1) needs this.
+- **D1. S/N-matched null.** Reweight the null sample to the primary sample's target-S/N
+  distribution (10 bins) and refit β_null. Also fit β_null within S/N terciles.
+  *(1) predicts* β_null shrinks toward 0 in matched or high-S/N subsets and is largest at low S/N.
+  *(2)/(3) predict* it persists at every S/N.
+- **D2. Which flux drives it.** On the null sample, regress the residual on R_pred plus
+  log S_c (target flux) and log S_n,max (the brightest neighbour's flux).
+  *(1) predicts* log S_c carries the effect, with a negative coefficient and the R_pred slope
+  falling.
+  *(2) predicts* log S_n,max carries it (positive), independent of S_c.
+- **D3. Local density.** Count every catalogued HI source within 15′ (any velocity) of each
+  target. Regress the null residual on R_pred plus log(1 + N_15).
+  *(3) predicts* density carries the effect and the R_pred slope vanishes. Also checked in the
+  isolated sample, which contains no neighbours within 6′ but varies in 15′ density: *(3)
+  predicts* a density trend there too, while *(1)/(2)* predict none.
+
+A diagnostic that matches none of its predictions is reported as such. None of these can turn
+step 3 into a blending claim.
