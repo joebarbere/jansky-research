@@ -187,3 +187,36 @@ def test_run_gated_follows_the_frozen_order():
                                     small["flux_f"], self_index=np.arange(60))  # fmt: skip
     stop = h.run_gated(small, s, np.random.default_rng(6), n_power=3, n_inj=2, n_boot=50)
     assert stop["stopped_at"].startswith("C0") and "primary" not in stop
+
+
+def test_fit_ols_recovers_coefficients_and_honours_weights():
+    rng = np.random.default_rng(8)
+    x = rng.normal(size=(3000, 2))
+    y = 0.1 + 0.5 * x[:, 0] - 0.3 * x[:, 1] + rng.normal(0, 0.05, 3000)
+    out = h.fit_ols(y, x, np.arange(3000), rng, n_boot=100)
+    assert np.allclose(out["coef"], [0.1, 0.5, -0.3], atol=0.01) and all(s > 0 for s in out["se"])
+    # zero weights drop rows: fitting only the first half must match an unweighted half-fit
+    w = (np.arange(3000) < 1500).astype(float)
+    half = h.fit_ols(y[:1500], x[:1500], np.arange(1500), rng, n_boot=20)
+    assert np.allclose(
+        h.fit_ols(y, x, np.arange(3000), rng, weights=w, n_boot=20)["coef"], half["coef"]
+    )
+    assert h.fit_ols(y[:3], x[:3], np.arange(3), rng) == {"n": 3}
+
+
+def test_diagnostics_run_and_report_every_block():
+    fashi, alfalfa = _two_survey_sky(3000, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    out = h.diagnostics(
+        f, np.random.default_rng(9), n_cat_ra=f["n_cat_ra"], n_cat_dec=f["n_cat_dec"], n_boot=50
+    )
+    assert len(out["D0_heldout_isolated_by_snr"]) == 5
+    assert len(out["D1_null_by_snr_tercile"]) == 3 and "coef" in out["D1_null_snr_matched"]
+    assert (
+        out["D2_null_terms"]["terms"][3] == "log S_n,max" and len(out["D2_null_terms"]["coef"]) == 4
+    )
+    assert len(out["D3_null_density"]["coef"]) == 3 and len(out["D3_isolated_density"]["coef"]) == 2
+    # no blending and no systematic planted: the held-out calibration residual is flat in S/N
+    assert all(
+        abs(b["sigma"]) < 3 for b in out["D0_heldout_isolated_by_snr"] if b["sigma"] is not None
+    )

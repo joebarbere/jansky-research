@@ -1,0 +1,183 @@
+{
+  "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
+  "is_real": true,
+  "post_hoc": true,
+  "predictions_commit": "d35a374",
+  "seed": 97,
+  "runtime_s": 11.2,
+  "D0_heldout_isolated_by_snr": [
+    {
+      "lo": 1.484,
+      "hi": 2.044,
+      "n": 1438,
+      "median": -0.00085,
+      "se": 0.00521,
+      "sigma": -0.16
+    },
+    {
+      "lo": 2.044,
+      "hi": 2.174,
+      "n": 1437,
+      "median": -0.02538,
+      "se": 0.00395,
+      "sigma": -6.43
+    },
+    {
+      "lo": 2.174,
+      "hi": 2.299,
+      "n": 1438,
+      "median": -0.01954,
+      "se": 0.00391,
+      "sigma": -4.99
+    },
+    {
+      "lo": 2.299,
+      "hi": 2.474,
+      "n": 1437,
+      "median": -0.00123,
+      "se": 0.00353,
+      "sigma": -0.35
+    },
+    {
+      "lo": 2.474,
+      "hi": 4.412,
+      "n": 1438,
+      "median": 0.039,
+      "se": 0.00437,
+      "sigma": 8.93
+    }
+  ],
+  "D1_null_snr_matched": {
+    "n": 4560,
+    "coef": [
+      -0.00285,
+      0.11718
+    ],
+    "se": [
+      0.00226,
+      0.08461
+    ],
+    "sigma": [
+      -1.26,
+      1.38
+    ]
+  },
+  "D1_null_by_snr_tercile": [
+    {
+      "log_snr": [
+        1.502,
+        2.151
+      ],
+      "n": 1520,
+      "n_clusters": 1365,
+      "beta": 0.3801,
+      "beta_se": 0.116,
+      "beta_sigma": 3.28,
+      "intercept": -0.00492,
+      "r_pred_median": 0.00801,
+      "r_pred_max": 0.32147
+    },
+    {
+      "log_snr": [
+        2.151,
+        2.366
+      ],
+      "n": 1520,
+      "n_clusters": 1421,
+      "beta": 0.2455,
+      "beta_se": 0.1358,
+      "beta_sigma": 1.81,
+      "intercept": -0.0298,
+      "r_pred_median": 0.00362,
+      "r_pred_max": 0.27109
+    },
+    {
+      "log_snr": [
+        2.366,
+        4.056
+      ],
+      "n": 1520,
+      "n_clusters": 1417,
+      "beta": -0.0304,
+      "beta_se": 0.2033,
+      "beta_sigma": -0.15,
+      "intercept": 0.01278,
+      "r_pred_median": 0.00132,
+      "r_pred_max": 0.23602
+    }
+  ],
+  "D2_null_terms": {
+    "terms": [
+      "const",
+      "R_null",
+      "log S_c",
+      "log S_n,max"
+    ],
+    "n": 4560,
+    "coef": [
+      -0.00379,
+      0.17436,
+      -0.00805,
+      0.00671
+    ],
+    "se": [
+      0.0031,
+      0.09513,
+      0.0076,
+      0.00523
+    ],
+    "sigma": [
+      -1.22,
+      1.83,
+      -1.06,
+      1.28
+    ]
+  },
+  "D3_null_density": {
+    "terms": [
+      "const",
+      "R_null",
+      "log(1+N15)"
+    ],
+    "n": 4560,
+    "coef": [
+      -0.00622,
+      0.25691,
+      -0.00136
+    ],
+    "se": [
+      0.00676,
+      0.08077,
+      0.00933
+    ],
+    "sigma": [
+      -0.92,
+      3.18,
+      -0.15
+    ]
+  },
+  "D3_isolated_density": {
+    "terms": [
+      "const",
+      "log(1+N15)"
+    ],
+    "n": 14375,
+    "coef": [
+      0.0052,
+      -0.01281
+    ],
+    "se": [
+      0.002,
+      0.00392
+    ],
+    "sigma": [
+      2.6,
+      -3.27
+    ]
+  },
+  "N15_median": {
+    "isolated": 2.0,
+    "null": 4.0,
+    "primary": 4.0
+  }
+}

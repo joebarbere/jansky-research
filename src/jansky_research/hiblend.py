@@ -395,9 +395,8 @@ def synthetic_field(
     }  # fmt: skip
 
 
-def analyse(field: dict, rng: np.random.Generator, *, n_boot: int = 500) -> dict:
-    """The full frozen analysis on a matched catalogue: C3 calibration on isolated targets,
-    beta on the primary sample, beta_null on the C2 sample."""
+def _prepare(field: dict) -> dict:
+    """Everything step 3 computes before fitting: samples, C3 calibration, residuals, R_pred."""
     nb: Neighbours = field["nb"]
     n = len(field["flux_f"])
     masks = sample_masks(n, nb)
@@ -415,24 +414,146 @@ def analyse(field: dict, rng: np.random.Generator, *, n_boot: int = 500) -> dict
         field["flux_a"], field["flux_f"], field["sig_a_dex"], field["sig_f_dex"], nb,
         subtract_blend=False,
     )  # fmt: skip
+    snr_g = s_g / field["flux_err_f"]
     design = calibration_design(
-        np.log10(s_g / field["flux_err_f"]), np.log10(field["w50"]), np.log10(s_g), field["dec"]
+        np.log10(snr_g), np.log10(field["w50"]), np.log10(s_g), field["dec"]
     )
     coef = fit_calibration(y[masks["isolated"]], design[masks["isolated"]])
-    resid = y - design @ coef
-    clusters = target_clusters(field["ra"], field["dec"])
-    r_pred = predicted_log_ratio(s_c, nb)
-    r_null = predicted_log_ratio(s_c, nb, use=null_pairs(nb), force_overlap=True)
-    p, q = masks["primary"], masks["null"]
     return {
-        "n_targets": n,
-        "n_isolated": int(masks["isolated"].sum()),
+        "n": n, "masks": masks, "y": y, "s_c": s_c, "s_g": s_g, "snr_g": snr_g,
+        "design": design, "coef": coef, "resid": y - design @ coef,
+        "clusters": target_clusters(field["ra"], field["dec"]),
+        "r_pred": predicted_log_ratio(s_c, nb),
+        "r_null": predicted_log_ratio(s_c, nb, use=null_pairs(nb), force_overlap=True),
+    }  # fmt: skip
+
+
+def analyse(field: dict, rng: np.random.Generator, *, n_boot: int = 500) -> dict:
+    """The full frozen analysis on a matched catalogue: C3 calibration on isolated targets,
+    beta on the primary sample, beta_null on the C2 sample."""
+    d = _prepare(field)
+    p, q = d["masks"]["primary"], d["masks"]["null"]
+    return {
+        "n_targets": d["n"],
+        "n_isolated": int(d["masks"]["isolated"].sum()),
         "n_primary": int(p.sum()),
         "n_null": int(q.sum()),
-        "calibration_coef": [round(float(c), 5) for c in coef],
-        "primary": fit_beta(resid[p], r_pred[p], clusters[p], rng, n_boot=n_boot),
-        "null": fit_beta(resid[q], r_null[q], clusters[q], rng, n_boot=n_boot),
+        "calibration_coef": [round(float(c), 5) for c in d["coef"]],
+        "primary": fit_beta(d["resid"][p], d["r_pred"][p], d["clusters"][p], rng, n_boot=n_boot),
+        "null": fit_beta(d["resid"][q], d["r_null"][q], d["clusters"][q], rng, n_boot=n_boot),
     }
+
+
+def fit_ols(
+    y: np.ndarray, x: np.ndarray, clusters: np.ndarray, rng: np.random.Generator, *,
+    weights: np.ndarray | None = None, n_boot: int = 500,
+) -> dict:  # fmt: skip
+    """(Weighted) least squares of y on [1, x...] with cluster-bootstrap standard errors."""
+    x = np.column_stack([np.ones(len(y)), np.asarray(x, float).reshape(len(y), -1)])
+    w = np.ones(len(y)) if weights is None else np.asarray(weights, float)
+    ok = np.isfinite(y) & np.all(np.isfinite(x), axis=1) & (w > 0)
+    y, x, w, cl = np.asarray(y, float)[ok], x[ok], w[ok], np.asarray(clusters)[ok]
+    if y.size <= x.shape[1] + 2:
+        return {"n": int(y.size)}
+
+    def solve(idx):
+        sw = np.sqrt(w[idx])
+        coef, *_ = np.linalg.lstsq(x[idx] * sw[:, None], y[idx] * sw, rcond=None)
+        return coef
+
+    c0 = solve(np.arange(y.size))
+    labels, inv = np.unique(cl, return_inverse=True)
+    members = [np.flatnonzero(inv == k) for k in range(labels.size)]
+    boots = np.array([
+        solve(np.concatenate([members[k] for k in rng.integers(0, labels.size, labels.size)]))
+        for _ in range(n_boot)
+    ])  # fmt: skip
+    se = boots.std(axis=0, ddof=1)
+    return {
+        "n": int(y.size),
+        "coef": [round(float(v), 5) for v in c0],
+        "se": [round(float(v), 5) for v in se],
+        "sigma": [round(float(v / s), 2) if s > 0 else None for v, s in zip(c0, se, strict=True)],
+    }
+
+
+def _binned_median(v: np.ndarray, key: np.ndarray, n_bins: int) -> list[dict]:
+    edges = np.nanquantile(key, np.linspace(0, 1, n_bins + 1))
+    out = []
+    for lo, hi in zip(edges[:-1], edges[1:], strict=True):
+        s = (key >= lo) & (key <= hi) & np.isfinite(v)
+        vv = v[s]
+        se = 1.2533 * vv.std(ddof=1) / np.sqrt(vv.size) if vv.size > 1 else np.nan
+        out.append({"lo": round(float(lo), 3), "hi": round(float(hi), 3), "n": int(vv.size),
+                    "median": round(float(np.median(vv)), 5) if vv.size else None,
+                    "se": round(float(se), 5), "sigma": round(float(np.median(vv) / se), 2) if vv.size > 1 and se > 0 else None})  # fmt: skip
+    return out
+
+
+def diagnostics(
+    field: dict,
+    rng: np.random.Generator,
+    *,
+    n_cat_ra: np.ndarray,
+    n_cat_dec: np.ndarray,
+    n_boot: int = 500,
+) -> dict:
+    """Post-hoc D0-D3 of the C2 failure (survey/hiblend-findings.md step 4)."""
+    from scipy.spatial import cKDTree
+
+    d = _prepare(field)
+    m, resid, cl = d["masks"], d["resid"], d["clusters"]
+    iso, q, p = np.flatnonzero(m["isolated"]), m["null"], m["primary"]
+    log_snr = np.log10(d["snr_g"])
+    out: dict = {}
+    # D0: calibrate on half the isolated sample, inspect the other half by S/N
+    perm = rng.permutation(iso)
+    a, b = perm[: perm.size // 2], perm[perm.size // 2 :]
+    coef_a = fit_calibration(d["y"][a], d["design"][a])
+    res_b = d["y"][b] - d["design"][b] @ coef_a
+    out["D0_heldout_isolated_by_snr"] = _binned_median(res_b, log_snr[b], 5)
+    # D1: null reweighted to the primary S/N distribution; and by null S/N tercile
+    edges = np.nanquantile(log_snr[p], np.linspace(0, 1, 11))
+    hp = np.histogram(log_snr[p], edges)[0] / p.sum()
+    hq = np.histogram(log_snr[q], edges)[0] / max(q.sum(), 1)
+    k = np.clip(np.digitize(log_snr, edges) - 1, 0, 9)
+    wq = np.where(hq[k] > 0, hp[k] / np.where(hq[k] > 0, hq[k], 1), 0.0)
+    out["D1_null_snr_matched"] = fit_ols(
+        resid[q], d["r_null"][q], cl[q], rng, weights=wq[q], n_boot=n_boot
+    )
+    terc = np.nanquantile(log_snr[q], [0, 1 / 3, 2 / 3, 1])
+    out["D1_null_by_snr_tercile"] = []
+    for lo, hi in zip(terc[:-1], terc[1:], strict=True):
+        s = q & (log_snr >= lo) & (log_snr <= hi)
+        out["D1_null_by_snr_tercile"].append({"log_snr": [round(float(lo), 3), round(float(hi), 3)],
+                                              **fit_beta(resid[s], d["r_null"][s], cl[s], rng, n_boot=n_boot)})  # fmt: skip
+    # D2: target flux vs brightest null-neighbour flux
+    nb = field["nb"]
+    npairs = null_pairs(nb)
+    snmax = np.full(d["n"], np.nan)
+    np.fmax.at(snmax, nb.target[npairs], nb.flux[npairs])
+    x2 = np.column_stack([d["r_null"], np.log10(d["s_c"]), np.log10(snmax)])
+    out["D2_null_terms"] = {"terms": ["const", "R_null", "log S_c", "log S_n,max"],
+                            **fit_ols(resid[q], x2[q], cl[q], rng, n_boot=n_boot)}  # fmt: skip
+    # D3: local density within 15' of every catalogued HI source
+    tree = cKDTree(_unit(n_cat_ra, n_cat_dec))
+    n15 = (
+        np.array(
+            [
+                len(h)
+                for h in tree.query_ball_point(_unit(field["ra"], field["dec"]), r=_chord(15.0))
+            ]
+        )
+        - 1
+    )
+    ld = np.log10(1.0 + np.clip(n15, 0, None))
+    out["D3_null_density"] = {"terms": ["const", "R_null", "log(1+N15)"],
+                              **fit_ols(resid[q], np.column_stack([d["r_null"], ld])[q], cl[q], rng, n_boot=n_boot)}  # fmt: skip
+    out["D3_isolated_density"] = {"terms": ["const", "log(1+N15)"],
+                                  **fit_ols(resid[iso], ld[iso], cl[iso], rng, n_boot=n_boot)}  # fmt: skip
+    out["N15_median"] = {"isolated": float(np.median(n15[iso])), "null": float(np.median(n15[q])),
+                         "primary": float(np.median(n15[p]))}  # fmt: skip
+    return out
 
 
 def power(
@@ -505,6 +626,7 @@ def build_field(fashi: dict, alfalfa: dict, *, shift_dec_arcmin: float = 0.0) ->
         "sig_a_dex": fa_e / (fa * ln10), "sig_f_dex": ff_e / (ff * ln10),
         "nb": nb, "i_fashi": i_f, "i_alfalfa": i_a,
         "n_alfalfa_code1": int(code1.sum()), "n_alfalfa_only_neighbours": int(a_only.size),
+        "n_cat_ra": n_ra, "n_cat_dec": n_dec,
     }  # fmt: skip
 
 

@@ -133,3 +133,88 @@ Each predicts something different: (1) C2 depends on S_c and vanishes when the p
 samples are matched in target S/N; (2) it depends on the neighbour's brightness, not the
 target's; (3) it depends on local density, not on any single neighbour. Running them would be a
 new, post-hoc test set, and the plan requires it to be labelled that way.
+
+## Step 4: post-hoc diagnostics of the C2 failure: predictions stated before running (2026-10-06)
+
+**These are post-hoc.** They were designed after C2 failed, to locate its cause, and cannot
+change step 3's outcome. Per CLAUDE.md (*freeze the controls before the first real run*), each
+diagnostic's distinguishing prediction is written here **before** it is run.
+
+All diagnostics use the step-3 samples and the same C3 calibration. "Residual" means the
+calibrated log ratio, as in β.
+
+- **D0. Out-of-sample calibration check.** Fit C3 on a random half of the isolated sample and
+  look at the other half's residual against target S/N (5 bins).
+  *If C3 is adequate:* every bin's median residual is within 2σ of 0.
+  *If a residual S/N trend remains:* the faint bins deviate. Hypothesis (1) needs this.
+- **D1. S/N-matched null.** Reweight the null sample to the primary sample's target-S/N
+  distribution (10 bins) and refit β_null. Also fit β_null within S/N terciles.
+  *(1) predicts* β_null shrinks toward 0 in matched or high-S/N subsets and is largest at low S/N.
+  *(2)/(3) predict* it persists at every S/N.
+- **D2. Which flux drives it.** On the null sample, regress the residual on R_pred plus
+  log S_c (target flux) and log S_n,max (the brightest neighbour's flux).
+  *(1) predicts* log S_c carries the effect, with a negative coefficient and the R_pred slope
+  falling.
+  *(2) predicts* log S_n,max carries it (positive), independent of S_c.
+- **D3. Local density.** Count every catalogued HI source within 15′ (any velocity) of each
+  target. Regress the null residual on R_pred plus log(1 + N_15).
+  *(3) predicts* density carries the effect and the R_pred slope vanishes. Also checked in the
+  isolated sample, which contains no neighbours within 6′ but varies in 15′ density: *(3)
+  predicts* a density trend there too, while *(1)/(2)* predict none.
+
+A diagnostic that matches none of its predictions is reported as such. None of these can turn
+step 3 into a blending claim.
+
+### Step 4 results (run 2026-10-06; `results/hiblend_diagnostics.json`, seed 97)
+
+Judged against the predictions above, which were committed in `d35a374` before this ran.
+
+**D0. Held-out calibration: inadequate, but not where (1) said.** Median residual of the
+held-out isolated half by target S/N quintile (log S/N bin edges 1.48 / 2.04 / 2.17 / 2.30 /
+2.47 / 4.41):
+
+| quintile | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| median (dex) | −0.001 | −0.025 | −0.020 | −0.001 | **+0.039** |
+| σ | −0.2 | −6.4 | −5.0 | −0.4 | **+8.9** |
+
+C3 does not describe isolated targets it was not fitted on. The misfit reaches 0.039 dex, about
+the size of the largest effect the test is looking for (≈0.045 dex per equal-flux neighbour). The
+prediction said the *faint* bins would deviate; the faintest bin is in fact fine, and the worst
+bin is the brightest, so the shape is not the one hypothesis (1) predicted.
+
+**D1. S/N-matched null: the null slope goes away, as (1) predicted.** Reweighted to the primary
+sample's S/N distribution, β_null = 0.117 ± 0.085 (1.4σ), against 0.256 ± 0.087 unmatched. By
+null-sample S/N tercile: 0.380 ± 0.116 (3.3σ), 0.246 ± 0.136 (1.8σ), −0.030 ± 0.203 (−0.2σ),
+low to high. Two limits: the lowest and highest terciles differ by only 1.8σ, and the
+high-S/N tercile has the least lever arm (median R_null 0.0013 against 0.0080), so part of its
+"vanishing" is lost power.
+
+**D2. Which flux drives it: inconclusive.** With log S_c and log S_n,max added, the R_null slope
+falls to 0.174 ± 0.095 (1.8σ). Both added coefficients have the signs their hypotheses predicted
+(S_c −0.008 ± 0.008, S_n,max +0.007 ± 0.005), but neither is significant (−1.1σ, +1.3σ). The
+three terms are collinear (R_null is close to a function of S_n/S_c), and this fit cannot
+separate them.
+
+**D3. Local density: rejected as the carrier.** In the null sample the density term is
+−0.001 ± 0.009 and the R_null slope is unchanged (0.257 ± 0.081, 3.2σ). Hypothesis (3) predicted
+the opposite on both counts. The isolated sample does show a density trend, −0.013 ± 0.004 per
+unit log(1+N₁₅) (−3.3σ), which (3) predicted and (1)/(2) did not. But it has the wrong sign to
+produce a positive β_null (a denser field gives a *lower* ALFALFA/FASHI ratio). It is a second,
+small, environment-linked systematic, not the one that failed C2. (Median N₁₅: 2 isolated, 4
+null, 4 primary.)
+
+**What this supports.** The best-supported reading is hypothesis (1): the survey-to-survey flux
+scale has S/N structure that C3's quadratic calibration does not capture (D0), and the null slope
+disappears when the null sample is matched in S/N to the primary sample (D1). This is weaker
+than it sounds. D0's misfit is not in the predicted place, D1's tercile contrast is 1.8σ, and D2
+cannot separate the terms. Hypothesis (3) is rejected for the null slope. Hypothesis (2) is
+neither supported nor excluded.
+
+**What this does not do.** It does not rescue step 3. The calibration misfit (D0) is as large as
+the signal, so a primary β measured with the frozen calibration is not interpretable at the
+precision the test needs, whatever C2 had shown. Re-measuring the primary β with an S/N-matched
+or re-calibrated sample would be a new analysis chosen after seeing these data. The honest
+route is a new frozen protocol: a more flexible calibration (for example a spline in S/N) fixed
+in advance and required to pass D0 on held-out isolated targets *before* C2 and β are rerun.
+That is a decision for a follow-up plan, not something to do here.
