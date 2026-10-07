@@ -11,6 +11,7 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `hiblend` post-hoc diagnostics D0-D3 of the C2 failure (`scripts/hiblend_diagnostics.py`, `results/hiblend_diagnostics.json`): the C3 calibration misfits held-out isolated targets by up to 0.039 dex in S/N, the null slope vanishes when S/N-matched to the primary sample (0.12 +/- 0.09), and local density is rejected as its carrier; predictions committed before the run, and the frozen outcome stays ambiguous.
 - **`hiblend` (plan 97): a two-beam FASHI x ALFALFA test of HI beam blending -- outcome AMBIGUOUS.**
   22,889 matched galaxies. Power (C0), planted truth on real isolated targets (C1) and match
   reliability (C4) all pass, but the spectral negative control fails (C2: neighbours that cannot
