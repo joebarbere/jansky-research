@@ -1,7 +1,7 @@
 {
   "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
   "is_real": true,
-  "plan": "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, 650a15c)",
+  "plan": "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, c8735cc)",
   "beams_arcmin": {
     "fast": 2.9,
     "alfa": 3.5

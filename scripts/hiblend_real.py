@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - network
         "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
         "is_real": True,
         "plan": (
-            "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, 650a15c)"
+            "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, c8735cc)"
             if args.v2
             else "plans/97-hiblend-fashi-alfalfa.md (controls frozen 2026-10-05)"
         ),

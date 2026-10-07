@@ -221,7 +221,7 @@ That is a decision for a follow-up plan, not something to do here.
 
 ## Step 5: plan 98, a recalibrated second attempt — stopped at C3′ (2026-10-06)
 
-Plan 98 (`plans/98-hiblend-recalibrated.md`, frozen at `650a15c`; code committed at `50d79e5`
+Plan 98 (`plans/98-hiblend-recalibrated.md`, frozen at `c8735cc`; code committed at `8657711`
 before the run) replaced the quadratic S/N term with a linear spline (knots at the calibration
 sample's log-S/N deciles), added log(1 + N₁₅), and put a new gate in front of everything. C3′
 fits on isolated targets in even 2° RA strips, tests on odd strips, then the reverse. **Both
