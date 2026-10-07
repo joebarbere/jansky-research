@@ -218,3 +218,52 @@ or re-calibrated sample would be a new analysis chosen after seeing these data. 
 route is a new frozen protocol: a more flexible calibration (for example a spline in S/N) fixed
 in advance and required to pass D0 on held-out isolated targets *before* C2 and β are rerun.
 That is a decision for a follow-up plan, not something to do here.
+
+## Step 5: plan 98, a recalibrated second attempt — stopped at C3′ (2026-10-06)
+
+Plan 98 (`plans/98-hiblend-recalibrated.md`, frozen at `650a15c`; code committed at `50d79e5`
+before the run) replaced the quadratic S/N term with a linear spline (knots at the calibration
+sample's log-S/N deciles), added log(1 + N₁₅), and put a new gate in front of everything. C3′
+fits on isolated targets in even 2° RA strips, tests on odd strips, then the reverse. **Both
+directions** must have every held-out S/N-decile median |Δ| < 0.010 dex and χ² p > 0.01. Seed 98;
+`results/hiblend_v2_metrics.json`.
+
+**Result: C3′ fails in both directions; the run stopped and no β is quoted.**
+
+| | plan-97 form | plan-98 form |
+|---|---|---|
+| max \|held-out decile median\| (even→odd, odd→even), dex | 0.054, 0.052 | **0.015, 0.027** |
+| χ² p (10 dof) | 0.0, 0.0 | **0.006, 0.001** |
+
+The spline removes most of the misfit, and the middle eight deciles now sit within about 2σ of 0.
+What remains is at the two ends of the S/N range, with the same signs in both directions:
+- lowest decile: −0.015 (−2.7σ) and −0.027 (−3.5σ);
+- highest decile: +0.009 (+2.5σ) and +0.015 (+3.5σ).
+
+Those residuals are a third to a half of the ≈0.045 dex equal-flux blending signal, and at low S/N
+they sit exactly where plan 97's null slope was concentrated (D1, lowest tercile).
+
+**The frozen outcome applies: the survey-to-survey flux scale cannot be calibrated, with these
+covariates and from isolated targets, to the precision this test needs.** Calibration is the
+limiting systematic of the two-beam FASHI × ALFALFA blending test. This is the plan's
+pre-stated negative and is reported as such. It also closes plan 97's question: its C2 failure
+is at least partly a calibration failure, and a calibration good enough to separate the two
+explanations has not been demonstrated.
+
+**One more finding, from writing the tests (synthetic data only).** On the small synthetic sky
+used in the unit tests, injected blends pushed 16–24% of C1's injected targets beyond the S/N
+range of the calibration sample. There, both forms recovered a planted β = 1 erratically
+(plan 97's form: −0.07 to 1.24; v2: −0.70 to 1.33). A linear spline extrapolates its last
+segment, and a quadratic its curvature. On real data plan 97's C1 passed tightly (1.249 ± 0.038),
+and plan 98 never reached C1. Any later attempt should still check, before running, what
+fraction of injected targets lands outside the calibration range.
+
+**Not done, deliberately.** Each further calibration form tried after this result would be
+another fork chosen with C3′'s answer in hand. Two candidates are left as ideas, not runs:
+- a per-region calibration (the misfit transfers poorly across RA strips, which a flux scale that
+  varies by FASHI cube or ALFALFA drift strip would produce; untested);
+- restricting the test to the middle S/N deciles, where C3′ is satisfied (this changes the
+  estimand and the power, and needs C0 rerun).
+
+Either would need its own frozen plan, written knowing that two calibration attempts have
+already failed on these targets.
