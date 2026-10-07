@@ -271,6 +271,45 @@ def calibration_design(
     return np.column_stack(x)
 
 
+def calibration_design_v2(
+    log_snr: np.ndarray,
+    log_w50: np.ndarray,
+    log_flux: np.ndarray,
+    dec: np.ndarray,
+    log_n15: np.ndarray,
+    knots: np.ndarray,
+) -> np.ndarray:
+    """Plan 98 C3 covariates: a linear spline in log S/N (hinges at ``knots``, the calibration
+    sample's log-S/N deciles) replaces plan 97's quadratic, plus log(1 + N15) (D3)."""
+    hinges = [np.clip(log_snr - k, 0, None) for k in np.asarray(knots, float)]
+    x = [np.ones(len(log_snr)), log_snr, *hinges, log_w50, log_flux, np.asarray(dec, float) / 90.0,
+         np.asarray(log_n15, float)]  # fmt: skip
+    return np.column_stack(x)
+
+
+def snr_knots(log_snr: np.ndarray) -> np.ndarray:
+    """Plan 98's frozen knots: the 10th..90th percentiles of log S/N in the calibration sample."""
+    return np.nanquantile(log_snr, np.linspace(0.1, 0.9, 9))
+
+
+def local_density(
+    ra: np.ndarray,
+    dec: np.ndarray,
+    cat_ra: np.ndarray,
+    cat_dec: np.ndarray,
+    *,
+    radius: float = 15.0,
+) -> np.ndarray:
+    """log10(1 + N), N = catalogued HI sources within ``radius`` arcmin, excluding the target
+    itself (D3; a plan-98 calibration covariate)."""
+    from scipy.spatial import cKDTree
+
+    tree = cKDTree(_unit(cat_ra, cat_dec))
+    hits = tree.query_ball_point(_unit(ra, dec), r=_chord(radius))
+    n = np.array([len(h) for h in hits]) - 1
+    return np.log10(1.0 + np.clip(n, 0, None))
+
+
 def fit_calibration(y: np.ndarray, design: np.ndarray) -> np.ndarray:
     """Least-squares coefficients of the log flux ratio on the C3 covariates."""
     ok = np.all(np.isfinite(design), axis=1) & np.isfinite(y)
@@ -358,6 +397,7 @@ def synthetic_field(
     strength: float = 1.0,
     scatter_dex: float = 0.08,
     seed: int = 0,
+    snr_hinge_dex: float = 0.0,
 ) -> dict:
     """Offline fixture: targets, some with an HI-detected neighbour at 0.5-6', two surveys that
     blend per the beam model scaled by ``strength``, a flux-scale term that depends on S/N (the
@@ -385,6 +425,9 @@ def synthetic_field(
     sa, sf = blended_fluxes(flux, nb, strength=strength)
     snr = 5 + 60 * (flux / flux.max())
     offset = 0.05 * np.exp(-(snr - 5) / 8)  # ALFALFA high at low S/N
+    # optional plan-98 plant: a hinge at the top S/N quintile, the shape D0 found on real data
+    ls = np.log10(snr)
+    offset = offset + snr_hinge_dex * np.clip(ls - np.quantile(ls, 0.8), 0, None) / np.ptp(ls)
     obs_a = sa * 10 ** (offset + rng.normal(0, scatter_dex, n_targets))
     obs_f = sf * 10 ** rng.normal(0, scatter_dex, n_targets)
     return {
@@ -392,7 +435,19 @@ def synthetic_field(
         "flux_a": obs_a, "flux_f": obs_f, "nb": nb,
         "flux_err_f": flux / snr,
         "sig_a_dex": np.full(n_targets, scatter_dex), "sig_f_dex": np.full(n_targets, scatter_dex),
+        "log_n15": local_density(ra, dec, np.concatenate([ra, n_ra]), np.concatenate([dec, n_dec])),
     }  # fmt: skip
+
+
+def _design(field: dict, log_snr: np.ndarray, s_g: np.ndarray, calib: np.ndarray) -> np.ndarray:
+    """The C3 design matrix: plan 97's form, or plan 98's when ``field["calib"] == "v2"`` (knots
+    from the rows in ``calib``, the sample the calibration is fitted on)."""
+    if field.get("calib", "v1") == "v2":
+        return calibration_design_v2(
+            log_snr, np.log10(field["w50"]), np.log10(s_g), field["dec"], field["log_n15"],
+            snr_knots(log_snr[calib]),
+        )  # fmt: skip
+    return calibration_design(log_snr, np.log10(field["w50"]), np.log10(s_g), field["dec"])
 
 
 def _prepare(field: dict) -> dict:
@@ -415,9 +470,7 @@ def _prepare(field: dict) -> dict:
         subtract_blend=False,
     )  # fmt: skip
     snr_g = s_g / field["flux_err_f"]
-    design = calibration_design(
-        np.log10(snr_g), np.log10(field["w50"]), np.log10(s_g), field["dec"]
-    )
+    design = _design(field, np.log10(snr_g), s_g, masks["isolated"])
     coef = fit_calibration(y[masks["isolated"]], design[masks["isolated"]])
     return {
         "n": n, "masks": masks, "y": y, "s_c": s_c, "s_g": s_g, "snr_g": snr_g,
@@ -499,8 +552,6 @@ def diagnostics(
     n_boot: int = 500,
 ) -> dict:
     """Post-hoc D0-D3 of the C2 failure (survey/hiblend-findings.md step 4)."""
-    from scipy.spatial import cKDTree
-
     d = _prepare(field)
     m, resid, cl = d["masks"], d["resid"], d["clusters"]
     iso, q, p = np.flatnonzero(m["isolated"]), m["null"], m["primary"]
@@ -536,17 +587,8 @@ def diagnostics(
     out["D2_null_terms"] = {"terms": ["const", "R_null", "log S_c", "log S_n,max"],
                             **fit_ols(resid[q], x2[q], cl[q], rng, n_boot=n_boot)}  # fmt: skip
     # D3: local density within 15' of every catalogued HI source
-    tree = cKDTree(_unit(n_cat_ra, n_cat_dec))
-    n15 = (
-        np.array(
-            [
-                len(h)
-                for h in tree.query_ball_point(_unit(field["ra"], field["dec"]), r=_chord(15.0))
-            ]
-        )
-        - 1
-    )
-    ld = np.log10(1.0 + np.clip(n15, 0, None))
+    ld = local_density(field["ra"], field["dec"], n_cat_ra, n_cat_dec)
+    n15 = np.rint(10**ld - 1.0)
     out["D3_null_density"] = {"terms": ["const", "R_null", "log(1+N15)"],
                               **fit_ols(resid[q], np.column_stack([d["r_null"], ld])[q], cl[q], rng, n_boot=n_boot)}  # fmt: skip
     out["D3_isolated_density"] = {"terms": ["const", "log(1+N15)"],
@@ -627,6 +669,7 @@ def build_field(fashi: dict, alfalfa: dict, *, shift_dec_arcmin: float = 0.0) ->
         "nb": nb, "i_fashi": i_f, "i_alfalfa": i_a,
         "n_alfalfa_code1": int(code1.sum()), "n_alfalfa_only_neighbours": int(a_only.size),
         "n_cat_ra": n_ra, "n_cat_dec": n_dec,
+        "log_n15": local_density(fashi["ra"][i_f], fashi["dec"][i_f], n_ra, n_dec),
     }  # fmt: skip
 
 
@@ -765,6 +808,122 @@ def run_gated(
         out["outcome"] = "ambiguous: C2 spectral null control is non-zero"
     elif (b.get("beta_sigma") or 0) >= 3:
         out["outcome"] = "blending supported: beta > 0 at >= 3 sigma, C1 and C2 pass"
+    else:
+        out["outcome"] = "blending not supported: beta consistent with 0"
+        out["beta_upper_95"] = round(b["beta"] + 1.645 * b["beta_se"], 4)
+    return out
+
+
+def heldout_calibration_check(
+    field: dict, rng: np.random.Generator, *, n_bins: int = 10, n_boot: int = 200,
+    max_abs_dex: float = 0.010, min_p: float = 0.01, strip_deg: float = 2.0,
+) -> dict:  # fmt: skip
+    """C3' (plan 98): fit the calibration on isolated targets in even RA strips, test on odd,
+    and the reverse. Each direction passes if every held-out S/N-decile median residual is under
+    ``max_abs_dex`` and the chi^2 of the medians against 0 has p > ``min_p``."""
+    from scipy.stats import chi2
+
+    d = _prepare(field)
+    iso = d["masks"]["isolated"]
+    log_snr = np.log10(d["snr_g"])
+    parity = np.floor(np.asarray(field["ra"], float) / strip_deg).astype(int) % 2
+    out: dict = {"form": field.get("calib", "v1"), "directions": []}
+    for train in (0, 1):
+        tr, te = iso & (parity == train), iso & (parity != train)
+        design = _design(field, log_snr, d["s_g"], tr)
+        coef = fit_calibration(d["y"][tr], design[tr])
+        res, key = (d["y"] - design @ coef)[te], log_snr[te]
+        ok = np.isfinite(res) & np.isfinite(key)
+        res, key = res[ok], key[ok]
+        edges = np.quantile(key, np.linspace(0, 1, n_bins + 1))
+        k = np.clip(np.searchsorted(edges, key, side="right") - 1, 0, n_bins - 1)
+        bins = []
+        for b in range(n_bins):
+            v = res[k == b]
+            med = float(np.median(v))
+            se = float(np.std([np.median(rng.choice(v, v.size)) for _ in range(n_boot)], ddof=1))
+            bins.append({"lo": round(float(edges[b]), 3), "hi": round(float(edges[b + 1]), 3),
+                         "n": int(v.size), "median": round(med, 5), "se": round(se, 5)})  # fmt: skip
+        meds = np.array([b["median"] for b in bins])
+        ses = np.array([b["se"] for b in bins])
+        chi = float(np.sum((meds / ses) ** 2))
+        p = float(chi2.sf(chi, n_bins))
+        max_abs = float(np.max(np.abs(meds)))
+        out["directions"].append({
+            "train_parity": train, "n_train": int(tr.sum()), "n_test": int(ok.sum()),
+            "bins": bins, "max_abs_median": round(max_abs, 5), "chi2": round(chi, 2),
+            "p": round(p, 5), "pass": bool(max_abs < max_abs_dex and p > min_p),
+        })  # fmt: skip
+    out["pass"] = all(x["pass"] for x in out["directions"])
+    return out
+
+
+def _by_tercile(resid, r, log_snr, sel, clusters, rng, n_boot) -> list[dict]:
+    terc = np.nanquantile(log_snr[sel], [0, 1 / 3, 2 / 3, 1])
+    rows = []
+    for lo, hi in zip(terc[:-1], terc[1:], strict=True):
+        s = sel & (log_snr >= lo) & (log_snr <= hi)
+        rows.append({"log_snr": [round(float(lo), 3), round(float(hi), 3)],
+                     **fit_beta(resid[s], r[s], clusters[s], rng, n_boot=n_boot)})  # fmt: skip
+    return rows
+
+
+def _within_2sigma(b: dict) -> bool:
+    return bool(b.get("beta_se") and abs(b["beta"]) < 2 * b["beta_se"])
+
+
+def run_gated_v2(
+    field: dict,
+    shifted: dict,
+    rng: np.random.Generator,
+    *,
+    n_power: int = 20,
+    n_inj: int = 10,
+    n_boot: int = 1000,
+) -> dict:
+    """Plan 98's frozen order: C3' held-out calibration -> C0 -> C1 -> C4 -> C2 (overall AND per
+    null S/N tercile) -> beta. ``field`` must carry ``log_n15``; the v2 calibration is used
+    throughout, including inside the C0/C1 injections."""
+    field = {**field, "calib": "v2"}
+    out: dict = {"n_targets": len(field["flux_f"]), "calibration": "v2", "gates": {}}
+    c3 = heldout_calibration_check(field, rng)
+    c3_v1 = heldout_calibration_check({**field, "calib": "v1"}, rng)
+    out["gates"]["C3prime_heldout"] = c3
+    out["C3prime_plan97_form_for_comparison"] = {
+        "pass": c3_v1["pass"],
+        "max_abs_median": [x["max_abs_median"] for x in c3_v1["directions"]],
+        "p": [x["p"] for x in c3_v1["directions"]],
+    }
+    if not c3["pass"]:
+        out["stopped_at"] = "C3': flux scale cannot be calibrated to the precision the test needs"
+        out["outcome"] = "stopped: calibration is the limiting systematic; no beta is quoted"
+        return out
+    gated = run_gated(field, {**shifted, "calib": "v2"}, rng, n_power=n_power, n_inj=n_inj,
+                      n_boot=n_boot)  # fmt: skip
+    out["gates"].update(gated["gates"])
+    if "stopped_at" in gated:
+        out["stopped_at"] = gated["stopped_at"]
+        out["outcome"] = "ambiguous: " + gated["stopped_at"]
+        return out
+    d = _prepare(field)
+    m = d["masks"]
+    log_snr = np.log10(d["snr_g"])
+    terc = _by_tercile(d["resid"], d["r_null"], log_snr, m["null"], d["clusters"], rng, n_boot)
+    c2 = out["gates"]["C2_spectral_null"]
+    c2["by_snr_tercile"] = terc
+    c2["pass_overall"] = c2["pass"]
+    c2["pass"] = bool(c2["pass_overall"] and all(_within_2sigma(t) for t in terc))
+    out["C3_calibration_coef"] = gated["C3_calibration_coef"]
+    out["samples"] = gated["samples"]
+    out["primary"] = b = gated["primary"]
+    out["secondary_primary_by_snr_tercile"] = _by_tercile(
+        d["resid"], d["r_pred"], log_snr, m["primary"], d["clusters"], rng, n_boot
+    )
+    if not c2["pass"]:
+        out["outcome"] = "ambiguous: C2 spectral null non-zero (overall or in an S/N tercile)"
+    elif (b.get("beta_sigma") or 0) >= 3:
+        out["outcome"] = ("blending supported after recalibration (a second attempt designed "
+                          "after plan 97's samples were seen)")  # fmt: skip
     else:
         out["outcome"] = "blending not supported: beta consistent with 0"
         out["beta_upper_95"] = round(b["beta"] + 1.645 * b["beta_se"], 4)
