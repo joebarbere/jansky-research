@@ -23,6 +23,8 @@ DM_EG = DM - DM_ISM(NE2001, from the FRBs/FRB JSON) - 50 (HoffmannEmin25's DMhal
 from __future__ import annotations
 
 import json
+import sys
+import tempfile
 from importlib import resources
 from pathlib import Path
 
@@ -43,19 +45,42 @@ def versions() -> dict[str, str]:
     return {k: version(k) for k in ("zdm", "numpy", "scipy", "pandas", "astropy")}
 
 
-def grids() -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+def _pruned_dir(prune: set[str]) -> str:
+    """Copy every survey file used into a temp dir with the given bursts' rows removed
+    (GATE-2 round 2, N3: certification bursts listed in zdm's own survey files can nudge
+    the survey efficiency through a median DM_G)."""
+    from astropy.table import Table  # noqa: PLC0415
+
+    src = resources.files("zdm").joinpath("data/Surveys/")
+    tmp = Path(tempfile.mkdtemp())
+    (tmp / "CHIME").mkdir()
+    names = list(SURVEY.values()) + ["MeerTRAPincoherent"]
+    names += [f"CHIME/CHIME_decbin_{i}_of_6" for i in range(6)]
+    for name in names:
+        t = Table.read(str(src.joinpath(name + ".ecsv")), format="ascii.ecsv")
+        keep = [str(x).removeprefix("FRB") not in prune for x in t["TNS"]]
+        t[keep].write(str(tmp / (name + ".ecsv")), format="ascii.ecsv", overwrite=True)
+    return str(tmp)
+
+
+def grids(prune: set[str] | None = None) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
     st = states.load_state(STATE)
     cos.set_cosmology(st)
     cos.init_dist_measures()
     zdm_grid, zvals, dmvals = misc_functions.get_zdm_grid(
         st, new=True, plot=False, method="analytic"
     )
+    sdir = _pruned_dir(prune) if prune else None
     rates: dict[str, np.ndarray] = {}
     for tel, name in list(SURVEY.items()) + [("MeerTRAPincoherent", "MeerTRAPincoherent")]:
-        s = survey.load_survey(name, st, dmvals)
+        s = survey.load_survey(name, st, dmvals, sdir=sdir)
         g = misc_functions.initialise_grids([s], zdm_grid, zvals, dmvals, st, wdist=True)[0]
         rates[tel] = np.array(g.rates)
-    chime_dir = str(resources.files("zdm").joinpath("data/Surveys/CHIME/"))
+    chime_dir = (
+        str(Path(sdir) / "CHIME") + "/"
+        if sdir
+        else str(resources.files("zdm").joinpath("data/Surveys/CHIME/"))
+    )
     tot = None
     for i in range(6):
         s = survey.load_survey(f"CHIME_decbin_{i}_of_6", st, dmvals, sdir=chime_dir)
@@ -111,8 +136,11 @@ def survey_file_frbs() -> dict[str, list[str]]:
 
 
 def main() -> None:
+    prune_mode = "--prune" in sys.argv[1:]
     prov = json.loads((ROOT / "results" / "dmzcal_provenance.json").read_text())
-    rates, zvals, dmvals = grids()
+    alts = prov["corrections"]["alternatives"]
+    cert = {r["name"].removeprefix("FRB") for r in prov["bursts"] if r["side"] == "certification"}
+    rates, zvals, dmvals = grids(prune=cert if prune_mode else None)
     bursts = [r for r in prov["bursts"] if r["telescope"] in rates]
     rak = prov["recover_a_known"]
     bursts.append(rak | {"side": "recover_a_known", "secure_host": True})
@@ -155,6 +183,16 @@ def main() -> None:
                             rec["pit_halo"][f"{h:g}"] = summarise(ch / ch.sum(), zvals, z_true)[
                                 "pit"
                             ]
+                    if b["name"] in alts:  # unresolved source conflict (GATE-2 r2 N4)
+                        a = alts[b["name"]]
+                        z_a = float(a["z"]["value"]) if "z" in a else z_true
+                        dm_a = (
+                            (float(a["DM"]["value"]) if "DM" in a else float(b["DM"]))
+                            - float(b["DMISM"])
+                            - DM_HALO
+                        )
+                        ca = rates[key][:, int(np.argmin(np.abs(dmvals - dm_a)))]
+                        rec["pit_alt"] = summarise(ca / ca.sum(), zvals, z_a)["pit"]
                     # planted truth: z drawn from this burst's own column (cell-uniform)
                     dz = float(zvals[1] - zvals[0])
                     idx = rng.choice(zvals.size, size=N_PLANT, p=pz)
@@ -176,10 +214,11 @@ def main() -> None:
         "survey_models": SURVEY | {"CHIME": "CHIME_decbin_0..5_of_6 summed, no repeaters"},
         "versions": versions(),
         "planted_truth": {"n_rep": N_PLANT, "seed": 0},
+        "survey_files_pruned_of_certification_bursts": prune_mode,
         "survey_file_frbs": survey_file_frbs(),
         "bursts": out,
     }
-    path = ROOT / "results" / "dmzcal_e1_zdm.json"
+    path = ROOT / "results" / ("dmzcal_e1_zdm_pruned.json" if prune_mode else "dmzcal_e1_zdm.json")
     path.write_text(json.dumps(res, indent=1) + "\n")
     print("wrote", path, len(out), "bursts")
 

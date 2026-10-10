@@ -67,6 +67,32 @@
     "locator": "Caleb+2023 arXiv:2302.09754 table: 'Beam: Incoherent beam'"
    }
   },
+  "alternatives": {
+   "FRB20231120A": {
+    "z": {
+     "value": 0.07,
+     "locator": "Connor+2024 arXiv:2409.16952 final table (vs Sharma Ext. Data Table 1 0.0368)"
+    }
+   },
+   "FRB20230124A": {
+    "DM": {
+     "value": 590.6,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   },
+   "FRB20230307A": {
+    "DM": {
+     "value": 608.9,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   },
+   "FRB20230501A": {
+    "DM": {
+     "value": 532.5,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   }
+  },
   "unresolved_not_applied": [
    "DSA DMs 20230124A/20230307A/20230501A differ by 0.6-1.25 pc/cc from Connor+2024 arXiv:2409.16952 final table (Sharma+2024 has no DM column)",
    "Connor+2024 gives z = 0.0700 for 20231120A vs Sharma+2024 Ext. Data Table 1 0.0368 (= FRBs/FRB); Sharma kept"

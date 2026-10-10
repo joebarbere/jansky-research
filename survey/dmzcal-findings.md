@@ -118,7 +118,8 @@ an independent pass.
   has no located source. Scored under the CHIME model, its E1 PIT moves from 0.015 to 0.165.
 - **FRB 20210410D:** DM 578.78 rather than 575.0 (Caleb+2023, arXiv:2302.09754, burst table).
   It was found in the MeerTRAP **incoherent** beam, so its survey model is now
-  `MeerTRAPincoherent`. Its PIT is unchanged at 0.011.
+  `MeerTRAPincoherent`. Its E1 PIT moves from 0.0034 to 0.0113 (corrected at round 2; round 1
+  misreported this as "unchanged"). Both corrections move towards less failure.
 - **Confirmed, not changed:**
   - FRB 20240201A's z = 0.042729. The 0.047279 lead is a digit swap in Shannon+2024's own host
     paragraph; SDSS DR18 gives 0.04273.
@@ -156,39 +157,60 @@ rule.
 **Post-hoc checks.** All of these were chosen after the verdicts were seen, and none is a
 verdict. They are in `results/dmzcal_metrics.json` → `post_hoc`.
 
-- **The DM model is fine at the known redshift.** The PIT of DM_EG given z_true is
-  P(DM' < DM | z_true), from each estimator's own p(DM|z). It is independent of the z prior
-  and of any redshift selection.
+- **The DM model at the known redshift: no failure detected, with limited power.** The PIT
+  of DM_EG given z_true is P(DM' < DM | z_true), from each estimator's own p(DM|z). It does
+  not depend on the z prior or on selection on redshift. It does depend on any selection that
+  acts on DM or on host properties at fixed z: for example, a host-identifiable sample that
+  favours massive hosts with larger DM_host. The CHIME gold sample is that kind of selection.
 
   | estimator | cov. 68% / 95% | median | KS p |
   |---|---|---|---|
   | E1 | 0.69 / 0.94 | 0.52 | 0.78 |
   | E2 | 0.75 / 0.94 | 0.52 | 0.63 |
 
-  So the miscalibration of p(z|DM) is not in p(DM|z), and therefore not in the host-DM,
-  Milky Way DM or cosmic-scatter terms at the level this sample can see. It lies in the
-  **redshift distribution**: either the population model's p(z) for detected bursts, or which
-  bursts receive a spectroscopic host. This sample cannot separate those two.
-- **The bias appears as the DM limit rises.** This is post hoc, with nested, small subsets.
-  Hoffmann et al. (Sec. 2.3, main.tex l.220-221) name the host-identification bias: fainter
-  high-z hosts go missing, which biases a localised sample low in z at fixed DM. They use z only
-  below DM_obs − DM_ISM = 183 pc cm⁻³ for DSA. E1 by that same variable:
+  Its power at these 36 redshifts, from `results/dmzcal_dmz_power.json` (synthetic, post hoc,
+  KS p < 0.01, 1000 replications):
 
-  | DM_obs − DM_ISM | N | median PIT | KS p |
-  |---|---|---|---|
-  | < 183 | 9 | 0.59 | 0.80 |
-  | < 250 | 12 | 0.44 | 0.31 |
-  | < 300 | 16 | 0.29 | 0.15 |
-  | < 400 | 24 | 0.25 | 0.027 |
-  | < 500 | 27 | 0.28 | 0.015 |
-  | all | 36 | 0.19 | 1e-4 |
+  | true DM model | rejection rate |
+  |---|---|
+  | unmodified (null) | 0.016 |
+  | host mean ×1.5 | 0.24 |
+  | host mean ×2 | **0.81** |
+  | host mean ÷1.5 | 0.26 |
+  | F (cosmic scatter) ×2 | 0.014 |
+  | unmodelled +30 pc cm⁻³ (MW ISM/halo) | 0.08 |
 
-  That pattern is what host-identification incompleteness predicts. It does not show it,
-  because N is small and Hoffmann's 183 was derived for the DSA commissioning sample, not for
-  this mix. E2 and E3 fail even below 183, as expected for estimators without a selection-aware
-  prior.
-- **Halo DM.** E1 at DM_halo = 25 / 75 has coverage 0.50 / 0.83 and 0.51 / 0.83, with KS p of
-  2e-6 and 5e-4. The failure does not depend on the frozen 50.
+  So **a host-DM mean error of about ×2 or more is disfavoured.** Smaller host errors, Milky
+  Way errors of tens of pc cm⁻³, and *any* cosmic-scatter error are not constrained: at these
+  low redshifts the DM is host-dominated.
+
+  Within those limits, the miscalibration of p(z|DM) is more plausibly in the **effective
+  redshift distribution** than in p(DM|z). That distribution is either the population model's
+  p(z) for detected bursts, or the selection of which bursts receive a spectroscopic host.
+  This sample cannot separate those two.
+- **E1's PIT against DM.** These are post hoc, small, independent bins. Hoffmann et al.
+  (Sec. 2.3, main.tex l.220-221) name the host-identification bias: fainter high-z hosts go
+  missing, which biases a localised sample low in z at fixed DM. They use z only below
+  DM_obs − DM_ISM = 183 pc cm⁻³ for DSA. E1 by that same variable, un-nested:
+
+  | DM_obs − DM_ISM | N | median PIT | PIT < 0.5 | KS p |
+  |---|---|---|---|---|
+  | < 183 | 9 | 0.59 | 44% | 0.80 |
+  | 183–300 | 7 | 0.17 | 71% | 0.10 |
+  | 300–500 | 11 | 0.21 | 91% | 0.005 |
+  | ≥ 500 | 9 | 0.14 | 100% | 0.002 |
+
+  **No failure is detected in the 9 bursts below 183, but 9 bursts have little power.** The
+  monotonic trend of PIT with DM across all 36 is **not significant** (Spearman ρ = −0.31,
+  p = 0.07).
+
+  The pattern is what host-identification incompleteness predicts, but it does not show it.
+  A p(z) that is wrong in its high-DM tail predicts the same thing. Hoffmann's 183 was also
+  derived for the DSA commissioning sample, not for this mix. E2 and E3 fail in every bin, as
+  expected for estimators without a selection-aware prior.
+
+- **Halo DM.** E1 at DM_halo = 25 (N = 36) and 75 (N = 35; one burst has DM_EG ≤ 0 at 75) has
+  coverage 0.50 / 0.83 and 0.51 / 0.83, with KS p of 2e-6 and 5e-4. The failure does not depend on the frozen 50.
 - **Planted truth through the E1 and E3 code paths** (500 replications each, with z drawn from
   each burst's own posterior). The rule passes 0.948 (E1) and 0.958 (E3) of the time, against
   0.955 expected from C0. E2's C2 gives 0.962. The PIT implementations in the two out-of-repo
@@ -206,16 +228,36 @@ verdict. They are in `results/dmzcal_metrics.json` → `post_hoc`.
   | ASKAP | 4 | 0.25 / 0.50 | 0.03 |
   | MeerKAT | 1 | 0.00 / 0.00 | 0.01 |
 
-  The reviewer found that E1 still fails KS without ASKAP and MeerKAT (N = 30, p = 0.0035), and
-  still fails with CHIME dropped (N = 15). This was measured on the pre-correction labels.
+  Descriptive subsets on the corrected labels (refreshed at round 2):
 
-**Known provenance path, recorded rather than removed.** zdm's survey files at e0f985b list
-some certification bursts (e.g. DSA 20221113A and 20221116A). Survey-file bursts enter the
-survey efficiency through a median of DM_halo + DM_G (zdm `survey.py:1345`, `:1388`), so a
-held-out burst can nudge E1's selection function. The effect is expected to be small, but it is
-not measured. The lists are in `dmzcal_e1_zdm.json` → `survey_file_frbs`.
+  | subset | N | cov. 68% / 95% | median PIT | KS p |
+  |---|---|---|---|---|
+  | CHIME + DSA | 31 | 0.61 / 0.87 | 0.28 | 0.002 |
+  | DSA + ASKAP | 15 | 0.53 / 0.73 | 0.18 | 2e-5 |
+  | CHIME | 20 | 0.60 / 0.90 | 0.25 | 0.035 |
+  | non-CHIME | 16 | 0.50 / 0.69 | 0.16 | 1e-5 |
+
+  Without ASKAP and MeerKAT, E1's coverage is in band but its location still fails KS.
+
+- **Unresolved source conflicts as a sensitivity row.** These are not applied to the headline.
+  - Connor+2024's z = 0.0700 for FRB 20231120A against Sharma's 0.0368. It moves that burst's
+    E1 PIT from 0.002 to 0.010.
+  - Three DSA DMs differ by 0.6–1.25 pc cm⁻³. They move PITs by ≤ 0.01.
+  - With all of them applied, E1's coverage, median PIT (0.185) and verdict are unchanged
+    (KS p = 1e-4).
+
+**Survey-file provenance path: measured.** zdm's survey files at e0f985b list **all 11**
+DSA certification bursts in `DSA.ecsv`, and CHIME's FRB 20180916B in decbin 3. Listed bursts
+enter the survey efficiency through a median of DM_halo + DM_G (zdm `survey.py:1345`, `:1388`).
+
+Re-running E1 with every certification burst pruned from every survey file used
+(`dmzcal_e1_zdm.py --prune` → `results/dmzcal_e1_zdm_pruned.json`) moves every certification
+PIT by ≤ 6×10⁻⁵ and leaves coverage, median and verdict unchanged. The path exists, and its
+effect is negligible.
+
 E1 also uses the state's fixed DM_G (`sigmaHalo = sigmaDMG = 0`). Hoffmann's fit modelled
 σ_halo = 15 and σ_ISM = DM_NE/2.
+zdm reports its own version as `0.0.0`; the commit (e0f985b) is what identifies it.
 
 **Not run.**
 - NE2001 versus YMW16, because `pygedm` does not build here.
@@ -234,4 +276,13 @@ Caleb et al.'s Macquart-relation range is [1.628, 3.397] (95%). All three estima
 overpredict this burst too. About 235 pc cm⁻³ of its DM is Virgo (Caleb+, Supplementary S1.4),
 which a DM-only estimate cannot know about.
 
-**Status.** These are *applied* fixes. Round 2 of GATE-2 decides whether they hold.
+**GATE-2 round 2** (verdict PASS-WITH-FIXES, no blockers): 10 of 13 round-1 findings were
+closed. Six new items (N1–N6) are addressed above:
+- N1: the DM|z claim is narrowed, and its power is quoted.
+- N2: the 20210410D before/after number is corrected.
+- N3: "all 11" is stated, and the survey-file path is measured.
+- N4: the alternative-source sensitivity row is added.
+- N5: the DM table is un-nested, a trend test is added, and the CHANGELOG is reworded.
+- N6: the subsets are refreshed.
+
+**Status.** These are *applied* fixes. Round 3 decides whether they hold.

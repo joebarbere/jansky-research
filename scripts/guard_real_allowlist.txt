@@ -51,3 +51,7 @@ drift_metrics.json
 # rule, committed BEFORE any real posterior so the frozen thresholds are checkable evidence.
 # Synthetic by design: both controls draw only from E2's own generative model; no real burst.
 dmzcal_controls.json
+# dmzcal_dmz_power.json -- post-hoc (GATE-2 round 2) power of the DM|z calibration check:
+# synthetic DMs drawn at the real certification redshifts. Synthetic by design; the findings
+# quote it only as the sensitivity of that check.
+dmzcal_dmz_power.json

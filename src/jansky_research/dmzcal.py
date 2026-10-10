@@ -53,6 +53,7 @@ __all__ = [
     "coverage",
     "tail_fractions",
     "dm_pit",
+    "dm_given_z_power",
     "CalibrationRule",
     "null_rule",
     "simulate_sample",
@@ -278,8 +279,10 @@ def tail_fractions(pits: np.ndarray, q: float = 0.68) -> dict[str, float]:
 def dm_pit(table: LikelihoodTable, dm_eg: np.ndarray, z_true: np.ndarray) -> np.ndarray:
     """P(DM_EG' < DM_EG | z_true): calibration of the DM model *at known z*.
 
-    Independent of the z prior and of any redshift selection, so it separates "the
-    p(DM|z) model is wrong" from "the prior over z (selection) is wrong". Uses the z node
+    Independent of the z prior and of selection on redshift, so it separates "the p(DM|z)
+    model is wrong" from "the effective p(z) is wrong". NOT independent of selection that
+    acts on DM or host properties at fixed z (e.g. host-identifiable samples favouring
+    massive hosts with larger DM_host). Its power is limited: see ``dm_given_z_power``. Uses the z node
     nearest z_true and treats each DM bin as uniform. Note: rows exclude the beyond-grid
     Delta^-3 tail (<~0.1%), so values are normalised to the in-grid mass.
     """
@@ -291,6 +294,30 @@ def dm_pit(table: LikelihoodTable, dm_eg: np.ndarray, z_true: np.ndarray) -> np.
     below = np.array([rows[j, : k[j]].sum() for j in range(k.size)])
     frac = np.clip((dm_eg - table.edges[k]) / table.dm_step, 0.0, 1.0)
     return below + rows[np.arange(k.size), k] * frac
+
+
+def dm_given_z_power(
+    score: LikelihoodTable,
+    gen: LikelihoodTable,
+    z_values: np.ndarray,
+    reps: int,
+    rng: np.random.Generator,
+    alpha: float = 0.01,
+) -> float:
+    """Fraction of samples, DM drawn from ``gen`` at the given redshifts, whose ``dm_pit``
+    under ``score`` is rejected by KS at ``alpha``: the power of the DM|z check."""
+    z_values = np.asarray(z_values, dtype=float)
+    i = np.abs(gen.z[None, :] - z_values[:, None]).argmin(axis=1)
+    cum = np.cumsum(gen.prob[i], axis=1)
+    cum /= cum[:, -1:]
+    rej = 0
+    for _ in range(reps):
+        k = (cum < rng.random(z_values.size)[:, None]).sum(axis=1)
+        k = np.minimum(k, gen.prob.shape[1] - 1)
+        dm = gen.edges[k] + rng.random(z_values.size) * gen.dm_step
+        p = dm_pit(score, dm, gen.z[i])
+        rej += float(stats.kstest(p, "uniform").pvalue) < alpha
+    return rej / reps
 
 
 def coverage(pits: np.ndarray, q: float) -> float:

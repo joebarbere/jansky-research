@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from scipy import stats
 
 from jansky_research import dmzcal
 
@@ -143,6 +144,13 @@ def _c2(
 
 HOFFMANN_DSA_LIMIT = 183.0  # DM_obs - DM_ISM; arXiv:2408.04878v2 Sec. 2.3, main.tex l.221
 DM_LIMITS = [HOFFMANN_DSA_LIMIT, 250.0, 300.0, 400.0, 500.0, float("inf")]
+DM_BINS = [0.0, HOFFMANN_DSA_LIMIT, 300.0, 500.0, float("inf")]  # un-nested (GATE-2 r2 N5)
+SUBSETS = {  # descriptive telescope subsets (GATE-2 r2 N6: refreshed on corrected labels)
+    "CHIME+DSA": {"CHIME", "DSA"},
+    "DSA+ASKAP": {"DSA", "ASKAP"},
+    "CHIME": {"CHIME"},
+    "non-CHIME": {"DSA", "ASKAP", "MeerKAT"},
+}
 
 
 def _obs_minus_ism(r: dict) -> float:
@@ -153,8 +161,6 @@ def _obs_minus_ism(r: dict) -> float:
 
 
 def _describe(pits: np.ndarray) -> dict:
-    from scipy import stats  # noqa: PLC0415
-
     if pits.size == 0:
         return {"n": 0}
     return {
@@ -201,7 +207,27 @@ def _post_hoc(
             lim["all" if L == float("inf") else f"<{L:g}"] = _describe(
                 np.array([r["pit"] for r in sel])
             )
-        blk["by_dm_obs_minus_ism_limit"] = lim
+        blk["by_dm_obs_minus_ism_limit_NESTED"] = lim
+        bins = {}
+        for lo, hi in zip(DM_BINS[:-1], DM_BINS[1:], strict=True):
+            sb = np.array([r["pit"] for r in c if lo <= _obs_minus_ism(r) < hi])
+            d = _describe(sb)
+            if sb.size:
+                d["frac_below_half"] = float(np.mean(sb < 0.5))
+            bins[f"{lo:g}-{hi:g}"] = d
+        blk["by_dm_obs_minus_ism_bin"] = bins
+        x = np.array([_obs_minus_ism(r) for r in c])
+        y = np.array([r["pit"] for r in c])
+        rho = stats.spearmanr(x, y)
+        blk["trend_spearman_pit_vs_dm"] = {
+            "rho": float(rho.statistic),
+            "p": float(rho.pvalue),
+            "n": int(x.size),
+        }
+        blk["subsets"] = {
+            k: _describe(np.array([r["pit"] for r in c if r["telescope"] in tels]))
+            for k, tels in SUBSETS.items()
+        }
         if any("pit_halo" in r for r in c):
             blk["halo_sensitivity"] = {
                 h: _describe(np.array([r["pit_halo"][h] for r in c if h in r.get("pit_halo", {})]))
@@ -210,6 +236,24 @@ def _post_hoc(
         if any("planted_pits" in r for r in c):
             blk["planted_truth"] = _planted(rule, c) | {"expected_pass_rate": expected_pass}
         out[name] = blk
+    pr = {r["name"]: r for r in _load("dmzcal_e1_zdm_pruned.json")["bursts"]}
+    pp = np.array([pr[n]["pit"] for n in sorted(cert_names) if "pit" in pr.get(n, {})])
+    out["E1_survey_files_pruned"] = _describe(pp) | {
+        "verdict": _verdict(rule, pp)["verdict"],
+        "max_abs_pit_shift": float(
+            max(
+                abs(pr[r["name"]]["pit"] - r["pit"])
+                for r in est["E1_zdm_HoffmannEmin25"]
+                if r["name"] in cert_names and "pit" in r
+            )
+        ),
+    }
+    e1c = [r for r in est["E1_zdm_HoffmannEmin25"] if r["name"] in cert_names and "pit" in r]
+    pa = np.array([r.get("pit_alt", r["pit"]) for r in e1c])
+    out["E1_unresolved_alternatives_applied"] = _describe(pa) | {
+        "verdict": _verdict(rule, pa)["verdict"],
+        "changed": {r["name"]: [r["pit"], r["pit_alt"]] for r in e1c if "pit_alt" in r},
+    }
     out["host_magnitude_stratification"] = (
         "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host "
         "magnitudes are available only for the 19 CHIME/Leung hosts (m_r), not for the "

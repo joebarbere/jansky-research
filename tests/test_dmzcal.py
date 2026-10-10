@@ -225,3 +225,11 @@ def test_rule_precedence_overconfident_before_biased():
     out = RULE.evaluate(pits)
     assert out["verdict"] == "OVERCONFIDENT"
     assert out["median_pit"] < 0.4
+
+
+def test_dm_given_z_power_null_and_shift(table):
+    rng = np.random.default_rng(9)
+    z = np.full(36, 0.1)
+    assert dz.dm_given_z_power(table, table, z, 60, rng) <= 0.1
+    big = dz.build_table(dz.E2Params(lmean=dz.HOFFMANN_EMIN25.lmean + 0.6), **SMALL)
+    assert dz.dm_given_z_power(table, big, z, 30, rng) >= 0.8

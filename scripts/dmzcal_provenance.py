@@ -118,6 +118,20 @@ TELESCOPE_OVERRIDE: dict[str, tuple[str, str]] = {
 DM_OVERRIDE: dict[str, tuple[float, str]] = {
     "FRB20210410D": (578.78, "Caleb+2023 arXiv:2302.09754 burst-properties table (+/- 2)"),
 }
+# Unresolved conflicts between primary sources: NOT applied to the headline; scored as a
+# post-hoc sensitivity row (GATE-2 round 2, N4). name -> {"z"|"DM": (value, locator)}
+ALTERNATIVES: dict[str, dict[str, tuple[float, str]]] = {
+    "FRB20231120A": {
+        "z": (
+            0.0700,
+            "Connor+2024 arXiv:2409.16952 final table (vs Sharma Ext. Data Table 1 0.0368)",
+        )
+    },
+    "FRB20230124A": {"DM": (590.6, "Connor+2024 arXiv:2409.16952 final table")},
+    "FRB20230307A": {"DM": (608.9, "Connor+2024 arXiv:2409.16952 final table")},
+    "FRB20230501A": {"DM": (532.5, "Connor+2024 arXiv:2409.16952 final table")},
+}
+
 # zdm survey model per burst where the instrument mode is known (default: by telescope)
 SURVEY_OVERRIDE: dict[str, tuple[str, str]] = {
     "FRB20210410D": (
@@ -265,6 +279,10 @@ def assemble(base: list[dict], hosts: list[dict], jsons: list[dict]) -> dict:
             "DM": {k: {"value": v, "locator": loc} for k, (v, loc) in DM_OVERRIDE.items()},
             "survey_model": {
                 k: {"value": v, "locator": loc} for k, (v, loc) in SURVEY_OVERRIDE.items()
+            },
+            "alternatives": {
+                k: {f: {"value": v, "locator": loc} for f, (v, loc) in d.items()}
+                for k, d in ALTERNATIVES.items()
             },
             "unresolved_not_applied": [
                 "DSA DMs 20230124A/20230307A/20230501A differ by 0.6-1.25 pc/cc from "
