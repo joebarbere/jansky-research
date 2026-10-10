@@ -58,10 +58,12 @@ linked within 6~arcmin.
 On simulated fluxes with the real geometry, a planted $\beta=1$ was detected at $3\sigma$ in
 20 of 20 trials. Blends injected into real isolated targets returned $\beta=\hbRealInjOne$
 (scatter \hbRealInjOneSd\ over ten injections; \hbRealConeProdSd\ in a later rerun), within the
-pre-set tolerance of 0.3. The injected flux also raises the calibration covariates, as real
-blends would, which inflates $\beta$; with covariates taken before injection the gain is
-\hbRealConeFrozen, for reasons we have not identified. C1 therefore brackets the gain between
-\hbRealConeFrozen\ and \hbRealConeProd\ rather than measuring it. The negative control failed,
+pre-set tolerance of 0.3. That pass was two errors cancelling. The injection added each
+neighbour on the FASHI flux scale to both surveys; placed on each survey's own scale (the
+calibration's predicted ratio), it gives $\beta=\hbRealScaledFrozen$ with covariates taken before
+injection. But injected flux, like a real blend, also raises the calibration covariates, and the
+estimator as applied then returns $\hbRealScaledProd\pm\hbRealScaledSd$, outside the
+tolerance. It overstates the blending gain by about half. The negative control failed,
 $\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, so the primary slope
 ($\hbRealBeta\pm\hbRealBetaErr$) cannot be interpreted.
 

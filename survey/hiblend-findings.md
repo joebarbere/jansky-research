@@ -423,3 +423,29 @@ response y. The smooth calibration prediction does not, so it is used instead.
 - *Either way:* planted 0 stays at about −0.03, since nothing is injected.
 
 Results go to `results/hiblend_referee2.json`. The round-3 referee runs after this check.
+
+### Step 8 results (run 2026-10-10; `results/hiblend_referee2.json`, seed 101, same draws as R3)
+
+| covariates | R3: injection on FASHI scale | R5: injection on each survey's scale |
+|---|---|---|
+| pre-injection | 0.70 ± 0.13 | **1.00 ± 0.10** |
+| production (post-injection) | 1.24 ± 0.13 | **1.54 ± 0.10** |
+| planted 0 (either mode) | −0.03 ± 0.06 | −0.03 ± 0.06 |
+
+The calibration's predicted ALFALFA/FASHI ratio on isolated targets has median 1.16 (5–95%:
+0.77–1.91).
+
+**The first prediction branch holds for the frozen-covariate case.** With the neighbour on each
+survey's scale and covariates taken before injection, the gain is 1.00. So the 0.70 came from the
+injection, not the estimator. The production β rises too, but by a factor of 1.24, not the 1.43
+the "similar factor" prediction implied. That part of the prediction missed.
+
+**Consequence for plan 97's frozen C1.** The production estimator, which is the one applied to
+real data, returns 1.54 for a correctly scaled planted β = 1. This falls outside C1's frozen
+tolerance (|β − 1| ≤ 0.3). C1 passed (1.25) only because the injection put the ALFALFA addition
+on the FASHI scale, and two errors of opposite sign (−30% from the scale, +54% from covariate
+absorption) nearly cancelled. C1, as built, could not have caught either error alone. Plan 97's
+outcome was already "ambiguous" through C2, so the verdict does not change. But **C1's pass is
+withdrawn as evidence**: the production estimator overstates the blending gain by about 1.5, so any
+future β would have to be divided by about 1.5, or computed with covariates that blending cannot
+reach.
