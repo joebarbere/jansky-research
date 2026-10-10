@@ -467,9 +467,9 @@ def _prepare(field: dict) -> dict:
     # If blending is real the covariates carry some of it and the calibration absorbs a little:
     # that biases beta toward 0, the conservative direction, and C1 measures by how much.
     s_g = target_flux_estimate(
-        field["flux_a"], field["flux_f"], field["sig_a_dex"], field["sig_f_dex"], nb,
-        subtract_blend=False,
-    )  # fmt: skip
+        field.get("cov_flux_a", field["flux_a"]), field.get("cov_flux_f", field["flux_f"]),
+        field["sig_a_dex"], field["sig_f_dex"], nb, subtract_blend=False,
+    )  # fmt: skip  # cov_flux_*: referee check R3 only (pre-injection covariates)
     snr_g = s_g / field["flux_err_f"]
     design = _design(field, np.log10(snr_g), s_g, masks["isolated"])
     coef = fit_calibration(y[masks["isolated"]], design[masks["isolated"]])
@@ -683,7 +683,9 @@ def _subset(field: dict, keep: np.ndarray, nb: Neighbours) -> dict:
     return out
 
 
-def injection_field(field: dict, rng: np.random.Generator, *, strength: float) -> dict:
+def injection_field(
+    field: dict, rng: np.random.Generator, *, strength: float, freeze_covariates: bool = False
+) -> dict:
     """C1 on real data: split the real ISOLATED targets in half. One half stays as the
     calibration sample; the other gets one synthetic neighbour each, drawn from the real primary
     sample's (separation, neighbour/target flux ratio) pairs, and its real measured fluxes are
@@ -711,6 +713,8 @@ def injection_field(field: dict, rng: np.random.Generator, *, strength: float) -
     )  # fmt: skip
     add_a = syn.flux * beam_response(syn.sep_arcmin, ALFA_FWHM_ARCMIN)
     add_f = syn.flux * beam_response(syn.sep_arcmin, FAST_FWHM_ARCMIN)
+    if freeze_covariates:  # referee check R3: calibration covariates from pre-injection fluxes
+        sub["cov_flux_a"], sub["cov_flux_f"] = sub["flux_a"].copy(), sub["flux_f"].copy()
     sub["flux_a"] = sub["flux_a"].copy()
     sub["flux_f"] = sub["flux_f"].copy()
     sub["flux_a"][pos] += strength * add_a
@@ -928,6 +932,100 @@ def run_gated_v2(
     else:
         out["outcome"] = "blending not supported: beta consistent with 0"
         out["beta_upper_95"] = round(b["beta"] + 1.645 * b["beta_se"], 4)
+    return out
+
+
+def _bins_with_means(res: np.ndarray, key: np.ndarray, n_bins: int) -> list[dict]:
+    edges = np.quantile(key, np.linspace(0, 1, n_bins + 1))
+    k = np.clip(np.searchsorted(edges, key, side="right") - 1, 0, n_bins - 1)
+    out = []
+    for b in range(n_bins):
+        v, kk = res[k == b], key[k == b]
+        out.append({"lo": round(float(edges[b]), 3), "hi": round(float(edges[b + 1]), 3),
+                    "n": int(v.size), "x_median": round(float(np.median(kk)), 4),
+                    "median": round(float(np.median(v)), 5), "mean": round(float(v.mean()), 5),
+                    "se_mean": round(float(v.std(ddof=1) / np.sqrt(v.size)), 5)})  # fmt: skip
+    return out
+
+
+def _chi2_means(bins: list[dict]) -> dict:
+    from scipy.stats import chi2
+
+    c = float(sum((b["mean"] / b["se_mean"]) ** 2 for b in bins))
+    return {"chi2": round(c, 2), "dof": len(bins), "p": round(float(chi2.sf(c, len(bins))), 5),
+            "max_abs_mean": round(max(abs(b["mean"]) for b in bins), 5)}  # fmt: skip
+
+
+def referee1_checks(
+    field: dict, *, seed: int = 101, d0_seed: int = 97, n_inj: int = 10, n_boot: int = 1000,
+    strip_deg: float = 2.0,
+) -> dict:  # fmt: skip
+    """Post-hoc checks R1-R4 for the note's first referee round (survey/hiblend-findings.md
+    step 6). R1 also records each bin's median log S/N, the figure's x positions."""
+    rng = np.random.default_rng(seed)
+    out: dict = {}
+    # R1 -- the same splits as D0 (seed 97's first draw) and C3' (RA-strip parity)
+    d1 = _prepare({**field, "calib": "v1"})
+    iso = np.flatnonzero(d1["masks"]["isolated"])
+    ls1 = np.log10(d1["snr_g"])
+    perm = np.random.default_rng(d0_seed).permutation(iso)
+    a, b = perm[: perm.size // 2], perm[perm.size // 2 :]
+    coef_a = fit_calibration(d1["y"][a], d1["design"][a])
+    d0 = _bins_with_means((d1["y"] - d1["design"] @ coef_a)[b], ls1[b], 5)
+    out["R1_D0_plan97"] = {"bins": d0, **_chi2_means(d0)}
+    parity = np.floor(np.asarray(field["ra"], float) / strip_deg).astype(int) % 2
+    for form in ("v2", "v1"):
+        f = {**field, "calib": form}
+        d = _prepare(f)
+        isom, ls = d["masks"]["isolated"], np.log10(d["snr_g"])
+        dirs = []
+        for train in (0, 1):
+            tr, te = isom & (parity == train), isom & (parity != train)
+            design = _design(f, ls, d["s_g"], tr)
+            coef = fit_calibration(d["y"][tr], design[tr])
+            res, key = (d["y"] - design @ coef)[te], ls[te]
+            ok = np.isfinite(res) & np.isfinite(key)
+            bins = _bins_with_means(res[ok], key[ok], 10)
+            dirs.append({"train_parity": train, "bins": bins, **_chi2_means(bins)})
+        out[f"R1_C3prime_{form}"] = dirs
+    # R2 -- the beta the plan-97 calibration misfit alone induces
+    q, pm, cl = d1["masks"]["null"], d1["masks"]["primary"], d1["clusters"]
+    curve = _bins_with_means(d1["resid"][iso], ls1[iso], 20)
+    xs = np.array([c["x_median"] for c in curve])
+    pred = np.interp(ls1, xs, np.array([c["mean"] for c in curve]))
+    pred_med = np.interp(ls1, xs, np.array([c["median"] for c in curve]))
+    out["R2_misfit_induced"] = {
+        "curve": curve,
+        "null_from_means": fit_beta(pred[q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "null_from_medians": fit_beta(pred_med[q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "primary_from_means": fit_beta(pred[pm], d1["r_pred"][pm], cl[pm], rng, n_boot=n_boot),
+        "null_r_median": round(float(np.median(d1["r_null"][q])), 5),
+        "primary_r_median": round(float(np.median(d1["r_pred"][pm])), 5),
+    }
+    # R3 -- C1 with calibration covariates from the pre-injection fluxes
+    r3: dict = {}
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # same injections in both modes
+            bs = [analyse(injection_field({**field, "calib": "v1"}, sub_rng, strength=st,
+                                          freeze_covariates=frozen), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            r3[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    out["R3_c1_covariates"] = r3
+    # R4 -- RA-strip blocks as bootstrap units
+    ra = np.asarray(field["ra"], float)
+    out["R4_strip_bootstrap"] = {"cluster_6arcmin": {
+        "null": fit_beta(d1["resid"][q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "primary": fit_beta(d1["resid"][pm], d1["r_pred"][pm], cl[pm], rng, n_boot=n_boot)}}  # fmt: skip
+    for w in (2.0, 4.0, 8.0):
+        blk = np.floor(ra / w).astype(int)
+        out["R4_strip_bootstrap"][f"strip_{w:g}deg"] = {
+            "null": fit_beta(d1["resid"][q], d1["r_null"][q], blk[q], rng, n_boot=n_boot),
+            "primary": fit_beta(d1["resid"][pm], d1["r_pred"][pm], blk[pm], rng, n_boot=n_boot),
+        }
     return out
 
 
