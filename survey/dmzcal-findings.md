@@ -168,7 +168,7 @@ verdict. They are in `results/dmzcal_metrics.json` → `post_hoc`.
   | E1 | 0.69 / 0.94 | 0.52 | 0.78 |
   | E2 | 0.75 / 0.94 | 0.52 | 0.63 |
 
-  Its power at these 36 redshifts, from `results/dmzcal_dmz_power.json` (synthetic, post hoc,
+  Its E2-model power at these 36 redshifts, from `results/dmzcal_dmz_power.json` (synthetic, post hoc,
   KS p < 0.01, 1000 replications):
 
   | true DM model | rejection rate |
@@ -180,7 +180,9 @@ verdict. They are in `results/dmzcal_metrics.json` → `post_hoc`.
   | F (cosmic scatter) ×2 | 0.014 |
   | unmodelled +30 pc cm⁻³ (MW ISM/halo) | 0.08 |
 
-  So **a host-DM mean error of about ×2 or more is disfavoured.** Smaller host errors, Milky
+  So **an upward host-DM mean error of about ×2 or more is disfavoured** (÷2 was not tested;
+  this is E2-model power, and E1's p(DM|z) also carries survey selection; the null rejects at
+  0.016 against a nominal 0.01, about 1.5σ at 1000 replications). Smaller host errors, Milky
   Way errors of tens of pc cm⁻³, and *any* cosmic-scatter error are not constrained: at these
   low redshifts the DM is host-dominated.
 
@@ -285,4 +287,56 @@ closed. Six new items (N1–N6) are addressed above:
 - N5: the DM table is un-nested, a trend test is added, and the CHANGELOG is reworded.
 - N6: the subsets are refreshed.
 
-**Status.** These are *applied* fixes. Round 3 decides whether they hold.
+**GATE-2 round 3: PASS for drafting.** N1–N6 and the remaining round-1 items are closed. The
+nits are addressed in the wording above:
+- ÷2 was not tested;
+- the power is E2-model power;
+- the per-bin p-values are uncorrected, so they are labelled descriptive.
+
+## Drafting contract (from the round-3 review)
+
+**May be stated as results.** All of these are on the 36 host-identified localised bursts,
+with the frozen bands and the asymmetric rule.
+- zdm HoffmannEmin25 fails the frozen rule one-sidedly:
+  - 95% coverage 0.806, against a floor of 0.861;
+  - KS p = 1e-4 and median PIT 0.185;
+  - 0.42 of the PITs fall below the 68% band and 0.03 above it.
+- The failure holds:
+  - without CHIME (DSA + ASKAP, N = 15, KS p = 2e-5);
+  - without ASKAP and MeerKAT, on the KS leg only (N = 31, p = 0.002; coverage is in band
+    there);
+  - under halo DM of 25 or 75;
+  - after pruning the certification bursts from zdm's survey files (largest PIT shift 6e-5);
+  - under the unresolved source conflicts.
+- The controls:
+  - C0 passes, with a false-fail rate of 0.045.
+  - C1 fails for the host case, with power 0.12 (0.95 for F ×2). The note discloses that the
+    verdict rule was made asymmetric after C1.
+  - Planted truth passes through all three code paths: E2 0.962, E1 0.948, E3 0.958, against
+    0.955 expected.
+- The data corrections, each with its locator and its before and after values.
+- A post-hoc DM|z check finds no failure. It rejects an upward host-DM mean error of ×2 or more
+  81% of the time. It has almost no power against cosmic-scatter errors (0.014) or a +30
+  pc cm⁻³ Milky Way error (0.08).
+
+**Caveats or labelled hypotheses.**
+- "OVERCONFIDENT" is the frozen label. Here it describes a one-sided displacement towards high
+  z, not intervals that are too narrow.
+- The cause probably lies in the effective p(z): either the population model or
+  host-identification selection. Those two are not separable here. Selection predicts the
+  pattern but this sample does not show it.
+- E2 and E3 were expected to fail. The three estimators are not independent confirmations.
+- Scope: the host-identified localised population, not use on unlocalised FRBs.
+- The DM-limit pattern is post hoc, rests on few bursts, and shows no significant trend.
+- Not run:
+  - NE2001 versus YMW16;
+  - an explicit low-z selection model;
+  - host-magnitude stratification.
+- The dependence on FRB 20231120A's source conflict is a sensitivity row, not a result.
+- FRB 20240304B is a single post-hoc case study.
+
+**Must not be stated.**
+- "Calibrated" or "consistent with calibration" for the DM model.
+- "The cause is selection" as a result.
+- "Held-out" for E2 or E3.
+- Any statement that the cosmic-scatter or Milky Way DM terms are fine.

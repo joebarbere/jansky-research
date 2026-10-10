@@ -252,7 +252,11 @@ def _post_hoc(
     pa = np.array([r.get("pit_alt", r["pit"]) for r in e1c])
     out["E1_unresolved_alternatives_applied"] = _describe(pa) | {
         "verdict": _verdict(rule, pa)["verdict"],
-        "changed": {r["name"]: [r["pit"], r["pit_alt"]] for r in e1c if "pit_alt" in r},
+        "changed": {
+            r["name"]: [r["pit"], r["pit_alt"]]
+            for r in e1c
+            if "pit_alt" in r and abs(r["pit_alt"] - r["pit"]) > 1e-12
+        },
     }
     out["host_magnitude_stratification"] = (
         "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host "
