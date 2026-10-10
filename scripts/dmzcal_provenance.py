@@ -19,6 +19,8 @@ import urllib.request
 from collections import Counter
 from pathlib import Path
 
+from jansky_research.dmzcal import _date, _dm, _key, dedupe, provenance_side
+
 ROOT = Path(__file__).resolve().parents[1]
 FRB_COMMIT = "996fcda9b0b22431e3171208b4c8e1cf2798e823"  # FRBs/FRB HEAD, 2026-10-10
 ZDM_COMMIT = "e0f985bb55ad03d8b3435bc6a334a58d3ed674ba"  # FRBs/zdm HEAD, 2026-10-10
@@ -136,73 +138,8 @@ def fetch() -> tuple[list[dict], list[dict], list[dict]]:  # pragma: no cover - 
     )
 
 
-def _key(name: str) -> str:
-    """Strip 'FRB' prefix: 'FRB20240210A' -> '20240210A'."""
-    return re.sub(r"^FRB", "", name.strip())
-
-
-def _date(name: str) -> str:
-    return re.match(r"(\d{8})", _key(name)).group(1)  # type: ignore[union-attr]
-
-
-def _dm(js: dict) -> float | None:
-    v = js.get("DM")
-    if isinstance(v, dict):
-        v = v.get("value")
-    return None if v is None else float(v)
-
-
-def _n_nonnull(js: dict) -> int:
-    return sum(v not in (None, "", [], {}) for v in js.values())
-
-
-def dedupe(jsons: list[dict]) -> tuple[list[dict], list[dict]]:
-    """Plan 99 rule 1, refined before any posterior: group by UTC date, but merge
-    only files whose DMs agree within 1 pc/cc (two genuine bursts can share a date).
-    Keep the file with more non-null fields."""
-    groups: dict[str, list[dict]] = {}
-    for js in jsons:
-        groups.setdefault(_date(js["_file"]), []).append(js)
-    kept, merges = [], []
-    for date, g in sorted(groups.items()):
-        clusters: list[list[dict]] = []
-        for js in g:
-            for c in clusters:
-                a, b = _dm(js), _dm(c[0])
-                if a is not None and b is not None and abs(a - b) < 1.0:
-                    c.append(js)
-                    break
-            else:
-                clusters.append([js])
-        for c in clusters:
-            best = max(c, key=lambda j: (_n_nonnull(j), j["_file"]))
-            kept.append(best)
-            if len(c) > 1:
-                merges.append(
-                    {
-                        "date": date,
-                        "kept": best["_file"],
-                        "dropped": sorted(j["_file"] for j in c if j is not best),
-                    }
-                )
-    return kept, merges
-
-
 def side(telescope: str, name: str) -> tuple[str, str]:
-    k = _key(name)
-    if telescope == "DSA":
-        if k in DSA_FIT:
-            return "production", "HoffmannEmin25 DSA table" + (
-                " (z used)" if k in DSA_FIT_Z_USED else " (DM only)"
-            )
-        return "certification", "DSA, not in HoffmannEmin25 fit"
-    if telescope == "ASKAP":
-        if _date(name) <= ASKAP_FIT_CUTOFF:
-            return "production", "CRAFT <= 2023 (HoffmannEmin25 Sec. 3.3)"
-        return "certification", "ASKAP 2024+ (after HoffmannEmin25 sample)"
-    if telescope in ("CHIME", "MeerKAT"):
-        return "certification", f"{telescope} excluded from fit (HoffmannEmin25 Sec. 2.1)"
-    return "no_model", f"{telescope or 'unknown'}: no zdm survey model"
+    return provenance_side(telescope, name, DSA_FIT, DSA_FIT_Z_USED, ASKAP_FIT_CUTOFF)
 
 
 def assemble(base: list[dict], hosts: list[dict], jsons: list[dict]) -> dict:

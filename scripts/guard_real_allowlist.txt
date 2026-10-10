@@ -47,3 +47,7 @@ stokesv_metrics.json
 # that is the paper's deliverable (deliberately synthetic-primary; seeded and reproducible).
 # The slice's REAL leg has its own file (results/drift_voyager.json, is_real=true).
 drift_metrics.json
+# dmzcal_controls.json -- plan 99's C0 (null false-fail rate) and C1 (power) for the coverage
+# rule, committed BEFORE any real posterior so the frozen thresholds are checkable evidence.
+# Synthetic by design: both controls draw only from E2's own generative model; no real burst.
+dmzcal_controls.json
