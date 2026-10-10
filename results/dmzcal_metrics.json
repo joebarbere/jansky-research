@@ -1319,7 +1319,21 @@
      "above": 0.05555555555555555,
      "expected_each": 0.15999999999999998
     },
-    "verdict": "OVERCONFIDENT"
+    "verdict": "OVERCONFIDENT",
+    "dm_given_z_under_this_model": {
+     "n": 36,
+     "coverage": {
+      "0.68": 0.6944444444444444,
+      "0.95": 0.8888888888888888
+     },
+     "median": 0.37815217081986696,
+     "ks_p": 0.06743937534234534,
+     "tails68": {
+      "below": 0.3055555555555556,
+      "above": 0.0,
+      "expected_each": 0.15999999999999998
+     }
+    }
    },
    "E1_host_mean_x2": {
     "n": 36,
@@ -1334,7 +1348,21 @@
      "above": 0.1111111111111111,
      "expected_each": 0.15999999999999998
     },
-    "verdict": "OVERCONFIDENT"
+    "verdict": "OVERCONFIDENT",
+    "dm_given_z_under_this_model": {
+     "n": 36,
+     "coverage": {
+      "0.68": 0.6388888888888888,
+      "0.95": 0.8888888888888888
+     },
+     "median": 0.2827018091288438,
+     "ks_p": 0.0008701672688546935,
+     "tails68": {
+      "below": 0.3611111111111111,
+      "above": 0.0,
+      "expected_each": 0.15999999999999998
+     }
+    }
    },
    "E1_coverage_0.68_binomial": {
     "k": 20,

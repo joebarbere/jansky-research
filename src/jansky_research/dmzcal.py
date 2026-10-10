@@ -667,6 +667,10 @@ def paper_values(
         real[f"{w}CovNinetyFive"] = f"{v['coverage']['0.95']:.2f}"
         real[f"{w}MedPit"] = f"{v['median']:.2f}"
         real[f"{w}KsP"] = _fp(v["ks_p"])
+        if "dm_given_z_under_this_model" in v:
+            dz_ = v["dm_given_z_under_this_model"]
+            real[f"{w}DmzKsP"] = _fp(dz_["ks_p"])
+            real[f"{w}DmzMed"] = f"{dz_['median']:.2f}"
     bn = r1["E1_coverage_0.95_binomial"]
     real["CovNinetyFiveK"] = str(bn["k"])
     real["CovNinetyFiveCiLo"] = f"{bn['ci95'][0]:.2f}"
@@ -694,9 +698,10 @@ def paper_values(
     e1now = {r["name"]: r for r in metrics.get("e1_pits_for_paper", [])}
     real["FirstPitTwoOneOneTwoFour"] = f"{fp1['E1_pit']['FRB20201124A']:.3f}"
     real["FirstPitTwoOneZeroFourOneZero"] = f"{fp1['E1_pit']['FRB20210410D']:.4f}"
+    # R3: same precision before and after
     for n, w in (("FRB20201124A", "TwoOneOneTwoFour"), ("FRB20210410D", "TwoOneZeroFourOneZero")):
         if n in e1now:
-            real[f"NowPit{w}"] = f"{e1now[n]['pit']:.3f}"
+            real[f"NowPit{w}"] = f"{e1now[n]['pit']:.{3 if w == 'TwoOneOneTwoFour' else 4}f}"
     fr = ctrl["frozen"]
     b = fr["rule"]["bands"]
     rr = power["rejection_rate"]

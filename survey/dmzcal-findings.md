@@ -396,3 +396,24 @@ arXiv and the zdm repo. Mas-Ribas 2026 predicts the bias direction from host-DM 
 model-versus-model comparison, so the note does not claim the direction is new.
 
 **Status.** The revision is *applied*. Referee round 2 decides it.
+
+## RNAAS note: referee round 2 (2026-10-10) — MINOR, revision applied
+
+F1 and F3–F14 are closed. F2 is partly closed and carried into R1 and R2. The referee
+confirmed that the F1 Gaussian is exact for Hoffmann's two untruncated Gaussians, and that the
+host-factor re-grid propagates: all 36 PITs rise, and the DM|z PITs fall.
+- **R1.** The ×2 host run passes KS (0.016) but fails the 95% leg. Its DM|z check gives KS
+  p = 9e-4 (median 0.28), against 0.07 for ×1.5 (both now in
+  `post_hoc.referee1.E1_host_mean_x*.dm_given_z_under_this_model`). The note now says that a
+  constant host-DM error is either too small to remove the failure (×1.5) or inconsistent with
+  the DMs (×2).
+- **R2.** The body's "more likely site" sentence is replaced by the abstract's three-way
+  statement: the redshift distribution (population model or host selection), or a host DM that
+  changes with z.
+- **R3.** Before/after PIT precision is made consistent.
+- **R4.** The in-sample arm is stated as "would pass the same thresholds, though the bands were
+  set for 36".
+- **Other changes.** Cuts for length: the abstract and body are now about 1390 words by source
+  count, about 1460 in the rendered body excluding the abstract.
+
+**Status.** Applied. Round 3 confirms.

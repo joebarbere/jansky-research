@@ -272,7 +272,11 @@ def _post_hoc(
     for f in ("1.5", "2"):
         hv = {r["name"]: r for r in _load(f"dmzcal_e1_zdm_host{f}.json")["bursts"]}
         hp = np.array([hv[n]["pit"] for n in ci if "pit" in hv.get(n, {})])
-        ref[f"E1_host_mean_x{f}"] = _describe(hp) | {"verdict": _verdict(rule, hp)["verdict"]}
+        hd = np.array([hv[n]["dm_pit"] for n in ci if "dm_pit" in hv.get(n, {})])
+        ref[f"E1_host_mean_x{f}"] = _describe(hp) | {
+            "verdict": _verdict(rule, hp)["verdict"],
+            "dm_given_z_under_this_model": _describe(hd),
+        }
     pits = np.array([e1d[n]["pit"] for n in ci])
     nn = pits.size
     for q in (0.68, 0.95):
