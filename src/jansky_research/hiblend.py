@@ -23,7 +23,9 @@ strength so every step is testable without network.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -463,12 +465,15 @@ def _prepare(field: dict) -> dict:
     # blend-subtracted (subtracting a blend that may not exist shifts the covariates with R_pred
     # and biased beta to -0.32 +/- 0.08 under the null), and an S/N from the flux ERROR (a noise
     # level) -- dividing by a measured flux puts that survey's noise back into the covariate.
-    # If blending is real the covariates carry some of it and the calibration absorbs a little:
-    # that biases beta toward 0, the conservative direction, and C1 measures by how much.
+    # If blending is real the covariates carry some of it. That biases beta UP, not toward 0: the
+    # injected flux raises S_g and S/N and the steep calibration slope lowers the prediction
+    # Findings step 10 (R7): with these covariates C1 carries a +0.54 absorption bias that does not
+    # depend on the injection model; the beam signal adds ~3u - 2, u = ALFALFA's (unmeasured)
+    # response to added flux relative to the target's own survey ratio.
     s_g = target_flux_estimate(
-        field["flux_a"], field["flux_f"], field["sig_a_dex"], field["sig_f_dex"], nb,
-        subtract_blend=False,
-    )  # fmt: skip
+        field.get("cov_flux_a", field["flux_a"]), field.get("cov_flux_f", field["flux_f"]),
+        field["sig_a_dex"], field["sig_f_dex"], nb, subtract_blend=False,
+    )  # fmt: skip  # cov_flux_*: referee check R3 only (pre-injection covariates)
     snr_g = s_g / field["flux_err_f"]
     design = _design(field, np.log10(snr_g), s_g, masks["isolated"])
     coef = fit_calibration(y[masks["isolated"]], design[masks["isolated"]])
@@ -682,7 +687,15 @@ def _subset(field: dict, keep: np.ndarray, nb: Neighbours) -> dict:
     return out
 
 
-def injection_field(field: dict, rng: np.random.Generator, *, strength: float) -> dict:
+def injection_field(
+    field: dict,
+    rng: np.random.Generator,
+    *,
+    strength: float,
+    freeze_covariates: bool = False,
+    alfa_scale: np.ndarray | None = None,
+    alfa_map: Callable[[np.ndarray, np.ndarray], np.ndarray] | None = None,
+) -> dict:
     """C1 on real data: split the real ISOLATED targets in half. One half stays as the
     calibration sample; the other gets one synthetic neighbour each, drawn from the real primary
     sample's (separation, neighbour/target flux ratio) pairs, and its real measured fluxes are
@@ -710,6 +723,12 @@ def injection_field(field: dict, rng: np.random.Generator, *, strength: float) -
     )  # fmt: skip
     add_a = syn.flux * beam_response(syn.sep_arcmin, ALFA_FWHM_ARCMIN)
     add_f = syn.flux * beam_response(syn.sep_arcmin, FAST_FWHM_ARCMIN)
+    if alfa_scale is not None:  # referee check R5: the neighbour on ALFALFA's own flux scale
+        add_a = add_a * np.asarray(alfa_scale, float)[inj]
+    if alfa_map is not None:  # referee check R6: alfa_map(target indices, FASHI-scale increment)
+        add_a = alfa_map(inj, add_a)
+    if freeze_covariates:  # referee check R3: calibration covariates from pre-injection fluxes
+        sub["cov_flux_a"], sub["cov_flux_f"] = sub["flux_a"].copy(), sub["flux_f"].copy()
     sub["flux_a"] = sub["flux_a"].copy()
     sub["flux_f"] = sub["flux_f"].copy()
     sub["flux_a"][pos] += strength * add_a
@@ -928,6 +947,347 @@ def run_gated_v2(
         out["outcome"] = "blending not supported: beta consistent with 0"
         out["beta_upper_95"] = round(b["beta"] + 1.645 * b["beta_se"], 4)
     return out
+
+
+def _bins_with_means(res: np.ndarray, key: np.ndarray, n_bins: int) -> list[dict]:
+    edges = np.quantile(key, np.linspace(0, 1, n_bins + 1))
+    k = np.clip(np.searchsorted(edges, key, side="right") - 1, 0, n_bins - 1)
+    out = []
+    for b in range(n_bins):
+        v, kk = res[k == b], key[k == b]
+        out.append({"lo": round(float(edges[b]), 3), "hi": round(float(edges[b + 1]), 3),
+                    "n": int(v.size), "x_median": round(float(np.median(kk)), 4),
+                    "median": round(float(np.median(v)), 5), "mean": round(float(v.mean()), 5),
+                    "se_mean": round(float(v.std(ddof=1) / np.sqrt(v.size)), 5)})  # fmt: skip
+    return out
+
+
+def _chi2_means(bins: list[dict]) -> dict:
+    from scipy.stats import chi2
+
+    c = float(sum((b["mean"] / b["se_mean"]) ** 2 for b in bins))
+    return {"chi2": round(c, 2), "dof": len(bins), "p": round(float(chi2.sf(c, len(bins))), 5),
+            "max_abs_mean": round(max(abs(b["mean"]) for b in bins), 5)}  # fmt: skip
+
+
+def referee1_checks(
+    field: dict, *, seed: int = 101, d0_seed: int = 97, n_inj: int = 10, n_boot: int = 1000,
+    strip_deg: float = 2.0,
+) -> dict:  # fmt: skip
+    """Post-hoc checks R1-R4 for the note's first referee round (survey/hiblend-findings.md
+    step 6). R1 also records each bin's median log S/N, the figure's x positions."""
+    rng = np.random.default_rng(seed)
+    out: dict = {}
+    # R1 -- the same splits as D0 (seed 97's first draw) and C3' (RA-strip parity)
+    d1 = _prepare({**field, "calib": "v1"})
+    iso = np.flatnonzero(d1["masks"]["isolated"])
+    ls1 = np.log10(d1["snr_g"])
+    perm = np.random.default_rng(d0_seed).permutation(iso)
+    a, b = perm[: perm.size // 2], perm[perm.size // 2 :]
+    coef_a = fit_calibration(d1["y"][a], d1["design"][a])
+    d0 = _bins_with_means((d1["y"] - d1["design"] @ coef_a)[b], ls1[b], 5)
+    out["R1_D0_plan97"] = {"bins": d0, **_chi2_means(d0)}
+    parity = np.floor(np.asarray(field["ra"], float) / strip_deg).astype(int) % 2
+    for form in ("v2", "v1"):
+        f = {**field, "calib": form}
+        d = _prepare(f)
+        isom, ls = d["masks"]["isolated"], np.log10(d["snr_g"])
+        dirs = []
+        for train in (0, 1):
+            tr, te = isom & (parity == train), isom & (parity != train)
+            design = _design(f, ls, d["s_g"], tr)
+            coef = fit_calibration(d["y"][tr], design[tr])
+            res, key = (d["y"] - design @ coef)[te], ls[te]
+            ok = np.isfinite(res) & np.isfinite(key)
+            bins = _bins_with_means(res[ok], key[ok], 10)
+            dirs.append({"train_parity": train, "bins": bins, **_chi2_means(bins)})
+        out[f"R1_C3prime_{form}"] = dirs
+    # R2 -- the beta the plan-97 calibration misfit alone induces
+    q, pm, cl = d1["masks"]["null"], d1["masks"]["primary"], d1["clusters"]
+    curve = _bins_with_means(d1["resid"][iso], ls1[iso], 20)
+    xs = np.array([c["x_median"] for c in curve])
+    pred = np.interp(ls1, xs, np.array([c["mean"] for c in curve]))
+    pred_med = np.interp(ls1, xs, np.array([c["median"] for c in curve]))
+    out["R2_misfit_induced"] = {
+        "curve": curve,
+        "null_from_means": fit_beta(pred[q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "null_from_medians": fit_beta(pred_med[q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "primary_from_means": fit_beta(pred[pm], d1["r_pred"][pm], cl[pm], rng, n_boot=n_boot),
+        "null_r_median": round(float(np.median(d1["r_null"][q])), 5),
+        "primary_r_median": round(float(np.median(d1["r_pred"][pm])), 5),
+    }
+    # R3 -- C1 with calibration covariates from the pre-injection fluxes
+    r3: dict = {}
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # same injections in both modes
+            bs = [analyse(injection_field({**field, "calib": "v1"}, sub_rng, strength=st,
+                                          freeze_covariates=frozen), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            r3[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    out["R3_c1_covariates"] = r3
+    # R4 -- RA-strip blocks as bootstrap units
+    ra = np.asarray(field["ra"], float)
+    out["R4_strip_bootstrap"] = {"cluster_6arcmin": {
+        "null": fit_beta(d1["resid"][q], d1["r_null"][q], cl[q], rng, n_boot=n_boot),
+        "primary": fit_beta(d1["resid"][pm], d1["r_pred"][pm], cl[pm], rng, n_boot=n_boot)}}  # fmt: skip
+    for w in (2.0, 4.0, 8.0):
+        blk = np.floor(ra / w).astype(int)
+        out["R4_strip_bootstrap"][f"strip_{w:g}deg"] = {
+            "null": fit_beta(d1["resid"][q], d1["r_null"][q], blk[q], rng, n_boot=n_boot),
+            "primary": fit_beta(d1["resid"][pm], d1["r_pred"][pm], blk[pm], rng, n_boot=n_boot),
+        }
+    return out
+
+
+def referee2_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
+    """Post-hoc check R5 (survey/hiblend-findings.md step 8): C1 as in R3, with each injected
+    ALFALFA flux multiplied by the survey ratio the plan-97 calibration predicts for the target."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    scale = 10 ** (d["design"] @ d["coef"])
+    iso = d["masks"]["isolated"]
+    out: dict = {"alfa_scale_isolated": {
+        "median": round(float(np.median(scale[iso])), 4),
+        "p05": round(float(np.quantile(scale[iso], 0.05)), 4),
+        "p95": round(float(np.quantile(scale[iso], 0.95)), 4)}}  # fmt: skip
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # the same draws as R3
+            bs = [analyse(injection_field(f, sub_rng, strength=st, freeze_covariates=frozen,
+                                          alfa_scale=scale), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            out[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    return {"R5_injection_on_survey_scale": out}
+
+
+def referee3_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
+    """Post-hoc check R6 (survey/hiblend-findings.md step 9): C1 as in R3/R5, with the injected
+    ALFALFA increment passed through the plan-97 calibration curve read as a flux mapping,
+    g(S + a) - g(S), g(S) = S 10^c(S), at fixed W50, declination and flux error."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    coef, s_g = d["coef"], d["s_g"]
+    err = np.asarray(field["flux_err_f"], float)
+    lw, dec = np.log10(np.asarray(field["w50"], float)), np.asarray(field["dec"], float)
+
+    def c(idx: np.ndarray, flux: np.ndarray) -> np.ndarray:
+        return (
+            calibration_design(np.log10(flux / err[idx]), lw[idx], np.log10(flux), dec[idx]) @ coef
+        )
+
+    def amap(idx: np.ndarray, add: np.ndarray) -> np.ndarray:
+        s0 = s_g[idx]
+        return (s0 + add) * 10 ** c(idx, s0 + add) - s0 * 10 ** c(idx, s0)
+
+    iso = np.flatnonzero(d["masks"]["isolated"])
+    probe = amap(iso, 0.1 * s_g[iso]) / (0.1 * s_g[iso])  # effective factor for a 10% addition
+    out: dict = {"effective_factor_10pct_isolated": {
+        "median": round(float(np.median(probe)), 4),
+        "p05": round(float(np.quantile(probe, 0.05)), 4),
+        "p95": round(float(np.quantile(probe, 0.95)), 4)}}  # fmt: skip
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # the same draws as R3 and R5
+            bs = [analyse(injection_field(f, sub_rng, strength=st, freeze_covariates=frozen,
+                                          alfa_map=amap), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            out[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    return {"R6_injection_through_curve": out}
+
+
+def referee4_checks(
+    field: dict, *, seed: int = 101, n_inj: int = 10, us: tuple[float, ...] = (0.6, 0.86, 1.0)
+) -> dict:
+    """Post-hoc check R7 (survey/hiblend-findings.md step 10): C1 with a constant ALFALFA
+    response u to added flux relative to the target's own scale, alfa_map = u * r_i * a."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    r = 10 ** (d["design"] @ d["coef"])
+    out: dict = {}
+
+    def constant(u: float) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+        return lambda i, a: u * r[i] * a
+
+    for u in us:
+        row: dict = {}
+        for frozen in (False, True):
+            sub_rng = np.random.default_rng(seed + 1)  # the strength-1 draws of R3, R5 and R6
+            bs = [analyse(injection_field(f, sub_rng, strength=1.0, freeze_covariates=frozen,
+                                          alfa_map=constant(u)), sub_rng,
+                          n_boot=200)["primary"]["beta"] for _ in range(n_inj)]  # fmt: skip
+            row["frozen" if frozen else "production"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+        row["absorption"] = round(row["production"]["mean"] - row["frozen"]["mean"], 4)
+        out[f"u_{u:g}"] = row
+    return {"R7_constant_u": out}
+
+
+# ---------------------------------------------------------------------------------------------
+# The note: macros + figure from the committed real evidence (plans 97 and 98)
+# ---------------------------------------------------------------------------------------------
+
+
+def equal_flux_signal_dex() -> float:
+    """Largest predicted log ratio for one equal-flux, spectrally overlapping neighbour: the
+    size of the effect the test looks for (plan 97, "The prediction")."""
+    s = np.linspace(0.0, 6.0, 6001)
+    return float(np.max(np.log10((1 + beam_response(s, ALFA_FWHM_ARCMIN))
+                                 / (1 + beam_response(s, FAST_FWHM_ARCMIN)))))  # fmt: skip
+
+
+def _n(v: float) -> str:
+    return f"{int(v):,}".replace(",", "{,}")
+
+
+def _c1_ranges(ref1: dict, ref2: dict, ref3: dict) -> dict[str, str]:
+    """C1's response to a planted beta = 1 across the R3/R5/R6 injection models."""
+    blocks = (ref1["R3_c1_covariates"], ref2["R5_injection_on_survey_scale"],
+              ref3["R6_injection_through_curve"])  # fmt: skip
+    prod = [b["production_strength_1"]["mean"] for b in blocks]
+    froz = [b["frozen_strength_1"]["mean"] for b in blocks]
+    return {"ConeProdMin": f"{min(prod):.2f}", "ConeProdMax": f"{max(prod):.2f}",
+            "ConeFrozMin": f"{min(froz):.2f}", "ConeFrozMax": f"{max(froz):.2f}"}  # fmt: skip
+
+
+def amplitude_pass_probability(directions: list[dict], tol: float = 0.010) -> float:
+    """Chance that a PERFECT calibration passes C3''s amplitude arm (every decile median within
+    ``tol``) in every direction, if each median is Gaussian with its committed bootstrap SE."""
+    from scipy.stats import norm
+
+    return float(np.prod([2 * norm.cdf(tol / b["se"]) - 1 for d in directions for b in d["bins"]]))
+
+
+def paper_values(
+    m97: dict, diag: dict, m98: dict, ref1: dict, ref2: dict, ref3: dict, ref4: dict
+) -> dict[str, str]:
+    """Every number the note quotes, as ``hbReal*`` macro values, from the seven results files."""
+    g = m97["gates"]
+    c3 = m98["gates"]["C3prime_heldout"]["directions"]
+    v1 = m98["C3prime_plan97_form_for_comparison"]
+    d0 = diag["D0_heldout_isolated_by_snr"]
+    terc = diag["D1_null_by_snr_tercile"]
+    lo = [d["bins"][0]["median"] for d in c3]
+    hi = [d["bins"][-1]["median"] for d in c3]
+    sig = [d["bins"][0]["median"] / d["bins"][0]["se"] for d in c3] + [
+        d["bins"][-1]["median"] / d["bins"][-1]["se"] for d in c3
+    ]
+    f2, f3 = (lambda x: f"{x:.2f}"), (lambda x: f"{x:.3f}")
+    return {
+        "NFashi": _n(m97["n_fashi"]), "NAlfalfa": _n(m97["n_alfalfa"]),
+        "NTargets": _n(m97["n_targets"]), "NIsolated": _n(m97["samples"]["n_isolated"]),
+        "NPrimary": _n(m97["samples"]["n_primary"]), "NNull": _n(m97["samples"]["n_null"]),
+        "BeamFast": f"{m97['beams_arcmin']['fast']}", "BeamAlfa": f"{m97['beams_arcmin']['alfa']}",
+        "Signal": f3(equal_flux_signal_dex()),
+        "PowerFrac": f"{round(100 * g['C0_power']['planted_1']['detect_frac'])}",
+        "InjOne": f2(g["C1_planted"]["beta_planted_1_mean"]),
+        "InjOneSd": f2(g["C1_planted"]["beta_planted_1_sd"]),
+        "InjZero": f2(g["C1_planted"]["beta_planted_0_mean"]),
+        "Chance": f2(100 * g["C4_match"]["chance_rate"]),
+        "BetaNull": f2(g["C2_spectral_null"]["beta"]), "BetaNullErr": f2(g["C2_spectral_null"]["beta_se"]),
+        "BetaNullSig": f"{g['C2_spectral_null']['beta_sigma']:.1f}",
+        "Beta": f2(m97["primary"]["beta"]), "BetaErr": f2(m97["primary"]["beta_se"]),
+        "DzeroTop": f3(d0[-1]["median"]), "DzeroTopSig": f"{d0[-1]['sigma']:.1f}",
+        "DzeroMid": f3(min(b["median"] for b in d0)),
+        "MatchedNull": f2(diag["D1_null_snr_matched"]["coef"][1]),
+        "MatchedNullErr": f2(diag["D1_null_snr_matched"]["se"][1]),
+        "TercLo": f2(terc[0]["beta"]), "TercLoErr": f2(terc[0]["beta_se"]),
+        "TercHi": f2(terc[-1]["beta"]), "TercHiErr": f2(terc[-1]["beta_se"]),
+        "Density": f3(diag["D3_null_density"]["coef"][2]),
+        "DensityErr": f3(diag["D3_null_density"]["se"][2]),
+        "VoneMax": f3(max(v1["max_abs_median"])),
+        "VtwoMaxA": f3(c3[0]["max_abs_median"]), "VtwoMaxB": f3(c3[1]["max_abs_median"]),
+        "VtwoPA": f3(c3[0]["p"]), "VtwoPB": f3(c3[1]["p"]),
+        "VtwoLoMin": f3(min(lo)), "VtwoLoMax": f3(max(lo)),
+        "VtwoHiMin": f3(min(hi)), "VtwoHiMax": f3(max(hi)),
+        "VtwoSigMin": f"{min(abs(x) for x in sig):.1f}", "VtwoSigMax": f"{max(abs(x) for x in sig):.1f}",
+        "VoneMaxB": f3(min(v1["max_abs_median"])),
+        "AmpPass": f2(amplitude_pass_probability(c3)),
+        "MeanPA": f2(ref1["R1_C3prime_v2"][0]["p"]), "MeanPB": f3(ref1["R1_C3prime_v2"][1]["p"]),
+        "MisfitNull": f3(ref1["R2_misfit_induced"]["null_from_means"]["beta"]),
+        "MisfitNullErr": f3(ref1["R2_misfit_induced"]["null_from_means"]["beta_se"]),
+        "RnullMed": f"{ref1['R2_misfit_induced']['null_r_median']:.4f}",
+        "RprimMed": f"{ref1['R2_misfit_induced']['primary_r_median']:.4f}",
+        "MisfitNullMed": f2(ref1["R2_misfit_induced"]["null_from_medians"]["beta"]),
+        "ConeProdSd": f2(ref1["R3_c1_covariates"]["production_strength_1"]["sd"]),
+        "MeanMaxB": f3(ref1["R1_C3prime_v2"][1]["max_abs_mean"]),
+        "MeanMaxA": f3(ref1["R1_C3prime_v2"][0]["max_abs_mean"]),
+        "ScaledFrozen": f2(ref2["R5_injection_on_survey_scale"]["frozen_strength_1"]["mean"]),
+        "ScaledProd": f2(ref2["R5_injection_on_survey_scale"]["production_strength_1"]["mean"]),
+        "ScaledSd": f2(ref2["R5_injection_on_survey_scale"]["production_strength_1"]["sd"]),
+        **_c1_ranges(ref1, ref2, ref3),
+        "Absorption": f2(float(np.mean([v["absorption"] for v in ref4["R7_constant_u"].values()]))),
+        "UFrozLo": f2(ref4["R7_constant_u"]["u_0.6"]["frozen"]["mean"]),
+        "UFrozMid": f2(ref4["R7_constant_u"]["u_0.86"]["frozen"]["mean"]),
+        "UFrozHi": f2(ref4["R7_constant_u"]["u_1"]["frozen"]["mean"]),
+        "UProdLo": f2(ref4["R7_constant_u"]["u_0.6"]["production"]["mean"]),
+        "VoneMaxMean": f3(max(d["max_abs_mean"] for d in ref1["R1_C3prime_v1"])),
+        "ConeProd": f2(ref1["R3_c1_covariates"]["production_strength_1"]["mean"]),
+        "ConeFrozen": f2(ref1["R3_c1_covariates"]["frozen_strength_1"]["mean"]),
+        "ConeFrozenSd": f2(ref1["R3_c1_covariates"]["frozen_strength_1"]["sd"]),
+        "StripSigMin": f"{min(v['null']['beta_sigma'] for v in ref1['R4_strip_bootstrap'].values()):.1f}",
+        "StripSigMax": f"{max(v['null']['beta_sigma'] for v in ref1['R4_strip_bootstrap'].values()):.1f}",
+    }  # fmt: skip
+
+
+def write_paper(out: str | Path = ".") -> list[Path]:
+    """``papers/hiblend/generated/macros.tex`` and the figure, from the committed results."""
+    import json
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from .report import preserve_live_macros
+
+    op = Path(out)
+    res = op / "results"
+    names = ("metrics", "diagnostics", "v2_metrics", "referee1", "referee2", "referee3", "referee4")
+    m97, diag, m98, ref1, ref2, ref3, ref4 = (
+        json.loads((res / f"hiblend_{n}.json").read_text()) for n in names
+    )
+    vals = paper_values(m97, diag, m98, ref1, ref2, ref3, ref4)
+    paper = op / "papers" / "hiblend"
+    (paper / "generated").mkdir(parents=True, exist_ok=True)
+    (paper / "figures").mkdir(parents=True, exist_ok=True)
+    lines = [
+        "% Auto-generated by jansky_research.hiblend.write_paper -- do not edit.",
+        "% hbReal* come from results/hiblend_metrics.json, hiblend_diagnostics.json,",
+        "% hiblend_v2_metrics.json and hiblend_referee{1,2,3,4}.json (real data only).",
+        rf"\newcommand{{\hbSource}}{{{m97['source']}}}",
+        *(rf"\newcommand{{\hbReal{k}}}{{{v}}}" for k, v in vals.items()),
+    ]
+    mpath = paper / "generated" / "macros.tex"
+    mpath.write_text(preserve_live_macros("\n".join(lines) + "\n", mpath))
+    fig, ax = plt.subplots(figsize=(3.4, 2.6))
+    ax.axhline(0, color="0.5", lw=0.6)
+    style = {"v1": ("0.45", "plan-97 calibration"), "v2": ("C0", "plan-98 calibration")}
+    for form, (col, lab) in style.items():
+        for k, d in enumerate(ref1[f"R1_C3prime_{form}"]):
+            b = d["bins"]
+            ax.errorbar([x["x_median"] + (k - 0.5) * 0.012 for x in b], [x["mean"] for x in b],
+                        [x["se_mean"] for x in b], fmt="os"[k], color=col, mfc=col if k == 0 else "none",
+                        ms=3, lw=0.8, capsize=0, label=lab if k == 0 else None)  # fmt: skip
+    ax.set_xlabel(r"$\log_{10}$ S/N (bin median)")
+    ax.set_ylabel("held-out mean residual (dex)")
+    ax.legend(fontsize=6, frameon=False, loc="upper center")
+    fig.tight_layout()
+    fpath = paper / "figures" / "hiblend_heldout.pdf"
+    fig.savefig(fpath)
+    plt.close(fig)
+    return [mpath, fpath]
 
 
 def fetch_alfalfa() -> dict:  # pragma: no cover - network

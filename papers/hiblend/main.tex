@@ -1,0 +1,144 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{An inconclusive two-beam blending test}
+\shortauthors{Barbere}
+\begin{document}
+\title{An Inconclusive Two-Beam FASHI--ALFALFA Test for H\,I Beam Blending}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Beam blending should raise H\,I fluxes more in the Arecibo beam
+(\hbRealBeamAlfa~arcmin) than in the FAST beam (\hbRealBeamFast~arcmin). We tested this on
+\hbRealNTargets\ galaxies matched between FASHI DR2 and ALFALFA $\alpha$.100, with controls
+fixed first. Neighbours too distant in velocity to blend gave a slope of
+$\hbRealBetaNull\pm\hbRealBetaNullErr$, so the test is inconclusive. The
+calibration misfit measured on isolated galaxies does not reproduce that slope; its cause is
+unknown. An injection test's response to a planted signal carries a $+\hbRealAbsorption$ bias from the
+calibration and otherwise depends on ALFALFA's unmeasured response to added flux. A
+second attempt stopped when its held-out calibration gate failed, on $\chi^2$ as well as on a
+tolerance that a perfect calibration fails two times in three. No blending slope is interpreted.
+\end{abstract}
+
+\keywords{H I line emission (690) --- Sky surveys (1464) --- Flux calibration (544) ---
+Galaxy environments (2029)}
+
+\section{Test}
+\label{sec:test}
+In FASHI DR2 \citep{fashi_dr2}, galaxies with another galaxy inside their flux aperture carry
+more H\,I at fixed optical luminosity than isolated ones (\code{fashienv},
+\citealt{janskyresearch}). The excess could be blending or real gas. \citet{haynes2018}
+describe confusion in ALFALFA as relatively minor, though confused sources are not hard to
+find (their arXiv version, p.~15, citing \citealt{jones2016}), and \citet{jones2015} studied it by simulation; we know of no test on the
+same galaxies with two beams. FASHI DR2 gives a FAST beam of \hbRealBeamFast~arcmin at
+1420~MHz (its Table~1), and \citet{giovanelli2005} an ALFA beam averaging
+\hbRealBeamAlfa~arcmin (arXiv preprint, pp.~8 and 22; 3.3 by 3.8~arcmin). We use these nominal
+widths; broader effective beams would change both the size and the separation dependence of
+the prediction. FASHI DR2 (\hbRealNFashi\ sources with positive flux and error and finite velocity and width) was matched to ALFALFA $\alpha$.100 code-1
+detections \citep[\hbRealNAlfalfa\ sources in all;][]{haynes2018} within 1.5~arcmin and
+100~km~s$^{-1}$; shifting one catalogue by 10~arcmin gives \hbRealChance\% chance matches.
+
+A neighbour of flux $S_n$ at separation $s_n$, overlapping in velocity, adds
+$S_n\exp(-4\ln2\,s_n^2/\theta^2)$ to a beam of width $\theta$. The predicted log ratio $R$ of the
+ALFA and FAST fluxes peaks at \hbRealSignal~dex for one equal-flux neighbour at 2~arcmin; its
+median is \hbRealRprimMed\ (primary) and \hbRealRnullMed\ (null). The statistic is the least-squares slope $\beta$ of
+the observed log flux ratio on $R$, after removing the survey-to-survey flux scale: in the beam
+model blending predicts $\beta\approx1$, extra gas in close pairs $\beta\approx0$. The flux scale (a function of
+signal-to-noise, line width, flux and declination) was fitted on the \hbRealNIsolated\ targets
+with no neighbour within 6~arcmin and applied to the \hbRealNPrimary\ with a neighbour at
+1--6~arcmin in the same velocity window. Here signal-to-noise is the noise-weighted geometric
+mean of the two fluxes over the FASHI flux error, not the catalogue SNR. The negative control
+uses \hbRealNNull\ targets whose neighbours lie more than 600~km~s$^{-1}$ away and cannot blend;
+its slope must be within $2\sigma$ of zero. Errors come from a bootstrap over groups of targets
+linked within 6~arcmin.
+
+\section{Results}
+\label{sec:results}
+On simulated fluxes with the real geometry, a planted $\beta=1$ was detected at $3\sigma$ in
+20 of 20 trials. Blends injected into real isolated targets returned $\beta=\hbRealInjOne$
+(scatter \hbRealInjOneSd\ over ten injections), within the pre-set tolerance of 0.3. Post-hoc
+variants split this response into two terms. Injected flux, like a real blend, raises the
+calibration covariates, which adds $+\hbRealAbsorption$ to $\beta$ in every variant. The rest is
+the beam signal, which depends on ALFALFA's response $u$ to added flux relative to the target's
+own survey ratio. It is about $3u-2$ for our neighbour separations: \hbRealUFrozLo,
+\hbRealUFrozMid\ and \hbRealUFrozHi\ at $u=0.6$, 0.86 and 1. FASHI DR2 attributes the low-S/N
+offset to Eddington bias \citep[][\S~5.2]{fashi_dr2}, which favours $u\approx0.86$ and the frozen
+value, but nothing here measures $u$. At $u=0.6$ the planted signal contributes almost nothing,
+yet the bias alone gives \hbRealUProdLo, inside the tolerance, so a passing injection test does
+not show that the estimator is calibrated. The negative control failed,
+$\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, so the primary slope
+($\hbRealBeta\pm\hbRealBetaErr$) cannot be interpreted.
+
+Diagnostics run afterwards, with their expected outcomes recorded first, did not find the cause.
+Tested on isolated targets it was not fitted on, the calibration's bin means are off by up to
+\hbRealVoneMaxMean~dex (Figure~\ref{fig:heldout}). Mapped onto the null targets by their
+signal-to-noise, this misfit predicts $\beta_{\rm null}$ between \hbRealMisfitNullMed\ and
+\hbRealMisfitNull\ (from bin medians and means). The null slope itself appears to depend on target
+signal-to-noise: weighted to the primary sample's distribution it falls to
+$\hbRealMatchedNull\pm\hbRealMatchedNullErr$, and it is $\hbRealTercLo\pm\hbRealTercLoErr$ in the
+faintest third against $\hbRealTercHi\pm\hbRealTercHiErr$ in the brightest, contrasts of under
+$2\sigma$.
+Resampling 2--8-degree strips of right ascension instead of 6-arcmin groups leaves the failure at
+\hbRealStripSigMin--\hbRealStripSigMax$\sigma$, and local galaxy density does not account for it.
+
+A second attempt, designed after these diagnostics on the same targets but fixed before it was
+run, used a linear spline in signal-to-noise and added local density. It placed a held-out gate
+first: fitted on alternate 2-degree strips and tested on the rest, every decile median had to
+lie within 0.010~dex of zero with $p>0.01$ over the ten. Both directions failed on both counts ($p=\hbRealVtwoPA$
+and \hbRealVtwoPB), and the run stopped before $\beta$ was measured; the plan read such a stop as
+showing that calibration limits the test. Later checks do not support that reading, and we
+withdraw it. Given the decile errors, a perfect calibration passes the 0.010~dex rule in both
+directions with probability only \hbRealAmpPass. Medians also respond to skew, while the fit
+uses means. In bin means, a statistic chosen after the gate failed, the spline calibration
+gives $\chi^2$ $p=\hbRealMeanPA$ and \hbRealMeanPB, against $p<10^{-5}$ for the original form,
+though one bin (\hbRealMeanMaxB~dex) still exceeds the tolerance (Figure~\ref{fig:heldout}).
+
+\begin{figure}
+\plotone{figures/hiblend_heldout.pdf}
+\caption{Mean flux-ratio residual of isolated targets not used in the fit, against
+signal-to-noise. The calibration was fitted on alternate 2-degree strips of right ascension and
+tested on the others (filled and open symbols for the two directions). Grey: the original
+calibration; blue: the spline calibration of the second attempt. The gate judged bin medians,
+which are not plotted.}
+\label{fig:heldout}
+\end{figure}
+
+\section{Conclusion}
+\label{sec:conclusion}
+The test is inconclusive. Its negative control fails for a reason we have not found. The
+calibration misfit measured on isolated galaxies does not reproduce it, the failure survives the
+resampling scales we tried, and local density does not explain it. The slope appears larger at
+low signal-to-noise, though by under $2\sigma$. A flux scale that differs for galaxies with
+neighbours, misfit along another covariate, and confusion in a broader effective ALFALFA beam
+all remain untested. The second attempt's gate stopped the run, and its residuals look
+consistent with zero only in a post-hoc statistic. A further attempt needs two things first: a
+gate framed as a bound on the slope a calibration misfit can induce, with its false-failure rate
+computed before it is fixed, and an independent measure of how the ALFALFA flux scale applies
+to added flux, without which an injection test cannot calibrate the estimator. Interferometric
+H\,I imaging of the pairs would settle the question directly.
+
+Reproducibility: \code{jansky\_research.hiblend} and \code{scripts/hiblend\_*.py}; every number
+here is generated from \code{results/hiblend\_*.json}. The plans, with the controls as frozen,
+and the record of each step are \code{plans/97}, \code{plans/98} and
+\code{survey/hiblend-findings.md}. Both catalogues are public.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~5.5, accessed 2026). Claude contributed to the
+design, implementation, and testing of the \code{hiblend} module and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+We used the FASHI DR2 catalogue (FAST, National Astronomical Observatories, Chinese Academy of
+Sciences) and the ALFALFA $\alpha$.100 catalogue through VizieR; the analysis builds on the
+\code{jansky} project. The author acknowledges the collaborative contribution of Anthropic's
+Claude.
+\end{acknowledgments}
+
+\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude},
+astroquery, Astropy, NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliography{refs}
+\end{document}

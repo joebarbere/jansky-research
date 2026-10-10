@@ -292,3 +292,95 @@ def test_run_gated_v2_runs_c3prime_first_and_checks_c2_per_tercile(monkeypatch):
     stop = h.run_gated_v2(f, s, np.random.default_rng(5))
     assert stop["stopped_at"].startswith("C3'") and list(stop["gates"]) == ["C3prime_heldout"]
     assert "primary" not in stop
+
+
+def test_write_paper_fills_every_macro_from_the_committed_results(tmp_path):
+    import shutil
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    (tmp_path / "results").mkdir()
+    for name in (
+        "hiblend_metrics.json",
+        "hiblend_diagnostics.json",
+        "hiblend_v2_metrics.json",
+        "hiblend_referee1.json",
+        "hiblend_referee2.json",
+        "hiblend_referee3.json",
+        "hiblend_referee4.json",
+    ):
+        shutil.copy(root / name, tmp_path / "results" / name)
+    macros, fig = h.write_paper(tmp_path)
+    text = macros.read_text()
+    assert fig.stat().st_size > 0 and r"\hbRealVtwoMaxB" in text
+    assert "{--}" not in text  # every quoted number has a committed value
+    assert abs(h.equal_flux_signal_dex() - 0.0445) < 0.001  # plan 97: "at most ~0.045 dex"
+    # a perfect calibration with these bin errors passes the 0.010 dex rule about 1/3 of the time
+    one = [{"bins": [{"se": 0.005}] * 10}]
+    assert 0.6 < h.amplitude_pass_probability(one) ** (1 / 10) < 0.97
+
+
+def test_injection_can_freeze_the_calibration_covariates():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    sub = h.injection_field(f, np.random.default_rng(3), strength=1.0, freeze_covariates=True)
+    assert np.all(sub["cov_flux_f"] <= sub["flux_f"]) and np.any(sub["cov_flux_f"] < sub["flux_f"])
+    assert "cov_flux_a" not in h.injection_field(f, np.random.default_rng(3), strength=1.0)
+
+
+def test_referee1_checks_reproduce_their_splits_and_report_every_block():
+    fashi, alfalfa = _two_survey_sky(3000, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    out = h.referee1_checks(f, n_inj=2, n_boot=50)
+    assert len(out["R1_D0_plan97"]["bins"]) == 5 and len(out["R1_C3prime_v2"]) == 2
+    b = out["R1_C3prime_v2"][0]["bins"][0]
+    assert b["lo"] <= b["x_median"] <= b["hi"] and "mean" in b and "se_mean" in b
+    assert set(out["R3_c1_covariates"]) == {
+        "production_strength_1", "frozen_strength_1", "production_strength_0", "frozen_strength_0",
+    }  # fmt: skip
+    assert set(out["R4_strip_bootstrap"]) == {
+        "cluster_6arcmin",
+        "strip_2deg",
+        "strip_4deg",
+        "strip_8deg",
+    }
+    # the C3' medians R1 recomputes are the ones heldout_calibration_check reports
+    c3 = h.heldout_calibration_check({**f, "calib": "v2"}, np.random.default_rng(0), n_boot=20)
+    assert [x["median"] for x in out["R1_C3prime_v2"][0]["bins"]] == [
+        x["median"] for x in c3["directions"][0]["bins"]
+    ]
+
+
+def test_injection_alfa_scale_multiplies_only_the_alfalfa_addition():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    n = len(f["flux_f"])
+    zero = h.injection_field(f, np.random.default_rng(3), strength=0.0)  # same draws, no flux
+    base = h.injection_field(f, np.random.default_rng(3), strength=1.0)
+    two = h.injection_field(f, np.random.default_rng(3), strength=1.0, alfa_scale=np.full(n, 2.0))
+    assert np.allclose(two["flux_f"], base["flux_f"])
+    assert np.allclose(two["flux_a"] - zero["flux_a"], 2 * (base["flux_a"] - zero["flux_a"]))
+    assert np.any(base["flux_a"] > zero["flux_a"])
+    out = h.referee2_checks(f, n_inj=2)["R5_injection_on_survey_scale"]
+    assert {"frozen_strength_1", "production_strength_0", "alfa_scale_isolated"} <= set(out)
+
+
+def test_injection_alfa_map_replaces_the_alfalfa_increment():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    zero = h.injection_field(f, np.random.default_rng(3), strength=0.0)
+    base = h.injection_field(f, np.random.default_rng(3), strength=1.0)
+    tripled = h.injection_field(
+        f, np.random.default_rng(3), strength=1.0, alfa_map=lambda idx, add: 3 * add
+    )
+    assert np.allclose(tripled["flux_a"] - zero["flux_a"], 3 * (base["flux_a"] - zero["flux_a"]))
+    assert np.allclose(tripled["flux_f"], base["flux_f"])
+    out = h.referee3_checks(f, n_inj=2)["R6_injection_through_curve"]
+    assert {"frozen_strength_1", "effective_factor_10pct_isolated"} <= set(out)
+
+
+def test_referee4_checks_report_absorption_per_u():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    out = h.referee4_checks(f, n_inj=2, us=(1.0,))["R7_constant_u"]["u_1"]
+    assert out["absorption"] == round(out["production"]["mean"] - out["frozen"]["mean"], 4)

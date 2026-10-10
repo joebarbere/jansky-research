@@ -59,7 +59,7 @@ No real data had been opened.
    construction. **Change:** the C3 covariates use the noise-decorrelated geometric-mean flux
    *without* blend subtraction (`subtract_blend=False`). R_pred keeps the subtraction, which only
    sets beta's scale if blending is real. If blending is present, the covariates carry some of it
-   and the calibration absorbs a little, which biases beta toward 0 (the conservative direction).
+   and the calibration absorbs a little, which biases beta toward 0 (the conservative direction). *(Wrong sign: step 6, R3.)*
    C1 measures how much.
 
 **After all three changes** (16 synthetic realizations each, 3,000 targets):
@@ -244,7 +244,9 @@ Those residuals are a third to a half of the ≈0.045 dex equal-flux blending si
 they sit exactly where plan 97's null slope was concentrated (D1, lowest tercile).
 
 **The frozen outcome applies: the survey-to-survey flux scale cannot be calibrated, with these
-covariates and from isolated targets, to the precision this test needs.** Calibration is the
+covariates and from isolated targets, to the precision this test needs.** *(Qualified in step 6:
+judged by means rather than medians, the plan-98 calibration passes the held-out χ² test, and
+the misfit does not induce the C2 slope. The frozen stop stands, but the reading above does not.)* Calibration is the
 limiting systematic of the two-beam FASHI × ALFALFA blending test. This is the plan's
 pre-stated negative and is reported as such. It also closes plan 97's question: its C2 failure
 is at least partly a calibration failure, and a calibration good enough to separate the two
@@ -267,3 +269,315 @@ another fork chosen with C3′'s answer in hand. Two candidates are left as idea
 
 Either would need its own frozen plan, written knowing that two calibration attempts have
 already failed on these targets.
+
+## Step 6: referee round 1 on the note, and four post-hoc checks: predictions stated before running (2026-10-10)
+
+Referee verdict on `papers/hiblend/`: **minor revision** (15 findings). The outcome stands; what the
+referee disputes is how strongly the abstract, figure and conclusion state it. Four findings call
+for a computation. All four are **post hoc**, and each prediction below was committed before the
+check ran. Results go to `results/hiblend_referee1.json`.
+
+- **R1. Means against medians (referee F3).** C3′ and D0 judge the calibration by binned
+  *medians*, while the calibration and β are least-squares *means*. Recompute the held-out bins
+  with means and their χ².
+  - *If skew alone made C3′ fail:* the χ² on means has p > 0.01.
+  - *If the misfit is real in the mean:* it fails about as the medians do.
+- **R2. The β_null the misfit alone predicts (F4).** Take the plan-97 calibration's binned mean
+  residual against S/N on isolated targets (20 bins), map it onto each null target by its S/N,
+  and regress that on R_null.
+  - *If the calibration misfit explains C2:* β_misfit is about +0.26.
+  - *Per the referee's sign argument* (R_null runs opposite to S/N, and the faint-end residual is
+    negative): β_misfit ≤ 0 or small.
+- **R3. C1 with pre-injection covariates (F5).** Repeat C1, ten injections at strength 1 and 0,
+  with the calibration covariates (S_g, S/N) computed from the fluxes *before* injection.
+  - *If covariate absorption causes the 1.25:* β falls to about 1.0, and the code comment calling
+    the absorption "conservative" has the sign wrong.
+  - *If not:* β stays about 1.25.
+- **R4. Bootstrap over RA strips (F7).** Refit β_null and β with 2°, 4° and 8° RA strips as the
+  resampling unit, in place of 6′ clusters.
+  - *If a spatially coherent systematic is present:* the SE grows and β_null falls below 2σ.
+  - *If not:* the SE stays near 0.087.
+
+**Withdrawn now (F7), no computation needed.** Step 5 said the misfit "transfers poorly across RA
+strips". The two directions' end-decile residuals differ by only 1.1–1.2σ, with the same signs,
+so the data do not support that sentence.
+
+### Step 6 results (run 2026-10-10; `results/hiblend_referee1.json`, seed 101)
+
+Checks committed at `9f49696` (predictions) and before the run (code). The recomputed medians
+reproduce the committed D0 and C3′ medians exactly, so the splits are the same ones.
+
+**R1. Means against medians: the median gate is what failed, not the mean calibration.** Here are
+the held-out χ² values using bin *means* (10 deciles, SE = sd/√n):
+
+| | even→odd: p (max \|mean\|) | odd→even: p (max \|mean\|) |
+|---|---|---|
+| plan-98 form | **0.36** (0.0087) | **0.043** (0.0106) |
+| plan-97 form | 0.0 (0.042) | 0.0 (0.051) |
+
+D0 (plan-97 form, random half) also fails in the mean: p ≈ 0, with max |mean| 0.027.
+- **Plan 97's calibration was inadequate in the mean as well.**
+- **Plan 98's calibration is adequate in the mean at p > 0.01 in both directions.** Its median
+  failure came mainly from skew: the faintest decile's median is −0.015 and −0.027, while its
+  means are +0.001 and −0.008.
+
+This matches the second prediction branch only for plan 97. For plan 98 it matches the first:
+skew alone made C3′ fail. In addition, from the committed bootstrap SEs, a perfect calibration
+would pass the 0.010 dex amplitude arm in both directions with probability **0.33**. That property
+of the gate was knowable before the run and was not computed. **The frozen stop stands. But
+"calibration is the limiting systematic", the reading in step 5 and in the v2 JSON's outcome
+string, is not supported, and is withdrawn.**
+
+**R2. The S/N misfit does not explain C2.** The plan-97 calibration's binned mean residual
+against S/N (20 bins, isolated targets), mapped onto the null targets, induces
+β_null = **0.003 ± 0.018** (−0.07 ± 0.02 from medians), against the measured 0.256. This is
+the referee's branch. The primary sample gives −0.001 ± 0.025. Median R is 0.0034 (null) and
+0.0021 (primary), 13–21 times below the 0.045 dex maximum. **The C2 failure is unexplained.**
+This check covers misfit along S/N only; a misfit along another covariate is not tested.
+
+**R3. Covariate absorption inflates β; it is not "conservative".** C1 used ten injections, with
+the same injections in both modes:
+
+| covariates | planted 1: mean ± sd | planted 0: mean ± sd |
+|---|---|---|
+| from injected fluxes (production) | 1.24 ± 0.13 | −0.03 ± 0.06 |
+| from pre-injection fluxes | **0.70 ± 0.13** | −0.03 ± 0.06 |
+
+Injected flux raises S_g and S/N, and the steep calibration slope then lowers the prediction,
+which **raises** β by about 0.54. The code comment and step 2 said this biases β "toward 0, the
+conservative direction"; the sign was wrong, and the comment is corrected. The prediction branch
+("β falls to about 1.0") is only half met: with frozen covariates β is 0.70, so a second,
+downward bias of about 30% remains and is undiagnosed. The planted-1 scatter here (0.13) is
+far larger than the 0.038 plan 97 committed for the identical procedure. *(Round 2: a variance
+ratio test gives p ≈ 0.001, and 0.038 is below plan 97's own planted-0 scatter, which a planted
+signal cannot cause. It is not chance, and it remains unexplained.)*
+
+**R4. The C2 failure does not depend on the bootstrap unit.** β_null = 0.256 with SE 0.088
+(6′ clusters), 0.087 (2° strips), 0.097 (4°) and 0.088 (8°), giving 2.9, 2.9, 2.6 and 2.9σ. This
+is the "no coherent systematic" branch.
+
+**Where this leaves the slice.**
+- Plan 97 is ambiguous. Its C2 failure is robust to the resampling unit and is not produced by
+  the S/N calibration misfit; its cause is unknown.
+- Plan 98 stopped at a gate that tested medians with a tolerance tighter than the errors. Its
+  calibration is adequate in the mean, but by the frozen rule β was never computed.
+- A third attempt would need a gate whose false-failure rate is computed before freezing, and
+  which judges the statistic the estimator uses. Running β under plan 98's calibration now would
+  be a forked analysis, so it was not done.
+
+## Step 7: referee round 2 on the note (2026-10-10): minor revision, text fixes applied
+
+The referee resolved F1, F2, F6–F9, F11, F12 and F15 against the evidence. They also confirmed:
+- the R1 splits reproduce the C3′ and D0 medians exactly;
+- R4's 6′ β_null reproduces plan 97's value, so the refactor did not change the v1 path;
+- the commit order: predictions `9f49696`, then code, then results.
+
+The revision had overclaimed in the opposite direction. Each fix uses numbers already committed:
+
+1. **"In the mean, its calibration passes" withdrawn.** Odd→even has one mean bin at 0.011 dex,
+   which fails the amplitude arm, and in means that arm is not harsh: a perfect calibration
+   passes it about 70% of the time (referee's arithmetic). The χ² on means (p = 0.36, 0.043) was
+   chosen after the gate failed. The note now says "consistent with zero by χ², post hoc, one bin
+   above tolerance". The abstract states that the median χ² arm failed too, so the stop is not
+   blamed on the tolerance alone.
+2. **"Not the S/N calibration misfit" narrowed.** R2 can only see a misfit that exists in the
+   *isolated* sample and transfers through S/N. A flux scale specific to targets with neighbours
+   is invisible to it. D1 is restored to the note: the null slope is concentrated at low S/N
+   (S/N-matched 0.12 ± 0.08; terciles 0.38 against −0.03; contrasts under 2σ), and "a flux scale
+   that differs for galaxies with neighbours" is listed as untested.
+3. **R3's 0.70 is labelled unexplained**, and C1 is said to bracket the gain (0.70–1.24) rather
+   than measure it. The referee's candidate cause is untested: the injected neighbour flux is set
+   on the FASHI scale and added unchanged to ALFALFA, while FASHI DR2 §5.2 reports ALFALFA higher
+   at low SNR. An offset of about 10% would cost about 30% of the signal. Testing it is a new run
+   and has not been done.
+4. The C1 scatter now quotes both 0.04 (committed) and 0.13 (rerun). See R3 above.
+5. R2 is quoted as a range, −0.07 (medians) to 0.003 (means). The quoted SE held the curve fixed,
+   and faint targets are clamped to the faintest bin.
+6. "Broader beams change only the scale" was false. R depends on separation nonlinearly (3.8′
+   scales it by 1.35 at 1′ and 2.46 at 5′). Fixed.
+7. Paragraph 3 of the Results is labelled post hoc, and it states that plan 98's pre-registered
+   reading of a C3′ stop ("calibration is the limiting systematic") is withdrawn.
+8. The prescription now says the next gate should bound the β that a misfit can induce (an
+   R2-type test), not the binned amplitudes.
+9. Nits: "no slope interpreted"; 156,269 is the count after finiteness cuts; Haynes et al.'s
+   qualifier ("individual cases of confused sources are not hard to find") restored; the caption
+   says the gate judged medians, which are not plotted.
+
+## Step 8: does the injection's flux scale explain C1's 0.70? Prediction stated before running (2026-10-10)
+
+**R5 (post hoc, from round-2 F3).** C1 sets each injected neighbour's flux on the FASHI scale and
+adds the same flux to the ALFALFA measurement. Real blends are measured on each survey's own
+scale, and FASHI DR2 §5.2 reports ALFALFA higher than FASHI at low SNR. R5 repeats R3, with the
+same seeds, ten injections at strength 1 and 0 and both covariate modes, but multiplies the
+injected ALFALFA flux by the survey ratio the plan-97 calibration predicts for that target
+(10^(design · coef), fitted on all isolated targets).
+
+**Design choice, made before running.** The referee suggested scaling by each target's own
+observed S_A/S_F. That ratio carries the target's measurement noise, which is correlated with the
+response y. The smooth calibration prediction does not, so it is used instead.
+
+**Predictions.**
+- *If the scale offset causes the 0.70:* with pre-injection covariates, β rises to about 1.0,
+  and the production-mode β rises above 1.24 by a similar factor.
+- *If not:* both stay within about 0.1 of R3 (0.70 and 1.24).
+- *Either way:* planted 0 stays at about −0.03, since nothing is injected.
+
+Results go to `results/hiblend_referee2.json`. The round-3 referee runs after this check.
+
+### Step 8 results (run 2026-10-10; `results/hiblend_referee2.json`, seed 101, same draws as R3)
+
+| covariates | R3: injection on FASHI scale | R5: injection on each survey's scale |
+|---|---|---|
+| pre-injection | 0.70 ± 0.13 | **1.00 ± 0.10** |
+| production (post-injection) | 1.24 ± 0.13 | **1.54 ± 0.10** |
+| planted 0 (either mode) | −0.03 ± 0.06 | −0.03 ± 0.06 |
+
+The calibration's predicted ALFALFA/FASHI ratio on isolated targets has median 1.16 (5–95%:
+0.77–1.91).
+
+**The first prediction branch holds for the frozen-covariate case.** With the neighbour on each
+survey's scale and covariates taken before injection, the gain is 1.00. So the 0.70 came from the
+injection, not the estimator. The production β rises too, but by a factor of 1.24, not the 1.43
+the "similar factor" prediction implied. That part of the prediction missed.
+
+*(Superseded by step 9: the next paragraph holds only under R5's ratio-as-gain model, and that model is disputed.)*
+
+**Consequence for plan 97's frozen C1** *(see step 10 for the conclusion that stands)*. The production estimator, which is the one applied to
+real data, returns 1.54 for a correctly scaled planted β = 1. This falls outside C1's frozen
+tolerance (|β − 1| ≤ 0.3). C1 passed (1.25) only because the injection put the ALFALFA addition
+on the FASHI scale, and two errors of opposite sign (−30% from the scale, +54% from covariate
+absorption) nearly cancelled. C1, as built, could not have caught either error alone. Plan 97's
+outcome was already "ambiguous" through C2, so the verdict does not change. But **C1's pass is
+withdrawn as evidence**: the production estimator overstates the blending gain by about 1.5, so any
+future β would have to be divided by about 1.5, or computed with covariates that blending cannot
+reach.
+
+## Step 9: referee round 3 (minor), and a third injection model R6: prediction stated before running (2026-10-10)
+
+Round 3 found that step 8's "two errors cancelling" holds only if the ALFALFA/FASHI curve acts as a
+**gain** on any flux added to the beam (R5 scaled the injection by the curve's *ratio*). FASHI DR2
+§5.2 instead attributes the offset to Eddington bias, which would leave a neighbour's flux at a
+gain near 1 (R3's model). The curve also depends on the target's own flux, so if it is a real flux
+mapping the right factor for a small added flux is its *slope*. And R5's pre-injection 1.00 was
+nearly guaranteed by construction, because the injection was scaled by exactly what the
+calibration removes.
+
+**R6 (post hoc).** Pass the added flux through the curve itself. The ALFALFA increment is
+g(S + a) − g(S), with g(S) = S · 10^c(S). Here c is the plan-97 calibration evaluated with the
+target's log flux and log S/N moved to S + a, and with W50, declination and flux error held fixed.
+S is the target's geometric-mean flux, and a is the FASHI-scale neighbour flux weighted by the ALFA
+beam. As in R3 and R5: same draws, ten injections, both covariate modes.
+
+**What R6 can and cannot do.** It fills in the third reading of the curve (flux mapping), next to
+R3 (selection effect, gain 1) and R5 (ratio as gain). It **cannot** say which reading is
+physically right. The note will quote the range across all three, not choose one.
+
+**Prediction.** At the median log S/N the referee's slope arithmetic gives an effective factor of
+about 0.6 r ≈ 0.70, below both R3's 1 and R5's r. So:
+- with pre-injection covariates, β ≈ 0.6–0.85;
+- in production, β ≈ 1.1–1.4;
+- planted 0 unchanged at −0.03.
+
+A result outside the R3–R5 span in either mode would mean the slope reading behaves differently
+from both, and would be reported as such.
+
+**Rewording queued (applied after R6):**
+- F1/F2: "two errors cancelling" and "about half" are replaced by the model range, labelled post hoc
+  (F3), and the factor-1.5 statements are removed from the findings and the code comment.
+- F4: R5/R6 go into the abstract and conclusion, and "β ≈ 1" is qualified as the beam model's.
+- F5: "appears larger at low S/N (under 2σ)".
+- F6: the scatter gap is called unexplained.
+- F7: withdrawn claims are removed from the README and CHANGELOG.
+- F8 and the nit: provenance and the flux > 0 cut.
+
+### Step 9 results (run 2026-10-10; `results/hiblend_referee3.json`, same draws as R3 and R5)
+
+| injection model | pre-injection covariates | production covariates |
+|---|---|---|
+| R3: neighbour at gain 1 (frozen C1's model) | 0.70 | 1.24 |
+| R5: scaled by the curve's ratio r | 1.00 | 1.54 |
+| **R6: through the curve as a flux mapping** | **0.18 ± 0.12** | **0.72 ± 0.12** |
+
+Planted 0 gives −0.03 in every model. For a 10% added flux, the curve's effective factor has median
+0.69 (5–95%: 0.51–0.95), which matches the referee's arithmetic.
+
+*(This explanation is withdrawn in step 10: it uses k where the variable is u = k/r.)* **The prediction failed in both modes.** Both values fall below the R3–R5 span I predicted (0.6–0.85
+and 1.1–1.4). The mistake is in the reasoning, not the code. I scaled β by the factor, but β
+measures the *difference* between the two beams' responses. At 2′ that difference is 0.404k − 0.267
+for an ALFALFA factor k. It is 0.137 at k = 1 and 0.012 at k = 0.69, so under the mapping reading
+the planted signal nearly cancels. A line through R3 and R5 (dβ/dk ≈ 1.9) predicts about 0.11 at
+k = 0.69, close to the 0.18 measured. The referee's slope arithmetic would have given the right
+answer had I carried it through the difference.
+
+**What C1 can say.** With the estimator as applied, C1's response to a planted β = 1 spans
+**0.72–1.54** across the three readings of the curve (0.18–1.00 with pre-injection covariates). The
+reading depends on whether the ALFALFA/FASHI offset is a gain, a selection effect or a flux
+mapping, which this slice has not established. Two consequences:
+- Plan 97's frozen C1 passed (1.25) under one of those readings. That pass is historically true, but
+  it is **not evidence that the estimator is calibrated**, and neither is any single variant.
+- Step 8's "two errors cancelling", "overstates by about half" and "divide by about 1.5" are
+  withdrawn. They held only under R5's model.
+
+Provenance (F8): r and the R6 curve come from a calibration fitted on *all* isolated targets,
+including the injected half, which is then re-calibrated without them. The effect is negligible
+(14,375 rows, 6 parameters), and it is recorded here.
+
+## Step 10: referee round 4 (minor), and a constant-u check R7: prediction stated before running (2026-10-10)
+
+Round 4 found that step 9's explanation of the missed R6 prediction used the wrong variable. The
+injected increment enters relative to the target's ALFALFA flux, which already carries the survey
+ratio r. So the variable that matters is u = k/r, not k. Step 9's "0.404k − 0.267, nearly cancels
+at k = 0.69" is **withdrawn**: it predicts 1.47 for R5, which measured 1.00. Step 9's "the mistake
+is in the reasoning, not the code" was asserted, not shown, and R7 is the test of it.
+
+**R7 (post hoc).** Repeat C1 with a constant `alfa_map = u · r_i · a` for u ∈ {0.6, 0.86, 1.0},
+using the same draws, both covariate modes and ten injections each.
+
+**Prediction, computed from the injection pool only** (`scripts/hiblend_r7_prediction.py`, which
+reads 3,479 primary-sample neighbour separations and flux ratios and measures no β). Take the OLS
+through the origin of log((1 + uρb_A)/(1 + ρb_F)) on R over the pool. The small-ρ limit is
+β = 3.00u − 2.00, steep because most pool separations are large (median 4.56′).
+
+| u | pre-injection covariates: predicted β | production: predicted β (+0.54) |
+|---|---|---|
+| 0.6 | 0.06 | 0.60 |
+| 0.86 | 0.69 | 1.23 |
+| 1.0 | 1.00 | 1.54 |
+
+- *If the u = k/r account is right:* the frozen β tracks these values within about 0.1, and the
+  production β sits about 0.54 above it at every u. That would establish that the absorption term
+  does not depend on the model.
+- *Retrodiction (does not count as a test):* R3 implicitly used u ≈ 1/r ≈ 0.86 and measured 0.70,
+  against 0.69 here. R6's effective u varies by target, with median about 0.69/1.16 ≈ 0.6, and
+  measured 0.18 against 0.06 here.
+- *If the frozen β departs from the table by more than 0.15 at any u:* the account is incomplete,
+  and that is reported as such.
+
+### Step 10 results (run 2026-10-10; `results/hiblend_referee4.json`, the strength-1 draws of R3/R5/R6)
+
+| u | frozen β: predicted | frozen β: measured | production β: predicted | production β: measured | absorption |
+|---|---|---|---|---|---|
+| 0.6 | 0.06 | **0.04 ± 0.11** | 0.60 | **0.58** | 0.540 |
+| 0.86 | 0.69 | **0.68 ± 0.10** | 1.23 | **1.22** | 0.544 |
+| 1.0 | 1.00 | **1.00 ± 0.10** | 1.54 | **1.54** | 0.546 |
+
+**The first prediction branch holds, at every u within 0.03.** C1 separates into two terms:
+- **A covariate-absorption bias of +0.54**, the same at every u (0.540–0.546) and in R3, R5 and R6
+  (0.54, 0.545, 0.538). It does not depend on the injection model. The production estimator adds
+  it to any planted signal.
+- **A beam-signal response of about 3u − 2**, set by the beam geometry and the injection pool's
+  separations (median 4.56′). Here u is ALFALFA's response to added flux relative to the target's
+  own survey ratio, and nothing in this slice measures it.
+
+The code was right and the step-9 reasoning was wrong (k for u). This is now shown, not asserted.
+Two retrodictions also fit, though they are not tests:
+- R3 corresponds to u ≈ 1/r ≈ 0.86: measured 0.70, against 0.68 here.
+- R6's u varies by target, and because β is linear in u, its mean u (not its median) sets β.
+  R6's 0.18 against 0.04 at u = 0.6 is consistent with that; it was not tested separately.
+
+**What C1 can and cannot say.** FASHI DR2 §5.2 (pp. 8–9, step 1) attributes the low-S/N offset to
+Eddington bias in ALFALFA. That favours gain 1 for added flux, u ≈ 1/r. Under that reading the
+frozen C1 value (1.25) is about 0.7 of beam signal plus 0.54 of absorption. Under u = 0.6 the
+planted signal contributes 0.04, and absorption alone gives 0.58, which is inside C1's tolerance.
+**A passing C1 therefore cannot show the estimator is calibrated**: the absorption term can carry
+it, whatever the true u.

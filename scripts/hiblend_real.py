@@ -24,7 +24,7 @@ from jansky_research.report import write_results
 
 def main(argv: list[str] | None = None) -> None:  # pragma: no cover - network
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--out", default=".")
+    ap.add_argument("--out", required=True)
     ap.add_argument("--n-power", type=int, default=20)
     ap.add_argument("--n-inj", type=int, default=10)
     ap.add_argument("--seed", type=int, default=None, help="default 97, or 98 with --v2")
