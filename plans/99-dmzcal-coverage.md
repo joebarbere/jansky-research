@@ -297,3 +297,19 @@ its reason.
 - `zdm`'s CHIME survey model was not fitted in HoffmannEmin25 (Sec. 2.1: CHIME needs repeater
   modelling). E1 on CHIME bursts is therefore exactly what a user gets out of the box, and is
   reported per telescope.
+
+## Verdict rule after C1 (decided 2026-10-10 by the author, before any real posterior)
+
+C1 failed for the host case: power 0.12 at N = 36 against a doubled host mean
+(`results/dmzcal_controls.json`). The frozen text says that a C1 failure withholds every
+verdict. **It is replaced by an asymmetric rule.**
+- A real-data **failure** of the calibration rule is reported with its named outcome:
+  OVERCONFIDENT, UNDERCONFIDENT, BIASED, or KS_FAIL. The rule's false-fail rate on a calibrated
+  null is controlled at 0.045 (C0), so a failure is evidence.
+- A **pass** is reported only as "consistent with calibration at a sensitivity that cannot
+  exclude a 2× host-mean error". The word CALIBRATED is never used as a verdict.
+- The note states both C1 powers: 0.12 for host ×2 and 0.95 for F ×2.
+
+Reason: the frozen wording discarded a test whose false-alarm rate is known. Joe made this
+decision after the controls and before the real data. It is a change to a frozen control, and
+the note must say so.
