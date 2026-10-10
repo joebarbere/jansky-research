@@ -402,3 +402,24 @@ The revision had overclaimed in the opposite direction. Each fix uses numbers al
 9. Nits: "no slope interpreted"; 156,269 is the count after finiteness cuts; Haynes et al.'s
    qualifier ("individual cases of confused sources are not hard to find") restored; the caption
    says the gate judged medians, which are not plotted.
+
+## Step 8: does the injection's flux scale explain C1's 0.70? Prediction stated before running (2026-10-10)
+
+**R5 (post hoc, from round-2 F3).** C1 sets each injected neighbour's flux on the FASHI scale and
+adds the same flux to the ALFALFA measurement. Real blends are measured on each survey's own
+scale, and FASHI DR2 §5.2 reports ALFALFA higher than FASHI at low SNR. R5 repeats R3, with the
+same seeds, ten injections at strength 1 and 0 and both covariate modes, but multiplies the
+injected ALFALFA flux by the survey ratio the plan-97 calibration predicts for that target
+(10^(design · coef), fitted on all isolated targets).
+
+**Design choice, made before running.** The referee suggested scaling by each target's own
+observed S_A/S_F. That ratio carries the target's measurement noise, which is correlated with the
+response y. The smooth calibration prediction does not, so it is used instead.
+
+**Predictions.**
+- *If the scale offset causes the 0.70:* with pre-injection covariates, β rises to about 1.0,
+  and the production-mode β rises above 1.24 by a similar factor.
+- *If not:* both stay within about 0.1 of R3 (0.70 and 1.24).
+- *Either way:* planted 0 stays at about −0.03, since nothing is injected.
+
+Results go to `results/hiblend_referee2.json`. The round-3 referee runs after this check.
