@@ -86,74 +86,142 @@ host-dominated, so cosmic scatter matters less.
   have not been opened, but it is still the author's choice, and the user should decide it
   explicitly.
 
-## Step 3 — real run (2026-10-10)
+## Step 3 — real run (first pass: commit 6226ce5)
 
-**Evidence.**
-- `results/dmzcal_e1_zdm.json` (E1: zdm at commit e0f985b, state HoffmannEmin25, Python 3.12
-  with pandas<3).
-- `results/dmzcal_e3.json` (E3: fruitbat 2.0.1 on Python 3.9).
-- `results/dmzcal_e4.json` (E4: FRBs/FRB at 996fcda).
-- `results/dmzcal_metrics.json` (E2, the audit, C2), from `scripts/dmzcal_real.py`. It is
-  deterministic: a rerun is byte-identical.
+The first pass gave E1 / E2 / E3 coverage of 0.528 / 0.778, 0.222 / 0.500 and 0.167 / 0.444,
+all OVERCONFIDENT. The committed write-up of that pass contained several claims that the GATE-2
+round-1 review refuted or found unsupported. They are **retracted** here, not silently
+replaced. The current numbers are in the next section.
 
-The survey models were fixed before any posterior. ASKAP uses `CRAFT_average_ICS`; this
-corrects step 0's "CRACO" label, because the 2024 certification bursts are Shannon2024 ICS
-detections.
+| retracted claim (6226ce5 findings / CHANGELOG) | why |
+|---|---|
+| "E2's comoving-volume prior … alone predicts much of" E2's failure | Re-scoring with the prior capped at z ≤ 1 or z ≤ 0.7 gives the same result: median PIT 0.027 / 0.028. The posterior mass above z = 1 is negligible at these DMs. This is the second mechanism I proposed for E2 that did not survive a check. |
+| "Whatever drives it is far larger than … a doubled host mean" | The C1 power was measured on E2's own synthetic population (z to 4) and does not transfer to a real z < 0.5 sample. |
+| "The E1–E2 gap measures what survey-selection modelling buys" | E1 also differs from E2 in its SFR evolution, luminosity function and z-prior shape. |
+| "Consistent with in-sample optimism" (E1 0.74 / 0.95 on its fit sample) | The production arm is itself biased low (median PIT 0.28, KS p = 0.018). Its 14 DSA bursts entered the fit by DM only, so their z is effectively held out too. |
+| "Six bursts carry most of E1's 95% shortfall" | 4 of the 8 misses came from those six, which is half. |
+| "Cause not separable … a host DM larger than modelled, MW DM … predict the sign" | A selection-free check separates the DM model from the z distribution; see below. |
+| "Held-out" for E2 and E3 | Nothing was fitted for them. |
+| "Recover-a-known" for FRB 20240304B | In this repo the term means a planted truth. This burst is a post-hoc single case study. |
+| "E1 reproduces their zdm-based z_Macquart ≈ 2.8" | Caleb et al. attribute 2.8 to the Macquart relation, not to zdm (their "Clues" section). |
 
-**C2 passes.** Planting each certification burst's z from its own E2 posterior and running the
-real pipeline gives coverage 0.64 / 0.89, KS p = 0.39. Over 500 draws the pass rate is 0.962,
-against 0.955 expected from C0. The pipeline does not distort PITs.
+## GATE-2 round 1 — corrections, post-hoc checks, current result (2026-10-10)
 
-**Verdicts on the certification sample.** N = 36 for all three estimators. Asymmetric rule;
-false-fail rate on a calibrated null 0.045.
+The review verdict was PASS-WITH-FIXES with no blockers. The reviewer edited nothing: the
+result hashes and `git status` were unchanged.
 
-| estimator | cov. 68% (band 0.528–0.833) | cov. 95% (band 0.861–1) | median PIT | KS p | verdict |
-|---|---|---|---|---|---|
-| E1 zdm HoffmannEmin25 | 0.528 | **0.778** | 0.185 | 1e-4 | **OVERCONFIDENT** |
-| E2 minimal (no selection) | 0.222 | 0.500 | 0.027 | 6e-13 | **OVERCONFIDENT** |
-| E3 fruitbat Batten2021 | 0.167 | 0.444 | 0.016 | 9e-20 | **OVERCONFIDENT** |
+**Data corrections, applied after the first run.** All are in `results/dmzcal_provenance.json`
+under `corrections`, each with a locator. Every burst was verified against primary sources by
+an independent pass.
+- **FRB 20201124A:** discovered by CHIME/FRB, not MeerKAT (Lanman+2022, arXiv:2109.09254,
+  abstract). Its z becomes 0.0979 (Fong+2021, arXiv:2106.11993, abstract); FRBs/FRB's 0.0982
+  has no located source. Scored under the CHIME model, its E1 PIT moves from 0.015 to 0.165.
+- **FRB 20210410D:** DM 578.78 rather than 575.0 (Caleb+2023, arXiv:2302.09754, burst table).
+  It was found in the MeerTRAP **incoherent** beam, so its survey model is now
+  `MeerTRAPincoherent`. Its PIT is unchanged at 0.011.
+- **Confirmed, not changed:**
+  - FRB 20240201A's z = 0.042729. The 0.047279 lead is a digit swap in Shannon+2024's own host
+    paragraph; SDSS DR18 gives 0.04273.
+  - All 11 DSA redshifts (Sharma+2024, Extended Data Table 1).
+  - All 4 ASKAP ICS detections and their bands.
+  - FRB 20180916B as a CHIME discovery.
+- **Unresolved, recorded but not applied:**
+  - Three DSA DMs differ from Connor+2024 by 0.6–1.25 pc cm⁻³.
+  - Connor+2024 gives z = 0.0700 for FRB 20231120A, against Sharma's 0.0368.
 
-The failures all point the same way. PIT values are low, so the true redshifts sit below the
-posteriors: every estimator places these hosts too far away. Median Δz/(1+z) on the
-certification sample is +0.057 (E1), +0.122 (E2), +0.154 (E3) and +0.056 for E4's point
-estimate (N = 35; FRB 20231230A falls below `z_from_DM`'s interpolation range). The NMADs are
-0.10, 0.15, 0.12 and 0.13.
+**Current verdicts.** N = 36 (CHIME 20, DSA 11, ASKAP 4, MeerKAT 1). Frozen bands; asymmetric
+rule.
 
-**What the failure does not show is the cause.** Each of the following pre-stated or modelled
-effects predicts low PITs, and this sample cannot separate them:
-- **Host-identifiability selection** (stated in the plan before the run). A spectroscopic host
-  is easier to obtain for a nearby burst at fixed DM. The 19 CHIME bursts are Leung's
-  *Local Universe* gold sample, which is the sharpest case.
-- **A host DM larger than modelled.**
-- **An underestimated Milky Way ISM or halo DM.**
+| estimator | cov. 68% | cov. 95% (floor 0.861) | median PIT | PIT < 0.16 / > 0.84 | KS p | verdict |
+|---|---|---|---|---|---|---|
+| E1 zdm HoffmannEmin25 | 0.556 | **0.806** | 0.185 | 0.42 / 0.03 | 1e-4 | OVERCONFIDENT (one-sided) |
+| E2 minimal, no selection | 0.222 | 0.500 | 0.027 | 0.75 / 0.03 | 6e-13 | OVERCONFIDENT (one-sided) |
+| E3 fruitbat Batten2021 | 0.167 | 0.444 | 0.016 | 0.83 / 0.00 | 9e-20 | OVERCONFIDENT (one-sided) |
 
-One inference is available, and it is limited to E2. C1 showed that a doubled host mean
-*rarely* fails this rule (power 0.12). E2's failure is overwhelming (KS p ≈ 6e-13), so whatever
-drives it is far larger than, or different in kind from, a doubled host mean in E2's own world.
-E2's comoving-volume prior, with median z ≈ 2.4, alone predicts much of that. E2 was designed
-as the no-selection comparison arm, and the E1–E2 gap measures what survey-selection modelling
-buys: median PIT 0.185 against 0.027.
+**Reading the verdicts.**
+- **"OVERCONFIDENT" is the frozen label, but the failure is one-sided.** PITs pile up low
+  (28 of 36 below 0.5 for E1), and almost none fall in the upper tail. The posteriors are
+  displaced towards high z. They are not symmetrically too narrow. Widening the intervals would
+  be the wrong fix.
+- E1's 68% coverage is in band, so its failure rests on the 95% leg and the KS test.
+- **E1 is the result.**
+  - E2 is the project's own no-selection comparison arm and was expected to fail.
+  - E3 is fruitbat as documented. It has no host term: its PDF path never reads
+    `subtract_host` (fruitbat `_frb.py:334-385`), and it subtracts no halo. Adding 50 pc cm⁻³ of
+    halo still fails (reviewer check, KS p = 1.7e-10).
+  - The three are scored on the same bursts, so they are not independent confirmations.
+- **Scope.** The verdict concerns this host-identified, localised population. It is not a
+  verdict on these estimators applied to unlocalised FRBs, which is the use they exist for.
 
-**E1 descriptive arms.** These carry no verdict, because the bands were frozen for N = 36 only.
+**Post-hoc checks.** All of these were chosen after the verdicts were seen, and none is a
+verdict. They are in `results/dmzcal_metrics.json` → `post_hoc`.
 
-| arm | N | cov. 68% | cov. 95% | median PIT |
-|---|---|---|---|---|
-| CHIME | 19 | 0.58 | 0.89 | 0.28 |
-| DSA | 11 | 0.64 | 0.82 | 0.34 |
-| ASKAP | 4 | 0.25 | 0.50 | 0.03 |
-| MeerKAT | 2 | 0.00 | 0.00 | 0.009 |
-| repeaters | 4 | 0.25 | 0.75 | 0.09 |
-| in-sample (production, *labelled*) | 39 | 0.74 | 0.95 | 0.28 |
-| certification, spectrum unflagged | 14 | 0.50 | 0.93 | 0.31 |
+- **The DM model is fine at the known redshift.** The PIT of DM_EG given z_true is
+  P(DM' < DM | z_true), from each estimator's own p(DM|z). It is independent of the z prior
+  and of any redshift selection.
 
-- Six bursts carry most of E1's 95% shortfall: the four ASKAP and the two MeerKAT. Their PITs
-  are ≤ 0.034. No subset verdict is drawn, because excluding them would be post hoc.
-- The two MeerKAT bursts are the instrument Hoffmann et al. excluded for reporting bias.
-- E1 covers its own fit sample at 0.74 / 0.95 and the held-out sample at 0.53 / 0.78. That is
-  consistent with in-sample optimism, but instrument and selection differ between the arms, so
-  it is not shown to be that.
+  | estimator | cov. 68% / 95% | median | KS p |
+  |---|---|---|---|
+  | E1 | 0.69 / 0.94 | 0.52 | 0.78 |
+  | E2 | 0.75 / 0.94 | 0.52 | 0.63 |
 
-**FRB 20240304B** (recover-a-known; excluded from every statistic above).
+  So the miscalibration of p(z|DM) is not in p(DM|z), and therefore not in the host-DM,
+  Milky Way DM or cosmic-scatter terms at the level this sample can see. It lies in the
+  **redshift distribution**: either the population model's p(z) for detected bursts, or which
+  bursts receive a spectroscopic host. This sample cannot separate those two.
+- **The bias appears as the DM limit rises.** This is post hoc, with nested, small subsets.
+  Hoffmann et al. (Sec. 2.3, main.tex l.220-221) name the host-identification bias: fainter
+  high-z hosts go missing, which biases a localised sample low in z at fixed DM. They use z only
+  below DM_obs − DM_ISM = 183 pc cm⁻³ for DSA. E1 by that same variable:
+
+  | DM_obs − DM_ISM | N | median PIT | KS p |
+  |---|---|---|---|
+  | < 183 | 9 | 0.59 | 0.80 |
+  | < 250 | 12 | 0.44 | 0.31 |
+  | < 300 | 16 | 0.29 | 0.15 |
+  | < 400 | 24 | 0.25 | 0.027 |
+  | < 500 | 27 | 0.28 | 0.015 |
+  | all | 36 | 0.19 | 1e-4 |
+
+  That pattern is what host-identification incompleteness predicts. It does not show it,
+  because N is small and Hoffmann's 183 was derived for the DSA commissioning sample, not for
+  this mix. E2 and E3 fail even below 183, as expected for estimators without a selection-aware
+  prior.
+- **Halo DM.** E1 at DM_halo = 25 / 75 has coverage 0.50 / 0.83 and 0.51 / 0.83, with KS p of
+  2e-6 and 5e-4. The failure does not depend on the frozen 50.
+- **Planted truth through the E1 and E3 code paths** (500 replications each, with z drawn from
+  each burst's own posterior). The rule passes 0.948 (E1) and 0.958 (E3) of the time, against
+  0.955 expected from C0. E2's C2 gives 0.962. The PIT implementations in the two out-of-repo
+  drivers are not biasing the result.
+- **Host-magnitude stratification**, which the plan pre-stated as conditional, was **skipped**.
+  Host magnitudes exist only for the 20 CHIME/Leung hosts, so no sample-wide split is possible.
+- **Point accuracy** on the certification sample. Median Δz/(1+z) is +0.057 (E1), +0.122 (E2),
+  +0.154 (E3) and +0.056 (E4, N = 35). NMAD is 0.10, 0.15, 0.12 and 0.13.
+- **E1 per telescope** (descriptive):
+
+  | telescope | N | cov. 68% / 95% | median PIT |
+  |---|---|---|---|
+  | CHIME | 20 | 0.60 / 0.90 | 0.25 |
+  | DSA | 11 | 0.64 / 0.82 | 0.34 |
+  | ASKAP | 4 | 0.25 / 0.50 | 0.03 |
+  | MeerKAT | 1 | 0.00 / 0.00 | 0.01 |
+
+  The reviewer found that E1 still fails KS without ASKAP and MeerKAT (N = 30, p = 0.0035), and
+  still fails with CHIME dropped (N = 15). This was measured on the pre-correction labels.
+
+**Known provenance path, recorded rather than removed.** zdm's survey files at e0f985b list
+some certification bursts (e.g. DSA 20221113A and 20221116A). Survey-file bursts enter the
+survey efficiency through a median of DM_halo + DM_G (zdm `survey.py:1345`, `:1388`), so a
+held-out burst can nudge E1's selection function. The effect is expected to be small, but it is
+not measured. The lists are in `dmzcal_e1_zdm.json` → `survey_file_frbs`.
+E1 also uses the state's fixed DM_G (`sigmaHalo = sigmaDMG = 0`). Hoffmann's fit modelled
+σ_halo = 15 and σ_ISM = DM_NE/2.
+
+**Not run.**
+- NE2001 versus YMW16, because `pygedm` does not build here.
+- An explicit low-z selection model. The DM-limit table is the nearest proxy.
+
+**FRB 20240304B** (post-hoc case study, excluded from every statistic).
 
 | | median z | 68% interval | 95% interval | PIT |
 |---|---|---|---|---|
@@ -162,9 +230,8 @@ buys: median PIT 0.185 against 0.027.
 | E3 | 2.42 | [2.16, 2.64] ✗ | [1.77, 2.83] ✓ | 0.15 |
 | E4 | 2.52 (point) | — | — | — |
 
-Caleb et al.'s DM range is [1.628, 3.397] (95%). E1 reproduces their zdm-based z_Macquart ≈ 2.8.
-All three estimators overpredict this burst too, in the same direction as the sample. Per
-Caleb et al., about 235 pc cm⁻³ of its DM is Virgo, which no DM-only user subtracts.
+Caleb et al.'s Macquart-relation range is [1.628, 3.397] (95%). All three estimators
+overpredict this burst too. About 235 pc cm⁻³ of its DM is Virgo (Caleb+, Supplementary S1.4),
+which a DM-only estimate cannot know about.
 
-**Status.** The failures are *applied* verdicts under the frozen rule, not yet reviewed. Next is
-GATE-2 science review (step 4) before any prose is drafted.
+**Status.** These are *applied* fixes. Round 2 of GATE-2 decides whether they hold.

@@ -33,8 +33,14 @@ from zdm import misc_functions, states, survey
 ROOT = Path(__file__).resolve().parents[1]
 STATE = "HoffmannEmin25"
 DM_HALO = 50.0
-Z_OVERRIDE = {"FRB20231201A": 0.1119}  # Leung+2025 primary table (step-0 finding 7)
+N_PLANT = 500  # planted-truth replications through this script's own PIT code (GATE-2 #7)
 SURVEY = {"DSA": "DSA", "ASKAP": "CRAFT_average_ICS", "MeerKAT": "MeerTRAPcoherent"}
+
+
+def versions() -> dict[str, str]:
+    from importlib.metadata import version  # noqa: PLC0415
+
+    return {k: version(k) for k in ("zdm", "numpy", "scipy", "pandas", "astropy")}
 
 
 def grids() -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
@@ -45,7 +51,7 @@ def grids() -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         st, new=True, plot=False, method="analytic"
     )
     rates: dict[str, np.ndarray] = {}
-    for tel, name in SURVEY.items():
+    for tel, name in list(SURVEY.items()) + [("MeerTRAPincoherent", "MeerTRAPincoherent")]:
         s = survey.load_survey(name, st, dmvals)
         g = misc_functions.initialise_grids([s], zdm_grid, zvals, dmvals, st, wdist=True)[0]
         rates[tel] = np.array(g.rates)
@@ -78,20 +84,49 @@ def summarise(pz: np.ndarray, zvals: np.ndarray, z_true: float) -> dict:
     }
 
 
+def dm_pit_row(row: np.ndarray, dmvals: np.ndarray, dm_eg: float) -> float:
+    """P(DM_EG' < DM_EG | z) from one z-row of the survey rates (DM bins of width ddm
+    centred on dmvals, each treated as uniform). Selection-free in z: tests the DM model
+    at the burst's known redshift (GATE-2 #2)."""
+    ddm = float(dmvals[1] - dmvals[0])
+    p = row / row.sum()
+    lo = dmvals - 0.5 * ddm
+    frac = np.clip((dm_eg - lo) / ddm, 0.0, 1.0)
+    return float(np.sum(p * frac))
+
+
+def survey_file_frbs() -> dict[str, list[str]]:
+    """Burst names listed in the zdm survey files used (GATE-2 #9: they enter the survey
+    efficiency through a median DM_G; recorded as a known provenance path)."""
+    import pandas as pd  # noqa: PLC0415
+    from astropy.table import Table  # noqa: PLC0415
+
+    sdir = resources.files("zdm").joinpath("data/Surveys/")
+    out = {}
+    for name in list(SURVEY.values()) + [f"CHIME/CHIME_decbin_{i}_of_6" for i in range(6)]:
+        t = Table.read(str(sdir.joinpath(name + ".ecsv")), format="ascii.ecsv")
+        col = "TNS" if "TNS" in t.colnames else t.colnames[0]
+        out[name] = sorted(str(x) for x in pd.Series(t[col]).astype(str))
+    return out
+
+
 def main() -> None:
     prov = json.loads((ROOT / "results" / "dmzcal_provenance.json").read_text())
     rates, zvals, dmvals = grids()
     bursts = [r for r in prov["bursts"] if r["telescope"] in rates]
     rak = prov["recover_a_known"]
     bursts.append(rak | {"side": "recover_a_known", "secure_host": True})
+    rng = np.random.default_rng(0)
     out = []
     for b in bursts:
         dm_eg = float(b["DM"]) - float(b["DMISM"]) - DM_HALO
-        z_true = Z_OVERRIDE.get(b["name"], float(b["z"]))
+        key = b.get("survey_override") or b["telescope"]
+        z_true = float(b["z"])  # provenance already applies primary-source corrections
         rec = {
             "name": b["name"],
             "telescope": b["telescope"],
-            "survey_model": SURVEY.get(b["telescope"], "CHIME_decbin_*_of_6 (summed)"),
+            "survey_model": b.get("survey_override")
+            or SURVEY.get(b["telescope"], "CHIME_decbin_*_of_6 (summed)"),
             "side": b["side"],
             "spec_z": b["spec_z"],
             "secure_host": b.get("secure_host", True),
@@ -102,11 +137,29 @@ def main() -> None:
         if dm_eg <= 0:
             rec["excluded"] = "DM_EG <= 0"
         else:
-            col = rates[b["telescope"]][:, int(np.argmin(np.abs(dmvals - dm_eg)))]
+            col = rates[key][:, int(np.argmin(np.abs(dmvals - dm_eg)))]
             if col.sum() <= 0:
                 rec["excluded"] = "zero survey rate at this DM_EG"
             else:
-                rec |= summarise(col / col.sum(), zvals, z_true)
+                pz = col / col.sum()
+                rec |= summarise(pz, zvals, z_true)
+                iz = int(np.argmin(np.abs(zvals - z_true)))
+                rec["dm_pit"] = dm_pit_row(rates[key][iz], dmvals, dm_eg)
+                if b["side"] == "certification" and b["spec_z"] and b.get("secure_host"):
+                    # post-hoc halo sensitivity (GATE-2 #13): same z, DM_halo 25 / 75
+                    rec["pit_halo"] = {}
+                    for h in (25.0, 75.0):
+                        dmh = float(b["DM"]) - float(b["DMISM"]) - h
+                        ch = rates[key][:, int(np.argmin(np.abs(dmvals - dmh)))]
+                        if dmh > 0 and ch.sum() > 0:
+                            rec["pit_halo"][f"{h:g}"] = summarise(ch / ch.sum(), zvals, z_true)[
+                                "pit"
+                            ]
+                    # planted truth: z drawn from this burst's own column (cell-uniform)
+                    dz = float(zvals[1] - zvals[0])
+                    idx = rng.choice(zvals.size, size=N_PLANT, p=pz)
+                    zp = zvals[idx] + (rng.random(N_PLANT) - 0.5) * dz
+                    rec["planted_pits"] = [summarise(pz, zvals, float(z))["pit"] for z in zp]
         out.append(rec)
     res = {
         "source": "real: zdm p(z|DM) (E1, state HoffmannEmin25) on FRBs/FRB localized hosts",
@@ -121,7 +174,9 @@ def main() -> None:
             "dmmax": float(dmvals[-1]),
         },
         "survey_models": SURVEY | {"CHIME": "CHIME_decbin_0..5_of_6 summed, no repeaters"},
-        "z_overrides": Z_OVERRIDE,
+        "versions": versions(),
+        "planted_truth": {"n_rep": N_PLANT, "seed": 0},
+        "survey_file_frbs": survey_file_frbs(),
         "bursts": out,
     }
     path = ROOT / "results" / "dmzcal_e1_zdm.json"

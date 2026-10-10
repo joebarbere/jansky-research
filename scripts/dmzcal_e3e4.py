@@ -30,12 +30,13 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-Z_OVERRIDE = {"FRB20231201A": 0.1119}
+N_PLANT = 500  # planted-truth replications through this script's own PIT code
 
 
 def _bursts() -> list[dict]:
@@ -53,7 +54,7 @@ def _base(b: dict) -> dict:
         "spec_z": b["spec_z"],
         "secure_host": b.get("secure_host", True),
         "repeater": b.get("repeater", False),
-        "z_true": Z_OVERRIDE.get(b["name"], float(b["z"])),
+        "z_true": float(b["z"]),  # provenance applies primary-source corrections
         "dm": float(b["DM"]),
         "dm_ism": float(b["DMISM"]),
     }
@@ -83,6 +84,12 @@ def run_e3() -> dict:
             frac = np.clip((rec["z_true"] - lo) / dz, 0.0, 1.0)
             edges = np.concatenate([[lo[0]], zb])
             cdf = np.concatenate([[0.0], np.cumsum(mass)])
+            if b["side"] == "certification" and b["spec_z"] and b.get("secure_host"):
+                rng = np.random.default_rng(zlib.crc32(rec["name"].encode()))
+                idx = rng.choice(mass.size, size=N_PLANT, p=mass)
+                zp = lo[idx] + rng.random(N_PLANT) * dz[idx]
+                fr = np.clip((zp[:, None] - lo[None, :]) / dz[None, :], 0.0, 1.0)
+                rec["planted_pits"] = [float(x) for x in (fr * mass[None, :]).sum(axis=1)]
             rec |= {
                 "pit": float(np.sum(mass * frac)),
                 "z_median": float(np.interp(0.5, cdf, edges)),

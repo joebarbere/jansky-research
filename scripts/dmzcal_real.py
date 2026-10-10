@@ -23,7 +23,6 @@ from jansky_research import dmzcal
 
 ROOT = Path(__file__).resolve().parents[1]
 R = ROOT / "results"
-Z_OVERRIDE = {"FRB20231201A": 0.1119}
 CALEB_DM_RANGE_95 = [1.628, 3.397]  # arXiv:2508.01648, "Clues" section
 PASS_WORD = "CONSISTENT_LOW_POWER"
 
@@ -45,7 +44,7 @@ def _e2(prov: dict) -> dict:
     rows.append(prov["recover_a_known"] | {"side": "recover_a_known", "secure_host": True})
     out = []
     for b in rows:
-        z_true = Z_OVERRIDE.get(b["name"], float(b["z"]))
+        z_true = float(b["z"])  # provenance applies primary-source corrections
         dm_eg = float(b["DM"]) - float(b["DMISM"]) - dmzcal.HOFFMANN_EMIN25.dm_halo
         rec = {
             "name": b["name"],
@@ -65,6 +64,7 @@ def _e2(prov: dict) -> dict:
             lo95, hi95 = dmzcal.central_interval(t, dm_eg, 0.95)
             rec["ci68"], rec["ci95"] = [lo68, hi68], [lo95, hi95]
             rec["z_median"] = dmzcal.central_interval(t, dm_eg, 0.0)[0]
+            rec["dm_pit"] = float(dmzcal.dm_pit(t, np.array([dm_eg]), np.array([z_true]))[0])
         out.append(rec)
     return {"bursts": out, "table": t}
 
@@ -141,6 +141,83 @@ def _c2(
     }
 
 
+HOFFMANN_DSA_LIMIT = 183.0  # DM_obs - DM_ISM; arXiv:2408.04878v2 Sec. 2.3, main.tex l.221
+DM_LIMITS = [HOFFMANN_DSA_LIMIT, 250.0, 300.0, 400.0, 500.0, float("inf")]
+
+
+def _obs_minus_ism(r: dict) -> float:
+    """DM_obs - DM_ISM, from whichever form an estimator's record carries."""
+    if "dm_eg" in r:
+        return float(r["dm_eg"]) + dmzcal.HOFFMANN_EMIN25.dm_halo
+    return float(r["dm"]) - float(r["dm_ism"])
+
+
+def _describe(pits: np.ndarray) -> dict:
+    from scipy import stats  # noqa: PLC0415
+
+    if pits.size == 0:
+        return {"n": 0}
+    return {
+        "n": int(pits.size),
+        "coverage": {str(q): dmzcal.coverage(pits, q) for q in (0.68, 0.95)},
+        "median": float(np.median(pits)),
+        "ks_p": float(stats.kstest(pits, "uniform").pvalue),
+        "tails68": dmzcal.tail_fractions(pits),
+    }
+
+
+def _planted(rule: dmzcal.CalibrationRule, rows: list[dict]) -> dict:
+    arr = np.array([r["planted_pits"] for r in rows if "planted_pits" in r])  # (n, reps)
+    if arr.size == 0:
+        return {"n": 0}
+    passes = [rule.evaluate(arr[:, k])["passed"] for k in range(arr.shape[1])]
+    return {
+        "n": int(arr.shape[0]),
+        "reps": int(arr.shape[1]),
+        "first_rep_passed": bool(passes[0]),
+        "pass_rate": float(np.mean(passes)),
+    }
+
+
+def _post_hoc(
+    rule: dmzcal.CalibrationRule,
+    est: dict[str, list[dict]],
+    cert_names: set[str],
+    expected_pass: float,
+) -> dict:
+    """GATE-2 round-1 checks. ALL POST HOC: chosen after the real verdicts were seen."""
+    out: dict[str, Any] = {"label": "POST HOC (GATE-2 round 1); no frozen verdicts"}
+    for name, rows in est.items():
+        c = [r for r in rows if r["name"] in cert_names and "pit" in r]
+        blk: dict[str, Any] = {
+            "tails68_z": dmzcal.tail_fractions(np.array([r["pit"] for r in c])),
+            "sign_below_half": int(sum(r["pit"] < 0.5 for r in c)),
+        }
+        if all("dm_pit" in r for r in c) and c:
+            blk["dm_given_z"] = _describe(np.array([r["dm_pit"] for r in c]))
+        lim = {}
+        for L in DM_LIMITS:
+            sel = [r for r in c if _obs_minus_ism(r) < L]
+            lim["all" if L == float("inf") else f"<{L:g}"] = _describe(
+                np.array([r["pit"] for r in sel])
+            )
+        blk["by_dm_obs_minus_ism_limit"] = lim
+        if any("pit_halo" in r for r in c):
+            blk["halo_sensitivity"] = {
+                h: _describe(np.array([r["pit_halo"][h] for r in c if h in r.get("pit_halo", {})]))
+                for h in ("25", "75")
+            }
+        if any("planted_pits" in r for r in c):
+            blk["planted_truth"] = _planted(rule, c) | {"expected_pass_rate": expected_pass}
+        out[name] = blk
+    out["host_magnitude_stratification"] = (
+        "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host "
+        "magnitudes are available only for the 19 CHIME/Leung hosts (m_r), not for the "
+        "DSA/ASKAP/MeerKAT ones, so no sample-wide stratification is possible."
+    )
+    return out
+
+
 def main() -> None:
     prov = _load("dmzcal_provenance.json")
     rule = _rule()
@@ -209,6 +286,12 @@ def main() -> None:
         "point_accuracy_certification": point,
         "recover_a_known_FRB20240304B": rak,
         "C2_planted_truth_E2": _c2(table, cert(e2["bursts"]), rule),
+        "post_hoc": _post_hoc(
+            rule,
+            est,
+            cert_names,
+            1 - _load("dmzcal_controls.json")["frozen"]["C0"]["false_fail_rate"],
+        ),
         "e2_bursts": e2["bursts"],
     }
     (R / "dmzcal_metrics.json").write_text(json.dumps(out, indent=1) + "\n")

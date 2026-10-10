@@ -260,12 +260,12 @@
   },
   {
    "name": "FRB20201124A",
-   "telescope": "MeerKAT",
+   "telescope": "CHIME",
    "side": "certification",
    "spec_z": true,
    "secure_host": true,
    "repeater": true,
-   "z_true": 0.0982,
+   "z_true": 0.0979,
    "dm": 411.0,
    "dm_ism": 123.16007817568256,
    "z_point": 0.21706523841727848
@@ -302,9 +302,9 @@
    "secure_host": true,
    "repeater": false,
    "z_true": 0.1415,
-   "dm": 575.0,
+   "dm": 578.78,
    "dm_ism": 55.71909939897647,
-   "z_point": 0.46852755713936156
+   "z_point": 0.47255988015635464
   },
   {
    "name": "FRB20210807D",

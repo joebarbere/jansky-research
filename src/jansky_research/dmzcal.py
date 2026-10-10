@@ -51,6 +51,8 @@ __all__ = [
     "pit",
     "central_interval",
     "coverage",
+    "tail_fractions",
+    "dm_pit",
     "CalibrationRule",
     "null_rule",
     "simulate_sample",
@@ -259,6 +261,36 @@ def central_interval(table: LikelihoodTable, dm_eg: float, q: float) -> tuple[fl
     cdf = np.concatenate([[0.0], np.cumsum(post)])
     lo, hi = (1 - q) / 2, (1 + q) / 2
     return float(np.interp(lo, cdf, edges)), float(np.interp(hi, cdf, edges))
+
+
+def tail_fractions(pits: np.ndarray, q: float = 0.68) -> dict[str, float]:
+    """Fractions of PITs below and above the central q band. A calibrated estimator puts
+    (1-q)/2 in each; a one-sided excess is a location bias, not interval width."""
+    pits = np.asarray(pits)
+    lo, hi = (1 - q) / 2, (1 + q) / 2
+    return {
+        "below": float(np.mean(pits < lo)),
+        "above": float(np.mean(pits > hi)),
+        "expected_each": lo,
+    }
+
+
+def dm_pit(table: LikelihoodTable, dm_eg: np.ndarray, z_true: np.ndarray) -> np.ndarray:
+    """P(DM_EG' < DM_EG | z_true): calibration of the DM model *at known z*.
+
+    Independent of the z prior and of any redshift selection, so it separates "the
+    p(DM|z) model is wrong" from "the prior over z (selection) is wrong". Uses the z node
+    nearest z_true and treats each DM bin as uniform. Note: rows exclude the beyond-grid
+    Delta^-3 tail (<~0.1%), so values are normalised to the in-grid mass.
+    """
+    dm_eg, z_true = np.atleast_1d(dm_eg), np.atleast_1d(z_true)
+    i = np.abs(table.z[None, :] - z_true[:, None]).argmin(axis=1)
+    rows = table.prob[i]
+    rows = rows / rows.sum(axis=1, keepdims=True)
+    k = table.bin_of(dm_eg)
+    below = np.array([rows[j, : k[j]].sum() for j in range(k.size)])
+    frac = np.clip((dm_eg - table.edges[k]) / table.dm_step, 0.0, 1.0)
+    return below + rows[np.arange(k.size), k] * frac
 
 
 def coverage(pits: np.ndarray, q: float) -> float:
@@ -500,7 +532,7 @@ def provenance_side(
         return "certification", "DSA, not in HoffmannEmin25 fit"
     if telescope == "ASKAP":
         if _date(name) <= askap_cutoff:
-            return "production", "CRAFT <= 2023 (HoffmannEmin25 Sec. 3.3)"
+            return "production", "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
         return "certification", "ASKAP 2024+ (after HoffmannEmin25 sample)"
     if telescope in ("CHIME", "MeerKAT"):
         return "certification", f"{telescope} excluded from fit (HoffmannEmin25 Sec. 2.1)"

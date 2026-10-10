@@ -255,7 +255,7 @@ its reason.
    bursts, including 2024 ones). The production side is:
    - the 25 DSA-110 bursts of the paper's DSA table, all of them, including those whose z was
      not used, because their DMs entered the likelihood;
-   - every ASKAP burst up to 2023-12-31 (Sec. 3.3: "all FRBs detected by CRAFT up until the
+   - every ASKAP burst up to 2023-12-31 (Sec. 2.4, corrected from "3.3" at GATE-2: "all FRBs detected by CRAFT up until the
      end of 2023"). This rule is deliberately conservative, because some table rows are
      commented out and their status is unclear.
 

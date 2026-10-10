@@ -160,3 +160,68 @@ def test_provenance_side(tel, name, side):
 def test_solve_c0_gives_up_eventually():
     with pytest.raises(ValueError):
         dz.solve_c0(1e5)
+
+
+def test_tail_fractions_one_sided():
+    pits = np.concatenate([np.full(44, 0.05), np.full(56, 0.5)])
+    t = dz.tail_fractions(pits)
+    assert t["below"] == pytest.approx(0.44)
+    assert t["above"] == 0.0
+    assert t["expected_each"] == pytest.approx(0.16)
+
+
+def test_dm_pit_uniform_on_null(table):
+    rng = np.random.default_rng(7)
+    z, dm = dz.simulate_sample(table, 3000, rng)
+    p = dz.dm_pit(table, dm, z)
+    assert dz.coverage(p, 0.68) == pytest.approx(0.68, abs=0.03)
+    assert np.median(p) == pytest.approx(0.5, abs=0.03)
+
+
+def test_dm_pit_detects_host_excess(table):
+    rng = np.random.default_rng(8)
+    z, dm = dz.simulate_sample(table, 500, rng)
+    shifted = dz.dm_pit(table, dm + 300.0, z)
+    assert np.median(shifted) > 0.7
+
+
+RULE = dz.CalibrationRule(bands={0.68: (0.55, 0.80), 0.95: (0.88, 1.0)})
+
+
+def test_rule_names_biased_when_coverage_in_band():
+    # 70% in [0.16, 0.84] (60% of it high), 95% in [0.025, 0.975]; median ~0.62
+    pits = np.concatenate(
+        [
+            np.linspace(0.56, 0.83, 120),
+            np.linspace(0.17, 0.5, 20),
+            np.linspace(0.85, 0.97, 50),
+            np.linspace(0.03, 0.15, 0),
+            np.full(10, 0.99),
+        ]
+    )
+    out = RULE.evaluate(pits)
+    assert not out["passed"]
+    assert out["verdict"] == "BIASED"
+
+
+def test_rule_names_ks_fail_for_clumped_symmetric_pits():
+    pits = np.concatenate(
+        [
+            np.full(140, 0.2),
+            np.full(140, 0.8),
+            np.linspace(0.03, 0.15, 54),
+            np.linspace(0.85, 0.97, 54),
+            np.full(6, 0.01),
+            np.full(6, 0.99),
+        ]
+    )
+    out = RULE.evaluate(pits)
+    assert out["verdict"] == "KS_FAIL"
+
+
+def test_rule_precedence_overconfident_before_biased():
+    # one-sided low PITs: both coverage and location fail; the label is OVERCONFIDENT
+    pits = np.concatenate([np.full(60, 0.01), np.linspace(0.2, 0.8, 40)])
+    out = RULE.evaluate(pits)
+    assert out["verdict"] == "OVERCONFIDENT"
+    assert out["median_pit"] < 0.4

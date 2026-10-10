@@ -45,7 +45,7 @@ DSA_FIT = (
     "20221101A"
 ).split()
 DSA_FIT_Z_USED = {"20220207C", "20220319D", "20220509G"}
-# - Sec. 3.3 (main.tex l.319): the James+2022b / Baptista+2023 Parkes, ASKAP Fly's-Eye
+# - Sec. 2.4 "Updated CRAFT surveys" (main.tex l.318-319): the James+2022b / Baptista+2023 Parkes, ASKAP Fly's-Eye
 #   and CRAFT/ICS samples, plus Table "Additional CRAFT FRBs" (l.281-317), "all FRBs
 #   detected by CRAFT up until the end of 2023". Rows commented out of that table may
 #   or may not have entered via the earlier samples; rather than guess, every ASKAP
@@ -58,10 +58,10 @@ ASKAP_FIT_CUTOFF = "20231231"
 
 # zdm survey model used for E1, by discovery instrument (zdm/data/Surveys at ZDM_COMMIT).
 SURVEY_MODEL = {
-    "ASKAP": "CRAFT_CRACO_900 / CRAFT_CRACO_1300 (by band; 2024+ CRACO era)",
+    "ASKAP": "CRAFT_average_ICS (2024 certification bursts are Shannon+2024 ICS detections)",
     "DSA": "DSA",
     "CHIME": "CHIME (decbin files; HoffmannEmin25 did not fit CHIME - see Sec. 2.1)",
-    "MeerKAT": "MeerTRAPcoherent / MeerTRAPincoherent (mode per burst)",
+    "MeerKAT": "MeerTRAPcoherent unless SURVEY_OVERRIDE gives the beam mode",
 }
 
 # Spectroscopic-z rule (plan 99 rule 2), refined 2026-10-10 before any posterior:
@@ -95,6 +95,36 @@ LEUNG25_SPEC_Z = {
 # Leung's 20230311A has "a secure redshift, but no secure host" (main.tex l.553): kept
 # for spec-z, flagged by its P(O|x) below like any other burst.
 P_OX_MIN = 0.9  # host-association floor where public_hosts.csv reports P_Ox
+
+# Primary-source corrections to FRBs/FRB, applied here so every estimator sees one sample.
+# Each carries its locator. Applied AFTER the first real run (step-0 finding 7 and the
+# GATE-2 round-1 verification); survey/dmzcal-findings.md reports results before and after.
+# name -> (value, locator)
+Z_OVERRIDE: dict[str, tuple[float, str]] = {
+    "FRB20231201A": (0.1119, "Leung+2025 arXiv:2502.11217v2 redshifts_table.tex"),
+    "FRB20201124A": (
+        0.0979,
+        "Fong+2021 arXiv:2106.11993 abstract (MMT, 0.0979 +/- 0.0001); "
+        "FRBs/FRB 0.0982 has no located source",
+    ),
+}
+TELESCOPE_OVERRIDE: dict[str, tuple[str, str]] = {
+    "FRB20201124A": (
+        "CHIME",
+        "Lanman+2022 arXiv:2109.09254 abstract: 'first discovered by "
+        "CHIME/FRB'; MeerKAT was follow-up only",
+    ),
+}
+DM_OVERRIDE: dict[str, tuple[float, str]] = {
+    "FRB20210410D": (578.78, "Caleb+2023 arXiv:2302.09754 burst-properties table (+/- 2)"),
+}
+# zdm survey model per burst where the instrument mode is known (default: by telescope)
+SURVEY_OVERRIDE: dict[str, tuple[str, str]] = {
+    "FRB20210410D": (
+        "MeerTRAPincoherent",
+        "Caleb+2023 arXiv:2302.09754 table: 'Beam: Incoherent beam'",
+    ),
+}
 
 # FRB 20240304B, added by hand: Caleb et al. 2026 (arXiv:2508.01648), Table 1 (DM,
 # scattering-corrected; l, b; NE2001 DM_ISM) and Table 2 (z_spec). Chosen after its z
@@ -163,6 +193,9 @@ def assemble(base: list[dict], hosts: list[dict], jsons: list[dict]) -> dict:
         t = tel.get(k) or tel.get(re.sub(r"[A-Za-z]+$", "", k), "")
         if not t and len(tel_by_date.get(_date(k), set())) == 1:
             t = next(iter(tel_by_date[_date(k)]))  # letter suffix differs between files
+        t_raw = t
+        if j["_file"] in TELESCOPE_OVERRIDE:
+            t = TELESCOPE_OVERRIDE[j["_file"]][0]
         s, why = side(t, j["_file"])
         is_spec = spec.get(k, False) or k in LEUNG25_SPEC_Z
         p = pox.get(k)
@@ -171,8 +204,14 @@ def assemble(base: list[dict], hosts: list[dict], jsons: list[dict]) -> dict:
             {
                 "name": j["_file"],
                 "telescope": t,
-                "z": float(j["z"]),
-                "DM": _dm(j),
+                "z": Z_OVERRIDE[j["_file"]][0] if j["_file"] in Z_OVERRIDE else float(j["z"]),
+                "z_frbs_frb": float(j["z"]),
+                "telescope_frbs_frb": t_raw,
+                "DM": DM_OVERRIDE[j["_file"]][0] if j["_file"] in DM_OVERRIDE else _dm(j),
+                "DM_frbs_frb": _dm(j),
+                "survey_override": SURVEY_OVERRIDE[j["_file"]][0]
+                if j["_file"] in SURVEY_OVERRIDE
+                else None,
                 "DMISM": j.get("DMISM", {}).get("value")
                 if isinstance(j.get("DMISM"), dict)
                 else j.get("DMISM"),
@@ -217,6 +256,22 @@ def assemble(base: list[dict], hosts: list[dict], jsons: list[dict]) -> dict:
             "certification_spec_z_but_insecure_host": sum(
                 r["spec_z"] and not r["secure_host"] for r in cert
             ),
+        },
+        "corrections": {
+            "z": {k: {"value": v, "locator": loc} for k, (v, loc) in Z_OVERRIDE.items()},
+            "telescope": {
+                k: {"value": v, "locator": loc} for k, (v, loc) in TELESCOPE_OVERRIDE.items()
+            },
+            "DM": {k: {"value": v, "locator": loc} for k, (v, loc) in DM_OVERRIDE.items()},
+            "survey_model": {
+                k: {"value": v, "locator": loc} for k, (v, loc) in SURVEY_OVERRIDE.items()
+            },
+            "unresolved_not_applied": [
+                "DSA DMs 20230124A/20230307A/20230501A differ by 0.6-1.25 pc/cc from "
+                "Connor+2024 arXiv:2409.16952 final table (Sharma+2024 has no DM column)",
+                "Connor+2024 gives z = 0.0700 for 20231120A vs Sharma+2024 Ext. Data "
+                "Table 1 0.0368 (= FRBs/FRB); Sharma kept",
+            ],
         },
         "z_discrepancies": [
             {"name": r["name"], "FRBs_FRB": r["z"], **r["z_literature_check"]}
