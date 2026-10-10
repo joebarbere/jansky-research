@@ -449,3 +449,41 @@ outcome was already "ambiguous" through C2, so the verdict does not change. But 
 withdrawn as evidence**: the production estimator overstates the blending gain by about 1.5, so any
 future β would have to be divided by about 1.5, or computed with covariates that blending cannot
 reach.
+
+## Step 9: referee round 3 (minor), and a third injection model R6: prediction stated before running (2026-10-10)
+
+Round 3 found that step 8's "two errors cancelling" holds only if the ALFALFA/FASHI curve acts as a
+**gain** on any flux added to the beam (R5 scaled the injection by the curve's *ratio*). FASHI DR2
+§5.2 instead attributes the offset to Eddington bias, which would leave a neighbour's flux at a
+gain near 1 (R3's model). The curve also depends on the target's own flux, so if it is a real flux
+mapping the right factor for a small added flux is its *slope*. And R5's pre-injection 1.00 was
+nearly guaranteed by construction, because the injection was scaled by exactly what the
+calibration removes.
+
+**R6 (post hoc).** Pass the added flux through the curve itself. The ALFALFA increment is
+g(S + a) − g(S), with g(S) = S · 10^c(S). Here c is the plan-97 calibration evaluated with the
+target's log flux and log S/N moved to S + a, and with W50, declination and flux error held fixed.
+S is the target's geometric-mean flux, and a is the FASHI-scale neighbour flux weighted by the ALFA
+beam. As in R3 and R5: same draws, ten injections, both covariate modes.
+
+**What R6 can and cannot do.** It fills in the third reading of the curve (flux mapping), next to
+R3 (selection effect, gain 1) and R5 (ratio as gain). It **cannot** say which reading is
+physically right. The note will quote the range across all three, not choose one.
+
+**Prediction.** At the median log S/N the referee's slope arithmetic gives an effective factor of
+about 0.6 r ≈ 0.70, below both R3's 1 and R5's r. So:
+- with pre-injection covariates, β ≈ 0.6–0.85;
+- in production, β ≈ 1.1–1.4;
+- planted 0 unchanged at −0.03.
+
+A result outside the R3–R5 span in either mode would mean the slope reading behaves differently
+from both, and would be reported as such.
+
+**Rewording queued (applied after R6):**
+- F1/F2: "two errors cancelling" and "about half" are replaced by the model range, labelled post hoc
+  (F3), and the factor-1.5 statements are removed from the findings and the code comment.
+- F4: R5/R6 go into the abstract and conclusion, and "β ≈ 1" is qualified as the beam model's.
+- F5: "appears larger at low S/N (under 2σ)".
+- F6: the scatter gap is called unexplained.
+- F7: withdrawn claims are removed from the README and CHANGELOG.
+- F8 and the nit: provenance and the flux > 0 cut.
