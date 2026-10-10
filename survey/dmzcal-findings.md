@@ -416,4 +416,5 @@ host-factor re-grid propagates: all 36 PITs rise, and the DM|z PITs fall.
 - **Other changes.** Cuts for length: the abstract and body are now about 1390 words by source
   count, about 1460 in the rendered body excluding the abstract.
 
-**Status.** Applied. Round 3 confirms.
+**Round 3: ACCEPT.** R1–R4 are closed. Two nits from the length cuts were applied: the
+source-conflict disclosure is restored, and the first-pass coverage clause is completed.
