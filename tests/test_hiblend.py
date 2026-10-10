@@ -361,3 +361,17 @@ def test_injection_alfa_scale_multiplies_only_the_alfalfa_addition():
     assert np.any(base["flux_a"] > zero["flux_a"])
     out = h.referee2_checks(f, n_inj=2)["R5_injection_on_survey_scale"]
     assert {"frozen_strength_1", "production_strength_0", "alfa_scale_isolated"} <= set(out)
+
+
+def test_injection_alfa_map_replaces_the_alfalfa_increment():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    zero = h.injection_field(f, np.random.default_rng(3), strength=0.0)
+    base = h.injection_field(f, np.random.default_rng(3), strength=1.0)
+    tripled = h.injection_field(
+        f, np.random.default_rng(3), strength=1.0, alfa_map=lambda idx, add: 3 * add
+    )
+    assert np.allclose(tripled["flux_a"] - zero["flux_a"], 3 * (base["flux_a"] - zero["flux_a"]))
+    assert np.allclose(tripled["flux_f"], base["flux_f"])
+    out = h.referee3_checks(f, n_inj=2)["R6_injection_through_curve"]
+    assert {"frozen_strength_1", "effective_factor_10pct_isolated"} <= set(out)

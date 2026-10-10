@@ -23,6 +23,7 @@ strength so every step is testable without network.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -692,6 +693,7 @@ def injection_field(
     strength: float,
     freeze_covariates: bool = False,
     alfa_scale: np.ndarray | None = None,
+    alfa_map: Callable[[np.ndarray, np.ndarray], np.ndarray] | None = None,
 ) -> dict:
     """C1 on real data: split the real ISOLATED targets in half. One half stays as the
     calibration sample; the other gets one synthetic neighbour each, drawn from the real primary
@@ -722,6 +724,8 @@ def injection_field(
     add_f = syn.flux * beam_response(syn.sep_arcmin, FAST_FWHM_ARCMIN)
     if alfa_scale is not None:  # referee check R5: the neighbour on ALFALFA's own flux scale
         add_a = add_a * np.asarray(alfa_scale, float)[inj]
+    if alfa_map is not None:  # referee check R6: alfa_map(target indices, FASHI-scale increment)
+        add_a = alfa_map(inj, add_a)
     if freeze_covariates:  # referee check R3: calibration covariates from pre-injection fluxes
         sub["cov_flux_a"], sub["cov_flux_f"] = sub["flux_a"].copy(), sub["flux_f"].copy()
     sub["flux_a"] = sub["flux_a"].copy()
@@ -1060,6 +1064,44 @@ def referee2_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
                 "betas": [round(float(x), 4) for x in bs],
             }  # fmt: skip
     return {"R5_injection_on_survey_scale": out}
+
+
+def referee3_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
+    """Post-hoc check R6 (survey/hiblend-findings.md step 9): C1 as in R3/R5, with the injected
+    ALFALFA increment passed through the plan-97 calibration curve read as a flux mapping,
+    g(S + a) - g(S), g(S) = S 10^c(S), at fixed W50, declination and flux error."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    coef, s_g = d["coef"], d["s_g"]
+    err = np.asarray(field["flux_err_f"], float)
+    lw, dec = np.log10(np.asarray(field["w50"], float)), np.asarray(field["dec"], float)
+
+    def c(idx: np.ndarray, flux: np.ndarray) -> np.ndarray:
+        return (
+            calibration_design(np.log10(flux / err[idx]), lw[idx], np.log10(flux), dec[idx]) @ coef
+        )
+
+    def amap(idx: np.ndarray, add: np.ndarray) -> np.ndarray:
+        s0 = s_g[idx]
+        return (s0 + add) * 10 ** c(idx, s0 + add) - s0 * 10 ** c(idx, s0)
+
+    iso = np.flatnonzero(d["masks"]["isolated"])
+    probe = amap(iso, 0.1 * s_g[iso]) / (0.1 * s_g[iso])  # effective factor for a 10% addition
+    out: dict = {"effective_factor_10pct_isolated": {
+        "median": round(float(np.median(probe)), 4),
+        "p05": round(float(np.quantile(probe, 0.05)), 4),
+        "p95": round(float(np.quantile(probe, 0.95)), 4)}}  # fmt: skip
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # the same draws as R3 and R5
+            bs = [analyse(injection_field(f, sub_rng, strength=st, freeze_covariates=frozen,
+                                          alfa_map=amap), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            out[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    return {"R6_injection_through_curve": out}
 
 
 # ---------------------------------------------------------------------------------------------
