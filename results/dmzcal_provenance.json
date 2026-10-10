@@ -1,0 +1,2596 @@
+{
+ "source": "real: FRBs/FRB localized-host JSONs + HoffmannEmin25 fit sample (arXiv:2408.04878v2 source)",
+ "plan": "plans/99-dmzcal-coverage.md step 0",
+ "frb_commit": "996fcda9b0b22431e3171208b4c8e1cf2798e823",
+ "zdm_commit": "e0f985bb55ad03d8b3435bc6a334a58d3ed674ba",
+ "state_audited": "HoffmannEmin25",
+ "state_reference": "Hoffmann et al. 2025, PASA 42, e017, doi:10.1017/pasa.2024.127",
+ "F_provenance": "F = 0.32 fixed, citing Macquart+2020 and Zhang+2021 (arXiv:2408.04878v2 Sec. 4, main.tex l.382); not fitted",
+ "zdm_default_state_note": "zdm load_state() defaults to HoffmannHalo25, marked 'Unpublished (yet!)' in states.py; not audited",
+ "survey_models": {
+  "ASKAP": "CRAFT_average_ICS (2024 certification bursts are Shannon+2024 ICS detections)",
+  "DSA": "DSA",
+  "CHIME": "CHIME (decbin files; HoffmannEmin25 did not fit CHIME - see Sec. 2.1)",
+  "MeerKAT": "MeerTRAPcoherent unless SURVEY_OVERRIDE gives the beam mode"
+ },
+ "counts": {
+  "json_files": 187,
+  "with_z": 111,
+  "after_dedupe": 105,
+  "by_side": {
+   "no_model": 3,
+   "production": 48,
+   "certification": 54
+  },
+  "certification_by_telescope": {
+   "CHIME": 35,
+   "DSA": 13,
+   "MeerKAT": 2,
+   "ASKAP": 4
+  },
+  "certification_spec_z": 36,
+  "certification_spec_z_by_telescope": {
+   "CHIME": 20,
+   "MeerKAT": 1,
+   "DSA": 11,
+   "ASKAP": 4
+  },
+  "certification_spec_z_repeaters": 4,
+  "certification_spec_z_but_insecure_host": 3
+ },
+ "corrections": {
+  "z": {
+   "FRB20231201A": {
+    "value": 0.1119,
+    "locator": "Leung+2025 arXiv:2502.11217v2 redshifts_table.tex"
+   },
+   "FRB20201124A": {
+    "value": 0.0979,
+    "locator": "Fong+2021 arXiv:2106.11993 abstract (MMT, 0.0979 +/- 0.0001); FRBs/FRB 0.0982 has no located source"
+   }
+  },
+  "telescope": {
+   "FRB20201124A": {
+    "value": "CHIME",
+    "locator": "Lanman+2022 arXiv:2109.09254 abstract: 'first discovered by CHIME/FRB'; MeerKAT was follow-up only"
+   }
+  },
+  "DM": {
+   "FRB20210410D": {
+    "value": 578.78,
+    "locator": "Caleb+2023 arXiv:2302.09754 burst-properties table (+/- 2)"
+   }
+  },
+  "survey_model": {
+   "FRB20210410D": {
+    "value": "MeerTRAPincoherent",
+    "locator": "Caleb+2023 arXiv:2302.09754 table: 'Beam: Incoherent beam'"
+   }
+  },
+  "alternatives": {
+   "FRB20231120A": {
+    "z": {
+     "value": 0.07,
+     "locator": "Connor+2024 arXiv:2409.16952 final table (vs Sharma Ext. Data Table 1 0.0368)"
+    }
+   },
+   "FRB20230124A": {
+    "DM": {
+     "value": 590.6,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   },
+   "FRB20230307A": {
+    "DM": {
+     "value": 608.9,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   },
+   "FRB20230501A": {
+    "DM": {
+     "value": 532.5,
+     "locator": "Connor+2024 arXiv:2409.16952 final table"
+    }
+   }
+  },
+  "unresolved_not_applied": [
+   "DSA DMs 20230124A/20230307A/20230501A differ by 0.6-1.25 pc/cc from Connor+2024 arXiv:2409.16952 final table (Sharma+2024 has no DM column)",
+   "Connor+2024 gives z = 0.0700 for 20231120A vs Sharma+2024 Ext. Data Table 1 0.0368 (= FRBs/FRB); Sharma kept"
+  ]
+ },
+ "z_discrepancies": [
+  {
+   "name": "FRB20231201A",
+   "FRBs_FRB": 0.1119,
+   "Leung2025": 0.1119,
+   "agrees": false
+  }
+ ],
+ "underpowered_by_rule": false,
+ "merges": [
+  {
+   "date": "20210320",
+   "kept": "FRB20210320C",
+   "dropped": [
+    "FRB20210320"
+   ]
+  },
+  {
+   "date": "20210410",
+   "kept": "FRB20210410D",
+   "dropped": [
+    "FRB20210410"
+   ]
+  },
+  {
+   "date": "20210807",
+   "kept": "FRB20210807D",
+   "dropped": [
+    "FRB20210807"
+   ]
+  },
+  {
+   "date": "20211127",
+   "kept": "FRB20211127I",
+   "dropped": [
+    "FRB20211127"
+   ]
+  },
+  {
+   "date": "20211203",
+   "kept": "FRB20211203C",
+   "dropped": [
+    "FRB20211203"
+   ]
+  },
+  {
+   "date": "20211212",
+   "kept": "FRB20211212A",
+   "dropped": [
+    "FRB20211212"
+   ]
+  }
+ ],
+ "recover_a_known": {
+  "name": "FRB20240304B",
+  "DM": 2458.2,
+  "DMISM": 28.1,
+  "gl": 269.8676,
+  "gb": 72.1035,
+  "z": 2.148,
+  "telescope": "MeerKAT",
+  "spec_z": true,
+  "refs": [
+   "Caleb2026"
+  ]
+ },
+ "bursts": [
+  {
+   "name": "FRB20121102A",
+   "telescope": "VLA",
+   "z": 0.19273,
+   "z_frbs_frb": 0.19273,
+   "telescope_frbs_frb": "VLA",
+   "DM": 558.1,
+   "DM_frbs_frb": 558.1,
+   "survey_override": null,
+   "DMISM": 158.23787096104465,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Tendulkar2017",
+    "Marcote2017"
+   ],
+   "side": "no_model",
+   "reason": "VLA: no zdm survey model"
+  },
+  {
+   "name": "FRB20171020",
+   "telescope": "ASKAP",
+   "z": 0.00867,
+   "z_frbs_frb": 0.00867,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 114.1,
+   "DM_frbs_frb": 114.1,
+   "survey_override": null,
+   "DMISM": 37.46616994198802,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2018",
+    "Mahony2018"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20180301A",
+   "telescope": "ASKAP",
+   "z": 0.33044,
+   "z_frbs_frb": 0.33044,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 536.0,
+   "DM_frbs_frb": 536.0,
+   "survey_override": null,
+   "DMISM": 133.01597418045492,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999999977,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20180916B",
+   "telescope": "CHIME",
+   "z": 0.0337,
+   "z_frbs_frb": 0.0337,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 348.76,
+   "DM_frbs_frb": 348.76,
+   "survey_override": null,
+   "DMISM": 171.67636809952725,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Marcote2020"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20180924B",
+   "telescope": "ASKAP",
+   "z": 0.3212,
+   "z_frbs_frb": 0.3212,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 362.16,
+   "DM_frbs_frb": 362.16,
+   "survey_override": null,
+   "DMISM": 41.89419211467203,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bannister2019",
+    "Bhandari2020",
+    "Day2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20181030A",
+   "telescope": "CHIME",
+   "z": 0.0039,
+   "z_frbs_frb": 0.0039,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 103.5,
+   "DM_frbs_frb": 103.5,
+   "survey_override": null,
+   "DMISM": 40.45249227173968,
+   "repeater": true,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhardwaj2021b"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20181112A",
+   "telescope": "ASKAP",
+   "z": 0.4755,
+   "z_frbs_frb": 0.4755,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 589.27,
+   "DM_frbs_frb": 589.27,
+   "survey_override": null,
+   "DMISM": 42.39581689047657,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.88624,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Prochaska2019",
+    "Day2021",
+    "Day2020"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20181119A",
+   "telescope": "",
+   "z": 0.26064,
+   "z_frbs_frb": 0.26064,
+   "telescope_frbs_frb": "",
+   "DM": 366.1,
+   "DM_frbs_frb": 366.1,
+   "survey_override": null,
+   "DMISM": 33.3671671737288,
+   "repeater": true,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Astroflash"
+   ],
+   "side": "no_model",
+   "reason": "unknown: no zdm survey model"
+  },
+  {
+   "name": "FRB20190102C",
+   "telescope": "ASKAP",
+   "z": 0.2912,
+   "z_frbs_frb": 0.2912,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 364.545,
+   "DM_frbs_frb": 364.545,
+   "survey_override": null,
+   "DMISM": 56.81557739026717,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2020",
+    "Day2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20190520B",
+   "telescope": "VLA",
+   "z": 0.241,
+   "z_frbs_frb": 0.241,
+   "telescope_frbs_frb": "VLA",
+   "DM": 1210.3,
+   "DM_frbs_frb": 1210.3,
+   "survey_override": null,
+   "DMISM": 58.233257330593965,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9984,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Niu2021"
+   ],
+   "side": "no_model",
+   "reason": "VLA: no zdm survey model"
+  },
+  {
+   "name": "FRB20190523A",
+   "telescope": "DSA",
+   "z": 0.66,
+   "z_frbs_frb": 0.66,
+   "telescope_frbs_frb": "DSA",
+   "DM": 760.8,
+   "DM_frbs_frb": 760.8,
+   "survey_override": null,
+   "DMISM": 36.798255994824146,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": true,
+   "P_Ox": 0.8407100417,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Ravi2019"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20190608B",
+   "telescope": "ASKAP",
+   "z": 0.1177805,
+   "z_frbs_frb": 0.1177805,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 340.05,
+   "DM_frbs_frb": 340.05,
+   "survey_override": null,
+   "DMISM": 38.063401552135424,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2020",
+    "Day2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20190611B",
+   "telescope": "ASKAP",
+   "z": 0.3778,
+   "z_frbs_frb": 0.3778,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 332.63,
+   "DM_frbs_frb": 332.63,
+   "survey_override": null,
+   "DMISM": 57.195175508153376,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.80454,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "MacQuart2020",
+    "Day2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20190711A",
+   "telescope": "ASKAP",
+   "z": 0.52172,
+   "z_frbs_frb": 0.52172,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 587.9,
+   "DM_frbs_frb": 587.9,
+   "survey_override": null,
+   "DMISM": 55.93110567077387,
+   "repeater": true,
+   "spec_z": false,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "MacQuart2020",
+    "Day2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20190714A",
+   "telescope": "ASKAP",
+   "z": 0.2365,
+   "z_frbs_frb": 0.2365,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 504.13,
+   "DM_frbs_frb": 504.13,
+   "survey_override": null,
+   "DMISM": 37.983023730476305,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Heintz2020",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20191001A",
+   "telescope": "ASKAP",
+   "z": 0.234,
+   "z_frbs_frb": 0.234,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 507.0,
+   "DM_frbs_frb": 507.0,
+   "survey_override": null,
+   "DMISM": 44.703374089604,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.99945,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2020b",
+    "Day2021",
+    "Shannon2023",
+    "Bhandari+2020"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20191228A",
+   "telescope": "ASKAP",
+   "z": 0.243,
+   "z_frbs_frb": 0.243,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 298.0,
+   "DM_frbs_frb": 298.0,
+   "survey_override": null,
+   "DMISM": 33.88103230189731,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999999964,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2021",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20200120E",
+   "telescope": "CHIME",
+   "z": 0.0008,
+   "z_frbs_frb": 0.0008,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 87.818,
+   "DM_frbs_frb": 87.818,
+   "survey_override": null,
+   "DMISM": 40.08448697334433,
+   "repeater": true,
+   "spec_z": false,
+   "in_public_hosts": true,
+   "P_Ox": 0.99999,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhardwaj2021",
+    "Kirsten2021"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20200430A",
+   "telescope": "ASKAP",
+   "z": 0.161,
+   "z_frbs_frb": 0.161,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 380.0,
+   "DM_frbs_frb": 380.0,
+   "survey_override": null,
+   "DMISM": 27.01968641732365,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2021",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20200906A",
+   "telescope": "ASKAP",
+   "z": 0.3688,
+   "z_frbs_frb": 0.3688,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 577.84,
+   "DM_frbs_frb": 577.84,
+   "survey_override": null,
+   "DMISM": 35.92456249219822,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Bhandari2021",
+    "Day2021"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20201123A",
+   "telescope": "MeerKAT",
+   "z": 0.0507,
+   "z_frbs_frb": 0.0507,
+   "telescope_frbs_frb": "MeerKAT",
+   "DM": 433.55,
+   "DM_frbs_frb": 433.55,
+   "survey_override": null,
+   "DMISM": 229.44847478020327,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.8371108665,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Rajwade2022"
+   ],
+   "side": "certification",
+   "reason": "MeerKAT excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20201124A",
+   "telescope": "CHIME",
+   "z": 0.0979,
+   "z_frbs_frb": 0.0982,
+   "telescope_frbs_frb": "MeerKAT",
+   "DM": 411.0,
+   "DM_frbs_frb": 411.0,
+   "survey_override": null,
+   "DMISM": 123.16007817568256,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Kumar2021"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20210117A",
+   "telescope": "ASKAP",
+   "z": 0.2145,
+   "z_frbs_frb": 0.2145,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 728.95,
+   "DM_frbs_frb": 728.95,
+   "survey_override": null,
+   "DMISM": 35.07712027434532,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20210320C",
+   "telescope": "ASKAP",
+   "z": 0.2797,
+   "z_frbs_frb": 0.2797,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 384.593,
+   "DM_frbs_frb": 384.593,
+   "survey_override": null,
+   "DMISM": 38.65484745915762,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999902981,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20210410D",
+   "telescope": "MeerKAT",
+   "z": 0.1415,
+   "z_frbs_frb": 0.1415,
+   "telescope_frbs_frb": "MeerKAT",
+   "DM": 578.78,
+   "DM_frbs_frb": 575.0,
+   "survey_override": "MeerTRAPincoherent",
+   "DMISM": 55.71909939897647,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9956501685,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Caleb2023"
+   ],
+   "side": "certification",
+   "reason": "MeerKAT excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20210807D",
+   "telescope": "ASKAP",
+   "z": 0.12927,
+   "z_frbs_frb": 0.12927,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 251.3,
+   "DM_frbs_frb": 251.3,
+   "survey_override": null,
+   "DMISM": 121.29888156583623,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999999935,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20211127I",
+   "telescope": "ASKAP",
+   "z": 0.0469,
+   "z_frbs_frb": 0.0469,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 234.97,
+   "DM_frbs_frb": 234.97,
+   "survey_override": null,
+   "DMISM": 41.686101787288266,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9998406996,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20211203C",
+   "telescope": "ASKAP",
+   "z": 0.34386,
+   "z_frbs_frb": 0.34386,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 635.0,
+   "DM_frbs_frb": 635.0,
+   "survey_override": null,
+   "DMISM": 61.42216883267918,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999999866,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20211212A",
+   "telescope": "ASKAP",
+   "z": 0.0707,
+   "z_frbs_frb": 0.0707,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 209.0,
+   "DM_frbs_frb": 209.0,
+   "survey_override": null,
+   "DMISM": 38.19769295659078,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220105A",
+   "telescope": "ASKAP",
+   "z": 0.2785,
+   "z_frbs_frb": 0.2785,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 580.0,
+   "DM_frbs_frb": 580.0,
+   "survey_override": null,
+   "DMISM": 21.89017619355952,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.999989879,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024",
+    "Gordon2023"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220204A",
+   "telescope": "DSA",
+   "z": 0.4012,
+   "z_frbs_frb": 0.4012,
+   "telescope_frbs_frb": "DSA",
+   "DM": 612.2,
+   "DM_frbs_frb": 612.2,
+   "survey_override": null,
+   "DMISM": 50.46088115441045,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.994,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220207C",
+   "telescope": "DSA",
+   "z": 0.0433,
+   "z_frbs_frb": 0.0433,
+   "telescope_frbs_frb": "DSA",
+   "DM": 262.3,
+   "DM_frbs_frb": 262.3,
+   "survey_override": null,
+   "DMISM": 74.98932526524507,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.969,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (z used)"
+  },
+  {
+   "name": "FRB20220208A",
+   "telescope": "DSA",
+   "z": 0.351,
+   "z_frbs_frb": 0.351,
+   "telescope_frbs_frb": "DSA",
+   "DM": 437.0,
+   "DM_frbs_frb": 437.0,
+   "survey_override": null,
+   "DMISM": 98.67925923463265,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.56,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220307B",
+   "telescope": "DSA",
+   "z": 0.2481,
+   "z_frbs_frb": 0.2481,
+   "telescope_frbs_frb": "DSA",
+   "DM": 499.15,
+   "DM_frbs_frb": 499.15,
+   "survey_override": null,
+   "DMISM": 120.01830643425639,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.983,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220310F",
+   "telescope": "DSA",
+   "z": 0.478,
+   "z_frbs_frb": 0.478,
+   "telescope_frbs_frb": "DSA",
+   "DM": 462.15,
+   "DM_frbs_frb": 462.15,
+   "survey_override": null,
+   "DMISM": 45.4596677829908,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.97,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220319D",
+   "telescope": "DSA",
+   "z": 0.0112,
+   "z_frbs_frb": 0.0112,
+   "telescope_frbs_frb": "DSA",
+   "DM": 110.95,
+   "DM_frbs_frb": 110.95,
+   "survey_override": null,
+   "DMISM": 126.76504021216692,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.999,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Ravi2023",
+    "Law2023",
+    "Sherman23"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (z used)"
+  },
+  {
+   "name": "FRB20220330D",
+   "telescope": "DSA",
+   "z": 0.3714,
+   "z_frbs_frb": 0.3714,
+   "telescope_frbs_frb": "DSA",
+   "DM": 468.1,
+   "DM_frbs_frb": 468.1,
+   "survey_override": null,
+   "DMISM": 38.04277574313523,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.63,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220418A",
+   "telescope": "DSA",
+   "z": 0.6213,
+   "z_frbs_frb": 0.6213,
+   "telescope_frbs_frb": "DSA",
+   "DM": 623.45,
+   "DM_frbs_frb": 623.45,
+   "survey_override": null,
+   "DMISM": 36.34696668405293,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.974,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220501C",
+   "telescope": "ASKAP",
+   "z": 0.381,
+   "z_frbs_frb": 0.381,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 449.5,
+   "DM_frbs_frb": 449.5,
+   "survey_override": null,
+   "DMISM": 31.837840025029816,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220506D",
+   "telescope": "DSA",
+   "z": 0.3004,
+   "z_frbs_frb": 0.3004,
+   "telescope_frbs_frb": "DSA",
+   "DM": 396.93,
+   "DM_frbs_frb": 396.93,
+   "survey_override": null,
+   "DMISM": 82.8478420011172,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.991,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220509G",
+   "telescope": "DSA",
+   "z": 0.0894,
+   "z_frbs_frb": 0.0894,
+   "telescope_frbs_frb": "DSA",
+   "DM": 269.5,
+   "DM_frbs_frb": 269.5,
+   "survey_override": null,
+   "DMISM": 55.27578917678303,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.969,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma2023",
+    "Connor2023",
+    "Law2023",
+    "Sherman23"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (z used)"
+  },
+  {
+   "name": "FRB20220610A",
+   "telescope": "ASKAP",
+   "z": 1.015,
+   "z_frbs_frb": 1.015,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 1458.1,
+   "DM_frbs_frb": 1458.1,
+   "survey_override": null,
+   "DMISM": 32.36290263090373,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Ryder2023",
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220725A",
+   "telescope": "ASKAP",
+   "z": 0.1926,
+   "z_frbs_frb": 0.1926,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 290.4,
+   "DM_frbs_frb": 290.4,
+   "survey_override": null,
+   "DMISM": 32.02458603127682,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220726A",
+   "telescope": "DSA",
+   "z": 0.3619,
+   "z_frbs_frb": 0.3619,
+   "telescope_frbs_frb": "DSA",
+   "DM": 686.55,
+   "DM_frbs_frb": 686.55,
+   "survey_override": null,
+   "DMISM": 84.56373333512416,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.994,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220825A",
+   "telescope": "DSA",
+   "z": 0.2414,
+   "z_frbs_frb": 0.2414,
+   "telescope_frbs_frb": "DSA",
+   "DM": 651.2,
+   "DM_frbs_frb": 651.2,
+   "survey_override": null,
+   "DMISM": 77.31468013731848,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.993,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220914A",
+   "telescope": "DSA",
+   "z": 0.1139,
+   "z_frbs_frb": 0.1139,
+   "telescope_frbs_frb": "DSA",
+   "DM": 631.05,
+   "DM_frbs_frb": 631.05,
+   "survey_override": null,
+   "DMISM": 54.38527742313936,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.974,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma2023",
+    "Connor2023",
+    "Law2023"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20220918A",
+   "telescope": "ASKAP",
+   "z": 0.491,
+   "z_frbs_frb": 0.491,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 656.8,
+   "DM_frbs_frb": 656.8,
+   "survey_override": null,
+   "DMISM": 41.082243542229726,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999019896,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20220920A",
+   "telescope": "DSA",
+   "z": 0.1582,
+   "z_frbs_frb": 0.1582,
+   "telescope_frbs_frb": "DSA",
+   "DM": 315.0,
+   "DM_frbs_frb": 315.0,
+   "survey_override": null,
+   "DMISM": 39.64271993600176,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.985,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20221012A",
+   "telescope": "DSA",
+   "z": 0.2847,
+   "z_frbs_frb": 0.2847,
+   "telescope_frbs_frb": "DSA",
+   "DM": 442.2,
+   "DM_frbs_frb": 442.2,
+   "survey_override": null,
+   "DMISM": 54.06005781339241,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.996,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Law2023",
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20221027A",
+   "telescope": "DSA",
+   "z": 0.5422,
+   "z_frbs_frb": 0.5422,
+   "telescope_frbs_frb": "DSA",
+   "DM": 452.5,
+   "DM_frbs_frb": 452.5,
+   "survey_override": null,
+   "DMISM": 46.232059019530254,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.616,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20221029A",
+   "telescope": "DSA",
+   "z": 0.975,
+   "z_frbs_frb": 0.975,
+   "telescope_frbs_frb": "DSA",
+   "DM": 1391.05,
+   "DM_frbs_frb": 1391.05,
+   "survey_override": null,
+   "DMISM": 43.19115845321518,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.92,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20221101B",
+   "telescope": "DSA",
+   "z": 0.2395,
+   "z_frbs_frb": 0.2395,
+   "telescope_frbs_frb": "DSA",
+   "DM": 490.7,
+   "DM_frbs_frb": 490.7,
+   "survey_override": null,
+   "DMISM": 123.11693425300545,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.987,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sherman23",
+    "Sharma24"
+   ],
+   "side": "production",
+   "reason": "HoffmannEmin25 DSA table (DM only)"
+  },
+  {
+   "name": "FRB20221106A",
+   "telescope": "ASKAP",
+   "z": 0.2044,
+   "z_frbs_frb": 0.2044,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 343.8,
+   "DM_frbs_frb": 343.8,
+   "survey_override": null,
+   "DMISM": 34.99171133639016,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9963770849,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20221113A",
+   "telescope": "DSA",
+   "z": 0.2505,
+   "z_frbs_frb": 0.2505,
+   "telescope_frbs_frb": "DSA",
+   "DM": 411.4,
+   "DM_frbs_frb": 411.4,
+   "survey_override": null,
+   "DMISM": 86.41248721711588,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.995,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20221116A",
+   "telescope": "DSA",
+   "z": 0.2764,
+   "z_frbs_frb": 0.2764,
+   "telescope_frbs_frb": "DSA",
+   "DM": 640.6,
+   "DM_frbs_frb": 640.6,
+   "survey_override": null,
+   "DMISM": 121.55822024791668,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.943,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20221219A",
+   "telescope": "DSA",
+   "z": 0.553,
+   "z_frbs_frb": 0.553,
+   "telescope_frbs_frb": "DSA",
+   "DM": 706.708,
+   "DM_frbs_frb": 706.708,
+   "survey_override": null,
+   "DMISM": 44.16003738953591,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.996,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230124A",
+   "telescope": "DSA",
+   "z": 0.0939,
+   "z_frbs_frb": 0.0939,
+   "telescope_frbs_frb": "DSA",
+   "DM": 590.0,
+   "DM_frbs_frb": 590.0,
+   "survey_override": null,
+   "DMISM": 38.250038648465534,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.999,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230203A",
+   "telescope": "CHIME",
+   "z": 0.1464,
+   "z_frbs_frb": 0.1464,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 417.302,
+   "DM_frbs_frb": 417.302,
+   "survey_override": null,
+   "DMISM": 35.289507893400796,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.938327,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1464,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230216A",
+   "telescope": "DSA",
+   "z": 0.531,
+   "z_frbs_frb": 0.531,
+   "telescope_frbs_frb": "DSA",
+   "DM": 828.289,
+   "DM_frbs_frb": 828.289,
+   "survey_override": null,
+   "DMISM": 37.7997811446619,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.418,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230222A",
+   "telescope": "CHIME",
+   "z": 0.1223,
+   "z_frbs_frb": 0.1223,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 708.442,
+   "DM_frbs_frb": 708.442,
+   "survey_override": null,
+   "DMISM": 120.07289915623517,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.985382,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1223,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230222B",
+   "telescope": "CHIME",
+   "z": 0.11,
+   "z_frbs_frb": 0.11,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 188.034,
+   "DM_frbs_frb": 188.034,
+   "survey_override": null,
+   "DMISM": 27.622929486048747,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.980619,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.11,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230307A",
+   "telescope": "DSA",
+   "z": 0.2706,
+   "z_frbs_frb": 0.2706,
+   "telescope_frbs_frb": "DSA",
+   "DM": 610.15,
+   "DM_frbs_frb": 610.15,
+   "survey_override": null,
+   "DMISM": 37.12309539138485,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.968,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230311A",
+   "telescope": "CHIME",
+   "z": 0.1918,
+   "z_frbs_frb": 0.1918,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 364.341217,
+   "DM_frbs_frb": 364.341217,
+   "survey_override": null,
+   "DMISM": 85.99482491715395,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.773594,
+   "secure_host": false,
+   "z_literature_check": {
+    "Leung2025": 0.1918,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230410A",
+   "telescope": "CHIME",
+   "z": 0.1684,
+   "z_frbs_frb": 0.1684,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 643.359,
+   "DM_frbs_frb": 643.359,
+   "survey_override": null,
+   "DMISM": 21.35259497888317,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230501A",
+   "telescope": "DSA",
+   "z": 0.3015,
+   "z_frbs_frb": 0.3015,
+   "telescope_frbs_frb": "DSA",
+   "DM": 533.7,
+   "DM_frbs_frb": 533.7,
+   "survey_override": null,
+   "DMISM": 118.634268055484,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.993,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230526A",
+   "telescope": "ASKAP",
+   "z": 0.157,
+   "z_frbs_frb": 0.157,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 361.4,
+   "DM_frbs_frb": 361.4,
+   "survey_override": null,
+   "DMISM": 32.42288934182724,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999741496,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20230616A",
+   "telescope": "CHIME",
+   "z": 0.4485,
+   "z_frbs_frb": 0.4485,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 918.334,
+   "DM_frbs_frb": 918.334,
+   "survey_override": null,
+   "DMISM": 19.816175205337426,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230626A",
+   "telescope": "DSA",
+   "z": 0.327,
+   "z_frbs_frb": 0.327,
+   "telescope_frbs_frb": "DSA",
+   "DM": 451.2,
+   "DM_frbs_frb": 451.2,
+   "survey_override": null,
+   "DMISM": 38.90785972099251,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.999,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230628A",
+   "telescope": "DSA",
+   "z": 0.127,
+   "z_frbs_frb": 0.127,
+   "telescope_frbs_frb": "DSA",
+   "DM": 345.15,
+   "DM_frbs_frb": 345.15,
+   "survey_override": null,
+   "DMISM": 38.54713303142838,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.953,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230702A",
+   "telescope": "CHIME",
+   "z": 0.3658,
+   "z_frbs_frb": 0.3658,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 598.878,
+   "DM_frbs_frb": 598.878,
+   "survey_override": null,
+   "DMISM": 47.70720627504303,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230703A",
+   "telescope": "CHIME",
+   "z": 0.1184,
+   "z_frbs_frb": 0.1184,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 290.745,
+   "DM_frbs_frb": 290.745,
+   "survey_override": null,
+   "DMISM": 26.700601585993446,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.973473,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1184,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230708A",
+   "telescope": "ASKAP",
+   "z": 0.105,
+   "z_frbs_frb": 0.105,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 411.51,
+   "DM_frbs_frb": 411.51,
+   "survey_override": null,
+   "DMISM": 59.77958712255504,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999991912,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20230712A",
+   "telescope": "DSA",
+   "z": 0.4525,
+   "z_frbs_frb": 0.4525,
+   "telescope_frbs_frb": "DSA",
+   "DM": 586.96,
+   "DM_frbs_frb": 586.96,
+   "survey_override": null,
+   "DMISM": 38.605954438563444,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.995,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20230718A",
+   "telescope": "ASKAP",
+   "z": 0.035,
+   "z_frbs_frb": 0.035,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 477.0,
+   "DM_frbs_frb": 477.0,
+   "survey_override": null,
+   "DMISM": 392.511971990473,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.0,
+   "secure_host": false,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20230730A",
+   "telescope": "CHIME",
+   "z": 0.2115,
+   "z_frbs_frb": 0.2115,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 312.581,
+   "DM_frbs_frb": 312.581,
+   "survey_override": null,
+   "DMISM": 80.5779561244582,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.951931,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.2115,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230828A",
+   "telescope": "CHIME",
+   "z": 0.6268,
+   "z_frbs_frb": 0.6268,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 377.281,
+   "DM_frbs_frb": 377.281,
+   "survey_override": null,
+   "DMISM": 54.900995292077425,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230902A",
+   "telescope": "ASKAP",
+   "z": 0.3619,
+   "z_frbs_frb": 0.3619,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 440.1,
+   "DM_frbs_frb": 440.1,
+   "survey_override": null,
+   "DMISM": 34.488765040778134,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9999999951,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20230918A",
+   "telescope": "CHIME",
+   "z": 0.06,
+   "z_frbs_frb": 0.06,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 365.95871,
+   "DM_frbs_frb": 365.95871,
+   "survey_override": null,
+   "DMISM": 35.30284029683995,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230923A",
+   "telescope": "CHIME",
+   "z": 0.4445,
+   "z_frbs_frb": 0.4445,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 918.333984,
+   "DM_frbs_frb": 918.333984,
+   "survey_override": null,
+   "DMISM": 27.90421549734002,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230924A",
+   "telescope": "CHIME",
+   "z": 0.3942,
+   "z_frbs_frb": 0.3942,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 991.12,
+   "DM_frbs_frb": 991.12,
+   "survey_override": null,
+   "DMISM": 22.62047863507327,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20230926A",
+   "telescope": "CHIME",
+   "z": 0.0553,
+   "z_frbs_frb": 0.0553,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 222.810226,
+   "DM_frbs_frb": 222.810226,
+   "survey_override": null,
+   "DMISM": 52.620972560610426,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.995847,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0553,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231005A",
+   "telescope": "CHIME",
+   "z": 0.0713,
+   "z_frbs_frb": 0.0713,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 188.842789,
+   "DM_frbs_frb": 188.842789,
+   "survey_override": null,
+   "DMISM": 33.23637092681405,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.984624,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0713,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231006B",
+   "telescope": "CHIME",
+   "z": 0.478,
+   "z_frbs_frb": 0.478,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 1252.3,
+   "DM_frbs_frb": 1252.3,
+   "survey_override": null,
+   "DMISM": 53.94527661462214,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231011A",
+   "telescope": "CHIME",
+   "z": 0.0783,
+   "z_frbs_frb": 0.0783,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 186.416534,
+   "DM_frbs_frb": 186.416534,
+   "survey_override": null,
+   "DMISM": 69.22385687432826,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.991333,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0783,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231017A",
+   "telescope": "CHIME",
+   "z": 0.245,
+   "z_frbs_frb": 0.245,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 344.122498,
+   "DM_frbs_frb": 344.122498,
+   "survey_override": null,
+   "DMISM": 64.88558766665756,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.918165,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.245,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231025B",
+   "telescope": "CHIME",
+   "z": 0.3238,
+   "z_frbs_frb": 0.3238,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 368.384949,
+   "DM_frbs_frb": 368.384949,
+   "survey_override": null,
+   "DMISM": 48.5142332605462,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.925295,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.3238,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231102A",
+   "telescope": "CHIME",
+   "z": 0.6878,
+   "z_frbs_frb": 0.6878,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 906.202759,
+   "DM_frbs_frb": 906.202759,
+   "survey_override": null,
+   "DMISM": 33.329444491465956,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231120A",
+   "telescope": "DSA",
+   "z": 0.0368,
+   "z_frbs_frb": 0.0368,
+   "telescope_frbs_frb": "DSA",
+   "DM": 438.9,
+   "DM_frbs_frb": 438.9,
+   "survey_override": null,
+   "DMISM": 43.04935337686666,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.987,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20231123A",
+   "telescope": "CHIME",
+   "z": 0.0729,
+   "z_frbs_frb": 0.0729,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 302.067566,
+   "DM_frbs_frb": 302.067566,
+   "survey_override": null,
+   "DMISM": 85.40898951500147,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.95591,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0729,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231123B",
+   "telescope": "DSA",
+   "z": 0.2621,
+   "z_frbs_frb": 0.2621,
+   "telescope_frbs_frb": "DSA",
+   "DM": 396.7,
+   "DM_frbs_frb": 396.7,
+   "survey_override": null,
+   "DMISM": 40.02435306125339,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.908,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Sharma24"
+   ],
+   "side": "certification",
+   "reason": "DSA, not in HoffmannEmin25 fit"
+  },
+  {
+   "name": "FRB20231128A",
+   "telescope": "CHIME",
+   "z": 0.1079,
+   "z_frbs_frb": 0.1079,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 332.4,
+   "DM_frbs_frb": 332.4,
+   "survey_override": null,
+   "DMISM": 24.8360854738091,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.984675,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1079,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231201A",
+   "telescope": "CHIME",
+   "z": 0.1119,
+   "z_frbs_frb": 0.119,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 169.432816,
+   "DM_frbs_frb": 169.432816,
+   "survey_override": null,
+   "DMISM": 67.45595168595776,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.911081,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1119,
+    "agrees": false
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231204A",
+   "telescope": "CHIME",
+   "z": 0.0644,
+   "z_frbs_frb": 0.0644,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 222.0,
+   "DM_frbs_frb": 222.0,
+   "survey_override": null,
+   "DMISM": 29.319834362733385,
+   "repeater": true,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.976179,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0644,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231206A",
+   "telescope": "CHIME",
+   "z": 0.0659,
+   "z_frbs_frb": 0.0659,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 457.751679,
+   "DM_frbs_frb": 457.751679,
+   "survey_override": null,
+   "DMISM": 57.110671306587136,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.989186,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0659,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231223C",
+   "telescope": "CHIME",
+   "z": 0.1059,
+   "z_frbs_frb": 0.1059,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 179.542175,
+   "DM_frbs_frb": 179.542175,
+   "survey_override": null,
+   "DMISM": 47.75023563433304,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.95342,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.1059,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231223D",
+   "telescope": "CHIME",
+   "z": 0.1606,
+   "z_frbs_frb": 0.1606,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 729.0,
+   "DM_frbs_frb": 729.0,
+   "survey_override": null,
+   "DMISM": 47.63008817506874,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231224A",
+   "telescope": "CHIME",
+   "z": 0.08,
+   "z_frbs_frb": 0.08,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 682.988159,
+   "DM_frbs_frb": 682.988159,
+   "survey_override": null,
+   "DMISM": 46.26120163072544,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231226A",
+   "telescope": "ASKAP",
+   "z": 0.1569,
+   "z_frbs_frb": 0.1569,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 329.9,
+   "DM_frbs_frb": 329.9,
+   "survey_override": null,
+   "DMISM": 37.40394614018928,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "production",
+   "reason": "CRAFT <= 2023 (HoffmannEmin25 Sec. 2.4)"
+  },
+  {
+   "name": "FRB20231229A",
+   "telescope": "CHIME",
+   "z": 0.019,
+   "z_frbs_frb": 0.019,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 198.54776,
+   "DM_frbs_frb": 198.54776,
+   "survey_override": null,
+   "DMISM": 57.51892971773883,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.998038,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.019,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20231230A",
+   "telescope": "CHIME",
+   "z": 0.02981,
+   "z_frbs_frb": 0.02981,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 131.421631,
+   "DM_frbs_frb": 131.421631,
+   "survey_override": null,
+   "DMISM": 60.382888292696244,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.917597,
+   "secure_host": true,
+   "z_literature_check": {
+    "Leung2025": 0.0298,
+    "agrees": true
+   },
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20240201A",
+   "telescope": "ASKAP",
+   "z": 0.042729,
+   "z_frbs_frb": 0.042729,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 374.5,
+   "DM_frbs_frb": 374.5,
+   "survey_override": null,
+   "DMISM": 37.7675658770977,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "certification",
+   "reason": "ASKAP 2024+ (after HoffmannEmin25 sample)"
+  },
+  {
+   "name": "FRB20240210A",
+   "telescope": "ASKAP",
+   "z": 0.023686,
+   "z_frbs_frb": 0.023686,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 283.73,
+   "DM_frbs_frb": 283.73,
+   "survey_override": null,
+   "DMISM": 29.780065021637647,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "certification",
+   "reason": "ASKAP 2024+ (after HoffmannEmin25 sample)"
+  },
+  {
+   "name": "FRB20240210C",
+   "telescope": "CHIME",
+   "z": 0.3658,
+   "z_frbs_frb": 0.3658,
+   "telescope_frbs_frb": "CHIME",
+   "DM": 380.920563,
+   "DM_frbs_frb": 380.920563,
+   "survey_override": null,
+   "DMISM": 45.81443674667267,
+   "repeater": false,
+   "spec_z": false,
+   "in_public_hosts": false,
+   "P_Ox": null,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Leung+2025"
+   ],
+   "side": "certification",
+   "reason": "CHIME excluded from fit (HoffmannEmin25 Sec. 2.1)"
+  },
+  {
+   "name": "FRB20240304A",
+   "telescope": "ASKAP",
+   "z": 0.2423,
+   "z_frbs_frb": 0.2423,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 652.6,
+   "DM_frbs_frb": 652.6,
+   "survey_override": null,
+   "DMISM": 73.00538765004744,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 1.0,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "certification",
+   "reason": "ASKAP 2024+ (after HoffmannEmin25 sample)"
+  },
+  {
+   "name": "FRB20240310A",
+   "telescope": "ASKAP",
+   "z": 0.127,
+   "z_frbs_frb": 0.127,
+   "telescope_frbs_frb": "ASKAP",
+   "DM": 601.8,
+   "DM_frbs_frb": 601.8,
+   "survey_override": null,
+   "DMISM": 30.611419506738827,
+   "repeater": false,
+   "spec_z": true,
+   "in_public_hosts": true,
+   "P_Ox": 0.9993541982,
+   "secure_host": true,
+   "z_literature_check": null,
+   "refs": [
+    "Shannon2024"
+   ],
+   "side": "certification",
+   "reason": "ASKAP 2024+ (after HoffmannEmin25 sample)"
+  }
+ ]
+}
