@@ -197,7 +197,7 @@ against its committed evidence, which is where several of the fixes below came f
 | Environment-split HIMFs in FASHI DR2 against two null tests (RNAAS note) | `fashienv/` | random-placement + label-shuffle nulls, environment-restricted Vmax, counterpart-matched blending classes; void not detected, group offset shows a blending signature (supersedes the DR1 −0.26 dex paper) | 89% | **ready** ([referee round 8](survey/fashienv-findings.md)); package built | ✅ 2026-09-27 — 8 rounds; the last two MINOR, all applied |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* retracted to a lower limit |
 | No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) survey-scale radio proper-motion search: UV/BL Ceti recovered; calibrated error model; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); parallax-aware completeness; limit < 9.3e-5 deg⁻² | 99% | **ready** ([referee round 3](survey/vlasspm-findings.md)); package built | ✅ 2026-09-28 — 3 rounds; final accept with nits, applied |
-| An inconclusive two-beam FASHI–ALFALFA test for H I beam blending (RNAAS note) | `hiblend/` | two-beam, same-galaxy test of H I beam blending with controls frozen before the data; negative control fails for an unidentified cause; a flawed gate stopped the second attempt | 98% | revised after referee round 1 ([findings](survey/hiblend-findings.md)) | ✅ 2026-10-10 — round 1 minor; calibration-limits claim withdrawn |
+| An inconclusive two-beam FASHI–ALFALFA test for H I beam blending (RNAAS note) | `hiblend/` | two-beam, same-galaxy test of H I beam blending with controls frozen before the data; negative control fails for an unidentified cause; a flawed gate stopped the second attempt | 98% | revised after referee round 2 ([findings](survey/hiblend-findings.md)) | ✅ 2026-10-10 — 2 rounds, both minor; calibration-limits claim withdrawn, then the overcorrection narrowed |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
 job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,
@@ -226,7 +226,7 @@ contribution — the tooling and the reproducibility, not a novelty claim:
   (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Three are RNAAS-length as
   their `main.tex`: the FASHI DR2 environment-split caution (`papers/fashienv/`, eight referee
   rounds) the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds), and the inconclusive
-  two-beam blending test (`papers/hiblend/`, one referee round).
+  two-beam blending test (`papers/hiblend/`, two referee rounds).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level
