@@ -1,0 +1,2169 @@
+{
+ "source": "real: zdm p(z|DM) (E1, state HoffmannEmin25) on FRBs/FRB localized hosts",
+ "plan": "plans/99-dmzcal-coverage.md step 3",
+ "zdm_commit": "e0f985bb55ad03d8b3435bc6a334a58d3ed674ba",
+ "state": "HoffmannEmin25",
+ "dm_halo": 50.0,
+ "grid": {
+  "nz": 500,
+  "zmax": 4.995,
+  "ndm": 1400,
+  "dmmax": 6997.5
+ },
+ "survey_models": {
+  "DSA": "DSA",
+  "ASKAP": "CRAFT_average_ICS",
+  "MeerKAT": "MeerTRAPcoherent",
+  "CHIME": "CHIME_decbin_0..5_of_6 summed, no repeaters"
+ },
+ "z_overrides": {
+  "FRB20231201A": 0.1119
+ },
+ "bursts": [
+  {
+   "name": "FRB20171020",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.00867,
+   "dm_eg": 26.633830058011966,
+   "pit": 0.03733221980368446,
+   "z_median": 0.03227929166745889,
+   "ci68": [
+    0.017638750128520203,
+    0.04639292924413204
+   ],
+   "ci95": [
+    0.005805976744479796,
+    0.058372660133409006
+   ]
+  },
+  {
+   "name": "FRB20180301A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.33044,
+   "dm_eg": 352.9840258195451,
+   "pit": 0.5361404716459682,
+   "z_median": 0.31519168095530753,
+   "ci68": [
+    0.15908977016038858,
+    0.4623018464566407
+   ],
+   "ci95": [
+    0.07681949929177866,
+    0.5602875404789477
+   ]
+  },
+  {
+   "name": "FRB20180916B",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.0337,
+   "dm_eg": 127.08363190047274,
+   "pit": 0.03609292011749674,
+   "z_median": 0.10944326659642879,
+   "ci68": [
+    0.06155689450545769,
+    0.166651639631633
+   ],
+   "ci95": [
+    0.029952905211061632,
+    0.21517305326557998
+   ]
+  },
+  {
+   "name": "FRB20180924B",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3212,
+   "dm_eg": 270.265807885328,
+   "pit": 0.7338306587236885,
+   "z_median": 0.24524120797380783,
+   "ci68": [
+    0.13331636168800878,
+    0.3607003051983701
+   ],
+   "ci95": [
+    0.06763642998235822,
+    0.4424027663739537
+   ]
+  },
+  {
+   "name": "FRB20181030A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.0039,
+   "dm_eg": 13.047507728260321,
+   "pit": 0.14884380451631152,
+   "z_median": 0.01233313571910704,
+   "ci68": [
+    0.0041923142318739705,
+    0.01903589345534477
+   ],
+   "ci95": [
+    0.0006550490987303086,
+    0.029829249695863265
+   ]
+  },
+  {
+   "name": "FRB20181112A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.4755,
+   "dm_eg": 496.8741831095234,
+   "pit": 0.5527208478088994,
+   "z_median": 0.44375436423783565,
+   "ci68": [
+    0.20623025520241633,
+    0.6439364436731877
+   ],
+   "ci95": [
+    0.08851498609265776,
+    0.7686664600860234
+   ]
+  },
+  {
+   "name": "FRB20190102C",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2912,
+   "dm_eg": 257.72942260973286,
+   "pit": 0.6939789513496338,
+   "z_median": 0.23240673667134493,
+   "ci68": [
+    0.1286424609443373,
+    0.3416463897736896
+   ],
+   "ci95": [
+    0.06551887808321004,
+    0.4197995105020423
+   ]
+  },
+  {
+   "name": "FRB20190523A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.66,
+   "dm_eg": 674.0017440051759,
+   "pit": 0.4616881089408347,
+   "z_median": 0.6871287321550058,
+   "ci68": [
+    0.37005855933210724,
+    0.9020986979290664
+   ],
+   "ci95": [
+    0.15527458796422172,
+    1.037728221472598
+   ]
+  },
+  {
+   "name": "FRB20190608B",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1177805,
+   "dm_eg": 251.9865984478646,
+   "pit": 0.13162149084108207,
+   "z_median": 0.22815517211929492,
+   "ci68": [
+    0.12706170609613973,
+    0.33532652120454226
+   ],
+   "ci95": [
+    0.06481523976597182,
+    0.41250427770202597
+   ]
+  },
+  {
+   "name": "FRB20190611B",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.3778,
+   "dm_eg": 225.4348244918466,
+   "pit": 0.9776216100444123,
+   "z_median": 0.2071475247784956,
+   "ci68": [
+    0.11919621047547813,
+    0.3035731815516299
+   ],
+   "ci95": [
+    0.061326236012176814,
+    0.3749781064834822
+   ]
+  },
+  {
+   "name": "FRB20190711A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.52172,
+   "dm_eg": 481.96889432922615,
+   "pit": 0.6601021891590081,
+   "z_median": 0.43053628101777525,
+   "ci68": [
+    0.2015060907148611,
+    0.6253417637301842
+   ],
+   "ci95": [
+    0.08750610649062672,
+    0.7474715818549531
+   ]
+  },
+  {
+   "name": "FRB20190714A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2365,
+   "dm_eg": 416.1469762695237,
+   "pit": 0.2511689708213905,
+   "z_median": 0.3729005767085014,
+   "ci68": [
+    0.18050237628535967,
+    0.5442251591263454
+   ],
+   "ci95": [
+    0.08274032215241316,
+    0.6546808325746369
+   ]
+  },
+  {
+   "name": "FRB20191001A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.234,
+   "dm_eg": 412.296625910396,
+   "pit": 0.2511923125454089,
+   "z_median": 0.3684597677109847,
+   "ci68": [
+    0.17885830831797628,
+    0.5379337123474369
+   ],
+   "ci95": [
+    0.08234967762275297,
+    0.6474375949256428
+   ]
+  },
+  {
+   "name": "FRB20191228A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.243,
+   "dm_eg": 214.11896769810267,
+   "pit": 0.6966075242872374,
+   "z_median": 0.19477276432907764,
+   "ci68": [
+    0.11415608728912381,
+    0.2845815222782348
+   ],
+   "ci95": [
+    0.05899720143175391,
+    0.3521788542943118
+   ]
+  },
+  {
+   "name": "FRB20200120E",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.0008,
+   "dm_eg": -2.2664869733443354,
+   "excluded": "DM_EG <= 0"
+  },
+  {
+   "name": "FRB20200430A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.161,
+   "dm_eg": 302.98031358267633,
+   "pit": 0.20530275330624898,
+   "z_median": 0.2712270724191249,
+   "ci68": [
+    0.14280897882029664,
+    0.39885697863863667
+   ],
+   "ci95": [
+    0.07144976687406068,
+    0.4869895786455106
+   ]
+  },
+  {
+   "name": "FRB20200906A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3688,
+   "dm_eg": 491.9154375078018,
+   "pit": 0.38809853591325116,
+   "z_median": 0.43935850338768573,
+   "ci68": [
+    0.20465912483232188,
+    0.6377314697769875
+   ],
+   "ci95": [
+    0.08818274613322954,
+    0.7616015029527067
+   ]
+  },
+  {
+   "name": "FRB20201123A",
+   "telescope": "MeerKAT",
+   "survey_model": "MeerTRAPcoherent",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.0507,
+   "dm_eg": 154.10152521979674,
+   "pit": 0.00988368101246007,
+   "z_median": 0.18812609129115232,
+   "ci68": [
+    0.12583769130649347,
+    0.24126580033238146
+   ],
+   "ci95": [
+    0.06860419603817433,
+    0.2821299570458903
+   ]
+  },
+  {
+   "name": "FRB20201124A",
+   "telescope": "MeerKAT",
+   "survey_model": "MeerTRAPcoherent",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.0982,
+   "dm_eg": 237.83992182431746,
+   "pit": 0.014768665329730212,
+   "z_median": 0.29517233072167426,
+   "ci68": [
+    0.20512233567581972,
+    0.36764609330672116
+   ],
+   "ci95": [
+    0.11569116854904651,
+    0.4219083304717134
+   ]
+  },
+  {
+   "name": "FRB20210117A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2145,
+   "dm_eg": 643.8728797256547,
+   "pit": 0.12875317869740086,
+   "z_median": 0.5689829814912917,
+   "ci68": [
+    0.24840624441346643,
+    0.8211582516337431
+   ],
+   "ci95": [
+    0.09542659082754998,
+    0.9711122578497952
+   ]
+  },
+  {
+   "name": "FRB20210320C",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2797,
+   "dm_eg": 295.9381525408424,
+   "pit": 0.5366003197257784,
+   "z_median": 0.266869282764334,
+   "ci68": [
+    0.14121767789773035,
+    0.3925294682657121
+   ],
+   "ci95": [
+    0.07090486416845973,
+    0.4794208571790052
+   ]
+  },
+  {
+   "name": "FRB20210410D",
+   "telescope": "MeerKAT",
+   "survey_model": "MeerTRAPcoherent",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1415,
+   "dm_eg": 469.2809006010235,
+   "pit": 0.003431359416677139,
+   "z_median": 0.5818480778547986,
+   "ci68": [
+    0.4299142705680911,
+    0.6948990587833846
+   ],
+   "ci95": [
+    0.2569084284897545,
+    0.7784118359511323
+   ]
+  },
+  {
+   "name": "FRB20210807D",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.12927,
+   "dm_eg": 80.0011184341638,
+   "pit": 0.8709250468260425,
+   "z_median": 0.09176915918239797,
+   "ci68": [
+    0.05671758507078479,
+    0.1252949180364606
+   ],
+   "ci95": [
+    0.028755009816633044,
+    0.15308549991750814
+   ]
+  },
+  {
+   "name": "FRB20211127I",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0469,
+   "dm_eg": 143.28389821271173,
+   "pit": 0.02758079290889966,
+   "z_median": 0.1401282554149603,
+   "ci68": [
+    0.08816279614056363,
+    0.19716173496235326
+   ],
+   "ci95": [
+    0.04522629746249603,
+    0.24541400190863633
+   ]
+  },
+  {
+   "name": "FRB20211203C",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.34386,
+   "dm_eg": 523.5778311673208,
+   "pit": 0.32379547689352967,
+   "z_median": 0.46571217770649054,
+   "ci68": [
+    0.21398261966381996,
+    0.6748246358501725
+   ],
+   "ci95": [
+    0.09009661863247342,
+    0.8040405609801891
+   ]
+  },
+  {
+   "name": "FRB20211212A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0707,
+   "dm_eg": 120.80230704340923,
+   "pit": 0.11792778092147799,
+   "z_median": 0.12545685248528318,
+   "ci68": [
+    0.07912227154410913,
+    0.17289604909421924
+   ],
+   "ci95": [
+    0.04073866602349511,
+    0.2146892500467844
+   ]
+  },
+  {
+   "name": "FRB20220105A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2785,
+   "dm_eg": 508.10982380644043,
+   "pit": 0.24776098834735016,
+   "z_median": 0.4525543825331387,
+   "ci68": [
+    0.20936007833663736,
+    0.6563055103931742
+   ],
+   "ci95": [
+    0.08916710127009247,
+    0.7828642767503622
+   ]
+  },
+  {
+   "name": "FRB20220204A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.4012,
+   "dm_eg": 511.7391188455896,
+   "pit": 0.31240878488094226,
+   "z_median": 0.5146741045090061,
+   "ci68": [
+    0.28579732339636144,
+    0.6918540439037089
+   ],
+   "ci95": [
+    0.1294420948005563,
+    0.8066098908149313
+   ]
+  },
+  {
+   "name": "FRB20220207C",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0433,
+   "dm_eg": 137.31067473475494,
+   "pit": 0.024030942997555448,
+   "z_median": 0.14916360477695784,
+   "ci68": [
+    0.09090429540652363,
+    0.20315553602266298
+   ],
+   "ci95": [
+    0.04393562275308486,
+    0.24597163459204824
+   ]
+  },
+  {
+   "name": "FRB20220208A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.351,
+   "dm_eg": 288.32074076536736,
+   "pit": 0.7031426411977351,
+   "z_median": 0.29146036204021436,
+   "ci68": [
+    0.17637439533000454,
+    0.39694455828467173
+   ],
+   "ci95": [
+    0.08532975780724711,
+    0.47415284243004385
+   ]
+  },
+  {
+   "name": "FRB20220307B",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2481,
+   "dm_eg": 329.1316935657436,
+   "pit": 0.2760522670745426,
+   "z_median": 0.3286109978726748,
+   "ci68": [
+    0.19626198877495615,
+    0.4488500121102351
+   ],
+   "ci95": [
+    0.09421218854536215,
+    0.5339704278563114
+   ]
+  },
+  {
+   "name": "FRB20220310F",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.478,
+   "dm_eg": 366.6903322170092,
+   "pit": 0.7873201509419958,
+   "z_median": 0.36698372258267514,
+   "ci68": [
+    0.21583602754093065,
+    0.5011408573998899
+   ],
+   "ci95": [
+    0.10260424441599329,
+    0.5934605857176758
+   ]
+  },
+  {
+   "name": "FRB20220319D",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0112,
+   "dm_eg": -65.81504021216692,
+   "excluded": "DM_EG <= 0"
+  },
+  {
+   "name": "FRB20220330D",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.3714,
+   "dm_eg": 380.0572242568648,
+   "pit": 0.47470606551670325,
+   "z_median": 0.38169323283171375,
+   "ci68": [
+    0.22310036389367977,
+    0.520802038588068
+   ],
+   "ci95": [
+    0.10557118022579344,
+    0.6157143133150367
+   ]
+  },
+  {
+   "name": "FRB20220418A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.6213,
+   "dm_eg": 537.1030333159471,
+   "pit": 0.6483068774285765,
+   "z_median": 0.5411430633628628,
+   "ci68": [
+    0.2983043947938665,
+    0.7247843592437432
+   ],
+   "ci95": [
+    0.1336081608762971,
+    0.842976654832276
+   ]
+  },
+  {
+   "name": "FRB20220501C",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.381,
+   "dm_eg": 367.66215997497017,
+   "pit": 0.6202492637998157,
+   "z_median": 0.3284844457579583,
+   "ci68": [
+    0.1640192726383245,
+    0.4812507429403951
+   ],
+   "ci95": [
+    0.07838844962626501,
+    0.5822929877499577
+   ]
+  },
+  {
+   "name": "FRB20220506D",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3004,
+   "dm_eg": 264.0821579988828,
+   "pit": 0.6209732565208177,
+   "z_median": 0.2685302010798541,
+   "ci68": [
+    0.16368749094710225,
+    0.36474987146006566
+   ],
+   "ci95": [
+    0.07968147279674431,
+    0.43658988447473157
+   ]
+  },
+  {
+   "name": "FRB20220509G",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0894,
+   "dm_eg": 164.22421082321696,
+   "pit": 0.1019904891388469,
+   "z_median": 0.17438898290904542,
+   "ci68": [
+    0.10682291670438616,
+    0.23677457606834582
+   ],
+   "ci95": [
+    0.05203106227711612,
+    0.28491034375316127
+   ]
+  },
+  {
+   "name": "FRB20220610A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 1.015,
+   "dm_eg": 1375.737097369096,
+   "pit": 0.5076285105688059,
+   "z_median": 0.9982693262174652,
+   "ci68": [
+    0.3123390401328725,
+    1.6295938087966473
+   ],
+   "ci95": [
+    0.09440452592417205,
+    1.928791056941191
+   ]
+  },
+  {
+   "name": "FRB20220725A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1926,
+   "dm_eg": 208.37541396872314,
+   "pit": 0.5083502700168264,
+   "z_median": 0.19068126337784724,
+   "ci68": [
+    0.11249816747568671,
+    0.27821425035139796
+   ],
+   "ci95": [
+    0.05806960222833426,
+    0.34471073531985363
+   ]
+  },
+  {
+   "name": "FRB20220726A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3619,
+   "dm_eg": 551.9862666648758,
+   "pit": 0.22209529496503438,
+   "z_median": 0.557112353339095,
+   "ci68": [
+    0.3058891188073699,
+    0.7445244068826367
+   ],
+   "ci95": [
+    0.1361227999202553,
+    0.8647923842701439
+   ]
+  },
+  {
+   "name": "FRB20220825A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2414,
+   "dm_eg": 523.8853198626816,
+   "pit": 0.10698574232787221,
+   "z_median": 0.5252294179763797,
+   "ci68": [
+    0.29079955314144706,
+    0.7050389514053133
+   ],
+   "ci95": [
+    0.13112768930679375,
+    0.8210666640444908
+   ]
+  },
+  {
+   "name": "FRB20220914A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1139,
+   "dm_eg": 526.6647225768606,
+   "pit": 0.01727572152293818,
+   "z_median": 0.530537361233493,
+   "ci68": [
+    0.29327942087826614,
+    0.7115991885704831
+   ],
+   "ci95": [
+    0.131950612343732,
+    0.8283793775947134
+   ]
+  },
+  {
+   "name": "FRB20220918A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.491,
+   "dm_eg": 565.7177564577702,
+   "pit": 0.48040600025519353,
+   "z_median": 0.5048983986956264,
+   "ci68": [
+    0.2274732007770582,
+    0.730045146415852
+   ],
+   "ci95": [
+    0.09232034060702485,
+    0.8671166985349326
+   ]
+  },
+  {
+   "name": "FRB20220920A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1582,
+   "dm_eg": 225.35728006399825,
+   "pit": 0.19839460364168104,
+   "z_median": 0.2367318409130614,
+   "ci68": [
+    0.144917162182802,
+    0.31995897216694974
+   ],
+   "ci95": [
+    0.0707785024804459,
+    0.3838422309619242
+   ]
+  },
+  {
+   "name": "FRB20221012A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2847,
+   "dm_eg": 338.1399421866076,
+   "pit": 0.3525199027380113,
+   "z_median": 0.3380824198442703,
+   "ci68": [
+    0.20122642726811318,
+    0.4619141048061119
+   ],
+   "ci95": [
+    0.09636203114869414,
+    0.5487407003412713
+   ]
+  },
+  {
+   "name": "FRB20221027A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.5422,
+   "dm_eg": 356.26794098046975,
+   "pit": 0.9372981408156107,
+   "z_median": 0.35727204802400747,
+   "ci68": [
+    0.21101839684313253,
+    0.48805805904351857
+   ],
+   "ci95": [
+    0.10066573279509973,
+    0.5785150243117296
+   ]
+  },
+  {
+   "name": "FRB20221029A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.975,
+   "dm_eg": 1297.8588415467848,
+   "pit": 0.2419152666293863,
+   "z_median": 1.3786740104638018,
+   "ci68": [
+    0.7538703376434247,
+    1.7048994183765842
+   ],
+   "ci95": [
+    0.23714145565324118,
+    1.9117608485465687
+   ]
+  },
+  {
+   "name": "FRB20221101B",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2395,
+   "dm_eg": 317.5830657469945,
+   "pit": 0.2703906199401059,
+   "z_median": 0.3192261527165916,
+   "ci68": [
+    0.1913432192232182,
+    0.4358712540084855
+   ],
+   "ci95": [
+    0.092102532810803,
+    0.5188899647254038
+   ]
+  },
+  {
+   "name": "FRB20221106A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2044,
+   "dm_eg": 258.80828866360986,
+   "pit": 0.40597748638159314,
+   "z_median": 0.23240673667134493,
+   "ci68": [
+    0.1286424609443373,
+    0.3416463897736896
+   ],
+   "ci95": [
+    0.06551887808321004,
+    0.4197995105020423
+   ]
+  },
+  {
+   "name": "FRB20221113A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2505,
+   "dm_eg": 274.9875127828841,
+   "pit": 0.4023738987580757,
+   "z_median": 0.277673387492759,
+   "ci68": [
+    0.16888223287968457,
+    0.3775791008547124
+   ],
+   "ci95": [
+    0.08193568431555032,
+    0.45149075139477224
+   ]
+  },
+  {
+   "name": "FRB20221116A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2764,
+   "dm_eg": 469.04177975208336,
+   "pit": 0.17711339230346604,
+   "z_median": 0.46768124141563044,
+   "ci68": [
+    0.2637169481610838,
+    0.6326083839762456
+   ],
+   "ci95": [
+    0.12156088746364048,
+    0.7407262348880925
+   ]
+  },
+  {
+   "name": "FRB20221219A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.553,
+   "dm_eg": 612.5479626104641,
+   "pit": 0.3993537206492968,
+   "z_median": 0.6217011478969585,
+   "ci68": [
+    0.3372444506566484,
+    0.8234068486791258
+   ],
+   "ci95": [
+    0.145909880080667,
+    0.9514869467082722
+   ]
+  },
+  {
+   "name": "FRB20230124A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0939,
+   "dm_eg": 501.74996135153447,
+   "pit": 0.011478948974328836,
+   "z_median": 0.5041575614145654,
+   "ci68": [
+    0.2808626490442985,
+    0.6786778127458367
+   ],
+   "ci95": [
+    0.12765870811498986,
+    0.7919711156537851
+   ]
+  },
+  {
+   "name": "FRB20230203A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1464,
+   "dm_eg": 332.0124921065992,
+   "pit": 0.21303718494513185,
+   "z_median": 0.2679113589377971,
+   "ci68": [
+    0.12342005049466485,
+    0.4192575618699427
+   ],
+   "ci95": [
+    0.05281051404366839,
+    0.5212181927913125
+   ]
+  },
+  {
+   "name": "FRB20230216A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.531,
+   "dm_eg": 740.4892188553381,
+   "pit": 0.2510714646838455,
+   "z_median": 0.7641751293528777,
+   "ci68": [
+    0.4098548099062279,
+    0.9935718451844817
+   ],
+   "ci95": [
+    0.1656717797500322,
+    1.1375304965713597
+   ]
+  },
+  {
+   "name": "FRB20230222A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1223,
+   "dm_eg": 538.3691008437648,
+   "pit": 0.09016307781696994,
+   "z_median": 0.43077052553876527,
+   "ci68": [
+    0.17578035763213148,
+    0.6694788228265824
+   ],
+   "ci95": [
+    0.06608464687413423,
+    0.812832928118089
+   ]
+  },
+  {
+   "name": "FRB20230222B",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.11,
+   "dm_eg": 110.41107051395124,
+   "pit": 0.5929694577584653,
+   "z_median": 0.09853132875795725,
+   "ci68": [
+    0.05605333916253406,
+    0.1483900502338715
+   ],
+   "ci95": [
+    0.02687596083622284,
+    0.19174077901828082
+   ]
+  },
+  {
+   "name": "FRB20230307A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2706,
+   "dm_eg": 523.0269046086152,
+   "pit": 0.1375214009572111,
+   "z_median": 0.5252294179763797,
+   "ci68": [
+    0.29079955314144706,
+    0.7050389514053133
+   ],
+   "ci95": [
+    0.13112768930679375,
+    0.8210666640444908
+   ]
+  },
+  {
+   "name": "FRB20230311A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.1918,
+   "dm_eg": 228.34639208284602,
+   "pit": 0.5245797053039829,
+   "z_median": 0.18505673622461363,
+   "ci68": [
+    0.09347929779004989,
+    0.2896202541209337
+   ],
+   "ci95": [
+    0.04265470026968233,
+    0.3668930218857681
+   ]
+  },
+  {
+   "name": "FRB20230410A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1684,
+   "dm_eg": 572.0064050211168,
+   "pit": 0.14126643811169323,
+   "z_median": 0.4582415177717144,
+   "ci68": [
+    0.183726450558839,
+    0.7117785085747256
+   ],
+   "ci95": [
+    0.06776059374082158,
+    0.861625323206453
+   ]
+  },
+  {
+   "name": "FRB20230501A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3015,
+   "dm_eg": 365.0657319445161,
+   "pit": 0.3377648969759951,
+   "z_median": 0.36698372258267514,
+   "ci68": [
+    0.21583602754093065,
+    0.5011408573998899
+   ],
+   "ci95": [
+    0.10260424441599329,
+    0.5934605857176758
+   ]
+  },
+  {
+   "name": "FRB20230526A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.157,
+   "dm_eg": 278.9771106581727,
+   "pit": 0.22267075787932794,
+   "z_median": 0.24954680825839848,
+   "ci68": [
+    0.13487963794250957,
+    0.36710256269008257
+   ],
+   "ci95": [
+    0.06834357007738619,
+    0.44968544262113197
+   ]
+  },
+  {
+   "name": "FRB20230616A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.4485,
+   "dm_eg": 848.5178247946625,
+   "pit": 0.3305589705942189,
+   "z_median": 0.6658009899525043,
+   "ci68": [
+    0.23417004262985563,
+    1.0390627287790957
+   ],
+   "ci95": [
+    0.07594042431736454,
+    1.237869399278371
+   ]
+  },
+  {
+   "name": "FRB20230626A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.327,
+   "dm_eg": 362.29214027900747,
+   "pit": 0.40962672343206474,
+   "z_median": 0.36212087336854526,
+   "ci68": [
+    0.21341378729220475,
+    0.49463136455238815
+   ],
+   "ci95": [
+    0.10163097321525112,
+    0.5860563238758384
+   ]
+  },
+  {
+   "name": "FRB20230628A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.127,
+   "dm_eg": 256.6028669685716,
+   "pit": 0.08812645059553706,
+   "z_median": 0.2639736936233319,
+   "ci68": [
+    0.1611426937761591,
+    0.358289546363814
+   ],
+   "ci95": [
+    0.07835224527560311,
+    0.42889933519821405
+   ]
+  },
+  {
+   "name": "FRB20230702A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3658,
+   "dm_eg": 501.170793724957,
+   "pit": 0.44443274231396246,
+   "z_median": 0.40314897717567305,
+   "ci68": [
+    0.16751549176371833,
+    0.6270852573744969
+   ],
+   "ci95": [
+    0.06428922866966862,
+    0.7637876575087368
+   ]
+  },
+  {
+   "name": "FRB20230703A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1184,
+   "dm_eg": 214.04439841400654,
+   "pit": 0.27698298886000783,
+   "z_median": 0.17342423762265738,
+   "ci68": [
+    0.08902286825910359,
+    0.27109882649813494
+   ],
+   "ci95": [
+    0.04110912333779837,
+    0.3444830019398094
+   ]
+  },
+  {
+   "name": "FRB20230708A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.105,
+   "dm_eg": 301.73041287744496,
+   "pit": 0.07379332961629616,
+   "z_median": 0.2712270724191249,
+   "ci68": [
+    0.14280897882029664,
+    0.39885697863863667
+   ],
+   "ci95": [
+    0.07144976687406068,
+    0.4869895786455106
+   ]
+  },
+  {
+   "name": "FRB20230712A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.4525,
+   "dm_eg": 498.3540455614366,
+   "pit": 0.41593102511953006,
+   "z_median": 0.4989254467204967,
+   "ci68": [
+    0.2783875626127018,
+    0.67210599291263
+   ],
+   "ci95": [
+    0.1267736558739884,
+    0.7847525308606909
+   ]
+  },
+  {
+   "name": "FRB20230718A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": false,
+   "repeater": false,
+   "z_true": 0.035,
+   "dm_eg": 34.488028009527,
+   "pit": 0.43469748936518926,
+   "z_median": 0.03766951221918592,
+   "ci68": [
+    0.021759212282426506,
+    0.053869699734609706
+   ],
+   "ci95": [
+    0.009661864823628095,
+    0.06805803341762033
+   ]
+  },
+  {
+   "name": "FRB20230730A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2115,
+   "dm_eg": 182.00304387554183,
+   "pit": 0.762417936121675,
+   "z_median": 0.15040535163119537,
+   "ci68": [
+    0.07985187862602869,
+    0.23411500552161385
+   ],
+   "ci95": [
+    0.037265309519720485,
+    0.2990370601286425
+   ]
+  },
+  {
+   "name": "FRB20230828A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.6268,
+   "dm_eg": 272.3800047079226,
+   "pit": 0.9999999997511013,
+   "z_median": 0.22032488353010538,
+   "ci68": [
+    0.1065985779818903,
+    0.3453104444710496
+   ],
+   "ci95": [
+    0.047357657450374936,
+    0.43363639657625364
+   ]
+  },
+  {
+   "name": "FRB20230902A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3619,
+   "dm_eg": 355.61123495922186,
+   "pit": 0.5994330146259838,
+   "z_median": 0.3196259202397688,
+   "ci68": [
+    0.16073609224760235,
+    0.4686118418988863
+   ],
+   "ci95": [
+    0.07734516116878577,
+    0.5677286719883627
+   ]
+  },
+  {
+   "name": "FRB20230918A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.06,
+   "dm_eg": 280.65586970316,
+   "pit": 0.04251923657217569,
+   "z_median": 0.22822763264362209,
+   "ci68": [
+    0.10948754420368623,
+    0.35764029947081266
+   ],
+   "ci95": [
+    0.048412689867343546,
+    0.4482617618672313
+   ]
+  },
+  {
+   "name": "FRB20230923A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.4445,
+   "dm_eg": 840.42976850266,
+   "pit": 0.32901502863408905,
+   "z_median": 0.6622069252072528,
+   "ci68": [
+    0.23344521876053437,
+    1.033208357143762
+   ],
+   "ci95": [
+    0.07584633693153468,
+    1.2311011991512808
+   ]
+  },
+  {
+   "name": "FRB20230924A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3942,
+   "dm_eg": 918.4995213649267,
+   "pit": 0.2727408109452383,
+   "z_median": 0.7152682324491401,
+   "ci68": [
+    0.24359263231581557,
+    1.120816973434725
+   ],
+   "ci95": [
+    0.07709894685947527,
+    1.3318030845437132
+   ]
+  },
+  {
+   "name": "FRB20230926A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0553,
+   "dm_eg": 120.18925343938957,
+   "pit": 0.13399105136535494,
+   "z_median": 0.10583245487399941,
+   "ci68": [
+    0.05987263819218716,
+    0.16043489480307943
+   ],
+   "ci95": [
+    0.028901675740833105,
+    0.20735467509233899
+   ]
+  },
+  {
+   "name": "FRB20231005A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0713,
+   "dm_eg": 105.60641807318598,
+   "pit": 0.29215517484330983,
+   "z_median": 0.09491303762920449,
+   "ci68": [
+    0.05418343995127824,
+    0.14240478581135824
+   ],
+   "ci95": [
+    0.0259026294576788,
+    0.18421113071761916
+   ]
+  },
+  {
+   "name": "FRB20231006B",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.478,
+   "dm_eg": 1148.3547233853778,
+   "pit": 0.2912422440384423,
+   "z_median": 0.8640097550224262,
+   "ci68": [
+    0.2659237763883842,
+    1.384803223249983
+   ],
+   "ci95": [
+    0.07919805108660063,
+    1.6368828451740167
+   ]
+  },
+  {
+   "name": "FRB20231011A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0783,
+   "dm_eg": 67.19267712567175,
+   "pit": 0.6736326015026746,
+   "z_median": 0.06487190991017425,
+   "ci68": [
+    0.03764492488332129,
+    0.09477707718528977
+   ],
+   "ci95": [
+    0.018080230987277852,
+    0.12145271727792033
+   ]
+  },
+  {
+   "name": "FRB20231017A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.245,
+   "dm_eg": 229.23691033334245,
+   "pit": 0.7086352535577738,
+   "z_median": 0.18505673622461363,
+   "ci68": [
+    0.09347929779004989,
+    0.2896202541209337
+   ],
+   "ci95": [
+    0.04265470026968233,
+    0.3668930218857681
+   ]
+  },
+  {
+   "name": "FRB20231025B",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3238,
+   "dm_eg": 269.87071573945383,
+   "pit": 0.8038909210081373,
+   "z_median": 0.2163857885088996,
+   "ci68": [
+    0.10515558768935757,
+    0.3390842640737074
+   ],
+   "ci95": [
+    0.04683055654578574,
+    0.42627095709217344
+   ]
+  },
+  {
+   "name": "FRB20231102A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.6878,
+   "dm_eg": 822.873314508534,
+   "pit": 0.5341274318265345,
+   "z_median": 0.6477434446760396,
+   "ci68": [
+    0.2304734609111856,
+    1.009705757939301
+   ],
+   "ci95": [
+    0.07545397958936326,
+    1.2042038368798034
+   ]
+  },
+  {
+   "name": "FRB20231120A",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0368,
+   "dm_eg": 345.85064662313334,
+   "pit": 0.0019122146828226168,
+   "z_median": 0.3476371939095376,
+   "ci68": [
+    0.20609601956347606,
+    0.4750052353767918
+   ],
+   "ci95": [
+    0.09855089985295659,
+    0.5637570024180298
+   ]
+  },
+  {
+   "name": "FRB20231123A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0729,
+   "dm_eg": 166.65857648499855,
+   "pit": 0.15039943037203538,
+   "z_median": 0.13906895858368973,
+   "ci68": [
+    0.07494726924760174,
+    0.21563905535958444
+   ],
+   "ci95": [
+    0.03518191403987999,
+    0.276455597785752
+   ]
+  },
+  {
+   "name": "FRB20231123B",
+   "telescope": "DSA",
+   "survey_model": "DSA",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2621,
+   "dm_eg": 306.6756469387466,
+   "pit": 0.3526703772290881,
+   "z_median": 0.30993070854525423,
+   "ci68": [
+    0.18634477894985038,
+    0.42286079556240935
+   ],
+   "ci95": [
+    0.09003421597009688,
+    0.5041018482483054
+   ]
+  },
+  {
+   "name": "FRB20231128A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.1079,
+   "dm_eg": 257.5639145261909,
+   "pit": 0.17735046315088976,
+   "z_median": 0.20851125690528563,
+   "ci68": [
+    0.10227421996754021,
+    0.32676700011931314
+   ],
+   "ci95": [
+    0.045779740452066287,
+    0.4113654207656281
+   ]
+  },
+  {
+   "name": "FRB20231201A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1119,
+   "dm_eg": 51.976864314042245,
+   "pit": 0.9964876267141698,
+   "z_median": 0.052461726528433436,
+   "ci68": [
+    0.030711246854476255,
+    0.07653963493681123
+   ],
+   "ci95": [
+    0.01360140173882919,
+    0.09802112273324001
+   ]
+  },
+  {
+   "name": "FRB20231204A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": true,
+   "z_true": 0.0644,
+   "dm_eg": 142.6801656372666,
+   "pit": 0.1479874804360954,
+   "z_median": 0.12043821376261205,
+   "ci68": [
+    0.06666822835911135,
+    0.18497076490517989
+   ],
+   "ci95": [
+    0.03185941067397673,
+    0.23810078925164035
+   ]
+  },
+  {
+   "name": "FRB20231206A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.0659,
+   "dm_eg": 350.6410076934129,
+   "pit": 0.039744249935928115,
+   "z_median": 0.28383774048303323,
+   "ci68": [
+    0.1288992536571011,
+    0.44389237908657575
+   ],
+   "ci95": [
+    0.05439423779526076,
+    0.5500842144801339
+   ]
+  },
+  {
+   "name": "FRB20231223C",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1059,
+   "dm_eg": 81.79193936566696,
+   "pit": 0.7911159639730319,
+   "z_median": 0.07648879434804422,
+   "ci68": [
+    0.04419338564513825,
+    0.11250935002892459
+   ],
+   "ci95": [
+    0.021483280527622696,
+    0.1453481240881867
+   ]
+  },
+  {
+   "name": "FRB20231223D",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1606,
+   "dm_eg": 631.3699118249313,
+   "pit": 0.12030191359250983,
+   "z_median": 0.5049200533456419,
+   "ci68": [
+    0.19657292270070795,
+    0.783979408395978
+   ],
+   "ci95": [
+    0.07030210475522335,
+    0.9449057598690281
+   ]
+  },
+  {
+   "name": "FRB20231224A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.08,
+   "dm_eg": 586.7269573692746,
+   "pit": 0.03561780097395395,
+   "z_median": 0.46996847193901997,
+   "ci68": [
+    0.1870310983444488,
+    0.7298471193920782
+   ],
+   "ci95": [
+    0.06844190618002155,
+    0.8825203214249407
+   ]
+  },
+  {
+   "name": "FRB20231226A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "production",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.1569,
+   "dm_eg": 242.49605385981067,
+   "pit": 0.27428085430251237,
+   "z_median": 0.21969862130129578,
+   "ci68": [
+    0.12392242056885619,
+    0.32259980633820057
+   ],
+   "ci95": [
+    0.06341312221083963,
+    0.39749791871693874
+   ]
+  },
+  {
+   "name": "FRB20231229A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.019,
+   "dm_eg": 91.0288302822612,
+   "pit": 0.01374900252692834,
+   "z_median": 0.0839797565117348,
+   "ci68": [
+    0.04843283903009031,
+    0.12448936591410178
+   ],
+   "ci95": [
+    0.02315914628661845,
+    0.16037464920428154
+   ]
+  },
+  {
+   "name": "FRB20231230A",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.02981,
+   "dm_eg": 21.038742707303754,
+   "pit": 0.6543955338208584,
+   "z_median": 0.024773989454196246,
+   "ci68": [
+    0.01272156774271892,
+    0.03743595453114609
+   ],
+   "ci95": [
+    0.0028540572779207126,
+    0.04802312382515281
+   ]
+  },
+  {
+   "name": "FRB20240201A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.042729,
+   "dm_eg": 286.7324341229023,
+   "pit": 0.006227395997527311,
+   "z_median": 0.2581876538311162,
+   "ci68": [
+    0.1380369403920078,
+    0.37976549062160875
+   ],
+   "ci95": [
+    0.06975822157411786,
+    0.46480080894509046
+   ]
+  },
+  {
+   "name": "FRB20240210A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.023686,
+   "dm_eg": 203.94993497836236,
+   "pit": 0.002100194935108159,
+   "z_median": 0.1866304606462625,
+   "ci68": [
+    0.11085104886322814,
+    0.2719063743803714
+   ],
+   "ci95": [
+    0.05714769702561196,
+    0.33706590977094963
+   ]
+  },
+  {
+   "name": "FRB20240210C",
+   "telescope": "CHIME",
+   "survey_model": "CHIME_decbin_*_of_6 (summed)",
+   "side": "certification",
+   "spec_z": false,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.3658,
+   "dm_eg": 285.1061262533274,
+   "pit": 0.8441727120756969,
+   "z_median": 0.23218421295667865,
+   "ci68": [
+    0.11090126546298623,
+    0.3638296180119308
+   ],
+   "ci95": [
+    0.04894018557953597,
+    0.4557055275332874
+   ]
+  },
+  {
+   "name": "FRB20240304A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.2423,
+   "dm_eg": 529.5946123499526,
+   "pit": 0.19173423779559168,
+   "z_median": 0.4701020759600656,
+   "ci68": [
+    0.2155115358145015,
+    0.6809609472573611
+   ],
+   "ci95": [
+    0.0903574738472235,
+    0.8109647561407363
+   ]
+  },
+  {
+   "name": "FRB20240310A",
+   "telescope": "ASKAP",
+   "survey_model": "CRAFT_average_ICS",
+   "side": "certification",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 0.127,
+   "dm_eg": 521.1885804932612,
+   "pit": 0.0608706971600677,
+   "z_median": 0.46571217770649054,
+   "ci68": [
+    0.21398261966381996,
+    0.6748246358501725
+   ],
+   "ci95": [
+    0.09009661863247342,
+    0.8040405609801891
+   ]
+  },
+  {
+   "name": "FRB20240304B",
+   "telescope": "MeerKAT",
+   "survey_model": "MeerTRAPcoherent",
+   "side": "recover_a_known",
+   "spec_z": true,
+   "secure_host": true,
+   "repeater": false,
+   "z_true": 2.148,
+   "dm_eg": 2380.1,
+   "pit": 0.19025608135198194,
+   "z_median": 2.7457083891145517,
+   "ci68": [
+    2.0395090009074925,
+    3.180003326016956
+   ],
+   "ci95": [
+    1.0649460402416597,
+    3.498606006441794
+   ]
+  }
+ ]
+}
