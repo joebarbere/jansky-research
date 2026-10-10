@@ -440,6 +440,8 @@ survey's scale and covariates taken before injection, the gain is 1.00. So the 0
 injection, not the estimator. The production β rises too, but by a factor of 1.24, not the 1.43
 the "similar factor" prediction implied. That part of the prediction missed.
 
+*(Superseded by step 9: the next paragraph holds only under R5's ratio-as-gain model, and that model is disputed.)*
+
 **Consequence for plan 97's frozen C1.** The production estimator, which is the one applied to
 real data, returns 1.54 for a correctly scaled planted β = 1. This falls outside C1's frozen
 tolerance (|β − 1| ≤ 0.3). C1 passed (1.25) only because the injection put the ALFALFA addition
@@ -487,3 +489,35 @@ from both, and would be reported as such.
 - F6: the scatter gap is called unexplained.
 - F7: withdrawn claims are removed from the README and CHANGELOG.
 - F8 and the nit: provenance and the flux > 0 cut.
+
+### Step 9 results (run 2026-10-10; `results/hiblend_referee3.json`, same draws as R3 and R5)
+
+| injection model | pre-injection covariates | production covariates |
+|---|---|---|
+| R3: neighbour at gain 1 (frozen C1's model) | 0.70 | 1.24 |
+| R5: scaled by the curve's ratio r | 1.00 | 1.54 |
+| **R6: through the curve as a flux mapping** | **0.18 ± 0.12** | **0.72 ± 0.12** |
+
+Planted 0 gives −0.03 in every model. For a 10% added flux, the curve's effective factor has median
+0.69 (5–95%: 0.51–0.95), which matches the referee's arithmetic.
+
+**The prediction failed in both modes.** Both values fall below the R3–R5 span I predicted (0.6–0.85
+and 1.1–1.4). The mistake is in the reasoning, not the code. I scaled β by the factor, but β
+measures the *difference* between the two beams' responses. At 2′ that difference is 0.404k − 0.267
+for an ALFALFA factor k. It is 0.137 at k = 1 and 0.012 at k = 0.69, so under the mapping reading
+the planted signal nearly cancels. A line through R3 and R5 (dβ/dk ≈ 1.9) predicts about 0.11 at
+k = 0.69, close to the 0.18 measured. The referee's slope arithmetic would have given the right
+answer had I carried it through the difference.
+
+**What C1 can say.** With the estimator as applied, C1's response to a planted β = 1 spans
+**0.72–1.54** across the three readings of the curve (0.18–1.00 with pre-injection covariates). The
+reading depends on whether the ALFALFA/FASHI offset is a gain, a selection effect or a flux
+mapping, which this slice has not established. Two consequences:
+- Plan 97's frozen C1 passed (1.25) under one of those readings. That pass is historically true, but
+  it is **not evidence that the estimator is calibrated**, and neither is any single variant.
+- Step 8's "two errors cancelling", "overstates by about half" and "divide by about 1.5" are
+  withdrawn. They held only under R5's model.
+
+Provenance (F8): r and the R6 curve come from a calibration fitted on *all* isolated targets,
+including the injected half, which is then re-calibrated without them. The effect is negligible
+(14,375 rows, 6 parameters), and it is recorded here.

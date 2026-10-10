@@ -14,11 +14,10 @@ Beam blending should raise a galaxy's H\,I flux more in the Arecibo beam
 \hbRealNTargets\ galaxies matched between FASHI DR2 and ALFALFA $\alpha$.100, with controls
 set in advance. Neighbours too far apart in velocity to blend gave a slope of
 $\hbRealBetaNull\pm\hbRealBetaNullErr$ instead of zero, so the test is inconclusive. The
-calibration misfit measured on isolated galaxies does not reproduce that slope, which is
-concentrated at low signal-to-noise; its cause is unknown. A second attempt stopped when its
-held-out calibration gate failed on medians. Its tolerance fails a perfect calibration two
-times in three, but its $\chi^2$ also failed. In post-hoc bin means the
-residuals are consistent with zero by $\chi^2$. No blending slope is interpreted.
+calibration misfit measured on isolated galaxies does not reproduce that slope; its cause is
+unknown. An injection test returns \hbRealConeProdMin--\hbRealConeProdMax\ for a planted signal,
+depending on an untested assumption about the ALFALFA flux scale. A second attempt stopped at a
+held-out calibration gate that would also fail a perfect calibration two times in three. No blending slope is interpreted.
 \end{abstract}
 
 \keywords{H I line emission (690) --- Sky surveys (1464) --- Flux calibration (544) ---
@@ -35,7 +34,7 @@ same galaxies with two beams. FASHI DR2 gives a FAST beam of \hbRealBeamFast~arc
 1420~MHz (its Table~1), and \citet{giovanelli2005} an ALFA beam averaging
 \hbRealBeamAlfa~arcmin (arXiv preprint, pp.~8 and 22; 3.3 by 3.8~arcmin). We use these nominal
 widths; broader effective beams would change both the size and the separation dependence of
-the prediction. FASHI DR2 (\hbRealNFashi\ sources with finite flux, error, velocity and width) was matched to ALFALFA $\alpha$.100 code-1
+the prediction. FASHI DR2 (\hbRealNFashi\ sources with positive flux and error and finite velocity and width) was matched to ALFALFA $\alpha$.100 code-1
 detections \citep[\hbRealNAlfalfa\ sources in all;][]{haynes2018} within 1.5~arcmin and
 100~km~s$^{-1}$; shifting one catalogue by 10~arcmin gives \hbRealChance\% chance matches.
 
@@ -43,8 +42,8 @@ A neighbour of flux $S_n$ at separation $s_n$, overlapping in velocity, adds
 $S_n\exp(-4\ln2\,s_n^2/\theta^2)$ to a beam of width $\theta$. The predicted log ratio $R$ of the
 ALFA and FAST fluxes peaks at \hbRealSignal~dex for one equal-flux neighbour at 2~arcmin; its
 median is \hbRealRprimMed\ (primary) and \hbRealRnullMed\ (null). The statistic is the least-squares slope $\beta$ of
-the observed log flux ratio on $R$, after removing the survey-to-survey flux scale: blending
-predicts $\beta\approx1$, extra gas in close pairs $\beta\approx0$. The flux scale (a function of
+the observed log flux ratio on $R$, after removing the survey-to-survey flux scale: in the beam
+model blending predicts $\beta\approx1$, extra gas in close pairs $\beta\approx0$. The flux scale (a function of
 signal-to-noise, line width, flux and declination) was fitted on the \hbRealNIsolated\ targets
 with no neighbour within 6~arcmin and applied to the \hbRealNPrimary\ with a neighbour at
 1--6~arcmin in the same velocity window. Here signal-to-noise is the noise-weighted geometric
@@ -57,13 +56,14 @@ linked within 6~arcmin.
 \label{sec:results}
 On simulated fluxes with the real geometry, a planted $\beta=1$ was detected at $3\sigma$ in
 20 of 20 trials. Blends injected into real isolated targets returned $\beta=\hbRealInjOne$
-(scatter \hbRealInjOneSd\ over ten injections; \hbRealConeProdSd\ in a later rerun), within the
-pre-set tolerance of 0.3. That pass was two errors cancelling. The injection added each
-neighbour on the FASHI flux scale to both surveys; placed on each survey's own scale (the
-calibration's predicted ratio), it gives $\beta=\hbRealScaledFrozen$ with covariates taken before
-injection. But injected flux, like a real blend, also raises the calibration covariates, and the
-estimator as applied then returns $\hbRealScaledProd\pm\hbRealScaledSd$, outside the
-tolerance. It overstates the blending gain by about half. The negative control failed,
+(scatter \hbRealInjOneSd\ over ten injections; \hbRealConeProdSd\ in a later rerun, a difference we
+have not explained), within the pre-set tolerance of 0.3. Post-hoc variants show that this
+number rests on an assumption we cannot test. The frozen test added each neighbour's flux to both
+surveys on the FASHI scale. The ALFALFA/FASHI offset could instead act as a gain, or as a flux
+mapping whose dependence on flux nearly cancels the two beams' difference. Across these
+readings the estimator as applied returns \hbRealConeProdMin--\hbRealConeProdMax\ for a planted
+$\beta=1$, and \hbRealConeFrozMin--\hbRealConeFrozMax\ with calibration covariates taken before
+injection. The pass is therefore not evidence that the estimator is calibrated. The negative control failed,
 $\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, so the primary slope
 ($\hbRealBeta\pm\hbRealBetaErr$) cannot be interpreted.
 
@@ -105,14 +105,15 @@ which are not plotted.}
 \label{sec:conclusion}
 The test is inconclusive. Its negative control fails for a reason we have not found. The
 calibration misfit measured on isolated galaxies does not reproduce it, the failure survives the
-resampling scales we tried, and local density does not explain it. The slope is concentrated at
-low signal-to-noise. A flux scale that differs for galaxies with neighbours, misfit along
-another covariate, and confusion in a broader effective ALFALFA beam all remain untested. The
-second attempt's gate stopped the run, and its residuals look consistent with zero only in a
-post-hoc statistic. A further attempt should frame its gate as a bound on the slope that a
-calibration misfit can induce, estimated as in our mapping test, with that gate's false-failure
-rate computed before it is fixed. Interferometric H\,I imaging of the pairs would settle the
-question directly.
+resampling scales we tried, and local density does not explain it. The slope appears larger at
+low signal-to-noise, though by under $2\sigma$. A flux scale that differs for galaxies with
+neighbours, misfit along another covariate, and confusion in a broader effective ALFALFA beam
+all remain untested. The second attempt's gate stopped the run, and its residuals look
+consistent with zero only in a post-hoc statistic. A further attempt needs two things first: a
+gate framed as a bound on the slope a calibration misfit can induce, with its false-failure rate
+computed before it is fixed, and an independent measure of how the ALFALFA flux scale applies
+to added flux, without which an injection test cannot calibrate the estimator. Interferometric
+H\,I imaging of the pairs would settle the question directly.
 
 Reproducibility: \code{jansky\_research.hiblend} and \code{scripts/hiblend\_*.py}; every number
 here is generated from \code{results/hiblend\_*.json}. The plans, with the controls as frozen,
