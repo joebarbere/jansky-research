@@ -12,13 +12,13 @@
 Beam blending should raise a galaxy's H\,I flux more in the Arecibo beam
 (\hbRealBeamAlfa~arcmin) than in the FAST beam (\hbRealBeamFast~arcmin). We tested this on
 \hbRealNTargets\ galaxies matched between FASHI DR2 and ALFALFA $\alpha$.100, with controls
-fixed in advance. Power, injection and chance-match controls passed; neighbours too far apart
-in velocity to blend gave a slope of $\hbRealBetaNull\pm\hbRealBetaNullErr$ instead of
-zero, so the test is inconclusive. The calibration's signal-to-noise misfit predicts only
-$\hbRealMisfitNull\pm\hbRealMisfitNullErr$ of that slope, and the failure survives other bootstrap
-units; its cause is unknown. A second attempt stopped at its held-out calibration
-gate, but that gate judged medians against a tolerance that a perfect calibration would fail
-two times in three. In the mean, its calibration passes. No blending slope is quoted.
+set in advance. Neighbours too far apart in velocity to blend gave a slope of
+$\hbRealBetaNull\pm\hbRealBetaNullErr$ instead of zero, so the test is inconclusive. The
+calibration misfit measured on isolated galaxies does not reproduce that slope, which is
+concentrated at low signal-to-noise; its cause is unknown. A second attempt stopped when its
+held-out calibration gate failed on medians. Its tolerance fails a perfect calibration two
+times in three, but its $\chi^2$ also failed. In post-hoc bin means the
+residuals are consistent with zero by $\chi^2$. No blending slope is interpreted.
 \end{abstract}
 
 \keywords{H I line emission (690) --- Sky surveys (1464) --- Flux calibration (544) ---
@@ -29,12 +29,13 @@ Galaxy environments (2029)}
 In FASHI DR2 \citep{fashi_dr2}, galaxies with another galaxy inside their flux aperture carry
 more H\,I at fixed optical luminosity than isolated ones (\code{fashienv},
 \citealt{janskyresearch}). The excess could be blending or real gas. \citet{haynes2018}
-describe confusion in ALFALFA as relatively minor (their arXiv version, p.~15, citing
-\citealt{jones2016}), and \citet{jones2015} studied it by simulation; we know of no test on the
+describe confusion in ALFALFA as relatively minor, though confused sources are not hard to
+find (their arXiv version, p.~15, citing \citealt{jones2016}), and \citet{jones2015} studied it by simulation; we know of no test on the
 same galaxies with two beams. FASHI DR2 gives a FAST beam of \hbRealBeamFast~arcmin at
 1420~MHz (its Table~1), and \citet{giovanelli2005} an ALFA beam averaging
 \hbRealBeamAlfa~arcmin (arXiv preprint, pp.~8 and 22; 3.3 by 3.8~arcmin). We use these nominal
-widths; broader effective beams would change only the scale of the expected slope. FASHI DR2 (\hbRealNFashi\ sources) was matched to ALFALFA $\alpha$.100 code-1
+widths; broader effective beams would change both the size and the separation dependence of
+the prediction. FASHI DR2 (\hbRealNFashi\ sources with finite flux, error, velocity and width) was matched to ALFALFA $\alpha$.100 code-1
 detections \citep[\hbRealNAlfalfa\ sources in all;][]{haynes2018} within 1.5~arcmin and
 100~km~s$^{-1}$; shifting one catalogue by 10~arcmin gives \hbRealChance\% chance matches.
 
@@ -56,47 +57,60 @@ linked within 6~arcmin.
 \label{sec:results}
 On simulated fluxes with the real geometry, a planted $\beta=1$ was detected at $3\sigma$ in
 20 of 20 trials. Blends injected into real isolated targets returned $\beta=\hbRealInjOne$
-(scatter \hbRealInjOneSd\ over ten injections), within the pre-set tolerance of 0.3; we later
-found that the injected flux also raises the calibration covariates, which inflates $\beta$;
-with covariates taken before injection the gain is \hbRealConeFrozen. The negative control failed,
+(scatter \hbRealInjOneSd\ over ten injections; \hbRealConeProdSd\ in a later rerun), within the
+pre-set tolerance of 0.3. The injected flux also raises the calibration covariates, as real
+blends would, which inflates $\beta$; with covariates taken before injection the gain is
+\hbRealConeFrozen, for reasons we have not identified. C1 therefore brackets the gain between
+\hbRealConeFrozen\ and \hbRealConeProd\ rather than measuring it. The negative control failed,
 $\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, so the primary slope
 ($\hbRealBeta\pm\hbRealBetaErr$) cannot be interpreted.
 
 Diagnostics run afterwards, with their expected outcomes recorded first, did not find the cause.
 Tested on isolated targets it was not fitted on, the calibration's bin means are off by up to
 \hbRealVoneMaxMean~dex (Figure~\ref{fig:heldout}). Mapped onto the null targets by their
-signal-to-noise, this misfit predicts $\beta_{\rm null}=\hbRealMisfitNull\pm\hbRealMisfitNullErr$.
+signal-to-noise, this misfit predicts $\beta_{\rm null}$ between \hbRealMisfitNullMed\ and
+\hbRealMisfitNull\ (from bin medians and means). The null slope itself does depend on target
+signal-to-noise: weighted to the primary sample's distribution it falls to
+$\hbRealMatchedNull\pm\hbRealMatchedNullErr$, and it is $\hbRealTercLo\pm\hbRealTercLoErr$ in the
+faintest third against $\hbRealTercHi\pm\hbRealTercHiErr$ in the brightest, contrasts of under
+$2\sigma$.
 Resampling 2--8-degree strips of right ascension instead of 6-arcmin groups leaves the failure at
 \hbRealStripSigMin--\hbRealStripSigMax$\sigma$, and local galaxy density does not account for it.
 
 A second attempt, designed after these diagnostics on the same targets but fixed before it was
 run, used a linear spline in signal-to-noise and added local density. It placed a held-out gate
 first: fitted on alternate 2-degree strips and tested on the rest, every decile median had to
-lie within 0.010~dex of zero with $p>0.01$ over the ten. Both directions failed ($p=\hbRealVtwoPA$
-and \hbRealVtwoPB), and the run stopped before $\beta$ was measured. The gate was poorly
-chosen. Given the decile errors, a perfect calibration passes the 0.010~dex rule in both
-directions with probability \hbRealAmpPass. Medians also respond to skew, while the fit uses
-means: in bin means the spline calibration gives $p=\hbRealMeanPA$ and \hbRealMeanPB\
-(Figure~\ref{fig:heldout}), and the original form $p<10^{-5}$.
+lie within 0.010~dex of zero with $p>0.01$ over the ten. Both directions failed on both counts ($p=\hbRealVtwoPA$
+and \hbRealVtwoPB), and the run stopped before $\beta$ was measured; the plan read such a stop as
+showing that calibration limits the test. Later checks do not support that reading, and we
+withdraw it. Given the decile errors, a perfect calibration passes the 0.010~dex rule in both
+directions with probability only \hbRealAmpPass. Medians also respond to skew, while the fit
+uses means. In bin means, a statistic chosen after the gate failed, the spline calibration
+gives $\chi^2$ $p=\hbRealMeanPA$ and \hbRealMeanPB, against $p<10^{-5}$ for the original form,
+though one bin (\hbRealMeanMaxB~dex) still exceeds the tolerance (Figure~\ref{fig:heldout}).
 
 \begin{figure}
 \plotone{figures/hiblend_heldout.pdf}
 \caption{Mean flux-ratio residual of isolated targets not used in the fit, against
 signal-to-noise. The calibration was fitted on alternate 2-degree strips of right ascension and
 tested on the others (filled and open symbols for the two directions). Grey: the original
-calibration; blue: the spline calibration of the second attempt.}
+calibration; blue: the spline calibration of the second attempt. The gate judged bin medians,
+which are not plotted.}
 \label{fig:heldout}
 \end{figure}
 
 \section{Conclusion}
 \label{sec:conclusion}
-The test is inconclusive. Its negative control fails for a reason we have not found: not the
-signal-to-noise calibration misfit, not correlated errors on the scales we tried, and not local
-density. Misfit along another covariate, or confusion in the broader gridded ALFALFA beam, is
-untested. The second attempt's calibration is adequate in the mean, but its gate stopped the
-run. A further attempt needs a gate whose false-failure rate is computed before it is fixed,
-applied to the statistic the estimator uses. Interferometric H\,I imaging of the pairs would
-settle the question directly.
+The test is inconclusive. Its negative control fails for a reason we have not found. The
+calibration misfit measured on isolated galaxies does not reproduce it, the failure survives the
+resampling scales we tried, and local density does not explain it. The slope is concentrated at
+low signal-to-noise. A flux scale that differs for galaxies with neighbours, misfit along
+another covariate, and confusion in a broader effective ALFALFA beam all remain untested. The
+second attempt's gate stopped the run, and its residuals look consistent with zero only in a
+post-hoc statistic. A further attempt should frame its gate as a bound on the slope that a
+calibration misfit can induce, estimated as in our mapping test, with that gate's false-failure
+rate computed before it is fixed. Interferometric H\,I imaging of the pairs would settle the
+question directly.
 
 Reproducibility: \code{jansky\_research.hiblend} and \code{scripts/hiblend\_*.py}; every number
 here is generated from \code{results/hiblend\_*.json}. The plans, with the controls as frozen,

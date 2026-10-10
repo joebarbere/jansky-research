@@ -348,7 +348,9 @@ which **raises** β by about 0.54. The code comment and step 2 said this biases 
 conservative direction"; the sign was wrong, and the comment is corrected. The prediction branch
 ("β falls to about 1.0") is only half met: with frozen covariates β is 0.70, so a second,
 downward bias of about 30% remains and is undiagnosed. The planted-1 scatter here (0.13) is
-comparable to plan 97's planted-0 scatter, so the 0.038 there looks like chance.
+far larger than the 0.038 plan 97 committed for the identical procedure. *(Round 2: a variance
+ratio test gives p ≈ 0.001, and 0.038 is below plan 97's own planted-0 scatter, which a planted
+signal cannot cause. It is not chance, and it remains unexplained.)*
 
 **R4. The C2 failure does not depend on the bootstrap unit.** β_null = 0.256 with SE 0.088
 (6′ clusters), 0.087 (2° strips), 0.097 (4°) and 0.088 (8°), giving 2.9, 2.9, 2.6 and 2.9σ. This
@@ -362,3 +364,41 @@ is the "no coherent systematic" branch.
 - A third attempt would need a gate whose false-failure rate is computed before freezing, and
   which judges the statistic the estimator uses. Running β under plan 98's calibration now would
   be a forked analysis, so it was not done.
+
+## Step 7: referee round 2 on the note (2026-10-10): minor revision, text fixes applied
+
+The referee resolved F1, F2, F6–F9, F11, F12 and F15 against the evidence. They also confirmed:
+- the R1 splits reproduce the C3′ and D0 medians exactly;
+- R4's 6′ β_null reproduces plan 97's value, so the refactor did not change the v1 path;
+- the commit order: predictions `9f49696`, then code, then results.
+
+The revision had overclaimed in the opposite direction. Each fix uses numbers already committed:
+
+1. **"In the mean, its calibration passes" withdrawn.** Odd→even has one mean bin at 0.011 dex,
+   which fails the amplitude arm, and in means that arm is not harsh: a perfect calibration
+   passes it about 70% of the time (referee's arithmetic). The χ² on means (p = 0.36, 0.043) was
+   chosen after the gate failed. The note now says "consistent with zero by χ², post hoc, one bin
+   above tolerance". The abstract states that the median χ² arm failed too, so the stop is not
+   blamed on the tolerance alone.
+2. **"Not the S/N calibration misfit" narrowed.** R2 can only see a misfit that exists in the
+   *isolated* sample and transfers through S/N. A flux scale specific to targets with neighbours
+   is invisible to it. D1 is restored to the note: the null slope is concentrated at low S/N
+   (S/N-matched 0.12 ± 0.08; terciles 0.38 against −0.03; contrasts under 2σ), and "a flux scale
+   that differs for galaxies with neighbours" is listed as untested.
+3. **R3's 0.70 is labelled unexplained**, and C1 is said to bracket the gain (0.70–1.24) rather
+   than measure it. The referee's candidate cause is untested: the injected neighbour flux is set
+   on the FASHI scale and added unchanged to ALFALFA, while FASHI DR2 §5.2 reports ALFALFA higher
+   at low SNR. An offset of about 10% would cost about 30% of the signal. Testing it is a new run
+   and has not been done.
+4. The C1 scatter now quotes both 0.04 (committed) and 0.13 (rerun). See R3 above.
+5. R2 is quoted as a range, −0.07 (medians) to 0.003 (means). The quoted SE held the curve fixed,
+   and faint targets are clamped to the faintest bin.
+6. "Broader beams change only the scale" was false. R depends on separation nonlinearly (3.8′
+   scales it by 1.35 at 1′ and 2.46 at 5′). Fixed.
+7. Paragraph 3 of the Results is labelled post hoc, and it states that plan 98's pre-registered
+   reading of a C3′ stop ("calibration is the limiting systematic") is withdrawn.
+8. The prescription now says the next gate should bound the β that a misfit can induce (an
+   R2-type test), not the binned amplitudes.
+9. Nits: "no slope interpreted"; 156,269 is the count after finiteness cuts; Haynes et al.'s
+   qualifier ("individual cases of confused sources are not hard to find") restored; the caption
+   says the gate judged medians, which are not plotted.
