@@ -307,6 +307,7 @@ def test_write_paper_fills_every_macro_from_the_committed_results(tmp_path):
         "hiblend_referee1.json",
         "hiblend_referee2.json",
         "hiblend_referee3.json",
+        "hiblend_referee4.json",
     ):
         shutil.copy(root / name, tmp_path / "results" / name)
     macros, fig = h.write_paper(tmp_path)

@@ -442,7 +442,7 @@ the "similar factor" prediction implied. That part of the prediction missed.
 
 *(Superseded by step 9: the next paragraph holds only under R5's ratio-as-gain model, and that model is disputed.)*
 
-**Consequence for plan 97's frozen C1.** The production estimator, which is the one applied to
+**Consequence for plan 97's frozen C1** *(see step 10 for the conclusion that stands)*. The production estimator, which is the one applied to
 real data, returns 1.54 for a correctly scaled planted β = 1. This falls outside C1's frozen
 tolerance (|β − 1| ≤ 0.3). C1 passed (1.25) only because the injection put the ALFALFA addition
 on the FASHI scale, and two errors of opposite sign (−30% from the scale, +54% from covariate
@@ -501,7 +501,7 @@ from both, and would be reported as such.
 Planted 0 gives −0.03 in every model. For a 10% added flux, the curve's effective factor has median
 0.69 (5–95%: 0.51–0.95), which matches the referee's arithmetic.
 
-**The prediction failed in both modes.** Both values fall below the R3–R5 span I predicted (0.6–0.85
+*(This explanation is withdrawn in step 10: it uses k where the variable is u = k/r.)* **The prediction failed in both modes.** Both values fall below the R3–R5 span I predicted (0.6–0.85
 and 1.1–1.4). The mistake is in the reasoning, not the code. I scaled β by the factor, but β
 measures the *difference* between the two beams' responses. At 2′ that difference is 0.404k − 0.267
 for an ALFALFA factor k. It is 0.137 at k = 1 and 0.012 at k = 0.69, so under the mapping reading
@@ -552,3 +552,32 @@ through the origin of log((1 + uρb_A)/(1 + ρb_F)) on R over the pool. The smal
   measured 0.18 against 0.06 here.
 - *If the frozen β departs from the table by more than 0.15 at any u:* the account is incomplete,
   and that is reported as such.
+
+### Step 10 results (run 2026-10-10; `results/hiblend_referee4.json`, the strength-1 draws of R3/R5/R6)
+
+| u | frozen β: predicted | frozen β: measured | production β: predicted | production β: measured | absorption |
+|---|---|---|---|---|---|
+| 0.6 | 0.06 | **0.04 ± 0.11** | 0.60 | **0.58** | 0.540 |
+| 0.86 | 0.69 | **0.68 ± 0.10** | 1.23 | **1.22** | 0.544 |
+| 1.0 | 1.00 | **1.00 ± 0.10** | 1.54 | **1.54** | 0.546 |
+
+**The first prediction branch holds, at every u within 0.03.** C1 separates into two terms:
+- **A covariate-absorption bias of +0.54**, the same at every u (0.540–0.546) and in R3, R5 and R6
+  (0.54, 0.545, 0.538). It does not depend on the injection model. The production estimator adds
+  it to any planted signal.
+- **A beam-signal response of about 3u − 2**, set by the beam geometry and the injection pool's
+  separations (median 4.56′). Here u is ALFALFA's response to added flux relative to the target's
+  own survey ratio, and nothing in this slice measures it.
+
+The code was right and the step-9 reasoning was wrong (k for u). This is now shown, not asserted.
+Two retrodictions also fit, though they are not tests:
+- R3 corresponds to u ≈ 1/r ≈ 0.86: measured 0.70, against 0.68 here.
+- R6's u varies by target, and because β is linear in u, its mean u (not its median) sets β.
+  R6's 0.18 against 0.04 at u = 0.6 is consistent with that; it was not tested separately.
+
+**What C1 can and cannot say.** FASHI DR2 §5.2 (pp. 8–9, step 1) attributes the low-S/N offset to
+Eddington bias in ALFALFA. That favours gain 1 for added flux, u ≈ 1/r. Under that reading the
+frozen C1 value (1.25) is about 0.7 of beam signal plus 0.54 of absorption. Under u = 0.6 the
+planted signal contributes 0.04, and absorption alone gives 0.58, which is inside C1's tolerance.
+**A passing C1 therefore cannot show the estimator is calibrated**: the absorption term can carry
+it, whatever the true u.

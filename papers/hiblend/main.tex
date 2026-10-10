@@ -9,15 +9,16 @@
 \affiliation{Independent researcher}
 
 \begin{abstract}
-Beam blending should raise a galaxy's H\,I flux more in the Arecibo beam
+Beam blending should raise H\,I fluxes more in the Arecibo beam
 (\hbRealBeamAlfa~arcmin) than in the FAST beam (\hbRealBeamFast~arcmin). We tested this on
 \hbRealNTargets\ galaxies matched between FASHI DR2 and ALFALFA $\alpha$.100, with controls
-set in advance. Neighbours too far apart in velocity to blend gave a slope of
-$\hbRealBetaNull\pm\hbRealBetaNullErr$ instead of zero, so the test is inconclusive. The
+fixed first. Neighbours too distant in velocity to blend gave a slope of
+$\hbRealBetaNull\pm\hbRealBetaNullErr$, so the test is inconclusive. The
 calibration misfit measured on isolated galaxies does not reproduce that slope; its cause is
-unknown. An injection test returns \hbRealConeProdMin--\hbRealConeProdMax\ for a planted signal,
-depending on an untested assumption about the ALFALFA flux scale. A second attempt stopped at a
-held-out calibration gate that would also fail a perfect calibration two times in three. No blending slope is interpreted.
+unknown. An injection test's response to a planted signal carries a $+\hbRealAbsorption$ bias from the
+calibration and otherwise depends on ALFALFA's unmeasured response to added flux. A
+second attempt stopped when its held-out calibration gate failed, on $\chi^2$ as well as on a
+tolerance that a perfect calibration fails two times in three. No blending slope is interpreted.
 \end{abstract}
 
 \keywords{H I line emission (690) --- Sky surveys (1464) --- Flux calibration (544) ---
@@ -56,14 +57,16 @@ linked within 6~arcmin.
 \label{sec:results}
 On simulated fluxes with the real geometry, a planted $\beta=1$ was detected at $3\sigma$ in
 20 of 20 trials. Blends injected into real isolated targets returned $\beta=\hbRealInjOne$
-(scatter \hbRealInjOneSd\ over ten injections; \hbRealConeProdSd\ in a later rerun, a difference we
-have not explained), within the pre-set tolerance of 0.3. Post-hoc variants show that this
-number rests on an assumption we cannot test. The frozen test added each neighbour's flux to both
-surveys on the FASHI scale. The ALFALFA/FASHI offset could instead act as a gain, or as a flux
-mapping whose dependence on flux nearly cancels the two beams' difference. Across these
-readings the estimator as applied returns \hbRealConeProdMin--\hbRealConeProdMax\ for a planted
-$\beta=1$, and \hbRealConeFrozMin--\hbRealConeFrozMax\ with calibration covariates taken before
-injection. The pass is therefore not evidence that the estimator is calibrated. The negative control failed,
+(scatter \hbRealInjOneSd\ over ten injections), within the pre-set tolerance of 0.3. Post-hoc
+variants split this response into two terms. Injected flux, like a real blend, raises the
+calibration covariates, which adds $+\hbRealAbsorption$ to $\beta$ in every variant. The rest is
+the beam signal, which depends on ALFALFA's response $u$ to added flux relative to the target's
+own survey ratio. It is about $3u-2$ for our neighbour separations: \hbRealUFrozLo,
+\hbRealUFrozMid\ and \hbRealUFrozHi\ at $u=0.6$, 0.86 and 1. FASHI DR2 attributes the low-S/N
+offset to Eddington bias \citep[][\S~5.2]{fashi_dr2}, which favours $u\approx0.86$ and the frozen
+value, but nothing here measures $u$. At $u=0.6$ the planted signal contributes almost nothing,
+yet the bias alone gives \hbRealUProdLo, inside the tolerance, so a passing injection test does
+not show that the estimator is calibrated. The negative control failed,
 $\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, so the primary slope
 ($\hbRealBeta\pm\hbRealBetaErr$) cannot be interpreted.
 
@@ -71,7 +74,7 @@ Diagnostics run afterwards, with their expected outcomes recorded first, did not
 Tested on isolated targets it was not fitted on, the calibration's bin means are off by up to
 \hbRealVoneMaxMean~dex (Figure~\ref{fig:heldout}). Mapped onto the null targets by their
 signal-to-noise, this misfit predicts $\beta_{\rm null}$ between \hbRealMisfitNullMed\ and
-\hbRealMisfitNull\ (from bin medians and means). The null slope itself does depend on target
+\hbRealMisfitNull\ (from bin medians and means). The null slope itself appears to depend on target
 signal-to-noise: weighted to the primary sample's distribution it falls to
 $\hbRealMatchedNull\pm\hbRealMatchedNullErr$, and it is $\hbRealTercLo\pm\hbRealTercLoErr$ in the
 faintest third against $\hbRealTercHi\pm\hbRealTercHiErr$ in the brightest, contrasts of under
