@@ -521,3 +521,34 @@ mapping, which this slice has not established. Two consequences:
 Provenance (F8): r and the R6 curve come from a calibration fitted on *all* isolated targets,
 including the injected half, which is then re-calibrated without them. The effect is negligible
 (14,375 rows, 6 parameters), and it is recorded here.
+
+## Step 10: referee round 4 (minor), and a constant-u check R7: prediction stated before running (2026-10-10)
+
+Round 4 found that step 9's explanation of the missed R6 prediction used the wrong variable. The
+injected increment enters relative to the target's ALFALFA flux, which already carries the survey
+ratio r. So the variable that matters is u = k/r, not k. Step 9's "0.404k − 0.267, nearly cancels
+at k = 0.69" is **withdrawn**: it predicts 1.47 for R5, which measured 1.00. Step 9's "the mistake
+is in the reasoning, not the code" was asserted, not shown, and R7 is the test of it.
+
+**R7 (post hoc).** Repeat C1 with a constant `alfa_map = u · r_i · a` for u ∈ {0.6, 0.86, 1.0},
+using the same draws, both covariate modes and ten injections each.
+
+**Prediction, computed from the injection pool only** (`scripts/hiblend_r7_prediction.py`, which
+reads 3,479 primary-sample neighbour separations and flux ratios and measures no β). Take the OLS
+through the origin of log((1 + uρb_A)/(1 + ρb_F)) on R over the pool. The small-ρ limit is
+β = 3.00u − 2.00, steep because most pool separations are large (median 4.56′).
+
+| u | pre-injection covariates: predicted β | production: predicted β (+0.54) |
+|---|---|---|
+| 0.6 | 0.06 | 0.60 |
+| 0.86 | 0.69 | 1.23 |
+| 1.0 | 1.00 | 1.54 |
+
+- *If the u = k/r account is right:* the frozen β tracks these values within about 0.1, and the
+  production β sits about 0.54 above it at every u. That would establish that the absorption term
+  does not depend on the model.
+- *Retrodiction (does not count as a test):* R3 implicitly used u ≈ 1/r ≈ 0.86 and measured 0.70,
+  against 0.69 here. R6's effective u varies by target, with median about 0.69/1.16 ≈ 0.6, and
+  measured 0.18 against 0.06 here.
+- *If the frozen β departs from the table by more than 0.15 at any u:* the account is incomplete,
+  and that is reported as such.
