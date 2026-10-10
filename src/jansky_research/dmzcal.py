@@ -654,6 +654,49 @@ def paper_values(
     real["FrbZ"] = f"{rak['z_true']:.3f}"
     real["FrbCalebLo"] = f"{rak['caleb_dm_range_95'][0]:.2f}"
     real["FrbCalebHi"] = f"{rak['caleb_dm_range_95'][1]:.2f}"
+    r1 = ph["referee1"]
+    for key, w in (
+        ("E1_galactic_dm_sigma", "Sigma"),
+        ("E1_host_mean_x1.5", "HostOneFive"),
+        ("E1_host_mean_x2", "HostTwo"),
+        ("E1_leung_gold_only", "Gold"),
+    ):
+        v = r1[key]
+        real[f"{w}N"] = str(v["n"])
+        real[f"{w}CovSixtyEight"] = f"{v['coverage']['0.68']:.2f}"
+        real[f"{w}CovNinetyFive"] = f"{v['coverage']['0.95']:.2f}"
+        real[f"{w}MedPit"] = f"{v['median']:.2f}"
+        real[f"{w}KsP"] = _fp(v["ks_p"])
+    bn = r1["E1_coverage_0.95_binomial"]
+    real["CovNinetyFiveK"] = str(bn["k"])
+    real["CovNinetyFiveCiLo"] = f"{bn['ci95'][0]:.2f}"
+    real["CovNinetyFiveCiHi"] = f"{bn['ci95'][1]:.2f}"
+    real["CovNinetyFiveBinomP"] = _fp(bn["p_le_k_given_nominal"])
+    real["SignP"] = _fp(r1["E1_sign_test"]["p_two_sided"])
+    snc = r1["E1_sign_test_non_chime"]
+    real["NonChimeBelowHalf"] = str(snc["below_half"])
+    real["NonChimeN"] = str(snc["n"])
+    real["NonChimeSignP"] = _fp(snc["p_two_sided"])
+    real["NonChimeKsP"] = _fp(sub["non-CHIME"]["ks_p"])
+    real["NonChimeCovNinetyFive"] = f"{sub['non-CHIME']['coverage']['0.95']:.2f}"
+    rt = r1["E1_zmedian_over_ztrue"]
+    real["RatioMed"] = f"{rt['median']:.2f}"
+    real["RatioIqrLo"] = f"{rt['iqr'][0]:.2f}"
+    real["RatioIqrHi"] = f"{rt['iqr'][1]:.2f}"
+    ins = a[names["One"]]["in_sample_production_LABELLED"]
+    real["InSampleN"] = str(ins["n_used"])
+    real["InSampleCovSixtyEight"] = f"{ins['coverage']['0.68']:.2f}"
+    real["InSampleCovNinetyFive"] = f"{ins['coverage']['0.95']:.2f}"
+    real["InSampleKsP"] = _fp(ins["ks_p"])
+    fp1 = metrics["first_pass_6226ce5"]
+    real["FirstCovSixtyEight"] = f"{fp1['E1_coverage']['0.68']:.2f}"
+    real["FirstCovNinetyFive"] = f"{fp1['E1_coverage']['0.95']:.2f}"
+    e1now = {r["name"]: r for r in metrics.get("e1_pits_for_paper", [])}
+    real["FirstPitTwoOneOneTwoFour"] = f"{fp1['E1_pit']['FRB20201124A']:.3f}"
+    real["FirstPitTwoOneZeroFourOneZero"] = f"{fp1['E1_pit']['FRB20210410D']:.4f}"
+    for n, w in (("FRB20201124A", "TwoOneOneTwoFour"), ("FRB20210410D", "TwoOneZeroFourOneZero")):
+        if n in e1now:
+            real[f"NowPit{w}"] = f"{e1now[n]['pit']:.3f}"
     fr = ctrl["frozen"]
     b = fr["rule"]["bands"]
     rr = power["rejection_rate"]
@@ -668,6 +711,7 @@ def paper_values(
         "PowerF": f"{fr['C1']['F_x2']['power']:.2f}",
         "PlantExpected": f"{1 - fr['C0']['false_fail_rate']:.4f}",
         "DmzPowHost": f"{rr['host_mean_x2']:.2f}",
+        "DmzPowHostOneFive": f"{rr['host_mean_x1.5']:.2f}",
         "DmzPowF": f"{rr['F_x2']:.3f}",
         "DmzPowMw": f"{rr['MW_DM_plus30']:.2f}",
     }

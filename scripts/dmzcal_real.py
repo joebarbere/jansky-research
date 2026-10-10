@@ -94,6 +94,7 @@ def _arm(rule: dmzcal.CalibrationRule, rows: list[dict], verdict: bool) -> dict:
         return out
     out["coverage"] = {str(q): dmzcal.coverage(pits, q) for q in (0.68, 0.95)}
     out["median_pit"] = float(np.median(pits))
+    out["ks_p"] = float(stats.kstest(pits, "uniform").pvalue)
     out["frac_pit_below_half"] = float(np.mean(pits < 0.5))
     if verdict:
         out["rule"] = _verdict(rule, pits)
@@ -258,12 +259,91 @@ def _post_hoc(
             if "pit_alt" in r and abs(r["pit_alt"] - r["pit"]) > 1e-12
         },
     }
+    # --- referee round 1 (post hoc) ---------------------------------------------------
+    ref: dict[str, Any] = {"label": "POST HOC (referee round 1)"}
+    e1d = {r["name"]: r for r in est["E1_zdm_HoffmannEmin25"]}
+    ci = sorted(n for n in cert_names if "pit" in e1d.get(n, {}))
+    sig = np.array([e1d[n]["pit_dmg_sigma"] for n in ci if "pit_dmg_sigma" in e1d[n]])
+    ref["E1_galactic_dm_sigma"] = _describe(sig) | {
+        "verdict": _verdict(rule, sig)["verdict"],
+        "model": "Gaussian DM_EG uncertainty, sigma_ISM = DM_NE/2, sigma_halo = 15 "
+        "(Hoffmann+2025 Sec. 3.1)",
+    }
+    for f in ("1.5", "2"):
+        hv = {r["name"]: r for r in _load(f"dmzcal_e1_zdm_host{f}.json")["bursts"]}
+        hp = np.array([hv[n]["pit"] for n in ci if "pit" in hv.get(n, {})])
+        ref[f"E1_host_mean_x{f}"] = _describe(hp) | {"verdict": _verdict(rule, hp)["verdict"]}
+    pits = np.array([e1d[n]["pit"] for n in ci])
+    nn = pits.size
+    for q in (0.68, 0.95):
+        k = int(np.sum((pits >= (1 - q) / 2) & (pits <= (1 + q) / 2)))
+        cp = stats.binomtest(k, nn, q).proportion_ci(confidence_level=0.95, method="exact")
+        ref[f"E1_coverage_{q}_binomial"] = {
+            "k": k,
+            "n": nn,
+            "ci95": [float(cp.low), float(cp.high)],
+            "p_le_k_given_nominal": float(stats.binom.cdf(k, nn, q)),
+        }
+    nb = int(np.sum(pits < 0.5))
+    ref["E1_sign_test"] = {
+        "below_half": nb,
+        "n": nn,
+        "p_two_sided": float(stats.binomtest(nb, nn, 0.5).pvalue),
+    }
+    nonchime = [e1d[n]["pit"] for n in ci if e1d[n]["telescope"] != "CHIME"]
+    nbc = int(np.sum(np.array(nonchime) < 0.5))
+    ref["E1_sign_test_non_chime"] = {
+        "below_half": nbc,
+        "n": len(nonchime),
+        "p_two_sided": float(stats.binomtest(nbc, len(nonchime), 0.5).pvalue),
+    }
+    prov = _load("dmzcal_provenance.json")
+    leung = {b["name"] for b in prov["bursts"] if "Leung+2025" in b["refs"]}
+    gp = np.array([e1d[n]["pit"] for n in ci if n in leung])
+    ref["E1_leung_gold_only"] = _describe(gp) | {"verdict": "none (bands frozen for N = 36 only)"}
+    ratio = np.array([e1d[n]["z_median"] / e1d[n]["z_true"] for n in ci])
+    ref["E1_zmedian_over_ztrue"] = {
+        "median": float(np.median(ratio)),
+        "iqr": [float(np.quantile(ratio, 0.25)), float(np.quantile(ratio, 0.75))],
+    }
+    out["referee1"] = ref
     out["host_magnitude_stratification"] = (
         "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host "
-        "magnitudes are available only for the 19 CHIME/Leung hosts (m_r), not for the "
+        "magnitudes are available only for the 18 Leung+2025 hosts in the certification sample (m_r), not for the "
         "DSA/ASKAP/MeerKAT ones, so no sample-wide stratification is possible."
     )
     return out
+
+
+def _first_pass() -> dict:
+    """Headline of the first real run (commit 6226ce5), before the two post-run data
+    corrections (FRB 20201124A relabelled CHIME; FRB 20210410D DM + incoherent beam)."""
+    import subprocess  # noqa: PLC0415
+
+    txt = subprocess.run(
+        ["git", "show", "6226ce5:results/dmzcal_metrics.json"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=ROOT,
+    ).stdout
+    old = json.loads(txt)["audit"]["E1_zdm_HoffmannEmin25"]["certification"]
+    e1 = {
+        b["name"]: b
+        for b in json.loads(
+            subprocess.run(
+                ["git", "show", "6226ce5:results/dmzcal_e1_zdm.json"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=ROOT,
+            ).stdout
+        )["bursts"]
+    }
+    return {
+        "E1_coverage": old["coverage"],
+        "E1_pit": {n: e1[n]["pit"] for n in ("FRB20201124A", "FRB20210410D")},
+    }
 
 
 def main() -> None:
@@ -334,6 +414,12 @@ def main() -> None:
         "point_accuracy_certification": point,
         "recover_a_known_FRB20240304B": rak,
         "C2_planted_truth_E2": _c2(table, cert(e2["bursts"]), rule),
+        "first_pass_6226ce5": _first_pass(),
+        "e1_pits_for_paper": [
+            {"name": r["name"], "pit": r["pit"]}
+            for r in est["E1_zdm_HoffmannEmin25"]
+            if r["name"] in ("FRB20201124A", "FRB20210410D")
+        ],
         "post_hoc": _post_hoc(
             rule,
             est,

@@ -63,8 +63,12 @@ def _pruned_dir(prune: set[str]) -> str:
     return str(tmp)
 
 
-def grids(prune: set[str] | None = None) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+def grids(
+    prune: set[str] | None = None, host_factor: float = 1.0
+) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
     st = states.load_state(STATE)
+    if host_factor != 1.0:  # post-hoc referee variant (F2): mean host DM x factor
+        st.update_param("lmean", st.host.lmean + float(np.log10(host_factor)))
     cos.set_cosmology(st)
     cos.init_dist_measures()
     zdm_grid, zvals, dmvals = misc_functions.get_zdm_grid(
@@ -137,10 +141,14 @@ def survey_file_frbs() -> dict[str, list[str]]:
 
 def main() -> None:
     prune_mode = "--prune" in sys.argv[1:]
+    host_factor = 1.0
+    for a in sys.argv[1:]:
+        if a.startswith("--host-factor="):
+            host_factor = float(a.split("=", 1)[1])
     prov = json.loads((ROOT / "results" / "dmzcal_provenance.json").read_text())
     alts = prov["corrections"]["alternatives"]
     cert = {r["name"].removeprefix("FRB") for r in prov["bursts"] if r["side"] == "certification"}
-    rates, zvals, dmvals = grids(prune=cert if prune_mode else None)
+    rates, zvals, dmvals = grids(prune=cert if prune_mode else None, host_factor=host_factor)
     bursts = [r for r in prov["bursts"] if r["telescope"] in rates]
     rak = prov["recover_a_known"]
     bursts.append(rak | {"side": "recover_a_known", "secure_host": True})
@@ -193,6 +201,14 @@ def main() -> None:
                         )
                         ca = rates[key][:, int(np.argmin(np.abs(dmvals - dm_a)))]
                         rec["pit_alt"] = summarise(ca / ca.sum(), zvals, z_a)["pit"]
+                    # post-hoc referee variant (F1): Hoffmann Sec. 3.1 Galactic DM
+                    # uncertainty, sigma_ISM = DM_NE/2 and sigma_halo = 15, marginalised as
+                    # a Gaussian over DM_EG
+                    sig = float(np.hypot(0.5 * float(b["DMISM"]), 15.0))
+                    w = np.exp(-0.5 * ((dmvals - dm_eg) / sig) ** 2)
+                    pzs = (rates[key] * w[None, :]).sum(axis=1)
+                    if pzs.sum() > 0:
+                        rec["pit_dmg_sigma"] = summarise(pzs / pzs.sum(), zvals, z_true)["pit"]
                     # planted truth: z drawn from this burst's own column (cell-uniform)
                     dz = float(zvals[1] - zvals[0])
                     idx = rng.choice(zvals.size, size=N_PLANT, p=pz)
@@ -215,10 +231,16 @@ def main() -> None:
         "versions": versions(),
         "planted_truth": {"n_rep": N_PLANT, "seed": 0},
         "survey_files_pruned_of_certification_bursts": prune_mode,
+        "host_mean_factor": host_factor,
         "survey_file_frbs": survey_file_frbs(),
         "bursts": out,
     }
-    path = ROOT / "results" / ("dmzcal_e1_zdm_pruned.json" if prune_mode else "dmzcal_e1_zdm.json")
+    name = "dmzcal_e1_zdm"
+    if prune_mode:
+        name += "_pruned"
+    if host_factor != 1.0:
+        name += f"_host{host_factor:g}"
+    path = ROOT / "results" / (name + ".json")
     path.write_text(json.dumps(res, indent=1) + "\n")
     print("wrote", path, len(out), "bursts")
 

@@ -27,6 +27,7 @@
      "0.95": 0.8055555555555556
     },
     "median_pit": 0.18454235047324072,
+    "ks_p": 9.933292596022611e-05,
     "frac_pit_below_half": 0.7777777777777778,
     "rule": {
      "coverage": {
@@ -51,6 +52,7 @@
       "0.95": 0.5
      },
      "median_pit": 0.0335490465787975,
+     "ks_p": 0.0027028919264912186,
      "frac_pit_below_half": 1.0
     },
     "CHIME": {
@@ -62,6 +64,7 @@
       "0.95": 0.9
      },
      "median_pit": 0.24501008690256984,
+     "ks_p": 0.03517213452473478,
      "frac_pit_below_half": 0.6
     },
     "DSA": {
@@ -73,6 +76,7 @@
       "0.95": 0.8181818181818182
      },
      "median_pit": 0.3377648969759951,
+     "ks_p": 0.00042728420561847895,
      "frac_pit_below_half": 1.0
     },
     "MeerKAT": {
@@ -84,6 +88,7 @@
       "0.95": 0.0
      },
      "median_pit": 0.011325385527059712,
+     "ks_p": 0.0226507710541195,
      "frac_pit_below_half": 1.0
     }
    },
@@ -96,6 +101,7 @@
      "0.95": 1.0
     },
     "median_pit": 0.15645583488085366,
+    "ks_p": 0.001978605917214388,
     "frac_pit_below_half": 1.0
    },
    "non_repeaters": {
@@ -107,6 +113,7 @@
      "0.95": 0.78125
     },
     "median_pit": 0.24501008690256984,
+    "ks_p": 0.0010974088369605228,
     "frac_pit_below_half": 0.75
    },
    "in_sample_production_LABELLED": {
@@ -120,6 +127,7 @@
      "0.95": 0.9487179487179487
     },
     "median_pit": 0.2760522670745426,
+    "ks_p": 0.01818892229082214,
     "frac_pit_below_half": 0.6666666666666666
    },
    "unflagged_spectrum_sensitivity": {
@@ -133,6 +141,7 @@
      "0.95": 0.9285714285714286
     },
     "median_pit": 0.31012863633626564,
+    "ks_p": 0.08279285005758585,
     "frac_pit_below_half": 0.7857142857142857
    }
   },
@@ -146,6 +155,7 @@
      "0.95": 0.5
     },
     "median_pit": 0.027086302535214515,
+    "ks_p": 5.796298368002239e-13,
     "frac_pit_below_half": 0.9166666666666666,
     "rule": {
      "coverage": {
@@ -170,6 +180,7 @@
       "0.95": 0.0
      },
      "median_pit": 0.0009196641450381895,
+     "ks_p": 2.896107592007075e-08,
      "frac_pit_below_half": 1.0
     },
     "CHIME": {
@@ -181,6 +192,7 @@
       "0.95": 0.55
      },
      "median_pit": 0.0333089394994957,
+     "ks_p": 2.1223951992777893e-05,
      "frac_pit_below_half": 0.85
     },
     "DSA": {
@@ -192,6 +204,7 @@
       "0.95": 0.6363636363636364
      },
      "median_pit": 0.11213154202538538,
+     "ks_p": 1.1025608170849857e-08,
      "frac_pit_below_half": 1.0
     },
     "MeerKAT": {
@@ -203,6 +216,7 @@
       "0.95": 0.0
      },
      "median_pit": 0.0028856616503388595,
+     "ks_p": 0.005771323300677755,
      "frac_pit_below_half": 1.0
     }
    },
@@ -215,6 +229,7 @@
      "0.95": 0.25
     },
     "median_pit": 0.013932630451259293,
+    "ks_p": 8.140183430956385e-07,
     "frac_pit_below_half": 1.0
    },
    "non_repeaters": {
@@ -226,6 +241,7 @@
      "0.95": 0.53125
     },
     "median_pit": 0.0333089394994957,
+    "ks_p": 1.7703076693493425e-10,
     "frac_pit_below_half": 0.90625
    },
    "in_sample_production_LABELLED": {
@@ -239,6 +255,7 @@
      "0.95": 0.7948717948717948
     },
     "median_pit": 0.06789761058870991,
+    "ks_p": 1.7568044574772653e-12,
     "frac_pit_below_half": 0.9487179487179487
    },
    "unflagged_spectrum_sensitivity": {
@@ -252,6 +269,7 @@
      "0.95": 0.2857142857142857
     },
     "median_pit": 0.008945305429968348,
+    "ks_p": 1.298792683427517e-07,
     "frac_pit_below_half": 0.8571428571428571
    }
   },
@@ -265,6 +283,7 @@
      "0.95": 0.4444444444444444
     },
     "median_pit": 0.01595242748901637,
+    "ks_p": 8.832228269112294e-20,
     "frac_pit_below_half": 1.0,
     "rule": {
      "coverage": {
@@ -289,6 +308,7 @@
       "0.95": 0.0
      },
      "median_pit": 0.0016247039328881505,
+     "ks_p": 3.356843939906708e-08,
      "frac_pit_below_half": 1.0
     },
     "CHIME": {
@@ -300,6 +320,7 @@
       "0.95": 0.45
      },
      "median_pit": 0.01543957052724881,
+     "ks_p": 1.0186327403046862e-09,
      "frac_pit_below_half": 1.0
     },
     "DSA": {
@@ -311,6 +332,7 @@
       "0.95": 0.6363636363636364
      },
      "median_pit": 0.09215047839607034,
+     "ks_p": 1.946165208847537e-08,
      "frac_pit_below_half": 1.0
     },
     "MeerKAT": {
@@ -322,6 +344,7 @@
       "0.95": 0.0
      },
      "median_pit": 0.003681705944068073,
+     "ks_p": 0.007363411888136051,
      "frac_pit_below_half": 1.0
     }
    },
@@ -334,6 +357,7 @@
      "0.95": 0.0
     },
     "median_pit": 0.009541064798378778,
+    "ks_p": 3.1016787953214814e-08,
     "frac_pit_below_half": 1.0
    },
    "non_repeaters": {
@@ -345,6 +369,7 @@
      "0.95": 0.5
     },
     "median_pit": 0.022479033490345805,
+    "ks_p": 3.040778486412976e-17,
     "frac_pit_below_half": 1.0
    },
    "in_sample_production_LABELLED": {
@@ -358,6 +383,7 @@
      "0.95": 0.6410256410256411
     },
     "median_pit": 0.06074020545874179,
+    "ks_p": 1.5709316417110683e-15,
     "frac_pit_below_half": 0.9487179487179487
    },
    "unflagged_spectrum_sensitivity": {
@@ -369,6 +395,7 @@
      "0.95": 0.26666666666666666
     },
     "median_pit": 0.0075005218972789625,
+    "ks_p": 2.975921215813777e-07,
     "frac_pit_below_half": 0.8666666666666667
    }
   }
@@ -469,6 +496,26 @@
   "reps": 500,
   "expected_pass_rate": 0.9555
  },
+ "first_pass_6226ce5": {
+  "E1_coverage": {
+   "0.68": 0.5277777777777778,
+   "0.95": 0.7777777777777778
+  },
+  "E1_pit": {
+   "FRB20201124A": 0.014768665329730212,
+   "FRB20210410D": 0.003431359416677139
+  }
+ },
+ "e1_pits_for_paper": [
+  {
+   "name": "FRB20201124A",
+   "pit": 0.16492418932561193
+  },
+  {
+   "name": "FRB20210410D",
+   "pit": 0.011325385527059712
+  }
+ ],
  "post_hoc": {
   "label": "POST HOC (GATE-2 round 1); no frozen verdicts",
   "E1_zdm_HoffmannEmin25": {
@@ -1241,7 +1288,106 @@
     ]
    }
   },
-  "host_magnitude_stratification": "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host magnitudes are available only for the 19 CHIME/Leung hosts (m_r), not for the DSA/ASKAP/MeerKAT ones, so no sample-wide stratification is possible."
+  "referee1": {
+   "label": "POST HOC (referee round 1)",
+   "E1_galactic_dm_sigma": {
+    "n": 36,
+    "coverage": {
+     "0.68": 0.5555555555555556,
+     "0.95": 0.8333333333333334
+    },
+    "median": 0.1867419415213848,
+    "ks_p": 2.3460776191258615e-05,
+    "tails68": {
+     "below": 0.4444444444444444,
+     "above": 0.0,
+     "expected_each": 0.15999999999999998
+    },
+    "verdict": "OVERCONFIDENT",
+    "model": "Gaussian DM_EG uncertainty, sigma_ISM = DM_NE/2, sigma_halo = 15 (Hoffmann+2025 Sec. 3.1)"
+   },
+   "E1_host_mean_x1.5": {
+    "n": 36,
+    "coverage": {
+     "0.68": 0.6388888888888888,
+     "0.95": 0.8055555555555556
+    },
+    "median": 0.2438614481922347,
+    "ks_p": 0.0036670897964564686,
+    "tails68": {
+     "below": 0.3055555555555556,
+     "above": 0.05555555555555555,
+     "expected_each": 0.15999999999999998
+    },
+    "verdict": "OVERCONFIDENT"
+   },
+   "E1_host_mean_x2": {
+    "n": 36,
+    "coverage": {
+     "0.68": 0.5833333333333334,
+     "0.95": 0.8055555555555556
+    },
+    "median": 0.2860273554861079,
+    "ks_p": 0.01607884251922942,
+    "tails68": {
+     "below": 0.3055555555555556,
+     "above": 0.1111111111111111,
+     "expected_each": 0.15999999999999998
+    },
+    "verdict": "OVERCONFIDENT"
+   },
+   "E1_coverage_0.68_binomial": {
+    "k": 20,
+    "n": 36,
+    "ci95": [
+     0.3809767940893837,
+     0.7206458080331525
+    ],
+    "p_le_k_given_nominal": 0.07997131875742886
+   },
+   "E1_coverage_0.95_binomial": {
+    "k": 29,
+    "n": 36,
+    "ci95": [
+     0.6397519838249748,
+     0.9180563602347911
+    ],
+    "p_le_k_given_nominal": 0.0018080743160301712
+   },
+   "E1_sign_test": {
+    "below_half": 28,
+    "n": 36,
+    "p_two_sided": 0.0011932429624721408
+   },
+   "E1_sign_test_non_chime": {
+    "below_half": 16,
+    "n": 16,
+    "p_two_sided": 3.0517578125e-05
+   },
+   "E1_leung_gold_only": {
+    "n": 18,
+    "coverage": {
+     "0.68": 0.6111111111111112,
+     "0.95": 0.8888888888888888
+    },
+    "median": 0.28456908185165886,
+    "ks_p": 0.13656119371182396,
+    "tails68": {
+     "below": 0.3333333333333333,
+     "above": 0.05555555555555555,
+     "expected_each": 0.15999999999999998
+    },
+    "verdict": "none (bands frozen for N = 36 only)"
+   },
+   "E1_zmedian_over_ztrue": {
+    "median": 1.85007710997907,
+    "iqr": [
+     1.106201879932084,
+     3.3162421797403203
+    ]
+   }
+  },
+  "host_magnitude_stratification": "SKIPPED: pre-stated as conditional ('if the P(O|x) column permits'); host magnitudes are available only for the 18 Leung+2025 hosts in the certification sample (m_r), not for the DSA/ASKAP/MeerKAT ones, so no sample-wide stratification is possible."
  },
  "e2_bursts": [
   {

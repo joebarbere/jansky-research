@@ -340,3 +340,59 @@ with the frozen bands and the asymmetric rule.
 - "The cause is selection" as a result.
 - "Held-out" for E2 or E3.
 - Any statement that the cosmic-scatter or Milky Way DM terms are fine.
+
+## RNAAS note: presenter + referee round 1 (2026-10-10) — MAJOR, revision applied
+
+The draft (f6f86d5) was written from the drafting contract above. The referee returned
+**major revision**. The result was supported, but the note described the zdm configuration
+inaccurately, did not disclose the unfitted survey models, and attributed cause more firmly than
+the evidence allowed. Every fix uses committed data or a re-run of the existing drivers.
+
+**New post-hoc runs.** All are in `results/dmzcal_metrics.json` → `post_hoc.referee1`.
+- **F1, Galactic DM uncertainty.** The run marginalises the fit's σ_ISM = DM_NE/2 and
+  σ_halo = 15 (Hoffmann Sec. 3.1) as a Gaussian over DM_EG, stored as `pit_dmg_sigma` in
+  `dmzcal_e1_zdm.json`. Coverage moves to 0.56 / 0.83 and KS p to 2e-5, so the failure remains.
+  The referee's worry was that two bursts moving inside could reach the floor. Only one moved.
+- **F2, host-mean errors that DM|z cannot see.** zdm was re-gridded with μ_host + log10 1.5 and
+  + log10 2 (`dmzcal_e1_zdm_host1.5.json`, `_host2.json`).
+
+  | host mean | cov. 68% / 95% | KS p |
+  |---|---|---|
+  | ×1.5 | 0.64 / 0.81 | 0.004 |
+  | ×2 | 0.58 / 0.81 | 0.016 |
+
+  The 95% leg fails in both. A constant host-DM error up to ×2 does not remove the failure.
+  Host-DM *evolution* with z (Mas-Ribas 2026, arXiv:2606.25214 §7; found by the novelty re-check)
+  was not tested and is named in the note.
+- **F9, interval estimates.**
+  - 95% coverage: 29/36, Clopper–Pearson [0.64, 0.92], P(≤29 | 0.95) = 0.0018.
+  - Sign test: 28/36 below 0.5, p = 0.0012.
+  - Non-CHIME: 16/16 below 0.5, p = 3e-5.
+- **F6, gold-only.** The 18 Leung gold bursts give 0.61 / 0.89, KS p = 0.14. No failure is
+  detected, at low power, and no verdict is given because the bands were frozen for N = 36.
+- **F10, ratio.** The median z_posterior-median / z_true is 1.85, with interquartile range
+  1.11–3.32.
+- **F12, in-sample arm.** 39 bursts: 0.74 / 0.95, KS p = 0.02. This is now in the note, as
+  plan 99 required.
+
+**Text fixes.**
+- Title: now "Host-Identified". It still reads as a sentence, which is the RNAAS verdict
+  convention, so it is proposed for sign-off.
+- CHIME and MeerKAT exclusion by Hoffmann is disclosed (21 bursts), as is the decbin summing.
+- Corrected: "means of the fit, uncertainties omitted" replaces "as in the fit". "Parkes, ASKAP,
+  DSA-110 and FAST" replaces the shorter list.
+- The 183 cut is now scoped to their DSA commissioning sample.
+- "18 gold + 2 repeaters" replaces "the gold sample".
+- Both post-run corrections are reported, with before/after PITs and first-pass coverage.
+- The post-hoc label now covers all the robustness checks.
+- Planted truth is quoted for all three estimators, noted as uniform by construction.
+- The DM|z selection caveat, ×1.5 power and Cordes+2022 are added.
+- The FRB 20240304B foreground is mentioned.
+- "No CHIME" now uses the true non-CHIME subset of 16.
+
+**Novelty re-check** (required by the plan before drafting; done at this round). No held-out
+coverage or PIT test of per-burst p(z|DM) was found from 2024-06 to 2026-10, searching ADS,
+arXiv and the zdm repo. Mas-Ribas 2026 predicts the bias direction from host-DM evolution in a
+model-versus-model comparison, so the note does not claim the direction is new.
+
+**Status.** The revision is *applied*. Referee round 2 decides it.
