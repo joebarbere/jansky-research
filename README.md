@@ -50,7 +50,7 @@ backlog in `survey/candidate-gaps.md`.
 
 ## Results
 
-Forty-six slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
+Forty-seven slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -99,6 +99,7 @@ Forty-six slices, one line each; the long version of every row is `survey/<slice
 | BL 3I/ATLAS GBT reproduction (plan 85) | `jansky_research.atlas3i` | ✅ the BL null reproduces from the public archive (1.12M raw hits → 261 survivors → 0 confirmed) at a matching 99.2 mW EIRP limit; the survivors are a taxonomy of two-position-filter evasion |
 | DR20 BHM radio-counterpart census (plan 88) | `jansky_research.dr20radio` | ✅ first radio census of SDSS-V BHM quasars: RACS south 3.95%, VLASS north 4.67%; α measured by survival analysis (−0.755 ± 0.012, systematic range −0.55 to −0.90); the contrast is quoted as a ratio (1.47) |
 | Blind VLASS proper-motion search (plan 64) | `jansky_research.vlasspm` | ✅/➖ UV/BL Ceti recovered blind at 3.41 ± 0.04″/yr (three epochs, parallax-aware; system 3.34); zero new movers after calibrated errors and a compactness cut; 95% limit < 9.3e-5 per deg² on persistent compact optically dark movers (2.4–3.75 mJy, beyond 8 pc, 1.1–5″/yr) |
+| Two-beam FASHI × ALFALFA beam-blending test (plans 97–98) | `jansky_research.hiblend` | ➖ 22,889 matched galaxies; power, injection and chance-match controls pass, but the spectral null fails (β_null 0.26 ± 0.09); a pre-specified recalibration then fails its held-out test (0.015–0.027 dex at the S/N extremes), so no β is quoted — survey cross-calibration limits the test |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅ unified drift-to-distance ladder; **geometric check on the model distance** (same-event r=0.989) |
 
 Most of these are recover-a-known validations and method work. Several are negatives, written up
@@ -196,6 +197,7 @@ against its committed evidence, which is where several of the fixes below came f
 | Environment-split HIMFs in FASHI DR2 against two null tests (RNAAS note) | `fashienv/` | random-placement + label-shuffle nulls, environment-restricted Vmax, counterpart-matched blending classes; void not detected, group offset shows a blending signature (supersedes the DR1 −0.26 dex paper) | 89% | **ready** ([referee round 8](survey/fashienv-findings.md)); package built | ✅ 2026-09-27 — 8 rounds; the last two MINOR, all applied |
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first calibrated beaming-fraction posterior + SBC-validated coverage + ROCm-trained NPE | 93% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* retracted to a lower limit |
 | No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) survey-scale radio proper-motion search: UV/BL Ceti recovered; calibrated error model; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); parallax-aware completeness; limit < 9.3e-5 deg⁻² | 99% | **ready** ([referee round 3](survey/vlasspm-findings.md)); package built | ✅ 2026-09-28 — 3 rounds; final accept with nits, applied |
+| Survey flux calibration limits a two-beam FASHI–ALFALFA blending test (RNAAS note) | `hiblend/` | first two-beam, same-galaxy test of H I beam blending, controls frozen before the data; reported negative: calibration residuals comparable to the signal | 98% | draft; referee round pending ([findings](survey/hiblend-findings.md)) | — |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
 job runs in CI: the **`release` workflow** compiles every paper with tectonic and, on a `v*` tag,
@@ -221,9 +223,10 @@ contribution — the tooling and the reproducibility, not a novelty claim:
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
   drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
   refereed and ready to submit), and the LAB/VGPS terminal-velocity comparison
-  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Two are RNAAS-length as
+  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Three are RNAAS-length as
   their `main.tex`: the FASHI DR2 environment-split caution (`papers/fashienv/`, eight referee
-  rounds) and the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds).
+  rounds) the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds), and the two-beam
+  blending test's calibration-limited negative (`papers/hiblend/`, not yet refereed).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level
@@ -315,7 +318,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py vlasspm.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py vlasspm.py hiblend.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

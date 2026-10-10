@@ -1,0 +1,127 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{A two-beam test for H\,I beam blending}
+\shortauthors{Barbere}
+\begin{document}
+\title{Survey Flux Calibration Limits a Two-Beam FASHI--ALFALFA Test for H\,I Beam Blending}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+Beam blending should raise a galaxy's H\,I flux more in the wider Arecibo beam
+(\hbRealBeamAlfa~arcmin) than in the FAST beam (\hbRealBeamFast~arcmin). We tested this on
+\hbRealNTargets\ galaxies matched between FASHI DR2 and ALFALFA $\alpha$.100, with controls
+fixed in advance. Power, injection and chance-match controls passed, but
+neighbours too far apart in velocity to blend gave a slope of
+$\hbRealBetaNull\pm\hbRealBetaNullErr$ instead of zero, so the test was inconclusive. The
+flux calibration misfits held-out isolated galaxies by up to \hbRealDzeroTop~dex, depending on
+signal-to-noise. A second, pre-specified attempt with a more flexible calibration cut the misfit to \hbRealVtwoMaxA--\hbRealVtwoMaxB~dex but
+still failed its held-out test, so no blending slope is quoted. That is comparable to the
+\hbRealSignal~dex signal of one equal-flux neighbour.
+\end{abstract}
+
+\keywords{H I line emission (690) --- Sky surveys (1464) --- Flux calibration (544) ---
+Galaxy environments (2029)}
+
+\section{Test}
+\label{sec:test}
+Confusion in H\,I surveys has been estimated by simulation \citep{jones2015}, but not, so far as
+we know, measured on the same galaxies with two beams. FASHI DR2 \citep{fashi_dr2} gives a FAST
+beam of \hbRealBeamFast~arcmin at 1420~MHz (its Table~1), and \citet{giovanelli2005} give an ALFA beam
+averaging \hbRealBeamAlfa~arcmin (their pp.~8 and 22; the beam is elliptical, 3.3 by 3.8~arcmin). We matched
+FASHI DR2 (\hbRealNFashi\ sources) to ALFALFA $\alpha$.100 code-1 detections
+\citep[\hbRealNAlfalfa\ sources in all;][]{haynes2018} within 1.5~arcmin and 100~km~s$^{-1}$.
+Shifting one catalogue by 10~arcmin gives a chance-match rate of \hbRealChance\%.
+
+For a target of flux $S_c$ with neighbours $n$ at separation $s_n$, a Gaussian beam of width
+$\theta$ adds $S_n\exp(-4\ln2\,s_n^2/\theta^2)$ when the two profiles overlap in velocity. The
+predicted log ratio $R$ of the ALFA and FAST fluxes is largest for neighbours about 2~arcmin
+away; it reaches \hbRealSignal~dex for one equal-flux neighbour. The statistic is the slope
+$\beta$ of the observed log flux ratio on $R$ after the survey-to-survey flux scale has been
+removed. Blending predicts $\beta\approx1$; extra gas in close pairs, which both surveys would
+see, predicts $\beta\approx0$. The flux scale (a function of signal-to-noise, line width, flux
+and declination) was fitted only on \hbRealNIsolated\ isolated targets, with no neighbour
+within 6~arcmin, and applied unchanged to the \hbRealNPrimary\ targets with a neighbour at
+1--6~arcmin in the same velocity window. The negative control uses \hbRealNNull\ targets with
+neighbours at the same separations but more than 600~km~s$^{-1}$ away in velocity, which cannot
+blend; its slope must be within $2\sigma$ of zero. Errors come from a bootstrap over groups of
+targets linked within 6~arcmin.
+
+\section{Results}
+\label{sec:results}
+On simulated fluxes with the real geometry and errors, a planted $\beta=1$ was detected at
+$3\sigma$ in \hbRealPowerFrac\% of trials. Blends injected into real isolated targets returned
+$\beta=\hbRealInjOne\pm\hbRealInjOneSd$ (mean and scatter of ten injections), and $\hbRealInjZero$ when nothing was injected. The
+negative control failed: $\beta_{\rm null}=\hbRealBetaNull\pm\hbRealBetaNullErr$, against
+$\beta=\hbRealBeta\pm\hbRealBetaErr$ for the primary sample. By the rule fixed in advance, the
+outcome is inconclusive.
+
+Diagnostics were then run to locate the failure, with their expected outcomes recorded before
+they were run. With the calibration fitted on a random half of the isolated targets, the other
+half's median residual reaches \hbRealDzeroTop~dex ($\hbRealDzeroTopSig\sigma$) in the
+highest signal-to-noise quintile and \hbRealDzeroMid~dex in the second-lowest
+(Figure~\ref{fig:heldout}). Weighted to the primary sample's signal-to-noise, the null slope
+falls to $\hbRealMatchedNull\pm\hbRealMatchedNullErr$; it is $\hbRealTercLo\pm\hbRealTercLoErr$
+in the faintest third of the null sample and $\hbRealTercHi\pm\hbRealTercHiErr$ in the
+brightest, a difference of under $2\sigma$. Local galaxy density does not account for it
+(coefficient $\hbRealDensity\pm\hbRealDensityErr$).
+
+A second attempt, specified before it was run, replaced the quadratic signal-to-noise term with
+a linear spline with knots at the deciles, added local density, and put a held-out test first.
+The calibration was fitted on isolated targets in alternate 2-degree strips of right ascension
+and tested on the others, in both directions. Every decile had to lie within 0.010~dex of zero,
+with $p>0.01$ for the ten together. The largest decile residual fell from
+\hbRealVoneMax~dex for the original form to \hbRealVtwoMaxA\ and \hbRealVtwoMaxB~dex, but both
+directions failed ($p=\hbRealVtwoPA$ and $\hbRealVtwoPB$). What remains is at the two ends of
+the signal-to-noise range: \hbRealVtwoLoMin\ to \hbRealVtwoLoMax~dex in the faintest decile and
+$+\hbRealVtwoHiMin$ to $+\hbRealVtwoHiMax$~dex in the brightest
+($\hbRealVtwoSigMin$--$\hbRealVtwoSigMax\sigma$). The run therefore stopped before the
+blending slope was measured.
+
+\begin{figure}
+\plotone{figures/hiblend_heldout.pdf}
+\caption{Median flux-ratio residual of isolated targets not used to fit the calibration, against
+signal-to-noise. Triangles: the original calibration, tested on a random half. Circles and
+squares: the spline calibration, fitted on alternate right-ascension strips and tested on the
+others. The shaded band is the $\pm0.010$~dex tolerance and the dotted line the effect of one
+equal-flux neighbour.}
+\label{fig:heldout}
+\end{figure}
+
+\section{Conclusion}
+\label{sec:conclusion}
+The FASHI and ALFALFA flux scales differ in a way that depends on signal-to-noise, as the FASHI
+DR2 comparison already showed for faint sources \citep[][\S~5.2]{fashi_dr2}. Our calibrations,
+fitted on isolated galaxies, leave held-out residuals of up to \hbRealVtwoMaxA--\hbRealVtwoMaxB~dex
+at the ends of the signal-to-noise range. That is comparable to the blending signal, and the failed negative
+control is at least partly a calibration effect. This catalogue comparison therefore cannot
+separate beam blending from a real H\,I excess in close pairs. A calibration that varies with
+sky position, or a test restricted to the signal-to-noise range where the calibration holds,
+would each need its own control fixed in advance. Interferometric H\,I imaging of the pairs
+would settle the question directly.
+
+Reproducibility: \code{jansky\_research.hiblend} and \code{scripts/hiblend\_*.py}; every number
+here is generated from \code{results/hiblend\_*.json}. The plans, with the controls as frozen,
+and the record of each step are \code{plans/97}, \code{plans/98} and
+\code{survey/hiblend-findings.md}. Both catalogues are public.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~5.5, accessed 2026). Claude contributed to the
+design, implementation, and testing of the \code{hiblend} module and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+We used the FASHI DR2 catalogue (FAST, National Astronomical Observatories, Chinese Academy of
+Sciences) and the ALFALFA $\alpha$.100 catalogue through VizieR; the analysis builds on the
+\code{jansky} project. The author acknowledges the collaborative contribution of Anthropic's
+Claude.
+\end{acknowledgments}
+
+\software{\code{jansky-research} \citep{janskyresearch}, Claude \citep{anthropicclaude},
+astroquery, Astropy, NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliography{refs}
+\end{document}

@@ -292,3 +292,18 @@ def test_run_gated_v2_runs_c3prime_first_and_checks_c2_per_tercile(monkeypatch):
     stop = h.run_gated_v2(f, s, np.random.default_rng(5))
     assert stop["stopped_at"].startswith("C3'") and list(stop["gates"]) == ["C3prime_heldout"]
     assert "primary" not in stop
+
+
+def test_write_paper_fills_every_macro_from_the_committed_results(tmp_path):
+    import shutil
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    (tmp_path / "results").mkdir()
+    for name in ("hiblend_metrics.json", "hiblend_diagnostics.json", "hiblend_v2_metrics.json"):
+        shutil.copy(root / name, tmp_path / "results" / name)
+    macros, fig = h.write_paper(tmp_path)
+    text = macros.read_text()
+    assert fig.stat().st_size > 0 and r"\hbRealVtwoMaxB" in text
+    assert "{--}" not in text  # every quoted number has a committed value
+    assert abs(h.equal_flux_signal_dex() - 0.0445) < 0.001  # plan 97: "at most ~0.045 dex"

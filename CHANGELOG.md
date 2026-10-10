@@ -11,8 +11,9 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `papers/hiblend/`: RNAAS note "Survey Flux Calibration Limits a Two-Beam FASHI--ALFALFA Test for H I Beam Blending" (plans 97-98), every number a `\hbReal*` macro built by `hiblend.write_paper` from the three committed results files; one figure (held-out calibration residual by S/N). Not yet refereed.
 - `hiblend` v2 (plan 98, frozen before the run): a decile-spline + density calibration gated by a held-out RA-strip test (C3'), then C0/C1/C4 and a per-S/N-tercile C2. **C3' failed in both directions** (held-out decile residuals up to 0.027 dex at the S/N extremes, p = 0.001-0.006, vs 0.054 for plan 97's form), so the run stopped with no beta quoted: survey-to-survey calibration is the limiting systematic of the two-beam test (`results/hiblend_v2_metrics.json`, `scripts/hiblend_real.py --v2`).
-- `hiblend` post-hoc diagnostics D0-D3 of the C2 failure (`scripts/hiblend_diagnostics.py`, `results/hiblend_diagnostics.json`): the C3 calibration misfits held-out isolated targets by up to 0.039 dex in S/N, the null slope vanishes when S/N-matched to the primary sample (0.12 +/- 0.09), and local density is rejected as its carrier; predictions committed before the run, and the frozen outcome stays ambiguous.
+- `hiblend` post-hoc diagnostics D0-D3 of the C2 failure (`scripts/hiblend_diagnostics.py`, `results/hiblend_diagnostics.json`): the C3 calibration misfits held-out isolated targets by up to 0.039 dex in S/N, the null slope vanishes when S/N-matched to the primary sample (0.12 +/- 0.08), and local density is rejected as its carrier; predictions committed before the run, and the frozen outcome stays ambiguous.
 - **`hiblend` (plan 97): a two-beam FASHI x ALFALFA test of HI beam blending -- outcome AMBIGUOUS.**
   22,889 matched galaxies. Power (C0), planted truth on real isolated targets (C1) and match
   reliability (C4) all pass, but the spectral negative control fails (C2: neighbours that cannot
