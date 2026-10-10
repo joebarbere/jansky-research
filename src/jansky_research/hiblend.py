@@ -1105,6 +1105,35 @@ def referee3_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
     return {"R6_injection_through_curve": out}
 
 
+def referee4_checks(
+    field: dict, *, seed: int = 101, n_inj: int = 10, us: tuple[float, ...] = (0.6, 0.86, 1.0)
+) -> dict:
+    """Post-hoc check R7 (survey/hiblend-findings.md step 10): C1 with a constant ALFALFA
+    response u to added flux relative to the target's own scale, alfa_map = u * r_i * a."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    r = 10 ** (d["design"] @ d["coef"])
+    out: dict = {}
+
+    def constant(u: float) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+        return lambda i, a: u * r[i] * a
+
+    for u in us:
+        row: dict = {}
+        for frozen in (False, True):
+            sub_rng = np.random.default_rng(seed + 1)  # the strength-1 draws of R3, R5 and R6
+            bs = [analyse(injection_field(f, sub_rng, strength=1.0, freeze_covariates=frozen,
+                                          alfa_map=constant(u)), sub_rng,
+                          n_boot=200)["primary"]["beta"] for _ in range(n_inj)]  # fmt: skip
+            row["frozen" if frozen else "production"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+        row["absorption"] = round(row["production"]["mean"] - row["frozen"]["mean"], 4)
+        out[f"u_{u:g}"] = row
+    return {"R7_constant_u": out}
+
+
 # ---------------------------------------------------------------------------------------------
 # The note: macros + figure from the committed real evidence (plans 97 and 98)
 # ---------------------------------------------------------------------------------------------

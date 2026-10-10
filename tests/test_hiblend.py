@@ -376,3 +376,10 @@ def test_injection_alfa_map_replaces_the_alfalfa_increment():
     assert np.allclose(tripled["flux_f"], base["flux_f"])
     out = h.referee3_checks(f, n_inj=2)["R6_injection_through_curve"]
     assert {"frozen_strength_1", "effective_factor_10pct_isolated"} <= set(out)
+
+
+def test_referee4_checks_report_absorption_per_u():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    out = h.referee4_checks(f, n_inj=2, us=(1.0,))["R7_constant_u"]["u_1"]
+    assert out["absorption"] == round(out["production"]["mean"] - out["frozen"]["mean"], 4)
