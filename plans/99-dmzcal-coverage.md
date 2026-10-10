@@ -226,3 +226,74 @@ evaluated.
   which models the main CHIME/FRB pipeline. Exclusions are counted, not hidden.
 - **Scoop.** `zdm`'s authors are the natural people to do this. Move at slice speed and re-run
   the novelty check before drafting.
+
+## Step 0 outcome and pre-posterior refinements (2026-10-10)
+
+`scripts/dmzcal_provenance.py` → `results/dmzcal_provenance.json`. It only counts bursts: no
+posterior and no z-vs-DM comparison has been computed. The following decisions were made in
+step 0, before any posterior. Each is a change to the frozen text above, recorded here with
+its reason.
+
+1. **Which "default parameter state" is audited.**
+   - The plan said "default parameter state of the pinned `zdm` commit". That phrase is
+     ambiguous, because there are three candidates:
+     - `parameters.State()`: lmean 2.16, lsigma 0.51, F 0.32, with no paper attached;
+     - `states.load_state()`, whose default is `HoffmannHalo25` and which `states.py` marks
+       "Unpublished (yet!)";
+     - the hard-coded settings in `pz_given_dm.py`, which imports the `imp` module that was
+       removed in Python 3.12, so the script does not run as shipped.
+   - **E1 uses `HoffmannEmin25`** (Hoffmann et al. 2025, PASA 42, e017; arXiv:2408.04878).
+     It is the latest *published* state, and it is the one Caleb et al. used for their Fig. 3.
+     Its fit sample can be read from the paper.
+   - E2 takes the same host parameters and F: μ_host = 2.18, σ_host = 0.42 (log10), F = 0.32,
+     DM_halo = 50.
+2. **Where F comes from.** HoffmannEmin25 fixes F = 0.32, citing Macquart+2020 and Zhang+2021
+   (arXiv:2408.04878v2 Sec. 4, main.tex l.382). It is not fitted, so it carries no burst-level
+   provenance.
+3. **Production side, from the paper's own tables rather than zdm's survey files.** The survey
+   files at the pinned commit were updated after the paper (for example, `DSA.ecsv` has 47
+   bursts, including 2024 ones). The production side is:
+   - the 25 DSA-110 bursts of the paper's DSA table, all of them, including those whose z was
+     not used, because their DMs entered the likelihood;
+   - every ASKAP burst up to 2023-12-31 (Sec. 3.3: "all FRBs detected by CRAFT up until the
+     end of 2023"). This rule is deliberately conservative, because some table rows are
+     commented out and their status is unclear.
+
+   CHIME and MeerKAT bursts were excluded from that fit (Sec. 2.1), so they sit on the
+   certification side.
+4. **The spectroscopic-z rule, made concrete.**
+   - A host counts as spectroscopic if `public_hosts.csv` flags a spectrum, or if it is one of
+     the 19 gold-sample hosts in Leung et al. 2025's follow-up table (arXiv:2502.11217v2,
+     `redshifts_table.tex`). `public_hosts.csv` leaves the flag blank for all of the latter,
+     and each has a Lick, Keck, Gemini or archival spectroscopic z.
+   - Leung's 13 "remaining" localizations stay out: they had no follow-up, and P(O|x) ≤ 0.75.
+5. **New: a host-association floor.** Where `P_Ox` is reported, it must be ≥ 0.9. A wrong host
+   gives a wrong z_true, which would read as mis-calibration. This rule removes 3 bursts:
+   - FRB 20201123A (MeerKAT, 0.84);
+   - FRB 20230216A (DSA, 0.42);
+   - FRB 20230311A (CHIME, 0.77; Leung: "a secure redshift, but no secure host").
+6. **Dedupe refined.** Files are merged by date only if their DMs agree within 1 pc cm⁻³,
+   because two real bursts can share a date. This produced 6 merges, all of an unlettered file
+   into its lettered twin, and each is listed in the JSON.
+7. **A data defect.** FRBs/FRB gives FRB 20231201A z = 0.119, while Leung+2025 gives 0.1119.
+   The primary-source value (0.1119) is used in the real run.
+
+**Counts.**
+- 187 files; 111 have a z, and 105 remain after deduplication.
+- 48 production, 54 certification, and 3 with no survey model (FRB 20121102A and 20190520B,
+  both VLA, and FRB 20181119A, telescope unlabelled).
+- **The certification sample is 36 spectroscopic-z bursts with secure hosts:** CHIME 19,
+  DSA 11, ASKAP 4, MeerKAT 2. Four of them are repeaters.
+- N ≥ 25, so the outcome is not UNDERPOWERED by size. C1 still decides whether the test has
+  power.
+
+**New caveats, pre-stated.**
+- The 19 CHIME bursts are Leung's *Local Universe* gold sample. It was selected for secure
+  optical hosts, so it is the sharpest case of the host-identifiability selection described
+  above.
+- Hoffmann et al. themselves give MeerKAT's reporting bias ("notable events may be published
+  first", Sec. 2.1) as a reason to exclude it. The two MeerKAT bursts are reported but cannot
+  carry a verdict alone.
+- `zdm`'s CHIME survey model was not fitted in HoffmannEmin25 (Sec. 2.1: CHIME needs repeater
+  modelling). E1 on CHIME bursts is therefore exactly what a user gets out of the box, and is
+  reported per telescope.
