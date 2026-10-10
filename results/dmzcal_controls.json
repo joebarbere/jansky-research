@@ -1,0 +1,134 @@
+{
+ "source": "synthetic controls: plan 99 C0 (null false-fail) and C1 (power), E2 generative model only -- no real burst used",
+ "plan": "plans/99-dmzcal-coverage.md step 2",
+ "frozen": {
+  "n": 36,
+  "m": 2000,
+  "seed": 99,
+  "table": {
+   "zmin": 0.01,
+   "zmax": 4.0,
+   "nz": 600,
+   "dm_step": 2.0
+  },
+  "rule": {
+   "bands": {
+    "0.68": [
+     0.5277777777777778,
+     0.8333333333333334
+    ],
+    "0.95": [
+     0.8611111111111112,
+     1.0
+    ]
+   },
+   "ks_p": 0.01,
+   "band_quantile": 0.95,
+   "widened": false
+  },
+  "C0": {
+   "false_fail_rate": 0.0445,
+   "gate": 0.07,
+   "passed": true,
+   "null_median_coverage": {
+    "0.68": 0.6944444444444444,
+    "0.95": 0.9444444444444444
+   },
+   "null_ks_reject_rate": 0.0075
+  },
+  "C1": {
+   "host_mean_x2": {
+    "power": 0.1205,
+    "verdict_counts": {
+     "BIASED": 125,
+     "CALIBRATED": 1759,
+     "KS_FAIL": 6,
+     "OVERCONFIDENT": 91,
+     "UNDERCONFIDENT": 19
+    },
+    "median_coverage_68": 0.6666666666666666,
+    "median_coverage_95": 0.9444444444444444
+   },
+   "F_x2": {
+    "power": 0.951,
+    "verdict_counts": {
+     "BIASED": 20,
+     "CALIBRATED": 98,
+     "OVERCONFIDENT": 1882
+    },
+    "median_coverage_68": 0.4444444444444444,
+    "median_coverage_95": 0.75
+   },
+   "required_power_host": 0.8,
+   "passed": false
+  }
+ },
+ "supplementary_zmax1": {
+  "post_hoc": true,
+  "gating": false,
+  "why": "preliminary M=200 frozen run gave C1 host power ~0.1; the frozen comoving-volume prior has median z ~2.4, unlike the certification sample",
+  "n": 36,
+  "m": 2000,
+  "seed": 990,
+  "table": {
+   "zmin": 0.01,
+   "zmax": 1.0,
+   "nz": 600,
+   "dm_step": 2.0
+  },
+  "rule": {
+   "bands": {
+    "0.68": [
+     0.5277777777777778,
+     0.8333333333333334
+    ],
+    "0.95": [
+     0.8611111111111112,
+     1.0
+    ]
+   },
+   "ks_p": 0.01,
+   "band_quantile": 0.95,
+   "widened": false
+  },
+  "C0": {
+   "false_fail_rate": 0.0365,
+   "gate": 0.07,
+   "passed": true,
+   "null_median_coverage": {
+    "0.68": 0.6944444444444444,
+    "0.95": 0.9444444444444444
+   },
+   "null_ks_reject_rate": 0.005
+  },
+  "C1": {
+   "host_mean_x2": {
+    "power": 0.146,
+    "verdict_counts": {
+     "BIASED": 158,
+     "CALIBRATED": 1708,
+     "OVERCONFIDENT": 124,
+     "UNDERCONFIDENT": 10
+    },
+    "median_coverage_68": 0.6388888888888888,
+    "median_coverage_95": 0.9444444444444444
+   },
+   "F_x2": {
+    "power": 0.3965,
+    "verdict_counts": {
+     "BIASED": 53,
+     "CALIBRATED": 1207,
+     "OVERCONFIDENT": 740
+    },
+    "median_coverage_68": 0.5833333333333334,
+    "median_coverage_95": 0.8888888888888888
+   },
+   "required_power_host": 0.8,
+   "passed": false
+  }
+ },
+ "runtime_s": {
+  "frozen": 38.3,
+  "supplementary": 42.8
+ }
+}

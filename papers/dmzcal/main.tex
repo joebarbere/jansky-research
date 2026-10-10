@@ -1,0 +1,178 @@
+\documentclass[twocolumn]{aastex631}
+\input{generated/macros}
+\newcommand{\code}[1]{\texttt{#1}}
+\shorttitle{DM redshift intervals on localized FRBs}
+\shortauthors{Barbere}
+\begin{document}
+\title{Dispersion-Measure Redshift Intervals Place Host-Identified Fast Radio Bursts Too Far Away}
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+We tested the redshift posteriors $p(z\,|\,\mathrm{DM})$ that \code{zdm} infers from fast radio
+burst (FRB) dispersion measures (DM), with the parameters of \citet{hoffmann2025}, on
+\dmzRealNCert\ FRBs with spectroscopic hosts not used in that fit. The 95\% intervals contain
+the host redshift for \dmzRealEOneCovNinetyFive\ of the bursts, below a floor of
+\dmzSynBandLoNinetyFive\ fixed in advance. The failure is one-sided: \dmzRealEOneTailLo\ of the
+probability integral transforms fall below the central 68\% band and \dmzRealEOneTailHi\ above
+it ($p=\dmzRealEOneKsP$), and the posterior median is typically \dmzRealRatioMed\ times the true
+redshift. It persists with the Galactic DM uncertainty of the fit included and with the mean host
+DM raised by half. This sample cannot tell whether the population model, the selection of
+identifiable hosts, or an unmodelled host DM is responsible.
+\end{abstract}
+
+\keywords{Radio transient sources (2008) --- Intergalactic medium (813) --- Astrostatistics
+(1882) --- Redshift surveys (1378)}
+
+\section{Test}
+\label{sec:test}
+For a burst at redshift $z$, the extragalactic DM is the sum of a cosmic term, whose mean and
+scatter follow \citet{macquart2020}, and a host term redshifted by $1/(1+z)$. Inverting this
+gives $p(z\,|\,\mathrm{DM})$. The \code{zdm} code \citep{james2022,zdm} adds each survey's
+detection efficiency and an FRB population model. Its parameters were last fitted on bursts from
+Parkes, ASKAP, DSA-110 and FAST \citep{hoffmann2025}. Point estimates have been compared with
+localized bursts before \citep{cordes2022}; we test whether the quoted intervals contain the
+true redshift as often as they claim.
+
+The sample is the localized-host compilation of the \code{FRB} repository \citep{frbrepo}:
+\dmzRealNLocal\ bursts after duplicates are removed. Bursts that entered the
+\citet{hoffmann2025} fit, \dmzRealNProd\ in all, were set aside: their 25 DSA-110 commissioning
+bursts (their Section~2.3) and every CRAFT burst to the end of 2023 (their Section~2.4). We
+required a spectroscopic redshift and a host association probability of at least 0.9. That
+leaves \dmzRealNCert\ bursts: \dmzRealNChime\ from CHIME (\dmzRealGoldN\ from the gold sample of
+\citealt{leung2025} and the repeaters FRB~20180916B and FRB~20201124A), \dmzRealNDsa\ from
+DSA-110 \citep{sharma2024}, \dmzRealNAskap\ from ASKAP \citep{shannon2025} and \dmzRealNMeer\
+from MeerKAT \citep{caleb2023}, each scored under the \code{zdm} survey model of its discovery
+instrument. \citet{hoffmann2025} excluded CHIME, whose model needs repeaters to be
+treated, and MeerKAT (their Section~2.1), so \dmzRealNChime\ of our bursts are scored with an
+unfitted CHIME model summed over its declination bins, and one with an unfitted MeerKAT model.
+The Milky Way DM is the NE2001 value \citep{cordes2002} plus 50~pc~cm$^{-3}$ for the halo. These
+are the means of the fit, which also allowed uncertainties of half the NE2001 value and
+15~pc~cm$^{-3}$ \citep[][Section~3.1]{hoffmann2025}; our primary run omits them.
+
+Checking the non-CHIME bursts against the original papers corrected two after the first run:
+FRB~20201124A was discovered by CHIME, not MeerKAT \citep{lanman2022}, at $z=0.0979$
+\citep{fong2021}, and FRB~20210410D has DM 578.78~pc~cm$^{-3}$ in the incoherent beam
+\citep{caleb2023}. Their PITs (defined below) rose from \dmzRealFirstPitTwoOneOneTwoFour\ to
+\dmzRealNowPitTwoOneOneTwoFour\ and \dmzRealFirstPitTwoOneZeroFourOneZero\ to
+\dmzRealNowPitTwoOneZeroFourOneZero, and the \code{zdm} coverages from
+\dmzRealFirstCovSixtyEight\ and \dmzRealFirstCovNinetyFive\ to their present values.
+
+For each burst we computed the probability integral transform (PIT), the posterior probability
+below the true redshift. A central $q$ interval contains the truth when the PIT lies between
+$(1-q)/2$ and $(1+q)/2$. Fixed before any real posterior was computed, the
+rule requires the 68\% and 95\% coverages to lie inside the central 95\% of their distributions for calibrated
+samples of \dmzSynN\ bursts, which are \dmzSynBandLoSixtyEight--\dmzSynBandHiSixtyEight\ and at
+least \dmzSynBandLoNinetyFive, and a Kolmogorov--Smirnov (KS) test of the PITs against a uniform
+distribution to give $p>0.01$. On \dmzSynM\ calibrated synthetic samples the rule fails
+\dmzSynFalseFail\ of the time. It has power \dmzSynPowerF\ against a doubled cosmic scatter but
+only \dmzSynPowerHost\ against a doubled mean host DM. Because of that low power we changed the
+rule after this control and before the real run: a failure is reported, and a pass would not
+have been read as evidence of calibration. Planting each burst's redshift from its own posterior,
+which makes the PITs uniform by construction, checks the code: the rule passes
+\dmzRealPlantOne, \dmzRealPlantTwo\ and \dmzRealPlantThree\ of the time for the three
+estimators, against \dmzSynPlantExpected\ expected.
+
+Two other estimators, neither fitted to these bursts and both expected to fail, were scored
+on the same bursts: the \citet{macquart2020} posterior with the same host and scatter
+parameters, a prior uniform in comoving volume and no survey selection; and \code{fruitbat}
+\citep{batten2019} with its default simulation-based relation \citep{batten2021}, which has no
+host term.
+
+\section{Results}
+\label{sec:results}
+All three estimators fail the rule (Figure~\ref{fig:pit}). For \code{zdm} the 68\% and 95\%
+coverages are \dmzRealEOneCovSixtyEight\ and \dmzRealEOneCovNinetyFive. The 68\% coverage is in
+band; the failure rests on the 95\% coverage, \dmzRealCovNinetyFiveK\ of \dmzRealNCert\ bursts
+(binomial 95\% interval \dmzRealCovNinetyFiveCiLo--\dmzRealCovNinetyFiveCiHi;
+$p=\dmzRealCovNinetyFiveBinomP$ if the true coverage were 95\%), and on the KS test. The median PIT
+is \dmzRealEOneMedPit, and \dmzRealEOneNBelowHalf\ of the PITs lie below 0.5 (sign test
+$p=\dmzRealSignP$). The other two fail more strongly (95\% coverages
+\dmzRealETwoCovNinetyFive\ and \dmzRealEThreeCovNinetyFive). The intervals are displaced toward high
+redshift, not too narrow. The \code{zdm} posterior median is \dmzRealRatioMed\ times the true redshift (interquartile
+range \dmzRealRatioIqrLo--\dmzRealRatioIqrHi). The \dmzRealInSampleN\ bursts that entered the fit
+would pass the same thresholds (\dmzRealInSampleCovSixtyEight\ and
+\dmzRealInSampleCovNinetyFive, $p=\dmzRealInSampleKsP$), though the bands were set for
+\dmzSynN\ bursts.
+
+The checks below were all chosen after the result was seen. All \dmzRealNonChimeN\ non-CHIME
+bursts have PITs below 0.5 ($p=\dmzRealNonChimeSignP$); their 95\% coverage is
+\dmzRealNonChimeCovNinetyFive\ and the KS test gives $p=\dmzRealNonChimeKsP$. Without the ASKAP and
+MeerKAT bursts the 95\% coverage is \dmzRealChimeDsaCovNinetyFive, inside the band, but the KS
+test still fails ($p=\dmzRealChimeDsaKsP$, \dmzRealChimeDsaN\ bursts). The \dmzRealGoldN\ gold
+CHIME bursts alone show no failure (\dmzRealGoldCovSixtyEight\ and \dmzRealGoldCovNinetyFive,
+$p=\dmzRealGoldKsP$), with little power at that size. With the Galactic DM uncertainty of the fit, approximated as one Gaussian
+with the two widths added in quadrature, the coverages are \dmzRealSigmaCovSixtyEight\ and \dmzRealSigmaCovNinetyFive\
+($p=\dmzRealSigmaKsP$). A halo DM of 25 or 75~pc~cm$^{-3}$ gives $p=\dmzRealHaloLowKsP$ and
+$\dmzRealHaloHighKsP$. All \dmzRealNDsa\ DSA-110 bursts and FRB~20180916B are listed in the
+\code{zdm} survey files; removing them changes no PIT by more than $\dmzRealPruneShift$. Conflicting published values (a second
+redshift for one burst, three DMs) do not change the result.
+
+The PIT of the DM at the known redshift is free of the redshift prior but not of selection on
+the host DM. It shows no failure: the coverages are
+\dmzRealDmzOneCovSixtyEight\ and \dmzRealDmzOneCovNinetyFive\ and $p=\dmzRealDmzOneKsP$ for
+\code{zdm}. In simulations at these redshifts this check detects a doubled mean host DM
+\dmzSynDmzPowHost\ of the time, a mean host DM half again too large \dmzSynDmzPowHostOneFive,
+a doubled cosmic scatter \dmzSynDmzPowF\ and an unmodelled 30~pc~cm$^{-3}$ \dmzSynDmzPowMw.
+Raising the \code{zdm} mean host DM by a factor of 1.5 leaves the failure on both counts (95\%
+coverage \dmzRealHostOneFiveCovNinetyFive, $p=\dmzRealHostOneFiveKsP$), and the DM check
+allows that model ($p=\dmzRealHostOneFiveDmzKsP$). A factor of 2 passes the KS test
+($p=\dmzRealHostTwoKsP$) but not the 95\% coverage (\dmzRealHostTwoCovNinetyFive), and the DM
+check rejects it ($p=\dmzRealHostTwoDmzKsP$). A constant host-DM error is either too small to
+remove the failure or inconsistent with the DMs. The redshift distribution, from the
+population model or the selection of identifiable hosts, and a host DM that changes with
+redshift remain. For their DSA-110 commissioning sample, \citet{hoffmann2025}
+used redshifts only below $\mathrm{DM}-\mathrm{DM_{ISM}}=183$~pc~cm$^{-3}$, because fainter hosts
+at higher redshift are missed and a localized sample is then biased low in redshift at fixed DM.
+Below that value our \dmzRealBinLowN\ bursts have a median PIT of \dmzRealBinLowMed\
+($p=\dmzRealBinLowKsP$); above it, the \dmzRealBinHighN\ bursts have medians of
+\dmzRealBinHighMedRange\ in three bins. That is the pattern such selection predicts, but
+\dmzRealBinLowN\ bursts have little power and the trend of PIT with DM is not significant
+($\rho=\dmzRealTrendRho$, $p=\dmzRealTrendP$). A host DM that rises with redshift biases DM redshifts
+high \citep{masribas2026}; it was not tested.
+
+FRB~20240304B \citep{caleb2026} at $z=\dmzRealFrbZ$, outside all statistics, lies inside the
+\code{zdm} 68\% interval (\dmzRealFrbOneLoSixtyEight--\dmzRealFrbOneHiSixtyEight) but outside
+the others (\dmzRealFrbTwoLoSixtyEight--\dmzRealFrbTwoHiSixtyEight\ and
+\dmzRealFrbThreeLoSixtyEight--\dmzRealFrbThreeHiSixtyEight); all three place it too far away,
+though part of its DM is from a foreground cluster \citep{caleb2026}.
+
+\begin{figure}
+\plotone{figures/dmzcal_pit.pdf}
+\caption{Cumulative distributions of the PIT of the host redshift for the \dmzRealNCert\
+bursts under the three estimators; a calibrated estimator follows the grey diagonal. Dotted:
+the PIT of the DM at the known redshift under \code{zdm}.}
+\label{fig:pit}
+\end{figure}
+
+\section{Limits}
+\label{sec:limits}
+The result applies to bursts with identified hosts, not to the unlocalized bursts for which
+these estimators are intended. The three estimators were scored on the same bursts and are not independent
+tests. NE2001 was not compared with other Galactic models, no explicit model of host
+identification was fitted, and host magnitudes, available only for the
+\dmzRealGoldN\ gold CHIME bursts, were not used.
+
+Reproducibility: \code{jansky\_research.dmzcal} and \code{scripts/dmzcal\_*.py}; every number
+here is generated from \code{results/dmzcal\_*.json}. The plan, with the rule as fixed, and
+the record of each step are \code{plans/99} and \code{survey/dmzcal-findings.md}.
+
+\section*{AI use disclosure}
+This paper was developed collaboratively by the author with Anthropic's Claude
+\citep{anthropicclaude} (model Claude Opus~5.5, accessed 2026). Claude contributed to the
+design, implementation, and testing of the \code{dmzcal} module and the drafting of this
+manuscript. The author directed the work, independently reviewed and verified all code, results,
+and citations, and takes full responsibility for the content. An AI/LLM is not an author.
+
+\begin{acknowledgments}
+We used the host compilation of the \code{FRB} repository and the published catalogues it
+draws on; the analysis builds on the \code{jansky} project. The author acknowledges the
+collaborative contribution of Anthropic's Claude.
+\end{acknowledgments}
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{zdm} \citep{zdm},
+\code{fruitbat} \citep{batten2019}, \code{FRB} \citep{frbrepo}, Claude \citep{anthropicclaude},
+Astropy, NumPy, SciPy, Matplotlib, jansky \citep{jansky}}
+
+\bibliography{refs}
+\end{document}
