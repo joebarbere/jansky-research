@@ -143,6 +143,7 @@ recommend the next version number.
   the $170 AWS estimate is superseded.
 
 ### Fixed
+- `scripts/hiblend_real.py` and `scripts/hiblend_diagnostics.py` now require `--out` (they defaulted to the repo root, the CLAUDE.md hazard; referee round 1 process note).
 - `hiblend`: the comment (and findings step 2) saying covariate absorption biases beta "toward 0, the conservative direction" had the sign wrong -- it inflates beta (C1 1.24 vs 0.70 with pre-injection covariates).
 - **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
   Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
