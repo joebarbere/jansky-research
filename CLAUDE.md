@@ -381,6 +381,20 @@ next referee. Report a fix as *applied*, not *resolved*; let the next independen
 author of the fix, call it closed. When a summary says "with one caveat" or "mostly", read the
 caveat as the result.
 
+**A frozen gate needs its own false-failure rate, computed before it is frozen.** `hiblend`'s
+plan 98 put a held-out calibration gate first: every one of ten S/N-decile *medians* within 0.010
+dex, in both directions. It failed, the run stopped, and the draft note was titled "Survey flux
+calibration limits the test". The referee computed, from the committed decile errors, that a
+*perfect* calibration passes that rule with probability **0.33**, and that the gate judged medians
+while the calibration and β are least-squares means. In bin means the same calibration passes
+(p = 0.36, 0.043). The errors needed to see this were in hand before the plan was frozen. Freezing
+a gate protects against drift, not against a gate that cannot be passed. **Before freezing a
+threshold, simulate it on the null it is meant to accept, and test the statistic the estimator
+actually uses.** The same round found that a "conservative" bias had the wrong sign (covariate
+absorption inflated C1 from 0.70 to 1.24), and that a misfit offered as the cause of a failed
+control predicted 0.003 of a 0.26 slope. Run the direct check before writing the causal
+sentence.
+
 ## The slice pattern (how every result is built)
 
 tested helper (pure NumPy/SciPy/astropy + synthetic offline fixture) → real-data run (network,

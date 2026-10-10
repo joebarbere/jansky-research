@@ -59,7 +59,7 @@ No real data had been opened.
    construction. **Change:** the C3 covariates use the noise-decorrelated geometric-mean flux
    *without* blend subtraction (`subtract_blend=False`). R_pred keeps the subtraction, which only
    sets beta's scale if blending is real. If blending is present, the covariates carry some of it
-   and the calibration absorbs a little, which biases beta toward 0 (the conservative direction).
+   and the calibration absorbs a little, which biases beta toward 0 (the conservative direction). *(Wrong sign: step 6, R3.)*
    C1 measures how much.
 
 **After all three changes** (16 synthetic realizations each, 3,000 targets):
@@ -244,7 +244,9 @@ Those residuals are a third to a half of the ≈0.045 dex equal-flux blending si
 they sit exactly where plan 97's null slope was concentrated (D1, lowest tercile).
 
 **The frozen outcome applies: the survey-to-survey flux scale cannot be calibrated, with these
-covariates and from isolated targets, to the precision this test needs.** Calibration is the
+covariates and from isolated targets, to the precision this test needs.** *(Qualified in step 6:
+judged by means rather than medians, the plan-98 calibration passes the held-out χ² test, and
+the misfit does not induce the C2 slope. The frozen stop stands, but the reading above does not.)* Calibration is the
 limiting systematic of the two-beam FASHI × ALFALFA blending test. This is the plan's
 pre-stated negative and is reported as such. It also closes plan 97's question: its C2 failure
 is at least partly a calibration failure, and a calibration good enough to separate the two
@@ -299,3 +301,64 @@ check ran. Results go to `results/hiblend_referee1.json`.
 **Withdrawn now (F7), no computation needed.** Step 5 said the misfit "transfers poorly across RA
 strips". The two directions' end-decile residuals differ by only 1.1–1.2σ, with the same signs,
 so the data do not support that sentence.
+
+### Step 6 results (run 2026-10-10; `results/hiblend_referee1.json`, seed 101)
+
+Checks committed at `9f49696` (predictions) and before the run (code). The recomputed medians
+reproduce the committed D0 and C3′ medians exactly, so the splits are the same ones.
+
+**R1. Means against medians: the median gate is what failed, not the mean calibration.** Here are
+the held-out χ² values using bin *means* (10 deciles, SE = sd/√n):
+
+| | even→odd: p (max \|mean\|) | odd→even: p (max \|mean\|) |
+|---|---|---|
+| plan-98 form | **0.36** (0.0087) | **0.043** (0.0106) |
+| plan-97 form | 0.0 (0.042) | 0.0 (0.051) |
+
+D0 (plan-97 form, random half) also fails in the mean: p ≈ 0, with max |mean| 0.027.
+- **Plan 97's calibration was inadequate in the mean as well.**
+- **Plan 98's calibration is adequate in the mean at p > 0.01 in both directions.** Its median
+  failure came mainly from skew: the faintest decile's median is −0.015 and −0.027, while its
+  means are +0.001 and −0.008.
+
+This matches the second prediction branch only for plan 97. For plan 98 it matches the first:
+skew alone made C3′ fail. In addition, from the committed bootstrap SEs, a perfect calibration
+would pass the 0.010 dex amplitude arm in both directions with probability **0.33**. That property
+of the gate was knowable before the run and was not computed. **The frozen stop stands. But
+"calibration is the limiting systematic", the reading in step 5 and in the v2 JSON's outcome
+string, is not supported, and is withdrawn.**
+
+**R2. The S/N misfit does not explain C2.** The plan-97 calibration's binned mean residual
+against S/N (20 bins, isolated targets), mapped onto the null targets, induces
+β_null = **0.003 ± 0.018** (−0.07 ± 0.02 from medians), against the measured 0.256. This is
+the referee's branch. The primary sample gives −0.001 ± 0.025. Median R is 0.0034 (null) and
+0.0021 (primary), 13–21 times below the 0.045 dex maximum. **The C2 failure is unexplained.**
+This check covers misfit along S/N only; a misfit along another covariate is not tested.
+
+**R3. Covariate absorption inflates β; it is not "conservative".** C1 used ten injections, with
+the same injections in both modes:
+
+| covariates | planted 1: mean ± sd | planted 0: mean ± sd |
+|---|---|---|
+| from injected fluxes (production) | 1.24 ± 0.13 | −0.03 ± 0.06 |
+| from pre-injection fluxes | **0.70 ± 0.13** | −0.03 ± 0.06 |
+
+Injected flux raises S_g and S/N, and the steep calibration slope then lowers the prediction,
+which **raises** β by about 0.54. The code comment and step 2 said this biases β "toward 0, the
+conservative direction"; the sign was wrong, and the comment is corrected. The prediction branch
+("β falls to about 1.0") is only half met: with frozen covariates β is 0.70, so a second,
+downward bias of about 30% remains and is undiagnosed. The planted-1 scatter here (0.13) is
+comparable to plan 97's planted-0 scatter, so the 0.038 there looks like chance.
+
+**R4. The C2 failure does not depend on the bootstrap unit.** β_null = 0.256 with SE 0.088
+(6′ clusters), 0.087 (2° strips), 0.097 (4°) and 0.088 (8°), giving 2.9, 2.9, 2.6 and 2.9σ. This
+is the "no coherent systematic" branch.
+
+**Where this leaves the slice.**
+- Plan 97 is ambiguous. Its C2 failure is robust to the resampling unit and is not produced by
+  the S/N calibration misfit; its cause is unknown.
+- Plan 98 stopped at a gate that tested medians with a tolerance tighter than the errors. Its
+  calibration is adequate in the mean, but by the frozen rule β was never computed.
+- A third attempt would need a gate whose false-failure rate is computed before freezing, and
+  which judges the statistic the estimator uses. Running β under plan 98's calibration now would
+  be a forked analysis, so it was not done.

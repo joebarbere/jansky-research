@@ -11,7 +11,7 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
-- `papers/hiblend/`: RNAAS note "Survey Flux Calibration Limits a Two-Beam FASHI--ALFALFA Test for H I Beam Blending" (plans 97-98), every number a `\hbReal*` macro built by `hiblend.write_paper` from the three committed results files; one figure (held-out calibration residual by S/N). Not yet refereed.
+- `papers/hiblend/`: RNAAS note "An Inconclusive Two-Beam FASHI--ALFALFA Test for H I Beam Blending" (plans 97-98), every number a `\hbReal*` macro built by `hiblend.write_paper` from the four committed results files. Referee round 1 (minor) and its post-hoc checks R1-R4 (`scripts/hiblend_referee1.py`, `results/hiblend_referee1.json`; predictions committed first) **withdrew the draft's headline**: in bin means plan 98's calibration passes its held-out test (p = 0.36, 0.043); the median gate that stopped it would fail a perfect calibration 2/3 of the time; the plan-97 S/N misfit predicts beta_null = 0.003 +/- 0.018, not the measured 0.26, so C2's cause is unknown; C2 survives 2-8 degree strip bootstraps.
 - `hiblend` v2 (plan 98, frozen before the run): a decile-spline + density calibration gated by a held-out RA-strip test (C3'), then C0/C1/C4 and a per-S/N-tercile C2. **C3' failed in both directions** (held-out decile residuals up to 0.027 dex at the S/N extremes, p = 0.001-0.006, vs 0.054 for plan 97's form), so the run stopped with no beta quoted: survey-to-survey calibration is the limiting systematic of the two-beam test (`results/hiblend_v2_metrics.json`, `scripts/hiblend_real.py --v2`).
 - `hiblend` post-hoc diagnostics D0-D3 of the C2 failure (`scripts/hiblend_diagnostics.py`, `results/hiblend_diagnostics.json`): the C3 calibration misfits held-out isolated targets by up to 0.039 dex in S/N, the null slope vanishes when S/N-matched to the primary sample (0.12 +/- 0.08), and local density is rejected as its carrier; predictions committed before the run, and the frozen outcome stays ambiguous.
 - **`hiblend` (plan 97): a two-beam FASHI x ALFALFA test of HI beam blending -- outcome AMBIGUOUS.**
@@ -143,6 +143,7 @@ recommend the next version number.
   the $170 AWS estimate is superseded.
 
 ### Fixed
+- `hiblend`: the comment (and findings step 2) saying covariate absorption biases beta "toward 0, the conservative direction" had the sign wrong -- it inflates beta (C1 1.24 vs 0.70 with pre-injection covariates).
 - **AASTeX keywords now name real UAT concepts.** Checked against the Unified Astronomy
   Thesaurus, 34 keywords in 27 papers carried a number for a different concept -- "Solar radio
   bursts (1998)" is the Solar convective zone (seven solar papers), "Fast radio bursts (1313)"

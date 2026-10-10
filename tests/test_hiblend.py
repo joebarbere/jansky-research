@@ -300,10 +300,49 @@ def test_write_paper_fills_every_macro_from_the_committed_results(tmp_path):
 
     root = Path(__file__).resolve().parents[1] / "results"
     (tmp_path / "results").mkdir()
-    for name in ("hiblend_metrics.json", "hiblend_diagnostics.json", "hiblend_v2_metrics.json"):
+    for name in (
+        "hiblend_metrics.json",
+        "hiblend_diagnostics.json",
+        "hiblend_v2_metrics.json",
+        "hiblend_referee1.json",
+    ):
         shutil.copy(root / name, tmp_path / "results" / name)
     macros, fig = h.write_paper(tmp_path)
     text = macros.read_text()
     assert fig.stat().st_size > 0 and r"\hbRealVtwoMaxB" in text
     assert "{--}" not in text  # every quoted number has a committed value
     assert abs(h.equal_flux_signal_dex() - 0.0445) < 0.001  # plan 97: "at most ~0.045 dex"
+    # a perfect calibration with these bin errors passes the 0.010 dex rule about 1/3 of the time
+    one = [{"bins": [{"se": 0.005}] * 10}]
+    assert 0.6 < h.amplitude_pass_probability(one) ** (1 / 10) < 0.97
+
+
+def test_injection_can_freeze_the_calibration_covariates():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    sub = h.injection_field(f, np.random.default_rng(3), strength=1.0, freeze_covariates=True)
+    assert np.all(sub["cov_flux_f"] <= sub["flux_f"]) and np.any(sub["cov_flux_f"] < sub["flux_f"])
+    assert "cov_flux_a" not in h.injection_field(f, np.random.default_rng(3), strength=1.0)
+
+
+def test_referee1_checks_reproduce_their_splits_and_report_every_block():
+    fashi, alfalfa = _two_survey_sky(3000, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    out = h.referee1_checks(f, n_inj=2, n_boot=50)
+    assert len(out["R1_D0_plan97"]["bins"]) == 5 and len(out["R1_C3prime_v2"]) == 2
+    b = out["R1_C3prime_v2"][0]["bins"][0]
+    assert b["lo"] <= b["x_median"] <= b["hi"] and "mean" in b and "se_mean" in b
+    assert set(out["R3_c1_covariates"]) == {
+        "production_strength_1", "frozen_strength_1", "production_strength_0", "frozen_strength_0",
+    }  # fmt: skip
+    assert set(out["R4_strip_bootstrap"]) == {
+        "cluster_6arcmin",
+        "strip_2deg",
+        "strip_4deg",
+        "strip_8deg",
+    }
+    # the C3' medians R1 recomputes are the ones heldout_calibration_check reports
+    c3 = h.heldout_calibration_check({**f, "calib": "v2"}, np.random.default_rng(0), n_boot=20)
+    assert [x["median"] for x in out["R1_C3prime_v2"][0]["bins"]] == [
+        x["median"] for x in c3["directions"][0]["bins"]
+    ]
