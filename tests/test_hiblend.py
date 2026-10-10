@@ -346,3 +346,17 @@ def test_referee1_checks_reproduce_their_splits_and_report_every_block():
     assert [x["median"] for x in out["R1_C3prime_v2"][0]["bins"]] == [
         x["median"] for x in c3["directions"][0]["bins"]
     ]
+
+
+def test_injection_alfa_scale_multiplies_only_the_alfalfa_addition():
+    fashi, alfalfa = _two_survey_sky(1500, strength=0.0)
+    f = h.build_field(fashi, alfalfa)
+    n = len(f["flux_f"])
+    zero = h.injection_field(f, np.random.default_rng(3), strength=0.0)  # same draws, no flux
+    base = h.injection_field(f, np.random.default_rng(3), strength=1.0)
+    two = h.injection_field(f, np.random.default_rng(3), strength=1.0, alfa_scale=np.full(n, 2.0))
+    assert np.allclose(two["flux_f"], base["flux_f"])
+    assert np.allclose(two["flux_a"] - zero["flux_a"], 2 * (base["flux_a"] - zero["flux_a"]))
+    assert np.any(base["flux_a"] > zero["flux_a"])
+    out = h.referee2_checks(f, n_inj=2)["R5_injection_on_survey_scale"]
+    assert {"frozen_strength_1", "production_strength_0", "alfa_scale_isolated"} <= set(out)

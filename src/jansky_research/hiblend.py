@@ -685,7 +685,12 @@ def _subset(field: dict, keep: np.ndarray, nb: Neighbours) -> dict:
 
 
 def injection_field(
-    field: dict, rng: np.random.Generator, *, strength: float, freeze_covariates: bool = False
+    field: dict,
+    rng: np.random.Generator,
+    *,
+    strength: float,
+    freeze_covariates: bool = False,
+    alfa_scale: np.ndarray | None = None,
 ) -> dict:
     """C1 on real data: split the real ISOLATED targets in half. One half stays as the
     calibration sample; the other gets one synthetic neighbour each, drawn from the real primary
@@ -714,6 +719,8 @@ def injection_field(
     )  # fmt: skip
     add_a = syn.flux * beam_response(syn.sep_arcmin, ALFA_FWHM_ARCMIN)
     add_f = syn.flux * beam_response(syn.sep_arcmin, FAST_FWHM_ARCMIN)
+    if alfa_scale is not None:  # referee check R5: the neighbour on ALFALFA's own flux scale
+        add_a = add_a * np.asarray(alfa_scale, float)[inj]
     if freeze_covariates:  # referee check R3: calibration covariates from pre-injection fluxes
         sub["cov_flux_a"], sub["cov_flux_f"] = sub["flux_a"].copy(), sub["flux_f"].copy()
     sub["flux_a"] = sub["flux_a"].copy()
@@ -1028,6 +1035,30 @@ def referee1_checks(
             "primary": fit_beta(d1["resid"][pm], d1["r_pred"][pm], blk[pm], rng, n_boot=n_boot),
         }
     return out
+
+
+def referee2_checks(field: dict, *, seed: int = 101, n_inj: int = 10) -> dict:
+    """Post-hoc check R5 (survey/hiblend-findings.md step 8): C1 as in R3, with each injected
+    ALFALFA flux multiplied by the survey ratio the plan-97 calibration predicts for the target."""
+    f = {**field, "calib": "v1"}
+    d = _prepare(f)
+    scale = 10 ** (d["design"] @ d["coef"])
+    iso = d["masks"]["isolated"]
+    out: dict = {"alfa_scale_isolated": {
+        "median": round(float(np.median(scale[iso])), 4),
+        "p05": round(float(np.quantile(scale[iso], 0.05)), 4),
+        "p95": round(float(np.quantile(scale[iso], 0.95)), 4)}}  # fmt: skip
+    for frozen in (False, True):
+        for st in (1.0, 0.0):
+            sub_rng = np.random.default_rng(seed + int(st))  # the same draws as R3
+            bs = [analyse(injection_field(f, sub_rng, strength=st, freeze_covariates=frozen,
+                                          alfa_scale=scale), sub_rng, n_boot=200)["primary"]["beta"]
+                  for _ in range(n_inj)]  # fmt: skip
+            out[f"{'frozen' if frozen else 'production'}_strength_{st:g}"] = {
+                "mean": round(float(np.mean(bs)), 4), "sd": round(float(np.std(bs, ddof=1)), 4),
+                "betas": [round(float(x), 4) for x in bs],
+            }  # fmt: skip
+    return {"R5_injection_on_survey_scale": out}
 
 
 # ---------------------------------------------------------------------------------------------
