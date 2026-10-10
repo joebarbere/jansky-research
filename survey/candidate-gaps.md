@@ -38,7 +38,9 @@ The remaining gaps below are unbuilt.
 - **DM → z pipeline with Macquart scatter** — offline `(DM, l, b) → DM_MW (pygedm) → DM_excess →
   z ± σ` from the DM_host log-normal prior. Fills the stale `fruitbat`. Reuse:
   `jansky.transients.macquart_redshift`, `jansky.constants.MACQUART_SLOPE`. Data: TNS / FRBSTATS
-  CSV (tens of KB). Refs: Macquart 2020 (Nature 581, 391); arXiv:2511.01195 (F≈0.32).
+  CSV (tens of KB). Refs: Macquart 2020 (Nature 581, 391); F≈0.32 is `zdm`'s default (`IGMParams.logF`),
+  source paper not yet located; arXiv:2511.01195 is the DM_host distribution, not F (corrected
+  2026-10-10). → reshaped into plan 99 (`dmzcal`, coverage audit — `zdm` already gives p(z|DM)).
 - **Burst morphology from filterbank** — batch drift-rate ("sad trombone"), component count,
   temporal/spectral width from a `.fil` + DM. Fills stale `burstfit`/`dfdt`. Reuse:
   `jansky.transients.dedisperse/boxcar_snr`, `jansky.formats.read_filterbank`. Data: FRB 140514
