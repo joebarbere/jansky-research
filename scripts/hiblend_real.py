@@ -1,6 +1,7 @@
 """hiblend real leg (plan 97): FASHI DR2 x ALFALFA alpha.100, gated controls, then beta.
 
     uv run python scripts/hiblend_real.py --out <dir>      # writes <dir>/results/hiblend_metrics.json
+    uv run python scripts/hiblend_real.py --v2 --out <dir> # plan 98: results/hiblend_v2_metrics.json
 
 The controls run in the order frozen in plans/97-hiblend-fashi-alfalfa.md and a failed gate
 stops the run before beta is computed (see hiblend.run_gated). Network: the FASHI DR2 CSTCloud
@@ -26,8 +27,11 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - network
     ap.add_argument("--out", default=".")
     ap.add_argument("--n-power", type=int, default=20)
     ap.add_argument("--n-inj", type=int, default=10)
-    ap.add_argument("--seed", type=int, default=97)
+    ap.add_argument("--seed", type=int, default=None, help="default 97, or 98 with --v2")
+    ap.add_argument("--v2", action="store_true", help="plan 98: C3' + recalibrated, per-tercile C2")
     args = ap.parse_args(argv)
+    if args.seed is None:
+        args.seed = 98 if args.v2 else 97
     t0 = time.time()
     raw = fe.fetch_fashi_dr2()
     ok = (
@@ -40,13 +44,18 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - network
     shifted = h.build_field(fashi, alf, shift_dec_arcmin=h.SHIFT_ARCMIN)
     print(f"[hiblend] {len(fashi['ra'])} FASHI, {len(alf['ra'])} ALFALFA, {len(field['flux_f'])} matched "
           f"({time.time() - t0:.0f}s)", flush=True)  # fmt: skip
-    res = h.run_gated(
+    gate = h.run_gated_v2 if args.v2 else h.run_gated
+    res = gate(
         field, shifted, np.random.default_rng(args.seed), n_power=args.n_power, n_inj=args.n_inj
     )
     metrics = {
         "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
         "is_real": True,
-        "plan": "plans/97-hiblend-fashi-alfalfa.md (controls frozen 2026-10-05)",
+        "plan": (
+            "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, c8735cc)"
+            if args.v2
+            else "plans/97-hiblend-fashi-alfalfa.md (controls frozen 2026-10-05)"
+        ),
         "beams_arcmin": {"fast": h.FAST_FWHM_ARCMIN, "alfa": h.ALFA_FWHM_ARCMIN},
         "match": {"radius_arcmin": h.MATCH_RADIUS_ARCMIN, "dv_kms": h.MATCH_DV_KMS},
         "n_fashi": int(len(fashi["ra"])), "n_alfalfa": int(len(alf["ra"])),
@@ -55,10 +64,11 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - network
         "seed": args.seed, "runtime_s": round(time.time() - t0, 1),
         **res,
     }  # fmt: skip
-    path = Path(args.out) / "results" / "hiblend_metrics.json"
+    name = "hiblend_v2_metrics.json" if args.v2 else "hiblend_metrics.json"
+    path = Path(args.out) / "results" / name
     write_results(metrics, path)
     print(json.dumps({k: v for k, v in metrics.items() if k != "gates"}, indent=1, default=str))
-    print(json.dumps(metrics["gates"], indent=1, default=str))
+    print(json.dumps(metrics["gates"], indent=1, default=str)[:20000])
 
 
 if __name__ == "__main__":

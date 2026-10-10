@@ -220,3 +220,75 @@ def test_diagnostics_run_and_report_every_block():
     assert all(
         abs(b["sigma"]) < 3 for b in out["D0_heldout_isolated_by_snr"] if b["sigma"] is not None
     )
+
+
+def test_heldout_check_fails_plan97_form_and_passes_v2_on_a_d0_shaped_hinge():
+    """Plan 98's required test: a top-quintile S/N hinge (the shape D0 found) defeats the
+    quadratic calibration out of sample; the decile linear spline absorbs it. With no hinge,
+    both forms pass, so C3' is not failing everything."""
+    rng = np.random.default_rng(1)
+    hinge = h.synthetic_field(30000, pair_frac=0.1, scatter_dex=0.04, seed=3, snr_hinge_dex=0.6)
+    v1 = h.heldout_calibration_check({**hinge, "calib": "v1"}, rng, n_boot=100)
+    v2 = h.heldout_calibration_check({**hinge, "calib": "v2"}, rng, n_boot=100)
+    assert not v1["pass"] and v2["pass"]
+    assert [d["train_parity"] for d in v2["directions"]] == [0, 1]
+    assert all(len(d["bins"]) == 10 for d in v2["directions"])
+    flat = h.synthetic_field(30000, pair_frac=0.1, scatter_dex=0.04, seed=3)
+    assert h.heldout_calibration_check({**flat, "calib": "v1"}, rng, n_boot=100)["pass"]
+
+
+def test_calibration_design_v2_has_one_hinge_per_knot():
+    x = np.linspace(1, 3, 50)
+    d = h.calibration_design_v2(x, x, x, x, x, h.snr_knots(x))
+    assert d.shape == (50, 2 + 9 + 4)
+    assert np.all(d[:, 2] >= 0) and d[0, 2] == 0 and d[-1, 2] > 0
+
+
+def test_run_gated_v2_runs_c3prime_first_and_checks_c2_per_tercile(monkeypatch):
+    """The v2 wrapper's own logic: C3' gates everything, then run_gated (tested above) runs on
+    the v2 calibration, then C2 must also pass in every null S/N tercile. run_gated is stubbed
+    because C1 is not stable on a sky this small (injected blends push 16-24% of targets past
+    the calibration's S/N range; survey/hiblend-findings.md step 5)."""
+    fashi, alfalfa = _two_survey_sky(3000, strength=1.0)
+    f = h.build_field(fashi, alfalfa)
+    s = h.build_field(fashi, alfalfa, shift_dec_arcmin=h.SHIFT_ARCMIN)
+    assert f["log_n15"].shape == f["flux_f"].shape
+    seen: list = []
+
+    def stub_gated(field, shifted, rng, **kw):
+        seen.append((field["calib"], shifted["calib"]))
+        res = h.analyse(field, rng, n_boot=50)
+        null = {**res["null"], "pass": True}
+        return {"gates": {"C0_power": {"pass": True}, "C1_planted": {"pass": True},
+                          "C4_match": {"pass": True}, "C2_spectral_null": null},
+                "C3_calibration_coef": res["calibration_coef"],
+                "samples": {"n_null": res["n_null"]}, "primary": res["primary"]}  # fmt: skip
+
+    passing = {"pass": True, "directions": [{"max_abs_median": 0.0, "p": 1.0}]}
+    monkeypatch.setattr(h, "heldout_calibration_check", lambda field, rng: passing)
+    monkeypatch.setattr(h, "run_gated", stub_gated)
+    out = h.run_gated_v2(f, s, np.random.default_rng(5), n_boot=100)
+    assert seen == [("v2", "v2")]
+    assert list(out["gates"]) == [
+        "C3prime_heldout", "C0_power", "C1_planted", "C4_match", "C2_spectral_null",
+    ]  # fmt: skip
+    c2 = out["gates"]["C2_spectral_null"]
+    assert len(c2["by_snr_tercile"]) == 3 and c2["pass_overall"] is True
+    assert c2["pass"] == all(h._within_2sigma(t) for t in c2["by_snr_tercile"])
+    assert len(out["secondary_primary_by_snr_tercile"]) == 3 and "outcome" in out
+    # a tercile that fails turns an overall C2 pass into a fail
+    monkeypatch.setattr(h, "_within_2sigma", lambda b: False)
+    bad = h.run_gated_v2(f, s, np.random.default_rng(5), n_boot=50)
+    assert not bad["gates"]["C2_spectral_null"]["pass"] and bad["outcome"].startswith("ambiguous")
+    # a control failing inside run_gated stops the run as ambiguous
+    monkeypatch.setattr(h, "run_gated", lambda *a, **k: {"gates": {"C0_power": {"pass": False}},
+                                                         "stopped_at": "C0: underpowered"})  # fmt: skip
+    c0 = h.run_gated_v2(f, s, np.random.default_rng(5))
+    assert c0["outcome"] == "ambiguous: C0: underpowered" and "primary" not in c0
+    # a failed C3' stops the run before any control or beta
+    monkeypatch.setattr(
+        h, "heldout_calibration_check", lambda field, rng: {**passing, "pass": False}
+    )
+    stop = h.run_gated_v2(f, s, np.random.default_rng(5))
+    assert stop["stopped_at"].startswith("C3'") and list(stop["gates"]) == ["C3prime_heldout"]
+    assert "primary" not in stop

@@ -1,0 +1,204 @@
+{
+  "source": "FASHI DR2 (arXiv:2606.31539) x ALFALFA alpha.100 (Haynes+2018, J/ApJ/861/49)",
+  "is_real": true,
+  "plan": "plans/98-hiblend-recalibrated.md (controls frozen 2026-10-06, c8735cc)",
+  "beams_arcmin": {
+    "fast": 2.9,
+    "alfa": 3.5
+  },
+  "match": {
+    "radius_arcmin": 1.5,
+    "dv_kms": 100.0
+  },
+  "n_fashi": 156269,
+  "n_alfalfa": 31500,
+  "n_alfalfa_code1": 25432,
+  "n_alfalfa_only_neighbours": 3801,
+  "seed": 98,
+  "runtime_s": 7.2,
+  "n_targets": 22889,
+  "calibration": "v2",
+  "gates": {
+    "C3prime_heldout": {
+      "form": "v2",
+      "directions": [
+        {
+          "train_parity": 0,
+          "n_train": 7243,
+          "n_test": 7132,
+          "bins": [
+            {
+              "lo": 1.484,
+              "hi": 1.954,
+              "n": 714,
+              "median": -0.01524,
+              "se": 0.00555
+            },
+            {
+              "lo": 1.954,
+              "hi": 2.053,
+              "n": 713,
+              "median": -0.00789,
+              "se": 0.0062
+            },
+            {
+              "lo": 2.053,
+              "hi": 2.118,
+              "n": 713,
+              "median": -0.00487,
+              "se": 0.00455
+            },
+            {
+              "lo": 2.118,
+              "hi": 2.181,
+              "n": 713,
+              "median": -0.00896,
+              "se": 0.006
+            },
+            {
+              "lo": 2.181,
+              "hi": 2.241,
+              "n": 713,
+              "median": -0.0009,
+              "se": 0.00395
+            },
+            {
+              "lo": 2.241,
+              "hi": 2.305,
+              "n": 713,
+              "median": -0.0012,
+              "se": 0.00551
+            },
+            {
+              "lo": 2.305,
+              "hi": 2.381,
+              "n": 713,
+              "median": 0.00369,
+              "se": 0.00391
+            },
+            {
+              "lo": 2.381,
+              "hi": 2.476,
+              "n": 713,
+              "median": 0.01132,
+              "se": 0.00512
+            },
+            {
+              "lo": 2.476,
+              "hi": 2.636,
+              "n": 713,
+              "median": -0.00119,
+              "se": 0.00402
+            },
+            {
+              "lo": 2.636,
+              "hi": 4.126,
+              "n": 714,
+              "median": 0.00851,
+              "se": 0.00336
+            }
+          ],
+          "max_abs_median": 0.01524,
+          "chi2": 24.92,
+          "p": 0.00551,
+          "pass": false
+        },
+        {
+          "train_parity": 1,
+          "n_train": 7132,
+          "n_test": 7243,
+          "bins": [
+            {
+              "lo": 1.456,
+              "hi": 1.937,
+              "n": 725,
+              "median": -0.02675,
+              "se": 0.00771
+            },
+            {
+              "lo": 1.937,
+              "hi": 2.04,
+              "n": 724,
+              "median": -0.0007,
+              "se": 0.00529
+            },
+            {
+              "lo": 2.04,
+              "hi": 2.111,
+              "n": 724,
+              "median": 0.00391,
+              "se": 0.00569
+            },
+            {
+              "lo": 2.111,
+              "hi": 2.169,
+              "n": 724,
+              "median": -0.00291,
+              "se": 0.00428
+            },
+            {
+              "lo": 2.169,
+              "hi": 2.23,
+              "n": 724,
+              "median": 0.0075,
+              "se": 0.00505
+            },
+            {
+              "lo": 2.23,
+              "hi": 2.294,
+              "n": 725,
+              "median": 0.00129,
+              "se": 0.00452
+            },
+            {
+              "lo": 2.294,
+              "hi": 2.368,
+              "n": 724,
+              "median": -0.0019,
+              "se": 0.00536
+            },
+            {
+              "lo": 2.368,
+              "hi": 2.466,
+              "n": 724,
+              "median": -0.00616,
+              "se": 0.00534
+            },
+            {
+              "lo": 2.466,
+              "hi": 2.624,
+              "n": 724,
+              "median": 0.00112,
+              "se": 0.0044
+            },
+            {
+              "lo": 2.624,
+              "hi": 4.412,
+              "n": 725,
+              "median": 0.01457,
+              "se": 0.00417
+            }
+          ],
+          "max_abs_median": 0.02675,
+          "chi2": 29.01,
+          "p": 0.00124,
+          "pass": false
+        }
+      ],
+      "pass": false
+    }
+  },
+  "C3prime_plan97_form_for_comparison": {
+    "pass": false,
+    "max_abs_median": [
+      0.05379,
+      0.05198
+    ],
+    "p": [
+      0.0,
+      0.0
+    ]
+  },
+  "stopped_at": "C3': flux scale cannot be calibrated to the precision the test needs",
+  "outcome": "stopped: calibration is the limiting systematic; no beta is quoted"
+}
