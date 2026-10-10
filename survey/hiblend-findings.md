@@ -267,3 +267,35 @@ another fork chosen with C3′'s answer in hand. Two candidates are left as idea
 
 Either would need its own frozen plan, written knowing that two calibration attempts have
 already failed on these targets.
+
+## Step 6: referee round 1 on the note, and four post-hoc checks: predictions stated before running (2026-10-10)
+
+Referee verdict on `papers/hiblend/`: **minor revision** (15 findings). The outcome stands; what the
+referee disputes is how strongly the abstract, figure and conclusion state it. Four findings call
+for a computation. All four are **post hoc**, and each prediction below was committed before the
+check ran. Results go to `results/hiblend_referee1.json`.
+
+- **R1. Means against medians (referee F3).** C3′ and D0 judge the calibration by binned
+  *medians*, while the calibration and β are least-squares *means*. Recompute the held-out bins
+  with means and their χ².
+  - *If skew alone made C3′ fail:* the χ² on means has p > 0.01.
+  - *If the misfit is real in the mean:* it fails about as the medians do.
+- **R2. The β_null the misfit alone predicts (F4).** Take the plan-97 calibration's binned mean
+  residual against S/N on isolated targets (20 bins), map it onto each null target by its S/N,
+  and regress that on R_null.
+  - *If the calibration misfit explains C2:* β_misfit is about +0.26.
+  - *Per the referee's sign argument* (R_null runs opposite to S/N, and the faint-end residual is
+    negative): β_misfit ≤ 0 or small.
+- **R3. C1 with pre-injection covariates (F5).** Repeat C1, ten injections at strength 1 and 0,
+  with the calibration covariates (S_g, S/N) computed from the fluxes *before* injection.
+  - *If covariate absorption causes the 1.25:* β falls to about 1.0, and the code comment calling
+    the absorption "conservative" has the sign wrong.
+  - *If not:* β stays about 1.25.
+- **R4. Bootstrap over RA strips (F7).** Refit β_null and β with 2°, 4° and 8° RA strips as the
+  resampling unit, in place of 6′ clusters.
+  - *If a spatially coherent systematic is present:* the SE grows and β_null falls below 2σ.
+  - *If not:* the SE stays near 0.087.
+
+**Withdrawn now (F7), no computation needed.** Step 5 said the misfit "transfers poorly across RA
+strips". The two directions' end-decile residuals differ by only 1.1–1.2σ, with the same signs,
+so the data do not support that sentence.
