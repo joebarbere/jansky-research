@@ -1,0 +1,10 @@
+# Hand-authored arXiv metadata for papers/dmzcal -- TRACKED IN GIT.
+#
+# `make arxiv` regenerates arxiv-submission/metadata.yaml from keywords, so curated values
+# belong here (see papers/atlas3i/arxiv.yaml for why). The result is about FRB redshift
+# inference (high-energy/transient astrophysics); the method (coverage testing) cross-lists to IM
+# and the IGM/Macquart relation to CO.
+primary_category: astro-ph.HE
+cross_lists: [astro-ph.CO, astro-ph.IM]
+
+comments: '3 pages, 1 figure. Research Note of the AAS. Code and data: doi:10.5281/zenodo.21482378; github.com/joebarbere/jansky-research'

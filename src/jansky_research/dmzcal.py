@@ -30,6 +30,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -59,6 +60,8 @@ __all__ = [
     "simulate_sample",
     "run_controls",
     "dedupe",
+    "paper_values",
+    "write_paper",
     "provenance_side",
 ]
 
@@ -564,3 +567,186 @@ def provenance_side(
     if telescope in ("CHIME", "MeerKAT"):
         return "certification", f"{telescope} excluded from fit (HoffmannEmin25 Sec. 2.1)"
     return "no_model", f"{telescope or 'unknown'}: no zdm survey model"
+
+
+# --- paper (RNAAS note) ---------------------------------------------------------------
+
+
+def _fp(p: float) -> str:
+    """A p-value for math mode: 0.78, 0.002, 2\\times10^{-5}."""
+    if p >= 0.01:
+        return f"{p:.2f}"
+    if p >= 0.001:
+        return f"{p:.3f}"
+    m, e = f"{p:.0e}".split("e")
+    return rf"{m}\times10^{{{int(e)}}}"
+
+
+def paper_values(
+    prov: dict, ctrl: dict, metrics: dict, power: dict
+) -> tuple[dict[str, str], dict[str, str]]:
+    """(real, synthetic) macro values for papers/dmzcal, from the committed results."""
+    a = metrics["audit"]
+    ph = metrics["post_hoc"]
+    rak = metrics["recover_a_known_FRB20240304B"]
+    cnt = prov["counts"]
+    tel = cnt["certification_spec_z_by_telescope"]
+    names = {"One": "E1_zdm_HoffmannEmin25", "Two": "E2_minimal", "Three": "E3_fruitbat_Batten2021"}
+    real: dict[str, str] = {
+        "NLocal": str(cnt["after_dedupe"]),
+        "NProd": str(cnt["by_side"]["production"]),
+        "NCert": str(cnt["certification_spec_z"]),
+        "NChime": str(tel["CHIME"]),
+        "NDsa": str(tel["DSA"]),
+        "NAskap": str(tel["ASKAP"]),
+        "NMeer": str(tel["MeerKAT"]),
+    }
+    for w, key in names.items():
+        c = a[key]["certification"]
+        real[f"E{w}CovSixtyEight"] = f"{c['coverage']['0.68']:.2f}"
+        real[f"E{w}CovNinetyFive"] = f"{c['coverage']['0.95']:.2f}"
+        real[f"E{w}MedPit"] = f"{c['median_pit']:.3f}"
+        real[f"E{w}KsP"] = _fp(c["rule"]["ks_p"])
+        t = ph[key]["tails68_z"]
+        real[f"E{w}TailLo"] = f"{t['below']:.2f}"
+        real[f"E{w}TailHi"] = f"{t['above']:.2f}"
+        r = rak[key]
+        real[f"Frb{w}Med"] = f"{r['z_median']:.2f}"
+        real[f"Frb{w}LoSixtyEight"] = f"{r['ci68'][0]:.2f}"
+        real[f"Frb{w}HiSixtyEight"] = f"{r['ci68'][1]:.2f}"
+    e1 = ph[names["One"]]
+    real["EOneNBelowHalf"] = str(e1["sign_below_half"])
+    pt = metrics["point_accuracy_certification"]
+    for w, k in (("One", "E1"), ("Two", "E2"), ("Three", "E3"), ("Four", "E4")):
+        real[f"Dz{w}"] = f"{pt[k]['median_dz1z']:+.2f}"
+    real["DzFourN"] = str(pt["E4"]["n"])
+    for w in ("One", "Two"):
+        dmz = ph[names[w]]["dm_given_z"]
+        real[f"Dmz{w}KsP"] = _fp(dmz["ks_p"])
+        real[f"Dmz{w}CovSixtyEight"] = f"{dmz['coverage']['0.68']:.2f}"
+        real[f"Dmz{w}CovNinetyFive"] = f"{dmz['coverage']['0.95']:.2f}"
+    lo = e1["by_dm_obs_minus_ism_bin"]["0-183"]
+    real["BinLowN"] = str(lo["n"])
+    real["BinLowMed"] = f"{lo['median']:.2f}"
+    real["BinLowKsP"] = _fp(lo["ks_p"])
+    hi_bins = [v for k, v in e1["by_dm_obs_minus_ism_bin"].items() if k != "0-183"]
+    real["BinHighN"] = str(sum(v["n"] for v in hi_bins))
+    real["BinHighMedRange"] = (
+        f"{min(v['median'] for v in hi_bins):.2f}--{max(v['median'] for v in hi_bins):.2f}"
+    )
+    tr = e1["trend_spearman_pit_vs_dm"]
+    real["TrendRho"] = f"{tr['rho']:.2f}"
+    real["TrendP"] = _fp(tr["p"])
+    sub = e1["subsets"]
+    real["NoChimeN"] = str(sub["DSA+ASKAP"]["n"])
+    real["NoChimeKsP"] = _fp(sub["DSA+ASKAP"]["ks_p"])
+    real["ChimeDsaN"] = str(sub["CHIME+DSA"]["n"])
+    real["ChimeDsaKsP"] = _fp(sub["CHIME+DSA"]["ks_p"])
+    real["ChimeDsaCovNinetyFive"] = f"{sub['CHIME+DSA']['coverage']['0.95']:.2f}"
+    hs = e1["halo_sensitivity"]
+    real["HaloLowKsP"] = _fp(hs["25"]["ks_p"])
+    real["HaloHighKsP"] = _fp(hs["75"]["ks_p"])
+    m, ex = f"{ph['E1_survey_files_pruned']['max_abs_pit_shift']:.0e}".split("e")
+    real["PruneShift"] = rf"{m}\times10^{{{int(ex)}}}"
+    real["PlantOne"] = f"{e1['planted_truth']['pass_rate']:.3f}"
+    real["PlantThree"] = f"{ph[names['Three']]['planted_truth']['pass_rate']:.3f}"
+    real["PlantTwo"] = f"{metrics['C2_planted_truth_E2']['pass_rate_over_reps']:.3f}"
+    real["FrbZ"] = f"{rak['z_true']:.3f}"
+    real["FrbCalebLo"] = f"{rak['caleb_dm_range_95'][0]:.2f}"
+    real["FrbCalebHi"] = f"{rak['caleb_dm_range_95'][1]:.2f}"
+    fr = ctrl["frozen"]
+    b = fr["rule"]["bands"]
+    rr = power["rejection_rate"]
+    syn = {
+        "N": str(fr["n"]),
+        "M": str(fr["m"]),
+        "BandLoSixtyEight": f"{b['0.68'][0]:.2f}",
+        "BandHiSixtyEight": f"{b['0.68'][1]:.2f}",
+        "BandLoNinetyFive": f"{b['0.95'][0]:.2f}",
+        "FalseFail": f"{fr['C0']['false_fail_rate']:.4f}",
+        "PowerHost": f"{fr['C1']['host_mean_x2']['power']:.2f}",
+        "PowerF": f"{fr['C1']['F_x2']['power']:.2f}",
+        "PlantExpected": f"{1 - fr['C0']['false_fail_rate']:.4f}",
+        "DmzPowHost": f"{rr['host_mean_x2']:.2f}",
+        "DmzPowF": f"{rr['F_x2']:.3f}",
+        "DmzPowMw": f"{rr['MW_DM_plus30']:.2f}",
+    }
+    return real, syn
+
+
+def write_paper(out: str | Path = ".") -> list[Path]:
+    """``papers/dmzcal/generated/macros.tex`` and the PIT figure, from committed results."""
+    import json
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from .report import preserve_live_macros
+
+    op = Path(out)
+    res = op / "results"
+
+    def load(n: str) -> dict:
+        return json.loads((res / f"dmzcal_{n}.json").read_text())
+
+    prov, ctrl, metrics, power = (
+        load(n) for n in ("provenance", "controls", "metrics", "dmz_power")
+    )
+    real, syn = paper_values(prov, ctrl, metrics, power)
+    paper = op / "papers" / "dmzcal"
+    (paper / "generated").mkdir(parents=True, exist_ok=True)
+    (paper / "figures").mkdir(parents=True, exist_ok=True)
+    lines = [
+        "% Auto-generated by jansky_research.dmzcal.write_paper -- do not edit.",
+        "% dmzReal* from results/dmzcal_{provenance,metrics}.json (real data);",
+        "% dmzSyn* from results/dmzcal_{controls,dmz_power}.json (synthetic controls).",
+        rf"\newcommand{{\dmzRealSource}}{{{metrics['source']}}}",
+        rf"\newcommand{{\dmzSynSource}}{{{ctrl['source']}}}",
+        *(rf"\newcommand{{\dmzReal{k}}}{{{v}}}" for k, v in real.items()),
+        *(rf"\newcommand{{\dmzSyn{k}}}{{{v}}}" for k, v in syn.items()),
+    ]
+    mpath = paper / "generated" / "macros.tex"
+    mpath.write_text(preserve_live_macros("\n".join(lines) + "\n", mpath))
+
+    cert = {
+        r["name"]
+        for r in metrics["e2_bursts"]
+        if r["side"] == "certification" and r["spec_z"] and r["secure_host"]
+    }
+    e1 = [r for r in load("e1_zdm")["bursts"] if r["name"] in cert and "pit" in r]
+    e3 = [r for r in load("e3")["bursts"] if r["name"] in cert and "pit" in r]
+    e2 = [r for r in metrics["e2_bursts"] if r["name"] in cert and "pit" in r]
+    series = [  # validated palette (dataviz validator: PASS; aqua < 3:1 -> line styles)
+        ("zdm (E1)", [r["pit"] for r in e1], "#2a78d6", "-"),
+        ("Macquart, no selection (E2)", [r["pit"] for r in e2], "#eb6834", "--"),
+        ("fruitbat (E3)", [r["pit"] for r in e3], "#1baf7a", "-."),
+        ("zdm, DM given true $z$", [r["dm_pit"] for r in e1], "0.35", ":"),
+    ]
+    fig, ax = plt.subplots(figsize=(3.4, 2.9))
+    ax.plot([0, 1], [0, 1], color="0.75", lw=0.8, zorder=0)
+    for lab, v, col, ls in series:
+        x = np.sort(np.asarray(v))
+        y = np.arange(1, x.size + 1) / x.size
+        ax.step(
+            np.concatenate([[0], x, [1]]),
+            np.concatenate([[0], y, [1]]),
+            where="post",
+            color=col,
+            ls=ls,
+            lw=1.4,
+            label=lab,
+        )
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("PIT")
+    ax.set_ylabel("cumulative fraction of bursts")
+    ax.legend(fontsize=6.5, frameon=False, loc="lower right")
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    fig.tight_layout()
+    fpath = paper / "figures" / "dmzcal_pit.pdf"
+    fig.savefig(fpath)
+    plt.close(fig)
+    return [mpath, fpath]

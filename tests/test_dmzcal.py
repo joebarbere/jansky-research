@@ -233,3 +233,27 @@ def test_dm_given_z_power_null_and_shift(table):
     assert dz.dm_given_z_power(table, table, z, 60, rng) <= 0.1
     big = dz.build_table(dz.E2Params(lmean=dz.HOFFMANN_EMIN25.lmean + 0.6), **SMALL)
     assert dz.dm_given_z_power(table, big, z, 30, rng) >= 0.8
+
+
+def test_write_paper_from_committed_results(tmp_path):
+    """Macros and figure build from the committed results (copied, so the repo's
+    papers/ and results/ are never written by the test)."""
+    import shutil
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    (tmp_path / "results").mkdir()
+    for f in (root / "results").glob("dmzcal_*.json"):
+        shutil.copy(f, tmp_path / "results" / f.name)
+    mpath, fpath = dz.write_paper(tmp_path)
+    text = mpath.read_text()
+    assert r"\dmzRealNCert}{36}" in text
+    assert r"\dmzSynBandLoNinetyFive}{0.86}" in text
+    assert "{--}" not in text
+    assert fpath.stat().st_size > 1000
+
+
+def test_fp_formats_pvalues():
+    assert dz._fp(0.78) == "0.78"
+    assert dz._fp(0.0035) == "0.003" or dz._fp(0.0035) == "0.004"
+    assert dz._fp(2.2e-5) == r"2\times10^{-5}"
