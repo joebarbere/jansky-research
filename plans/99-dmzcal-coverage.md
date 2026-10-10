@@ -76,6 +76,26 @@ paper must be found and given a locator before it is quoted. Baptista et al. 202
 
   E2 exists so the audit can say how much of E1's calibration comes from the survey selection
   function. It is a comparison arm, not a proposed replacement for `zdm`.
+- **E3 — fruitbat 2.0.1 `Batten2021`** (added 2026-10-10, before any real posterior). Settings
+  are the package defaults: `subtract_host=False`, `prior="uniform"`, and `dm_galaxy` = the
+  per-burst `DMISM`. PIT is computed from `calc_redshift_pdf`. This is the widely-installed
+  simulation-based (EAGLE) alternative. Its scatter was **not** fitted to localized FRBs, so
+  every burst is on the certification side for E3. It is still scored on the same
+  certification sample as E1 so the estimators are compared like for like, and the full-sample
+  E3 number is reported alongside.
+
+  **Environment.** fruitbat no longer runs on a current stack:
+  - it fails to import `astropy.cosmology.core` on astropy ≥ 6;
+  - it needs `np.long` / `np.asscalar`, so numpy < 1.23;
+  - it imports `pygedm` at module load, and `pygedm` does not build here.
+
+  The recipe that works is Python 3.9, numpy 1.22.4, astropy 4.3.1, scipy < 1.10, h5py < 3.8,
+  setuptools < 70, `pip install --no-deps fruitbat`, and a `pygedm` stub that **raises** if
+  called (so it cannot silently supply a Milky Way DM). The recipe is recorded in the driver
+  script. The decay itself is a finding for the note, stated as fact and not as criticism.
+- **E4 — `FRBs/FRB` `frb.dm.igm.z_from_DM`, point estimate only** (`corr_nuisance=True`,
+  the default). It returns no interval, so it **cannot enter the coverage test**. It enters only
+  the secondary point-accuracy table below.
 - Milky Way: per-burst `DMISM` (NE2001), plus a halo term of 50 pc cm⁻³ that is folded into the
   host distribution's floor. No other foreground (Virgo, intervening groups) is modelled for any
   burst. That is what a DM-only user gets.
@@ -162,6 +182,18 @@ stratification by host magnitude is run and labelled post hoc.
 - **UNDERPOWERED** — N < 25, or C1 failed.
 
 Each outcome is reported per estimator. No outcome is upgraded by the in-sample arm.
+
+**Secondary point-accuracy table.** This is descriptive only, with no verdict.
+- For E1–E4 it reports the median and the normalized median absolute deviation (NMAD) of
+  Δz / (1 + z_true). For E1–E3 the point estimate is the posterior median; E4 has only its point
+  value.
+- This puts the interval-free tool (E4) on the same footing as the others. Point accuracy is
+  Cordes et al. 2022 territory and is not the claim.
+
+**Already seen.** The install checks on 2026-10-10 evaluated FRB 20240304B under E3 (median 2.40,
+68% interval [2.11, 2.62]) and under E4 (2.52; 2.47 with the nuisance correction against
+DM − DM_ISM − 40). That burst is already excluded from every statistic. No other burst has been
+evaluated.
 
 ## Steps
 
