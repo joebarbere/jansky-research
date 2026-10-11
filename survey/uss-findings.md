@@ -35,6 +35,14 @@ HzRG *candidates*.
 Where SIMBAD "matches", it knows the source *only* as a bare `NVSS J…` radio entry — no
 classification, no redshift. So none of the six is catalogued as a high-$z$ radio galaxy.
 
+> **SUPERSEDED (2026-08-25).** The sections from here to "Bottom line" record the first-pass
+> reading and are kept as history. Their flux-scale story is retracted: de Gasperin (2018) is
+> built from the same *uncorrected* ADR1 fluxes, the population offset against it is
+> +0.002 ± 0.005, and the candidates' steepening is selection on a noisy index. The
+> "15%, up to 40–50%, biasing α by 0.1–0.2" limitation and the "~0.15 inflation" bottom line
+> are not in the cited source. Current results: the referee round below and the 2026-10-11
+> sections at the end.
+
 ## Manual cross-check against de Gasperin (2018) — the candidates mostly do NOT survive
 
 The recommended follow-up (GATE-2 review, S-3) was a manual cross-check against published TGSS×NVSS
@@ -226,3 +234,74 @@ captions) now use the partitive "of which / part of which the model predicts", t
 form the ratio supports. Standing item for the next science round: main.tex still says
 selection "produces most of the observed offset" — 44% is not "most"; the sentence should
 quote the fraction or say "roughly half".
+
+## Confirming referee rounds on the RNAAS note (2026-10-11) — accepted at round 3
+
+**Round 1 (minor):** the Aug fixes were in the note, but "the offset is selection, not
+calibration" outran −0.049 ± 0.033 against −0.11, and the 1/7 completeness was attributed to
+survey-floor truncation, which cannot explain a disagreement between two catalogues built from
+the same surveys. The committed `uss_reference_check.csv` shows what does: 3 of the 7 Scode=S
+reference USS sources are absent from our 456 matched rows; two in-sample misses sit at −1.312
+and −1.304; one differs by 0.69 in α at 7″; of the five unconfirmed candidates one has only a
+limit and two sit within 0.005 and 0.032 of the cut. **Round 2 (minor):** the figure labelled
+all 108 non-S rows "Scode=L" (54 L, 26 M, 20 C, 8 I). Rebuilt from the committed CSV through
+`spectra.make_figures` with a corrected legend (identical points; M/C/I as crosses). The
+reference USS population is Scode=S only (two matched M/I sources below −1.3 would make
+completeness 1/9). The selection residual is 1.3σ (model SD and the empirical SE of the five
+offsets in quadrature), so "remainder unexplained" overcorrected; the population null excludes a
+*relative* calibration difference only, not the shared ADR1 flux-scale term. **Round 3: note
+accepted;** `main.tex` caption, Discussion and 1.3σ definition aligned. **Round 4:** both
+accepted ("within 1.3σ" → "at 1.3σ" applied). The standing item above ("most of the offset")
+is closed.
+
+## End-to-end slice audit (2026-10-11)
+
+An independent read-only audit of code, tests, committed results, both papers and this file
+(14 tests passed at the start; tree clean). No blockers; every macro matches
+`results/uss_metrics.json`, every row-level claim reproduces from the CSVs, the reproduction
+command matches the CLI, and the cited DOIs match Crossref.
+
+**The selection model's one assumption was unstated.** `selection_bias_mc` adds our formal
+index errors (rms 0.059) to the reference indices; the papers called it "zero-free-parameter".
+The audit's alternative (scale our noise to the full observed scatter, 0.088) gives −0.089,
+which would make selection explain ~80%. That variant charges the reference's own noise to the
+selected index, so it is a bound, not a better model: the observed scatter is *below* the
+combined formal errors (0.098; reference rms 0.078), which bounds our share between 0.69× and
+1.49× our formal error. Measured over that range (post hoc,
+`scripts/spectra_selection_sensitivity.py` → `results/uss_selection_sensitivity.json`, from the
+committed CSV): predicted −0.028 / −0.049 / −0.089, i.e. 26% / 44% / 81% of the −0.110
+offset, residuals 2.0σ / 1.3σ / 0.4σ. Both papers now state the assumption and the range;
+"zero-free-parameter" is gone.
+
+**A confirming referee then found the variance bound too generous.** The differences are
+heavy-tailed on the flat side (14 of the 15 beyond 0.2 are positive; SD 0.088 against a MAD
+core of 0.039; normalised by each source's combined formal error, the robust scatter is 0.52). USS selection acts on the steep side,
+where the core applies, so the core is the relevant noise: with it the model explains 17–24% of
+the offset and leaves a 2.1–2.4σ residual over five sources. The papers now say selection
+*explains part* of the steepening (17–81% across all noise models, most plausibly a fifth
+to a quarter, since the steep side's robust normalised scatter is 0.64 against the overall
+0.52), with a ~2σ remainder unexplained; the August verdict "the offset is selection", and
+this morning's "about half" and "sufficient explanation", are withdrawn. Run the test even
+when you expect it to pass: the variant I added to strengthen the claim was the one that
+weakened it. All bounds are post hoc. `selection_bias_mc` gained a `noise_scale` argument (default 1,
+so committed results are unchanged).
+
+Also fixed: the RNAAS note cited the tool as `jansky` (it is `janskyresearch`), and main.tex
+said it was built "on the jansky helpers" (it imports nothing from `jansky`); the unsourced
+"consistent with the weighted mean of de Gasperin" clause dropped; the NED/SIMBAD check
+labelled manual in main.tex too; TGSS's 24.5 mJy stated as a peak-brightness floor applied to
+total flux; this file's first-pass sections marked superseded. Four known-answer tests added
+(index error formula, the 102.5 mJy probe, the selection bias of a source at the cut,
+−σ√(2/π), and a non-S reference row ignored by `uss_confusion`).
+
+**Open, not fixed here:** the three reference USS sources outside our matched sample are not
+recorded anywhere (needs the reference cone re-fetched and committed); the mode-dependent
+`\us*` macros (`\usNmatched`, `\usNuss`, `\usAlphaMedian`, …) are not namespaced
+`usReal*`/`usSyn*` and rely on `preserve_live_macros`; the local arXiv package
+(`papers/spectra/arxiv-submission/`, untracked) predates today's fixes and must be rebuilt
+with `make arxiv` before upload.
+
+The confirming round after that (2026-10-11) caught 0.52 attached to the wrong quantity (it is the
+robust scatter of the normalised differences; 0.039/0.098 = 0.39) and "about a fifth" as
+slightly low (steep side 0.64 → ~23–25%); both fixed, and the note now labels the sensitivity
+analysis post hoc.

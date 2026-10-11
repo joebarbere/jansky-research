@@ -10,9 +10,9 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 | Field | Value |
 |---|---|
 | **Repository URL** | `https://github.com/joebarbere/jansky-research` |
-| **Software version** | `v1.0.1` |
+| **Software version** | `v1.13.0` |
 | **Git branch** | `main` (leave default) |
-| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions — stable across releases). If JOSS asks for the version-specific archive of one exact release, `v1.0.1` is `10.5281/zenodo.21564183`. Re-check this after any release cut during review: Zenodo mints a new version DOI each time, and JOSS collects the final one at acceptance. |
+| **Archive DOI** | `10.5281/zenodo.21482378` (concept / all-versions — stable across releases). If JOSS asks for the version-specific archive of one exact release, `v1.13.0` is `10.5281/zenodo.23289575`. Re-check this after any release cut during review: Zenodo mints a new version DOI each time, and JOSS collects the final one at acceptance. |
 | **Submitting author** | Joseph Barbere · ORCID `0009-0008-3289-4447` · Independent researcher |
 | **Suggested keywords/topics** | Python; astronomy; radio astronomy; fast radio bursts; pulsars; reproducibility |
 
@@ -29,7 +29,7 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 >
 > 1. **Recover-a-known validations + methodology, with honest nulls at scale.** Each tool must
 >    recover an injected or historically established signal (e.g. FRB 20180916B's 16.35-day period,
->    the VGPS inner Milky Way terminal-velocity curve, the Crab's DM, published planetary rotation periods)
+>    the VGPS inner Milky Way terminal-velocity curve, the Crab's DM, FK Com's variability)
 >    before being trusted on new data; a large fraction of slices then report bounded non-detections
 >    or "the apparent signal is really a systematic" results rather than manufactured discoveries.
 >    The toolkit doubles as a reproducible reference for what careful, gate-checked amateur analysis
@@ -40,17 +40,18 @@ software paper is `joss/paper.md`; the archived release is on Zenodo.
 >    entry points feeds the CLI, the notebooks, and both orchestrators, so `make reproduce`
 >    regenerates data → analyses → papers → arXiv packages from a clean checkout.
 >
-> **Related publications (disclosure):** Two Research Notes of the AAS derived from this software are
-> in preparation — a blind reanalysis of the Voyager 2 PRA ice-giant rotation periods
-> (`papers/vgpra/`) and a cautionary note on TGSS×NVSS ultra-steep-spectrum selection
-> (`papers/spectra/`). The repository additionally contains per-slice reproducible AASTeX write-ups
+> **Related publications (disclosure):** Twelve Research Notes of the AAS derived from this software
+> are being submitted separately, among them a blind reanalysis of the Voyager 2 PRA ice-giant
+> rotation periods (`papers/vgpra/`), a cautionary note on TGSS×NVSS ultra-steep-spectrum
+> selection (`papers/spectra/`) and an independent reproduction of Breakthrough Listen's 3I/ATLAS
+> null (`papers/atlas3i/`). The repository additionally contains per-slice reproducible AASTeX write-ups
 > under `papers/`; these are in-repository research records, not separate journal submissions. The
 > JOSS contribution is the toolkit and its methodology, distinct from any individual science result.
 >
 > **AI-use disclosure:** The software was developed collaboratively with Anthropic's Claude (a large
 > language model). The author directed the work and independently reviewed and verified all code,
 > results, and citations; an AI/LLM is not an author. Full disclosure is in the paper's
-> Acknowledgements.
+> AI usage disclosure section.
 >
 > **Install note for reviewers:** `git clone` + `uv sync` is all that is needed. The sole
 > first-party dependency `jansky` (the sibling teaching course) installs automatically from its

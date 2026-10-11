@@ -1,0 +1,63 @@
+{
+ "source": "real: tgss-x-nvss reference comparison (post-hoc, from committed CSV)",
+ "n_rows": 333,
+ "rms_e_ours": 0.0593,
+ "rms_e_ref": 0.0783,
+ "observed_scatter": 0.0882,
+ "observed_scatter_mad": 0.0385,
+ "z_sd": 1.147,
+ "z_mad": 0.515,
+ "z_mad_steep": 0.636,
+ "n_steep": 84,
+ "n_abs_diff_gt_0p2": 15,
+ "n_diff_gt_0p2": 14,
+ "candidate_offset": -0.1102,
+ "candidate_offset_se": 0.0324,
+ "variants": {
+  "core_formal_ratio": {
+   "noise_scale": 0.515,
+   "n_realizations": 2000,
+   "predicted_offset": -0.0185,
+   "predicted_offset_sd": 0.0201,
+   "mean_n_selected": 4.0,
+   "fraction_explained": 0.17,
+   "residual_sigma": -2.4
+  },
+  "core_all_ours": {
+   "noise_scale": 0.65,
+   "n_realizations": 2000,
+   "predicted_offset": -0.0262,
+   "predicted_offset_sd": 0.0243,
+   "mean_n_selected": 4.3,
+   "fraction_explained": 0.24,
+   "residual_sigma": -2.07
+  },
+  "sd_ref_errors_trusted": {
+   "noise_scale": 0.685,
+   "n_realizations": 2000,
+   "predicted_offset": -0.0283,
+   "predicted_offset_sd": 0.0255,
+   "mean_n_selected": 4.4,
+   "fraction_explained": 0.26,
+   "residual_sigma": -1.99
+  },
+  "formal": {
+   "noise_scale": 1.0,
+   "n_realizations": 2000,
+   "predicted_offset": -0.0487,
+   "predicted_offset_sd": 0.033,
+   "mean_n_selected": 5.0,
+   "fraction_explained": 0.44,
+   "residual_sigma": -1.33
+  },
+  "sd_all_scatter_ours": {
+   "noise_scale": 1.487,
+   "n_realizations": 2000,
+   "predicted_offset": -0.0889,
+   "predicted_offset_sd": 0.0409,
+   "mean_n_selected": 6.1,
+   "fraction_explained": 0.81,
+   "residual_sigma": -0.41
+  }
+ }
+}

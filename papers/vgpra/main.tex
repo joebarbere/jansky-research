@@ -20,19 +20,20 @@ using none of the original beaming or magnetic-longitude modelling, and take a r
 bootstrap and the sub-band peak spread as the uncertainties. The result is a controlled null.
 The pipeline is validated end-to-end: it recovers an injected
 period in a synthetic flyby searched over the same window (\vgSynInjected~h $\to$
-\vgSynRecovered~h) to $\sim$1~min but recovers neither real period: the Uranus peak wanders between
-sub-bands (\vgRealUPeriod~h, spread \vgRealUSpread~h, offset $+1.2$~h from $17.24$~h; not
+\vgSynRecovered~h) to $\sim$1~min but recovers neither real period: the Uranus peak is unstable across
+sub-bands (\vgRealUPeriod~h, sub-band standard deviation \vgRealUSpread~h, offset $+1.2$~h from $17.24$~h; not
 recovered, \vgRealURecovers), and the Neptune peak rails to the search bound (\vgRealNPeriod~h; not
 recovered, \vgRealNRecovers). The method recovers a clean signal when one is present, so the
 real-data failure is a limitation of blind total-power analysis, not of the pipeline: the
-ice-giant total-power radio flux is not a clean rotational sinusoid, and recovering the periods requires the geometric modelling used
-in the original analyses. This blind, total-power analysis places no useful bound on the period: its window resolution is
+ice-giant total-power radio flux is not a clean rotational sinusoid, consistent with the geometric
+modelling used in the original analyses having been necessary. This blind, total-power analysis places no useful bound on the period: its window resolution is
 $\sim$\vgRealURes--\vgRealNRes~h and a peak unconstrained within the window; that reflects this
 method on this data, not the flybys, since the modelled 1993 reanalysis reached $\pm 0.006$~h
 ($\pm 22$~s) from the same Neptune data, hundreds of times coarser than the Hubble result. The
-contribution is a reproducible, modern-statistical demonstration of why the historical periods
-needed the sophisticated modelling used to derive them, and
-how little a naive total-power periodogram of these short flybys can constrain.
+contribution is a reproducible, modern-statistical measurement of how little a naive
+total-power periodogram of these short flybys can constrain: injections into the real series
+exclude a sinusoidal modulation at the historical periods only at depths of \vgRealUMinDepth\%
+(Uranus) and \vgRealNMinDepth\% (Neptune).
 \end{abstract}
 
 \keywords{Planetary science (1255) --- Uranus (1751) --- Neptune (1096) --- Radio astronomy (1338)
@@ -80,7 +81,7 @@ the known values, since a narrow window centred on the answer would manufacture 
 samples are strongly autocorrelated and enormous in number, the analytic Lomb--Scargle false-alarm
 probability is meaningless (absurdly small) and we do not report it. The statistical
 uncertainty is a rotation-block bootstrap (resample whole rotation-length blocks); the systematic
-one is the peak's spread across four frequency sub-bands. A coherent signal, whether rotation or a
+one is the peak's spread across three disjoint thirds of the 100--1000~kHz analysis band. A coherent signal, whether rotation or a
 viewing-geometry, beaming, or spectral-window modulation, is achromatic, so a small sub-band spread
 is evidence of a real coherent peak but does not establish that it is the rotation. A discrete-epoch
 Rayleigh $Z^2_1$ fold \citep{buccheri1983} of detected bursts, reused from this repository's FRB
@@ -96,7 +97,8 @@ period (\vgSynInjected~h), noise, and data gaps, searched in the same wide 14--2
 used on the real data. The Lomb--Scargle estimator recovers \vgSynRecovered~h (\vgSynRecoveredOK) and
 the Rayleigh fold recovers \vgSynRayPeriod~h (\vgSynRayOK), both inside their bootstrap bands. This is
 the control that makes the real-data null interpretable: the method finds a clean rotation when one is
-present, so a failure on the real data is a property of the data, not the pipeline.
+present, so a failure on the real data reflects this method on this data rather than a broken
+pipeline.
 
 \section{Results}
 \label{sec:results}
@@ -106,46 +108,49 @@ On the real encounter volumes the blind periodogram recovers neither rotation pe
 For Uranus, the peak sits at \vgRealUPeriod~h, offset $+1.2$~h from the historical
 \vgRealUHist~h, or 1.1 window-resolution elements (\vgRealURes~h at this baseline), so
 the offset alone is marginal. The verdict rests on achromaticity: across three disjoint
-thirds of the 100--1000~kHz analysis band the peak wanders with a spread of \vgRealUSpread~h,
+thirds of the 100--1000~kHz analysis band the peaks have a standard deviation of \vgRealUSpread~h (one railed),
 so it is not a stable coherent line and not a recovery (\vgRealURecovers). (An earlier
 version's band set included one band extending above the analysis band, which alone decided
 this verdict; the disjoint in-band set reaches the same conclusion on independent channels.)
 The peak is nonetheless significant against a scramble null
-(FAP $\le \vgRealUFap$ over \vgRealUNIndep\ independent frequencies): there is coherent
-structure in the series, but it is not at the rotation period. The historical and Hubble values
+(FAP $\le \vgRealUFap$ over \vgRealUNIndep\ independent frequencies). A scramble also
+destroys red noise and the flyby envelope, so this shows the series is not white noise, not
+that it holds a coherent line; whatever structure there is, it is not at the rotation period. The historical and Hubble values
 fall inside the $\pm\vgRealUUnc$~h band only because that band is nearly as wide as the
 search window ($\sigma/W = 0.32$, against 0.29 for a uniform distribution); the bootstrap
 is reporting an unconstrained peak, not an uncertainty, and we do not quote it as one.
 
 For Neptune, the peak rails to the upper search bound (\vgRealNPeriod~h), a bound,
 not an estimate, so no consistency statement with the historical $\vgRealNHist \pm 0.05$~h is
-possible (the macro reports ``\vgRealNHistOK''). The offset from 16.11~h is 7+ resolution
-elements, a real mismatch; the railing is the signature of a periodogram dominated by the
+possible (the macro reports ``\vgRealNHistOK''). The offset from 16.11~h spans several resolution
+elements (\vgRealNRes~h each at this baseline), a real mismatch; the railing is the signature of a periodogram dominated by the
 red-noise / flyby-envelope continuum rather than a rotational line. We disclose the analysis
 history in full, since this paper's title contains ``blind'': an earlier version of this
 analysis used a narrower search window and reported Neptune as recovered near 16~h; widening
 the window moved the peak to the bound, exposing the earlier result as a window artifact, and
-the recovery criterion's band-robustness and railing clauses were added after that episode. The
-window and criterion published here were then frozen and applied identically to both planets
-and to the control. A narrower window still places the Neptune peak near 16~h; that
+the recovery criterion's band-robustness and railing clauses were added after that episode. A
+second change followed: the sub-band set was redefined as disjoint thirds after the original set
+was found to decide the Uranus verdict (above). The scramble and injection controls below were
+also added after the real result and are post hoc. The final window and criterion were applied
+identically to both planets and to the control. A narrower window still places the Neptune peak near 16~h; that
 demonstrates window-dependence, not a rotation.
 
 We tested the selection function directly. Injecting a fractional sinusoid at each
 historical period into the real flux series (red noise, flyby envelope and detrend included)
-and re-running the blind search recovers modulation depths down to \vgRealUMinDepth\%
-(Uranus) and \vgRealNMinDepth\% (Neptune) in $\ge$90\% of phase draws. Any rotational
-total-power modulation deeper than that would have been found; none is. This, not the
+and re-running the blind search recovers it in every one of eight phases at depths of
+\vgRealUMinDepth\% (Uranus) and \vgRealNMinDepth\% (Neptune), the smallest tested depths to reach
+that on a grid of 2, 5, 10, 20 and 40\%, so the true eight-of-eight threshold lies between half
+and all of each value. A sinusoidal total-power modulation at the historical period is excluded at
+those depths. This, not the
 synthetic spike train, is the operative validation: the synthetic control (which passes the
 full three-clause criterion, \vgSynFullOK, with seed-to-seed scatter \vgSynSeedSd~h across
-\vgSynSeedN\ seeds) exercises the machinery end to end, while the injection bounds the sky.
+\vgSynSeedN\ seeds) exercises the machinery end to end, while the injection measures what this search could have seen.
 
 The blind total-power periodogram does not recover the ice-giant rotation
 periods, while recovering a clean injected signal in the identical analysis. The auroral total-power
-flux is therefore not a clean rotational sinusoid over these flybys; the historical determinations'
-beaming and magnetic-longitude modelling, which a blind periodogram omits, was essential.
-Independently, the rotation-block uncertainties ($\sim$\vgRealUUnc~h) are hundreds of times coarser
-than the 28~s by which \citet{lamy2025} refined Uranus, so even a successful blind extraction could
-never approach modern precision. The secondary Rayleigh burst fold (Uranus \vgRealURayPeriod~h,
+flux is therefore not a clean rotational sinusoid over these flybys, consistent with the historical
+determinations' beaming and magnetic-longitude modelling, which a blind periodogram omits, having been
+necessary; this analysis does not test that modelling. The secondary Rayleigh burst fold (Uranus \vgRealURayPeriod~h,
 Neptune \vgRealNRayPeriod~h) is likewise uninformative, as expected for a discrete-epoch method on
 this emission.
 
@@ -155,7 +160,7 @@ this emission.
 \startdata
 Voyager (historical)   & $17.24\pm0.01$ & $16.11$ & radio (modelled) \\
 \citet{lamy2025}       & $\vgRealULamy$ & \nodata & HST UV \\
-This work (blind)      & $\vgRealUPeriod\pm\vgRealUUnc$ & $\vgRealNPeriod\pm\vgRealNUnc$ & radio (blind LS) \\
+This work (blind)      & $\vgRealUPeriod$ & $\vgRealNPeriod$ (railed) & radio (blind LS) \\
 recovers historical?   & \vgRealURecovers & \vgRealNRecovers & \\
 \enddata
 \tablecomments{This work: blind Lomb--Scargle of the PRA flux series over an un-tuned 14--20~h window;

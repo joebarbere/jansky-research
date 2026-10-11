@@ -454,18 +454,23 @@ def selection_bias_mc(
     threshold: float = USS_THRESHOLD,
     n_mc: int = 2000,
     seed: int = 0,
+    noise_scale: float = 1.0,
 ) -> dict:
-    """The no-free-parameter model of selection on the noisy variable.
+    """A model of selection on the noisy variable, with one assumption (the noise).
 
     Treat the reference indices as truth, add each source's own measurement noise, select
     ``noisy < threshold``, and record the mean (noisy - truth) of the selected set. That is the
     offset a *perfectly calibrated* survey pair shows for sources chosen on the extreme of the
     noisy measurement --- the number the six-candidate offset must be compared against before any
     of it is attributed to a flux scale. Deterministic (fixed seed).
+
+    The one assumption is the noise of the selected variable: our formal index errors, times
+    ``noise_scale``. The papers quote the default (1.0) and the range the observed raw-minus-
+    reference scatter allows (``scripts/spectra_selection_sensitivity.py``).
     """
     ok = np.isfinite(truth_alpha) & np.isfinite(e_alpha) & (e_alpha > 0)
     t = truth_alpha[ok]
-    e = e_alpha[ok]
+    e = e_alpha[ok] * noise_scale
     rng = np.random.default_rng(seed)
     means = []
     n_sel = []
@@ -636,8 +641,10 @@ def make_figures(
 
     if rc is not None:  # pragma: no cover - network run only
         ok = finite & np.isfinite(rc["ref_alpha"])
-        det = ok & (np.asarray([str(s) for s in rc["ref_scode"]]) == "S")
-        lim = ok & ~det
+        scode = np.asarray([str(s) for s in rc["ref_scode"]])
+        det = ok & (scode == "S")
+        lim = ok & (scode == "L")
+        multi = ok & ~det & ~lim
         fig, ax = plt.subplots(figsize=(5, 4.2))
         ax.scatter(rc["ref_alpha"][det & ~uss], a[det & ~uss], s=8, color="0.6", label="matched")
         ax.scatter(
@@ -656,6 +663,15 @@ def make_figures(
                 facecolors="none",
                 edgecolors="C1",
                 label="reference limit (Scode=L)",
+            )
+        if multi.any():
+            ax.scatter(
+                rc["ref_alpha"][multi],
+                a[multi],
+                s=18,
+                marker="x",
+                color="C0",
+                label="reference multi-component (Scode=M/C/I)",
             )
         span = [-2.2, 0.8]
         ax.plot(span, span, color="k", lw=0.8, ls=":")

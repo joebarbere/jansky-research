@@ -25,13 +25,16 @@ $\alpha=\usAlphaMedian$) and flags \usNuss\ raw candidates. Scoring the whole fi
 \citet{degasperin2018} TGSS$\times$NVSS spectral-index catalogue (built from the same
 uncorrected ADR1 fluxes, so the comparison measures matching and selection, not the flux scale)
 shows no population offset ($\Delta\alpha=+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ over
-\usRealNPairs\ detection pairs, identical on both sides of the rescaled-coverage declination edge).
+\usRealNPairs\ detection pairs, consistent on both sides of the rescaled-coverage declination edge).
 The candidates nonetheless sit $\Delta\alpha=\usRealFlaggedOffset$ below their reference values,
-of which a zero-free-parameter model of selection on the noisy index predicts
-$\usRealSelPred\pm\usRealSelPredSD$: the offset is the selection, not a calibration. Against the
-reference's own USS population the raw cut is \usRealPurityPct\% pure
+of which a model of selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$
+with our formal errors (a 1.3$\sigma$ residual), 17--81\% across the index noise the observed
+differences allow, and a fifth to a quarter with their robust core, leaving a $\sim$2$\sigma$ residual
+over five sources unexplained. Against the
+reference's own single-component USS population the raw cut is \usRealPurityPct\% pure
 (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\% complete
-(\usRealNRefUssRec\ of \usRealNRefUss), and the incompleteness is structural: a joint detection is
+(\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being mostly sources at the threshold
+and sources absent from our matched sample; against the true sky, a joint detection is
 equally sensitive only down to $\alpha\approx\usAlphaMatch$, and flagging a source at
 $\alpha=\usAlphaProbe$ requires $S_{150}\geq\usSNeededProbe$~mJy. A catalogue-level USS cut from
 this survey pair is unreliable in both directions; we report the measurement as the cautionary
@@ -51,7 +54,7 @@ catalogue-level run produces a candidate list one should believe. The answer, me
 not the one we first suspected.
 
 \section{Method and data}
-\code{spectra} is a pure-NumPy/astropy module (on the \code{jansky} helpers; \citealt{jansky}). It
+\code{spectra} is a pure-NumPy/astropy module of this repository (\citealt{janskyresearch}). It
 positionally cross-matches TGSS and NVSS catalog sources within $15\arcsec$, computes the two-point
 index
 \begin{equation}
@@ -70,12 +73,12 @@ breaks it is the real error and sensitivity structure, not the arithmetic.
 \section{Results}
 \paragraph{The population statistics are consistent.} The run matches \usNmatched\ sources with a
 median $\alpha=\usAlphaMedian$ (Figure~\ref{fig:hist}), consistent with the typical $-0.7$ to
-$-0.8$ of flux-limited extragalactic radio samples and with the weighted mean of the
-\citet{degasperin2018} catalogue. This is a weak check: a median is insensitive to everything
+$-0.8$ of flux-limited extragalactic radio samples. This is a weak check: a median is insensitive to everything
 measured below, so we treat it as consistency, not validation.
 \paragraph{Raw USS candidates.} \usNuss\ sources fall below the $\alpha<\usThreshold$ cut (steepest
 $\alpha=\usAlphaMin$; Figure~\ref{fig:scatter}). None has a measured redshift or high-$z$
-classification in NED or SIMBAD, i.e.\ candidates, not confirmations.
+classification in NED or SIMBAD (a manual check, not part of the committed pipeline), i.e.\
+candidates, not confirmations.
 
 \begin{figure}
 \plotone{figures/alpha_hist.pdf}
@@ -104,14 +107,28 @@ of the rescaled-TGSS coverage, the two sides are indistinguishable
 declination-edge effect in this field, and no mechanism for one, since neither catalogue applies
 the rescaling.
 
-\paragraph{The candidate offset is selection, not calibration.} The \usNuss\ raw candidates sit
+\paragraph{Selection explains part of the candidate offset.} The \usNuss\ raw candidates sit
 below their reference values by $\Delta\alpha=\usRealFlaggedOffset$ (over the detection rows; one
 candidate's reference entry is a non-detection limit, on which more below). An earlier draft of
 this analysis attributed exactly this offset to the TGSS flux scale. The population statistics above
-refute that, and a zero-free-parameter model supplies the real cause: treating the reference
-indices as truth and re-selecting on truth $+$ each source's own measurement noise predicts a mean
-offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected set. Selection on the extreme of
-a noisy variable produces most of the observed offset, with no calibration error anywhere. This is
+refute that, and a model of selection on the noisy index explains part of it: treating the reference indices as truth and re-selecting on truth $+$ each source's own
+formal index error predicts a mean offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected
+set, 44\% of the observed offset, the two differing by 1.3$\sigma$ (model SD and the empirical
+standard error of the five single-component candidate offsets, in quadrature; with five points, a
+rough guide). The model's one assumption is the noise of the selected index. The
+raw-minus-reference differences have a standard deviation of 0.088, smaller than the two
+catalogues' combined formal errors, 0.098 (ours 0.059, the reference's 0.078, rms), but they are
+heavy-tailed on the flat side (14 of the 15 differences beyond 0.2 are positive), and their
+robust (MAD) scatter is 0.039, and in units of each source's combined formal error 0.52.
+Charging our index with noise
+between that core (0.52 times our formal error) and the whole standard deviation (1.49 times),
+the model predicts $-0.019$ to $-0.089$, 17--81\% of the offset, with residuals of 2.4$\sigma$ to
+0.4$\sigma$ (post hoc, \code{scripts/spectra\_selection\_sensitivity.py},
+\code{results/uss\_selection\_sensitivity.json}). USS selection acts on the steep side, whose robust
+normalised scatter (0.64, for reference $\alpha<-0.9$) lies near the core, so selection most
+plausibly explains a fifth to a quarter of the steepening; the remaining
+$\sim$2$\sigma$, over five sources, is unexplained; the population statistics exclude a relative calibration difference
+between the catalogues, though not the ADR1 flux-scale term they share. This is
 committed as \code{selection\_bias\_mc} and is the number any candidate-list offset must be
 compared against before invoking a systematic.
 
@@ -127,7 +144,8 @@ population in the same cone (its \code{Scode=S} entries with $\alpha<\usThreshol
 of the \usRealNRefUss\ genuine reference USS sources in the field, the raw cut recovers
 \usRealNRefUssRec\ (completeness \usRealCompletenessPct\%). The incompleteness is structural, not
 statistical. A source enters the matched sample only if detected in both surveys; with the
-documented survey floors (NVSS $\sim$2.5~mJy, TGSS~ADR1 $\sim$24.5~mJy) the pair is equally
+documented survey floors (NVSS $\sim$2.5~mJy, TGSS~ADR1 $\sim$24.5~mJy, the latter a peak-brightness floor in
+mJy~beam$^{-1}$ applied here to total flux) the pair is equally
 sensitive only down to $\alpha\approx\usAlphaMatch$, and for anything steeper NVSS is the limiting
 survey: to be flagged at the cut requires $S_{150}\geq\usSNeededThr$~mJy, and at
 $\alpha=\usAlphaProbe$ (our steepest candidate) $S_{150}\geq\usSNeededProbe$~mJy, a flux
@@ -139,8 +157,10 @@ out of a joint TGSS$\times$NVSS detection by construction.
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every matched source
 with a reference counterpart. The population lies on the identity line (mean offset
 $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of which the committed
-selection-on-a-noisy-variable model predicts. The open circle is the candidate whose reference
-entry is a non-detection limit (\code{Scode=L}), excluded from all means.}
+selection-on-a-noisy-variable model predicts. Open circles are reference non-detection limits
+(\code{Scode=L}, one of them a candidate) and crosses are multi-component entries
+(\code{Scode=M/C/I}); only single-component detections enter the means and the purity and
+completeness. Reference USS sources outside our matched sample cannot appear.}
 \label{fig:compare}
 \end{figure}
 
@@ -168,13 +188,14 @@ either side of it in either catalogue.
 
 \section{Discussion and reproducibility}
 The honest outcome is a negative, cautionary result, sharper than the one an earlier draft of this
-analysis claimed. There is no evidence that the TGSS flux scale biases this field's indices: the
-population offset against the reference is zero, and the declination-edge mechanism is refuted by
-measurement. What actually breaks a raw TGSS$\times$NVSS USS candidate list is (a) selection on
-the extreme of a noisy index, which manufactures a spurious steepening of the selected few that a
-committed zero-free-parameter model reproduces, and (b) matched-sensitivity truncation, which
-removes genuine USS sources from the joint sample by construction. Measured against the reference
-catalogue's own USS population, the cut is \usRealPurityPct\% pure and \usRealCompletenessPct\%
+analysis claimed. The population offset against the reference is zero, which excludes a relative calibration
+difference between the two catalogues and refutes the declination-edge mechanism by measurement;
+the ADR1 flux-scale term both catalogues share is untested here. What actually breaks a raw TGSS$\times$NVSS USS candidate list is (a) selection on
+the extreme of a noisy index, which steepens the selected few by an amount the committed
+selection model accounts for at 17--81\% (most plausibly a fifth to a quarter, leaving a $\sim$2$\sigma$
+residual unexplained), and (b) matched-sensitivity truncation, which
+limits both catalogues against the true sky. Measured against the reference
+catalogue's own single-component USS population, the cut is \usRealPurityPct\% pure and \usRealCompletenessPct\%
 complete: unreliable in both directions. What survives is an open, tested tool, the committed
 whole-field comparison, and the two mechanisms, quantified. The analysis regenerates from a clean
 checkout (\code{python -m jansky\_research.spectra --ra \usFieldRa\ --dec \usFieldDec\ --radius
