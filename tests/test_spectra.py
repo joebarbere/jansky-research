@@ -184,3 +184,50 @@ def test_synthetic_run_does_not_clobber_real_artifacts(tmp_path):
     assert (figdir / "alpha_hist.pdf").read_bytes() == b"REAL"
     kept = json.loads((tmp_path / "results" / "uss_metrics.json").read_text())
     assert kept["n_matched"] == 456
+
+
+def test_spectral_index_error_known_answer():
+    # 10% and 5% fractional errors: sigma_alpha = sqrt(0.1^2 + 0.05^2) / ln(1400/147.5)
+    _a, e = spectra.spectral_index(
+        np.array([100.0]), 147.5, np.array([20.0]), 1400.0, np.array([10.0]), np.array([1.0])
+    )
+    assert np.isclose(e[0], np.hypot(0.1, 0.05) / np.log(1400.0 / 147.5))
+
+
+def test_matched_sensitivity_probe_known_answer():
+    ms = spectra.matched_sensitivity(alpha_probe=-1.65)
+    expected = spectra.NVSS_LIMIT_MJY * (147.5 / 1400.0) ** -1.65
+    assert np.isclose(ms["s150_needed_at_probe_mjy"], round(expected, 1))
+
+
+def test_selection_bias_mc_known_answers():
+    # A source exactly at the cut is selected half the time, with E[noise | noise < 0] =
+    # -sigma*sqrt(2/pi); a source far below the cut is always selected, with zero mean bias.
+    at_cut = spectra.selection_bias_mc(
+        np.array([spectra.USS_THRESHOLD]), np.array([0.1]), n_mc=20000
+    )
+    assert np.isclose(at_cut["predicted_offset"], -0.1 * np.sqrt(2 / np.pi), atol=0.004)
+    far = spectra.selection_bias_mc(np.array([-3.0]), np.array([0.1]), n_mc=2000)
+    assert abs(far["predicted_offset"]) < 0.01
+    # noise_scale multiplies the noise of the selected variable, so the bias scales with it
+    doubled = spectra.selection_bias_mc(
+        np.array([spectra.USS_THRESHOLD]), np.array([0.05]), n_mc=20000, noise_scale=2.0
+    )
+    assert np.isclose(doubled["predicted_offset"], at_cut["predicted_offset"], atol=0.004)
+
+
+def test_uss_confusion_ignores_non_detection_reference_rows():
+    res = {
+        "ra": np.array([10.0]),
+        "dec": np.array([20.0]),
+        "alpha": np.array([-1.5]),
+        "is_uss": np.array([True]),
+    }
+    ref = {
+        "ra": np.array([10.0]),
+        "dec": np.array([20.0]),
+        "spindex": np.array([-1.6]),
+        "scode": np.array(["L"]),
+    }
+    cf = spectra.uss_confusion(res, ref)
+    assert cf["n_flagged_ref_uss"] == 0 and cf["n_ref_uss"] == 0

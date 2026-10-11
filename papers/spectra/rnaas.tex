@@ -21,9 +21,10 @@ cross-match TGSS~ADR1 \citep{intema2017} with NVSS \citep{condon1998} in a
 and flag \usNuss\ raw USS candidates ($\alpha<\usThreshold$). Scored against the
 \citet{degasperin2018} catalogue (built from the same uncorrected ADR1 fluxes), the
 field shows no population offset ($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$,
-\usRealNPairs\ pairs), yet the candidates sit $\usRealFlaggedOffset$ steep, of which
-a zero-free-parameter model of
-selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own single-component USS population the cut is
+\usRealNPairs\ pairs), yet the candidates sit $\usRealFlaggedOffset$ below their reference
+values; a model of selection on the noisy index accounts for 17--81\% of that, depending on
+the assumed index noise, and for a fifth to a quarter with the robust core of the observed scatter,
+leaving a $\sim$2$\sigma$ residual over five sources unexplained. Against the reference's own single-component USS population the cut is
 \usRealPurityPct\% pure (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\%
 complete (\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being mostly sources at the
 threshold and sources absent from our matched sample. A cautionary negative result.
@@ -31,7 +32,7 @@ threshold and sources absent from our matched sample. A cautionary negative resu
 
 \section{Result}
 
-\code{spectra} \citep{jansky} is a pure-NumPy/Astropy tool that positionally
+\code{spectra} \citep{janskyresearch} is a pure-NumPy/Astropy tool that positionally
 cross-matches TGSS and NVSS catalogue sources within $15\arcsec$, forms the two-point
 index $\alpha_{150}^{1400}=\ln(S_{147.5}/S_{1400})/\ln(147.5/1400)$, and flags
 $\alpha<\usThreshold$ as USS. Every routine is tested offline on a synthetic field
@@ -53,10 +54,18 @@ consistent on both sides of the $+30^\circ$ declination edge of the rescaled-TGS
 candidates still sit $\usRealFlaggedOffset$ below their reference values
 (Figure~\ref{fig:spectra}; one candidate's reference entry is a non-detection limit,
 excluded); treating the reference as truth and re-selecting on truth plus each
-source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so the offset is consistent with
-selection on the extreme of a noisy variable (a 1.3$\sigma$ residual, combining the model SD and the empirical standard error of the five
-offsets in quadrature; the model's central
-value accounts for about half). The population null excludes a relative calibration
+source's own formal index error predicts $\usRealSelPred\pm\usRealSelPredSD$ (44\%, a
+1.3$\sigma$ residual, combining the model SD and the empirical standard error of the five
+offsets in quadrature). The one assumption is the noise of the selected index. The
+raw-minus-reference differences have a standard deviation of 0.088, below the two catalogues'
+combined formal errors (0.098), but they are heavy-tailed on the flat side (14 of the 15
+differences beyond 0.2 are positive): their robust (MAD) scatter is 0.039, and in units of each
+source's combined formal error 0.52. In a post hoc sensitivity analysis, noise scales from
+that core (0.52 times our formal error) to the full standard deviation charged to our index
+(1.49 times) give 17--81\% of the offset, with residuals of 2.4$\sigma$ to 0.4$\sigma$. USS
+selection acts on the steep side, whose robust normalised scatter (0.64) lies near the core, so
+selection most plausibly explains a fifth to a quarter of the steepening; the remaining
+$\sim$2$\sigma$, over five sources, is unexplained. The population null excludes a relative calibration
 difference between the two catalogues, though not the ADR1 flux-scale term they share.
 Against the reference's own single-component (\code{Scode=S}) USS population the cut is \usRealPurityPct\% pure
 (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\% complete
@@ -72,8 +81,9 @@ $\alpha=\usAlphaProbe$ must have $S_{150}\geq\usSNeededProbe$~mJy to be flagged 
 
 A catalogue-level USS cut from this survey pair is therefore unreliable in both
 directions. Every number above is \code{\textbackslash input} from a
-pipeline-generated macro file, except the row-level counts and differences and the 1.3$\sigma$ residual, which are
-tallied from the committed \code{results/uss\_reference\_check.csv}; all regenerate from a clean checkout
+pipeline-generated macro file, except the row-level counts and differences and the selection-model residuals and
+noise bounds, which are tallied from the committed \code{results/uss\_reference\_check.csv}
+and \code{results/uss\_selection\_sensitivity.json}; all regenerate from a clean checkout
 (\code{python -m jansky\_research.spectra --ra \usFieldRa\ --dec \usFieldDec\
 --radius \usRadius}).
 

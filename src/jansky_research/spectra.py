@@ -454,18 +454,23 @@ def selection_bias_mc(
     threshold: float = USS_THRESHOLD,
     n_mc: int = 2000,
     seed: int = 0,
+    noise_scale: float = 1.0,
 ) -> dict:
-    """The no-free-parameter model of selection on the noisy variable.
+    """A model of selection on the noisy variable, with one assumption (the noise).
 
     Treat the reference indices as truth, add each source's own measurement noise, select
     ``noisy < threshold``, and record the mean (noisy - truth) of the selected set. That is the
     offset a *perfectly calibrated* survey pair shows for sources chosen on the extreme of the
     noisy measurement --- the number the six-candidate offset must be compared against before any
     of it is attributed to a flux scale. Deterministic (fixed seed).
+
+    The one assumption is the noise of the selected variable: our formal index errors, times
+    ``noise_scale``. The papers quote the default (1.0) and the range the observed raw-minus-
+    reference scatter allows (``scripts/spectra_selection_sensitivity.py``).
     """
     ok = np.isfinite(truth_alpha) & np.isfinite(e_alpha) & (e_alpha > 0)
     t = truth_alpha[ok]
-    e = e_alpha[ok]
+    e = e_alpha[ok] * noise_scale
     rng = np.random.default_rng(seed)
     means = []
     n_sel = []

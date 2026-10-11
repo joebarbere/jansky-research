@@ -22,6 +22,10 @@ date-released: "2026-10-10"
 license: MIT
 repository-code: "https://github.com/joebarbere/jansky-research"
 url: "https://github.com/joebarbere/jansky-research"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21482378
+    description: "Zenodo concept DOI (all versions)"
 keywords:
   - radio astronomy
   - fast radio bursts
@@ -29,3 +33,5 @@ keywords:
   - SETI
   - reproducibility
   - open-source software
+  - pulsars
+  - solar radio bursts
