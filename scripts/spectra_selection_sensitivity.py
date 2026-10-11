@@ -54,6 +54,8 @@ def main() -> None:
         "observed_scatter_mad": round(mad(diff), 4),
         "z_sd": round(float(np.std(diff / comb, ddof=1)), 3),
         "z_mad": round(k_core, 3),
+        "z_mad_steep": round(mad((diff / comb)[ref < -0.9]), 3),
+        "n_steep": int(np.sum(ref < -0.9)),
         "n_abs_diff_gt_0p2": int(np.sum(np.abs(diff) > 0.2)),
         "n_diff_gt_0p2": int(np.sum(diff > 0.2)),
         "candidate_offset": round(obs, 4),

@@ -7,6 +7,8 @@
  "observed_scatter_mad": 0.0385,
  "z_sd": 1.147,
  "z_mad": 0.515,
+ "z_mad_steep": 0.636,
+ "n_steep": 84,
  "n_abs_diff_gt_0p2": 15,
  "n_diff_gt_0p2": 14,
  "candidate_offset": -0.1102,
