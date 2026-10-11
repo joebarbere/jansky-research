@@ -98,6 +98,51 @@ independently re-checked, so the standing GATE-0 still applies to anything plann
   to each neighbour (largest near 2′); a physical excess predicts none. CPU, days, both catalogues
   public. GATE-0 run: data load; nearest prior work is Jones+2015's simulation of confusion, not an
   empirical two-beam test. Controls and pass criteria frozen in the plan before any real run.
+- **L9 (2026-10-11, GATE-0 run: PARTLY DONE, weak data — demoted).** Solar-elongation flux
+  dips in the ATCA calibrator database, replicating Marchili, Witzel & Aller (A&A 694, A96, 2025;
+  arXiv:2412.05373; **full text read**). The premise in the first scan was wrong: their
+  low-latitude annual ~30% dip (type I, Table 1, Sect. 3.1) is **instrumental** — the Sun in a
+  primary-beam sidelobe (Fiedler+1987b) — so an ATCA replication of it tests a telescope, not
+  the sky. The open physics is types IIa/IIb (Table 1, Sect. 3.2–3.3): achromatic dips out to
+  50–55° elongation at 8/14.5 GHz, annual or semi-annual (tied to RA ~6h/18h), cause unknown;
+  Sect. 5.2 rules out IPS and an ISM screen. Novelty: only two citing papers (ADS, 2026-10-11;
+  Koryukova+2025 arXiv:2503.22858, Mullan 2025 RNAAS 9, 287), neither a replication; their
+  Paper II is "in prep." Data: ATCA endpoint `/cgi-bin/Calibrators/new/caldb_v3.pl` works
+  without login, but per-epoch values are fitted log-log spectra with an RMS scatter, not a flux
+  error; cadence is ~5 epochs/yr against GBI's ~2 days. In a 250-name sample of |β|<20°
+  sources, 5 have ≥50 epochs at 4cm and none at 16cm; ~1,100 pooled 4cm epochs within 20° of
+  the Sun across the whole database (scaled). Only a pooled elongation stack is workable; per-
+  source dips and ESE claims are not. Traps: survivorship (near-Sun epochs exist only where
+  observers scheduled and kept them), intrinsic blazar variability at sparse cadence,
+  epoch-correlated flux-scale errors. If revived, aim it at **type IIa/IIb at 20–55°** with
+  frozen controls: planted 10/20/30% dips at real epochs, elongation-shuffle and offset-Sun
+  nulls, and a null reported as uninformative if a planted 20% dip is not recovered.
+- **L10 (2026-10-11, GATE-0 run: He KILLED; C partly open, artefact-limited — demoted).**
+  Stacked He/C recombination lines in the public Parkes HIPASS+ZOA RRL cube (Alves+2015,
+  arXiv:1411.4497, full text read; JBCA FITS v1.02, 200 MB, 3249×151×51, 4' pixels,
+  13.4 km/s channels at 20 km/s resolution, 14.4' beam, mK Tb, LSRK) at WISE HII 'K' regions
+  (VizieR J/ApJS/212/1: 1,323 with ionized-gas velocities in the footprint, 680 with
+  distances; velocities from Anderson+2011, Caswell & Haynes 1987, Lockman 1989, Sewilo 2004 —
+  none from this survey, so independent). **He⁺/H⁺ vs R_gal is already done at higher S/N**:
+  Wenger+2013 (arXiv:1212.2161, §4.4; 84 He/52 C components, GBT HRDS, slope
+  +0.0035 ± 0.0016 kpc⁻¹) and Quireza+2006a (106 regions). Alves 2015 §3.5 gives only a W43
+  anecdote (diffuse C/H 17 ± 2%); Alves 2012 §3.3 promised He/C "in future work", and no
+  citing paper reused the cube (ADS titles, 2026-10-11). What is left new: southern/fourth-
+  quadrant coverage and an aggregate C/H amplitude stack. **Caveat — real data has been
+  looked at:** the GATE-0 agent ran an exploratory stack (not a frozen test). He at −122 km/s
+  came out at 0.2–0.5% ± 0.3% of H against ~7–9% expected, a feature peaked at −160 km/s (not
+  −149.5) and a −4.5% trough at −93 km/s with no mirror at +93, all varying 1.6–7.6% across
+  subsets — a continuum-proportional baseline/ringing residual (Alves §2.1–2.3 documents
+  ripple, Gibbs ringing, scan striations and negative spikes near −130 km/s at l = 270–330°).
+  The systematic floor (~1–4% of H) sets the precision, not the noise (±0.3%). Any revival
+  must say the stack is not blind, and needs a joint H/He/C + fixed-frequency baseline
+  template (the catalogue's velocity spread separates "moves with H" from "fixed in
+  frequency"), planted triplets injected with the cube's smoothing and noise correlation
+  (channels lag-1 ≈ 0.2, pixels ≈ 0.65–0.70), and matched random-position nulls.
+- **L11 (2026-10-11, data unverified). Blind RRL stack over MALS AGN sightlines.** Emig+2023
+  (arXiv:2301.03115) stacked RRLs toward PKS 1830−211 only; no MALS-wide search found. Blocked
+  on whether the MALS spectra are downloadable without login and their size (likely tens of
+  GB). Expected outcome a null — quote the limit divided by sensitivity, not by sightline count.
 - **Rejected on arrival:** "RACS-mid two-epoch circular-polarization variability census" — the
   agent proposed it as new, but this repo already did it (`stokesv_discovery` uses both
   RACS-mid epochs). The survivor is plan 59 (same method, Gaia UCD targets).
@@ -277,6 +322,18 @@ should treat these as hard "do not plan" flags unless the GATE-0 re-check overtu
   MeerKAT. A directly-imaged-planet census, and β Pic as a recover-a-known, are both out of
   reach of survey snapshots; only deep targeted interferometry works. (RACS-mid epoch 2 tile
   ASKAP-67275 returned "no access" from CASDA and was not measured.)
+- **Archival-mining scan kills (added 2026-10-11; calibrator reuse and recombination lines).**
+  OVRO 40m blazar monitoring: data by email only, and the query page is Cloudflare-blocked. GBI
+  archive: `ese.nrl.navy.mil` does not respond. Calibrator fields as cm deep fields: the mm
+  version is done (ALMACAL XV, arXiv:2511.22574), PKS B1934−638's field is characterised
+  (arXiv:2004.00454), and a cm version needs raw-visibility calibration. MeerKAT "flux density
+  monitoring" on Data Central is 89 MSPs, not calibrators. Station RRLs at 1.4 GHz: Orion gives
+  ~0.3 mK in the 0.7 m dish, ~6,000 h for a detection, and the SAW filter passes one line.
+  Low-frequency CRRLs: done (NenuFAR Cas A, arXiv:2506.08895) and TB-scale. Extragalactic RRL
+  stacking in HIPASS/ALFALFA-class cubes: mJy noise against ~mJy lines. RRL contamination of
+  FASHI/ALFALFA catalogues: QA, not a paper (HIPASS already flagged them). Partial survivor:
+  SMA calibrator list (`sma1.sma.hawaii.edu/callist`, plain text, to 2025) for a 2013–2025
+  extension of Bower+2015's variability timescales (arXiv:1508.06603) — incremental.
 
 ---
 

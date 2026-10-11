@@ -10,6 +10,10 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- `ideas.md`: archival-mining scan (calibrator-field reuse, radio recombination lines). New leads L9 (ATCA solar-elongation dips; full-text GATE-0 found the low-latitude dip in Marchili+2025 is instrumental, so demoted, with the type IIa/IIb variant kept), L10 (stacked He/C RRLs in the Parkes HIPASS+ZOA cube; full-text GATE-0 found He/H vs R_gal already measured at higher S/N by Wenger+2013 and an exploratory stack limited by a continuum-proportional baseline artefact, so demoted) and L11 (MALS RRL stack, data unverified); seven dead ends added to closed doors.
+- `README.md` brought current: slice count 48 (the dmzcal row had not bumped it), dmzcal added to the RNAAS-length notes, plan range 00–99, and the What's-next paragraph describes `ideas.md`'s dated updates.
+
 ## [1.13.0] - 2026-10-10
 
 ### Added
