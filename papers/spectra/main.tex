@@ -25,7 +25,7 @@ $\alpha=\usAlphaMedian$) and flags \usNuss\ raw candidates. Scoring the whole fi
 \citet{degasperin2018} TGSS$\times$NVSS spectral-index catalogue (built from the same
 uncorrected ADR1 fluxes, so the comparison measures matching and selection, not the flux scale)
 shows no population offset ($\Delta\alpha=+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ over
-\usRealNPairs\ detection pairs, identical on both sides of the rescaled-coverage declination edge).
+\usRealNPairs\ detection pairs, consistent on both sides of the rescaled-coverage declination edge).
 The candidates nonetheless sit $\Delta\alpha=\usRealFlaggedOffset$ below their reference values,
 of which a zero-free-parameter model of selection on the noisy index predicts
 $\usRealSelPred\pm\usRealSelPredSD$: the offset is the selection, not a calibration. Against the
@@ -111,7 +111,7 @@ this analysis attributed exactly this offset to the TGSS flux scale. The populat
 refute that, and a zero-free-parameter model supplies the real cause: treating the reference
 indices as truth and re-selecting on truth $+$ each source's own measurement noise predicts a mean
 offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected set. Selection on the extreme of
-a noisy variable produces most of the observed offset, with no calibration error anywhere. This is
+a noisy variable produces about half of the observed offset; the population statistics exclude a calibration error, and the remainder is unexplained. This is
 committed as \code{selection\_bias\_mc} and is the number any candidate-list offset must be
 compared against before invoking a systematic.
 

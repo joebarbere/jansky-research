@@ -50,7 +50,8 @@ scan and no off-target scan. A postage-stamp vet re-reads all six scans around e
 survivor and demands the same coherence directly of the data, and an ITU
 satellite-downlink allocation exclusion follows. Every stage is validated offline on a
 synthetic cadence with an injected drifting tone, an always-on interferer, and a DC
-spike.
+spike; recovery completeness as a function of signal-to-noise and drift rate has not been
+measured for this detector.
 
 The result reproduces the paper's null over the full band (Figure~\ref{fig:survey}):
 \aiTotRawHits\ raw hits $\to$ \aiTotSurvivors\ survivors $\to$ \aiTotConfirmed\
@@ -58,8 +59,13 @@ confirmed. The $16\sigma$ narrowband limit,
 $\mathrm{EIRP} = 4\pi d^{2}\,S_\mathrm{min}\,\delta\nu$ with the paper's own parameters
 (SEFD $\approx$ 10~Jy, 300~s scans, $d=\aiDistanceAu$~au from JPL Horizons at the
 cadence epoch), is $\mathrm{EIRP} \le \aiEirpMw$~mW at L band, algebraically identical
-to the paper's formulation \citep{gajjar2021} for unit dedrifting efficiency, hence the
-matching $\sim$100~mW. The reproduction cost $\approx$95~h of active compute and
+to the paper's formulation \citep{gajjar2021} for a transmitted linewidth equal to the
+channel width and unit dedrifting efficiency, hence the matching $\sim$100~mW. Unit
+efficiency holds only on the drift grid, which is $6.7\times$ coarser than matched; a
+worst-case off-grid tone, including the $\sim$0.17~Hz\,s$^{-1}$ Earth-rotation drift of a
+transmitter on the target, faces a limit up to $\sim$3$\times$ weaker. No sensitivity is
+quoted for S, C or X band, where the SEFD differs. Reconstructed from per-node rates (no
+run log was kept), the reproduction took $\approx$95~h of active compute and
 $\approx$3.7~TB of transfer on one desktop PC. Auditing a published technosignature
 search from its public archive is within any interested party's reach.
 
@@ -69,7 +75,9 @@ The survivor population is a taxonomy of filter evasion, concentrated where the
 interference lives: \aiLSurvivors\ of the \aiTotSurvivors\ survivors are in L band,
 \aiSSurvivors\ in S, \aiXSurvivors\ in X (all zero-drift Ku-band satellite-TV tones
 above the analysed passband), and C band, 4.3~GHz of spectrum, produced
-\aiCSurvivors. Terrestrial carriers passed the on/off filter by sitting below threshold
+\aiCSurvivors. These counts are not directly comparable between bands: the L-band leg used
+symmetric $16\sigma$ on/off thresholds and S/C/X the paper's $16\sigma$/$10\sigma$, whose
+stricter off-scan veto removes candidates, so C band's zero is partly a threshold effect. Terrestrial carriers passed the on/off filter by sitting below threshold
 in the off scans; the stamp vet sees them there directly. High-drift chance
 coincidences in the densest hit lists fail to track their own drift rate. Of
 particular interest, \aiSatCoherent\ candidates passed both geometric filters, every one in the Iridium or
@@ -78,9 +86,8 @@ sky and intermittent, so no two-position filter can reject them by geometry; a
 frequency-allocation axis is necessary, as BL's own pipelines encode. This independent
 rediscovery of that necessity from scratch is a check on the original search's design.
 
-Caveats: the L-band leg used symmetric on/off thresholds where the paper used
-$16\sigma$/$10\sigma$ (the stamp vet's direct off-scan check subsumes the difference).
-The MAD-based threshold is effectively looser than \code{turboSETI}'s normalization
+Caveats: the stamp vet's direct off-scan check subsumes the threshold difference for
+confirmation, though not for the survivor counts. The MAD-based threshold is effectively looser than \code{turboSETI}'s normalization
 \citep{choza2024} in dense RFI, so raw hit counts are not comparable between detectors,
 a conservative bias for a null. The recorded band edges searched here also extend
 beyond the passbands the original team analysed.
@@ -97,8 +104,9 @@ hits $\to$ \aiTotSurvivors\ on/off survivors $\to$ \aiTotConfirmed\ confirmed.}
 \end{figure}
 
 \software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
-NumPy, h5py. Analysis assisted by Claude \citep{anthropicclaude}; all results verified
-by the pipeline's test suite.}
+NumPy, h5py. Analysis assisted by Claude \citep{anthropicclaude}. The pipeline's
+scientific kernels are covered by an offline test suite; the network and real-data drivers
+are not unit-tested.}
 
 \bibliography{refs}
 \bibliographystyle{aasjournal}

@@ -24,10 +24,9 @@ field shows no population offset ($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$,
 \usRealNPairs\ pairs), yet the candidates sit $\usRealFlaggedOffset$ steep, of which
 a zero-free-parameter model of
 selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own USS population the cut is
-\usRealPurityPct\% pure and \usRealCompletenessPct\% complete; the incompleteness is
-structural, since a joint detection is equally sensitive only to
-$\alpha\approx\usAlphaMatch$ and flagging $\alpha=\usAlphaProbe$ requires
-$S_{150}\geq\usSNeededProbe$~mJy. A cautionary negative result.
+\usRealPurityPct\% pure (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\%
+complete (\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being sources at the
+threshold and sources absent from our matched sample. A cautionary negative result.
 \end{abstract}
 
 \section{Result}
@@ -41,7 +40,7 @@ with injected indices, including sources injected at the cut. Run on a
 Galactic Pole, it matches \usNmatched\ sources with a median $\alpha=\usAlphaMedian$,
 consistent with flux-limited extragalactic samples, and flags \usNuss\ raw USS
 candidates (steepest $\alpha=\usAlphaMin$), none with a measured redshift in NED or
-SIMBAD.
+SIMBAD (a manual check, not part of the committed pipeline).
 
 The follow-up scores the whole field against the 1.4-million-source
 \citet{degasperin2018} TGSS$\times$NVSS catalogue. That catalogue is built from the
@@ -50,22 +49,30 @@ flux-scale term at $\sim$0.06 in $\alpha$), so the comparison measures matching 
 selection, not the flux scale. Three measured facts replace the flux-scale story an
 earlier draft of this note told. The population shows no offset:
 $+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$ over \usRealNPairs\ detection pairs,
-identical on both sides of the rescaled-coverage declination edge. The
+consistent on both sides of the $+30^\circ$ declination edge of the rescaled-TGSS coverage. The
 candidates still sit $\usRealFlaggedOffset$ below their reference values
 (Figure~\ref{fig:spectra}; one candidate's reference entry is a non-detection limit,
 excluded); treating the reference as truth and re-selecting on truth plus each
-source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so the offset is
-selection on the extreme of a noisy variable, not calibration. Against the
+source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so about half the offset is
+selection on the extreme of a noisy variable; the population null excludes a calibration
+error, and the remainder is unexplained. Against the
 reference's own USS population the cut is \usRealPurityPct\% pure
 (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\% complete
-(\usRealNRefUssRec\ of \usRealNRefUss): with the documented survey floors a joint
-detection is equally sensitive only down to $\alpha\approx\usAlphaMatch$, and a
-source at $\alpha=\usAlphaProbe$ must have $S_{150}\geq\usSNeededProbe$~mJy to be
-flagged at all, so genuine USS sources are truncated out by construction.
+(\usRealNRefUssRec\ of \usRealNRefUss). The committed rows show why. Of the five
+candidates the reference does not confirm, one has only a non-detection limit there and two
+have reference indices within 0.04 of the threshold; of the six missed
+reference sources, three are absent from our matched sample, two lie within 0.012 of the
+threshold, and one differs by 0.69 in $\alpha$ at a 7\arcsec\ separation. Since both
+catalogues are built from the same two surveys, the survey floors cannot explain their
+disagreement; they instead limit both against the true sky, where a joint detection is
+equally sensitive only down to $\alpha\approx\usAlphaMatch$ and a source at
+$\alpha=\usAlphaProbe$ must have $S_{150}\geq\usSNeededProbe$~mJy to be flagged at all.
 
 A catalogue-level USS cut from this survey pair is therefore unreliable in both
 directions. Every number above is \code{\textbackslash input} from a
-pipeline-generated macro file and regenerates from a clean checkout
+pipeline-generated macro file, except the row-level counts and differences in the
+preceding paragraph, which are tallied from the committed
+\code{results/uss\_reference\_check.csv}; all regenerate from a clean checkout
 (\code{python -m jansky\_research.spectra --ra \usFieldRa\ --dec \usFieldDec\
 --radius \usRadius}).
 
@@ -75,9 +82,9 @@ pipeline-generated macro file and regenerates from a clean checkout
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every
 matched source with a counterpart. The population lies on the identity line (mean
 offset $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of
-which the committed selection model predicts. The open circle is the candidate
-whose reference entry is a non-detection limit (\code{Scode=L}), excluded from all
-means.}
+which the committed selection model predicts. Open circles are reference entries that
+are non-detection limits (\code{Scode=L}, one of them a candidate), excluded from all
+means. Reference USS sources outside our matched sample cannot appear.}
 \label{fig:spectra}
 \end{figure}
 

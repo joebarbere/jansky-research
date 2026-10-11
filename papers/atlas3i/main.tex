@@ -146,7 +146,8 @@ Separately, the C band produced zero two-position survivors across its
 4.3~GHz. The narrowband sensitivity,
 $S_\mathrm{min} = 16\,\mathrm{SEFD}/\sqrt{n_\mathrm{pol}\,\delta\nu\,\tau}$ and
 $\mathrm{EIRP} = 4\pi d^{2} S_\mathrm{min}\,\delta\nu$, gives
-$\le\aiEirpMw$~mW at L band. Setting the transmitted linewidth of the published
+$\le\aiEirpMw$~mW at L band; no limit is quoted for S, C or X band, where the
+SEFD differs, so those legs reproduce the null without a stated sensitivity. Setting the transmitted linewidth of the published
 formulation \citep{gajjar2021} equal to the channel resolution
 ($\delta\nu_t = \delta\nu$) and taking unit dedrifting efficiency $\beta$, the two
 expressions coincide exactly in the combined EIRP, so the agreement with the paper's
@@ -178,9 +179,9 @@ strategy, is forced to rediscover the same three-axis rejection design (geometry
 coherence, allocation) is itself a validation of the original search's architecture.
 
 \subsection{Computational cost}
-% The figures in this subsection are run-log measurements (survey/atlas3i-findings.md),
-% not macro-generated from the result JSONs — update them there if the runs are redone.
-Measured from run logs: $\approx$95~h of active compute (L $\approx$2.2~h per node;
+% The figures in this subsection are reconstructed from per-node rates (survey/atlas3i-findings.md);
+% no run log was kept, and they are not macro-generated — update them there if the runs are redone.
+Reconstructed from per-node rates (no run log was kept): $\approx$95~h of active compute (L $\approx$2.2~h per node;
 S/C/X $\approx$1.5~h) and $\approx$3.7~TB transferred, with peak disk of one cadence
 ($\approx$60~GB) under a fetch--search--vet--delete cycle, on one desktop (6-core Ryzen
 5 5600X, 64~GB RAM), CPU only. Auditing a published technosignature search from its

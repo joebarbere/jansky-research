@@ -80,7 +80,7 @@ the known values, since a narrow window centred on the answer would manufacture 
 samples are strongly autocorrelated and enormous in number, the analytic Lomb--Scargle false-alarm
 probability is meaningless (absurdly small) and we do not report it. The statistical
 uncertainty is a rotation-block bootstrap (resample whole rotation-length blocks); the systematic
-one is the peak's spread across four frequency sub-bands. A coherent signal, whether rotation or a
+one is the peak's spread across three disjoint thirds of the 100--1000~kHz analysis band. A coherent signal, whether rotation or a
 viewing-geometry, beaming, or spectral-window modulation, is achromatic, so a small sub-band spread
 is evidence of a real coherent peak but does not establish that it is the rotation. A discrete-epoch
 Rayleigh $Z^2_1$ fold \citep{buccheri1983} of detected bursts, reused from this repository's FRB
@@ -119,8 +119,8 @@ is reporting an unconstrained peak, not an uncertainty, and we do not quote it a
 
 For Neptune, the peak rails to the upper search bound (\vgRealNPeriod~h), a bound,
 not an estimate, so no consistency statement with the historical $\vgRealNHist \pm 0.05$~h is
-possible (the macro reports ``\vgRealNHistOK''). The offset from 16.11~h is 7+ resolution
-elements, a real mismatch; the railing is the signature of a periodogram dominated by the
+possible (the macro reports ``\vgRealNHistOK''). The offset from 16.11~h spans several resolution
+elements (\vgRealNRes~h each at this baseline), a real mismatch; the railing is the signature of a periodogram dominated by the
 red-noise / flyby-envelope continuum rather than a rotational line. We disclose the analysis
 history in full, since this paper's title contains ``blind'': an earlier version of this
 analysis used a narrower search window and reported Neptune as recovered near 16~h; widening
@@ -141,11 +141,9 @@ full three-clause criterion, \vgSynFullOK, with seed-to-seed scatter \vgSynSeedS
 
 The blind total-power periodogram does not recover the ice-giant rotation
 periods, while recovering a clean injected signal in the identical analysis. The auroral total-power
-flux is therefore not a clean rotational sinusoid over these flybys; the historical determinations'
-beaming and magnetic-longitude modelling, which a blind periodogram omits, was essential.
-Independently, the rotation-block uncertainties ($\sim$\vgRealUUnc~h) are hundreds of times coarser
-than the 28~s by which \citet{lamy2025} refined Uranus, so even a successful blind extraction could
-never approach modern precision. The secondary Rayleigh burst fold (Uranus \vgRealURayPeriod~h,
+flux is therefore not a clean rotational sinusoid over these flybys, consistent with the historical
+determinations' beaming and magnetic-longitude modelling, which a blind periodogram omits, having been
+necessary; this analysis does not test that modelling. The secondary Rayleigh burst fold (Uranus \vgRealURayPeriod~h,
 Neptune \vgRealNRayPeriod~h) is likewise uninformative, as expected for a discrete-epoch method on
 this emission.
 
@@ -155,7 +153,7 @@ this emission.
 \startdata
 Voyager (historical)   & $17.24\pm0.01$ & $16.11$ & radio (modelled) \\
 \citet{lamy2025}       & $\vgRealULamy$ & \nodata & HST UV \\
-This work (blind)      & $\vgRealUPeriod\pm\vgRealUUnc$ & $\vgRealNPeriod\pm\vgRealNUnc$ & radio (blind LS) \\
+This work (blind)      & $\vgRealUPeriod$ & $\vgRealNPeriod$ (railed) & radio (blind LS) \\
 recovers historical?   & \vgRealURecovers & \vgRealNRecovers & \\
 \enddata
 \tablecomments{This work: blind Lomb--Scargle of the PRA flux series over an un-tuned 14--20~h window;
