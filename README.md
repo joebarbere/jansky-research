@@ -13,29 +13,38 @@ independently re-checked. This repo asks small, answerable questions of those ar
 published null reproduce, are a tool's error bars honest, is a claimed trend a survey artefact?)
 and answers each with a tested tool and a short paper. The unit of work is a "slice": one
 question, one tested tool, one real dataset, one write-up. The tools are pure NumPy/SciPy/astropy,
-or pure PyTorch where device portability pays (the same code runs on CPU and on an AMD GPU).
+or pure PyTorch where device portability pays (the same code runs on CPU and on AMD and NVIDIA
+GPUs).
 
 **Why it is useful.**
 - *Checkable:* every number in every paper is generated from committed results, and the whole
   chain regenerates from a clean checkout. 48 slices, each with its tool, tests and paper.
-- *Honest about negatives:* nulls, inconclusive tests and retractions are written up the same
-  way as positives; most of the results here are limits and cautions, and say so.
-- *Reviewed adversarially:* each result passes a science-review gate and, before submission,
-  presenter/referee rounds whose findings and retractions are kept in `survey/`.
+- *Honest about negatives:* nulls, inconclusive tests and withdrawn claims are written up the
+  same way as positives; most of the results here are limits and cautions, and say so.
+- *Reviewed adversarially, by AI:* each result passes a science-review gate and, before
+  submission, rounds with AI presenter and referee agents whose findings and withdrawals are kept
+  in `survey/`. That makes the work checkable, not peer-reviewed (see the
+  [AI use disclosure](#ai-use-disclosure)); "accepted" below means accepted by those internal
+  rounds, not by a journal.
 - *Reusable:* the tools are tested modules (85% coverage floor) that run on a desktop, and
   the lessons about how analyses go wrong are recorded where the next slice will read them.
 
 **Recent headlines.**
 - *2026-10:* zdm's per-burst redshift intervals for fast radio bursts place host-identified
   bursts too far away: 95% coverage 0.81 against a floor of 0.86 on 36 bursts it was not fitted
-  to (`dmzcal`, RNAAS note accepted after three referee rounds).
-- *2026-10:* three more RNAAS notes refereed to acceptance: the Voyager 2 ice-giant rotation
-  null (`vgpra`), the TGSS×NVSS ultra-steep-spectrum caution (`spectra`), and the independent
-  reproduction of Breakthrough Listen's 3I/ATLAS null (`atlas3i`, also bound for arXiv).
+  to (`dmzcal`; RNAAS note accepted after three internal referee rounds, not yet submitted).
+- *2026-10:* three more RNAAS notes accepted in internal review, ahead of submission: the
+  Voyager 2 ice-giant rotation null (`vgpra`), the TGSS×NVSS ultra-steep-spectrum caution
+  (`spectra`), and the independent reproduction of Breakthrough Listen's 3I/ATLAS null
+  (`atlas3i`, also bound for arXiv). An end-to-end audit then reopened `spectra`: selection on a
+  noisy index explains only a fifth to a quarter of its candidates' steepening, not half, and
+  the note now says so.
+- *2026-10:* every Outcome and Papers-table entry in this README was re-checked against its
+  slice's latest review round; about half had been overtaken by later rounds and were corrected.
 - *2026-10:* a two-beam FASHI × ALFALFA test of H I beam blending, with controls frozen before
-  the data, came out inconclusive and is published as such (`hiblend`).
-- *2026-09:* the first blind, survey-scale radio proper-motion search across four VLASS epochs recovers
-  UV/BL Ceti and finds no new movers (`vlasspm`).
+  the data, came out inconclusive and is written up as such (`hiblend`).
+- *2026-09:* the first blind, survey-scale radio proper-motion search across four VLASS epochs
+  recovers UV/BL Ceti and finds no new movers (`vlasspm`).
 - Release [v1.13.0](https://github.com/joebarbere/jansky-research/releases/tag/v1.13.0)
   (2026-10-10), archived on Zenodo.
 
