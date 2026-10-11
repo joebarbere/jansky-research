@@ -45,8 +45,8 @@ GPUs).
   the data, came out inconclusive and is written up as such (`hiblend`).
 - *2026-09:* the first blind, survey-scale radio proper-motion search across four VLASS epochs
   recovers UV/BL Ceti and finds no new movers (`vlasspm`).
-- Release [v1.13.0](https://github.com/joebarbere/jansky-research/releases/tag/v1.13.0)
-  (2026-10-10), archived on Zenodo.
+- Release [v1.13.1](https://github.com/joebarbere/jansky-research/releases/tag/v1.13.1)
+  (2026-10-11), archived on Zenodo.
 
 **Up next** (from [`ideas.md`](ideas.md); each starts with a novelty and data-access check):
 a Stokes-V census of Gaia ultracool dwarfs across two RACS epochs (plan 59); broadband
