@@ -98,6 +98,38 @@ independently re-checked, so the standing GATE-0 still applies to anything plann
   to each neighbour (largest near 2′); a physical excess predicts none. CPU, days, both catalogues
   public. GATE-0 run: data load; nearest prior work is Jones+2015's simulation of confusion, not an
   empirical two-beam test. Controls and pass criteria frozen in the plan before any real run.
+- **L9 (2026-10-11, GATE-0 run: PARTLY DONE, weak data — demoted).** Solar-elongation flux
+  dips in the ATCA calibrator database, replicating Marchili, Witzel & Aller (A&A 694, A96, 2025;
+  arXiv:2412.05373; **full text read**). The premise in the first scan was wrong: their
+  low-latitude annual ~30% dip (type I, Table 1, Sect. 3.1) is **instrumental** — the Sun in a
+  primary-beam sidelobe (Fiedler+1987b) — so an ATCA replication of it tests a telescope, not
+  the sky. The open physics is types IIa/IIb (Table 1, Sect. 3.2–3.3): achromatic dips out to
+  50–55° elongation at 8/14.5 GHz, annual or semi-annual (tied to RA ~6h/18h), cause unknown;
+  Sect. 5.2 rules out IPS and an ISM screen. Novelty: only two citing papers (ADS, 2026-10-11;
+  Koryukova+2025 arXiv:2503.22858, Mullan 2025 RNAAS 9, 287), neither a replication; their
+  Paper II is "in prep." Data: ATCA endpoint `/cgi-bin/Calibrators/new/caldb_v3.pl` works
+  without login, but per-epoch values are fitted log-log spectra with an RMS scatter, not a flux
+  error; cadence is ~5 epochs/yr against GBI's ~2 days. In a 250-name sample of |β|<20°
+  sources, 5 have ≥50 epochs at 4cm and none at 16cm; ~1,100 pooled 4cm epochs within 20° of
+  the Sun across the whole database (scaled). Only a pooled elongation stack is workable; per-
+  source dips and ESE claims are not. Traps: survivorship (near-Sun epochs exist only where
+  observers scheduled and kept them), intrinsic blazar variability at sparse cadence,
+  epoch-correlated flux-scale errors. If revived, aim it at **type IIa/IIb at 20–55°** with
+  frozen controls: planted 10/20/30% dips at real epochs, elongation-shuffle and offset-Sun
+  nulls, and a null reported as uninformative if a planted 20% dip is not recovered.
+- **L10 (2026-10-11). Stacked He/C recombination lines in the Parkes HIPASS+ZOA RRL cube.**
+  Velocity-registered stack of the public H166–168α cube (Alves et al. 2015, arXiv:1411.4497;
+  JBCA, 200 MB FITS, verified) at WISE HII positions (VizieR J/ApJS/212/1), giving He⁺/H⁺ and
+  C/H amplitude ratios vs Galactocentric radius. Alves 2015's abstract covers Te gradient,
+  compact sources and diffuse C RRLs but not stacked He ratios — full-text check needed. Trap:
+  He and C sit −122/−150 km/s from H, 27 km/s apart against 20 km/s channels, so they blend;
+  fit a joint triplet and report the degeneracy. Planted triplets at off-plane positions; the
+  FAST GPPS RRL cubes (Hou+2022, arXiv:2211.11301; download unverified) as a cross-instrument
+  leg. CPU, days.
+- **L11 (2026-10-11, data unverified). Blind RRL stack over MALS AGN sightlines.** Emig+2023
+  (arXiv:2301.03115) stacked RRLs toward PKS 1830−211 only; no MALS-wide search found. Blocked
+  on whether the MALS spectra are downloadable without login and their size (likely tens of
+  GB). Expected outcome a null — quote the limit divided by sensitivity, not by sightline count.
 - **Rejected on arrival:** "RACS-mid two-epoch circular-polarization variability census" — the
   agent proposed it as new, but this repo already did it (`stokesv_discovery` uses both
   RACS-mid epochs). The survivor is plan 59 (same method, Gaia UCD targets).
@@ -277,6 +309,18 @@ should treat these as hard "do not plan" flags unless the GATE-0 re-check overtu
   MeerKAT. A directly-imaged-planet census, and β Pic as a recover-a-known, are both out of
   reach of survey snapshots; only deep targeted interferometry works. (RACS-mid epoch 2 tile
   ASKAP-67275 returned "no access" from CASDA and was not measured.)
+- **Archival-mining scan kills (added 2026-10-11; calibrator reuse and recombination lines).**
+  OVRO 40m blazar monitoring: data by email only, and the query page is Cloudflare-blocked. GBI
+  archive: `ese.nrl.navy.mil` does not respond. Calibrator fields as cm deep fields: the mm
+  version is done (ALMACAL XV, arXiv:2511.22574), PKS B1934−638's field is characterised
+  (arXiv:2004.00454), and a cm version needs raw-visibility calibration. MeerKAT "flux density
+  monitoring" on Data Central is 89 MSPs, not calibrators. Station RRLs at 1.4 GHz: Orion gives
+  ~0.3 mK in the 0.7 m dish, ~6,000 h for a detection, and the SAW filter passes one line.
+  Low-frequency CRRLs: done (NenuFAR Cas A, arXiv:2506.08895) and TB-scale. Extragalactic RRL
+  stacking in HIPASS/ALFALFA-class cubes: mJy noise against ~mJy lines. RRL contamination of
+  FASHI/ALFALFA catalogues: QA, not a paper (HIPASS already flagged them). Partial survivor:
+  SMA calibrator list (`sma1.sma.hawaii.edu/callist`, plain text, to 2025) for a 2013–2025
+  extension of Bower+2015's variability timescales (arXiv:1508.06603) — incremental.
 
 ---
 
