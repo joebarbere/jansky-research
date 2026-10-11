@@ -50,7 +50,7 @@ backlog in `survey/candidate-gaps.md`.
 
 ## Results
 
-Forty-seven slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
+Forty-eight slices, one line each; the long version of every row is `survey/<slice>-findings.md`:
 
 | Slice | Tool | Outcome |
 |-------|------|---------|
@@ -113,8 +113,9 @@ keeping it.
 ## What's next
 
 The idea backlog is [`ideas.md`](ideas.md) (a 2026-07 deep re-scan of the open-data
-landscape). Every entry there now has a plan (`plans/38`–`93`) and most have been executed, so
-current work is depth rather than breadth:
+landscape, with dated updates since: 2026-09 releases and leads L1–L8; 2026-10 archival-mining
+leads L9–L11, two demoted at GATE-0 and one blocked on data access). Every July entry has a plan
+(`plans/38`–`93`) and most have been executed, so current work is depth rather than breadth:
 
 - **Review.** Every paper passes mechanical triage (`scripts/triage_papers.py`), and a deeper
   presenter/referee round is working through the list — the Reviewed column in the papers table
@@ -219,16 +220,17 @@ contribution — the tooling and the reproducibility, not a novelty claim:
 
 - **Software / citable archive:** the toolkit is meant for [JOSS](https://joss.theoj.org) (see
   `joss/paper.md`) and a [Zenodo](https://zenodo.org) DOI on release (`.zenodo.json`, `CITATION.cff`).
-- **Short notes:** seven results are condensed to
+- **Short notes:** nine results are condensed to
   [Research Notes of the AAS](https://journals.aas.org/research-notes/) — the frbstats validation
   (`papers/frbstats/rnaas.tex`), the WD-pulsar survey (`papers/wdpulsar/rnaas.tex`, refereed and
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), and the
   drift-search benchmark + Voyager-1 replication (`papers/driftsearch/rnaas.tex`, plan 94,
   refereed and ready to submit), and the LAB/VGPS terminal-velocity comparison
-  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Three are RNAAS-length as
+  (`papers/hi/rnaas.tex`, GATE-0 discharged and refereed 2026-08-31). Four are RNAAS-length as
   their `main.tex`: the FASHI DR2 environment-split caution (`papers/fashienv/`, eight referee
-  rounds) the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds), and the inconclusive
-  two-beam blending test (`papers/hiblend/`, four referee rounds).
+  rounds), the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds), the inconclusive
+  two-beam blending test (`papers/hiblend/`, four referee rounds), and the FRB DM→z coverage
+  audit (`papers/dmzcal/`, accepted at referee round 3).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/`, `dr20radio/`, `lptv/`, and `innerrc/` — each has been through multiple referee
   rounds (see the Reviewed column below). Behind them: `frblens/` (the first catalogue-level
@@ -341,10 +343,10 @@ jansky-research/
   .claude/agents/        # science-reviewer, paper-presenter, paper-referee, style-editor,
                          #   dataset-analyst, pipeline-runner, results-interpreter, archive-scout,
                          #   radio-research-assistant
-  plans/                 # numbered slice specs (00-93); the lasting record is each slice's
+  plans/                 # numbered slice specs (00-99); the lasting record is each slice's
                          #   survey/*-findings.md + papers/<slice>/
-  ideas.md         # current plan-ready idea list (2026-07 deep re-scan; supersedes the
-                         #   opportunity-scan shortlist)
+  ideas.md         # current plan-ready idea list (2026-07 deep re-scan + dated updates;
+                         #   supersedes the opportunity-scan shortlist)
 ```
 
 ## Support
