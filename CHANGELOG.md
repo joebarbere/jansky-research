@@ -10,6 +10,8 @@ recommend the next version number.
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-10-11
+
 ### Changed
 - `ideas.md`: archival-mining scan (calibrator-field reuse, radio recombination lines). New leads L9 (ATCA solar-elongation dips; full-text GATE-0 found the low-latitude dip in Marchili+2025 is instrumental, so demoted, with the type IIa/IIb variant kept), L10 (stacked He/C RRLs in the Parkes HIPASS+ZOA cube; full-text GATE-0 found He/H vs R_gal already measured at higher S/N by Wenger+2013 and an exploratory stack limited by a continuum-proportional baseline artefact, so demoted) and L11 (MALS RRL stack, data unverified); seven dead ends added to closed doors.
 - RNAAS notes `papers/vgpra/rnaas.tex`, `papers/spectra/rnaas.tex` and `papers/atlas3i/rnaas.tex` refereed to acceptance (2026-10-11; four, four and two rounds). The vgpra note had never received its August fixes and was rewritten (disjoint sub-bands, post-hoc controls and two post-result criterion changes disclosed, injection depth bounds as the operative validation); spectra's completeness is attributed to what the committed rows show; atlas3i's note carries its paper's caveats. Each `main.tex` aligned with its note. Rounds recorded in the three findings files.
