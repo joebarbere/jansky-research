@@ -139,3 +139,22 @@ in the paper, since the title says "blind". The figure now shows the full 14–2
 with the real Uranus and Neptune periodograms (it previously showed a 1.4 h window centred
 on the known answer, with no real data). Synthetic metrics are committed evidence
 (results/vgpra_synthetic_metrics.json, guard-allowlisted).
+
+## Confirming referee rounds on the RNAAS note (2026-10-11) — accepted at round 4
+
+Joe chose RNAAS submission, so `rnaas.tex` got its own rounds. **Round 1 (major):** the
+Aug-13 fixes above had reached `main.tex` only partly and the note not at all — it still
+described four sub-bands, printed the ±1.94 h as an uncertainty, kept the retracted
+"precision ceiling", and omitted the scramble FAP, the injection bounds and the analysis
+history. This is the "done, with one asterisk" pattern: the fixes were recorded here as applied
+when they were applied to one of two documents. The note was rewritten from the corrected
+Results. **Round 2 (minor):** the history said one post-result change; there were two (the
+window/criterion clauses, then the sub-band redefinition), and the scramble and injection
+controls are post hoc. A scramble also destroys red noise, so it shows non-white structure,
+not a coherent line. The sub-band spread is a standard deviation (peaks 18.41, 20.0, 15.41 h;
+one railed). The injection result excludes a *sinusoid at the historical period* (8/8 phases
+at 20% / 10%; 5/8 at the next depth down), so the true threshold lies between half and all of
+each value. **Round 3 (minor):** the note abstract and `main.tex` brought into line.
+**Round 4: note accepted;** `main.tex` minors (abstract no longer claims the modelling was
+needed; the synthetic sentence matches "this method on this data"; the grid is 2/5/10/20/40%)
+applied without a further round.

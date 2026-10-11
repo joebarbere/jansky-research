@@ -30,9 +30,10 @@ modelling used in the original analyses having been necessary. This blind, total
 $\sim$\vgRealURes--\vgRealNRes~h and a peak unconstrained within the window; that reflects this
 method on this data, not the flybys, since the modelled 1993 reanalysis reached $\pm 0.006$~h
 ($\pm 22$~s) from the same Neptune data, hundreds of times coarser than the Hubble result. The
-contribution is a reproducible, modern-statistical demonstration of why the historical periods
-needed the sophisticated modelling used to derive them, and
-how little a naive total-power periodogram of these short flybys can constrain.
+contribution is a reproducible, modern-statistical measurement of how little a naive
+total-power periodogram of these short flybys can constrain: injections into the real series
+exclude a sinusoidal modulation at the historical periods only at depths of \vgRealUMinDepth\%
+(Uranus) and \vgRealNMinDepth\% (Neptune).
 \end{abstract}
 
 \keywords{Planetary science (1255) --- Uranus (1751) --- Neptune (1096) --- Radio astronomy (1338)
@@ -96,7 +97,8 @@ period (\vgSynInjected~h), noise, and data gaps, searched in the same wide 14--2
 used on the real data. The Lomb--Scargle estimator recovers \vgSynRecovered~h (\vgSynRecoveredOK) and
 the Rayleigh fold recovers \vgSynRayPeriod~h (\vgSynRayOK), both inside their bootstrap bands. This is
 the control that makes the real-data null interpretable: the method finds a clean rotation when one is
-present, so a failure on the real data is a property of the data, not the pipeline.
+present, so a failure on the real data reflects this method on this data rather than a broken
+pipeline.
 
 \section{Results}
 \label{sec:results}
@@ -137,7 +139,7 @@ We tested the selection function directly. Injecting a fractional sinusoid at ea
 historical period into the real flux series (red noise, flyby envelope and detrend included)
 and re-running the blind search recovers it in every one of eight phases at depths of
 \vgRealUMinDepth\% (Uranus) and \vgRealNMinDepth\% (Neptune), the smallest tested depths to reach
-that on a grid stepping by factors of two, so the true eight-of-eight threshold lies between half
+that on a grid of 2, 5, 10, 20 and 40\%, so the true eight-of-eight threshold lies between half
 and all of each value. A sinusoidal total-power modulation at the historical period is excluded at
 those depths. This, not the
 synthetic spike train, is the operative validation: the synthetic control (which passes the

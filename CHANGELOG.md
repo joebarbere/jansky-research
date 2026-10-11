@@ -12,7 +12,11 @@ recommend the next version number.
 
 ### Changed
 - `ideas.md`: archival-mining scan (calibrator-field reuse, radio recombination lines). New leads L9 (ATCA solar-elongation dips; full-text GATE-0 found the low-latitude dip in Marchili+2025 is instrumental, so demoted, with the type IIa/IIb variant kept), L10 (stacked He/C RRLs in the Parkes HIPASS+ZOA cube; full-text GATE-0 found He/H vs R_gal already measured at higher S/N by Wenger+2013 and an exploratory stack limited by a continuum-proportional baseline artefact, so demoted) and L11 (MALS RRL stack, data unverified); seven dead ends added to closed doors.
-- `README.md` brought current: slice count 48 (the dmzcal row had not bumped it), dmzcal added to the RNAAS-length notes, plan range 00–99, and the What's-next paragraph describes `ideas.md`'s dated updates.
+- RNAAS notes `papers/vgpra/rnaas.tex`, `papers/spectra/rnaas.tex` and `papers/atlas3i/rnaas.tex` refereed to acceptance (2026-10-11; four, four and two rounds). The vgpra note had never received its August fixes and was rewritten (disjoint sub-bands, post-hoc controls and two post-result criterion changes disclosed, injection depth bounds as the operative validation); spectra's completeness is attributed to what the committed rows show; atlas3i's note carries its paper's caveats. Each `main.tex` aligned with its note. Rounds recorded in the three findings files.
+- `README.md` brought current: slice count 48 (the dmzcal row had not bumped it), dmzcal added to the RNAAS-length notes, plan range 00–99, the What's-next paragraph describes `ideas.md`'s dated updates, and the vgpra/spectra/atlas3i rows and the publishing paragraph record the three accepted RNAAS notes (atlas3i on both the RNAAS and arXiv tracks).
+
+### Fixed
+- `spectra.make_figures`: multi-component reference rows (Scode=M/C/I) were drawn and labelled as non-detection limits; they now get their own marker. `papers/spectra/figures/alpha_compare.pdf` rebuilt from the committed `results/uss_reference_check.csv` (identical points).
 
 ## [1.13.0] - 2026-10-10
 

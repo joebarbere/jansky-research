@@ -226,3 +226,22 @@ captions) now use the partitive "of which / part of which the model predicts", t
 form the ratio supports. Standing item for the next science round: main.tex still says
 selection "produces most of the observed offset" — 44% is not "most"; the sentence should
 quote the fraction or say "roughly half".
+
+## Confirming referee rounds on the RNAAS note (2026-10-11) — accepted at round 3
+
+**Round 1 (minor):** the Aug fixes were in the note, but "the offset is selection, not
+calibration" outran −0.049 ± 0.033 against −0.11, and the 1/7 completeness was attributed to
+survey-floor truncation, which cannot explain a disagreement between two catalogues built from
+the same surveys. The committed `uss_reference_check.csv` shows what does: 3 of the 7 Scode=S
+reference USS sources are absent from our 456 matched rows; two in-sample misses sit at −1.312
+and −1.304; one differs by 0.69 in α at 7″; of the five unconfirmed candidates one has only a
+limit and two sit within 0.005 and 0.032 of the cut. **Round 2 (minor):** the figure labelled
+all 108 non-S rows "Scode=L" (54 L, 26 M, 20 C, 8 I). Rebuilt from the committed CSV through
+`spectra.make_figures` with a corrected legend (identical points; M/C/I as crosses). The
+reference USS population is Scode=S only (two matched M/I sources below −1.3 would make
+completeness 1/9). The selection residual is 1.3σ (model SD and the empirical SE of the five
+offsets in quadrature), so "remainder unexplained" overcorrected; the population null excludes a
+*relative* calibration difference only, not the shared ADR1 flux-scale term. **Round 3: note
+accepted;** `main.tex` caption, Discussion and 1.3σ definition aligned. **Round 4:** both
+accepted ("within 1.3σ" → "at 1.3σ" applied). The standing item above ("most of the offset")
+is closed.

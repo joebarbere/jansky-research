@@ -186,3 +186,17 @@ arithmetically from per-node rates but have no run log behind them.
 drift rates would replace both the β caveat and the removed calibration with a measured
 recovery curve, turning "the null reproduces" into "the null reproduces, and here is the
 completeness at which it does".
+
+## Confirming referee rounds on the RNAAS note (2026-10-11) — accepted at round 2
+
+Joe chose both venues: `rnaas.tex` to RNAAS and `main.tex` to arXiv, public together. **Round 1
+(minor):** most of the 2026-08-11 fixes had reached `main.tex` only. The note still said "all
+results verified by the pipeline's test suite", omitted unmeasured completeness, presented C
+band's zero as a quiet band (S/C/X used 16σ/10σ, L symmetric 16σ), carried the off-grid
+penalty only in its abstract, and gave the 95 h / 3.7 TB cost without provenance while
+`main.tex` said "measured from run logs" (there is no log). All carried over; cost labelled a
+reconstruction from per-node rates in both papers; no sensitivity quoted for S/C/X. **Round 2:
+note accepted;** `main.tex` gained "C band's zero is partly a threshold effect" and "a check
+on" (not "a validation of") the original design. The two papers now agree claim by claim. Still
+open, as before: the off-grid injection grid that would replace the β caveat with a measured
+completeness, and the L-band EIRP value written into the S/C/X result JSONs.
