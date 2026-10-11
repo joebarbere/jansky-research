@@ -109,11 +109,12 @@ the rescaling.
 below their reference values by $\Delta\alpha=\usRealFlaggedOffset$ (over the detection rows; one
 candidate's reference entry is a non-detection limit, on which more below). An earlier draft of
 this analysis attributed exactly this offset to the TGSS flux scale. The population statistics above
-refute that, and a zero-free-parameter model supplies the real cause: treating the reference
+refute that, and a zero-free-parameter model offers a sufficient explanation within errors: treating the reference
 indices as truth and re-selecting on truth $+$ each source's own measurement noise predicts a mean
 offset of $\usRealSelPred\pm\usRealSelPredSD$ for the selected set. Selection on the extreme of
 a noisy variable accounts for about half of the observed offset at its central value, and the
-two agree within 1.3$\sigma$; the population statistics exclude a relative calibration difference
+two agree within 1.3$\sigma$ (model SD and the empirical standard error of the five
+single-component candidate offsets, in quadrature; with five points, a rough guide); the population statistics exclude a relative calibration difference
 between the catalogues, though not the ADR1 flux-scale term they share. This is
 committed as \code{selection\_bias\_mc} and is the number any candidate-list offset must be
 compared against before invoking a systematic.
@@ -142,8 +143,10 @@ out of a joint TGSS$\times$NVSS detection by construction.
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every matched source
 with a reference counterpart. The population lies on the identity line (mean offset
 $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of which the committed
-selection-on-a-noisy-variable model predicts. The open circle is the candidate whose reference
-entry is a non-detection limit (\code{Scode=L}), excluded from all means.}
+selection-on-a-noisy-variable model predicts. Open circles are reference non-detection limits
+(\code{Scode=L}, one of them a candidate) and crosses are multi-component entries
+(\code{Scode=M/C/I}); only single-component detections enter the means and the purity and
+completeness. Reference USS sources outside our matched sample cannot appear.}
 \label{fig:compare}
 \end{figure}
 
@@ -171,9 +174,9 @@ either side of it in either catalogue.
 
 \section{Discussion and reproducibility}
 The honest outcome is a negative, cautionary result, sharper than the one an earlier draft of this
-analysis claimed. There is no evidence that the TGSS flux scale biases this field's indices: the
-population offset against the reference is zero, and the declination-edge mechanism is refuted by
-measurement. What actually breaks a raw TGSS$\times$NVSS USS candidate list is (a) selection on
+analysis claimed. The population offset against the reference is zero, which excludes a relative calibration
+difference between the two catalogues and refutes the declination-edge mechanism by measurement;
+the ADR1 flux-scale term both catalogues share is untested here. What actually breaks a raw TGSS$\times$NVSS USS candidate list is (a) selection on
 the extreme of a noisy index, which manufactures a spurious steepening of the selected few that a
 committed zero-free-parameter model matches within 1.3$\sigma$, and (b) matched-sensitivity truncation, which
 limits both catalogues against the true sky. Measured against the reference

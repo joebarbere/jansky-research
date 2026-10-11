@@ -23,7 +23,7 @@ and flag \usNuss\ raw USS candidates ($\alpha<\usThreshold$). Scored against the
 field shows no population offset ($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$,
 \usRealNPairs\ pairs), yet the candidates sit $\usRealFlaggedOffset$ steep, of which
 a zero-free-parameter model of
-selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own USS population the cut is
+selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own single-component USS population the cut is
 \usRealPurityPct\% pure (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\%
 complete (\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being mostly sources at the
 threshold and sources absent from our matched sample. A cautionary negative result.
@@ -54,7 +54,8 @@ candidates still sit $\usRealFlaggedOffset$ below their reference values
 (Figure~\ref{fig:spectra}; one candidate's reference entry is a non-detection limit,
 excluded); treating the reference as truth and re-selecting on truth plus each
 source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so the offset is consistent with
-selection on the extreme of a noisy variable (a 1.3$\sigma$ residual; the model's central
+selection on the extreme of a noisy variable (a 1.3$\sigma$ residual, combining the model SD and the empirical standard error of the five
+offsets in quadrature; the model's central
 value accounts for about half). The population null excludes a relative calibration
 difference between the two catalogues, though not the ADR1 flux-scale term they share.
 Against the reference's own single-component (\code{Scode=S}) USS population the cut is \usRealPurityPct\% pure
@@ -71,9 +72,8 @@ $\alpha=\usAlphaProbe$ must have $S_{150}\geq\usSNeededProbe$~mJy to be flagged 
 
 A catalogue-level USS cut from this survey pair is therefore unreliable in both
 directions. Every number above is \code{\textbackslash input} from a
-pipeline-generated macro file, except the row-level counts and differences in the
-preceding paragraph, which are tallied from the committed
-\code{results/uss\_reference\_check.csv}; all regenerate from a clean checkout
+pipeline-generated macro file, except the row-level counts and differences and the 1.3$\sigma$ residual, which are
+tallied from the committed \code{results/uss\_reference\_check.csv}; all regenerate from a clean checkout
 (\code{python -m jansky\_research.spectra --ra \usFieldRa\ --dec \usFieldDec\
 --radius \usRadius}).
 
