@@ -117,15 +117,28 @@ independently re-checked, so the standing GATE-0 still applies to anything plann
   epoch-correlated flux-scale errors. If revived, aim it at **type IIa/IIb at 20–55°** with
   frozen controls: planted 10/20/30% dips at real epochs, elongation-shuffle and offset-Sun
   nulls, and a null reported as uninformative if a planted 20% dip is not recovered.
-- **L10 (2026-10-11). Stacked He/C recombination lines in the Parkes HIPASS+ZOA RRL cube.**
-  Velocity-registered stack of the public H166–168α cube (Alves et al. 2015, arXiv:1411.4497;
-  JBCA, 200 MB FITS, verified) at WISE HII positions (VizieR J/ApJS/212/1), giving He⁺/H⁺ and
-  C/H amplitude ratios vs Galactocentric radius. Alves 2015's abstract covers Te gradient,
-  compact sources and diffuse C RRLs but not stacked He ratios — full-text check needed. Trap:
-  He and C sit −122/−150 km/s from H, 27 km/s apart against 20 km/s channels, so they blend;
-  fit a joint triplet and report the degeneracy. Planted triplets at off-plane positions; the
-  FAST GPPS RRL cubes (Hou+2022, arXiv:2211.11301; download unverified) as a cross-instrument
-  leg. CPU, days.
+- **L10 (2026-10-11, GATE-0 run: He KILLED; C partly open, artefact-limited — demoted).**
+  Stacked He/C recombination lines in the public Parkes HIPASS+ZOA RRL cube (Alves+2015,
+  arXiv:1411.4497, full text read; JBCA FITS v1.02, 200 MB, 3249×151×51, 4' pixels,
+  13.4 km/s channels at 20 km/s resolution, 14.4' beam, mK Tb, LSRK) at WISE HII 'K' regions
+  (VizieR J/ApJS/212/1: 1,323 with ionized-gas velocities in the footprint, 680 with
+  distances; velocities from Anderson+2011, Caswell & Haynes 1987, Lockman 1989, Sewilo 2004 —
+  none from this survey, so independent). **He⁺/H⁺ vs R_gal is already done at higher S/N**:
+  Wenger+2013 (arXiv:1212.2161, §4.4; 84 He/52 C components, GBT HRDS, slope
+  +0.0035 ± 0.0016 kpc⁻¹) and Quireza+2006a (106 regions). Alves 2015 §3.5 gives only a W43
+  anecdote (diffuse C/H 17 ± 2%); Alves 2012 §3.3 promised He/C "in future work", and no
+  citing paper reused the cube (ADS titles, 2026-10-11). What is left new: southern/fourth-
+  quadrant coverage and an aggregate C/H amplitude stack. **Caveat — real data has been
+  looked at:** the GATE-0 agent ran an exploratory stack (not a frozen test). He at −122 km/s
+  came out at 0.2–0.5% ± 0.3% of H against ~7–9% expected, a feature peaked at −160 km/s (not
+  −149.5) and a −4.5% trough at −93 km/s with no mirror at +93, all varying 1.6–7.6% across
+  subsets — a continuum-proportional baseline/ringing residual (Alves §2.1–2.3 documents
+  ripple, Gibbs ringing, scan striations and negative spikes near −130 km/s at l = 270–330°).
+  The systematic floor (~1–4% of H) sets the precision, not the noise (±0.3%). Any revival
+  must say the stack is not blind, and needs a joint H/He/C + fixed-frequency baseline
+  template (the catalogue's velocity spread separates "moves with H" from "fixed in
+  frequency"), planted triplets injected with the cube's smoothing and noise correlation
+  (channels lag-1 ≈ 0.2, pixels ≈ 0.65–0.70), and matched random-position nulls.
 - **L11 (2026-10-11, data unverified). Blind RRL stack over MALS AGN sightlines.** Emig+2023
   (arXiv:2301.03115) stacked RRLs toward PKS 1830−211 only; no MALS-wide search found. Blocked
   on whether the MALS spectra are downloadable without login and their size (likely tens of
