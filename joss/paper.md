@@ -100,9 +100,9 @@ established signal (FRB 20180916B's period, the VGPS terminal-velocity curve, th
 published planetary rotation periods) before it is trusted on new data. The second is
 an honest null: a large body of slices report bounded non-detections or systematics
 rather than manufactured discoveries — the SETI detector fooled by a band-centre
-DC-spike artifact (`driftsearch`), ultra-steep-spectrum candidates that are really the
-TGSS flux-scale systematic (`spectra`), a blind Voyager 2 reanalysis that recovers
-neither ice-giant period (`vgpra`), an OVRO-LWA type II census that is
+DC-spike artifact (`driftsearch`), an ultra-steep-spectrum cut that is neither pure
+nor complete against a reference catalogue (`spectra`), a blind Voyager 2 reanalysis
+that recovers neither ice-giant period (`vgpra`), an OVRO-LWA type II census that is
 false-positive dominated (`typeii`), and calibrated upper limits from megaconstellation
 RFI trends, giant-pulse tests, repeater lensing, and Stokes-V emitter surveys
 (`rfitrend`, `pte2`, `frblens`, `wdpulsar`). Not a single overclaim has
@@ -120,9 +120,9 @@ Apache Airflow DAG on rootless Podman for the frequently-updated e-Callisto stre
 archive. The software is itself the research — each slice is written up as an AASTeX
 paper under `papers/`, two of them further as Research Notes of the AAS — so
 `make reproduce` regenerates the whole chain, from raw public data through the
-analyses and papers to arXiv packages, from a clean checkout. Two of those notes
-(the `vgpra` and `spectra` slices) are in preparation for the Research Notes of the
-AAS; they report individual science results and are distinct from this paper, which
+analyses and papers to arXiv packages, from a clean checkout. Several of those notes
+(including the `vgpra`, `spectra` and `atlas3i` slices) are being submitted to the
+Research Notes of the AAS; they report individual science results and are distinct from this paper, which
 describes the software and its methodology.
 
 # Functionality and reproducibility
