@@ -4,15 +4,46 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/joebarbere?logo=githubsponsors)](https://github.com/sponsors/joebarbere)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/joebarbere)
 
-Amateur radio-astronomy research, end to end. A sibling of the
+Amateur radio-astronomy research, end to end, on public data. A sibling of the
 [`jansky`](https://github.com/joebarbere/jansky) teaching course: where jansky teaches radio
-astronomy, this repo does original amateur research on public data.
+astronomy, this repo does original research with it.
 
-The unit of work is a "slice": one question, one tested tool, one real dataset, one write-up.
-The tools are pure NumPy/SciPy/astropy, or pure PyTorch where device portability pays (the same
-code runs on CPU and on an AMD GPU via ROCm). Each slice goes through an adversarial science
-review before the paper is written, and a negative result gets the same write-up a positive one
-would.
+**What it is for.** Most radio-astronomy data are public, and most published results are never
+independently re-checked. This repo asks small, answerable questions of those archives (does a
+published null reproduce, are a tool's error bars honest, is a claimed trend a survey artefact?)
+and answers each with a tested tool and a short paper. The unit of work is a "slice": one
+question, one tested tool, one real dataset, one write-up. The tools are pure NumPy/SciPy/astropy,
+or pure PyTorch where device portability pays (the same code runs on CPU and on an AMD GPU).
+
+**Why it is useful.**
+- *Checkable:* every number in every paper is generated from committed results, and the whole
+  chain regenerates from a clean checkout. 48 slices, each with its tool, tests and paper.
+- *Honest about negatives:* nulls, inconclusive tests and retractions are written up the same
+  way as positives; most of the results here are limits and cautions, and say so.
+- *Reviewed adversarially:* each result passes a science-review gate and, before submission,
+  presenter/referee rounds whose findings and retractions are kept in `survey/`.
+- *Reusable:* the tools are tested modules (85% coverage floor) that run on a desktop, and
+  the lessons about how analyses go wrong are recorded where the next slice will read them.
+
+**Recent headlines.**
+- *2026-10:* zdm's per-burst redshift intervals for fast radio bursts place host-identified
+  bursts too far away: 95% coverage 0.81 against a floor of 0.86 on 36 bursts it was not fitted
+  to (`dmzcal`, RNAAS note accepted after three referee rounds).
+- *2026-10:* three more RNAAS notes refereed to acceptance: the Voyager 2 ice-giant rotation
+  null (`vgpra`), the TGSS×NVSS ultra-steep-spectrum caution (`spectra`), and the independent
+  reproduction of Breakthrough Listen's 3I/ATLAS null (`atlas3i`, also bound for arXiv).
+- *2026-10:* a two-beam FASHI × ALFALFA test of H I beam blending, with controls frozen before
+  the data, came out inconclusive and is published as such (`hiblend`).
+- *2026-09:* the first blind, survey-scale radio proper-motion search across four VLASS epochs recovers
+  UV/BL Ceti and finds no new movers (`vlasspm`).
+- Release [v1.13.0](https://github.com/joebarbere/jansky-research/releases/tag/v1.13.0)
+  (2026-10-10), archived on Zenodo.
+
+**Up next** (from [`ideas.md`](ideas.md); each starts with a novelty and data-access check):
+a Stokes-V census of Gaia ultracool dwarfs across two RACS epochs (plan 59); broadband
+technosignature power limits from survey circular polarization (plan 53); an anomaly sweep of a
+survey nobody has swept (plan 52); and, once the rooftop receiver is producing calibrated
+spectra, the first self-collected data (plan 78). See [What's next](#whats-next).
 
 **In this README:** [AI use disclosure](#ai-use-disclosure) · [Method](#method) ·
 [Results](#results) · [What's next](#whats-next) · [Papers](#papers) ·
@@ -121,6 +152,11 @@ leads L9–L11, two demoted at GATE-0 and one blocked on data access). Every Jul
   presenter/referee round is working through the list — the Reviewed column in the papers table
   below is the record. Every round so far has come back with revisions, which is the argument
   for finishing it before submitting anything.
+- **New slices.** Planned and waiting on their novelty and data-access checks: plan 59 (RACS
+  Stokes-V census of Gaia ultracool dwarfs), plan 53 (broadband technosignature EIRP limits from
+  survey Stokes V), plan 52 (self-supervised anomaly sweep of RACS or LoTSS DR3) and plan 51
+  (an external FAST-FREX benchmark with an open-weights burst classifier). Plan 61 (Apertif
+  single-pulse reprocessing) is re-scoped to a pulsar field and waits on an ASTRON account.
 - **Publishing.** The submission queue and venue reasoning are in the papers section below.
 - **The station.** Once the rooftop receiver produces calibrated spectra, self-collected data
   joins the public-archive slices (plan 78; `ideas.md` carries a station track for it).
