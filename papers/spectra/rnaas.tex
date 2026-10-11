@@ -25,7 +25,7 @@ field shows no population offset ($+\usRealDeltaAlpha\pm\usRealDeltaAlphaSE$,
 a zero-free-parameter model of
 selection on the noisy index predicts $\usRealSelPred\pm\usRealSelPredSD$. Against the reference's own USS population the cut is
 \usRealPurityPct\% pure (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\%
-complete (\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being sources at the
+complete (\usRealNRefUssRec\ of \usRealNRefUss), the disagreements being mostly sources at the
 threshold and sources absent from our matched sample. A cautionary negative result.
 \end{abstract}
 
@@ -53,10 +53,11 @@ consistent on both sides of the $+30^\circ$ declination edge of the rescaled-TGS
 candidates still sit $\usRealFlaggedOffset$ below their reference values
 (Figure~\ref{fig:spectra}; one candidate's reference entry is a non-detection limit,
 excluded); treating the reference as truth and re-selecting on truth plus each
-source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so about half the offset is
-selection on the extreme of a noisy variable; the population null excludes a calibration
-error, and the remainder is unexplained. Against the
-reference's own USS population the cut is \usRealPurityPct\% pure
+source's own noise predicts $\usRealSelPred\pm\usRealSelPredSD$, so the offset is consistent with
+selection on the extreme of a noisy variable (a 1.3$\sigma$ residual; the model's central
+value accounts for about half). The population null excludes a relative calibration
+difference between the two catalogues, though not the ADR1 flux-scale term they share.
+Against the reference's own single-component (\code{Scode=S}) USS population the cut is \usRealPurityPct\% pure
 (\usRealNFlaggedRefUss\ of \usNuss) and \usRealCompletenessPct\% complete
 (\usRealNRefUssRec\ of \usRealNRefUss). The committed rows show why. Of the five
 candidates the reference does not confirm, one has only a non-detection limit there and two
@@ -82,9 +83,10 @@ preceding paragraph, which are tallied from the committed
 \caption{Raw spectral index against the \citet{degasperin2018} reference for every
 matched source with a counterpart. The population lies on the identity line (mean
 offset $+\usRealDeltaAlpha$); the raw USS candidates (stars) sit below it, part of
-which the committed selection model predicts. Open circles are reference entries that
-are non-detection limits (\code{Scode=L}, one of them a candidate), excluded from all
-means. Reference USS sources outside our matched sample cannot appear.}
+which the committed selection model predicts. Open circles are reference non-detection
+limits (\code{Scode=L}, one of them a candidate) and crosses are multi-component entries
+(\code{Scode=M/C/I}); only single-component detections enter the means and the
+purity and completeness. Reference USS sources outside our matched sample cannot appear.}
 \label{fig:spectra}
 \end{figure}
 

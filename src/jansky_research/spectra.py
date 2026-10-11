@@ -636,8 +636,10 @@ def make_figures(
 
     if rc is not None:  # pragma: no cover - network run only
         ok = finite & np.isfinite(rc["ref_alpha"])
-        det = ok & (np.asarray([str(s) for s in rc["ref_scode"]]) == "S")
-        lim = ok & ~det
+        scode = np.asarray([str(s) for s in rc["ref_scode"]])
+        det = ok & (scode == "S")
+        lim = ok & (scode == "L")
+        multi = ok & ~det & ~lim
         fig, ax = plt.subplots(figsize=(5, 4.2))
         ax.scatter(rc["ref_alpha"][det & ~uss], a[det & ~uss], s=8, color="0.6", label="matched")
         ax.scatter(
@@ -656,6 +658,15 @@ def make_figures(
                 facecolors="none",
                 edgecolors="C1",
                 label="reference limit (Scode=L)",
+            )
+        if multi.any():
+            ax.scatter(
+                rc["ref_alpha"][multi],
+                a[multi],
+                s=18,
+                marker="x",
+                color="C0",
+                label="reference multi-component (Scode=M/C/I)",
             )
         span = [-2.2, 0.8]
         ax.plot(span, span, color="k", lw=0.8, ls=":")

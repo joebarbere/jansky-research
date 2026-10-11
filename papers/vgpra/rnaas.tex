@@ -41,32 +41,35 @@ narrow window would manufacture a match. A historical period counts as \emph{rec
 only if the blind peak lands within one combined-$\sigma$ of it (rotation-block bootstrap
 plus sub-band spread), is band-robust (spread $<0.6$~h across three disjoint thirds of the
 100--1000~kHz analysis band), and is not railed to a search bound. The window and criterion
-were frozen after one disclosed episode: an earlier, narrower window reported Neptune as
-recovered near 16~h, widening it moved the peak to the bound, and the band-robustness and
-railing clauses were added then. The frozen rule was applied identically to both planets
-and to a synthetic control, which recovers its injected period
+changed twice after real results were seen, and both changes are disclosed: an earlier,
+narrower window reported Neptune as recovered near 16~h, so the window was widened and the
+band-robustness and railing clauses added; and an earlier sub-band set included one band
+above the analysis band, which alone decided the Uranus verdict, so the bands were
+redefined as disjoint thirds. The scramble and injection controls below are likewise post
+hoc. The final rule was applied identically to both planets and to a synthetic control, which recovers its injected period
 (\vgSynInjected~h $\to$ \vgSynRecovered~h) and passes the full rule (\vgSynFullOK).
 
 On the real encounter volumes the blind periodogram recovers neither planet
 (Figure~\ref{fig:vgpra}). The Uranus peak sits at \vgRealUPeriod~h, 1.1 resolution
-elements (\vgRealURes~h) above the historical \vgRealUHist~h, and wanders by \vgRealUSpread~h
-across the three sub-bands, so it is not a stable line (not recovered, \vgRealURecovers).
-It is nonetheless significant against a scramble null (FAP $\le\vgRealUFap$ over
-\vgRealUNIndep\ independent frequencies): the series holds coherent structure, but not at
-the rotation period. The bootstrap width is nearly that of the search window, so it reports
+elements (\vgRealURes~h) above the historical \vgRealUHist~h, and its sub-band peaks have a standard deviation of
+\vgRealUSpread~h, one of them railed, so it is not a stable line and is not recovered. It
+is inconsistent with white noise (scramble FAP $\le\vgRealUFap$ over \vgRealUNIndep\
+independent frequencies), but a scramble also destroys red noise and the flyby envelope,
+so this shows structure in the series, not a coherent line. The bootstrap width is nearly that of the search window, so it reports
 an unconstrained peak rather than an uncertainty, and the historical and Hubble values
 lying within it says nothing. The Neptune peak rails to the upper search bound
 (\vgRealNPeriod~h); a railed peak is a bound, not an estimate, so no consistency statement
-with \vgRealNHist~h is possible (\vgRealNHistOK; not recovered, \vgRealNRecovers).
+with \vgRealNHist~h is possible, and it is not recovered.
 
 The operative validation is an injection into the real series (red noise, flyby envelope
 and detrend included): a fractional sinusoid at each historical period is recovered in
-$\ge$90\% of phase draws down to modulation depths of \vgRealUMinDepth\% (Uranus) and
-\vgRealNMinDepth\% (Neptune). No rotational total-power modulation deeper than these is
-present at the historical periods. The auroral total-power flux is therefore not a clean
+every one of eight phases at modulation depths of \vgRealUMinDepth\% (Uranus) and
+\vgRealNMinDepth\% (Neptune), the smallest tested depths to reach that, on a grid stepping by
+factors of two. A sinusoidal total-power modulation at the historical period is therefore
+excluded at those depths; the bound lies between half and all of each value. The auroral total-power flux is therefore not a clean
 rotational sinusoid over these flybys, consistent with the beaming and magnetic-longitude
 modelling of the original determinations, which a blind periodogram omits, having been
-necessary; this analysis does not test that modelling. Every number above is
+necessary; this analysis does not test that modelling. Every measured value above is
 \code{\textbackslash input} from a pipeline-generated macro file and regenerates from a
 clean checkout (\code{python -m jansky\_research.vgpra}).
 
@@ -74,8 +77,9 @@ clean checkout (\code{python -m jansky\_research.vgpra}).
 \centering
 \includegraphics[width=0.7\linewidth]{figures/vgpra.pdf}
 \caption{Blind Lomb--Scargle reanalysis of the Voyager~2 PRA flux, computed by
-\code{vgpra}. The synthetic recover-a-known (injected \vgSynInjected~h, recovered
-\vgSynRecovered~h) shows the Lomb--Scargle periodogram over the full un-tuned 14--20~h window for the synthetic control (left; injected period marked and recovered) and the real Uranus and Neptune series (middle, right; historical periods dashed, blind peaks dotted). Neither real peak coincides with its historical period; Neptune's rails to the window bound.}
+\code{vgpra}, over the full un-tuned 14--20~h window: the synthetic control (left;
+injected \vgSynInjected~h, recovered \vgSynRecovered~h) and the real Uranus and Neptune
+series (middle, right; historical periods dashed, blind peaks dotted). Neither real peak coincides with its historical period; Neptune's rails to the window bound.}
 \label{fig:vgpra}
 \end{figure}
 

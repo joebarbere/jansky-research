@@ -106,13 +106,14 @@ On the real encounter volumes the blind periodogram recovers neither rotation pe
 For Uranus, the peak sits at \vgRealUPeriod~h, offset $+1.2$~h from the historical
 \vgRealUHist~h, or 1.1 window-resolution elements (\vgRealURes~h at this baseline), so
 the offset alone is marginal. The verdict rests on achromaticity: across three disjoint
-thirds of the 100--1000~kHz analysis band the peak wanders with a spread of \vgRealUSpread~h,
+thirds of the 100--1000~kHz analysis band the peaks have a standard deviation of \vgRealUSpread~h (one railed),
 so it is not a stable coherent line and not a recovery (\vgRealURecovers). (An earlier
 version's band set included one band extending above the analysis band, which alone decided
 this verdict; the disjoint in-band set reaches the same conclusion on independent channels.)
 The peak is nonetheless significant against a scramble null
-(FAP $\le \vgRealUFap$ over \vgRealUNIndep\ independent frequencies): there is coherent
-structure in the series, but it is not at the rotation period. The historical and Hubble values
+(FAP $\le \vgRealUFap$ over \vgRealUNIndep\ independent frequencies). A scramble also
+destroys red noise and the flyby envelope, so this shows the series is not white noise, not
+that it holds a coherent line; whatever structure there is, it is not at the rotation period. The historical and Hubble values
 fall inside the $\pm\vgRealUUnc$~h band only because that band is nearly as wide as the
 search window ($\sigma/W = 0.32$, against 0.29 for a uniform distribution); the bootstrap
 is reporting an unconstrained peak, not an uncertainty, and we do not quote it as one.
