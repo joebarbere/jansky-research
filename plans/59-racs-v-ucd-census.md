@@ -1,6 +1,6 @@
 # 59 — RACS Stokes-V two-epoch census of the Gaia UCD sample
 
-Status: 📋 planned — GATE 0 run 2026-10-15 (scout, ideas.md "Update 2026-10-15 (2)", PR #343):
+Status: 🔨 in progress (built in a Claude Code session, not by scout; started 2026-10-15) — GATE 0 run 2026-10-15 (scout, ideas.md "Update 2026-10-15 (2)", PR #343):
 novelty PASS at the full-text level for the two closest papers; data PASS for the CASDA listing,
 **not** for cutout throughput (S0 below). Controls frozen 2026-10-15, before any real V cutout
 of a target is opened. Slice name: `ucdv`.
