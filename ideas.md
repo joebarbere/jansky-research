@@ -3,6 +3,8 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-15 (2)](#update-2026-10-15-2--scout-full-astro-ph-sweep--gate-0-shortlist-of-three-slices):
+  full astro-ph sweep, data checks, three-slice GATE-0 shortlist.
 - [Update 2026-10-15](#update-2026-10-15--scout-scan-first-run-abstract-level-only): scout scan.
 - [Update 2026-09-26](#update-2026-09-26--releases-scoop-re-check-compute-cloud-ml): data
   releases, scoop re-check of every unstarted plan, new leads, compute policy, AWS, ML.
@@ -22,6 +24,131 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-15 (2) — scout: full astro-ph sweep + GATE-0 shortlist of three slices
+
+Follows the first scan below (merged as #342). Nothing here starts a slice.
+
+**Two corrections to the 2026-09-26 "Revised suggested order" first.** Items 1 and 2 are done:
+L1 became `fashienv` (FASHI DR2, eight referee rounds; README row) and plan 64 became `vlasspm`
+(merged; zero new movers). Item 3 (plans 59/53) is the live head of that list. Also: `hiblend`
+(plans 97–98) closed inconclusive, so L8 is spent.
+
+### Sweep coverage (what was and was not read)
+
+- **Listings.** arXiv API, `submittedDate` 2026-10-01 → 10-14, complete for astro-ph.HE (264
+  papers), .GA (305) and .CO (187). For .SR, .EP, .IM the API rate-limited (HTTP 429) and only
+  the arxiv.org `pastweek` listing worked, which covers **2026-10-08 → 10-15 only**; **.SR/.EP/.IM
+  for 10-01 → 10-07 were not swept.** Filtering was by title/abstract keyword, so a relevant paper
+  with an unrelated title can be missed. No ADS access from this workstation; citation checks are
+  web search + arXiv pages only.
+- **Reading depth.** Everything below is "abstract only" unless it says otherwise.
+
+### New papers worth knowing (all abstract only unless marked)
+
+| arXiv | Cat | What | Why it matters here |
+|---|---|---|---|
+| 2610.05955 | HE | ASKAP DINGO search of 2.2×10⁴ h of stellar dynamic spectra for polarised bursts; WW PsA (M4V) found. **Full text partly read (first 100k of 148k chars).** 154 GCNS stars <85 pc in one footprint, 2 detections, no systematic limit table (Sect. 3.1); no SETI/technosignature text seen | Closest published *targeted* V search of nearby stars; does not overlap plans 53/59 (different data, no limit table). CASDA project codes AS032/034/104/110/115/204/207 are public |
+| 2610.09854 | SR | Jupiter-like radio aurora in the L3.5 dwarf LSPM J0036+1821 (VLA/VLBI + TESS, accepted A&A) | UCD radio emission is an active topic; no RACS/VAST used per the abstract page |
+| 2610.13011 | IM | ASKAP monitoring of the Rubin Deep Drilling Fields, alert infrastructure | Long-term ASKAP data in DDFs; infrastructure paper |
+| 2610.08396 | GA | ApPolLO: Apertif counterparts of polarised LOFAR RM-grid sources, depolarisation ratio 144 MHz vs 1.4 GHz | Adjacent to `rmstructure`; Apertif data access not checked |
+| 2610.20495 | HE | VT J1823−2345, a VLASS transient with a peaked spectrum, brightening 1996–2021 | Adjacent to `vlass`/`peaked`; single object |
+| 2610.18710 | HE | SBI on CHIME/FRB Cat 2: one-off and repeater subpopulations preferred | Same family as the *closed* "ML repeater classification" door; does not touch the `frbwait` wait-time census, but re-check before any FRB slice |
+| 2610.17022 | GA | SKA forecast for the cosmic radio dipole | The dipole field is still moving (see candidate 3) |
+| 2610.12450, 2610.17280 | HE | Parkes archival MC pulsars (6 new); GBNCC reanalysis, 51 new pulsars + revised census | A census refresh could invalidate `ppdot` inputs; not checked |
+| 2609.17382 | — | Ionospheric effects on LoDeSS image quality (found by search, not the sweep; **search snippet only**) | Closest prior to a LoDeSS spectral analysis (candidate 2) |
+
+The other open items (plans 51, 52, 56, 58, 61, 63, L3) were **not** re-searched for scoops this
+wake; the sweep surfaced nothing on them, which is weaker than a check.
+
+### Data checks (2026-10-15, from this workstation)
+
+| Item | Result |
+|---|---|
+| CASDA TAP (anonymous) | Lists RACS Stokes-V `taylor.0.restored.conv` products: 1,602 at λ=0.181 m (high), 3,190 at 0.219 m (mid; 1,609 of them MJD > 60,300 = second epoch), 1,702 at 0.318 m (943.5 MHz, MJD ≈ 60,300–60,400), 1,177 at 0.338 m (887.5 MHz, MJD 59,656–59,881). **No V product found at 887.5 MHz before MJD 59,600**, i.e. none for RACS-low1 under that filename pattern. Epoch names are my inference from wavelength and MJD, not from a paper. **SODA cutouts were NOT tested**: no `~/.casda_pw` and no `CASDA_USERNAME` on this workstation |
+| LoDeSS DR1 | `lofar-surveys.org/lodess.html` lists 40 fields (I/Q/U/V, 400,006,080 bytes each), source (7.5 MB) and Gaussian (12.7 MB) catalogues, two mosaics. **Downloaded the source catalogue**: FITS opens, 21,465 rows, 45 columns (the paper's Appendix B Table 4 lists 17). Range requests on a field image, V image and mosaic return 206 with FITS headers |
+| LoTSS DR3 source catalogue | `lofar-surveys.org/public/DR3/catalogues/LoTSS_DR3_v1.0.srl.fits`, 3,047,958,720 bytes, range request 206 |
+| SPICE-RACS DR2 | DAP API `…/collections/csiro:64891/data` lists `catalogues/spice-racs.dr2.fits.gz` (4,968,301,262 bytes); range request through the presigned link returns 206. Not on this workstation (`data/` lacks it). The same listing also carries `RACS-low3_INITIAL_components.fits` (1.9 GB) and `_sources.fits` (1.5 GB), dated 2026-05-04 — **listed, not opened** |
+| Reylé+2018 UCDs | VizieR `J/A+A/619/L8` (Gaia DR2 UCD candidates): 14,918 TSV lines; resolves |
+| Gaia CNS | VizieR `J/A+A/649/A6` (GCNS) returns rows. (`J/A+A/650/A201` is the 10 pc sample, 565 lines — the one `stokesv_discovery` used) |
+| NVSS polarization | VizieR `VIII/65/nvss` has **no polarization columns** (field list checked). NRAO's catalogue is anonymous FTP; `ftp://ftp.cv.nrao.edu` did not answer from here |
+| Not checked | MIDAS DR1, Apertif/ApPolLO data, FAST-FREX, ICRF3 (hpiers URL timed out) |
+
+Disk: 75 GB free (`df`), ~70 GB planning figure stands.
+
+### Shortlist (ranked; the recommendation is candidate 1)
+
+**1. Plan 59 — RACS Stokes-V census of Gaia ultracool dwarfs (plan 53 as an add-on, not a peer).**
+- *Gap.* Perger, Seli & Vida (arXiv:2506.21169, A&A; **full text read**) searched Reylé-2018
+  M7.5–L4 candidates in VLASS **Stokes I only**: 11,519 in the footprint, 0 brown-dwarf matches
+  (Sect. 2, 3.1); no Stokes V, no RACS (Sect. 3.1). RACS-low2 (arXiv:2606.16182, **full text
+  read**) measures V only at Stokes-I catalogue positions (Sect. 3.3), finds 61 stars (Sect.
+  5.2.3), mentions no UCDs, gives no per-target limits and no SETI text; its Sect. 6 plans "a
+  Stokes V data release for all RACS epochs" — a scoop clock for anything catalogue-wide. A
+  targeted forced-V limit table for UCDs at two RACS epochs was not found.
+- *Corrections to plan 59.* (a) 2506.21169 does **not** supply the UCD table; the parent is
+  Reylé+2018 (**Gaia DR2**-based), VizieR `J/A+A/619/L8`, 14,918 rows. (b) "RACS-low1 and
+  RACS-low2" cannot be the pair: no low1 V products were found; use low2 (887.5 MHz) + low3
+  (943.5 MHz), or mid1 + mid2 (same band).
+- *Data.* Reylé table (rows above); CASDA V cutouts. Size: cutouts are KB-scale; my estimate is
+  < 5 GB for ~15k targets × 2 epochs × I+V (**estimate, not measured**). **Gate not discharged:**
+  cutout download needs OPAL credentials this workstation does not have.
+- *Recover-a-known.* WISE J0623−0456 in RACS-mid (arXiv:2306.15219; abstract/snippet only: 4.17
+  mJy I, 66% V); forced photometry on blank sky must go negative about half the time (CLAUDE.md
+  `stokesv_discovery` lesson); planted V sources in real cutouts.
+- *Biggest risk.* A near-null result plus leakage near bright sources; the limit table has to be
+  the paper. Second risk is wall-clock: ~60k cutout requests, unmeasured.
+- *Effort.* Code 2–3 days (near-total `stokesv`/`stokesv_discovery` reuse); CASDA pass about a week
+  (the plan's own figure); referee rounds on top.
+- *Plan 53 as the add-on.* GCNS 100 pc resolves. But 1 mJy at 100 pc over a 288 MHz band (band
+  width from memory) is EIRP ≈ 3×10¹⁷ W (my arithmetic), many orders above narrowband limits
+  such as the GBT 11,680-star search (snippet only) — a different axis, not a competing limit.
+  Worth doing only as the same cutout pass; not worth a slice alone.
+
+**2. LoDeSS DR1 × LoTSS/NVSS/VLSSr: a 23 MHz spectral and curvature census (new, days old).**
+- *Gap.* arXiv:2610.04698 (**HTML text read through the appendices; figures and the reference
+  list not**): the catalogue is single-band (no spectral-index column, Appendix B Table 4), V is
+  released as images only and I saw no V source catalogue (Data availability; Sect. 5.5 gives
+  1.71 ± 0.09% leakage), and the LoDeSS–LoLSS comparison is deferred to the final release
+  (Sect. 5.4). Closest priors, snippets only: 2609.17382 (per-source log-log polynomial fits with
+  NVSS and 8C to assess ionospheric effects, not astrophysics); LoLSS DR1 (A&A 2023: α −0.71 vs
+  LoTSS-DR2); 2406.13346 (MPS vs GPS sources). An astrophysical 23–144 MHz turnover/curvature
+  census of the DR1 catalogue was not found.
+- *Data.* Verified above: 7.5 MB catalogue (21,465 sources), LoTSS DR3 3.05 GB, NVSS via VizieR.
+  Total download ≈ 3.1 GB; the 16 GB of V images only if a V search is added.
+- *Recover-a-known.* Reproduce the paper's own flux-scale comparison against NVSS/VLSSr/LoTSS
+  (Sect. 5.4: predicted/measured 2.23, SIQR 1.15 for all fields; 1.39, SIQR 0.40 for the
+  good-quality ones) before any new claim; then bright calibrators with literature spectra.
+- *Biggest risk.* The flux scale: a recommended 39% systematic and a field-dependent ratio of
+  1.4–2.2 (Sect. 5.4). Appendix A Table 3 rates the fields good/mediocre/poor (13/19/8 by my
+  count of a fetched summary — recount from the table before use), and the paper excludes poor
+  fields from the source catalogue. A result may reduce to "restricted to the 13 good fields, α is X ± the flux-scale systematic". Second: the
+  survey team is the natural author and has the final release planned.
+- *Effort.* 3–5 days CPU. The only candidate that can start on this workstation today.
+
+**3. Plan 55 — polarized-flux dipole from SPICE-RACS DR2.**
+- *Gap.* Only prior found is Tiwari & Jain (arXiv:1308.3970, MNRAS 447, 2658; **abstract only**):
+  NVSS, 8σ–5σ for P-weighted counts above 20–50 mJy. A web search found no polarized-flux dipole
+  with SPICE-RACS or POSSUM (snippets only, not ADS). Total-intensity dipoles are crowded
+  (closed-door entry above).
+- *Data.* DR2 file served (above), 5.0 GB gz, roughly 10 GB gunzipped (my estimate from 9.29M
+  rows × 125 columns), ~15 GB peak.
+- *Recover-a-known.* The plan's NVSS anchor is **unverified**: VizieR has no polarization columns
+  and FTP is unreachable from here. The local `data/rmsky_taylor2009.csv.gz` is an RM subset, not
+  the Tiwari & Jain sample.
+- *Biggest risk.* `rmdipole` already showed what this geometry does: the footprint edge (Dec ≤
+  +49°) carries the anisotropy and a polar-axis dipole is invisible. The kinematic expectation
+  needs x_P and α_P (from a snippet of arXiv:1610.08176), neither measured here.
+- *Effort.* 1–2 weeks, mostly systematics.
+
+**Not shortlisted.** Plan 58 (aberration drift): Gaia DR4 is dated 2026-12-02, seven weeks away,
+and a DR3 reproduction would be superseded on release. Plan 53 alone: see candidate 1. Plans 51,
+52, 56, 61, 63, L3 MIDAS: no new information this wake.
+
+**Recommendation: candidate 1 (plan 59), conditional on OPAL credentials being placed on this
+workstation.** It has the cleanest full-text novelty pass, the most reuse, and a recover-a-known
+that already exists. If credentials cannot be provided, candidate 2 is the only one that can start
+now, with the flux-scale caveat stated up front.
 
 ## Update 2026-10-15 — scout scan (first run; abstract-level only)
 

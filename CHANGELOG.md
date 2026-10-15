@@ -12,6 +12,7 @@ recommend the next version number.
 
 ### Changed
 - `ideas.md`: scout scan 2026-10-15 (astro-ph.IM, abstract level): LoDeSS DR1 (arXiv:2610.04698) and the RACS astrometry correction (arXiv:2607.18775) noted; FAST/LOFAR site checks recorded.
+- `ideas.md`: scout sweep 2026-10-15 (2): astro-ph.HE/.GA/.CO to 10-14 and .SR/.EP/.IM from 10-08 only, data-URL checks, and a ranked GATE-0 shortlist (plan 59 recommended, LoDeSS DR1, plan 55); notes that L1 and plan 64 are already merged.
 
 ## [1.13.1] - 2026-10-11
 
