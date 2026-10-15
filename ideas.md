@@ -3,6 +3,7 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-15](#update-2026-10-15--scout-scan-first-run-abstract-level-only): scout scan.
 - [Update 2026-09-26](#update-2026-09-26--releases-scoop-re-check-compute-cloud-ml): data
   releases, scoop re-check of every unstarted plan, new leads, compute policy, AWS, ML.
 
@@ -21,6 +22,29 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-15 — scout scan (first run; abstract-level only)
+
+Sources: arXiv API listing (astro-ph.IM, radio + catalogue, newest first), abstract pages
+fetched 2026-10-15. **Nothing below was read in full; all are "abstract only".** The scan
+covered astro-ph.IM only; .HE/.GA/.SR/.CO/.EP listings are not yet swept.
+
+- **LoDeSS DR1** — arXiv:2610.04698 (abstract only). LOFAR 15–30 MHz, dec > 20°, ~45″,
+  ~11.5 mJy/beam at 23 MHz, ~15% of planned area, fields chosen around exoplanet-aurora
+  candidates; Stokes I+V images and a source catalogue. Submitted 2026-10-03. **Data URL not
+  found** in the abstract page; locate it in the paper's data-availability section before
+  any plan. Possible fit: ultra-steep/peaked spectra with LoTSS DR3 (`peaked`/`southern`
+  reuse), or a V census. Scoop risk unknown.
+- **RACS astrometry correction, mid and high epochs** — arXiv:2607.18775 v2 (abstract only).
+  Corrected positions for two RACS epochs. Check whether `stokesv_discovery` and `southern`
+  cross-matches used uncorrected positions, and whether the corrected catalogue is on CASDA.
+- **No change found** for plan 51 (arXiv:2607.07382 still the VLM benchmark, no open-weights
+  classifier) or the RACS-low2 release (arXiv:2606.16182, CASDA).
+- **Data URL checks (2026-10-15):** arxiv.org abs pages, fast.bao.ac.cn/cms/article/271/ and
+  lofar-surveys.org all returned 200 on a re-check (first attempt got no response; re-checked
+  from the workstation). File downloads not tested.
+- **Not scanned / not done:** no ADS access, no check of the L1–L11 leads for scoops beyond
+  the above, no check of the Gaia DR4 date (2026-12-02 stands from the last update).
 
 ## Update 2026-09-26 — releases, scoop re-check, compute, cloud, ML
 

@@ -10,6 +10,9 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- `ideas.md`: scout scan 2026-10-15 (astro-ph.IM, abstract level): LoDeSS DR1 (arXiv:2610.04698) and the RACS astrometry correction (arXiv:2607.18775) noted; FAST/LOFAR site checks recorded.
+
 ## [1.13.1] - 2026-10-11
 
 ### Changed
