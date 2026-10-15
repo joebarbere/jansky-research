@@ -42,6 +42,8 @@ __all__ = [
     "apply_detection_rule",
     "assign_set",
     "forced_measure",
+    "in_footprint",
+    "parse_polygon",
     "injection_check",
     "inject_point_source",
     "luminosity_limit",
@@ -95,13 +97,46 @@ class Beam:
 
 
 def assign_set(source_id: np.ndarray) -> np.ndarray:
-    """Provenance split by Gaia ``source_id`` parity: even -> ``"A"`` (calibrates), odd -> ``"B"``.
+    """Provenance split: ``"A"`` (calibrates) or ``"B"`` (certifies) from a hash of the Gaia id.
 
-    A deterministic, data-blind rule fixed in the plan: no flux or position enters it, so set B
-    can certify what set A was used to tune.
+    The low bit of a Gaia DR2 ``source_id`` is not random -- all 14,915 Reyle+2018 ids are even --
+    so the parity rule first frozen in the plan would have put every target in A (amended
+    2026-10-15, pre-data). The first byte of SHA-256 of the decimal id is uniform and still
+    data-blind: no flux, position or distance enters it.
     """
-    sid = np.asarray(source_id, dtype=np.int64)
-    return np.where(sid % 2 == 0, "A", "B")
+    import hashlib
+
+    sid = np.atleast_1d(np.asarray(source_id, dtype=np.int64))
+    bit = np.array([hashlib.sha256(str(int(x)).encode()).digest()[0] & 1 for x in sid], dtype=int)
+    return np.where(bit == 0, "A", "B")
+
+
+def parse_polygon(s_region: str) -> np.ndarray:
+    """Vertices ``(n, 2)`` in degrees from an ObsCore ``POLYGON ICRS ra1 dec1 ra2 dec2 ...``."""
+    tok = str(s_region).split()
+    if not tok or tok[0].upper() != "POLYGON":
+        raise ValueError(f"not a POLYGON s_region: {s_region[:40]!r}")
+    nums = [float(x) for x in tok[1:] if x.upper() not in ("ICRS", "J2000", "FK5")]
+    return np.asarray(nums, float).reshape(-1, 2)
+
+
+def _unit(ra_deg: np.ndarray, dec_deg: np.ndarray) -> np.ndarray:
+    ra, dec = np.radians(ra_deg), np.radians(dec_deg)
+    return np.stack([np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)], axis=-1)
+
+
+def in_footprint(ra: np.ndarray, dec: np.ndarray, vertices: np.ndarray) -> np.ndarray:
+    """Points inside a convex spherical polygon (great-circle edges), either vertex winding.
+
+    Inside iff on the polygon's side of every edge's great circle, where "the polygon's side" is
+    fixed by the vertex centroid -- without that, the antipodal region also passes (all signs
+    flipped together). Exact on the sphere, so it holds near the poles and across RA = 0.
+    """
+    p = _unit(np.atleast_1d(np.asarray(ra, float)), np.atleast_1d(np.asarray(dec, float)))
+    v = _unit(vertices[:, 0], vertices[:, 1])
+    normals = np.cross(v, np.roll(v, -1, axis=0))  # one per edge
+    orient = np.sign(v.mean(axis=0) @ normals.T)  # the interior's sign for each edge
+    return np.all((p @ normals.T) * orient >= 0, axis=1)
 
 
 def null_positions(
