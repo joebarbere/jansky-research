@@ -48,11 +48,17 @@ Split: targets and null positions are assigned to set A/B by Gaia `source_id` pa
   subsample `d < D`, with D the largest distance whose projected wall-clock is ≤ 120 h. D is
   chosen from parallax and the throughput number **only** — never from any V or I value.
 - **C1 — blank-sky null (calibration on A, certification on B).** Forced photometry
-  (`measure_circular_pol(search_arcsec=0)`) at positions offset 2′ from each target in a random
-  direction (seed 59), same epoch, same cutout. Pass, on B only: fraction of V > 0 within the
-  binomial 95% interval of 0.5; std of V/σ_V in [0.85, 1.20]; count with |V|/σ_V ≥ 5 at most the
-  Gaussian expectation + 3 (Poisson 99.7%). The forced-photometry-on-noise lesson
-  (`stokesv_discovery`): a positive-only null means the measurement is searching, and stops the run.
+  (`measure_circular_pol(search_arcsec=0)`) at **5 positions per target-epoch**, each 2′ from the
+  target, at bearings 72° apart with one random rotation (seed 59), same epoch and cutout; nulls
+  are then > 2 beams apart. **n ≥ 400 null measurements** (40 S0 targets × 2 epochs × 5). Pass, on
+  B only: fraction of V > 0 within the binomial **99%** interval of 0.5; std of V/σ_V in
+  [0.85, 1.20]; count with |V|/σ_V ≥ 5 at most the Gaussian expectation + 3. A positive-only null
+  means the measurement is searching, and stops the run.
+  *False-failure rate of this rule on pure Gaussian noise (20,000 simulations, 2026-10-15): 0.8% at
+  n = 400.* The first frozen version (95% sign interval, one null per target-epoch, n ≈ 80) failed
+  a perfect pipeline 6.6% of the time (17% at n = 40); the synthetic offline run tripped it on
+  pure noise (std 0.83). Amended before any real data was opened (CLAUDE.md, the `hiblend` gate
+  lesson).
 - **C2 — injection–recovery (real cutouts, set B).** Inject beam-shaped (header BMAJ/BMIN/BPA)
   V point sources at the target pixel, at 3, 5, 7, 10, 20 σ_V, 200 per level. Pass: completeness
   ≥ 90% at 7 σ_V for the 5 σ_V threshold; median recovered/injected flux in [0.95, 1.05] at
@@ -69,6 +75,8 @@ Split: targets and null positions are assigned to set A/B by Gaia `source_id` pa
   3′ (sidelobe/leakage guard). With N ≈ 3×10⁴ target-epochs the Gaussian false-alarm expectation
   at 5σ two-sided is ~0.02. Candidates are named only after `classify_emitter` vetting and image
   inspection; nothing is called a detection on the photometry alone.
+- **Cutout size.** 0.06° radius (216″): a 2′ null plus its 30–90″ RMS annulus reaches 210″, and the
+  bright-source guard needs I out to 3′. The existing `stokesv` default (0.03°) is too small.
 - **Positions.** Gaia DR2 positions propagated to each epoch's observation MJD with
   `stokesv_discovery.epoch_position`: Gaia DR2 epoch 2015.5 to RACS-low2/low3 (2022–2024) is 7–9 yr,
   and nearby UCDs move up to ~1″/yr, i.e. several arcsec — a sizeable fraction of the beam.
