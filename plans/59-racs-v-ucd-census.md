@@ -37,7 +37,11 @@ that framing is committed now.
 
 Provenance rule (CLAUDE.md "an oracle that fed a fit may never certify"): anything that sets a
 threshold is production-side. Where a control calibrates, a **disjoint** set certifies.
-Split: targets and null positions are assigned to set A/B by Gaia `source_id` parity (even = A).
+Split: targets (and their nulls) are assigned to set A/B by the first bit of SHA-256 of the
+decimal Gaia `source_id` (0 = A). *Amended 2026-10-15, pre-data:* the first version used
+`source_id` parity, but all 14,915 Reylé ids are even, so every target would have landed in A and
+nothing could certify. The hash splits the 12,751 targets in both epochs' V footprints 6,377 A /
+6,374 B and uses no flux, position or distance.
 
 - **S0 — throughput and scope gate (first real action; touches no target V pixel values).**
   Fetch I+V cutout pairs for 40 targets drawn at random (seed 59) from set B, both epochs, with
