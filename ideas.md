@@ -40,8 +40,8 @@ L1 became `fashienv` (FASHI DR2, eight referee rounds; README row) and plan 64 b
   papers), .GA (305) and .CO (187). For .SR, .EP, .IM the API rate-limited (HTTP 429) and only
   the arxiv.org `pastweek` listing worked, which covers **2026-10-08 → 10-15 only**; **.SR/.EP/.IM
   for 10-01 → 10-07 were not swept.** Filtering was by title/abstract keyword, so a relevant paper
-  with an unrelated title can be missed. No ADS access from this workstation; citation checks are
-  web search + arXiv pages only.
+  with an unrelated title can be missed. ADS (API token, queried 2026-10-15) was used for the
+  GATE-0 pass below, after the sweep; the sweep itself was arXiv-only.
 - **Reading depth.** Everything below is "abstract only" unless it says otherwise.
 
 ### New papers worth knowing (all abstract only unless marked)
@@ -75,6 +75,36 @@ wake; the sweep surfaced nothing on them, which is weaker than a check.
 | Not checked | MIDAS DR1, Apertif/ApPolLO data, FAST-FREX, ICRF3 (hpiers URL timed out) |
 
 Disk: 75 GB free (`df`), ~70 GB planning figure stands.
+
+### ADS pass for the three candidates (2026-10-15; titles/abstracts, not full text)
+
+ADS queries are keyword-limited: "nothing found" means nothing matched these queries.
+
+- **Plan 59.** `abs:(ultracool|brown dwarf) AND abs:(radio) AND abs:(survey|census|upper limit|stokes V)`
+  2023→2026 returned 0; `abs:Gaia AND abs:ultracool AND abs:(RACS|VAST)` returned 0.
+  Papers citing Pritchard+2021 (28) and Rose+2023 (33) that touch UCDs/stars, none a forced-V
+  census: 2026MNRAS.547ag313P (arXiv:2602.10333, six wide-orbit BD companions, uGMRT/VLA,
+  targeted); 2024AJ..168..288A (arXiv:2409.18466, VLASS×Gaia DR3 within 500 pc, Stokes I,
+  includes UCDs); 2024ApJ..977..50H (GLEAM-X late-type dwarfs); 2025PASA..42..110D (ASKAP
+  multi-epoch MRP stars); 2026AJ..172..17S (first UCD at 340 MHz, VLITE); 2026ApJ..1005..51V
+  (upper limits, inactive M dwarfs, targeted). Nothing cites RACS VIII yet (0 citations).
+  Verdict unchanged: a RACS targeted forced-V UCD limit table was not found.
+- **Plan 55.** `abs:(polari*) AND abs:(dipole|anisotropy|isotropy) AND abs:(radio|NVSS|RACS|POSSUM)`
+  2019→2026 returned only unrelated hits; of 55 papers citing Tiwari & Jain 2015, the 9 that
+  mention polarization are CMB/optical-polarization or forecast papers (e.g. 2016JApA..37..25G,
+  the SKA forecast; 2019A&A..622A.113T, polarization *angles*). `SPICE-RACS|POSSUM AND
+  (dipole|source counts)` returned 0. No polarized-flux dipole with a modern catalogue found.
+- **Candidate 2 (LoDeSS) — novelty is weaker than stated above.** 2024NatAs..8..786G
+  (de Gasperin+, arXiv:2405.05311, abstract only) already imaged 330 deg² at 16–30 MHz with the
+  same instrument and band, found four fossil-plasma sources, and reports two as the steepest
+  spectra "among all sources detected at 23 MHz". 2024A&A..689A.264B (arXiv:2406.13346)
+  built 506 MPS sources near 144 MHz from LoTSS/LoLSS/VLASS; 2024A&A..689A.218P did
+  ultra-low-frequency spectral indices of cluster halos. LoDeSS DR1 (arXiv:2610.04698) has 0
+  citations and 2609.17382 has 0. So: a DR1-scale 23-MHz spectral census is open as far as ADS
+  shows, but steep-spectrum/fossil-plasma at 23 MHz has a direct precedent, and the answer would
+  have to say what DR1 adds over it.
+- **Ranking after ADS.** Unchanged: 59 first, 55 and 2 close. If anything, candidate 2's lower
+  novelty widens the gap between it and candidate 1.
 
 ### Shortlist (ranked; the recommendation is candidate 1)
 
@@ -129,7 +159,7 @@ Disk: 75 GB free (`df`), ~70 GB planning figure stands.
 **3. Plan 55 — polarized-flux dipole from SPICE-RACS DR2.**
 - *Gap.* Only prior found is Tiwari & Jain (arXiv:1308.3970, MNRAS 447, 2658; **abstract only**):
   NVSS, 8σ–5σ for P-weighted counts above 20–50 mJy. A web search found no polarized-flux dipole
-  with SPICE-RACS or POSSUM (snippets only, not ADS). Total-intensity dipoles are crowded
+  with SPICE-RACS or POSSUM (web snippets; ADS pass in the section below). Total-intensity dipoles are crowded
   (closed-door entry above).
 - *Data.* DR2 file served (above), 5.0 GB gz, roughly 10 GB gunzipped (my estimate from 9.29M
   rows × 125 columns), ~15 GB peak.
