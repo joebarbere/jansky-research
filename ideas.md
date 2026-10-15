@@ -41,8 +41,8 @@ covered astro-ph.IM only; .HE/.GA/.SR/.CO/.EP listings are not yet swept.
 - **No change found** for plan 51 (arXiv:2607.07382 still the VLM benchmark, no open-weights
   classifier) or the RACS-low2 release (arXiv:2606.16182, CASDA).
 - **Data URL checks (2026-10-15):** arxiv.org abs pages, fast.bao.ac.cn/cms/article/271/ and
-  lofar-surveys.org all returned 200 on a re-check (first attempt got no response; Joe
-  reports the sites reachable). File downloads not tested.
+  lofar-surveys.org all returned 200 on a re-check (first attempt got no response; re-checked
+  from the workstation). File downloads not tested.
 - **Not scanned / not done:** no ADS access, no check of the L1–L11 leads for scoops beyond
   the above, no check of the Gaia DR4 date (2026-12-02 stands from the last update).
 
