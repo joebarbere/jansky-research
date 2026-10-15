@@ -9,9 +9,13 @@ from jansky_research import ucdv
 from jansky_research.stokesv import measure_circular_pol
 
 
-def test_assign_set_is_source_id_parity():
-    sid = np.array([2, 3, 4_000_000_000_000_000_001, 10])
-    assert list(ucdv.assign_set(sid)) == ["A", "B", "B", "A"]
+def test_assign_set_is_balanced_and_data_blind():
+    # Gaia DR2 ids in the Reyle table are all even, so parity cannot split them; the hash can
+    even_ids = np.arange(10**15, 10**15 + 2 * 4000, 2, dtype=np.int64)
+    s = ucdv.assign_set(even_ids)
+    assert set(s) == {"A", "B"}
+    assert abs(np.mean(s == "B") - 0.5) < 0.03
+    assert list(ucdv.assign_set(even_ids[:5])) == list(s[:5])  # deterministic
 
 
 def test_null_positions_geometry():
@@ -166,3 +170,21 @@ def test_validate_synthetic_passes_frozen_controls():
     assert r["null"]["passed"]
     assert r["injection"]["passed"]
     assert r["injection"]["completeness"][3.0] < 0.5  # 3 sigma is below a 5-sigma threshold
+
+
+def test_parse_polygon_and_in_footprint():
+    v = ucdv.parse_polygon("POLYGON ICRS 85.0 38.0 74.2 38.0 73.6 45.4 85.7 45.4")
+    assert v.shape == (4, 2)
+    inside = ucdv.in_footprint(np.array([80.0, 60.0, 80.0]), np.array([41.0, 41.0, 50.0]), v)
+    assert list(inside) == [True, False, False]
+    # opposite winding gives the same answer
+    assert list(ucdv.in_footprint(np.array([80.0]), np.array([41.0]), v[::-1])) == [True]
+    # a tile straddling RA = 0, where a planar test in RA would fail
+    w = ucdv.parse_polygon("POLYGON ICRS 355.0 -5.0 5.0 -5.0 5.0 5.0 355.0 5.0")
+    assert list(ucdv.in_footprint(np.array([0.5, 359.5, 180.0]), np.zeros(3), w)) == [
+        True,
+        True,
+        False,
+    ]
+    with pytest.raises(ValueError):
+        ucdv.parse_polygon("CIRCLE ICRS 1 2 3")
