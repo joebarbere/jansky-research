@@ -72,3 +72,11 @@ so null sites in the same cutouts were added to reach 480. Both are reported.
   census.
 
 All three frozen controls pass on real data before the census starts.
+
+## Census launch (2026-10-15)
+
+50-slot trial first (part of the census, kept): 50/50 ok, 21.0 s per slot, the 250 per-slot nulls
+52% positive with std(V/σ) 1.10 and none at ≥ 5σ, median σ_V 0.159 mJy/beam, ~11 MB of float32
+cutouts per 50 slots (≈ 4.4 GB for the census). Target V not evaluated. The full run then started
+as `ucdv-census.service` (systemd user unit, resumable) from a detached worktree pinned to
+`38426ad`, 9,805 targets × 2 epochs = 19,610 slots, ~115–120 h expected.
