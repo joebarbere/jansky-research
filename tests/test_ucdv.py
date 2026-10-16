@@ -246,3 +246,14 @@ def test_bright_neighbour_guard():
         ra_b = ra_c + off_arcmin / 60.0 / np.cos(np.radians(dec_c))
         bright = ucdv.inject_point_source(img_i, w, ra_b, dec_c, 200.0, beam)
         assert ucdv.bright_neighbour(bright, w, ra_c, dec_c) is expect
+
+
+def test_backoff_seconds_doubles_and_caps():
+    assert [ucdv.backoff_seconds(k) for k in (0, 1, 2, 3, 4)] == [60.0, 60.0, 120.0, 240.0, 480.0]
+    assert ucdv.backoff_seconds(50) == 1800.0
+    # an 11.5 h outage now costs ~29 logins instead of ~285
+    t, k = 0.0, 0
+    while t < 11.5 * 3600:
+        k += 1
+        t += ucdv.backoff_seconds(k)
+    assert k < 30

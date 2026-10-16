@@ -80,3 +80,11 @@ All three frozen controls pass on real data before the census starts.
 cutouts per 50 slots (≈ 4.4 GB for the census). Target V not evaluated. The full run then started
 as `ucdv-census.service` (systemd user unit, resumable) from a detached worktree pinned to
 `38426ad`, 9,805 targets × 2 epochs = 19,610 slots, ~115–120 h expected.
+
+## Census stall and restart (2026-10-16)
+
+The census ran at ~165 slots/h until 07:54 EDT on Oct 16, then every CASDA login failed for
+~11.5 h; the runner's fixed 60 s retry made ~285 failed OPAL logins before it was noticed and
+stopped at 19:28 (1,694 of 19,610 slots done, all `ok`). A manual login then succeeded — no lockout.
+Retries now back off exponentially (60 s doubling, cap 30 min; ~29 logins for an outage that
+long) and log timestamped errors. Failed slots were never written, so no data was affected.
