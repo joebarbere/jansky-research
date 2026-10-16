@@ -234,3 +234,15 @@ def test_load_cutout_roundtrip_and_controls_on_synthetic(tmp_path):
     assert r["c1_null_v"]["n"] == 400 and r["c1_null_v"]["passed"]
     assert r["c2_injection"]["passed"]
     assert r["n_injections_per_level"] == 480 and r["n_target_pixel_per_level"] == 80
+
+
+def test_bright_neighbour_guard():
+    img_i, _, w, beam = ucdv.synthetic_cutout()
+    n = img_i.shape[0]
+    ra_c, dec_c = (float(x) for x in w.pixel_to_world_values(n / 2.0, n / 2.0))
+    assert not ucdv.bright_neighbour(img_i, w, ra_c, dec_c)
+    # a 200 mJy source 2' away trips the 3' guard; 4' away it does not
+    for off_arcmin, expect in ((2.0, True), (4.0, False)):
+        ra_b = ra_c + off_arcmin / 60.0 / np.cos(np.radians(dec_c))
+        bright = ucdv.inject_point_source(img_i, w, ra_b, dec_c, 200.0, beam)
+        assert ucdv.bright_neighbour(bright, w, ra_c, dec_c) is expect
