@@ -1,0 +1,550 @@
+{
+ "source": "real RACS-low2 cutouts pinned to catalogue SBIDs; CASDA AS110.racs_low2_v_v01",
+ "date": "2026-10-15",
+ "n_stars": 67,
+ "n_ok": 67,
+ "c3a": {
+  "n": 67,
+  "n_sign_flip": 0,
+  "median_ratio": 1.0210581654977808,
+  "passed": true
+ },
+ "rows": [
+  {
+   "name": "RACS-LOW2 J002409.2-621101",
+   "cat_v": 0.9143155184999999,
+   "status": "ok",
+   "forced_v": 0.8463113917969167,
+   "forced_sigma_v": 0.17649134063880875,
+   "cat_noise_v": 0.181
+  },
+  {
+   "name": "RACS-LOW2 J003303.6-631745",
+   "cat_v": -0.6853393279,
+   "status": "ok",
+   "forced_v": -0.6260984227992594,
+   "forced_sigma_v": 0.12020498237241294,
+   "cat_noise_v": 0.121
+  },
+  {
+   "name": "RACS-LOW2 J005309.3-743904",
+   "cat_v": 1.9943185620000001,
+   "status": "ok",
+   "forced_v": 2.0533516071736813,
+   "forced_sigma_v": 0.33637752894520606,
+   "cat_noise_v": 0.335
+  },
+  {
+   "name": "RACS-LOW2 J010648.8-225123",
+   "cat_v": 2.264941344,
+   "status": "ok",
+   "forced_v": 2.4193967692553997,
+   "forced_sigma_v": 0.19653798086987498,
+   "cat_noise_v": 0.196
+  },
+  {
+   "name": "RACS-LOW2 J010648.9-225124",
+   "cat_v": 1.709353761,
+   "status": "ok",
+   "forced_v": 1.9914463628083467,
+   "forced_sigma_v": 0.29203326284452763,
+   "cat_noise_v": 0.29
+  },
+  {
+   "name": "RACS-LOW2 J012256.8+072512",
+   "cat_v": -0.6139994947999999,
+   "status": "ok",
+   "forced_v": -0.6580650806427002,
+   "forced_sigma_v": 0.10319936275210718,
+   "cat_noise_v": 0.109
+  },
+  {
+   "name": "RACS-LOW2 J012317.8-794131",
+   "cat_v": -0.8939816034,
+   "status": "ok",
+   "forced_v": -0.834176258649677,
+   "forced_sigma_v": 0.12161013992104222,
+   "cat_noise_v": 0.122
+  },
+  {
+   "name": "RACS-LOW2 J013906.5-175647",
+   "cat_v": 19.42833699,
+   "status": "ok",
+   "forced_v": 19.42833699285984,
+   "forced_sigma_v": 0.136966870130248,
+   "cat_noise_v": 0.14
+  },
+  {
+   "name": "RACS-LOW2 J032635.3+284253",
+   "cat_v": 0.8526667953,
+   "status": "ok",
+   "forced_v": 0.8751059649512172,
+   "forced_sigma_v": 0.15819497168209115,
+   "cat_noise_v": 0.167
+  },
+  {
+   "name": "RACS-LOW2 J033647.2+003512",
+   "cat_v": -6.728110835000001,
+   "status": "ok",
+   "forced_v": -6.804261356592178,
+   "forced_sigma_v": 0.1465114456408359,
+   "cat_noise_v": 0.152
+  },
+  {
+   "name": "RACS-LOW2 J041412.9+281212",
+   "cat_v": -9.059745818,
+   "status": "ok",
+   "forced_v": -10.157700628042221,
+   "forced_sigma_v": 0.2461144290249965,
+   "cat_noise_v": 0.243
+  },
+  {
+   "name": "RACS-LOW2 J041846.9+282009",
+   "cat_v": -1.570637221,
+   "status": "ok",
+   "forced_v": -1.5742533141747117,
+   "forced_sigma_v": 0.18921133467956316,
+   "cat_noise_v": 0.206
+  },
+  {
+   "name": "RACS-LOW2 J042350.4+145515",
+   "cat_v": -3.449435113,
+   "status": "ok",
+   "forced_v": -3.4494351129978895,
+   "forced_sigma_v": 0.31411487646503383,
+   "cat_noise_v": 0.315
+  },
+  {
+   "name": "RACS-LOW2 J043648.5+270750",
+   "cat_v": -1.5907292249999998,
+   "status": "ok",
+   "forced_v": -1.7447213176637888,
+   "forced_sigma_v": 0.17245591863810752,
+   "cat_noise_v": 0.174
+  },
+  {
+   "name": "RACS-LOW2 J043648.5+270753",
+   "cat_v": -0.7511058938999999,
+   "status": "ok",
+   "forced_v": -0.7037658360786736,
+   "forced_sigma_v": 0.13166145056264084,
+   "cat_noise_v": 0.137
+  },
+  {
+   "name": "RACS-LOW2 J044847.1+100302",
+   "cat_v": 0.9794457583,
+   "status": "ok",
+   "forced_v": 0.9441207512281835,
+   "forced_sigma_v": 0.18705626023021826,
+   "cat_noise_v": 0.192
+  },
+  {
+   "name": "RACS-LOW2 J045817.9-751637",
+   "cat_v": 0.7861733320000001,
+   "status": "ok",
+   "forced_v": 0.7495164754800498,
+   "forced_sigma_v": 0.11900816011964008,
+   "cat_noise_v": 0.118
+  },
+  {
+   "name": "RACS-LOW2 J050537.5+230339",
+   "cat_v": 2.50156736,
+   "status": "ok",
+   "forced_v": 2.450432861223817,
+   "forced_sigma_v": 0.13802121987649585,
+   "cat_noise_v": 0.146
+  },
+  {
+   "name": "RACS-LOW2 J051019.6+271349",
+   "cat_v": 1.178715145,
+   "status": "ok",
+   "forced_v": 1.1789833661168814,
+   "forced_sigma_v": 0.17313326555292344,
+   "cat_noise_v": 0.181
+  },
+  {
+   "name": "RACS-LOW2 J052828.5+163649",
+   "cat_v": 1.540141529,
+   "status": "ok",
+   "forced_v": 1.540141529403627,
+   "forced_sigma_v": 0.18502420814697518,
+   "cat_noise_v": 0.193
+  },
+  {
+   "name": "RACS-LOW2 J054025.6+244800",
+   "cat_v": -1.2497187129999998,
+   "status": "ok",
+   "forced_v": -1.2497187126427889,
+   "forced_sigma_v": 0.166299540298207,
+   "cat_noise_v": 0.174
+  },
+  {
+   "name": "RACS-LOW2 J060334.3+165143",
+   "cat_v": -1.37645076,
+   "status": "ok",
+   "forced_v": -1.5066562918946147,
+   "forced_sigma_v": 0.13509723782765923,
+   "cat_noise_v": 0.131
+  },
+  {
+   "name": "RACS-LOW2 J062610.0+184520",
+   "cat_v": -1.403016504,
+   "status": "ok",
+   "forced_v": -1.6105732647702098,
+   "forced_sigma_v": 0.13212281189460515,
+   "cat_noise_v": 0.135
+  },
+  {
+   "name": "RACS-LOW2 J073435.7+315316",
+   "cat_v": 0.9355217335,
+   "status": "ok",
+   "forced_v": 1.1346936225891113,
+   "forced_sigma_v": 0.12632143146751812,
+   "cat_noise_v": 0.13
+  },
+  {
+   "name": "RACS-LOW2 J073625.4+070434",
+   "cat_v": 0.7144792471,
+   "status": "ok",
+   "forced_v": 0.7144792471081018,
+   "forced_sigma_v": 0.10990201057395423,
+   "cat_noise_v": 0.114
+  },
+  {
+   "name": "RACS-LOW2 J073625.4+070436",
+   "cat_v": 1.4065061700000001,
+   "status": "ok",
+   "forced_v": 1.4065061695873737,
+   "forced_sigma_v": 0.11652586651240329,
+   "cat_noise_v": 0.122
+  },
+  {
+   "name": "RACS-LOW2 J073849.7-264813",
+   "cat_v": 1.051088097,
+   "status": "ok",
+   "forced_v": 1.0918750194832683,
+   "forced_sigma_v": 0.15675397198322938,
+   "cat_noise_v": 0.157
+  },
+  {
+   "name": "RACS-LOW2 J074911.5-764210",
+   "cat_v": 1.54041464,
+   "status": "ok",
+   "forced_v": 1.540414639748633,
+   "forced_sigma_v": 0.2097738509809616,
+   "cat_noise_v": 0.211
+  },
+  {
+   "name": "RACS-LOW2 J075224.1+161207",
+   "cat_v": -1.07099663,
+   "status": "ok",
+   "forced_v": -1.0075034806504846,
+   "forced_sigma_v": 0.142816814472033,
+   "cat_noise_v": 0.151
+  },
+  {
+   "name": "RACS-LOW2 J084028.3+182356",
+   "cat_v": 0.6605515955,
+   "status": "ok",
+   "forced_v": 0.6422544829547405,
+   "forced_sigma_v": 0.1285206436680675,
+   "cat_noise_v": 0.124
+  },
+  {
+   "name": "RACS-LOW2 J085813.7+194544",
+   "cat_v": 1.9586281850000002,
+   "status": "ok",
+   "forced_v": 1.8391924677416682,
+   "forced_sigma_v": 0.15796236487558915,
+   "cat_noise_v": 0.157
+  },
+  {
+   "name": "RACS-LOW2 J085813.7+194545",
+   "cat_v": 1.426226809,
+   "status": "ok",
+   "forced_v": 1.4674531994387507,
+   "forced_sigma_v": 0.2753925434444397,
+   "cat_noise_v": 0.27
+  },
+  {
+   "name": "RACS-LOW2 J094557.8-325326",
+   "cat_v": -2.236219821,
+   "status": "ok",
+   "forced_v": -2.5541861541569233,
+   "forced_sigma_v": 0.13989085423362105,
+   "cat_noise_v": 0.143
+  },
+  {
+   "name": "RACS-LOW2 J100230.8-281427",
+   "cat_v": -1.9016647709999999,
+   "status": "ok",
+   "forced_v": -1.9820034503936768,
+   "forced_sigma_v": 0.23636567815348994,
+   "cat_noise_v": 0.237
+  },
+  {
+   "name": "RACS-LOW2 J100301.7+343314",
+   "cat_v": -3.039848525,
+   "status": "ok",
+   "forced_v": -3.1981440261006355,
+   "forced_sigma_v": 0.22239182783831452,
+   "cat_noise_v": 0.22
+  },
+  {
+   "name": "RACS-LOW2 J110309.6+363906",
+   "cat_v": 5.403570831,
+   "status": "ok",
+   "forced_v": 5.403570830821991,
+   "forced_sigma_v": 0.7363046546841533,
+   "cat_noise_v": 0.699
+  },
+  {
+   "name": "RACS-LOW2 J110309.6+363908",
+   "cat_v": 6.6526033920000005,
+   "status": "ok",
+   "forced_v": 7.258703466504812,
+   "forced_sigma_v": 0.16866503591752896,
+   "cat_noise_v": 0.157
+  },
+  {
+   "name": "RACS-LOW2 J110521.9+433137",
+   "cat_v": -13.10923882,
+   "status": "ok",
+   "forced_v": -14.19585570693016,
+   "forced_sigma_v": 0.35769005020016903,
+   "cat_noise_v": 0.128
+  },
+  {
+   "name": "RACS-LOW2 J111027.6-373152",
+   "cat_v": -8.718295023,
+   "status": "ok",
+   "forced_v": -9.16729960590601,
+   "forced_sigma_v": 0.12962421492785348,
+   "cat_noise_v": 0.133
+  },
+  {
+   "name": "RACS-LOW2 J111151.3+333213",
+   "cat_v": -2.964197425,
+   "status": "ok",
+   "forced_v": -3.026057267561555,
+   "forced_sigma_v": 0.1645668773334506,
+   "cat_noise_v": 0.161
+  },
+  {
+   "name": "RACS-LOW2 J112148.5-131309",
+   "cat_v": -1.733517158,
+   "status": "ok",
+   "forced_v": -1.9665127620100975,
+   "forced_sigma_v": 0.12290570189725883,
+   "cat_noise_v": 0.122
+  },
+  {
+   "name": "RACS-LOW2 J114438.1-492503",
+   "cat_v": 2.1194701549999997,
+   "status": "ok",
+   "forced_v": 2.4931689258664846,
+   "forced_sigma_v": 0.12980435445425514,
+   "cat_noise_v": 0.135
+  },
+  {
+   "name": "RACS-LOW2 J121028.7-131030",
+   "cat_v": 0.7570364978,
+   "status": "ok",
+   "forced_v": 0.8630134398117661,
+   "forced_sigma_v": 0.13576319088609662,
+   "cat_noise_v": 0.137
+  },
+  {
+   "name": "RACS-LOW2 J125545.3-445152",
+   "cat_v": 0.6003024173,
+   "status": "ok",
+   "forced_v": 0.8141195285134017,
+   "forced_sigma_v": 0.11692475636806234,
+   "cat_noise_v": 0.117
+  },
+  {
+   "name": "RACS-LOW2 J130650.0-460954",
+   "cat_v": -1.214551972,
+   "status": "ok",
+   "forced_v": -1.156260957941413,
+   "forced_sigma_v": 0.2003000527650845,
+   "cat_noise_v": 0.206
+  },
+  {
+   "name": "RACS-LOW2 J133447.9+371055",
+   "cat_v": -1.3964661630000001,
+   "status": "ok",
+   "forced_v": -1.548607018776238,
+   "forced_sigma_v": 0.1344334294384501,
+   "cat_noise_v": 0.144
+  },
+  {
+   "name": "RACS-LOW2 J134810.4-570705",
+   "cat_v": 0.9520510794,
+   "status": "ok",
+   "forced_v": 0.9452393278479576,
+   "forced_sigma_v": 0.14218149359034288,
+   "cat_noise_v": 0.149
+  },
+  {
+   "name": "RACS-LOW2 J142243.1+162447",
+   "cat_v": -0.7447166136,
+   "status": "ok",
+   "forced_v": -0.8134669624269009,
+   "forced_sigma_v": 0.1452943398604937,
+   "cat_noise_v": 0.135
+  },
+  {
+   "name": "RACS-LOW2 J150939.1-133213",
+   "cat_v": 0.9312760085,
+   "status": "ok",
+   "forced_v": 0.9312760084867477,
+   "forced_sigma_v": 0.1308889731026889,
+   "cat_noise_v": 0.134
+  },
+  {
+   "name": "RACS-LOW2 J155355.8-235842",
+   "cat_v": 2.127358457,
+   "status": "ok",
+   "forced_v": 2.1273584570735693,
+   "forced_sigma_v": 0.15631517991068572,
+   "cat_noise_v": 0.163
+  },
+  {
+   "name": "RACS-LOW2 J155834.7-244955",
+   "cat_v": 20.83616331,
+   "status": "ok",
+   "forced_v": 20.922807976603508,
+   "forced_sigma_v": 0.17150346937678915,
+   "cat_noise_v": 0.173
+  },
+  {
+   "name": "RACS-LOW2 J162534.9-232420",
+   "cat_v": 1.497676247,
+   "status": "ok",
+   "forced_v": 1.4357196632772684,
+   "forced_sigma_v": 0.18296790810160443,
+   "cat_noise_v": 0.188
+  },
+  {
+   "name": "RACS-LOW2 J162552.7-231938",
+   "cat_v": 4.577592015,
+   "status": "ok",
+   "forced_v": 4.758207127451897,
+   "forced_sigma_v": 0.18975654622722712,
+   "cat_noise_v": 0.196
+  },
+  {
+   "name": "RACS-LOW2 J165234.9-290027",
+   "cat_v": 1.601774246,
+   "status": "ok",
+   "forced_v": 1.6017742455005646,
+   "forced_sigma_v": 0.20978718649416875,
+   "cat_noise_v": 0.207
+  },
+  {
+   "name": "RACS-LOW2 J171952.5+263008",
+   "cat_v": 2.085119486,
+   "status": "ok",
+   "forced_v": 2.0851194858551025,
+   "forced_sigma_v": 0.12983845434764354,
+   "cat_noise_v": 0.133
+  },
+  {
+   "name": "RACS-LOW2 J172350.6-075711",
+   "cat_v": -1.324170968,
+   "status": "ok",
+   "forced_v": -1.3241709675639868,
+   "forced_sigma_v": 0.17940160489590282,
+   "cat_noise_v": 0.182
+  },
+  {
+   "name": "RACS-LOW2 J184500.8-140904",
+   "cat_v": 1.796810539,
+   "status": "ok",
+   "forced_v": 1.9564633257687092,
+   "forced_sigma_v": 0.3120830331056487,
+   "cat_noise_v": 0.33
+  },
+  {
+   "name": "RACS-LOW2 J184500.8-140905",
+   "cat_v": 2.082692692,
+   "status": "ok",
+   "forced_v": 2.225028583779931,
+   "forced_sigma_v": 0.19363386071058403,
+   "cat_noise_v": 0.203
+  },
+  {
+   "name": "RACS-LOW2 J192649.6+164257",
+   "cat_v": 1.500895713,
+   "status": "ok",
+   "forced_v": 1.6369180520996451,
+   "forced_sigma_v": 0.2330571305030376,
+   "cat_noise_v": 0.238
+  },
+  {
+   "name": "RACS-LOW2 J195518.9+062427",
+   "cat_v": 2.462744946,
+   "status": "ok",
+   "forced_v": 2.599767642095685,
+   "forced_sigma_v": 0.15399489372270192,
+   "cat_noise_v": 0.153
+  },
+  {
+   "name": "RACS-LOW2 J195518.8+062428",
+   "cat_v": 1.200907514,
+   "status": "ok",
+   "forced_v": 1.4305072836577892,
+   "forced_sigma_v": 0.14123196519250011,
+   "cat_noise_v": 0.142
+  },
+  {
+   "name": "RACS-LOW2 J200456.9+032100",
+   "cat_v": 1.391908969,
+   "status": "ok",
+   "forced_v": 1.2775820214301348,
+   "forced_sigma_v": 0.2511341849460296,
+   "cat_noise_v": 0.245
+  },
+  {
+   "name": "RACS-LOW2 J220840.8+454429",
+   "cat_v": 1.1916088409999999,
+   "status": "ok",
+   "forced_v": 1.209757407195866,
+   "forced_sigma_v": 0.16382445498593978,
+   "cat_noise_v": 0.166
+  },
+  {
+   "name": "RACS-LOW2 J221718.2-084817",
+   "cat_v": 1.599481096,
+   "status": "ok",
+   "forced_v": 1.7869834555312991,
+   "forced_sigma_v": 0.17166542297754675,
+   "cat_noise_v": 0.178
+  },
+  {
+   "name": "RACS-LOW2 J222424.3-582614",
+   "cat_v": -0.8085291483,
+   "status": "ok",
+   "forced_v": -0.9453266975469887,
+   "forced_sigma_v": 0.1431257731619318,
+   "cat_noise_v": 0.147
+  },
+  {
+   "name": "RACS-LOW2 J232923.2+412742",
+   "cat_v": -1.593346125,
+   "status": "ok",
+   "forced_v": -1.677627325989306,
+   "forced_sigma_v": 0.2009114892770264,
+   "cat_noise_v": 0.206
+  },
+  {
+   "name": "RACS-LOW2 J235814.0-172432",
+   "cat_v": -1.0992089520000001,
+   "status": "ok",
+   "forced_v": -1.1223562760278583,
+   "forced_sigma_v": 0.12731780928553665,
+   "cat_noise_v": 0.132
+  }
+ ]
+}

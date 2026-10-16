@@ -57,3 +57,18 @@ First evaluation of any pixel value; target V itself not evaluated.
 
 Deviation: C2 asked for 200 injections per level "at the target pixel"; 80 target cutouts give 80,
 so null sites in the same cutouts were added to reach 480. Both are reported.
+
+## C3 recover-a-known (results/ucdv_controls_c3.json)
+
+- **C3(a): pass.** All 67 `source_type == 'star'` rows of the RACS-low2 V catalogue (CASDA
+  `AS110.racs_low2_v_v01`, 221 rows) fetched in their own SBID (stars flare, so the most-central-
+  tile rule is overridden by `obs_id`), forced V at the catalogue's fitted position: median
+  forced/catalogue **1.021** (IQR 1.00–1.09; frozen range 0.85–1.15), **0 handedness flips in 67**,
+  local σ_V / catalogue noise 0.98. Largest outlier: RACS-LOW2 J125545.3−445152, 0.60 → 0.81 mJy
+  with σ 0.12 (1.7σ apart).
+- **C3(b) WISE J0623−0456: not run yet.** It is a T8 dwarf, too faint for Gaia and so not in the
+  Reylé sample; the plan makes it "reported, not pass/fail" and requires the full text of
+  arXiv:2306.15219 to be read before any flux from it is quoted. Pending, and not a gate for the
+  census.
+
+All three frozen controls pass on real data before the census starts.
