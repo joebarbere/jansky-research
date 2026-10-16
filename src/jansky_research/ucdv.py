@@ -20,6 +20,7 @@ reuses :func:`jansky_research.stokesv.measure_circular_pol` in its genuinely for
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -44,8 +45,13 @@ __all__ = [
     "forced_measure",
     "in_footprint",
     "parse_polygon",
+    "pick_tile",
+    "run_s0",
+    "fetch_epoch_pair",
     "injection_check",
     "inject_point_source",
+    "load_cutout",
+    "controls_c1_c2",
     "luminosity_limit",
     "null_check",
     "null_positions",
@@ -483,4 +489,323 @@ def validate_synthetic(*, n_cutouts: int = 80, seed: int = SEED) -> dict:
     return {
         "null": null_check(np.array(v_null), np.array(s_null)),
         "injection": injection_check(np.array(lev), np.array(inj), np.array(meas), np.array(sig)),
+    }
+
+
+# ---- network (real leg; not unit-tested) -------------------------------------------------------
+CASDA_TAP_URL = "https://casda.csiro.au/casda_vo_tools/tap"
+EPOCH_LAMBDA_M = {"low2": 0.338, "low3": 0.318}  # ObsCore (em_min+em_max)/2, rounded to 1 mm
+
+
+def _stokes_of(header) -> str:
+    """``"i"`` or ``"v"`` from a FITS header's STOKES axis (CASDA cutout names do not carry it)."""
+    for n in range(1, int(header.get("NAXIS", 0)) + 1):
+        if str(header.get(f"CTYPE{n}", "")).strip().upper() == "STOKES":
+            code = int(round(float(header[f"CRVAL{n}"])))
+            return {1: "i", 4: "v"}.get(code, f"stokes{code}")
+    raise RuntimeError("cutout header has no STOKES axis")
+
+
+def pick_tile(ra: float, dec: float, regions: list[str]) -> int:
+    """Index of the tile whose vertex centroid is nearest ``(ra, dec)`` among those containing it.
+
+    Leakage rises towards tile edges, so the most central tile is preferred. Positions only: no
+    pixel value can influence which observation a target is measured in. Returns -1 if none.
+    """
+    best, best_cos = -1, -2.0
+    p = _unit(np.array([ra]), np.array([dec]))[0]
+    for k, reg in enumerate(regions):
+        v = parse_polygon(reg)
+        if not in_footprint(np.array([ra]), np.array([dec]), v)[0]:
+            continue
+        c = _unit(v[:, 0], v[:, 1]).mean(axis=0)
+        cosang = float(p @ (c / np.linalg.norm(c)))
+        if cosang > best_cos:
+            best, best_cos = k, cosang
+    return best
+
+
+def fetch_epoch_pair(
+    ra: float,
+    dec: float,
+    epoch: str,
+    casda,
+    *,
+    radius_deg: float = CUTOUT_RADIUS_DEG,
+    poll_interval: float = 20.0,
+):  # pragma: no cover - network
+    """One SODA job staging a same-observation I+V cutout pair for ``epoch`` at ``(ra, dec)``.
+
+    Queries ObsCore for RACS taylor.0 restored conv I and V products of that epoch whose footprint
+    contains the position, keeps observations that have both, picks the most central tile
+    (:func:`pick_tile`), and stages I and V in a single cutout job (astroquery's default is one job
+    per product). Returns ``dict(i, v, wcs, beam, mjd, obs_id, files, t_tap, t_job, t_dl)`` with
+    images in mJy/beam and timings in seconds, or ``None`` if the epoch has no I+V pair here.
+    """
+    import tempfile
+    import time
+    from pathlib import Path
+
+    import astropy.units as u
+    import pyvo
+    import requests
+    from astropy.coordinates import SkyCoord
+    from astropy.io import fits
+    from astropy.wcs import WCS
+
+    lam = EPOCH_LAMBDA_M[epoch]
+    t0 = time.time()
+    q = f"""
+    SELECT obs_id, filename, t_min, access_url, s_region FROM ivoa.obscore
+    WHERE obs_collection = 'The Rapid ASKAP Continuum Survey'
+    AND (filename LIKE 'image.i.%' OR filename LIKE 'image.v.%')
+    AND filename LIKE '%.taylor.0.restored.conv.fits'
+    AND em_min > {lam - 0.01:.3f} AND em_max < {lam + 0.01:.3f}
+    AND 1 = CONTAINS(POINT('ICRS', {ra:.8f}, {dec:.8f}), s_region)
+    """
+    tab = pyvo.dal.TAPService(CASDA_TAP_URL).search(q).to_table()
+    t_tap = time.time() - t0
+    groups: dict[str, dict[str, int]] = {}
+    for k, row in enumerate(tab):
+        groups.setdefault(str(row["obs_id"]), {})[str(row["filename"]).split(".")[1]] = k
+    complete = [g for g in groups.values() if "i" in g and "v" in g]
+    if not complete:
+        return None
+    k = pick_tile(ra, dec, [str(tab["s_region"][g["i"]]) for g in complete])
+    if k < 0:
+        return None
+    rows = tab[[complete[k]["i"], complete[k]["v"]]]
+    t1 = time.time()
+    casda.POLL_INTERVAL = poll_interval
+    urls = casda.cutout(
+        rows["access_url",],
+        coordinates=SkyCoord(ra * u.deg, dec * u.deg),
+        radius=radius_deg * u.deg,
+    )
+    t_job = time.time() - t1
+    t2 = time.time()
+    out: dict[str, Any] = {}
+    for furl in (x for x in urls if x.endswith(".fits")):
+        raw = requests.get(furl, timeout=200).content
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "c.fits"
+            path.write_bytes(raw)
+            with fits.open(path) as hd:
+                hdr = hd[0].header
+                data = np.squeeze(np.asarray(hd[0].data, float)) * 1000.0  # Jy -> mJy/beam
+                stokes = _stokes_of(hdr)
+                if stokes in out:
+                    raise RuntimeError(f"two Stokes-{stokes} cutouts in one job: {urls}")
+                out[stokes] = data
+                out["wcs"] = WCS(hdr).celestial
+                out["beam"] = Beam(
+                    float(hdr["BMAJ"]) * 3600.0, float(hdr["BMIN"]) * 3600.0, float(hdr["BPA"])
+                )
+    t_dl = time.time() - t2
+    if "i" not in out or "v" not in out:
+        raise RuntimeError(f"cutout job returned {sorted(out)} for {urls}")
+    if np.shape(out["i"]) != np.shape(out["v"]):
+        raise RuntimeError("I/V cutout grids differ")
+    out.update(
+        mjd=float(rows["t_min"][0]),
+        obs_id=str(rows["obs_id"][0]),
+        files=[str(x) for x in rows["filename"]],
+        t_tap=t_tap,
+        t_job=t_job,
+        t_dl=t_dl,
+    )
+    return out
+
+
+def run_s0(
+    *,
+    username: str,
+    pw_path: str = "~/.casda_pw",
+    n_targets: int = 40,
+    poll_interval: float = 3.0,
+    table_path: str = "data/ucdv/reyle2018_ucds.ecsv",
+    products_path: str = "data/ucdv/racs_v_products.ecsv",
+    cutout_dir: str = "data/ucdv/cutouts",
+    out_json: str = "results/ucdv_s0_throughput.json",
+):  # pragma: no cover - network
+    """S0: time single-job I+V pair fetches for ``n_targets`` random set-B targets, both epochs.
+
+    Saves each pair (images, header WCS, beam, MJD) under ``cutout_dir`` for C1-C3, but computes
+    and records **timing and failure counts only** -- no pixel statistic is evaluated here, per the
+    plan. Positions are propagated to each epoch's MJD before the cutout is centred.
+    """
+    import json
+    import time
+    from pathlib import Path
+
+    from astropy.table import Table
+
+    from .stokesv import _casda_session
+    from .stokesv_discovery import epoch_position
+
+    ucds = Table.read(table_path)
+    prods = Table.read(products_path)
+    lam = np.round((np.asarray(prods["em_min"]) + np.asarray(prods["em_max"])) / 2, 3)
+    ra0 = np.asarray(ucds["RAICRS"], float)
+    de0 = np.asarray(ucds["DEICRS"], float)
+    both = np.ones(len(ucds), bool)
+    for ep in ("low2", "low3"):
+        hit = np.zeros(len(ucds), bool)
+        for reg in prods["s_region"][lam == EPOCH_LAMBDA_M[ep]]:
+            hit |= in_footprint(ra0, de0, parse_polygon(str(reg)))
+        both &= hit
+    sets = assign_set(np.asarray(ucds["Source"]))
+    pool = np.flatnonzero(both & (sets == "B"))
+    pick = np.sort(np.random.default_rng(SEED).choice(pool, n_targets, replace=False))
+    Path(cutout_dir).mkdir(parents=True, exist_ok=True)
+    casda = _casda_session(username, pw_path)
+    rows = []
+    t_all = time.time()
+    for idx in pick:
+        r = ucds[int(idx)]
+        for ep in ("low2", "low3"):
+            rec: dict[str, Any] = {"source_id": int(r["Source"]), "epoch": ep}
+            t = time.time()
+            try:
+                # centre the cutout on the position propagated to this epoch (a 2-pass fetch would
+                # cost a second job; the tile's MJD spread within an epoch is < 1 yr, ~1" for UCDs)
+                mjd_mid = 59750.0 if ep == "low2" else 60330.0
+                ra, de = epoch_position(
+                    np.array([r["RAICRS"]]),
+                    np.array([r["DEICRS"]]),
+                    np.array([r["pmRA"]]),
+                    np.array([r["pmDE"]]),
+                    GAIA_DR2_EPOCH,
+                    mjd_mid,
+                )
+                out = fetch_epoch_pair(
+                    float(ra[0]), float(de[0]), ep, casda, poll_interval=poll_interval
+                )
+                if out is None:
+                    rec["status"] = "no_pair"
+                else:
+                    rec.update(
+                        status="ok",
+                        obs_id=out["obs_id"],
+                        mjd=out["mjd"],
+                        t_tap=out["t_tap"],
+                        t_job=out["t_job"],
+                        t_dl=out["t_dl"],
+                    )
+                    np.savez_compressed(
+                        Path(cutout_dir) / f"{int(r['Source'])}_{ep}.npz",
+                        i=out["i"],
+                        v=out["v"],
+                        wcs_header=out["wcs"].to_header_string(),
+                        beam=np.array(
+                            [out["beam"].bmaj_arcsec, out["beam"].bmin_arcsec, out["beam"].bpa_deg]
+                        ),
+                        mjd=out["mjd"],
+                        obs_id=out["obs_id"],
+                    )
+            except Exception as exc:  # recorded, not raised: the failure rate is the measurement
+                rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+                casda = _casda_session(username, pw_path)
+            rec["t_total"] = time.time() - t
+            rows.append(rec)
+            print(rec["source_id"], ep, rec["status"], f"{rec['t_total']:.1f}s", flush=True)
+    ok = [x for x in rows if x["status"] == "ok"]
+    attempts = len(rows)
+    summary = {
+        "source": "real CASDA S0 throughput run (timings and failure counts only; no pixel stats)",
+        "date": time.strftime("%Y-%m-%d"),
+        "mode": f"single job per I+V pair, poll_interval={poll_interval}s",
+        "n_targets": n_targets,
+        "n_attempts": attempts,
+        "n_ok": len(ok),
+        "n_no_pair": sum(x["status"] == "no_pair" for x in rows),
+        "n_error": sum(x["status"] == "error" for x in rows),
+        "fail_rate": 1.0 - len(ok) / attempts,
+        "sec_per_attempt_mean": float(np.mean([x["t_total"] for x in rows])),
+        "sec_per_ok_median": float(np.median([x["t_total"] for x in ok])) if ok else None,
+        "wall_clock_s": time.time() - t_all,
+        "rows": rows,
+    }
+    Path(out_json).write_text(json.dumps(summary, indent=1))
+    return summary
+
+
+def load_cutout(path) -> dict[str, Any]:
+    """Read a saved I+V cutout pair (``run_s0``/census ``.npz``) back into images, WCS and beam."""
+    from astropy.io import fits
+    from astropy.wcs import WCS
+
+    z = np.load(path, allow_pickle=False)
+    b = z["beam"]
+    return {
+        "i": z["i"],
+        "v": z["v"],
+        "wcs": WCS(fits.Header.fromstring(str(z["wcs_header"]))),
+        "beam": Beam(float(b[0]), float(b[1]), float(b[2])),
+        "mjd": float(z["mjd"]),
+        "obs_id": str(z["obs_id"]),
+    }
+
+
+def controls_c1_c2(
+    cutouts: list[dict[str, Any]],
+    targets: list[tuple[float, float, float, float]],
+    *,
+    seed: int = SEED,
+) -> dict:
+    """C1 and C2 on real cutouts. ``targets[k]`` is ``(ra, dec, pmra, pmdec)`` at the Gaia epoch.
+
+    For each cutout the target is propagated to that cutout's MJD; C1 reads forced I/V at the
+    ``NULL_PER_TARGET`` null positions; C2 injects beam-shaped V sources (header beam) at
+    ``INJ_LEVELS_SIGMA`` x the local annulus sigma_V, at the target pixel and at each null site,
+    one injection per site per level in a copy of the image. Returns both rule outcomes plus the
+    target-pixel-only completeness curve, reported separately.
+    """
+    from .stokesv_discovery import epoch_position
+
+    rng = np.random.default_rng(seed)
+    nv, ns, ni, nsi = [], [], [], []
+    lev, inj, meas, sig, at_target = [], [], [], [], []
+    for k, (c, (ra0, de0, pmra, pmde)) in enumerate(zip(cutouts, targets, strict=True)):
+        ra, de = epoch_position(
+            np.array([ra0]),
+            np.array([de0]),
+            np.array([pmra]),
+            np.array([pmde]),
+            GAIA_DR2_EPOCH,
+            c["mjd"],
+        )
+        rt, dt = float(ra[0]), float(de[0])
+        rn, dn = null_positions(np.array([rt]), np.array([dt]), seed=seed + k)
+        sites = [(rt, dt, True)] + [
+            (float(a), float(b), False) for a, b in zip(rn, dn, strict=True)
+        ]
+        for a, b, is_t in sites:
+            m = forced_measure(c["i"], c["v"], c["wcs"], a, b)
+            if not is_t:
+                nv.append(m["v_peak"])
+                ns.append(m["v_rms"])
+                ni.append(m["i_peak"])
+                nsi.append(m["i_rms"])
+            sigma = m["v_rms"]
+            if not np.isfinite(sigma):
+                continue
+            for L in INJ_LEVELS_SIGMA:
+                flux = rng.choice([-1.0, 1.0]) * L * sigma
+                iv = inject_point_source(c["v"], c["wcs"], a, b, flux, c["beam"])
+                mm = forced_measure(c["i"], iv, c["wcs"], a, b)
+                lev.append(L)
+                inj.append(flux)
+                meas.append(mm["v_peak"])  # the underlying sky is part of it, as for a real source
+                sig.append(mm["v_rms"])
+                at_target.append(is_t)
+    lev_a, inj_a, meas_a, sig_a = map(np.asarray, (lev, inj, meas, sig))
+    t = np.asarray(at_target, bool)
+    return {
+        "c1_null_v": null_check(np.asarray(nv), np.asarray(ns)),
+        "c1_null_i": null_check(np.asarray(ni), np.asarray(nsi)),
+        "c2_injection": injection_check(lev_a, inj_a, meas_a, sig_a),
+        "c2_target_pixel_only": injection_check(lev_a[t], inj_a[t], meas_a[t], sig_a[t]),
+        "n_injections_per_level": int(len(lev) / len(INJ_LEVELS_SIGMA)),
+        "n_target_pixel_per_level": int(t.sum() / len(INJ_LEVELS_SIGMA)),
     }
