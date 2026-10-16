@@ -88,3 +88,8 @@ The census ran at ~165 slots/h until 07:54 EDT on Oct 16, then every CASDA login
 stopped at 19:28 (1,694 of 19,610 slots done, all `ok`). A manual login then succeeded — no lockout.
 Retries now back off exponentially (60 s doubling, cap 30 min; ~29 logins for an outage that
 long) and log timestamped errors. Failed slots were never written, so no data was affected.
+After the restart (19:29) logins succeeded but no slot was written: CASDA's SODA queue was leaving
+cutout jobs PENDING indefinitely (a manual probe sat PENDING > 4 min; a second was aborted at
+60 s, still PENDING), and astroquery's job poll has no timeout. `_cutout_urls` now runs the same
+SODA steps with a 10-minute deadline, aborts the stuck job and raises, so the backoff applies and
+the census waits out CASDA outages on its own (~2 attempts/h while down).

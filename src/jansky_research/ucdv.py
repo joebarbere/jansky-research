@@ -530,6 +530,47 @@ def pick_tile(ra: float, dec: float, regions: list[str]) -> int:
     return best
 
 
+JOB_TIMEOUT_S = 600.0  # a CASDA cutout job not done in 10 min is abandoned (aborted) and retried
+
+
+def _cutout_urls(
+    casda, rows, coord, radius_deg: float, poll: float, timeout: float = JOB_TIMEOUT_S
+):  # pragma: no cover - network
+    """astroquery's ``Casda.cutout`` with a deadline.
+
+    ``Casda._run_job`` polls until the job leaves PENDING/QUEUED/EXECUTING and has no timeout; on
+    2026-10-16 CASDA's SODA queue left jobs PENDING indefinitely and the census hung silently. This
+    runs the same steps (datalink tokens -> SODA job -> POS -> RUN -> poll) but aborts the job and
+    raises ``TimeoutError`` after ``timeout`` s, so the caller's backoff takes over.
+    """
+    import time
+    from urllib.parse import unquote
+
+    import astropy.units as u
+
+    job = casda._create_job(rows, "cutout_service", False)
+    spec = casda._args_to_payload(radius=radius_deg * u.deg, coordinates=coord)
+    casda._add_cutout_params(job, False, spec)
+    casda._request("POST", job + "/phase", data={"phase": "RUN"}, cache=False)
+    t0 = time.time()
+    while True:
+        status = casda._read_job_status(casda._get_job_details_xml(job), False)
+        if status not in ("EXECUTING", "QUEUED", "PENDING", "SUSPENDED"):
+            break
+        if time.time() - t0 > timeout:
+            try:
+                casda._request("POST", job + "/phase", data={"phase": "ABORT"}, cache=False)
+            except Exception:
+                pass
+            raise TimeoutError(f"CASDA cutout job still {status} after {timeout:.0f} s: {job}")
+        time.sleep(poll)
+    if status != "COMPLETED":
+        raise ValueError(f"CASDA cutout job ended {status}: {job}")
+    details = casda._get_job_details_xml(job)
+    results = details.find("uws:results", casda._uws_ns).findall("uws:result", casda._uws_ns)
+    return [unquote(r.get("{http://www.w3.org/1999/xlink}href")) for r in results]
+
+
 def fetch_epoch_pair(
     ra: float,
     dec: float,
@@ -585,11 +626,8 @@ def fetch_epoch_pair(
         return None
     rows = tab[[complete[k]["i"], complete[k]["v"]]]
     t1 = time.time()
-    casda.POLL_INTERVAL = poll_interval
-    urls = casda.cutout(
-        rows["access_url",],
-        coordinates=SkyCoord(ra * u.deg, dec * u.deg),
-        radius=radius_deg * u.deg,
+    urls = _cutout_urls(
+        casda, rows["access_url",], SkyCoord(ra * u.deg, dec * u.deg), radius_deg, poll_interval
     )
     t_job = time.time() - t1
     t2 = time.time()
