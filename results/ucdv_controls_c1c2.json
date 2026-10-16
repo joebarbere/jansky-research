@@ -1,0 +1,62 @@
+{
+ "source": "real RACS-low2/low3 cutouts, S0 set-B targets (C1 null + C2 injection; target V not evaluated)",
+ "date": "2026-10-15",
+ "c1_null_v": {
+  "n": 400,
+  "frac_positive": 0.51,
+  "frac_positive_ci": [
+   0.435,
+   0.565
+  ],
+  "std_z": 0.9633370460554223,
+  "n_ge5": 0,
+  "expected_ge5": 0.00022932125750335463,
+  "sign_ok": true,
+  "std_ok": true,
+  "excess_ok": true,
+  "passed": true
+ },
+ "c1_null_i": {
+  "n": 400,
+  "frac_positive": 0.51,
+  "frac_positive_ci": [
+   0.435,
+   0.565
+  ],
+  "std_z": 1.0114376994502574,
+  "n_ge5": 0,
+  "expected_ge5": 0.00022932125750335463,
+  "sign_ok": true,
+  "std_ok": true,
+  "excess_ok": true,
+  "passed": true
+ },
+ "c2_injection": {
+  "completeness": {
+   "3.0": 0.029166666666666667,
+   "5.0": 0.47708333333333336,
+   "7.0": 0.9645833333333333,
+   "10.0": 1.0,
+   "20.0": 1.0
+  },
+  "median_ratio_ge10": 0.9821921400128089,
+  "completeness_ok": true,
+  "flux_ok": true,
+  "passed": true
+ },
+ "c2_target_pixel_only": {
+  "completeness": {
+   "3.0": 0.025,
+   "5.0": 0.575,
+   "7.0": 0.95,
+   "10.0": 1.0,
+   "20.0": 1.0
+  },
+  "median_ratio_ge10": 0.9715429658485035,
+  "completeness_ok": true,
+  "flux_ok": true,
+  "passed": true
+ },
+ "n_injections_per_level": 480,
+ "n_target_pixel_per_level": 80
+}
