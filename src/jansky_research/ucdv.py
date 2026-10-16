@@ -47,6 +47,10 @@ __all__ = [
     "parse_polygon",
     "pick_tile",
     "run_s0",
+    "run_c3",
+    "run_census",
+    "census_targets",
+    "bright_neighbour",
     "fetch_epoch_pair",
     "injection_check",
     "inject_point_source",
@@ -533,13 +537,15 @@ def fetch_epoch_pair(
     *,
     radius_deg: float = CUTOUT_RADIUS_DEG,
     poll_interval: float = 20.0,
+    obs_id: str | None = None,
 ):  # pragma: no cover - network
     """One SODA job staging a same-observation I+V cutout pair for ``epoch`` at ``(ra, dec)``.
 
     Queries ObsCore for RACS taylor.0 restored conv I and V products of that epoch whose footprint
     contains the position, keeps observations that have both, picks the most central tile
     (:func:`pick_tile`), and stages I and V in a single cutout job (astroquery's default is one job
-    per product). Returns ``dict(i, v, wcs, beam, mjd, obs_id, files, t_tap, t_job, t_dl)`` with
+    per product). ``obs_id`` pins the observation instead (C3 compares against a catalogue measured
+    in one specific SBID). Returns ``dict(i, v, wcs, beam, mjd, obs_id, files, t_tap, t_job, t_dl)`` with
     images in mJy/beam and timings in seconds, or ``None`` if the epoch has no I+V pair here.
     """
     import tempfile
@@ -568,7 +574,9 @@ def fetch_epoch_pair(
     groups: dict[str, dict[str, int]] = {}
     for k, row in enumerate(tab):
         groups.setdefault(str(row["obs_id"]), {})[str(row["filename"]).split(".")[1]] = k
-    complete = [g for g in groups.values() if "i" in g and "v" in g]
+    complete = [
+        g for o, g in groups.items() if "i" in g and "v" in g and (obs_id is None or o == obs_id)
+    ]
     if not complete:
         return None
     k = pick_tile(ra, dec, [str(tab["s_region"][g["i"]]) for g in complete])
@@ -809,3 +817,238 @@ def controls_c1_c2(
         "n_injections_per_level": int(len(lev) / len(INJ_LEVELS_SIGMA)),
         "n_target_pixel_per_level": int(t.sum() / len(INJ_LEVELS_SIGMA)),
     }
+
+
+def run_c3(
+    *,
+    username: str,
+    pw_path: str = "~/.casda_pw",
+    catalogue_path: str = "data/ucdv/racs_low2_v_catalogue.ecsv",
+    cutout_dir: str = "data/ucdv/c3",
+    out_json: str = "results/ucdv_controls_c3.json",
+    poll_interval: float = 3.0,
+):  # pragma: no cover - network
+    """C3(a): forced low2 V at every star of the RACS-low2 V catalogue, in that star's own SBID.
+
+    The catalogue (CASDA ``AS110.racs_low2_v_v01``, 67 rows with ``source_type == 'star'``) is
+    measured in one specific observation per source, and stars flare, so the cutout is pinned to
+    ``ASKAP-<sbid>`` rather than the most central tile. Positions are the catalogue's fitted
+    ``ra``/``dec`` in that image (not ``dec_corr``), so the forced pixel is the catalogued one.
+    """
+    import json
+    import time
+    from pathlib import Path
+
+    from astropy.table import Table
+
+    from .stokesv import _casda_session
+
+    cat = Table.read(catalogue_path)
+    stars = cat[np.array([str(x) == "star" for x in cat["source_type"]])]
+    Path(cutout_dir).mkdir(parents=True, exist_ok=True)
+    casda = _casda_session(username, pw_path)
+    rows = []
+    for r in stars:
+        rec: dict[str, Any] = {"name": str(r["name"]), "cat_v": float(r["peak_flux_v"])}
+        try:
+            out = fetch_epoch_pair(
+                float(r["ra"]),
+                float(r["dec"]),
+                "low2",
+                casda,
+                poll_interval=poll_interval,
+                obs_id=f"ASKAP-{int(r['sbid'])}",
+            )
+            if out is None:
+                rec["status"] = "no_pair_in_sbid"
+            else:
+                m = forced_measure(out["i"], out["v"], out["wcs"], float(r["ra"]), float(r["dec"]))
+                rec.update(status="ok", forced_v=m["v_peak"], forced_sigma_v=m["v_rms"])
+                rec["cat_noise_v"] = float(r["noise_v"])
+        except Exception as exc:
+            rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+            casda = _casda_session(username, pw_path)
+        rows.append(rec)
+        print(rec["name"], rec["status"], flush=True)
+    ok = [x for x in rows if x["status"] == "ok"]
+    res = recover_known_check(
+        np.array([x["forced_v"] for x in ok]), np.array([x["cat_v"] for x in ok])
+    )
+    summary = {
+        "source": "real RACS-low2 cutouts pinned to catalogue SBIDs; CASDA AS110.racs_low2_v_v01",
+        "date": time.strftime("%Y-%m-%d"),
+        "n_stars": len(rows),
+        "n_ok": len(ok),
+        "c3a": res,
+        "rows": rows,
+    }
+    Path(out_json).write_text(json.dumps(summary, indent=1, default=float))
+    return summary
+
+
+def bright_neighbour(image_i, wcs, ra: float, dec: float) -> bool:
+    """True if any Stokes-I pixel above ``BRIGHT_GUARD_MJY`` lies within ``BRIGHT_GUARD_ARCMIN``."""
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
+    from astropy.wcs.utils import proj_plane_pixel_scales
+
+    img = np.asarray(image_i, float)
+    px, py = wcs.world_to_pixel(SkyCoord(ra * u.deg, dec * u.deg))
+    scale = float(np.mean(proj_plane_pixel_scales(wcs)) * 3600.0)
+    yy, xx = np.mgrid[0 : img.shape[0], 0 : img.shape[1]]
+    near = np.hypot(xx - float(px), yy - float(py)) * scale <= BRIGHT_GUARD_ARCMIN * 60.0
+    vals = img[near & np.isfinite(img)]
+    return bool(vals.size and np.max(vals) > BRIGHT_GUARD_MJY)
+
+
+def census_targets(
+    table_path: str = "data/ucdv/reyle2018_ucds.ecsv",
+    products_path: str = "data/ucdv/racs_v_products.ecsv",
+    d_max_pc: float = 107.77952446412739,
+):
+    """The census list: UCDs in both low2 and low3 V footprints with ``1000/Plx < d_max_pc``.
+
+    ``d_max_pc`` is the S0 outcome (results/ucdv_s0_throughput.json), not a tunable.
+    """
+    from astropy.table import Table
+
+    ucds = Table.read(table_path)
+    prods = Table.read(products_path)
+    lam = np.round((np.asarray(prods["em_min"]) + np.asarray(prods["em_max"])) / 2, 3)
+    ra0 = np.asarray(ucds["RAICRS"], float)
+    de0 = np.asarray(ucds["DEICRS"], float)
+    keep = 1000.0 / np.asarray(ucds["Plx"], float) < d_max_pc
+    for ep in ("low2", "low3"):
+        hit = np.zeros(len(ucds), bool)
+        for reg in prods["s_region"][lam == EPOCH_LAMBDA_M[ep]]:
+            hit |= in_footprint(ra0, de0, parse_polygon(str(reg)))
+        keep &= hit
+    return ucds[keep]
+
+
+def run_census(
+    *,
+    username: str,
+    pw_path: str = "~/.casda_pw",
+    out_jsonl: str = "data/ucdv/census.jsonl",
+    cutout_dir: str = "data/ucdv/census_cutouts",
+    poll_interval: float = 3.0,
+    limit: int | None = None,
+):  # pragma: no cover - network, ~120 h
+    """The census: forced I/V at every target, both epochs; resumable, one JSON line per slot.
+
+    For each target-epoch: fetch the I+V pair (most central tile), propagate the Gaia DR2 position
+    to that cutout's MJD, measure forced I/V there, the 5 nulls (ongoing C1), and the bright-source
+    guard; save the cutout (float32) for vetting. Slots already in ``out_jsonl`` are skipped, so
+    the run can be stopped and restarted. Detection, limits and comparison run afterwards on the
+    JSONL, never inside this loop.
+    """
+    import json
+    import time
+    from pathlib import Path
+
+    from .stokesv import _casda_session
+    from .stokesv_discovery import epoch_position
+
+    tg = census_targets()
+    done: set[tuple[int, str]] = set()
+    out = Path(out_jsonl)
+    if out.exists():
+        for line in out.read_text().splitlines():
+            r = json.loads(line)
+            done.add((int(r["source_id"]), str(r["epoch"])))
+    Path(cutout_dir).mkdir(parents=True, exist_ok=True)
+    casda = _casda_session(username, pw_path)
+    n = 0
+    with out.open("a") as fh:
+        for r in tg:
+            sid = int(r["Source"])
+            for ep in ("low2", "low3"):
+                if (sid, ep) in done:
+                    continue
+                if limit is not None and n >= limit:
+                    return n
+                n += 1
+                rec: dict[str, Any] = {"source_id": sid, "epoch": ep, "t_start": time.time()}
+                pos = (np.array([r["RAICRS"]]), np.array([r["DEICRS"]]))
+                pm = (np.array([r["pmRA"]]), np.array([r["pmDE"]]))
+                try:
+                    mid = 59750.0 if ep == "low2" else 60330.0
+                    ra_c, de_c = epoch_position(*pos, *pm, GAIA_DR2_EPOCH, mid)
+                    pair = fetch_epoch_pair(
+                        float(ra_c[0]), float(de_c[0]), ep, casda, poll_interval=poll_interval
+                    )
+                    if pair is None:
+                        rec["status"] = "no_pair"
+                    else:
+                        ra_t, de_t = epoch_position(*pos, *pm, GAIA_DR2_EPOCH, pair["mjd"])
+                        rt, dt = float(ra_t[0]), float(de_t[0])
+                        m = forced_measure(pair["i"], pair["v"], pair["wcs"], rt, dt)
+                        rn, dn = null_positions(
+                            np.array([rt]), np.array([dt]), seed=SEED + sid % 997
+                        )
+                        nulls = [
+                            forced_measure(pair["i"], pair["v"], pair["wcs"], float(a), float(b))
+                            for a, b in zip(rn, dn, strict=True)
+                        ]
+                        rec.update(
+                            status="ok",
+                            obs_id=pair["obs_id"],
+                            mjd=pair["mjd"],
+                            ra=rt,
+                            dec=dt,
+                            v=m["v_peak"],
+                            sigma_v=m["v_rms"],
+                            i=m["i_peak"],
+                            sigma_i=m["i_rms"],
+                            bright=bright_neighbour(pair["i"], pair["wcs"], rt, dt),
+                            null_v=[x["v_peak"] for x in nulls],
+                            null_sigma_v=[x["v_rms"] for x in nulls],
+                            beam=[pair["beam"].bmaj_arcsec, pair["beam"].bmin_arcsec],
+                        )
+                        np.savez_compressed(
+                            Path(cutout_dir) / f"{sid}_{ep}.npz",
+                            i=pair["i"].astype(np.float32),
+                            v=pair["v"].astype(np.float32),
+                            wcs_header=pair["wcs"].to_header_string(),
+                            beam=np.array(
+                                [
+                                    pair["beam"].bmaj_arcsec,
+                                    pair["beam"].bmin_arcsec,
+                                    pair["beam"].bpa_deg,
+                                ]
+                            ),
+                            mjd=pair["mjd"],
+                            obs_id=pair["obs_id"],
+                        )
+                except Exception as exc:  # recorded and retried on the next resume
+                    rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+                    try:
+                        casda = _casda_session(username, pw_path)
+                    except Exception:
+                        time.sleep(60)
+                rec["t_total"] = time.time() - rec["t_start"]
+                if rec["status"] != "error":
+                    fh.write(json.dumps(rec, default=float) + "\n")
+                    fh.flush()
+    return n
+
+
+def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
+    import argparse
+    import os
+
+    ap = argparse.ArgumentParser(prog="python -m jansky_research.ucdv")
+    ap.add_argument("command", choices=["census"])
+    ap.add_argument("--limit", type=int, default=None)
+    a = ap.parse_args(argv)
+    user = os.environ.get("CASDA_USERNAME")
+    if not user:
+        raise SystemExit("set CASDA_USERNAME")
+    n = run_census(username=user, limit=a.limit)
+    print(f"census: {n} slots attempted this run")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(_main())
