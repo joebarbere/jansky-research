@@ -49,6 +49,7 @@ __all__ = [
     "run_s0",
     "run_c3",
     "run_census",
+    "backoff_seconds",
     "census_targets",
     "bright_neighbour",
     "fetch_epoch_pair",
@@ -926,6 +927,12 @@ def census_targets(
     return ucds[keep]
 
 
+def backoff_seconds(consecutive_failures: int, *, base: float = 60.0, cap: float = 1800.0) -> float:
+    """Exponential retry wait: ``base * 2**(k-1)`` seconds after ``k`` consecutive failures, capped."""
+    k = max(int(consecutive_failures), 1)
+    return float(min(cap, base * 2.0 ** (k - 1)))
+
+
 def run_census(
     *,
     username: str,
@@ -960,6 +967,7 @@ def run_census(
     Path(cutout_dir).mkdir(parents=True, exist_ok=True)
     casda = _casda_session(username, pw_path)
     n = 0
+    fails = 0  # consecutive failed slots, drives the backoff
     with out.open("a") as fh:
         for r in tg:
             sid = int(r["Source"])
@@ -1023,10 +1031,23 @@ def run_census(
                         )
                 except Exception as exc:  # recorded and retried on the next resume
                     rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+                    fails += 1
+                    # Back off exponentially (cap 30 min) so an outage costs tens of logins,
+                    # not hundreds: on 2026-10-16 a fixed 60 s retry made ~285 failed OPAL logins
+                    # over 11.5 h while CASDA authentication was refusing.
+                    wait = backoff_seconds(fails)
+                    print(
+                        time.strftime("%Y-%m-%d %H:%M:%S"),
+                        f"slot error #{fails} ({rec['error'][:120]}); sleeping {wait:.0f} s",
+                        flush=True,
+                    )
+                    time.sleep(wait)
                     try:
                         casda = _casda_session(username, pw_path)
-                    except Exception:
-                        time.sleep(60)
+                    except Exception as login_exc:
+                        print(time.strftime("%Y-%m-%d %H:%M:%S"), "login failed:", login_exc)
+                else:
+                    fails = 0
                 rec["t_total"] = time.time() - rec["t_start"]
                 if rec["status"] != "error":
                     fh.write(json.dumps(rec, default=float) + "\n")
