@@ -188,3 +188,49 @@ def test_parse_polygon_and_in_footprint():
     ]
     with pytest.raises(ValueError):
         ucdv.parse_polygon("CIRCLE ICRS 1 2 3")
+
+
+def test_pick_tile_prefers_most_central_containing_tile():
+    edge = "POLYGON ICRS 9.0 -1.0 11.0 -1.0 11.0 1.0 9.0 1.0"  # target near its west edge
+    centre = "POLYGON ICRS 8.0 -1.0 10.0 -1.0 10.0 1.0 8.0 1.0"  # target near its centre
+    away = "POLYGON ICRS 20.0 -1.0 22.0 -1.0 22.0 1.0 20.0 1.0"  # does not contain it
+    assert ucdv.pick_tile(9.1, 0.0, [edge, centre, away]) == 1
+    assert ucdv.pick_tile(9.1, 0.0, [away]) == -1
+
+
+def test_stokes_of_reads_the_stokes_axis():
+    from astropy.io import fits
+
+    h = fits.Header({"NAXIS": 4, "CTYPE3": "FREQ", "CTYPE4": "STOKES", "CRVAL4": 4.0})
+    assert ucdv._stokes_of(h) == "v"
+    h["CRVAL4"] = 1.0
+    assert ucdv._stokes_of(h) == "i"
+    with pytest.raises(RuntimeError):
+        ucdv._stokes_of(fits.Header({"NAXIS": 2, "CTYPE1": "RA---SIN"}))
+
+
+def test_load_cutout_roundtrip_and_controls_on_synthetic(tmp_path):
+    cut = []
+    tg = []
+    for k in range(80):
+        i, v, w, b = ucdv.synthetic_cutout(seed=900 + k)
+        p = tmp_path / f"c{k}.npz"
+        np.savez_compressed(
+            p,
+            i=i,
+            v=v,
+            wcs_header=w.to_header_string(),
+            beam=np.array([b.bmaj_arcsec, b.bmin_arcsec, b.bpa_deg]),
+            mjd=59700.0,
+            obs_id="X",
+        )
+        c = ucdv.load_cutout(p)
+        n = i.shape[0]
+        ra, dec = (float(x) for x in c["wcs"].pixel_to_world_values(n / 2.0, n / 2.0))
+        cut.append(c)
+        tg.append((ra, dec, 0.0, 0.0))
+    assert cut[0]["beam"] == ucdv.Beam(15.0, 12.0, 30.0)
+    r = ucdv.controls_c1_c2(cut, tg)
+    assert r["c1_null_v"]["n"] == 400 and r["c1_null_v"]["passed"]
+    assert r["c2_injection"]["passed"]
+    assert r["n_injections_per_level"] == 480 and r["n_target_pixel_per_level"] == 80
