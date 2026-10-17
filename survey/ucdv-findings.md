@@ -93,3 +93,12 @@ cutout jobs PENDING indefinitely (a manual probe sat PENDING > 4 min; a second w
 60 s, still PENDING), and astroquery's job poll has no timeout. `_cutout_urls` now runs the same
 SODA steps with a 10-minute deadline, aborts the stuck job and raises, so the backoff applies and
 the census waits out CASDA outages on its own (~2 attempts/h while down).
+
+## CASDA data-access outage (2026-10-16 → at least 2026-10-17 09:15 EDT)
+
+Since ~08:00 EDT Oct 16 no cutout job has left PENDING (23 timed-out attempts by Oct 17 08:51,
+one every ~40 min under the backoff). A plain file-staging job fails immediately with
+`errorSummary: "Error: A problem occured obtaining access to the requested item(s)"` (job
+e44f96ee-b313-4b8f-b548-10f86d203037), while login and TAP work. This is CASDA's archive back end,
+not this code or the account. No notice on casda.csiro.au or research.csiro.au/casda. The census
+service waits it out and resumes on its own; 1,694 / 19,610 slots are banked.
