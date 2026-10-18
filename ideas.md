@@ -58,6 +58,13 @@ covered from ADS (`identifier:2610.0*`, titles only; ADS lag may leave it incomp
   than copied. Recover-a-known: their mean drifts (0.043 MHz s⁻¹ type II, 4.383 MHz s⁻¹ type III)
   with a frozen ridge fitter (`solarbursts`/`type3synthesis` reuse). Risk: the paper's fit method
   is unread, so a disagreement may be definitional; read it in full first. Fit 4/5.
+  - *GATE-0 run 2026-10-18 (research agent, key values re-checked by hand): OPEN, reframed.* The
+    published fit is A = 0.78 ± 0.91, a = 0.43 ± 0.31 (Fig. 15 caption) — an **across-burst** fit of
+    one peak-time drift per burst, binned and flux-weighted (Sect. III.5); A is consistent with 0.
+    Same-band comparison: Zhang et al. 2018 (A&A 618, A165; abstract), 1389 type III bursts at
+    10–80 MHz, index **1.23**. Data: 290 type III arrays (paper: 293), 1 s × 195 kHz, 29.3–60.7 MHz;
+    drifts only in Table 3. 0 citations. **Plan 101 (`lvdrift`)**: the within-burst index from
+    ridge tracking, with planted-burst, shuffled-null and paper-reproduction controls.
 - **L14 (2026-10-17, data not verified). FRB host inclination vs DM_host, out of sample.**
   Marnoch, Ryder & Simha (arXiv:2610.13062, abstract): GALFIT axis ratios for 34 CRAFT hosts, a
   new inclination–DM_host relation reducing Macquart scatter by 40%. Test it on hosts not in that
