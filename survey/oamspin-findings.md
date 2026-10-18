@@ -81,8 +81,8 @@ pixel and q is a noise statistic. P reaches ~1 rad only near Δz × 10¹⁶; q a
 at ×10¹⁸, where P ~ 0.01 rad.
 
 Reading, before any real-data q: **for a source with no spin and no noise, this estimator returns
-values spanning the paper's (q₂ = 1.369 is reproduced exactly at Δz × 10¹⁴) depending on a unit
-convention the paper does not state, driven by day-to-day uv-coverage changes alone.** The plan
+values spanning the paper's depending on a unit convention the paper does not state
+(SM Sect. 4.2, Eqs. 10–11, p. 8, give no units or scale for x, y or z), driven by day-to-day uv-coverage changes alone.** The plan
 says such a failure is reported first; it is. N1 (with noise) still runs, as frozen, to give the
 null's spread.
 
@@ -113,7 +113,8 @@ imaged by the EHT pipeline (A1); 17.4 h wall clock. The 95% interval of q **cont
 
 By the plan's frozen rule ("cannot see spin if the N1 95% interval of q contains 1.393"),
 **the estimator cannot distinguish a non-spinning source from the published value at any Δz**.
-The narrowest interval (×10¹⁵, where the TIE phase is ~1 rad) is still 0.52 – 1.77. The
+[Corrected after GATE-2: the narrowest interval is ×10¹⁶ (0.67 – 1.69), where the TIE phase is
+~1 rad; at ×10¹⁵ (phase ~10 rad) it is 0.52 – 1.77.] The
 real-data controls (N2–N4) and the real pairs (R1) follow and are reported regardless.
 
 ## Real data: R1, N2, N3, N4 (2026-10-18; results/oamspin_real.json)
@@ -143,7 +144,7 @@ fixed flux/prior/field are not tuned for it):
 - 95-96 lo: 12.75 / **0.43** / 1.32 / 1.12 / 1.32
 - 100-101 lo: 0.39 / **0.75** / 0.40 / 1.29 / 1.14
 
-## Verdict by the frozen rules
+## Verdict by the frozen rules (first statement — superseded after GATE-2, below)
 
 The plan's three "cannot see spin" criteria are each met independently: the N1 95% interval
 contains 1.393 (at every Δz); N2 departures from 1 are at least as large as R1's; N3 moves q by
@@ -152,3 +153,46 @@ distinguish a spinning black hole from a non-spinning one.** This is a statement
 as published and as we implemented it (our TIE and our ring centring; the authors' code is not
 public), not a measurement of M87\*'s spin, which is untouched by this result.
 
+
+## GATE-2 science review (2026-10-18) and revised verdict
+
+Reviewer (science-reviewer agent, read-only; `git status` clean afterwards): **PASS WITH CHANGES**.
+What it changed, and what we did:
+
+1. **The fiducial-Δz results test our unit convention, not the method.** There the TIE phase is
+   ~10¹⁶ rad (wrapped), so the failed gate, N3 and the fiducial N1 interval are all statements
+   about a regime the authors cannot have been in. The meaningful regime is P ≈ 1 rad, at
+   Δz × 10¹⁶ (phase rms scales as 1/Δz from 1.1 × 10¹⁶ rad at the fiducial). The note leads with it.
+2. **In that regime the result is marginal, not "indistinguishable".** Pooled over cells, the
+   non-spinning null reaches q ≥ 1.393 in 7.0% / 4.3% / 5.1% of realisations at ×10¹⁴ / 10¹⁵ / 10¹⁶;
+   averaging two epochs as the paper did, the null's 95% interval of the mean is 0.80–1.53 (lo) and
+   0.67–1.47 (hi) at ×10¹⁶ — still containing 1.393, at p ≈ 0.05 one-sided. Wording: "the claimed
+   signal is not separable from pipeline noise at 95%", not "cannot see spin".
+3. **No positive control → no power statement.** Answered by **P0** (post hoc, analytic, no imaging,
+   no units: the same Δz forward and back): a phase vortex P = αφ injected through the forward TIE
+   produces an intensity change ∝ ∂I/∂φ — **none at all on a symmetric ring**, where the TIE
+   recovers P = 0 and q = 1 exactly for a true q of 1.86 (α = 0.3) or ≫ 100 (α = 1). On the M87-like
+   crescent it recovers q = 1.05 for a true 99 (α = 1) and 1.09 for 1.17 (α = 0.3). The TIE as
+   used keeps only the curl-free part of I∇P, and a vortex's I∇P is not curl-free where I varies
+   with radius. **Two intensity images cannot carry the OAM the estimator is meant to measure.**
+   Tests: `test_tie_is_blind_to_a_phase_vortex_on_a_symmetric_ring`,
+   `test_tie_misrecovers_a_vortex_on_a_crescent`. The paper's own Table 1 implies a small signal in
+   any case (q 1.295 → 1.391 for a = 0.5 → 0.9 at i = 17°, Δq ≈ 0.1) against a null scatter of
+   ~±0.4 in ln q per pair.
+4. **N2 statistic defined.** Mean |ln q| over the pairs, per Δz: N2 ≥ R1 at ×10¹⁴, 10¹⁵, 10¹⁶
+   (0.61/0.68/0.47 vs 0.36/0.17/0.24) but **not** at the fiducial (0.26 vs 0.71) or most other Δz.
+   So criterion 2 holds in the P ≈ 1 regime only, and is not claimed as independent elsewhere.
+5. **Band-combined images** (`-i2`, closer to the released fiducial images): running. The released
+   per-day images themselves could not be fetched by script (EHT data page returns 403) — disclosed.
+6. **Null harsher than the data on gains?** A calibrated N1 subset (thermal + 2%/1° systematics, no
+   station gains, 30 per cell) is running. The opposite bias is also stated: the null has no
+   source evolution, so it underestimates real day-to-day change.
+7–10. Fixed: the ×10¹⁵/×10¹⁶ error, the "q₂ reproduced exactly" sentence (struck), N4 (3C 279)
+   demoted to a sanity run (two lo-band pairs, M87-tuned pipeline, no frozen rule), the units
+   locator added; the dead hand-recipe code is removed.
+
+**Revised verdict (pending items 5–6):** the published estimator's q is not separable from pipeline
+noise at the 95% level on EHT 2017 sampling in the regime where it is defined (P ≈ 1 rad), and is
+meaningless outside it; and, independently of data, the two-image TIE cannot carry a phase vortex at
+all on a symmetric ring and mis-recovers it on a crescent. This concerns the method as published
+and as implemented here; it says nothing about M87\*'s spin.

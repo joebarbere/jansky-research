@@ -257,17 +257,11 @@ EHT2017_URL = (
     "https://data.cyverse.org/dav-anon/iplant/projects/commons_repo/curated/"
     "EHTC_FirstM87Results_Apr2019/EHTC_FirstM87Results_Apr2019_uvfits.tgz"
 )
-EHT2017_SHA256 = None  # recorded on first download in survey/oamspin-findings.md
-FOV_UAS = 120.0
-NPIX_IMAGE = 64
-PRIOR_FWHM_UAS = 40.0
+FOV_UAS = 120.0  # the simulation grid (0.48 uas px); radii are physical, so this is not the EHT FOV
 TOTAL_FLUX_JY = 0.6
 SYS_AMP = 0.02  # Paper III abstract / Sect. 8.4.5: non-closing amplitude systematic
 SYS_PHASE_DEG = 1.0  # ... and phase
 GAIN_AMP = 0.10  # Paper III Sect. 6.1: a lower limit, used as the null's per-scan gain scatter
-DATA_TERMS = {"cphase": 100.0, "logcamp": 100.0, "amp": 10.0}
-REG_TERMS = {"simple": 1.0, "tv": 1.0}
-N_ROUNDS = 3
 
 
 def fetch_eht2017(dest="data/oamspin") -> list[str]:  # pragma: no cover - network
@@ -299,51 +293,6 @@ def uvfits_path(day: int, band: str, root: str = "data/oamspin") -> str:
         / "uvfits"
         / f"SR1_M87_2017_{day:03d}_{band}_hops_netcal_StokesI.uvfits"
     )
-
-
-def load_obs(path: str):  # pragma: no cover - ehtim
-    """ehtim Obsdata with the non-closing systematics added in quadrature to sigma."""
-    import ehtim as eh
-
-    obs = eh.obsdata.load_uvfits(path)
-    # co-located pairs see large-scale flux, not the compact source (1.14 Jy vs <= 0.42 Jy on
-    # every other baseline on day 095 lo); flagged for imaging, as is standard EHT practice
-    obs = obs.flag_bl(["AA", "AP"]).flag_bl(["JC", "SM"])
-    obs.add_scans()
-    obs = obs.avg_coherent(0.0, scan_avg=True)
-    return obs.add_fractional_noise(SYS_AMP)
-
-
-def image_obs(obs) -> np.ndarray:  # pragma: no cover - ehtim
-    """The frozen recipe: 64-px, 120 uas RML image -> 250 x 250 array (unit flux, uas grid)."""
-    import ehtim as eh
-    from scipy.ndimage import zoom
-
-    fov = FOV_UAS * eh.RADPERUAS
-    prior = eh.image.make_square(obs, NPIX_IMAGE, fov)
-    prior = prior.add_gauss(TOTAL_FLUX_JY, (PRIOR_FWHM_UAS * eh.RADPERUAS,) * 2 + (0, 0, 0))
-    init = prior.copy()
-    res = obs.res()
-    for k in range(N_ROUNDS):
-        imgr = eh.imager.Imager(
-            obs,
-            init,
-            prior_im=prior,
-            flux=TOTAL_FLUX_JY,
-            data_term=DATA_TERMS,
-            reg_term=REG_TERMS,
-            ttype="direct",
-            maxit=200,
-            stop=1e-6,
-            epsilon_tv=1e-10,  # numerical: TV's 0/0 where the prior underflows to exactly 0
-        )
-        imgr.make_image_I(show_updates=False)
-        out = imgr.out_last()
-        if k < N_ROUNDS - 1:
-            init = out.blur_circ(res / 2.0)
-    arr = np.asarray(out.imarr(), float)
-    arr = np.clip(zoom(arr, N_GRID / NPIX_IMAGE, order=1), 0.0, None)
-    return arr / arr.sum()
 
 
 def pixel_uas() -> float:
