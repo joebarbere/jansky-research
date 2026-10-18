@@ -1,0 +1,75 @@
+\documentclass[RNAAS]{aastex631}
+
+% Numbers are \input from the pipeline-generated macros -- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+% DRAFT (2026-10-17). The title carries the verdict and waits for the census; the results
+% paragraph and the abstract's result sentences are written only after the census is analysed.
+\title{Circular Polarization of Gaia Ultracool Dwarfs in Two RACS Epochs at 0.9~GHz}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+We measured Stokes~$V$ at the positions of \ucdvRealNCensus\ ultracool dwarfs from the
+\citet{reyle2018} Gaia DR2 sample within \ucdvRealDmax~pc, in the RACS-low2 (887.5~MHz) and RACS-low3
+(943.5~MHz) epochs of the Rapid ASKAP Continuum Survey. % RESULT SENTENCES PENDING THE CENSUS.
+\end{abstract}
+
+\section{Sample and measurement}
+\label{sec:method}
+Ultracool-dwarf radio emission is coherent and often strongly circularly polarized, so a
+Stokes~$V$ survey selects it against the unpolarized extragalactic background. The blind
+VLASS search of the \citet{reyle2018} candidates at 3~GHz used Stokes~$I$ alone
+\citep{perger2025}, and the RACS-low2 circular-polarization catalogue measures $V$ only at
+Stokes~$I$ catalogue positions \citep{duchesne2026}. We instead measure $V$ at every dwarf.
+
+The parent sample is the \citet{reyle2018} table of Gaia DR2 \citep{gaiadr2} candidates.
+Of its \ucdvRealNReyle\ entries, \ucdvRealNBoth\ fall inside both a low2 and a low3 Stokes~$V$ image on CASDA; RACS-low1
+has no $V$ products there. The fetch rate measured on \ucdvRealSzeroN\ test pairs
+(\ucdvRealSzeroOk\ succeeded, \ucdvRealSzeroSec~s per pair) projected \ucdvRealFullHours~h
+for the full sample; a rule fixed beforehand then set a distance limit of \ucdvRealDmax~pc,
+chosen from parallax alone. For each dwarf and epoch we
+retrieved a $0.06^\circ$ $I$ and $V$ cutout from one observation \citep{mcconnell2020}
+with \code{astroquery} \citep{astroquery}, moved the Gaia position to the observation date
+with its proper motion, and read $I$ and $V$ at the pixel containing it. The noise is the
+standard deviation in an annulus of 30--90\arcsec.
+
+A target-epoch counts as a candidate if $|V|/\sigma_V\geq5$, if $|V|/I$ exceeds the local
+leakage floor when Stokes~$I$ is itself detected, and if no Stokes~$I$ source brighter than
+100~mJy lies within 3\arcmin. The upper limit on $|V|$ is $|V|+3\sigma_V$.
+
+\section{Controls}
+\label{sec:controls}
+The thresholds and pass criteria were fixed before any target value was examined. The checks
+used the \ucdvRealSzeroN\ test pairs, whose dwarfs come from the half of the sample (split by a
+hash of the Gaia identifier) that sets no threshold. Forced photometry at
+\ucdvRealConeN\ blank positions 2\arcmin\ from the targets gave positive $V$ in a fraction
+\ucdvRealConePos\ of cases with $\mathrm{std}(V/\sigma_V)=\ucdvRealConeStd$, as expected
+for noise; a peak search instead of a fixed pixel would bias this fraction towards one. Point
+sources injected into the real cutouts (\ucdvRealCtwoN\ per level) were recovered at a rate of
+\ucdvRealCtwoComp\ at $7\sigma_V$, with a median recovered-to-injected flux ratio of
+\ucdvRealCtwoRatio\ above $10\sigma_V$. For the \ucdvRealCthreeN\ stars of the RACS-low2
+circular-polarization catalogue \citep{duchesne2026}, measured in their own observations, the
+median ratio of our $V$ to the catalogue value is \ucdvRealCthreeRatio, with
+\ucdvRealCthreeFlips\ sign reversals.
+
+\section{Results}
+\label{sec:results}
+% PENDING THE CENSUS: candidates and vetting, the limit table, the fraction of snapshots above
+% L_nu (divided by the snapshots deep enough to see it), the two-epoch comparison, and WISE
+% J0623-0456 \citep{rose2023} reported as a non-gating case.
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+\code{astroquery} \citep{astroquery}, NumPy, SciPy, Astropy. Analysis assisted by Claude
+\citep{anthropicclaude}. The scientific kernels are covered by an offline test suite; the
+network and real-data drivers are not unit-tested.}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}
