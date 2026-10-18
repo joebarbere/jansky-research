@@ -31,6 +31,7 @@ __all__ = [
     "laguerre_gauss_field",
     "crescent_model",
     "crescent_params",
+    "vortex_injection",
     "q_sweep",
     "earth_dz_one_day",
     "patch_pipeline",
@@ -208,6 +209,35 @@ def laguerre_gauss_field(n: int, ell: int, *, w: float = 0.25) -> np.ndarray:
     y, x = np.mgrid[-1.0 : 1.0 : n * 1j, -1.0 : 1.0 : n * 1j]
     r = np.hypot(x, y)
     return (r / w) ** abs(ell) * np.exp(-((r / w) ** 2)) * np.exp(1j * ell * np.arctan2(y, x))
+
+
+def vortex_injection(
+    n: int, pixel: float, radius: float, width: float, asym: float, phi0: float, alpha: float
+) -> dict[str, float]:
+    """Positive control P0 (post hoc, 2026-10-18): inject a phase vortex P = alpha * phi into a
+    crescent through the forward TIE (SM Eq. 11a) and see what the inverse TIE recovers.
+
+    For P = alpha*phi, div(I grad P) = (alpha / r^2) dI/dphi, so the two-plane intensity change is
+    proportional to the crescent's azimuthal asymmetry -- zero for a symmetric ring. Returns q of
+    the true vortex field and q of the TIE-recovered field. The same dz is used forward and back,
+    so no unit convention enters.
+    """
+    img = crescent_model(n, pixel, radius, width, asym, phi0)
+    norm = float(img.sum())
+    img = img / norm
+    y, x = (np.mgrid[0:n, 0:n] - (n - 1) / 2.0) * pixel
+    r = np.hypot(x, y)
+    phi = np.arctan2(y, x)
+    ring = np.exp(-4.0 * np.log(2.0) * ((r - radius) / width) ** 2) / norm
+    didz = (
+        -(alpha / (2.0 * np.pi)) * ring * (-asym * np.sin(phi - phi0)) / np.maximum(r, pixel) ** 2
+    )
+    dz = 1e-3
+    p = tie_phase(img - 0.5 * dz * didz, img + 0.5 * dz * didz, dz, pixel)
+    r_pk = ring_radius(img, pixel)
+    q_true = q_from_spectrum(spiral_spectrum(np.sqrt(img) * np.exp(1j * alpha * phi), pixel, r_pk))
+    q_rec = q_from_spectrum(spiral_spectrum(np.sqrt(img) * np.exp(1j * p), pixel, r_pk))
+    return {"q_true": q_true, "q_recovered": q_rec, "phase_rms": float(np.std(p))}
 
 
 def crescent_model(
@@ -436,7 +466,13 @@ def q_sweep(i1: np.ndarray, i2: np.ndarray, pixel_uas: float, dz_km: float) -> d
 
 
 def simulate_uvfits(
-    template_uvfits: str, model: np.ndarray, pixel_uas: float, out: str, seed: int, noise: bool
+    template_uvfits: str,
+    model: np.ndarray,
+    pixel_uas: float,
+    out: str,
+    seed: int,
+    noise: bool,
+    gains: bool = True,
 ) -> None:  # pragma: no cover - ehtim
     """Observe ``model`` (unit-flux array scaled to TOTAL_FLUX_JY) on the exact coverage of a real
     uvfits. ``noise``: thermal noise, 10% per-scan amplitude gains, random station phases, and the
@@ -459,8 +495,8 @@ def simulate_uvfits(
         obs,
         ttype="fast",
         add_th_noise=noise,
-        ampcal=not noise,
-        phasecal=not noise,
+        ampcal=not (noise and gains),
+        phasecal=not (noise and gains),
         gainp=GAIN_AMP,
         gain_offset=0.0,
         seed=seed,
@@ -476,7 +512,11 @@ def simulate_uvfits(
 
 
 def n1_runner(
-    *, n_real: int = 200, out_jsonl: str = "data/oamspin/n1.jsonl", work: str = "data/oamspin/n1"
+    *,
+    n_real: int = 200,
+    out_jsonl: str = "data/oamspin/n1.jsonl",
+    work: str = "data/oamspin/n1",
+    gains: bool = True,
 ) -> int:  # pragma: no cover - ehtim + subprocess, ~1 day
     """N1: the non-spinning crescent (params from results/oamspin_crescent.json) observed on both
     days of each pair and band with independent noise, imaged by the EHT pipeline; resumable."""
@@ -507,7 +547,7 @@ def n1_runner(
                         uv = str(Path(work) / f"sim_{a}{b}_{band}_{k}_{j}.uvfits")
                         fi = uv.replace(".uvfits", ".fits")
                         seed = 100_000 * k + 1000 * a + 10 * j + (0 if band == "lo" else 1)
-                        simulate_uvfits(uvfits_path(day, band), model, pix, uv, seed, True)
+                        simulate_uvfits(uvfits_path(day, band), model, pix, uv, seed, True, gains)
                         run_eht_pipeline(uv, fi)
                         imgs.append(load_fits_image(fi))
                         Path(uv).unlink()
@@ -547,6 +587,38 @@ def fetch_3c279(dest: str = "data/oamspin") -> str:  # pragma: no cover - networ
         with tarfile.open(tgz) as tf:
             tf.extractall(d, filter="data")
     return str(out / "uvfits")
+
+
+def combined_runner(out_json: str = "results/oamspin_combined.json") -> dict:  # pragma: no cover
+    """R1 on band-combined images (the pipeline's own ``-i2``: lo and hi imaged together per day),
+    closer to the released fiducial images than single-band imaging."""
+    import json
+    import time
+    from pathlib import Path
+
+    cp = json.loads(Path("results/oamspin_crescent.json").read_text())
+    imgdir = Path("data/oamspin/images")
+    imgdir.mkdir(parents=True, exist_ok=True)
+    imgs = {}
+    for day in DAYS:
+        f = imgdir / f"{day:03d}_lohi.fits"
+        if not f.exists():
+            run_eht_pipeline(uvfits_path(day, "lo"), str(f), uvfits_path(day, "hi"))
+        imgs[day] = load_fits_image(str(f))
+    rows = []
+    for a, b in PAIRS:
+        (i1, p1), (i2, _) = imgs[a], imgs[b]
+        rows.append(
+            {"pair": f"{a}-{b}", "band": "lo+hi", **q_sweep(i1, i2, p1, cp["dz_km"][f"{a}-{b}"])}
+        )
+    out = {
+        "source": "real: EHT 2017 M87*, each day imaged with lo+hi combined (-i2) by the EHT "
+        f"pipeline {EHT_PIPELINE_REPO}@{EHT_PIPELINE_COMMIT[:7]} (ttype fast), frozen estimator",
+        "date": time.strftime("%Y-%m-%d"),
+        "R1_combined": rows,
+    }
+    Path(out_json).write_text(json.dumps(out, indent=1))
+    return out
 
 
 def real_runner(out_json: str = "results/oamspin_real.json") -> dict:  # pragma: no cover - ehtim

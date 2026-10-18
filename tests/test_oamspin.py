@@ -142,3 +142,16 @@ def test_q_sweep_keys_and_identity():
     s = om.q_sweep(img, img, PIX, 1e5)
     assert set(s) == {f"q_x{f:g}" for f in om.DZ_SWEEP}
     assert all(v == pytest.approx(1.0, abs=1e-12) for v in s.values())
+
+
+def test_tie_is_blind_to_a_phase_vortex_on_a_symmetric_ring():
+    # a twisted wavefront on an azimuthally symmetric ring changes no intensity: the TIE sees nothing
+    r = om.vortex_injection(om.N_GRID, 0.512, 19.97, 15.87, 0.0, 0.0, 0.3)
+    assert r["q_true"] > 1.5
+    assert r["q_recovered"] == pytest.approx(1.0, abs=1e-9) and r["phase_rms"] == 0.0
+
+
+def test_tie_misrecovers_a_vortex_on_a_crescent():
+    r = om.vortex_injection(om.N_GRID, 0.512, 19.97, 15.87, 0.535, -2.15, 1.0)
+    assert r["q_true"] > 50.0  # an l = 1 vortex: power almost all in m = +1
+    assert r["q_recovered"] < 1.2  # recovered field barely asymmetric
