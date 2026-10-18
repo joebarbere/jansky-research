@@ -522,3 +522,90 @@ def n1_runner(
                     fh.flush()
                     n += 1
     return n
+
+
+DAYS = (95, 96, 100, 101)
+EHT3C279_URL = (
+    "https://data.cyverse.org/dav-anon/iplant/projects/commons_repo/curated/"
+    "EHTC_First3C279Results_May2020/EHTC_First3C279Results_May2020_uvfits.tgz"
+)
+
+
+def fetch_3c279(dest: str = "data/oamspin") -> str:  # pragma: no cover - network
+    """Download and unpack the EHT 2017 3C 279 Stokes-I uvfits; return the uvfits directory."""
+    import tarfile
+    from pathlib import Path
+
+    from . import data as _data
+
+    d = Path(dest)
+    tgz = d / EHT3C279_URL.rsplit("/", 1)[-1]
+    if not tgz.exists():
+        _data._download(EHT3C279_URL, tgz)
+    out = d / "EHTC_First3C279Results_May2020"
+    if not out.exists():
+        with tarfile.open(tgz) as tf:
+            tf.extractall(d, filter="data")
+    return str(out / "uvfits")
+
+
+def real_runner(out_json: str = "results/oamspin_real.json") -> dict:  # pragma: no cover - ehtim
+    """R1 (real day pairs), N2 (simultaneous lo/hi of each day) and N3 (dz rescaling, inside the
+    sweep), all through the A1 pipeline and the frozen estimator. Images are cached under
+    ``data/oamspin/images``."""
+    import json
+    import time
+    from pathlib import Path
+
+    cp = json.loads(Path("results/oamspin_crescent.json").read_text())
+    imgdir = Path("data/oamspin/images")
+    imgdir.mkdir(parents=True, exist_ok=True)
+    imgs = {}
+    for day in DAYS:
+        for band in BANDS:
+            f = imgdir / f"{day:03d}_{band}.fits"
+            if not f.exists():
+                run_eht_pipeline(uvfits_path(day, band), str(f))
+            imgs[(day, band)] = load_fits_image(str(f))
+    r1, n2 = [], []
+    for a, b in PAIRS:
+        dz = cp["dz_km"][f"{a}-{b}"]
+        for band in BANDS:
+            (i1, p1), (i2, _) = imgs[(a, band)], imgs[(b, band)]
+            r1.append({"pair": f"{a}-{b}", "band": band, **q_sweep(i1, i2, p1, dz)})
+        for day in (a, b):
+            (lo, p1), (hi, _) = imgs[(day, "lo")], imgs[(day, "hi")]
+            n2.append({"day": day, "pair_dz": f"{a}-{b}", **q_sweep(lo, hi, p1, dz)})
+    # N4: 3C 279 through the same chain (the M87 pipeline's fixed zbl/prior/FOV are not tuned for
+    # a bright jet -- run as frozen, reported with that caveat; q has no spin meaning here)
+    n4: list[dict[str, object]] = []
+    uvd = Path(fetch_3c279())
+    for a, b in PAIRS:
+        ii = []
+        for day in (a, b):
+            f = imgdir / f"3c279_{day:03d}_lo.fits"
+            if not f.exists():
+                try:
+                    run_eht_pipeline(
+                        str(uvd / f"SR1_3C279_2017_{day:03d}_lo_hops_netcal_StokesI.uvfits"), str(f)
+                    )
+                except Exception as exc:
+                    n4.append({"pair": f"{a}-{b}", "error": f"{type(exc).__name__}: {exc}"[:300]})
+                    break
+            ii.append(load_fits_image(str(f)))
+        if len(ii) == 2:
+            (i1, p1), (i2, _) = ii
+            n4.append(
+                {"pair": f"{a}-{b}", "band": "lo", **q_sweep(i1, i2, p1, cp["dz_km"][f"{a}-{b}"])}
+            )
+    out = {
+        "source": "real: EHT 2017 M87* uvfits (CyVerse doi:10.25739/g85n-f134), EHT eht-imaging "
+        f"pipeline {EHT_PIPELINE_REPO}@{EHT_PIPELINE_COMMIT[:7]} (ttype fast), frozen estimator",
+        "date": time.strftime("%Y-%m-%d"),
+        "paper_q": {"q1": 1.417, "q2": 1.369, "mean": 1.393},
+        "R1_day_pairs": r1,
+        "N2_simultaneous_bands": n2,
+        "N4_3c279": n4,
+    }
+    Path(out_json).write_text(json.dumps(out, indent=1))
+    return out
