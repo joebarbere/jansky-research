@@ -3,6 +3,8 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-17 (2)](#update-2026-10-17-2--sweep-scoop-checks-and-l13l15): sweep,
+  scoop checks for plan 59 and L12, leads L13–L15, MIDAS demoted, VLASS URLs broken.
 - [Update 2026-10-17](#update-2026-10-17--l12-gate-0-the-m87-twisted-light-spin-claim): L12 GATE-0,
   the M87\* twisted-light (OAM) spin claim — OPEN, reframed as an estimator test.
 - [Update 2026-10-15 (2)](#update-2026-10-15-2--scout-full-astro-ph-sweep--gate-0-shortlist-of-three-slices):
@@ -26,6 +28,55 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-17 (2) — sweep, scoop checks and L13–L15
+
+Run by a research subagent in a Claude Code session (the Spool "scout" loop was retired on
+2026-10-18); its data and URL claims were re-checked by hand where marked. Abstract level unless
+stated. Plan 59 (`ucdv`) stays the active slice; plan 100 (`oamspin`, L12) is in review.
+
+**Last scanned through:** astro-ph.HE/.GA/.CO/.SR/.EP/.IM to 2026-10-16 (arxiv.org `pastweek`
+lists, 5 announcement days, keyword-filtered titles). The .SR/.EP/.IM 10-01 → 10-07 gap was
+covered from ADS (`identifier:2610.0*`, titles only; ADS lag may leave it incomplete).
+
+- **Plan 59 scoop check: none found.** ADS (ultracool/brown/L/T dwarf × radio/ASKAP/RACS/VAST/
+  Stokes V, 2026-06 →): 11 hits, no forced or targeted RACS/VAST V census; closest are
+  single-object papers (arXiv:2610.09854, 2607.19642). The all-epoch RACS V release announced in
+  RACS VIII (arXiv:2606.16182, Sect. 6) has not appeared.
+- **CASDA outage (since ~2026-10-16 12:00 UTC): no public notice found.** Pawsey status page
+  "All Systems Operational"; CASDA release notes' latest is v1.32 (2026-06-30). A support address
+  (atnf-datasup@csiro.au) was reported by the agent but **not found** on the CASDA pages re-checked
+  — unverified.
+- **L12 scoop check: nothing new** (148 citing records, same as the GATE-0).
+
+- **L13 (2026-10-17, data verified). Re-derive the LV614 (Irbene LOFAR) solar-burst drift law.**
+  Šteinbergs, Kolotkov & Nakariakov (arXiv:2609.26535, abstract) catalogue 335 bursts at
+  29–60 MHz (293 type III, 8 type II) and fit df/dt = A f^a with A = 0.78, a = 0.43. The classic
+  type III index is near 1.8 (from memory, to check) — the abstract does not say whether the fit
+  pools burst types. Data: Zenodo doi:10.5281/zenodo.20157853, one 266,723,235 B zip, CC-BY-4.0
+  (re-checked by hand), per-burst `.npy` dynamic spectra, so drifts can be re-measured rather
+  than copied. Recover-a-known: their mean drifts (0.043 MHz s⁻¹ type II, 4.383 MHz s⁻¹ type III)
+  with a frozen ridge fitter (`solarbursts`/`type3synthesis` reuse). Risk: the paper's fit method
+  is unread, so a disagreement may be definitional; read it in full first. Fit 4/5.
+- **L14 (2026-10-17, data not verified). FRB host inclination vs DM_host, out of sample.**
+  Marnoch, Ryder & Simha (arXiv:2610.13062, abstract): GALFIT axis ratios for 34 CRAFT hosts, a
+  new inclination–DM_host relation reducing Macquart scatter by 40%. Test it on hosts not in that
+  sample (FRBs/FRB repository; Legacy Survey / PS1 imaging), relation frozen first. Risk: faint
+  hosts give unstable axis ratios; DM_cosmic and halo scatter dominate. Fit 3/5.
+- **L15 (2026-10-17). PRS forced photometry at localized FRBs — weak.** Pelliciari, Bruno &
+  Bernardi (arXiv:2609.35729, abstract), 75-FRB PRS catalogue complete to 10²⁹ erg s⁻¹ Hz⁻¹. At
+  500 Mpc that is ~0.4 mJy (agent's arithmetic), near or below RACS/VLASS 5σ, so most targets are
+  insensitive; any limit must divide by Σε (`frblens` lesson). Fit 2/5.
+- **L3 (MIDAS DR1) demoted: data not serving.** doi:10.57891/z19a-2n41 resolves to a Data Central
+  path returning HTTP 404 (re-checked by hand).
+- **Maintenance, not a lead: the VLASS catalogue URLs in `src/jansky_research/vlass.py` (lines
+  58–67) all return HTTP 404** (re-checked by hand); `vlass-dl.nrao.edu` reports its Quick Look
+  cache offline. Committed VLASS results stand, but their real-data download path cannot be
+  re-run until the URLs are moved (CIRADA/CADC). A VLASS reliability study (negative-peak false
+  detections, cf. arXiv:2610.02028) is blocked on the same images.
+- Not leads: arXiv:2609.21177 (CRAFT FRB polarimetry, small N), arXiv:2610.13011 (ASKAP Rubin
+  DDF release — on CASDA, currently failing). arXiv:2610.17280 and 2610.12450 (new pulsar
+  censuses) may shift `ppdot` inputs — not checked.
 
 ## Update 2026-10-17 — L12 GATE-0: the M87\* twisted-light spin claim
 
