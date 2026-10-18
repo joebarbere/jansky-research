@@ -11,6 +11,7 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Changed
+- `ideas.md`: L12 GATE-0 — the M87\* twisted-light (OAM) spin claim (Tamburini+2020): no independent test found (keyword + citation search); reframed as a pre-registered estimator test on the public EHT 2017 data (the m=±1 asymmetry can only come from the reconstructed phase).
 - `plans/59`: revised after GATE 0 (Reylé+2018 UCD table, RACS-low2+low3 epochs, low1 has no V) and controls frozen before any real data: throughput/scope gate S0, blank-sky null, injection–recovery, recover-a-known, detection rule, limit definition.
 - `ideas.md`: scout scan 2026-10-15 (astro-ph.IM, abstract level): LoDeSS DR1 (arXiv:2610.04698) and the RACS astrometry correction (arXiv:2607.18775) noted; FAST/LOFAR site checks recorded.
 - `ideas.md`: scout sweep 2026-10-15 (2): astro-ph.HE/.GA/.CO to 10-14 and .SR/.EP/.IM from 10-08 only, data-URL checks, and a ranked GATE-0 shortlist (plan 59 recommended, LoDeSS DR1, plan 55); notes that L1 and plan 64 are already merged.
