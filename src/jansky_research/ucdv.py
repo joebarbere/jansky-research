@@ -1131,7 +1131,7 @@ def run_c3b(*, username: str, pw_path: str = "~/.casda_pw"):  # pragma: no cover
     from .stokesv import _casda_session
 
     casda = _casda_session(username, pw_path)
-    out = {}
+    out: dict[str, dict[str, Any]] = {}
     for ep, mid in (("low2", 59750.0), ("low3", 60330.0)):
         ra, dec = w0623_position(mid)
         pair = fetch_epoch_pair(ra, dec, ep, casda, poll_interval=3.0)
