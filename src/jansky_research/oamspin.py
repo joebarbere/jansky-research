@@ -47,7 +47,7 @@ def tie_phase(i1: np.ndarray, i2: np.ndarray, dz: float, pixel: float) -> np.nda
     zero-mean). ``I`` is the mean of the two images with a Tikhonov floor of ``TIKHONOV_FRAC``
     x max(I). ``dz`` and ``pixel`` share a length unit. Identical images give P = 0 exactly.
 
-    The FFT solution assumes :math:`I\\nabla P` is curl-free (exact for uniform I); for a
+    The FFT solution assumes :math:`I\nabla P` is curl-free (exact for uniform I); for a
     lopsided ring the curl part is dropped, the method's standard approximation (tests bound it).
     """
     i1 = np.asarray(i1, float)
