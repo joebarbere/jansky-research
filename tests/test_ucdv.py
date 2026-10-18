@@ -329,3 +329,13 @@ def test_run_offline_writes_namespaced_artifacts(tmp_path):
     assert r"\ucdvSynNRecovered" in tex and r"\ucdvRealNTargets}{--}" in tex
     assert (tmp_path / "papers" / "ucdv" / "figures" / "ucdv_limits.pdf").exists()
     assert (tmp_path / "results" / "ucdv_metrics.json").exists()
+
+
+def test_w0623_position_moves_with_its_proper_motion():
+    ra0, de0 = ucdv.w0623_position(ucdv.W0623_REF_MJD)
+    assert ra0 == pytest.approx(ucdv.W0623_RA_DEG) and de0 == pytest.approx(ucdv.W0623_DEC_DEG)
+    ra1, de1 = ucdv.w0623_position(ucdv.W0623_REF_MJD + 365.25)
+    # one year: ~0.93" west (RA decreases) and 0.17" north
+    d_ra = (ra1 - ra0) * 3600.0 * np.cos(np.radians(de0))
+    assert d_ra == pytest.approx(-0.93, abs=0.01)
+    assert (de1 - de0) * 3600.0 == pytest.approx(0.17, abs=0.01)

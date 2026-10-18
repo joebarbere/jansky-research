@@ -102,3 +102,15 @@ one every ~40 min under the backoff). A plain file-staging job fails immediately
 e44f96ee-b313-4b8f-b548-10f86d203037), while login and TAP work. This is CASDA's archive back end,
 not this code or the account. No notice on casda.csiro.au or research.csiro.au/casda. The census
 service waits it out and resumes on its own; 1,694 / 19,610 slots are banked.
+
+## C3(b) WISE J0623−0456 — literature read (arXiv:2306.15219, full text, 2026-10-17)
+
+Detected in **RACS-mid** (SBID 21060, MJD 59216): Stokes I 4.17 ± 0.41 mJy beam⁻¹, |V|/I
+66.3 ± 9.0% (Sec. II.1). **Not detected in RACS-low** (SBID 8592), 5σ limit 1.81 mJy beam⁻¹
+(Sec. II.1; Table 1 note). RACS-mid position 06ʰ23ᵐ09.28ˢ −04°56′22.8″, proper motion
+(−0.93 ± 0.01, +0.17 ± 0.02) ″ yr⁻¹, distance 11.44 ± 0.38 pc (Sec. II.4); period 1.912 h,
+B > 0.71 kG, emission cut off near 1.9–2.0 GHz (abstract, Sec. III). It is a T8 dwarf, absent
+from Gaia and so from the Reylé sample. For this census it is a rotationally pulsed source with
+no prior ~0.9 GHz detection, seen in two 15-min snapshots against a 1.9 h period — a
+non-detection is the likely outcome and is not a pipeline failure. `run_c3b` measures it once
+CASDA's archive recovers; reported, not pass/fail, as the plan states.

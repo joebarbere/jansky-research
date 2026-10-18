@@ -53,6 +53,8 @@ __all__ = [
     "pick_tile",
     "run_s0",
     "run_c3",
+    "run_c3b",
+    "w0623_position",
     "run",
     "run_census",
     "backoff_seconds",
@@ -1097,6 +1099,49 @@ def run_census(
                     fh.write(json.dumps(rec, default=float) + "\n")
                     fh.flush()
     return n
+
+
+# C3(b) target, from Rose et al. (arXiv:2306.15219, full text): RACS-mid position at MJD 59216
+# and proper motion (Sec. II.4), distance 11.44 +/- 0.38 pc. A T8 dwarf -- not in Gaia, so not in
+# the Reyle sample. Reported, not pass/fail (plan 59).
+W0623_RA_DEG = (6 + 23 / 60 + 9.28 / 3600) * 15.0
+W0623_DEC_DEG = -(4 + 56 / 60 + 22.8 / 3600)
+W0623_REF_MJD = 59216.0
+W0623_PM_MAS_YR = (-930.0, 170.0)  # (mu_alpha*, mu_delta)
+
+
+def w0623_position(mjd: float) -> tuple[float, float]:
+    """WISE J0623-0456 propagated from its RACS-mid position to ``mjd`` with its proper motion."""
+    from .stokesv_discovery import epoch_position
+
+    ref_yr = (W0623_REF_MJD - 51544.5) / 365.25 + 2000.0
+    ra, dec = epoch_position(
+        np.array([W0623_RA_DEG]),
+        np.array([W0623_DEC_DEG]),
+        np.array([W0623_PM_MAS_YR[0]]),
+        np.array([W0623_PM_MAS_YR[1]]),
+        ref_yr,
+        mjd,
+    )
+    return float(ra[0]), float(dec[0])
+
+
+def run_c3b(*, username: str, pw_path: str = "~/.casda_pw"):  # pragma: no cover - network
+    """C3(b): forced V for WISE J0623-0456 in low2 and low3 (reported, not a gate)."""
+    from .stokesv import _casda_session
+
+    casda = _casda_session(username, pw_path)
+    out = {}
+    for ep, mid in (("low2", 59750.0), ("low3", 60330.0)):
+        ra, dec = w0623_position(mid)
+        pair = fetch_epoch_pair(ra, dec, ep, casda, poll_interval=3.0)
+        if pair is None:
+            out[ep] = {"status": "no_pair"}
+            continue
+        ra, dec = w0623_position(pair["mjd"])
+        m = forced_measure(pair["i"], pair["v"], pair["wcs"], ra, dec)
+        out[ep] = {"status": "ok", "mjd": pair["mjd"], "obs_id": pair["obs_id"], **m}
+    return out
 
 
 L_GRID = np.logspace(13.0, 17.0, 41)  # erg s^-1 Hz^-1, for the snapshot-fraction curve
