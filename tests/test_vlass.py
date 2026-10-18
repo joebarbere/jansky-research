@@ -207,3 +207,48 @@ def test_run_offline(tmp_path):
     assert r"\vlassSynComplFifty" in macros and r"\vlassSynComplTen" in macros
     assert m["completeness_50_factor_se"] >= 0.0 or np.isnan(m["completeness_50_factor_se"])
     assert m["n_single_epoch_only"] == 0  # synthetic field: every source in every epoch
+
+
+def test_resolve_bulk_uses_cache_verifies_and_explains_failures(tmp_path):
+    import hashlib
+
+    import pytest
+
+    url = "https://example.invalid/x/QL3.1_components.fits"
+    calls = []
+
+    def dead(u, t):
+        calls.append(u)
+        raise OSError("404 Not Found")
+
+    with pytest.raises(RuntimeError, match="NRAO took the Quick Look catalogues offline"):
+        vlass._resolve_bulk(url, tmp_path, dead)
+    # a cached copy is used without any download attempt
+    (tmp_path / "QL3.1_components.fits").write_bytes(b"cached")
+    assert vlass._resolve_bulk(url, tmp_path, dead).name == "QL3.1_components.fits"
+    assert len(calls) == 1
+    # a fresh download with the wrong bytes is rejected and removed
+    (tmp_path / "QL3.1_components.fits").unlink()
+
+    def wrong(u, t):
+        t.write_bytes(b"not the catalogue")
+
+    with pytest.raises(RuntimeError, match="do not match"):
+        vlass._resolve_bulk(url, tmp_path, wrong)
+    assert not (tmp_path / "QL3.1_components.fits").exists()
+    # an unrecorded file is accepted as downloaded
+    other = "https://example.invalid/new.fits"
+    assert vlass._resolve_bulk(other, tmp_path, wrong).read_bytes() == b"not the catalogue"
+    assert vlass._sha256(tmp_path / "new.fits") == hashlib.sha256(b"not the catalogue").hexdigest()
+
+
+def test_recorded_vlass_checksums_match_local_cache_when_present():
+    import pytest
+
+    from jansky_research import data as _data
+
+    present = [n for n in vlass.VLASS_BULK_SHA256 if (_data.data_dir() / n).exists()]
+    if not present:
+        pytest.skip("VLASS bulk catalogues not cached on this machine")
+    for n in present[:1]:  # the smallest check that proves the record matches real bytes
+        assert vlass._sha256(_data.data_dir() / n) == vlass.VLASS_BULK_SHA256[n]

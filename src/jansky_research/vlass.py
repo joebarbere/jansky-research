@@ -65,6 +65,18 @@ VLASS_BULK_URLS: dict[int, list[str]] = {
         "https://vlass-dl.nrao.edu/vlass/quicklook/catalogs/epoch3/QL3.2_components.fits",
     ],
 }
+# The URLs above are kept as provenance: as of 2026-10-17 every one returns HTTP 404 -- NRAO took
+# the Quick Look cache (catalogues included) offline and points to its archive or CADC, and no
+# public replacement for the Epoch 2/3 component tables was found (CADC TAP, VizieR, CANFAR
+# vault). The copies the committed results were built from were cached on 2026-06-27; their
+# SHA-256 identify the exact inputs, so a replacement source can be verified byte-for-byte.
+VLASS_BULK_SHA256: dict[str, str] = {
+    "CIRADA_VLASS2QLv2_table1_components.csv.gz": (
+        "1299a786c973f50130bf8b53ccbede26eb5143fad092c1861c811b69a7223523"
+    ),
+    "QL3.1_components.fits": "a425958e43f8b72f052df893fbc1b65eae03b11008974c11eeab693be4f50c86",
+    "QL3.2_components.fits": "5ad65e94509f7a8ff22f0dadf0263bcf4818a68910008ac82bd0eb72c09009cd",
+}
 # Multiplicative peak-flux corrections onto the Perley-Butler 2017 scale (VLASS Memos 13/22):
 # the Quick-Look images *underestimate* peak flux, epoch-dependently. Epoch 1 is the mean of the
 # 1.1 (~15% low) and 1.2 (~8% low) campaigns. WITHOUT this, the epoch-to-epoch offset alone makes
@@ -591,14 +603,51 @@ def _write_candidates(path, ra, dec, flux, eta, v, mask, conf, vet) -> None:
             )
 
 
+def _sha256(path) -> str:
+    """Hex SHA-256 of a file, streamed (the Epoch 2 table is ~1 GB)."""
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _resolve_bulk(url: str, data_dir, download) -> object:
+    """Local path for a bulk catalogue: the cached copy if present, else ``download(url, target)``.
+
+    A fresh download is checked against ``VLASS_BULK_SHA256``; a mismatch is an error, because
+    the committed results were built from those exact bytes. If the file is missing and the
+    download fails, the error says why (the NRAO takedown) and where the file must be placed,
+    instead of surfacing a bare HTTP 404.
+    """
+    from pathlib import Path
+
+    name = url.rsplit("/", 1)[-1]
+    target = Path(data_dir) / name
+    if target.exists():
+        return target
+    try:
+        download(url, target)
+    except Exception as exc:
+        raise RuntimeError(
+            f"VLASS catalogue {name} is not cached and {url} could not be fetched ({exc}). "
+            "NRAO took the Quick Look catalogues offline in 2026; place a copy at "
+            f"{target} (expected SHA-256 {VLASS_BULK_SHA256.get(name, 'unknown')})."
+        ) from exc
+    want = VLASS_BULK_SHA256.get(name)
+    if want is not None and _sha256(target) != want:
+        target.unlink()
+        raise RuntimeError(f"{name}: downloaded bytes do not match the recorded SHA-256 {want}")
+    return target
+
+
 def _cached_download(url: str):  # pragma: no cover - network
     """Download ``url`` into the dataset cache (idempotent); return the local path."""
     from . import data as _data
 
-    target = _data.data_dir() / url.rsplit("/", 1)[-1]
-    if not target.exists():
-        _data._download(url, target)
-    return target
+    return _resolve_bulk(url, _data.data_dir(), _data._download)
 
 
 def _cone_mask(ra, dec, center, radius_deg):
