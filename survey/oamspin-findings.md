@@ -115,3 +115,40 @@ By the plan's frozen rule ("cannot see spin if the N1 95% interval of q contains
 **the estimator cannot distinguish a non-spinning source from the published value at any Δz**.
 The narrowest interval (×10¹⁵, where the TIE phase is ~1 rad) is still 0.52 – 1.77. The
 real-data controls (N2–N4) and the real pairs (R1) follow and are reported regardless.
+
+## Real data: R1, N2, N3, N4 (2026-10-18; results/oamspin_real.json)
+
+All eight 2017 images (4 days × lo/hi) and four 3C 279 images through the A1 pipeline; 9.7 min.
+
+**R1 — the real day pairs** (q at Δz × 0.5 / 1 / 2 / 10 / 10¹⁵):
+- 95-96 lo: 0.60 / **2.02** / 0.77 / 0.29 / 1.22 (fiducial inside the N1 95% interval: True)
+- 95-96 hi: 0.29 / **1.61** / 2.24 / 1.12 / 0.75 (fiducial inside the N1 95% interval: True)
+- 100-101 lo: 0.84 / **0.94** / 0.98 / 7.72 / 0.93 (fiducial inside the N1 95% interval: True)
+- 100-101 hi: 0.79 / **0.21** / 3.08 / 2.19 / 1.13 (fiducial inside the N1 95% interval: True)
+
+The two bands of a pair were recorded simultaneously yet give q = 2.02 vs 1.62 (95–96) and
+0.94 vs 0.21 (100–101) at the fiducial Δz. Nothing here is a stable ≈ 1.39.
+
+**N2 — simultaneous lo/hi of the same day** (no physical Δz):
+- day 95: 1.97 / **0.92** / 0.07 / 3.00 / 2.13
+- day 96: 1.45 / **1.04** / 0.95 / 0.63 / 0.28
+- day 100: 1.88 / **0.64** / 3.56 / 0.16 / 1.58
+- day 101: 1.11 / **0.63** / 1.15 / 1.40 / 1.22
+
+**N3 — Δz rescaling:** in every R1 row q moves by far more than the 0.05 the plan allows
+(e.g. 95–96 lo: 0.60 → 2.02 → 0.77 → 0.29 at ×0.5 / 1 / 2 / 10).
+
+**N4 — 3C 279** (a blazar jet, no ring; same chain, run as frozen although the M87 pipeline's
+fixed flux/prior/field are not tuned for it):
+- 95-96 lo: 12.75 / **0.43** / 1.32 / 1.12 / 1.32
+- 100-101 lo: 0.39 / **0.75** / 0.40 / 1.29 / 1.14
+
+## Verdict by the frozen rules
+
+The plan's three "cannot see spin" criteria are each met independently: the N1 95% interval
+contains 1.393 (at every Δz); N2 departures from 1 are at least as large as R1's; N3 moves q by
+far more than 0.05. **The published twisted-light estimator, applied to EHT 2017 sampling, cannot
+distinguish a spinning black hole from a non-spinning one.** This is a statement about the method
+as published and as we implemented it (our TIE and our ring centring; the authors' code is not
+public), not a measurement of M87\*'s spin, which is untouched by this result.
+
