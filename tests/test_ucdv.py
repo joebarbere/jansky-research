@@ -339,3 +339,12 @@ def test_w0623_position_moves_with_its_proper_motion():
     d_ra = (ra1 - ra0) * 3600.0 * np.cos(np.radians(de0))
     assert d_ra == pytest.approx(-0.93, abs=0.01)
     assert (de1 - de0) * 3600.0 == pytest.approx(0.17, abs=0.01)
+
+
+def test_control_metrics_read_committed_results():
+    from pathlib import Path
+
+    m = ucdv._control_metrics(Path(__file__).resolve().parents[1] / "results")
+    assert m["real_s0_n_ok"] == 80 and m["real_c1_n"] == 400
+    assert 0.435 <= m["real_c1_frac_pos"] <= 0.565 and m["real_c3_flips"] == 0
+    assert ucdv._control_metrics(Path("/nonexistent")) == {}

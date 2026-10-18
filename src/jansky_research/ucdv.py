@@ -1176,6 +1176,54 @@ def _metrics(res: dict[str, Any], prefix: str) -> dict[str, Any]:
     return m
 
 
+def _control_metrics(results_dir) -> dict[str, Any]:
+    """S0/C1/C2/C3 numbers from their committed real results files, as ``real_*`` metrics."""
+    import json
+    from pathlib import Path
+
+    rd = Path(results_dir)
+    m: dict[str, Any] = {}
+    s0p, cp, c3p = (
+        rd / f"ucdv_{n}.json" for n in ("s0_throughput", "controls_c1c2", "controls_c3")
+    )
+    if s0p.exists():
+        s0 = json.loads(s0p.read_text())
+        m.update(
+            real_s0_n_ok=s0["n_ok"],
+            real_s0_n_attempts=s0["n_attempts"],
+            real_s0_sec_per_pair=round(float(s0["sec_per_attempt_mean"]), 1),
+        )
+    if cp.exists():
+        c = json.loads(cp.read_text())
+        nv, inj = c["c1_null_v"], c["c2_injection"]
+        m.update(
+            real_c1_n=nv["n"],
+            real_c1_frac_pos=round(float(nv["frac_positive"]), 3),
+            real_c1_std=round(float(nv["std_z"]), 2),
+            real_c2_n_per_level=c["n_injections_per_level"],
+            real_c2_comp7=round(float(inj["completeness"]["7.0"]), 3),
+            real_c2_ratio=round(float(inj["median_ratio_ge10"]), 3),
+        )
+    scp = rd / "ucdv_scope.json"
+    if scp.exists():
+        sc = json.loads(scp.read_text())
+        m.update(
+            real_n_reyle=sc["n_reyle"],
+            real_n_both_epochs=sc["n_both_epochs"],
+            real_d_max_pc=sc["d_max_pc"],
+            real_n_census=sc["n_census"],
+            real_full_hours=sc["projected_full_hours"],
+        )
+    if c3p.exists():
+        c3 = json.loads(c3p.read_text())
+        m.update(
+            real_c3_n=c3["c3a"]["n"],
+            real_c3_ratio=round(float(c3["c3a"]["median_ratio"]), 3),
+            real_c3_flips=c3["c3a"]["n_sign_flip"],
+        )
+    return m
+
+
 def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
     """Slice entry point. Offline: synthetic census with planted emitters (recover-a-known).
 
@@ -1198,6 +1246,8 @@ def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
     metrics["syn_n_recovered"] = len(found & emit)
     metrics["syn_n_false"] = len(found - emit)
     real = None
+    if not offline:  # pragma: no cover - needs the committed real control results
+        metrics.update(_control_metrics(Path(out) / "results"))
     if not offline:  # pragma: no cover - needs the real census
         cpath = Path(out) / "data" / "ucdv" / "census.jsonl"
         crow = [json.loads(x) for x in cpath.read_text().splitlines()]
@@ -1247,6 +1297,23 @@ _MACROS = {
     "SynNPlanted": "syn_n_planted",
     "SynNRecovered": "syn_n_recovered",
     "SynNFalse": "syn_n_false",
+    "RealNReyle": "real_n_reyle",
+    "RealNBoth": "real_n_both_epochs",
+    "RealDmax": "real_d_max_pc",
+    "RealNCensus": "real_n_census",
+    "RealFullHours": "real_full_hours",
+    "RealSzeroOk": "real_s0_n_ok",
+    "RealSzeroN": "real_s0_n_attempts",
+    "RealSzeroSec": "real_s0_sec_per_pair",
+    "RealConeN": "real_c1_n",
+    "RealConePos": "real_c1_frac_pos",
+    "RealConeStd": "real_c1_std",
+    "RealCtwoN": "real_c2_n_per_level",
+    "RealCtwoComp": "real_c2_comp7",
+    "RealCtwoRatio": "real_c2_ratio",
+    "RealCthreeN": "real_c3_n",
+    "RealCthreeRatio": "real_c3_ratio",
+    "RealCthreeFlips": "real_c3_flips",
     "RealNTargets": "real_n_targets",
     "RealNSlots": "real_n_slots",
     "RealNSane": "real_n_sane",
