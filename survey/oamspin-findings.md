@@ -89,3 +89,29 @@ null's spread.
 Two corrections made while setting this up, both before any real q: the model's orientation was
 mirrored by the ehtim/FITS round trip (φ₀ → −φ₀; fixed with a vertical flip, now −2.141 vs −2.15),
 and the Δz sweep was extended to 10¹²–10¹⁸ (post hoc) to reach the P ~ 1 rad regime.
+
+## N1 — non-spinning null with noise (2026-10-18; results/oamspin_n1.json)
+
+800 realisations (200 per day pair × band) of the crescent above, observed on the exact 2017
+coverage with thermal noise, 10% gains, random station phases and the 2% / 1° systematics, each
+imaged by the EHT pipeline (A1); 17.4 h wall clock. The 95% interval of q **contains the paper's
+1.393 at every Δz in the sweep**:
+
+| Δz × fiducial | median q | 95% interval | fraction q > 1.3 |
+|---|---|---|---|
+| 0.5 | 1.078 | 0.189 – 6.261 | 0.404 |
+| 1 | 1.023 | 0.143 – 6.115 | 0.375 |
+| 2 | 1.004 | 0.160 – 6.434 | 0.364 |
+| 10 | 1.018 | 0.153 – 6.699 | 0.376 |
+| 1e+12 | 0.936 | 0.155 – 7.968 | 0.338 |
+| 1e+13 | 1.057 | 0.240 – 5.840 | 0.365 |
+| 1e+14 | 0.995 | 0.429 – 2.667 | 0.084 |
+| 1e+15 | 1.000 | 0.516 – 1.770 | 0.048 |
+| 1e+16 | 0.997 | 0.670 – 1.690 | 0.059 |
+| 1e+17 | 0.970 | 0.178 – 3.770 | 0.287 |
+| 1e+18 | 0.979 | 0.354 – 2.853 | 0.214 |
+
+By the plan's frozen rule ("cannot see spin if the N1 95% interval of q contains 1.393"),
+**the estimator cannot distinguish a non-spinning source from the published value at any Δz**.
+The narrowest interval (×10¹⁵, where the TIE phase is ~1 rad) is still 0.52 – 1.77. The
+real-data controls (N2–N4) and the real pairs (R1) follow and are reported regardless.
