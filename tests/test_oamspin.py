@@ -87,3 +87,58 @@ def test_ring_radius_and_crescent():
     img = _crescent()
     assert om.ring_radius(img, PIX) == pytest.approx(21.0, abs=PIX)
     assert np.all(img >= 0)
+
+
+def test_ring_center_finds_an_offset_crescent_not_its_centroid():
+    from scipy.ndimage import shift
+
+    img = shift(_crescent(asym=0.8, phi0=0.0), (6.0, -9.0), order=1)
+    cy, cx = om.ring_center(img, search_px=14, step=0.5)
+    c = (om.N_GRID - 1) / 2.0
+    assert abs(cy - (c + 6.0)) <= 1.0 and abs(cx - (c - 9.0)) <= 1.0
+    # the centroid is pulled toward the bright side (phi0 = 0 -> +x), the ring centre is not
+    n = om.N_GRID
+    y, x = np.mgrid[0:n, 0:n]
+    assert (img * x).sum() / img.sum() > (c - 9.0) + 2.0
+
+
+def test_center_on_ring_uses_one_common_shift():
+    from scipy.ndimage import shift
+
+    a = shift(_crescent(phi0=1.0), (5.0, 4.0), order=1)
+    b = shift(_crescent(phi0=1.1), (5.0, 4.0), order=1)
+    ca, cb = om.center_on_ring(a, b)
+    assert om.ring_radius(0.5 * (ca + cb), PIX) == pytest.approx(21.0, abs=1.0)
+    # identical inputs stay identical after centring -> q is still exactly 1
+    assert om.q_estimator(a, a, PIX, 1.0)["q"] == pytest.approx(1.0, abs=1e-12)
+
+
+def test_patch_pipeline_changes_exactly_one_line():
+    src = "a = 1\nttype     = 'nfft'   # comment\nb = 2\n"
+    out = om.patch_pipeline(src)
+    assert out.count("\n") == src.count("\n")
+    assert "ttype = 'fast'" in out and "nfft'" not in out.split("\n")[1]
+    with pytest.raises(ValueError):
+        om.patch_pipeline("a = 1\n")
+
+
+def test_units_and_dz_are_physical():
+    # 1 uas at 16.8 Mpc ~ 2.5e9 km; the Earth's line-of-sight motion in a day is << that
+    assert om.uas_to_km(1.0) == pytest.approx(2.513e9, rel=1e-3)
+    dz = om.earth_dz_one_day(57848.0)  # 2017-04-05
+    assert 1e4 < dz < 2.6e6  # at most the Earth's orbital speed x 1 day (~2.57e6 km)
+
+
+def test_crescent_params_recovers_the_model():
+    img = _crescent(asym=0.5, phi0=0.7)
+    p = om.crescent_params(img, PIX)
+    assert p["radius"] == pytest.approx(21.0, abs=PIX)
+    assert p["asym"] == pytest.approx(0.5, abs=0.05)
+    assert p["phi0"] == pytest.approx(0.7, abs=0.05)
+
+
+def test_q_sweep_keys_and_identity():
+    img = _crescent()
+    s = om.q_sweep(img, img, PIX, 1e5)
+    assert set(s) == {f"q_x{f:g}" for f in om.DZ_SWEEP}
+    assert all(v == pytest.approx(1.0, abs=1e-12) for v in s.values())
