@@ -41,13 +41,19 @@ __all__ = [
     "SNR_DETECT",
     "Beam",
     "apply_detection_rule",
+    "analyze_census",
     "assign_set",
+    "cutout_leakage_floor",
+    "poisson_upper",
+    "snapshot_fraction_limit",
+    "synthetic_census",
     "forced_measure",
     "in_footprint",
     "parse_polygon",
     "pick_tile",
     "run_s0",
     "run_c3",
+    "run",
     "run_census",
     "backoff_seconds",
     "census_targets",
@@ -1093,14 +1099,165 @@ def run_census(
     return n
 
 
+L_GRID = np.logspace(13.0, 17.0, 41)  # erg s^-1 Hz^-1, for the snapshot-fraction curve
+L_QUOTE = (1e14, 1e15, 1e16)  # luminosities the paper quotes a fraction limit at
+
+
+def _metrics(res: dict[str, Any], prefix: str) -> dict[str, Any]:
+    """Flatten an ``analyze_census`` result into the namespaced metrics the paper cites."""
+    ok_l = res["l_upper"][res["sane"]]
+    det_l = res["l_upper"][res["candidate"]]  # conservative: a candidate's L is its upper value
+    frac = snapshot_fraction_limit(ok_l, np.array(L_QUOTE), det_l)
+    m: dict[str, Any] = {
+        f"{prefix}_n_targets": res["n_targets"],
+        f"{prefix}_n_slots": res["n_slots"],
+        f"{prefix}_n_sane": res["n_sane"],
+        f"{prefix}_n_candidates": res["n_candidates"],
+        f"{prefix}_n_held": res["n_held"],
+        f"{prefix}_n_pairs": res["n_pairs"],
+        f"{prefix}_n_beyond_spectral": int(np.sum(res["two_epoch"]["beyond_spectral"])),
+        f"{prefix}_median_sigma_v_mjy": round(float(np.nanmedian(res["sigma_v"])), 3),
+        f"{prefix}_median_limit_mjy": round(float(np.nanmedian(res["upper_limit_mjy"])), 3),
+        f"{prefix}_null_frac_positive": round(
+            float(res["null_monitor"].get("frac_positive", np.nan)), 3
+        ),
+        f"{prefix}_null_std": round(float(res["null_monitor"].get("std_z", np.nan)), 3),
+        f"{prefix}_null_passed": bool(res["null_monitor"].get("passed", False)),
+    }
+    for L, n, f in zip(L_QUOTE, frac["n_eff"], frac["frac_upper"], strict=True):
+        tag = f"1e{int(round(np.log10(L)))}"
+        m[f"{prefix}_neff_{tag}"] = int(n)
+        m[f"{prefix}_frac_upper_{tag}"] = None if not np.isfinite(f) else round(float(f), 5)
+    return m
+
+
+def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
+    """Slice entry point. Offline: synthetic census with planted emitters (recover-a-known).
+
+    Real (``offline=False``): the committed census rows in ``data/ucdv/census.jsonl``. Offline and
+    real metrics are namespaced (``syn_*`` / ``real_*`` -> ``\\ucdvSyn*`` / ``\\ucdvReal*``), the
+    results JSON and macros merge through ``report.write_results`` / ``preserve_live_macros``,
+    and an offline run must be pointed at a scratch ``out`` (CLAUDE.md).
+    """
+    import json
+    from pathlib import Path
+
+    from .report import write_results
+
+    rows, dist, emit = synthetic_census()
+    res = analyze_census(rows, dist)
+    found = set(res["source_id"][res["candidate"]].tolist())
+    metrics: dict[str, Any] = {"source": "synthetic census with planted emitters"}
+    metrics.update(_metrics(res, "syn"))
+    metrics["syn_n_planted"] = len(emit)
+    metrics["syn_n_recovered"] = len(found & emit)
+    metrics["syn_n_false"] = len(found - emit)
+    real = None
+    if not offline:  # pragma: no cover - needs the real census
+        cpath = Path(out) / "data" / "ucdv" / "census.jsonl"
+        crow = [json.loads(x) for x in cpath.read_text().splitlines()]
+        tg = census_targets()
+        dist_r = {int(s): 1000.0 / float(p) for s, p in zip(tg["Source"], tg["Plx"], strict=True)}
+        real = analyze_census(crow, dist_r)
+        metrics.update(_metrics(real, "real"))
+        metrics["source"] = "synthetic recover-a-known + real RACS-low2/low3 forced-V census"
+    op = Path(out)
+    write_results(metrics, op / "results" / "ucdv_metrics.json")
+    _figure(real if real is not None else res, op / "papers" / "ucdv" / "figures")
+    _write_macros(metrics, op / "papers" / "ucdv" / "generated" / "macros.tex")
+    return metrics
+
+
+def _figure(res: dict[str, Any], out_dir) -> None:
+    """Two panels: per-slot L_nu,V upper limit vs distance; snapshot-fraction limit vs L."""
+    from pathlib import Path
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    od = Path(out_dir)
+    od.mkdir(parents=True, exist_ok=True)
+    s = res["sane"]
+    frac = snapshot_fraction_limit(res["l_upper"][s], L_GRID, res["l_upper"][res["candidate"]])
+    fig, ax = plt.subplots(1, 2, figsize=(9, 3.6))
+    ax[0].scatter(res["dist_pc"][s], res["l_upper"][s], s=2, alpha=0.4, color="0.3")
+    ax[0].set_xlabel("distance (pc)")
+    ax[0].set_ylabel(r"$L_{\nu,V}$ upper limit (erg s$^{-1}$ Hz$^{-1}$)")
+    ax[0].set_yscale("log")
+    fin = np.isfinite(frac["frac_upper"])
+    ax[1].plot(frac["l_grid"][fin], frac["frac_upper"][fin], color="k")
+    ax[1].set_xscale("log")
+    ax[1].set_yscale("log")
+    ax[1].set_xlabel(r"$L_{\nu,V}$ (erg s$^{-1}$ Hz$^{-1}$)")
+    ax[1].set_ylabel("95% upper limit on snapshot fraction")
+    fig.tight_layout()
+    fig.savefig(od / "ucdv_limits.pdf")
+    plt.close(fig)
+
+
+_MACROS = {
+    "SynNTargets": "syn_n_targets",
+    "SynNPlanted": "syn_n_planted",
+    "SynNRecovered": "syn_n_recovered",
+    "SynNFalse": "syn_n_false",
+    "RealNTargets": "real_n_targets",
+    "RealNSlots": "real_n_slots",
+    "RealNSane": "real_n_sane",
+    "RealNCand": "real_n_candidates",
+    "RealNHeld": "real_n_held",
+    "RealNPairs": "real_n_pairs",
+    "RealNBeyondSpec": "real_n_beyond_spectral",
+    "RealSigmaV": "real_median_sigma_v_mjy",
+    "RealLimit": "real_median_limit_mjy",
+    "RealNullPos": "real_null_frac_positive",
+    "RealNullStd": "real_null_std",
+    "RealNeffFourteen": "real_neff_1e14",
+    "RealFracFourteen": "real_frac_upper_1e14",
+    "RealNeffFifteen": "real_neff_1e15",
+    "RealFracFifteen": "real_frac_upper_1e15",
+    "RealNeffSixteen": "real_neff_1e16",
+    "RealFracSixteen": "real_frac_upper_1e16",
+}
+
+
+def _write_macros(m: dict[str, Any], path) -> None:
+    from pathlib import Path
+
+    from .report import preserve_live_macros
+
+    def _fmt(key: str) -> str:
+        val = m.get(key)
+        return "--" if val is None else str(val)
+
+    lines = [
+        "% Auto-generated by jansky_research.ucdv._write_macros -- do not edit.",
+        rf"\newcommand{{\ucdvSource}}{{{m['source']}}}",
+    ]
+    lines += [rf"\newcommand{{\ucdv{name}}}{{{_fmt(key)}}}" for name, key in _MACROS.items()]
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(preserve_live_macros("\n".join(lines) + "\n", p))
+
+
 def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     import argparse
     import os
 
     ap = argparse.ArgumentParser(prog="python -m jansky_research.ucdv")
-    ap.add_argument("command", choices=["census"])
+    ap.add_argument("command", choices=["census", "run"])
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--out", default=None, help="run: output root (use a scratch dir offline)")
+    ap.add_argument("--offline", action="store_true")
     a = ap.parse_args(argv)
+    if a.command == "run":
+        if a.out is None:
+            raise SystemExit("run: pass --out (offline runs must not write into the repo root)")
+        import json
+
+        print(json.dumps(run(a.out, offline=a.offline), indent=2, default=str))
+        return 0
     user = os.environ.get("CASDA_USERNAME")
     if not user:
         raise SystemExit("set CASDA_USERNAME")
@@ -1111,3 +1268,186 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(_main())
+
+
+# ---- analysis of the census (runs after the fetch, never inside it) -----------------------------
+BRIGHT_LEAK_SNR = 50.0  # field sources used for the leakage floor: I/sigma_I above this
+MIN_LEAK_SOURCES = 3
+
+
+def cutout_leakage_floor(image_i, image_v, *, snr: float = BRIGHT_LEAK_SNR) -> float:
+    """Leakage floor from the cutout's own bright Stokes-I peaks (``stokesv.leakage_floor``).
+
+    Local maxima with ``I > snr * sigma_I`` (sigma from a robust MAD of the whole cutout) give
+    |V/I|; fewer than ``MIN_LEAK_SOURCES`` such peaks returns NaN, which the detection rule treats
+    as "floor undetermined" -- the candidate is held for vetting, never passed or dropped silently.
+    """
+    from scipy.ndimage import maximum_filter
+
+    from .stokesv import leakage_floor
+
+    i = np.asarray(image_i, float)
+    v = np.asarray(image_v, float)
+    ok = np.isfinite(i)
+    if not ok.any():
+        return float("nan")
+    sig = 1.4826 * float(np.nanmedian(np.abs(i[ok] - np.nanmedian(i[ok]))))
+    peaks = (i == maximum_filter(np.nan_to_num(i, nan=-np.inf), size=5)) & (i > snr * sig)
+    if int(peaks.sum()) < MIN_LEAK_SOURCES:
+        return float("nan")
+    return leakage_floor(np.abs(v[peaks]) / i[peaks])
+
+
+def poisson_upper(n: int, cl: float = 0.95) -> float:
+    """One-sided Poisson upper limit on the mean for ``n`` observed events (2.996 for n = 0)."""
+    return float(stats.chi2.ppf(cl, 2 * (int(n) + 1)) / 2.0)
+
+
+def snapshot_fraction_limit(
+    l_limit: np.ndarray, l_grid: np.ndarray, l_detected: np.ndarray | None = None, cl: float = 0.95
+) -> dict[str, np.ndarray]:
+    """Upper limit on the fraction of target-snapshots above luminosity ``L``, for each ``L``.
+
+    Only snapshots whose own limit reaches ``L`` could have seen a source that bright, so the
+    denominator is ``N_eff(L) = #(l_limit <= L)`` -- not the sample size (the ``frblens`` lesson:
+    a null divides by sensitivity). Detections with ``L_det >= L`` enter the Poisson numerator.
+    """
+    lim = np.asarray(l_limit, float)
+    lim = lim[np.isfinite(lim)]
+    det = np.asarray([] if l_detected is None else l_detected, float)
+    grid = np.asarray(l_grid, float)
+    n_eff = np.array([int(np.sum(lim <= L)) for L in grid])
+    n_det = np.array([int(np.sum(det >= L)) for L in grid])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        frac = np.array(
+            [
+                poisson_upper(k, cl) / n if n > 0 else np.inf
+                for k, n in zip(n_det, n_eff, strict=True)
+            ]
+        )
+    return {"l_grid": grid, "n_eff": n_eff, "n_det": n_det, "frac_upper": frac}
+
+
+def analyze_census(
+    rows: list[dict[str, Any]],
+    dist_pc: dict[int, float],
+    leak_floor: dict[tuple[int, str], float] | None = None,
+) -> dict[str, Any]:
+    """Apply the frozen rules to census rows (one per target-epoch, as ``run_census`` writes them).
+
+    Slot sanity: rows with undefined sigma_V, or sigma_V > ``CUTOUT_RMS_MAX_FACTOR`` x that
+    epoch's median, get no limit. Candidates follow :func:`apply_detection_rule`; when Stokes I
+    is detected and the leakage floor is undetermined the slot is ``held`` for vetting. Returns
+    per-slot arrays, the per-target two-epoch comparison, the ongoing C1 null monitor, and counts.
+    """
+    leak_floor = leak_floor or {}
+    ok = [r for r in rows if r.get("status") == "ok"]
+    sid = np.array([int(r["source_id"]) for r in ok], dtype=np.int64)
+    ep = np.array([str(r["epoch"]) for r in ok])
+    v = np.array([float(r["v"]) for r in ok])
+    sv = np.array([float(r["sigma_v"]) for r in ok])
+    i = np.array([float(r["i"]) for r in ok])
+    si = np.array([float(r["sigma_i"]) for r in ok])
+    bright = np.array([bool(r["bright"]) for r in ok])
+    sane = np.isfinite(sv) & (sv > 0)
+    for e in np.unique(ep):
+        m = ep == e
+        med = float(np.nanmedian(sv[m & sane])) if (m & sane).any() else np.nan
+        sane &= ~(m & (sv > CUTOUT_RMS_MAX_FACTOR * med))
+    floor = np.array(
+        [leak_floor.get((int(a), str(b)), np.nan) for a, b in zip(sid, ep, strict=True)]
+    )
+    rule = apply_detection_rule(v, sv, i, si, np.nan_to_num(floor, nan=np.inf), bright)
+    i_det = i / si >= SNR_DETECT
+    held = rule["v_significant"] & i_det & ~np.isfinite(floor) & rule["clear_of_bright"]
+    cand = rule["candidate"] & sane
+    ul = np.where(sane, upper_limit(v, sv), np.nan)
+    d = np.array([dist_pc.get(int(s), np.nan) for s in sid])
+    l_ul = luminosity_limit(ul, d)
+    nv = (
+        np.concatenate([np.asarray(r.get("null_v", []), float) for r in ok]) if ok else np.array([])
+    )
+    ns = (
+        np.concatenate([np.asarray(r.get("null_sigma_v", []), float) for r in ok])
+        if ok
+        else np.array([])
+    )
+    # two-epoch comparison for targets with both epochs sane
+    pairs = []
+    for s in np.unique(sid):
+        a = np.flatnonzero((sid == s) & (ep == "low2") & sane)
+        b = np.flatnonzero((sid == s) & (ep == "low3") & sane)
+        if a.size and b.size:
+            pairs.append((int(s), int(a[0]), int(b[0])))
+    if pairs:
+        ia = np.array([p[1] for p in pairs])
+        ib = np.array([p[2] for p in pairs])
+        cmp = two_epoch_compare(v[ia], sv[ia], v[ib], sv[ib])
+    else:
+        cmp = {
+            "z_diff": np.array([]),
+            "differs": np.array([], bool),
+            "beyond_spectral": np.array([]),
+        }
+    return {
+        "source_id": sid,
+        "epoch": ep,
+        "v": v,
+        "sigma_v": sv,
+        "sane": sane,
+        "candidate": cand,
+        "held": held & sane,
+        "upper_limit_mjy": ul,
+        "dist_pc": d,
+        "l_upper": l_ul,
+        "pair_source_id": np.array([p[0] for p in pairs], dtype=np.int64),
+        "two_epoch": cmp,
+        "null_monitor": null_check(nv, ns) if nv.size else {"n": 0, "passed": False},
+        "n_targets": int(np.unique(sid).size),
+        "n_slots": int(len(ok)),
+        "n_sane": int(sane.sum()),
+        "n_candidates": int(cand.sum()),
+        "n_held": int((held & sane).sum()),
+        "n_pairs": len(pairs),
+    }
+
+
+def synthetic_census(
+    n_targets: int = 2000, *, n_emitters: int = 6, seed: int = SEED
+) -> tuple[list[dict[str, Any]], dict[int, float], set[int]]:
+    """Offline fixture shaped like ``census.jsonl``: noise-only targets plus planted emitters.
+
+    Noise per slot is drawn around the measured RACS level (median sigma_V 0.15 mJy/beam, S0);
+    ``n_emitters`` targets carry a strongly circularly polarised source (|V| = 10-20 sigma, I below
+    detection) in one or both epochs. Returns ``(rows, dist_pc, emitter_ids)``.
+    """
+    rng = np.random.default_rng(seed)
+    ids = rng.choice(np.arange(10**15, 10**15 + 10**8, 2), n_targets, replace=False).astype(
+        np.int64
+    )
+    dist = dict(zip(ids.tolist(), rng.uniform(10.0, 107.8, n_targets).tolist(), strict=True))
+    emit = set(rng.choice(ids, n_emitters, replace=False).tolist())
+    rows = []
+    for s in ids.tolist():
+        both = rng.random() < 0.5
+        for k, e in enumerate(("low2", "low3")):
+            sv = float(rng.lognormal(np.log(0.15), 0.2))
+            si = sv * 1.3
+            vt = 0.0
+            if s in emit and (both or k == 0):
+                vt = float(rng.choice([-1.0, 1.0]) * rng.uniform(10, 20) * sv)
+            rows.append(
+                {
+                    "source_id": s,
+                    "epoch": e,
+                    "status": "ok",
+                    "v": vt + rng.normal(0, sv),
+                    "sigma_v": sv,
+                    "i": abs(vt) * 0.3 + rng.normal(0, si),
+                    "sigma_i": si,
+                    "bright": bool(rng.random() < 0.01),
+                    "null_v": rng.normal(0, sv, NULL_PER_TARGET).tolist(),
+                    "null_sigma_v": [sv] * NULL_PER_TARGET,
+                }
+            )
+    return rows, dist, emit

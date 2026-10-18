@@ -257,3 +257,75 @@ def test_backoff_seconds_doubles_and_caps():
         k += 1
         t += ucdv.backoff_seconds(k)
     assert k < 30
+
+
+def test_poisson_upper_and_fraction_limit_divides_by_sensitivity():
+    assert ucdv.poisson_upper(0) == pytest.approx(2.996, abs=1e-3)
+    assert ucdv.poisson_upper(2) == pytest.approx(6.296, abs=1e-3)
+    # 1000 snapshots, only 100 deep enough to reach L=1e15: the limit divides by 100, not 1000
+    lim = np.r_[np.full(100, 5e14), np.full(900, 5e16)]
+    f = ucdv.snapshot_fraction_limit(lim, np.array([1e15, 1e17]))
+    assert list(f["n_eff"]) == [100, 1000]
+    assert f["frac_upper"][0] == pytest.approx(2.996 / 100, rel=1e-3)
+    assert f["frac_upper"][1] == pytest.approx(2.996 / 1000, rel=1e-3)
+    # a detection above L raises the numerator; nothing reaches 1e13 -> infinite
+    g = ucdv.snapshot_fraction_limit(lim, np.array([1e13, 1e15]), np.array([2e15]))
+    assert np.isinf(g["frac_upper"][0]) and g["n_det"][1] == 1
+
+
+def test_cutout_leakage_floor():
+    from jansky_research.stokesv import LEAKAGE_NSIGMA
+
+    i, v, w, beam = ucdv.synthetic_cutout(rms_mjy=0.15)
+    assert np.isnan(ucdv.cutout_leakage_floor(i, v))  # no bright sources -> undetermined
+    n = i.shape[0]
+    for fx, fy in ((0.3, 0.3), (0.7, 0.3), (0.5, 0.75)):
+        ra, dec = (float(x) for x in w.pixel_to_world_values(fx * n, fy * n))
+        i = ucdv.inject_point_source(i, w, ra, dec, 1000.0, beam)
+        v = ucdv.inject_point_source(v, w, ra, dec, 10.0, beam)  # 1% leakage, noise 1.5%
+    assert ucdv.cutout_leakage_floor(i, v) == pytest.approx(LEAKAGE_NSIGMA * 0.01, rel=0.05)
+
+
+def test_analyze_census_recovers_planted_emitters_and_applies_sanity():
+    rows, dist, emit = ucdv.synthetic_census(n_targets=1500, n_emitters=6)
+    rows.append(dict(rows[0], source_id=7, sigma_v=50.0, v=400.0))  # absurd noise: no limit
+    dist[7] = 50.0
+    rows.append(dict(rows[0], source_id=9, status="error"))  # failed slots are ignored
+    res = ucdv.analyze_census(rows, dist)
+    found = set(res["source_id"][res["candidate"]].tolist())
+    assert found >= emit  # every planted emitter recovered
+    assert len(found - emit) <= 2  # Gaussian false alarms at 5 sigma over ~3000 slots: ~0
+    k = np.flatnonzero(res["source_id"] == 7)[0]
+    assert not res["sane"][k] and np.isnan(res["upper_limit_mjy"][k])
+    assert res["n_pairs"] >= 1499
+    assert res["null_monitor"]["passed"]
+    # the two-epoch comparison flags the one-epoch emitters as beyond spectral
+    assert int(np.sum(res["two_epoch"]["beyond_spectral"])) >= 1
+
+
+def test_analyze_census_holds_i_detected_candidates_without_floor():
+    base = {
+        "epoch": "low2",
+        "status": "ok",
+        "sigma_v": 0.15,
+        "sigma_i": 0.2,
+        "bright": False,
+        "null_v": [],
+        "null_sigma_v": [],
+    }
+    rows = [dict(base, source_id=2, v=1.5, i=20.0), dict(base, source_id=4, v=0.0, i=0.0)]
+    res = ucdv.analyze_census(rows, {2: 30.0, 4: 30.0})
+    assert res["n_held"] == 1 and res["n_candidates"] == 0
+    res2 = ucdv.analyze_census(rows, {2: 30.0, 4: 30.0}, {(2, "low2"): 0.02})
+    assert res2["n_candidates"] == 1  # |V|/I = 7.5% clears a 2% floor
+
+
+def test_run_offline_writes_namespaced_artifacts(tmp_path):
+    m = ucdv.run(str(tmp_path), offline=True)
+    assert m["source"].startswith("synthetic")
+    assert m["syn_n_recovered"] == m["syn_n_planted"]
+    assert not any(k.startswith("real_") for k in m)
+    tex = (tmp_path / "papers" / "ucdv" / "generated" / "macros.tex").read_text()
+    assert r"\ucdvSynNRecovered" in tex and r"\ucdvRealNTargets}{--}" in tex
+    assert (tmp_path / "papers" / "ucdv" / "figures" / "ucdv_limits.pdf").exists()
+    assert (tmp_path / "results" / "ucdv_metrics.json").exists()
