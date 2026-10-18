@@ -3,6 +3,8 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-17](#update-2026-10-17--l12-gate-0-the-m87-twisted-light-spin-claim): L12 GATE-0,
+  the M87\* twisted-light (OAM) spin claim — OPEN, reframed as an estimator test.
 - [Update 2026-10-15 (2)](#update-2026-10-15-2--scout-full-astro-ph-sweep--gate-0-shortlist-of-three-slices):
   full astro-ph sweep, data checks, three-slice GATE-0 shortlist.
 - [Update 2026-10-15](#update-2026-10-15--scout-scan-first-run-abstract-level-only): scout scan.
@@ -24,6 +26,55 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-17 — L12 GATE-0: the M87\* twisted-light spin claim
+
+Run in a Claude Code session (research agent for the reading, findings spot-checked by hand).
+Nothing here starts a slice. Plan 59 (`ucdv`) is in progress and stays the active slice.
+
+- **L12 (2026-10-17, GATE-0 run: OPEN — reframed). An estimator test of the M87\* OAM spin.**
+  - *The claim.* Tamburini, Thidé & Della Valle 2020, MNRAS 492, L22–L27
+    (doi:10.1093/mnrasl/slz176, arXiv:1904.07923): an orbital-angular-momentum signature in the
+    public EHT 2017 M87\* data gives a = 0.90 ± 0.05, i = 17° ± 2° (abstract, read 2026-10-17).
+    Theory: Tamburini et al. 2011, *Nat. Phys.* 7, 195 (doi:10.1038/nphys1907).
+  - *Method (agent, full text of v4; not re-read by hand).* The field is √I·e^{iP}; the phase P is
+    not measured but reconstructed with the Transport-of-Intensity Equation from two images one day
+    apart (Eq. 11a/b, SM 4.2). The observable is q, the m = +1 / m = −1 peak ratio of the
+    azimuthal ("spiral") spectrum (Sec. 1, Table 1). Measured q₁ = 1.417 ± 0.049 and
+    q₂ = 1.369 ± 0.047 (Sec. 2(iii)); a(q) from KERTAP ray-traced rings over a = 0.5–0.99 with
+    i fixed at 17° (Table 1, Fig. 7). No a = 0 model and no null test (Sec. 2(i)); the a error
+    is ±0.05 in the abstract and ±0.10 in Sec. 3 and the Fig. 4 caption; no code or input images
+    released.
+  - *The crux (checked by hand: elementary).* For a real brightness on a ring the azimuthal
+    Fourier coefficients obey c₋ₘ = c̄ₘ, so |c₊₁| = |c₋₁|: **q ≠ 1 comes entirely from the
+    reconstructed phase P**, which rests on two incoherent-source images taken a day apart. That
+    is the thing to test, and a non-spinning null run through the same estimator tests it.
+  - *Novelty.* ADS: 148 records cite it; the agent read titles for all, abstracts for ~12 and
+    full text for 4 (Garofalo 2020, Rodríguez-Fajardo 2023, Iorio 2025, Wan 2024): none
+    re-analyses or criticises it. Every OAM-and-M87 follow-up found is by the original group or a
+    co-author (Tamburini 2021, 2022; Feleppa, Tamburini & Lambiase 2026). Keyword searches only;
+    absence of a rebuttal is not evidence the claim is right.
+  - *Data (verified 2026-10-17).* EHT 2017 M87\* calibrated visibilities, doi:10.25739/g85n-f134,
+    CyVerse `EHTC_FirstM87Results_Apr2019_uvfits.tgz`: HTTP 200, 1,606,171 B, eight Stokes-I
+    uvfits (days 095/096/100/101 × hi/lo), ODC-PDDL. Also listed (agent, HTTP 200): 3C 279 2017
+    (1.8 MB), M87 2018 (2.7 MB), Sgr A\* 2017 (7.1 MB). The pipeline *images* Tamburini used
+    could not be confirmed public (the EHT data page returns 403 to scripts — needs a browser).
+  - *Why not a straight recover-a-known.* No code, unspecified inputs and an inconsistent error
+    budget mean a failure to reproduce q would not separate "claim wrong" from "different
+    pipeline". **Reframe: test the estimator, not the paper's number.** Implement the stated
+    TIE + spiral-spectrum estimator once, freeze it, then report q for (1) a = 0 rings with a
+    Doppler-like cos φ brightness asymmetry, imaged through the identical 2017 uv coverage and
+    the same ehtim path; (2) a spinning model; (3) 3C 279 through the same chain; (4) M87\*
+    day-pair permutations, including 0-day "pairs" (one image against itself); (5) the 2018
+    epoch, whose asymmetry moved. If (1) gives q ≈ 1.4, the estimator cannot see spin.
+  - *Feasibility.* Megabytes of data; ehtim (PyPI, GPL-3.0) for imaging; the null rings are NumPy.
+    No GPU. Risk: our TIE implementation is ours, so the paper must say it tests the stated method,
+    not their code.
+  - *GATE-0 checks still open:* browser search for released pipeline images; read the full text
+    by hand before the plan quotes any equation; check whether day-to-day image differences in
+    2017 are dominated by imaging noise.
+  - *Framing.* "We test whether the estimator distinguishes spin", never "we refute". Teaching
+    side planned separately in `jansky` (plans/01-oam-radio.md, jansky PR #146).
 
 ## Update 2026-10-15 (2) — scout: full astro-ph sweep + GATE-0 shortlist of three slices
 
