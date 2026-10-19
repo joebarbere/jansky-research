@@ -40,6 +40,9 @@ workflow = ["snakemake>=8.0; python_version >= '3.11'"]
 # never pull multi-GB accelerator wheels; the GPU benchmark leg runs from a ROCm venv with this
 # repo importable (see plans/34). Tests `importorskip("torch")`, so core CI stays torch-free.
 fdmt = ["torch>=2.4"]
+# EHT imaging for the twisted-light estimator test (plan 100). ehtim is GPL-3.0, so it is an
+# OPTIONAL extra, imported only inside oamspin's imaging functions; core and CI stay without it.
+eht = ["ehtim>=1.2"]
 # Neural simulation-based inference for the RACS Stokes-V coherent-emitter population (plan 40).
 # Pulls torch; kept OUT of core/CI like fdmt. Tests `importorskip("sbi")`, so the pure-NumPy
 # forward model / summary statistics stay testable in core CI; NPE training runs from the ROCm

@@ -115,6 +115,14 @@ within 0.01 (if not, the imaging recipe itself injects asymmetry, and that is re
 - Tests to the 85% floor; `results/oamspin_*.json` with `source`; `survey/oamspin-findings.md`;
   `papers/oamspin/` RNAAS note (software-cites `jansky-research`).
 
+## Amendment A1 (2026-10-17, after the first real image, before any q)
+
+Imaging is the EHT Collaboration's released `eht-imaging_pipeline.py` (2019-D01-02, commit
+80d230e, `ttype='fast'`) instead of our hand recipe, which failed on the first image; the
+estimator centres the annulus on the ring (equal-radius criterion, one common shift per pair); the
+fiducial Δz uses physical units at M87 and the real-vs-null comparison is repeated across a Δz
+sweep (post hoc). Details and the evidence for each in `survey/oamspin-findings.md`.
+
 ## Order of work
 
 1. Estimator + offline tests (N0, planted ℓ = ±1, P ≡ 0). Imaging-recipe check on a model with

@@ -1,0 +1,14 @@
+{
+ "source": "real: EHT 2017 day 095 lo, EHT eht-imaging pipeline (2019-D01-02 @80d230e, ttype fast) -- crescent geometry only, no q",
+ "date": "2026-10-17",
+ "pixel_uas": 0.512,
+ "radius": 19.97,
+ "width": 15.87,
+ "asym": 0.535,
+ "phi0": -2.15,
+ "dz_km": {
+  "95-96": 545526.1,
+  "100-101": 749935.2
+ },
+ "pixel_km": 1286781044.6
+}
