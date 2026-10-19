@@ -47,3 +47,26 @@ passes**. The low bias near 1.23 seen in white noise (−0.09) persists in real 
 any comparison with Zhang et al.'s 1.23 must carry it. Only 25–30 of 50 plants per index pass the
 quality cut (the weak ones keep < 40 channels above S/N 5): the real-data result describes bursts
 bright enough to track, and the fraction of the 290 that pass will be reported.
+
+## Step 3 — N1, R0 and the within-burst index on the real arrays (2026-10-18; results/lvdrift_real.json)
+
+- **N1 — PASS.** 290 / 290 channel-shuffled real bursts fail the quality cut (rule ≥ 95%).
+- **Within-burst index (headline setting, S/N 5, smoothing 3):** **43 of 290** type III bursts
+  pass the quality cut (15%); median a = **1.45**, bootstrap 95% interval **1.25 – 1.96**. Most
+  failures are "non-monotonic", often by ≳ 50 s — a ridge that jumps to another burst or to
+  interference in the same array rather than a slow drift. The result describes a 15% subsample
+  selected by the cut, and that selection is the first caveat. Against Zhang et al. (2018, 1.23 at
+  10–80 MHz): the interval's lower edge sits just above 1.23; P1 showed the estimator reads a true
+  1.23 as ≈ 1.12 in this noise, so the bias runs toward agreement, not away from it.
+- **R0 — FAILS its frozen rule.** Per burst, our peak-time drift (±3 s regression) over Table 3's
+  drift has median **1.34** for the 201 joined bursts with both values (rule [0.8, 1.25]). Means:
+  type III **4.16** MHz s⁻¹ (paper 4.383; Table 3's own mean of the listed drifts 4.24), type II
+  **1.57** (paper 0.043) — our ridge method does not capture slow, long type II bursts. Join:
+  281 unique, 8 ambiguous (two bursts in one minute), 1 unmatched.
+- **The paper's across-burst law does not reproduce from its own Table 3:** unbinned log-log fit
+  a = **0.23** (229 bursts); the binned, mean-flux-weighted recipe as we read it gives **−3.99**,
+  against the published 0.43 ± 0.31. The weighting convention is not stated (Sect. III.5).
+
+R0 failing means our reconstruction of *their* per-burst quantity does not match theirs; it does
+not test the within-burst estimator, which P1 validates. Both facts go in the note. Robustness
+(S/N 4/5/7, smoothing 1/3/5) follows.

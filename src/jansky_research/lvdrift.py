@@ -33,6 +33,10 @@ __all__ = [
     "peak_drift",
     "noise_windows",
     "parse_name",
+    "parse_table3",
+    "join_table3",
+    "across_burst_fit",
+    "run_real",
     "p1_real",
 ]
 
@@ -313,3 +317,179 @@ def parse_name(path: str) -> dict[str, Any]:
         "hhmm_stop": m.group(5),
         "freqs": lofar_freqs(int(m.group(6)), int(m.group(7))),
     }
+
+
+def parse_table3(html_text: str) -> list[dict[str, Any]]:
+    """Rows of the paper's Table 3 (arXiv:2609.26535 HTML): id, date, start/stop (HH:MM), peak
+    frequency (MHz), peak flux (SFU), type, drift (MHz s^-1, NaN where the table shows '-')."""
+    import html
+    import re
+
+    tables = re.findall(r"<table[^>]*>(.*?)</table>", html_text, re.S)
+    rows_out: list[dict[str, Any]] = []
+    for tb in tables:
+        rows = re.findall(r"<tr[^>]*>(.*?)</tr>", tb, re.S)
+
+        def cells(r: str) -> list[str]:
+            cs = re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S)
+            return [
+                re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", c))).strip() for c in cs
+            ]
+
+        if not rows or cells(rows[0])[:3] != ["ID", "Date", "Start time"]:
+            continue
+        for r in rows[2:]:
+            c = cells(r)
+            if len(c) < 9 or not c[0].isdigit():
+                continue
+
+            def num(x: str) -> float:
+                try:
+                    return float(x.replace("−", "-"))
+                except ValueError:
+                    return float("nan")
+
+            rows_out.append(
+                {
+                    "id": int(c[0]),
+                    "date": c[1],
+                    "start": c[2],
+                    "stop": c[3],
+                    "peak_freq": num(c[4]),
+                    "peak_flux": num(c[5]),
+                    "type": c[6],
+                    "drift": num(c[8]),
+                }
+            )
+    return rows_out
+
+
+def join_table3(files: list[str], table: list[dict[str, Any]]) -> dict[str, Any]:
+    """Match files to Table 3 rows on (date, start HH:MM) and type. Returns the unique matches and
+    counts of ambiguous keys and unmatched files (reported, not dropped silently)."""
+    roman = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V"}
+    index: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for row in table:
+        index.setdefault((row["date"], row["start"], row["type"]), []).append(row)
+    matches, ambiguous, unmatched = [], 0, 0
+    for f in files:
+        d = parse_name(f)
+        key = (d["date"], f"{d['hhmm_start'][:2]}:{d['hhmm_start'][2:]}", roman[d["type"]])
+        hits = index.get(key, [])
+        if len(hits) == 1:
+            matches.append((f, hits[0]))
+        elif len(hits) > 1:
+            ambiguous += 1
+        else:
+            unmatched += 1
+    return {"matches": matches, "n_ambiguous": ambiguous, "n_unmatched": unmatched}
+
+
+def across_burst_fit(
+    freq: np.ndarray, drift: np.ndarray, flux: np.ndarray | None = None
+) -> dict[str, float]:
+    """The paper's across-burst law, re-run two ways: their recipe (1 MHz bins of peak frequency,
+    least squares with mean flux as weights -- read as sigma proportional to 1/flux) and an
+    unbinned least-squares fit in log-log. Returns both indices."""
+    from scipy.optimize import curve_fit
+
+    f = np.asarray(freq, float)
+    d = np.abs(np.asarray(drift, float))
+    ok = np.isfinite(f) & np.isfinite(d) & (d > 0)
+    f, d = f[ok], d[ok]
+    out: dict[str, float] = {"n": float(f.size)}
+    lo = np.polyfit(np.log(f), np.log(d), 1)
+    out["a_unbinned"] = float(lo[0])
+    bins = np.floor(f).astype(int)
+    ub = np.unique(bins)
+    fm = np.array([f[bins == b].mean() for b in ub])
+    dm = np.array([d[bins == b].mean() for b in ub])
+    w = np.ones_like(fm)
+    if flux is not None:
+        fl = np.asarray(flux, float)[ok]
+        w = np.array([fl[bins == b].mean() for b in ub])
+    try:
+        p, _ = curve_fit(
+            lambda x, A, a: A * x**a, fm, dm, p0=(0.5, 0.5), sigma=1.0 / w, maxfev=20000
+        )
+        out["a_binned_fluxweighted"] = float(p[1])
+        out["A_binned_fluxweighted"] = float(p[0])
+    except (RuntimeError, ValueError):
+        out["a_binned_fluxweighted"] = float("nan")
+    return out
+
+
+def run_real(
+    data_root: str = "data/lvdrift", table_html: str | None = None, out_dir: str = "results"
+) -> dict[str, Any]:  # pragma: no cover - needs the Zenodo arrays and the paper's HTML
+    """Step 3 on the real arrays: N1 (channel-shuffled real bursts), R0 (the paper's peak drifts
+    and across-burst fit), and the within-burst index of every type III burst."""
+    import glob
+    import json
+    import time
+    from pathlib import Path
+
+    t3 = sorted(glob.glob(f"{data_root}/**/type_3/npy/*.npy", recursive=True))
+    t2 = sorted(glob.glob(f"{data_root}/**/type_2/npy/*.npy", recursive=True))
+    table = parse_table3(Path(table_html).read_text()) if table_html else []
+    per = []
+    n1_rej = []
+    for k, f in enumerate(t3):
+        d = parse_name(f)
+        arr = np.load(f)
+        r = burst_index(arr, d["freqs"])
+        per.append(
+            {
+                "file": Path(f).name,
+                **{kk: v for kk, v in r.items() if kk != "reason"},
+                "reason": r["reason"],
+                "peak_drift": peak_drift(arr, d["freqs"]),
+            }
+        )
+        n1_rej.append(not burst_index(shuffle_channels(arr, seed=k), d["freqs"])["ok"])
+    ok = [p for p in per if p["ok"]]
+    a = np.array([p["a"] for p in ok])
+    rng = np.random.default_rng(101)
+    boot = [float(np.median(rng.choice(a, a.size))) for _ in range(2000)] if a.size else []
+    res: dict[str, Any] = {
+        "source": "real: LV614 type III arrays (Zenodo 10.5281/zenodo.20157853), frozen within-burst estimator",
+        "date": time.strftime("%Y-%m-%d"),
+        "n_type3": len(t3),
+        "n_pass_cut": len(ok),
+        "within_median_a": float(np.median(a)) if a.size else None,
+        "within_median_a_ci95": [float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))]
+        if boot
+        else None,
+        "n1_reject_frac": float(np.mean(n1_rej)),
+        "n1_n": len(n1_rej),
+        "per_burst": per,
+    }
+    if table:
+        j = join_table3(t3, table)
+        ours = {Path(f).name: p for f, p in zip(t3, per, strict=True)}
+        pairs = [(ours[Path(f).name]["peak_drift"], row["drift"]) for f, row in j["matches"]]
+        pr = np.array([(o, t) for o, t in pairs if np.isfinite(o) and np.isfinite(t) and t != 0])
+        t2_drifts = [peak_drift(np.load(f), parse_name(f)["freqs"]) for f in t2]
+        rows3 = [r for r in table if r["type"] == "III"]
+        res["r0"] = {
+            "n_joined": len(j["matches"]),
+            "n_ambiguous": j["n_ambiguous"],
+            "n_unmatched": j["n_unmatched"],
+            "n_compared": int(len(pr)),
+            "median_ratio_ours_over_table": float(np.median(np.abs(pr[:, 0]) / np.abs(pr[:, 1])))
+            if len(pr)
+            else None,
+            "ours_type3_mean": float(np.nanmean(np.abs([p["peak_drift"] for p in per]))),
+            "ours_type2_mean": float(np.nanmean(np.abs(t2_drifts))) if t2_drifts else None,
+            "paper_type3_mean": 4.383,
+            "paper_type2_mean": 0.043,
+            "table_type3_mean": float(np.nanmean([abs(r["drift"]) for r in rows3])),
+            "across_burst_table": across_burst_fit(
+                np.array([r["peak_freq"] for r in rows3]),
+                np.array([r["drift"] for r in rows3]),
+                np.array([r["peak_flux"] for r in rows3]),
+            ),
+        }
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    Path(out_dir, "lvdrift_real.json").write_text(json.dumps(res, indent=1, default=float))
+    return res
