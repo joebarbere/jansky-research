@@ -196,3 +196,34 @@ noise at the 95% level on EHT 2017 sampling in the regime where it is defined (P
 meaningless outside it; and, independently of data, the two-image TIE cannot carry a phase vortex at
 all on a symmetric ring and mis-recovers it on a crescent. This concerns the method as published
 and as implemented here; it says nothing about M87\*'s spin.
+
+## GATE-2 follow-ups (2026-10-18)
+
+**Item 5 — R1 on band-combined images** (`-i2`, lo+hi per day; results/oamspin_combined.json), q at
+Δz × 1 / 10¹⁴ / 10¹⁵ / 10¹⁶:
+- 95-96: **0.99** / 0.63 / 0.98 / 0.75
+- 100-101: **2.65** / 1.76 / 0.98 / 0.82
+
+Neither pair gives a stable ≈ 1.39; in the P ≈ 1 regime both are at or below 1 (0.98 / 0.98 at
+×10¹⁵, 0.76 / 0.82 at ×10¹⁶). The released per-day images remain unavailable to scripts (403).
+
+**Item 6 — calibrated N1** (no station gains; results/oamspin_n1cal.json, n = 120):
+
+| Δz × | median | 95% interval | frac q ≥ 1.393 | gains-on N1 interval |
+|---|---|---|---|---|
+| 1 | 0.888 | 0.154 – 3.971 | 0.292 | 0.143 – 6.115 |
+| 1e+14 | 1.065 | 0.275 – 6.237 | 0.292 | 0.429 – 2.667 |
+| 1e+15 | 0.931 | 0.167 – 7.281 | 0.317 | 0.516 – 1.770 |
+| 1e+16 | 0.705 | 0.262 – 4.654 | 0.175 | 0.670 – 1.690 |
+
+The calibrated null is **not narrower** than the gains-on null — it is wider, with 17–32% of
+realisations at q ≥ 1.393. So the concern that the null was harsher than the network-calibrated
+data does not hold. Why removing gains widens it is **not understood** (no explanation is offered
+here); with 30 per cell each 2.5% tail rests on ~3 values, so the interval edges are noisy.
+
+**Verdict, final for the note:** in the regime where q is defined (P ≈ 1 rad), the paper's 1.393
+lies inside the non-spinning null under both noise models (p ≈ 0.05 with gains; ~0.2–0.3 without),
+the real band-combined pairs give q ≈ 0.8–1.0, and the two-image TIE cannot carry a phase vortex
+on a symmetric ring (P0). The published q is not separable from pipeline noise on EHT 2017
+sampling. Nothing here measures M87\*'s spin.
+
