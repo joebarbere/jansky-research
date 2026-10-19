@@ -155,3 +155,26 @@ def test_tie_misrecovers_a_vortex_on_a_crescent():
     r = om.vortex_injection(om.N_GRID, 0.512, 19.97, 15.87, 0.535, -2.15, 1.0)
     assert r["q_true"] > 50.0  # an l = 1 vortex: power almost all in m = +1
     assert r["q_recovered"] < 1.2  # recovered field barely asymmetric
+
+
+def test_paper_metrics_from_committed_results(tmp_path):
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    m = om.paper_metrics(str(root))
+    assert m["syn_n1_n"] == 800 and m["syn_pzero_sym_rec"] == 1.0
+    assert m["syn_n1_lo_pone"] <= 1.393 <= m["syn_n1_hi_pone"]
+    out = tmp_path / "macros.tex"
+    om.write_paper_macros(str(out), str(root))
+    tex = out.read_text()
+    assert r"\oamspinSynNoneN}{800}" in tex and "--" not in tex.split("Source")[1]
+    assert om.paper_metrics(str(tmp_path))["syn_pzero_sym_rec"] == 1.0  # P0 needs no files
+
+
+def test_paper_figure_renders(tmp_path):
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    out = tmp_path / "f.pdf"
+    om.paper_figure(str(root), str(out))
+    assert out.stat().st_size > 1000

@@ -205,7 +205,7 @@ and as implemented here; it says nothing about M87\*'s spin.
 - 100-101: **2.65** / 1.76 / 0.98 / 0.82
 
 Neither pair gives a stable ≈ 1.39; in the P ≈ 1 regime both are at or below 1 (0.98 / 0.98 at
-×10¹⁵, 0.76 / 0.82 at ×10¹⁶). The released per-day images remain unavailable to scripts (403).
+×10¹⁵, 0.75 / 0.82 at ×10¹⁶). The released per-day images remain unavailable to scripts (403).
 
 **Item 6 — calibrated N1** (no station gains; results/oamspin_n1cal.json, n = 120):
 

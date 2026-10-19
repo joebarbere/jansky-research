@@ -10,6 +10,9 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Added
+- `oamspin` (plan 100): the twisted-light spin estimator of Tamburini et al. (2020) tested on the public EHT 2017 M87* data — its q does not separate spin from imaging noise (non-spinning null 95% range 0.67–1.69 where q is defined, containing the published 1.393), and the two-image TIE cannot carry a phase vortex on a symmetric ring. Imaging by the EHT's released pipeline; `ehtim` as an optional `eht` extra. RNAAS note `papers/oamspin/rnaas.tex`.
+
 ### Fixed
 - `vlass`: NRAO took the VLASS Quick Look catalogues offline (all three bulk URLs return 404; no public replacement found). The bulk download now records the SHA-256 of the cached Epoch 2/3 tables the committed results were built from, rejects a mismatched download, and explains a missing file instead of surfacing a bare 404.
 
