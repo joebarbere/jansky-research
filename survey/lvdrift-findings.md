@@ -70,3 +70,25 @@ bright enough to track, and the fraction of the 290 that pass will be reported.
 R0 failing means our reconstruction of *their* per-burst quantity does not match theirs; it does
 not test the within-burst estimator, which P1 validates. Both facts go in the note. Robustness
 (S/N 4/5/7, smoothing 1/3/5) follows.
+
+## Robustness grid (2026-10-18; results/lvdrift_robustness.json)
+
+| S/N min | smoothing | bursts passing | median a | 95% interval |
+|---|---|---|---|---|
+| 4 | 1 | 33 | 1.82 | 1.29 – 2.32 |
+| 4 | 3 | 42 | 1.42 | 1.25 – 1.96 |
+| 4 | 5 | 51 | 1.66 | 1.07 – 2.12 |
+| 5 | 1 | 34 | 1.75 | 1.29 – 2.23 |
+| 5 | 3 | 43 | 1.45 | 1.25 – 1.96 |
+| 5 | 5 | 52 | 1.62 | 1.03 – 2.12 |
+| 7 | 1 | 33 | 1.81 | 1.29 – 2.32 |
+| 7 | 3 | 44 | 1.42 | 1.25 – 1.92 |
+| 7 | 5 | 52 | 1.62 | 1.03 – 2.12 |
+
+Medians span 1.42 – 1.82, always above 1.23, but the 95% interval
+contains Zhang et al.'s 1.23 in 3 of 9 settings (all at smoothing 5, where more, noisier bursts pass).
+**The within-burst index is not robustly different from 1.23.** What the data support: a
+within-burst index of about 1.4–1.8 for the 12–18% of bursts that can be tracked, consistent
+with 1.23 at some settings and well above the paper's across-burst 0.43. The interval width is
+driven by the small passing sample (33–52 bursts).
+
