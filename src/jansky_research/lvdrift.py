@@ -31,6 +31,9 @@ __all__ = [
     "synthetic_burst",
     "shuffle_channels",
     "peak_drift",
+    "noise_windows",
+    "parse_name",
+    "p1_real",
 ]
 
 # ---- frozen estimator constants (plans/101, 2026-10-18) -----------------------------------------
@@ -223,3 +226,90 @@ def peak_drift(arr: np.ndarray, freqs: np.ndarray, dt: float = 1.0, window_s: fl
         return float("nan")
     slope = np.polyfit(r["t_peak"][near], r["freqs"][near], 1)[0]
     return float(-slope)
+
+
+NOISE_WINDOW_S = 20
+NOISE_MARGIN_S = 30  # a window is used only if the array's summed flux peaks at or after this
+
+
+def noise_windows(arrays: list[np.ndarray], dt: float = 1.0) -> list[np.ndarray]:
+    """P1's real-noise canvases: the first ``NOISE_WINDOW_S`` s of every array whose
+    background-subtracted summed flux peaks at >= ``NOISE_MARGIN_S`` s (flux timing only)."""
+    out = []
+    n = int(NOISE_WINDOW_S / dt)
+    for a in arrays:
+        a = np.asarray(a, float)
+        prof = (a - np.median(a, axis=0, keepdims=True)).sum(axis=1)
+        if int(np.argmax(prof)) * dt >= NOISE_MARGIN_S and a.shape[0] >= n:
+            out.append(a[:n])
+    return out
+
+
+def p1_real(
+    windows: list[np.ndarray],
+    freqs: np.ndarray,
+    *,
+    indices: tuple[float, ...] = (0.0, 0.43, 1.0, 1.23, 1.84),
+    n_plants: int = 50,
+    seed: int = 101,
+) -> dict[str, dict[str, float]]:
+    """P1 in real noise: plant bursts (S/N 5-50 against each window's median channel sigma, FWHM
+    2-6 s, t_hi = 3 s, A = 4/45^a MHz/s) into randomly chosen windows; median recovered a per
+    planted index, its bias and the pass flag (|bias| <= 0.15)."""
+    rng = np.random.default_rng(seed)
+    res = {}
+    for a in indices:
+        est = []
+        fails = 0
+        for _ in range(n_plants):
+            w = windows[int(rng.integers(len(windows)))]
+            w0 = w - np.median(w, axis=0, keepdims=True)
+            sig = float(np.median(1.4826 * np.median(np.abs(w0), axis=0)))
+            b = synthetic_burst(
+                freqs,
+                a=a,
+                A=4.0 / 45.0**a,
+                n_t=w.shape[0],
+                t_hi=3.0,
+                width_s=float(rng.uniform(2, 6)),
+                peak=float(rng.uniform(5, 50)),
+                noise=w,
+                sigma=sig,
+            )
+            r = burst_index(b, freqs)
+            if r["ok"]:
+                est.append(r["a"])
+            else:
+                fails += 1
+        med = float(np.median(est)) if est else float("nan")
+        res[f"{a:g}"] = {
+            "median": med,
+            "bias": med - a,
+            "n_ok": len(est),
+            "n_failed_cut": fails,
+            "passed": bool(abs(med - a) <= 0.15),
+        }
+    return res
+
+
+def parse_name(path: str) -> dict[str, Any]:
+    """Date, start/stop and channel frequencies from an LV614 file name, e.g.
+    ``type3_burst_start_time_2023-04-28_07:02:39_1100_stop_time_1103_subband_min_150_subband_max_311.npy``."""
+    import re
+    from pathlib import Path
+
+    m = re.search(
+        r"type(\d)_burst_start_time_(\d{4}-\d{2}-\d{2})_(\d{2}:\d{2}:\d{2})_(\d{4})_stop_time_(\d{4})"
+        r"_subband_min_(\d+)_subband_max_(\d+)",
+        Path(path).name,
+    )
+    if not m:
+        raise ValueError(f"unrecognised LV614 file name: {Path(path).name}")
+    return {
+        "type": int(m.group(1)),
+        "date": m.group(2),
+        "start": m.group(3),
+        "hhmm_start": m.group(4),
+        "hhmm_stop": m.group(5),
+        "freqs": lofar_freqs(int(m.group(6)), int(m.group(7))),
+    }

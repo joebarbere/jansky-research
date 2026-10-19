@@ -58,3 +58,19 @@ def test_peak_drift_matches_the_local_slope():
 def test_fit_failure_is_flagged_not_reported():
     r = lv.fit_index(np.array([50.0, 50.0, 50.0]), np.array([1.0, 2.0, 3.0]))
     assert r["a_at_bound"] or r["unconstrained"]
+
+
+def test_parse_name_reads_layout_and_time():
+    n = "type3_burst_start_time_2023-04-28_07:02:39_1100_stop_time_1103_subband_min_100_subband_max_343.npy"
+    d = lv.parse_name(n)
+    assert d["type"] == 3 and d["date"] == "2023-04-28" and d["start"] == "07:02:39"
+    assert d["freqs"].size == 244 and d["freqs"][0] == pytest.approx(19.53, abs=0.01)
+    with pytest.raises(ValueError):
+        lv.parse_name("other.npy")
+
+
+def test_noise_windows_skip_arrays_with_early_bursts():
+    early = lv.synthetic_burst(F, a=1.0, A=4 / 45, n_t=60, t_hi=5.0, peak=30, seed=1)
+    late = lv.synthetic_burst(F, a=1.0, A=4 / 45, n_t=60, t_hi=45.0, peak=30, seed=2)
+    w = lv.noise_windows([early, late])
+    assert len(w) == 1 and w[0].shape == (20, F.size)
