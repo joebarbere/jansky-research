@@ -74,3 +74,14 @@ def test_noise_windows_skip_arrays_with_early_bursts():
     late = lv.synthetic_burst(F, a=1.0, A=4 / 45, n_t=60, t_hi=45.0, peak=30, seed=2)
     w = lv.noise_windows([early, late])
     assert len(w) == 1 and w[0].shape == (20, F.size)
+
+
+def test_joint_index_recovers_a_shared_planted_index():
+    ridges = []
+    for s in range(8):
+        b = lv.synthetic_burst(F, a=1.23, A=4.0 / 45**1.23, peak=25, seed=100 + s)
+        r = lv.burst_ridge(b, F)
+        ridges.append((r["freqs"], r["t_peak"]))
+    j = lv.joint_index(ridges, np.linspace(0.5, 2.5, 201))
+    assert j["a_lo"] - 0.15 <= 1.23 <= j["a_hi"] + 0.15
+    assert not j["at_grid_edge"] and j["dof"] > 0

@@ -37,6 +37,7 @@ __all__ = [
     "join_table3",
     "across_burst_fit",
     "run_real",
+    "joint_index",
     "p1_real",
 ]
 
@@ -493,3 +494,38 @@ def run_real(
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     Path(out_dir, "lvdrift_real.json").write_text(json.dumps(res, indent=1, default=float))
     return res
+
+
+def joint_index(
+    ridges: list[tuple[np.ndarray, np.ndarray]], a_grid: np.ndarray | None = None
+) -> dict[str, float]:
+    """Plan step 6: one shared index a across bursts, each with its own t0 and A.
+
+    For fixed a the model t = t0 - g(f; a)/A is linear in (t0, 1/A) per burst, so the total
+    residual sum of squares is profiled on a grid of a; with the 1 s timing error the 68%
+    interval is where the RSS rises by 1. ``ridges`` are (freqs, t_peak) per burst."""
+    grid = np.linspace(-1.0, 4.0, 501) if a_grid is None else np.asarray(a_grid, float)
+    rss = np.zeros(grid.size)
+    for f, t in ridges:
+        f = np.asarray(f, float)
+        t = np.asarray(t, float)
+        f_ref = float(np.exp(np.mean(np.log(f))))
+        for k, a in enumerate(grid):
+            X = np.column_stack([np.ones_like(f), -_g(f, float(a), f_ref)])
+            _, res, *_ = np.linalg.lstsq(X, t, rcond=None)
+            rss[k] += (
+                float(res[0])
+                if res.size
+                else float(np.sum((X @ np.linalg.lstsq(X, t, rcond=None)[0] - t) ** 2))
+            )
+    chi2 = rss / TIMING_ERR_S**2
+    k = int(np.argmin(chi2))
+    inside = grid[chi2 <= chi2[k] + 1.0]
+    return {
+        "a": float(grid[k]),
+        "a_lo": float(inside.min()),
+        "a_hi": float(inside.max()),
+        "chi2_min": float(chi2[k]),
+        "dof": float(sum(len(f) for f, _ in ridges) - 2 * len(ridges) - 1),
+        "at_grid_edge": bool(k in (0, grid.size - 1)),
+    }

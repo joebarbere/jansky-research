@@ -92,3 +92,39 @@ within-burst index of about 1.4–1.8 for the 12–18% of bursts that can be tra
 with 1.23 at some settings and well above the paper's across-burst 0.43. The interval width is
 driven by the small passing sample (33–52 bursts).
 
+
+## GATE-2 review (2026-10-18) and revised verdict (results/lvdrift_gate2.json)
+
+Reviewer (science-reviewer agent, read-only; `git status` clean afterwards): **PASS WITH CHANGES**.
+Every number it quoted was re-derived here with our own code before use.
+
+1. **Overdispersion.** The 43 passing bursts' fitted indices have 25–75% range **0.26 – 2.32**
+   (10–90%: −1.24 – 3.12; median per-burst a_err 0.52), several times wider than clean planted
+   power laws in the same noise (P1). So "within-burst index 1.45" is renamed what it is — **the
+   median of per-burst fitted indices** — and is not presented as a measured law.
+2. **Joint fit (plan step 6), now run.** One shared a with per-burst t₀ and A, profiled on a grid
+   with the 1 s timing error: **a = −0.26 with χ²/dof = 1.45 × 10⁶ / 6606 ≈ 220.** A single
+   within-burst power law does not describe the tracked ridges at 1 s precision; the formal
+   interval (Δχ² = 1 on a χ² of 10⁶) is meaningless and is not quoted. The least-squares joint
+   fit is dominated by the worst-fitting bursts, which is why it disagrees with the median.
+3. **A–a degeneracy.** log A and a correlate at r = −0.99 across the passing bursts; A is now
+   quoted as the drift at 45 MHz (median 6.8 MHz s⁻¹), never as the 1 MHz normalisation.
+4. **Selection.** Of the 281 bursts joined to Table 3, the 41 that pass peak at a higher median
+   frequency (47.7 vs 39.1 MHz); flux (19.1 vs 18.0 SFU) and drift (2.87 vs 3.15 MHz s⁻¹) are
+   similar. The cut keeps isolated bursts that stay coherent across the band.
+5. **R0 depends on the regression window** (plan's ±2/±3/±5 s list, now run, plus ±1 and ±8):
+   median ours/Table 3 = 1.72 (±1 s), 1.54 (±2), **1.34 (±3, frozen: FAIL)**, 1.08 (±5), 1.03 (±8).
+   The frozen verdict stands; the window dependence shows the mismatch is a definition (their
+   window is unstated), not the method. ±5 s passing is post hoc and not used to relabel R0.
+6. **Framing against 0.43.** A within-burst and an across-burst index are different quantities;
+   the comparison is not a tension and is no longer phrased as one. The across-burst re-fit from
+   Table 3 gives 0.23 unbinned — within 1σ of the published 0.43 ± 0.31, so "does not reproduce" is
+   withdrawn; the binned flux-weighted −3.99 is a failed fit under our reading of an unstated
+   weighting and is not quoted as a value.
+
+**Revised verdict.** The LV614 catalogue does not constrain a type III drift-law index at
+29–60 MHz with 1 s timing, within or across bursts: the across-burst index is 0.23–0.43 with
+σ ≈ 0.3 and an amplitude consistent with zero; per-burst indices of the 15% of bursts that can be
+tracked scatter over 0.26–2.32 (interquartile) around a median of 1.4–1.8 (setting-dependent,
+consistent with Zhang et al.'s 1.23 at some settings); a single shared within-burst law fits
+badly (χ²/dof ≈ 220). The useful product is the per-burst table and the estimator, not an index.
