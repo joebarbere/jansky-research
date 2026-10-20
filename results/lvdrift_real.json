@@ -1,0 +1,2406 @@
+{
+ "source": "real: LV614 type III arrays (Zenodo 10.5281/zenodo.20157853), frozen within-burst estimator",
+ "date": "2026-10-18",
+ "n_type3": 290,
+ "n_pass_cut": 43,
+ "within_median_a": 1.4451255135803898,
+ "within_median_a_ci95": [
+  1.2510847200078128,
+  1.9562853974782857
+ ],
+ "n1_reject_frac": 1.0,
+ "n1_n": 290,
+ "per_burst": [
+  {
+   "file": "type3_burst_start_time_2022-06-15_01:30:28_0726_stop_time_0728_subband_min_150_subband_max_271.npy",
+   "ok": true,
+   "n_channels": 122,
+   "a": 2.3720398612205615,
+   "A": 0.0011593793081379471,
+   "t0": 104.95556324771623,
+   "rms": 0.2715019637316388,
+   "a_err": 1.228060067568032,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.51655807186238
+  },
+  {
+   "file": "type3_burst_start_time_2022-08-13_06:07:39_1244_stop_time_1245_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 98,
+   "reason": "span 1.47 < 1.5",
+   "peak_drift": 3.278426320731482
+  },
+  {
+   "file": "type3_burst_start_time_2022-09-09_03:51:51_0359_stop_time_0359_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 45.0 s",
+   "peak_drift": 9.864640015842372
+  },
+  {
+   "file": "type3_burst_start_time_2022-10-26_10:24:33_1237_stop_time_1246_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": -0.9200483277078945
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-09_08:04:39_1050_stop_time_1051_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 36.0 s",
+   "peak_drift": 6.075086456122382
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-09_08:04:39_1151_stop_time_1152_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 83,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -0.8465177449748738
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-15_08:40:26_1016_stop_time_1016_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 132,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": -3.244249764312693
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-15_08:40:26_1058_stop_time_1107_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 338.0 s",
+   "peak_drift": 8.158735795455106
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-15_08:40:26_1357_stop_time_1357_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 148,
+   "reason": "non-monotonic by 8.0 s",
+   "peak_drift": -1.9645476625625253
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-22_08:06:23_1226_stop_time_1234_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": -0.09888617758175554
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-22_08:06:23_1248_stop_time_1257_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": 4.18332677679527
+  },
+  {
+   "file": "type3_burst_start_time_2022-11-30_07:38:57_1104_stop_time_1112_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": 0.6532916077358273
+  },
+  {
+   "file": "type3_burst_start_time_2022-12-07_06:59:27_0846_stop_time_0847_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": 3.833699453391327
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-04_06:55:00_0925_stop_time_0925_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 152,
+   "reason": "non-monotonic by 29.0 s",
+   "peak_drift": 0.22713162251655383
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-04_06:55:00_1125_stop_time_1131_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 156,
+   "reason": "non-monotonic by 342.0 s",
+   "peak_drift": 5.4646489501312905
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-04_06:55:00_1311_stop_time_1311_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 148,
+   "reason": "non-monotonic by 24.0 s",
+   "peak_drift": 4.719566231343304
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-18_06:59:58_1201_stop_time_1201_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 150,
+   "reason": "non-monotonic by 30.0 s",
+   "peak_drift": 3.1929551918815164
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-25_06:52:18_0804_stop_time_0804_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 149,
+   "reason": "non-monotonic by 35.0 s",
+   "peak_drift": 0.040879360465118114
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-25_06:52:18_0818_stop_time_0823_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.781439008537784,
+   "A": 0.00048016130353785577,
+   "t0": 245.1893737616434,
+   "rms": 0.37566314894361513,
+   "a_err": 1.4796734187044882,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 10.800418108566975
+  },
+  {
+   "file": "type3_burst_start_time_2023-01-25_06:52:18_1220_stop_time_1221_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 4.1048076243398155,
+   "A": 2.9230968395347477e-06,
+   "t0": 30.90512615477275,
+   "rms": 0.8573071739226241,
+   "a_err": 1.2377013265119767,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.267387997787609
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-01_06:35:21_0803_stop_time_0803_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.8806677103557832,
+   "A": 0.0060803139176736,
+   "t0": 8.37856513023822,
+   "rms": 0.2734192406297364,
+   "a_err": 0.6493833158449002,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 7.369995117187499
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-07_08:03:55_1410_stop_time_1414_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 204.0 s",
+   "peak_drift": 12.52360691432578
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-07_08:03:55_1458_stop_time_1501_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 155,
+   "reason": "non-monotonic by 145.0 s",
+   "peak_drift": -10.28645833333337
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-08_08:19:16_1100_stop_time_1101_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 152,
+   "reason": "non-monotonic by 51.0 s",
+   "peak_drift": 2.6228913163715055
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-15_06:08:58_1425_stop_time_1425_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 21.0 s",
+   "peak_drift": 3.0838747469941388
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-21_08:06:13_1131_stop_time_1132_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 25,
+   "reason": "channels 25 < 40; span 1.28 < 1.5; non-monotonic by 24.0 s",
+   "peak_drift": -4.274164244186054
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-21_08:06:13_1434_stop_time_1439_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 199.0 s",
+   "peak_drift": 2.524801475239492
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-28_08:19:30_1045_stop_time_1046_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 28,
+   "reason": "channels 28 < 40; span 1.19 < 1.5; non-monotonic by 54.0 s",
+   "peak_drift": -2.1484374999999627
+  },
+  {
+   "file": "type3_burst_start_time_2023-02-28_08:19:30_1450_stop_time_1456_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 311.0 s",
+   "peak_drift": 1.4849028716216324
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-01_05:33:58_1143_stop_time_1144_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": 4.484608533698478
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-01_05:33:58_1315_stop_time_1316_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 14.0 s",
+   "peak_drift": 4.151856105915621
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-01_05:33:58_1345_stop_time_1348_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 165.0 s",
+   "peak_drift": 1.839116432723498
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-08_05:10:03_1221_stop_time_1226_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 289.0 s",
+   "peak_drift": 6.087239583333196
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-28_07:00:42_1320_stop_time_1320_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 4.615732433187155
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-29_04:11:56_1045_stop_time_1048_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 79.0 s",
+   "peak_drift": 2.8320312500000258
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-29_04:11:56_1152_stop_time_1152_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 157,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": 3.269128251739193
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-29_04:11:56_1301_stop_time_1302_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 136,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 0.0658611918604689
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-29_04:11:56_1336_stop_time_1338_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 156,
+   "reason": "non-monotonic by 100.0 s",
+   "peak_drift": -2.024147727272748
+  },
+  {
+   "file": "type3_burst_start_time_2023-03-29_04:11:56_1352_stop_time_1355_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 1.7987144418221366
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-04_07:02:56_0743_stop_time_0743_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 37,
+   "reason": "channels 37 < 40; span 1.24 < 1.5",
+   "peak_drift": 3.613281250000007
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-04_07:02:56_1138_stop_time_1138_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 5.402928955992482
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-05_04:19:42_0958_stop_time_0958_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.127820441056846,
+   "A": 0.001502407504962437,
+   "t0": 30.609484382054912,
+   "rms": 0.3225745825284331,
+   "a_err": 0.4040000421147029,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 4.550985685830343
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-05_04:19:42_1035_stop_time_1035_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.332061553215628,
+   "A": 0.02240775650532913,
+   "t0": 20.48130147444765,
+   "rms": 0.3050582548633193,
+   "a_err": 0.3075111271738601,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 3.0582961223367264
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-28_07:02:39_0859_stop_time_0911_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 16.0 s",
+   "peak_drift": 3.021507719123388
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-28_07:02:39_1100_stop_time_1103_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 33.0 s",
+   "peak_drift": -0.9649624956070978
+  },
+  {
+   "file": "type3_burst_start_time_2023-04-28_07:02:39_1131_stop_time_1138_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 279.0 s",
+   "peak_drift": 3.4801402965465864
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_0739_stop_time_0742_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": -1.986551891796235
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_1048_stop_time_1050_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": 5.7124970613917325
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_1202_stop_time_1205_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 2.634521975907952
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_1401_stop_time_1402_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 4,
+   "reason": "channels 4 < 40; span 1.02 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_1745_stop_time_1746_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 0,
+   "reason": "no ridge",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-09_07:06:13_1828_stop_time_1837_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 58.0 s",
+   "peak_drift": 9.065538028974482
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0310_stop_time_0314_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.275177672634681,
+   "A": 0.002580171491987111,
+   "t0": 58.05868421810709,
+   "rms": 0.3245682511787271,
+   "a_err": 1.2028364031926269,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 10.64613970588239
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0408_stop_time_0416_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 64.0 s",
+   "peak_drift": 7.334798177083341
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0553_stop_time_0555_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 0,
+   "reason": "no ridge",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0658_stop_time_0659_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 133,
+   "a": 1.7124836697768473,
+   "A": 0.003443387599208914,
+   "t0": 50.267987330318036,
+   "rms": 0.6908456786422897,
+   "a_err": 0.3014858958008076,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 2.57040204154727
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0722_stop_time_0723_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 44.0 s",
+   "peak_drift": 5.091259339975109
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0807_stop_time_0808_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": -6.032841360954294
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-10_02:25:04_0933_stop_time_0933_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.2430449882451549,
+   "A": 0.08222916137476569,
+   "t0": 20.89388407023333,
+   "rms": 0.30537627774065135,
+   "a_err": 0.8086700060159903,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 8.162051766299786
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-23_07:05:17_0854_stop_time_0856_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 60,
+   "reason": "non-monotonic by 71.0 s",
+   "peak_drift": -1.7042206554878099
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-23_07:05:17_1118_stop_time_1119_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 111,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": 3.2536479855371914
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-23_07:05:17_1157_stop_time_1158_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 58,
+   "reason": "non-monotonic by 32.0 s",
+   "peak_drift": 1.1839148116438205
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-24_01:45:54_0155_stop_time_0158_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 146,
+   "reason": "non-monotonic by 163.0 s",
+   "peak_drift": -1.1559119591346159
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-24_01:45:54_0207_stop_time_0208_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 33,
+   "reason": "channels 33 < 40; non-monotonic by 33.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-24_01:45:54_0357_stop_time_0357_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 0.8380470225984648
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-24_01:45:54_0438_stop_time_0443_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 267.0 s",
+   "peak_drift": 11.085236378204819
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-24_01:45:54_1254_stop_time_1255_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 7.732127811332138
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-30_07:34:54_1250_stop_time_1250_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 3.8229237867395898
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-30_07:34:54_1338_stop_time_1344_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 257.0 s",
+   "peak_drift": 4.059657570893567
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-30_07:34:54_1440_stop_time_1440_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 3.472095722692933,
+   "A": 9.817218829146829e-06,
+   "t0": 49.15582545118289,
+   "rms": 0.32356135674789843,
+   "a_err": 0.39603073985883835,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.709930717465032
+  },
+  {
+   "file": "type3_burst_start_time_2023-05-30_07:34:54_1848_stop_time_1901_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 705.0 s",
+   "peak_drift": 4.2468524388989914
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-27_07:22:57_0820_stop_time_0821_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -1.505757306177375,
+   "A": 4370.455872099707,
+   "t0": 47.53502279390412,
+   "rms": 0.291786518592214,
+   "a_err": 1.3985171518085247,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 11.509708637268012
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-27_07:22:57_1411_stop_time_1412_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 148,
+   "reason": "non-monotonic by 22.0 s",
+   "peak_drift": -0.8627423163222826
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-28_03:07:02_0318_stop_time_0318_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": 3.2568412622682703
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-28_03:07:02_0421_stop_time_0425_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -0.7340398486876181,
+   "A": 88.87926498677196,
+   "t0": 189.07716656361197,
+   "rms": 0.3195546596683888,
+   "a_err": 0.5221795274269806,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.232644382911392
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-28_03:07:02_0555_stop_time_0605_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": -0.7456466662509437
+  },
+  {
+   "file": "type3_burst_start_time_2023-06-28_03:07:02_0602_stop_time_0603_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 148,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": 4.275513315714583
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-04_07:00:56_0732_stop_time_0732_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 123,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 1.7702692102082536
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-04_07:00:56_1357_stop_time_1358_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 120,
+   "reason": "non-monotonic by 31.0 s",
+   "peak_drift": -2.86754261363647
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-04_07:00:56_1426_stop_time_1426_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.074712712508476,
+   "A": 0.0025351937570347346,
+   "t0": 35.448308843327695,
+   "rms": 0.7319310995929698,
+   "a_err": 0.5590593673192171,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.05142562257155
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_0809_stop_time_0809_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -1.7037214600949881,
+   "A": 11585.195428549165,
+   "t0": 20.808929148273844,
+   "rms": 0.6953689217308947,
+   "a_err": 1.754893704507821,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.220073084677406
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_0904_stop_time_0914_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 4.604581011401485
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_1012_stop_time_1018_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 255.0 s",
+   "peak_drift": 2.9275144120518406
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_1127_stop_time_1128_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 90,
+   "reason": "span 1.40 < 1.5; non-monotonic by 28.0 s",
+   "peak_drift": 4.18416501976283
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_1224_stop_time_1226_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": -0.7785478815391745
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-05_01:44:59_1347_stop_time_1355_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 38.0 s",
+   "peak_drift": 4.6605512771766
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-11_07:07:17_0932_stop_time_0932_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -0.1367147026776281,
+   "A": 7.862086214286985,
+   "t0": 31.92856956476151,
+   "rms": 0.6021756020861907,
+   "a_err": 0.43706344853075835,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 3.9520887820405006
+  },
+  {
+   "file": "type3_burst_start_time_2023-07-11_07:07:17_1117_stop_time_1120_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 137,
+   "reason": "non-monotonic by 115.0 s",
+   "peak_drift": 10.034609043359655
+  },
+  {
+   "file": "type3_burst_start_time_2023-08-08_07:12:17_0927_stop_time_0929_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 1,
+   "reason": "channels 1 < 40; span 1.00 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-08-08_07:12:17_1052_stop_time_1053_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 31.0 s",
+   "peak_drift": -1.568995108330592
+  },
+  {
+   "file": "type3_burst_start_time_2023-08-08_07:12:17_1140_stop_time_1141_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 98,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": -7.869746767241383
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-05_08:09:40_0810_stop_time_0811_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -0.8727579474671371,
+   "A": 149.7540229187648,
+   "t0": 44.19509358410756,
+   "rms": 0.32496072126582076,
+   "a_err": 0.5217548344959246,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.368039052825267
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-05_08:09:40_0852_stop_time_0855_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.4032916517120049,
+   "A": 0.041191159278996234,
+   "t0": 52.38521687390607,
+   "rms": 0.28652706492543834,
+   "a_err": 0.7379761195293055,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 7.598747031643456
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-05_08:09:40_1316_stop_time_1321_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 66.0 s",
+   "peak_drift": 8.525970633523995
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-06_09:33:34_1058_stop_time_1059_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 117,
+   "reason": "non-monotonic by 44.0 s",
+   "peak_drift": -4.4605262204313805
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-06_09:33:34_1147_stop_time_1148_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 108,
+   "reason": "non-monotonic by 42.0 s",
+   "peak_drift": 1.7334339686242688
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-06_09:33:34_1239_stop_time_1240_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 1.0327556363012163
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-12_08:36:51_0850_stop_time_0851_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 19,
+   "reason": "channels 19 < 40; span 1.06 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-12_08:36:51_1046_stop_time_1046_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 53,
+   "reason": "span 1.20 < 1.5",
+   "peak_drift": 2.775854410535115
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-13_07:39:40_0925_stop_time_0926_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 11.0 s",
+   "peak_drift": 4.764271988713752
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-13_07:39:40_1057_stop_time_1057_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 10.0 s",
+   "peak_drift": -4.854403409090912
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-13_07:39:40_1114_stop_time_1115_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 86,
+   "reason": "non-monotonic by 24.0 s",
+   "peak_drift": 5.224609375000063
+  },
+  {
+   "file": "type3_burst_start_time_2023-09-13_07:39:40_1114_stop_time_1116_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 46.0 s",
+   "peak_drift": -2.958794861295422
+  },
+  {
+   "file": "type3_burst_start_time_2023-10-16_07:32:17_1140_stop_time_1227_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 2416.0 s",
+   "peak_drift": -0.19531249999998276
+  },
+  {
+   "file": "type3_burst_start_time_2023-10-17_05:13:33_0845_stop_time_0846_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 139,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": -1.0843912760416734
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-01_06:02:46_0847_stop_time_0848_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 146,
+   "reason": "non-monotonic by 53.0 s",
+   "peak_drift": 2.563476562499996
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-01_06:02:46_0935_stop_time_0937_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 147,
+   "reason": "non-monotonic by 112.0 s",
+   "peak_drift": -10.351562500000009
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-01_06:02:46_0955_stop_time_0956_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 119,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 7.397947827635288
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-08_06:02:45_0605_stop_time_0605_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 147,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": -6.391777843498081
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-08_06:02:45_0737_stop_time_0737_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 156,
+   "a": 4.999999999999999,
+   "A": 4.234006785920527e-08,
+   "t0": 4.899892411309976,
+   "rms": 1.7226667251815357,
+   "a_err": 0.5217652461660498,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 7.53188169488598
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-08_06:02:45_1109_stop_time_1110_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 117,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -0.6064967105263148
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-08_06:02:45_1144_stop_time_1152_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 395.0 s",
+   "peak_drift": 4.4721554487180875
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-14_12:48:21_1251_stop_time_1251_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 5.877349617475633
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-14_12:48:21_1353_stop_time_1354_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 156,
+   "reason": "non-monotonic by 30.0 s",
+   "peak_drift": 5.812824120585216
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-15_06:18:47_1210_stop_time_1211_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 126,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 6.489089439655177
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-28_08:02:46_0834_stop_time_0835_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 5.759573699421973
+  },
+  {
+   "file": "type3_burst_start_time_2023-11-28_08:02:46_1154_stop_time_1155_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 54,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 3.0738467261904283
+  },
+  {
+   "file": "type3_burst_start_time_2023-12-05_08:00:56_1008_stop_time_1009_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 157,
+   "reason": "non-monotonic by 27.0 s",
+   "peak_drift": -2.3080991662067065
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-05_02:08:05_0914_stop_time_0916_subband_min_100_subband_max_343.npy",
+   "ok": false,
+   "n_channels": 138,
+   "reason": "non-monotonic by 67.0 s",
+   "peak_drift": 2.0833333333333393
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-11_07:09:24_0840_stop_time_0841_subband_min_100_subband_max_343.npy",
+   "ok": false,
+   "n_channels": 36,
+   "reason": "channels 36 < 40; span 1.47 < 1.5; non-monotonic by 42.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-11_07:09:24_1638_stop_time_1639_subband_min_100_subband_max_343.npy",
+   "ok": true,
+   "n_channels": 104,
+   "a": -2.8155728407658653,
+   "A": 999999.9999999909,
+   "t0": 56.61827361330481,
+   "rms": 0.4261929603064581,
+   "a_err": 1.9454039732934685,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 9.179396794599135
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-11_07:09:24_1723_stop_time_1723_subband_min_100_subband_max_343.npy",
+   "ok": false,
+   "n_channels": 240,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": -0.9032287597656253
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1212_stop_time_1218_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": 2.829170852278925
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1311_stop_time_1312_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": -0.6287547112060665
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1336_stop_time_1338_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 76.0 s",
+   "peak_drift": 2.628654724902583
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1452_stop_time_1453_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 129,
+   "reason": "non-monotonic by 53.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1535_stop_time_1537_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 67,
+   "reason": "non-monotonic by 111.0 s",
+   "peak_drift": 2.5167124007473003
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-18_07:12:14_1753_stop_time_1757_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 140.0 s",
+   "peak_drift": 0.14792562033732665
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-19_01:37:19_0502_stop_time_0503_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 128,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": 2.8568591101694865
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-19_01:37:19_0556_stop_time_0557_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.5674519061489585,
+   "A": 0.013445563331872955,
+   "t0": 34.24286580946551,
+   "rms": 0.28021208469109166,
+   "a_err": 0.44519914342734757,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.041658962279321
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-19_01:37:19_0734_stop_time_0736_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 0.878629729745152
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-19_01:37:19_0904_stop_time_0905_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.4135608050588613,
+   "A": 0.0006428723773786179,
+   "t0": 50.392730272778564,
+   "rms": 0.30915148028523365,
+   "a_err": 0.5023466549237977,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.17404242360444
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_0820_stop_time_0823_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 94.0 s",
+   "peak_drift": 5.474209045031342
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_0926_stop_time_0929_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 3.0314004050296517,
+   "A": 8.096635406910697e-05,
+   "t0": 16.053596250365988,
+   "rms": 0.2899018654638861,
+   "a_err": 0.6333002817275303,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.214894295895648
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_0947_stop_time_0956_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 127.0 s",
+   "peak_drift": 2.1977060997496793
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_1106_stop_time_1114_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 23.0 s",
+   "peak_drift": 1.731178977272734
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_1331_stop_time_1332_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": -2.148490846372214
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_1421_stop_time_1422_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 126,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 4.75657105193531
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_1502_stop_time_1503_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 109,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": 5.1826382643885225
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-25_07:18:44_1757_stop_time_1758_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 3.140503136689944,
+   "A": 2.5044423465567892e-05,
+   "t0": 47.88809382764216,
+   "rms": 0.5225159594589631,
+   "a_err": 0.29409377714936163,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 2.136903763312833
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-26_01:34:17_0218_stop_time_0221_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 22.0 s",
+   "peak_drift": 0.7194019563079703
+  },
+  {
+   "file": "type3_burst_start_time_2024-06-26_01:34:17_1016_stop_time_1027_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 55.0 s",
+   "peak_drift": 4.361250796351548
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-02_07:12:40_1237_stop_time_1242_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 139,
+   "reason": "non-monotonic by 67.0 s",
+   "peak_drift": -5.101507482394377
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-02_07:12:40_1650_stop_time_1651_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.3769302174529197,
+   "A": 0.06221549107176443,
+   "t0": 30.924754683679094,
+   "rms": 0.2786832444934806,
+   "a_err": 1.0099326817248269,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 9.925217278039232
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-03_01:59:19_0735_stop_time_0738_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 142,
+   "reason": "non-monotonic by 121.0 s",
+   "peak_drift": -1.242727327255276
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-03_01:59:19_1054_stop_time_1056_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": 4.013267287774161
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-09_07:15:18_0832_stop_time_0832_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 76,
+   "reason": "non-monotonic by 41.0 s",
+   "peak_drift": 1.998634128138396
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-09_07:15:18_1331_stop_time_1331_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.9562853974782857,
+   "A": 0.0027479230247806985,
+   "t0": 10.865601060377365,
+   "rms": 0.31328197363012816,
+   "a_err": 0.38931619056569483,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 4.838025089099441
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-09_07:15:18_1533_stop_time_1534_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 83,
+   "reason": "non-monotonic by 39.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-16_07:07:56_0919_stop_time_0920_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 3.2198486763909724,
+   "A": 2.130904828050484e-05,
+   "t0": 13.0684682061076,
+   "rms": 0.29031279502848745,
+   "a_err": 0.33623243148857723,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 4.474269231599861
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-16_07:07:56_1322_stop_time_1323_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.7681003271630304,
+   "A": 0.0001342304473017284,
+   "t0": 26.81534517619628,
+   "rms": 0.310706206404005,
+   "a_err": 0.3935824020940904,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 4.9901964338711275
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-17_02:29:19_0237_stop_time_0238_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 2.1322263931049426
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-17_02:29:19_0355_stop_time_0356_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 126,
+   "reason": "non-monotonic by 53.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-17_02:29:19_0451_stop_time_0451_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 2.3263354981706614
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-17_02:29:19_0609_stop_time_0612_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 69,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 0.3227621822033902
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-17_02:29:19_0625_stop_time_0627_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 147,
+   "reason": "non-monotonic by 98.0 s",
+   "peak_drift": 2.4059987207602407
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-23_07:05:12_0806_stop_time_0809_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": -0.761930131041911
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-23_07:05:12_1403_stop_time_1408_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 88.0 s",
+   "peak_drift": -3.3633982377647893
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_0456_stop_time_0456_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 0.7924888461942032,
+   "A": 0.7221755811427881,
+   "t0": 31.112498739347306,
+   "rms": 0.3823338455658894,
+   "a_err": 1.3133009521679915,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 10.55202915561295
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_0555_stop_time_0556_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 72,
+   "reason": "span 1.30 < 1.5",
+   "peak_drift": 7.031249999999761
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_0654_stop_time_0659_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": 3.4204065812182085
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_0732_stop_time_0738_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 51,
+   "reason": "span 1.38 < 1.5; non-monotonic by 96.0 s",
+   "peak_drift": 1.422991071428574
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_1046_stop_time_1053_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 128,
+   "reason": "non-monotonic by 14.0 s",
+   "peak_drift": 0.5525392438227369
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_1117_stop_time_1120_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 97.0 s",
+   "peak_drift": 2.8609632927889543
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_1151_stop_time_1156_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 42.0 s",
+   "peak_drift": 6.938796482048267
+  },
+  {
+   "file": "type3_burst_start_time_2024-07-24_02:28:29_1249_stop_time_1259_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.81220979181221,
+   "A": 0.0072444602701327455,
+   "t0": 583.1438747783999,
+   "rms": 0.3058314184128066,
+   "a_err": 0.5990361708746637,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.223067292812394
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-06_07:30:27_0843_stop_time_0846_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": 0.6218433073084088
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-06_07:30:27_0929_stop_time_0930_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 96,
+   "a": 4.999999999999999,
+   "A": 1.047001615519557e-07,
+   "t0": 54.97681613821058,
+   "rms": 0.47964390365834625,
+   "a_err": 3.1792458130062267,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 5.910537735249216
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-06_07:30:27_1002_stop_time_1003_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 155,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": 1.2528306920543104
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-07_02:59:54_0424_stop_time_0425_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 40,
+   "reason": "span 1.42 < 1.5; non-monotonic by 3.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-07_02:59:54_1033_stop_time_1039_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 3.412574576756247
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-07_02:59:54_1333_stop_time_1335_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 100,
+   "reason": "non-monotonic by 39.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-13_07:00:50_0802_stop_time_0803_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 144,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 0.7304107658853761
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-13_07:00:50_1159_stop_time_1159_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 153,
+   "reason": "non-monotonic by 44.0 s",
+   "peak_drift": 2.503285681849924
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-13_07:00:50_1449_stop_time_1450_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 65,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-13_07:00:50_1609_stop_time_1611_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -1.020764161975503,
+   "A": 418.18998081566104,
+   "t0": 58.97307444417658,
+   "rms": 0.37680143050755854,
+   "a_err": 0.8340961936787855,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 7.561054562373958
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-14_03:31:55_0755_stop_time_0756_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "a": -2.9999999999999774,
+   "A": 235180.40053689675,
+   "t0": 55.07944887362889,
+   "rms": 3.500182680388541,
+   "a_err": 0.26213774467554435,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 5.944587953629021
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-14_03:31:55_0819_stop_time_0819_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": 4.7181605348125775
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-14_03:31:55_1332_stop_time_1333_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 120,
+   "reason": "non-monotonic by 15.0 s",
+   "peak_drift": 4.4541759850450875
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-20_07:14:57_0833_stop_time_0837_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 2.587114878430533,
+   "A": 0.00015797250040495617,
+   "t0": 15.873415492568492,
+   "rms": 0.3970910437150257,
+   "a_err": 0.23586752319728002,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 1.6366079343971653
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-20_07:14:57_0910_stop_time_0910_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 5.956383219384668
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-20_07:14:57_1143_stop_time_1144_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 140,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": 5.086461909070568
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-20_07:14:57_1424_stop_time_1424_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 0.6537925751470327,
+   "A": 0.45615614144197425,
+   "t0": 31.894538774834,
+   "rms": 0.3030877972547401,
+   "a_err": 0.4931750108921559,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.232038628016783
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-21_04:07:39_1126_stop_time_1127_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 55,
+   "reason": "span 1.36 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-28_04:02:29_0430_stop_time_0431_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 77,
+   "reason": "non-monotonic by 33.0 s",
+   "peak_drift": -1.3938761645962403
+  },
+  {
+   "file": "type3_burst_start_time_2024-08-28_04:02:29_0857_stop_time_0905_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -0.2627652881647142,
+   "A": 0.1487534742677158,
+   "t0": 242.32516935388838,
+   "rms": 94.60181737715016,
+   "a_err": 0.005148390045468089,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 3.7419016768292805
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-10_04:58:02_1201_stop_time_1201_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.2510847200078128,
+   "A": 0.024613724271402057,
+   "t0": 38.450417236342155,
+   "rms": 0.31483156068033535,
+   "a_err": 0.24945645192914867,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 2.2647090163560812
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-10_04:58:02_1201_stop_time_1202_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.2510847200078128,
+   "A": 0.024613724271402057,
+   "t0": 38.450417236342155,
+   "rms": 0.31483156068033535,
+   "a_err": 0.24945645192914867,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 2.2647090163560812
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-11_04:53:35_0923_stop_time_0923_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 120,
+   "reason": "non-monotonic by 51.0 s",
+   "peak_drift": 2.9955517004056893
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-11_04:53:35_1336_stop_time_1337_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -1.1000258260434042,
+   "A": 497.97742940559607,
+   "t0": 53.90751187967088,
+   "rms": 0.48032827326563,
+   "a_err": 0.7366663085114801,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.465999561183581
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-16_05:08:54_0723_stop_time_0723_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.4451255135803898,
+   "A": 0.010555140493925492,
+   "t0": 35.673153126961495,
+   "rms": 0.4912292142629376,
+   "a_err": 0.22115021954138922,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 3.3311683880280034
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-23_05:55:06_0754_stop_time_0756_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 19.0 s",
+   "peak_drift": 2.827574012129545
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-23_05:55:06_0927_stop_time_0927_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 16.0 s",
+   "peak_drift": 2.1971622777621
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-24_05:51:07_1135_stop_time_1136_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 153,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 5.904374757662964
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-25_07:02:02_0757_stop_time_0758_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 121,
+   "reason": "non-monotonic by 44.0 s",
+   "peak_drift": 2.7931858500396745
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-25_07:02:02_1224_stop_time_1224_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 140,
+   "reason": "non-monotonic by 47.0 s",
+   "peak_drift": -3.143700132978716
+  },
+  {
+   "file": "type3_burst_start_time_2024-09-25_07:02:02_1416_stop_time_1422_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "a": 4.999999999999999,
+   "A": 9.326349501824874e-09,
+   "t0": 43.05019749902195,
+   "rms": 19.217172803917137,
+   "a_err": 0.10890425318756895,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 4.815550620854938
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-02_06:00:42_0657_stop_time_0703_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 142,
+   "reason": "non-monotonic by 335.0 s",
+   "peak_drift": 2.6695763763537728
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-02_06:00:42_0841_stop_time_0842_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 136,
+   "reason": "non-monotonic by 43.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-02_06:00:42_1219_stop_time_1220_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": -1.2741066333965154,
+   "A": 1265.0234257736965,
+   "t0": 52.54127436508797,
+   "rms": 0.5700303960866321,
+   "a_err": 0.9704966612883426,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 7.062234295811671
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-02_06:00:42_1249_stop_time_1252_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 130,
+   "reason": "non-monotonic by 172.0 s",
+   "peak_drift": 2.91663634226086
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-02_06:00:42_1402_stop_time_1408_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 213.0 s",
+   "peak_drift": -14.648437500000894
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-03_06:02:59_0622_stop_time_0623_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 53,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -5.6072443181818485
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-03_06:02:59_0713_stop_time_0713_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 155,
+   "reason": "non-monotonic by 45.0 s",
+   "peak_drift": 5.117579072816858
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-03_06:02:59_1116_stop_time_1116_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 125,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 3.432541330233035
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-03_06:02:59_1205_stop_time_1205_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 95,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 3.868116637760154
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-07_08:51:59_0941_stop_time_0942_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 3.0 s",
+   "peak_drift": 6.213943537658593
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-08_09:04:54_1003_stop_time_1006_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 70.0 s",
+   "peak_drift": 4.225142134037308
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-08_09:04:54_1053_stop_time_1054_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 12.0 s",
+   "peak_drift": -3.385535493122995
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-23_08:34:30_0902_stop_time_0906_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 35,
+   "reason": "channels 35 < 40; span 1.38 < 1.5; non-monotonic by 221.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-23_08:34:30_0950_stop_time_0956_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 245.0 s",
+   "peak_drift": 7.170508848545808
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-23_08:34:30_1042_stop_time_1043_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 51.0 s",
+   "peak_drift": 6.200438522752801
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-24_08:34:07_0844_stop_time_0845_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 53.0 s",
+   "peak_drift": 2.9179687500000124
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-24_08:34:07_0919_stop_time_0919_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 153,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": 2.551849837376926
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-24_08:34:07_1052_stop_time_1054_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 109,
+   "reason": "non-monotonic by 40.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-24_08:34:07_1346_stop_time_1346_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 151,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": 1.1715353260869366
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-31_08:57:01_1144_stop_time_1145_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 45.0 s",
+   "peak_drift": 3.859760319871333
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-31_08:57:01_1147_stop_time_1148_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": 6.7388397514175
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-31_08:57:01_1252_stop_time_1254_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 82.0 s",
+   "peak_drift": 4.889761821161129
+  },
+  {
+   "file": "type3_burst_start_time_2024-10-31_08:57:01_1305_stop_time_1307_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 66.0 s",
+   "peak_drift": 8.076772316675434
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-01_08:56:09_0939_stop_time_0944_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 295.0 s",
+   "peak_drift": 0.11160714285735403
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-01_08:56:09_1254_stop_time_1257_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 145,
+   "reason": "non-monotonic by 171.0 s",
+   "peak_drift": -0.488281249999703
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-04_09:33:51_1038_stop_time_1040_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 109,
+   "reason": "non-monotonic by 114.0 s",
+   "peak_drift": 2.167968750000001
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-04_09:33:51_1153_stop_time_1156_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 148.0 s",
+   "peak_drift": 4.851523677827713
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-04_09:33:51_1257_stop_time_1258_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 146,
+   "reason": "non-monotonic by 55.0 s",
+   "peak_drift": 2.9387310436109115
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-05_09:03:18_0942_stop_time_0944_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 148,
+   "reason": "non-monotonic by 102.0 s",
+   "peak_drift": 3.6656719420600887
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-13_08:16:36_0850_stop_time_0851_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 103,
+   "reason": "non-monotonic by 52.0 s",
+   "peak_drift": -1.3183593750000338
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-14_08:14:38_0918_stop_time_0922_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 73,
+   "reason": "non-monotonic by 207.0 s",
+   "peak_drift": -4.296874999999972
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-26_09:00:51_0930_stop_time_0930_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 155,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 2.0839881166187744
+  },
+  {
+   "file": "type3_burst_start_time_2024-11-27_08:43:19_0943_stop_time_0944_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 25.0 s",
+   "peak_drift": 4.3923422772142136
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-23_09:04:02_1101_stop_time_1107_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 308.0 s",
+   "peak_drift": 4.137469803022787
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-23_09:04:02_1232_stop_time_1239_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 157,
+   "reason": "non-monotonic by 350.0 s",
+   "peak_drift": 4.101186314727055
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-23_09:04:02_1353_stop_time_1357_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 90.0 s",
+   "peak_drift": 0.1787173202614316
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-24_09:00:57_0920_stop_time_0929_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 519.0 s",
+   "peak_drift": 5.1077466038118375
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-24_09:00:57_0952_stop_time_0955_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 130,
+   "reason": "non-monotonic by 137.0 s",
+   "peak_drift": -0.7925998210790252
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_0915_stop_time_0916_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 5.0 s",
+   "peak_drift": 2.0440463362068924
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_0951_stop_time_0952_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 88,
+   "reason": "span 1.47 < 1.5",
+   "peak_drift": 6.077665441176449
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_1051_stop_time_1052_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 132,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 4.056689049586755
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_1052_stop_time_1052_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 54,
+   "a": -2.9543412912865357,
+   "A": 999999.999999999,
+   "t0": 3.2887466677936184,
+   "rms": 0.75155479090048,
+   "a_err": 4.372738335318698,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 5.783691406249992
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_1059_stop_time_1100_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 3.7152747322476793,
+   "A": 5.156569685606654e-06,
+   "t0": 48.29216267270501,
+   "rms": 0.27662995220342945,
+   "a_err": 0.5137972713035349,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 7.006855184987036
+  },
+  {
+   "file": "type3_burst_start_time_2025-01-31_09:05:58_1129_stop_time_1133_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 8.0 s",
+   "peak_drift": 0.21012351640910365
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-06_09:00:26_1017_stop_time_1018_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 92,
+   "reason": "non-monotonic by 55.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-06_09:00:26_1104_stop_time_1107_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 2.4884594479718327
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-07_09:00:21_0933_stop_time_0943_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 150,
+   "reason": "non-monotonic by 535.0 s",
+   "peak_drift": -5.580780643310989
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-07_09:00:21_0942_stop_time_0943_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 142,
+   "reason": "non-monotonic by 46.0 s",
+   "peak_drift": -5.580780643310963
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-07_09:00:21_1022_stop_time_1024_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 158,
+   "reason": "non-monotonic by 26.0 s",
+   "peak_drift": 3.725600561126634
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-13_08:48:03_1001_stop_time_1009_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 14.0 s",
+   "peak_drift": -0.08854532105836363
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-13_08:48:03_1050_stop_time_1054_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 64.0 s",
+   "peak_drift": 8.673098726163937
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-13_08:48:03_1058_stop_time_1101_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 101,
+   "reason": "non-monotonic by 93.0 s",
+   "peak_drift": -0.4820406951640738
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-13_08:48:03_1207_stop_time_1210_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 10.0 s",
+   "peak_drift": -3.9257430906056796
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-14_08:45:34_0911_stop_time_0912_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 152,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -0.8650775950395709
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-14_08:45:34_0957_stop_time_1000_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 130.0 s",
+   "peak_drift": 9.028707139844084
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-14_08:45:34_1123_stop_time_1127_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 39.0 s",
+   "peak_drift": 6.22706246240339
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-20_08:06:50_1039_stop_time_1040_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 27.0 s",
+   "peak_drift": 3.833765183052003
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-20_08:06:50_1102_stop_time_1103_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 141,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": 4.429724878060144
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-21_08:36:45_0928_stop_time_0928_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 157,
+   "reason": "non-monotonic by 50.0 s",
+   "peak_drift": 2.544640703396374
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-21_08:36:45_1206_stop_time_1206_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 115,
+   "reason": "non-monotonic by 49.0 s",
+   "peak_drift": -1.8647693452381
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-27_07:36:06_0755_stop_time_0756_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 153,
+   "reason": "non-monotonic by 7.0 s",
+   "peak_drift": 6.504573845873266
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-27_07:36:06_0841_stop_time_0841_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 44.0 s",
+   "peak_drift": 5.122202120895465
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-27_07:36:06_0941_stop_time_0942_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 39.0 s",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-27_07:36:06_1213_stop_time_1218_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 161,
+   "reason": "non-monotonic by 116.0 s",
+   "peak_drift": 4.445954689431402
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-28_07:56:07_0907_stop_time_0908_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 66,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -15.136718749999906
+  },
+  {
+   "file": "type3_burst_start_time_2025-02-28_07:56:07_1014_stop_time_1020_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 14.0 s",
+   "peak_drift": 4.435750323165673
+  },
+  {
+   "file": "type3_burst_start_time_2025-03-06_08:04:53_0919_stop_time_0920_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 147,
+   "reason": "non-monotonic by 49.0 s",
+   "peak_drift": -3.7531448622881376
+  },
+  {
+   "file": "type3_burst_start_time_2025-03-07_08:06:30_1230_stop_time_1231_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 13.0 s",
+   "peak_drift": 7.227276605079707
+  },
+  {
+   "file": "type3_burst_start_time_2025-03-29_10:15:58_1157_stop_time_1158_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 81,
+   "reason": "span 1.35 < 1.5",
+   "peak_drift": 3.125000000000006
+  },
+  {
+   "file": "type3_burst_start_time_2025-03-29_12:33:44_1242_stop_time_1243_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 16,
+   "reason": "channels 16 < 40; span 1.05 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2025-04-05_08:46:36_0913_stop_time_0915_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "a": -2.999999999999999,
+   "A": 440010.76220275473,
+   "t0": 22.09589840552164,
+   "rms": 1.6018256626236165,
+   "a_err": 0.490446582118153,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 7.103794222475415
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-05_04:37:12_1220_stop_time_1221_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 11.0 s",
+   "peak_drift": 3.2095116018731034
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-05_04:37:12_1525_stop_time_1535_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 105.0 s",
+   "peak_drift": -3.527284780992681
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-06_04:41:40_0953_stop_time_0954_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 0,
+   "reason": "no ridge",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-14_06:19:44_0656_stop_time_0704_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 398.0 s",
+   "peak_drift": 5.421766263892242
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-14_06:19:44_1141_stop_time_1142_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 139,
+   "a": 1.8256047324732887,
+   "A": 0.004930325415589313,
+   "t0": 44.402944546879276,
+   "rms": 0.2890125588299933,
+   "a_err": 0.524682897696943,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 4.612179556659383
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-14_06:19:44_1326_stop_time_1329_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 9.0 s",
+   "peak_drift": 7.256032535965196
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-14_06:19:44_1506_stop_time_1507_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 129,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": 9.28202189371256
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-14_06:19:44_1606_stop_time_1608_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 38.0 s",
+   "peak_drift": 6.4948585485487955
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-15_11:37:37_1210_stop_time_1211_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 159,
+   "reason": "non-monotonic by 48.0 s",
+   "peak_drift": 4.15753620426829
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-15_11:37:37_1309_stop_time_1315_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "a": 4.999999999999999,
+   "A": 7.85340364326796e-08,
+   "t0": 112.41763434053675,
+   "rms": 0.6665738822875368,
+   "a_err": 0.917045480417489,
+   "a_at_bound": true,
+   "unconstrained": false,
+   "reason": "fit at the a bound",
+   "peak_drift": 9.625199874364624
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_0626_stop_time_0626_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.0309520123101956,
+   "A": 0.1510669541295588,
+   "t0": 17.12564356584443,
+   "rms": 0.3175661628840583,
+   "a_err": 0.6713785186862495,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.918431277801328
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_0951_stop_time_0951_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 26.0 s",
+   "peak_drift": 4.035975063264455
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_1056_stop_time_1057_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 160,
+   "reason": "non-monotonic by 4.0 s",
+   "peak_drift": 2.781567037416231
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_1155_stop_time_1155_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 28.0 s",
+   "peak_drift": 2.553068673286945
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_1309_stop_time_1309_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 155,
+   "reason": "non-monotonic by 49.0 s",
+   "peak_drift": -1.4325161637931125
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-17_05:55:55_1401_stop_time_1402_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 139,
+   "reason": "non-monotonic by 35.0 s",
+   "peak_drift": 0.0011057134570815592
+  },
+  {
+   "file": "type3_burst_start_time_2025-06-30_10:27:37_1250_stop_time_1251_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 2,
+   "reason": "channels 2 < 40; span 1.00 < 1.5",
+   "peak_drift": NaN
+  },
+  {
+   "file": "type3_burst_start_time_2025-07-01_06:00:30_0638_stop_time_0638_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 8.0 s",
+   "peak_drift": 3.086381392045447
+  },
+  {
+   "file": "type3_burst_start_time_2025-07-01_06:00:30_0830_stop_time_0832_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 162,
+   "reason": "non-monotonic by 54.0 s",
+   "peak_drift": -1.8154367243795064
+  },
+  {
+   "file": "type3_burst_start_time_2025-07-26_06:30:22_0708_stop_time_0708_subband_min_150_subband_max_311.npy",
+   "ok": false,
+   "n_channels": 154,
+   "reason": "non-monotonic by 6.0 s",
+   "peak_drift": -0.5098047586520954
+  },
+  {
+   "file": "type3_burst_start_time_2025-07-26_06:30:22_1112_stop_time_1112_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 147,
+   "a": 1.302701618512334,
+   "A": 0.02571660882115797,
+   "t0": 52.06057652172914,
+   "rms": 0.3049065643062728,
+   "a_err": 0.4438346288989447,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 3.7372207710322387
+  },
+  {
+   "file": "type3_burst_start_time_2025-08-02_06:29:05_0943_stop_time_0944_subband_min_150_subband_max_311.npy",
+   "ok": true,
+   "n_channels": 162,
+   "a": 1.9593213300467092,
+   "A": 0.004187717320845095,
+   "t0": 28.63592904211998,
+   "rms": 0.30168834242123854,
+   "a_err": 0.6000701271331057,
+   "a_at_bound": false,
+   "unconstrained": false,
+   "reason": "",
+   "peak_drift": 6.700821114705591
+  }
+ ],
+ "r0": {
+  "n_joined": 281,
+  "n_ambiguous": 8,
+  "n_unmatched": 1,
+  "n_compared": 201,
+  "median_ratio_ours_over_table": 1.3369309645081162,
+  "ours_type3_mean": 4.157780614512221,
+  "ours_type2_mean": 1.5658847366848865,
+  "paper_type3_mean": 4.383,
+  "paper_type2_mean": 0.043,
+  "table_type3_mean": 4.244375545851528,
+  "across_burst_table": {
+   "n": 229.0,
+   "a_unbinned": 0.2276460595910232,
+   "a_binned_fluxweighted": -3.992831300247306,
+   "A_binned_fluxweighted": 5394933.368198492
+  }
+ }
+}

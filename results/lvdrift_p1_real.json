@@ -1,0 +1,43 @@
+{
+ "source": "real noise: first 20 s of standard-layout LV614 type III arrays whose summed flux peaks >= 30 s (Zenodo 10.5281/zenodo.20157853), planted bursts; frozen estimator",
+ "date": "2026-10-18",
+ "n_files": 285,
+ "n_windows": 217,
+ "p1": {
+  "0": {
+   "median": -0.000832642520206134,
+   "bias": -0.000832642520206134,
+   "n_ok": 25,
+   "n_failed_cut": 25,
+   "passed": true
+  },
+  "0.43": {
+   "median": 0.4479988031673925,
+   "bias": 0.017998803167392496,
+   "n_ok": 30,
+   "n_failed_cut": 20,
+   "passed": true
+  },
+  "1": {
+   "median": 0.98318197325395,
+   "bias": -0.01681802674605004,
+   "n_ok": 30,
+   "n_failed_cut": 20,
+   "passed": true
+  },
+  "1.23": {
+   "median": 1.118219119456993,
+   "bias": -0.11178088054300694,
+   "n_ok": 25,
+   "n_failed_cut": 25,
+   "passed": true
+  },
+  "1.84": {
+   "median": 1.8203224716536934,
+   "bias": -0.01967752834630665,
+   "n_ok": 30,
+   "n_failed_cut": 20,
+   "passed": true
+  }
+ }
+}

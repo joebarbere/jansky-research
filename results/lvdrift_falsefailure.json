@@ -1,0 +1,43 @@
+{
+ "source": "simulation: planted type III bursts in white noise (S/N 5-50, FWHM 2-6 s, A = 4/45^a MHz/s), frozen lvdrift estimator; no LV614 array used",
+ "date": "2026-10-18",
+ "p1_rule": "median recovered a within +/-0.15 of planted, every index, 50 plants each",
+ "p1_trials": 40,
+ "p1_false_fail_rate": 0.0,
+ "n1_rule": ">=95% of channel-shuffled bursts rejected by the quality cut",
+ "n1_n": 300,
+ "n1_reject_frac": 1.0,
+ "per_burst_s": 0.289,
+ "p1_bias_by_index": {
+  "0.0": {
+   "median_recovered": 0.0076,
+   "bias": 0.0076,
+   "sd_of_trial_medians": 0.0118,
+   "worst_abs_dev": 0.029
+  },
+  "0.43": {
+   "median_recovered": 0.4244,
+   "bias": -0.0056,
+   "sd_of_trial_medians": 0.0129,
+   "worst_abs_dev": 0.0341
+  },
+  "1.0": {
+   "median_recovered": 0.9485,
+   "bias": -0.0515,
+   "sd_of_trial_medians": 0.0122,
+   "worst_abs_dev": 0.0808
+  },
+  "1.23": {
+   "median_recovered": 1.1431,
+   "bias": -0.0869,
+   "sd_of_trial_medians": 0.009,
+   "worst_abs_dev": 0.1047
+  },
+  "1.84": {
+   "median_recovered": 1.7881,
+   "bias": -0.0519,
+   "sd_of_trial_medians": 0.0113,
+   "worst_abs_dev": 0.0739
+  }
+ }
+}
