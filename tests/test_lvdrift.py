@@ -85,3 +85,16 @@ def test_joint_index_recovers_a_shared_planted_index():
     j = lv.joint_index(ridges, np.linspace(0.5, 2.5, 201))
     assert j["a_lo"] - 0.15 <= 1.23 <= j["a_hi"] + 0.15
     assert not j["at_grid_edge"] and j["dof"] > 0
+
+
+def test_paper_metrics_macros_and_figure(tmp_path):
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "results"
+    m = lv.paper_metrics(str(root))
+    assert m["n_bursts"] == 290 and m["n_pass"] == 43 and m["joint_chi2dof"] > 50
+    out = tmp_path / "m.tex"
+    lv.write_paper_macros(str(out), str(root))
+    assert "{--}" not in out.read_text()
+    lv.paper_figure(str(root), str(tmp_path / "f.pdf"))
+    assert (tmp_path / "f.pdf").stat().st_size > 1000
