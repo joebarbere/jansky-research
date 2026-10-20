@@ -3,6 +3,8 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-19](#update-2026-10-19--l16-the-polarimetric-spin-handedness-test): L16, the
+  EHT polarization twist (β₂) run through the plan-100 null harness.
 - [Update 2026-10-17 (2)](#update-2026-10-17-2--sweep-scoop-checks-and-l13l15): sweep,
   scoop checks for plan 59 and L12, leads L13–L15, MIDAS demoted, VLASS URLs broken.
 - [Update 2026-10-17](#update-2026-10-17--l12-gate-0-the-m87-twisted-light-spin-claim): L12 GATE-0,
@@ -28,6 +30,50 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-19 — L16: the polarimetric spin-handedness test
+
+Written in a Claude Code session after plan 100 (`oamspin`, merged #350) closed. Nothing here
+starts a slice; plan 59 (`ucdv`) stays the active slice, blocked on CASDA. Not yet GATE-0'd.
+
+- **L16 (2026-10-19, GATE-0 not run). Is the EHT polarization twist β₂ robust where the OAM
+  q was not?**
+  - *Why this follows plan 100.* Plan 100 found the published intensity-only spin estimator does
+    not separate spin from imaging noise (`survey/oamspin-findings.md`). The reason is general,
+    not specific to that estimator: for a real brightness on a ring |c₊ₘ| = |c₋ₘ|, so handedness
+    can only live in how the azimuthal modes change phase with radius, and at EHT resolution the
+    ring is about one beam wide. A better intensity estimator is not available at this
+    resolution. Polarization is different: the linear-polarization pattern carries a handedness
+    of its own.
+  - *The quantity.* β₂, the m = 2 azimuthal mode of the complex linear polarization
+    P = Q + iU on the ring (Palumbo, Wong & Prather 2020, ApJ 894, 156,
+    doi:10.3847/1538-4357/ab86ac — DOI checked on Crossref; the definition and the claim that
+    arg β₂ tracks accretion state and spin in GRMHD libraries are from memory, to be read before
+    the plan quotes them). The EHT measured it for M87\* in 2017 (EHT Collaboration 2021, ApJL
+    910, L12 and L13, doi:10.3847/2041-8213/abe71d, 10.3847/2041-8213/abe4de — DOIs checked on
+    Crossref; the values themselves not yet read).
+  - *Test.* Reuse the plan-100 harness unchanged in spirit: a model with **known** β₂ (and a
+    β₂ = 0 control, e.g. a purely radial EVPA pattern) observed on the exact 2017 baselines and
+    times, with thermal noise, station gains, random phases, non-closing errors and polarimetric
+    leakage (D-terms) added, imaged through the EHT's polarimetric pipeline, many realisations.
+    Then: (1) recover-a-known: reproduce the published 2017 β₂ from the public polarimetric data;
+    (2) the null: does the β₂ = 0 model return |β₂| consistent with zero and arg β₂ uniform?
+    (3) injection: how well is a planted arg β₂ recovered as a function of |β₂| and leakage?
+    (4) day-pair and band consistency, as in plan 100's N2.
+  - *Data (not verified).* A public EHT M87\* polarimetric release on CyVerse was listed by the
+    L12 GATE-0 agent (24 datasets, not downloaded). Check that it carries calibrated full-Stokes
+    visibilities, not only images.
+  - *Scope of the claim.* Turning arg β₂ into a spin magnitude needs a GRMHD image library, which
+    this repo does not have; the honest output is "is the measured handedness robust to the
+    imaging and calibration systematics, and by how much", never "spin = X".
+  - *Scoop risk (high, from memory).* The EHT papers themselves assessed β₂ robustness with
+    synthetic data, and later EHT epochs (2018, and possibly 2021) reported polarization
+    changes. GATE-0 must read those robustness sections in full and establish what an
+    independent, harness-based test adds; if the EHT already ran an equivalent null and
+    injection suite, the idea is closed.
+  - *Feasibility.* Megabytes of data, CPU only; ehtim handles polarimetric imaging (GPL-3.0,
+    downloaded not vendored, as in plan 100). Risk: D-term calibration choices may dominate the
+    answer, so the leakage model must be frozen before real data is opened. Fit 3/5.
 
 ## Update 2026-10-17 (2) — sweep, scoop checks and L13–L15
 

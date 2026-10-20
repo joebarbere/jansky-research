@@ -18,6 +18,7 @@ recommend the next version number.
 - `vlass`: NRAO took the VLASS Quick Look catalogues offline (all three bulk URLs return 404; no public replacement found). The bulk download now records the SHA-256 of the cached Epoch 2/3 tables the committed results were built from, rejects a mismatched download, and explains a missing file instead of surfacing a bare 404.
 
 ### Changed
+- `ideas.md`: L16 — test whether the EHT polarization twist (β₂) of M87\* is robust to imaging and calibration systematics by running it through the plan-100 non-spinning null harness (lead only, GATE-0 not run; scoop risk from the EHT's own robustness tests flagged).
 - `plans/101` (`lvdrift`): the within-burst type III drift law from the LV614 LOFAR arrays (the published across-burst fit, a = 0.43 ± 0.31 with A = 0.78 ± 0.91, is unconstrained); estimator, planted-burst, shuffled-null and paper-reproduction controls frozen before any array is analysed. `ideas.md` L13 GATE-0 recorded.
 - `ideas.md`: sweep to 2026-10-16 — no scoop found for plan 59 or L12; new leads L13 (LV614 solar-burst drift law, data verified), L14, L15; L3 (MIDAS) demoted (data 404); `vlass.py` catalogue URLs found returning 404 (maintenance).
 - `plans/100` (`oamspin`): test whether the published "twisted light" estimator (Tamburini+2020) can distinguish black-hole spin in EHT 2017 sampling — estimator, imaging recipe, non-spinning null, simultaneous-band and Δz-convention controls, and interpretation rules frozen before any image is made.
