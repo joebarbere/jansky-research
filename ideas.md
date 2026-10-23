@@ -3,6 +3,9 @@
 *Renamed from `fable-ideas.md` on 2026-09-26. The body below is the 2026-07-05 deep re-scan;
 dated **Update** sections at the top record what changed since. Newest update first.*
 
+- [Update 2026-10-22](#update-2026-10-22--gate-0-on-four-unsolved-problems): GATE-0 on four
+  problems from Wikipedia's unsolved-problems list — L17 (FRB repetition, reframed), Saturn
+  rotation and the Galactic Centre MSP test closed, plan 55 still open, WALLABY not released.
 - [Update 2026-10-19](#update-2026-10-19--l16-the-polarimetric-spin-handedness-test): L16, the
   EHT polarization twist (β₂) run through the plan-100 null harness.
 - [Update 2026-10-17 (2)](#update-2026-10-17-2--sweep-scoop-checks-and-l13l15): sweep,
@@ -30,6 +33,73 @@ Approach / Verification) by a planning model without re-doing the survey: each e
 gap, the novelty evidence (closest papers, arXiv IDs), the exact data products + access path, a
 method sketch naming the reusable modules, a recover-a-known validation, the biggest risk, and
 its GATE-0.
+
+## Update 2026-10-22 — GATE-0 on four unsolved problems
+
+Prompted by Wikipedia's "List of unsolved problems in astronomy". Four research agents, one per
+problem, **abstract level only** (no full texts read), with key DOIs checked on Crossref and the
+FRB arXiv abstracts re-read by hand. Two agent errors corrected: Ye et al. 2018 defines SLS5 (not
+SLS4); arXiv:2610.18710's first author is Sirota (not Shin). Nothing here starts a slice.
+
+- **Saturn's deep rotation — CLOSED (fit 1/5).** The north/south SKR period series is complete
+  through end of mission: Ye et al. 2018 (GRL 45, 7297, doi:10.1029/2018GL077976, SLS5 to Sept
+  2017) and Provan et al. 2019 (JGRA 124, 1157, doi:10.1029/2018JA026079; abstract: periods within
+  ±0.01 h of 10.79 h N and 10.68 h S from mid-2015, magnetic and SKR periods agreeing to 0.0036 h).
+  The interior rate is settled across methods at 10 h 33–35 m: ring seismology 10h33m38s
+  (Mankovich et al. 2019, ApJ 871, 1, doi:10.3847/1538-4357/aaf798, abstract), gravity
+  10:33:34 ± 55 s (Militzer et al. 2019, abstract), 634.7 min (Mankovich et al. 2023, abstract);
+  the field is too axisymmetric to give a period (Cao et al. 2020, abstract). The SKR periods are
+  understood as magnetospheric oscillations, not the interior rate. **Correction to F23:** its
+  "nobody has run the dual-period census through 2017" is wrong (Ye 2016/2018, Provan 2019). F23's
+  separate proximity-law question stands. Data note: PDS-PPI key parameters are at
+  `pds-ppi.igpp.ucla.edu/archive1/CORPWS_*` (200; ~2.5 GB for 2013–17, agent's estimate); a
+  north/south split needs circular polarization, i.e. the LESIA/Kronos SKR products (host refused
+  connections; unverified).
+- **Galactic Centre GeV excess, radio MSP census — CLOSED as posed (fit 2/5).** The exact test is
+  published, deeper than RACS/VLASS: Frail, Polisensky & Hyman 2024 (ApJ 975, 34,
+  doi:10.3847/1538-4357/ad74fd; abstract: MeerKAT bulge survey Stokes I/Q/U/V, 173 deg², 75
+  polarized sources, 30 candidates); Sengar et al. 2026 (ApJ 1001, 119,
+  doi:10.3847/1538-4357/ae4872; abstract: Parkes follow-up found 9 pulsars, 5 new MSPs, all
+  foreground by DM); products in Cotton et al. 2025 (ApJ 985, 94, doi:10.3847/1538-4357/adcc33).
+  The only residual is a completeness-corrected count against the Calore et al. 2016 luminosity
+  function, which the unmeasured luminosity function leaves weakly constraining.
+- **Plan 55 (polarized-flux dipole; "is the CMB dipole kinematic?") — still OPEN.** Scoop check
+  2026-09-01 → 10-22 (ADS + arXiv keywords): no polarized-flux or polarized-count dipole with
+  SPICE-RACS, POSSUM, VLASS or LoTSS; arXiv:2610.17022 is an SKA HI/continuum forecast, no
+  polarization (abstract). SPICE-RACS DR2 is already on disk (`data/spice-racs.dr2.fits`); its
+  polarized-flux columns are the remaining GATE-0 item. **CASDA reports itself available since
+  2026-10-16 19:07 UTC** (TAP availability); plan 59's census is running again (61% of slots by
+  10-22) but slow, with cutout jobs timing out.
+- **WALLABY / external-field-effect test — blocked (fit 2/5).** The full survey is not released
+  (Westmeier, IAUS 392, abstract); Pilot DR2 has ~126 kinematic models (Murugeshan et al. 2024,
+  abstract), too few and with inclination problems for an EFE test. A non-SPARC alternative
+  exists: the Apertif AWES release, 568 rotation curves (Haubner et al. 2026, A&A 714, A250,
+  abstract; 3–23 points each). Chae 2020's SPARC EFE claim (ApJ 904, 51) is disputed (Sargent
+  2025, abstract). Not pursued now.
+- **L17 (2026-10-22, GATE-0 run: OPEN — reframed). Does burst morphology predict FRB repetition,
+  out of time and at matched exposure?**
+  - *The question as asked is closed.* Cook et al. 2026 (arXiv:2605.08410, abstract re-read by
+    hand): 2.4 ± 0.4% of CHIME sources repeat; the one-offs' repeat-rate upper limits sit inside
+    the repeaters' range, and a power-law rate distribution with 50–100% of sources repeating
+    fits equally well. Sirota et al. 2026 (arXiv:2610.18710, abstract re-read): simulation-based
+    inference on Catalog 2 "strongly and decisively" favours a distinct one-off subpopulation.
+    The two disagree; that disagreement is the live issue.
+  - *The gap.* Many classifiers predict repeaters from morphology (Chen 2022, Luo 2023, Zhu-Ge
+    2023, Sun 2024, Kumar 2026 on Catalog 2, and others; agent's list, abstract level), but none
+    found tests its candidates **prospectively** or **at matched exposure**. Reframe: freeze a
+    Catalog-1-era classifier and candidate list, score it on the sources that first repeated in
+    Catalog 2 (`catalog1_flag`, `repeater_name`), comparing candidates with non-candidates at
+    matched `exp_up`/`exp_low`; then ask whether classifier score tracks the exposure-implied
+    rate limits, which bears directly on Cook vs Sirota.
+  - *Data (on disk).* `data/chimefrbcat2.csv` (4.06 MB; has `exp_up`, `exp_low`, `width_fitb`,
+    `scat_time`, `sp_idx`, `sp_run`, `high_freq`, `low_freq`, `peak_freq`, `catalog1_flag`,
+    `sidelobe_flag`) and `data/chimefrbcat2_exposure.h5` (216 MB, time-integrated only).
+    chime-frb.ca is back (200).
+  - *Risks.* Low power: tens of new repeaters among Catalog 1 one-offs at most. Catalog 2
+    re-fitted Catalog 1's parameters, so "frozen" must use the Catalog 1 values. Some features
+    (fluence, DM) carry selection effects tied to exposure.
+  - *GATE-0 still open:* full-text read of Cook, Sirota and the Catalog 2 morphology papers for
+    any retrospective validation; how `catalog1_flag` encodes repeat history. Fit 3/5.
 
 ## Update 2026-10-19 — L16: the polarimetric spin-handedness test
 
@@ -990,8 +1060,9 @@ Pritchard UCD detections. **Risk:** likely near-zero detections — the limit ta
 
 ## F23. Cassini SKR: post-2013 + Grand-Finale proximity census (port `junodam` to Saturn)
 
-Fischer+2015 stops early-2013; nobody has run the RPWS-flux dual-period census through the 2017
-proximal orbits, and nobody has asked "does the junodam ~180× proximity law hold for SKR".
+*(Corrected 2026-10-22: the dual-period census through 2017 is published — Ye et al. 2016/2018,
+Provan et al. 2019; see the 2026-10-22 update. The proximity question below stands.)*
+Fischer+2015 stops early-2013; nobody has asked "does the junodam ~180× proximity law hold for SKR".
 **Data:** PDS-PPI `CO-V/E/J/S/SS-RPWS-4-SUMM-KEY60S-V1.0` (60-s key params; **GATE-0: pre-2008
 volume ID**); Horizons geometry. **Method/validation:** re-derive the known 10.8/10.6 h split
 first; then range-binned duty cycles + LS through 2017. **Risk:** SKR "proximity" needs
