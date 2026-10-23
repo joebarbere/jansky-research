@@ -85,8 +85,8 @@ SLS4); arXiv:2610.18710's first author is Sirota (not Shin). Nothing here starts
     inference on Catalog 2 "strongly and decisively" favours a distinct one-off subpopulation.
     The two disagree; that disagreement is the live issue.
   - *The gap.* Many classifiers predict repeaters from morphology (Chen 2022, Luo 2023, Zhu-Ge
-    2023, Sun 2024, Kumar 2026 on Catalog 2, and others; agent's list, abstract level), but none
-    found tests its candidates **prospectively** or **at matched exposure**. Reframe: freeze a
+    2023, Sharma & Rajpaul 2024, Kharel et al. 2026 on Catalog 2, and others), but none tests its
+    candidates **prospectively** or **at matched exposure** (full-text pass below). Reframe: freeze a
     Catalog-1-era classifier and candidate list, score it on the sources that first repeated in
     Catalog 2 (`catalog1_flag`, `repeater_name`), comparing candidates with non-candidates at
     matched `exp_up`/`exp_low`; then ask whether classifier score tracks the exposure-implied
@@ -98,8 +98,31 @@ SLS4); arXiv:2610.18710's first author is Sirota (not Shin). Nothing here starts
   - *Risks.* Low power: tens of new repeaters among Catalog 1 one-offs at most. Catalog 2
     re-fitted Catalog 1's parameters, so "frozen" must use the Catalog 1 values. Some features
     (fluence, DM) carry selection effects tied to exposure.
-  - *GATE-0 still open:* full-text read of Cook, Sirota and the Catalog 2 morphology papers for
-    any retrospective validation; how `catalog1_flag` encodes repeat history. Fit 3/5.
+  - *Full-text pass (2026-10-22, research agent; Cook, Sirota, CHIME Cat 2, Kharel, Tang & Liu,
+    Fan, Sun 2026 read in full; Chen 2022 and Sharma & Rajpaul searched, not read).*
+    - Nobody scores a Catalog-1-frozen classifier on Catalog 2 at matched exposure. Closest:
+      Kharel et al. (arXiv:2509.06208, ApJ 998, 154; §4) — 4 of 6 Catalog 1 one-offs that later
+      repeated were predicted repeaters, but training was a random burst-level split of Catalog 2
+      (§3.2), so other bursts of the same sources leaked in, and exposure is not matched. Sun et al.
+      2026 (arXiv:2601.16048, Discussion) report two candidates "since confirmed", no denominator.
+      Tang & Liu (arXiv:2512.06316, Table 4) list 168 candidates but train on 2025 labels and defer
+      validation to Catalog 2. Cook et al. (§4.3, §5.1) test no morphology and warn CHIME is biased
+      against narrowband, long repeater-like bursts. Sirota & Lorimer (arXiv:2610.18710) use no
+      morphology; its random forest is model selection (§4.1–4.2); §4.6 counts **14** Catalog 1
+      one-offs that had repeated by Catalog 2.
+    - *Data.* `catalog1_flag` = event included in Catalog 1 (Cat 2 column table). From the local
+      tables (Cat 1 + Cat 2 joined on `tns_name`): **12** sources whose Catalog 1 burst was a
+      one-off and which repeat in Catalog 2 (11 new + FRB20190329A, which Cat 2 reassigns to known
+      repeater FRB20180814A); Sirota's 14 include sources the public table can't name. Only **3**
+      (FRB20181018B, FRB20190208C, FRB20190320E) first repeated after RepCat3's 2021-05-01 cutoff,
+      i.e. could not have leaked into any published classifier's training (other 8 not checked
+      against RepCat2/3). ~470 negatives.
+    - *Power (agent's estimate, Hanley–McNeil vs AUC 0.5).* 11 positives: z ≈ 2.3 at AUC 0.7, 3.4 at
+      0.8. 3 clean positives: z ≈ 1.2 and 1.8. Published precision is 0.35–0.42 at ~0.85 recall.
+    - *Verdict: OPEN but underpowered.* The only honest output is a wide-interval AUC for the two
+      Catalog-1-only candidate lists (Chen 2022, 188 of 474 non-repeaters, online supplement;
+      Zhu-Ge 2023), exposure as a covariate. With 3 leak-free positives it cannot conclude. **Parked
+      until Catalog 3 (or a larger repeater release) adds positives.** Fit 2/5 now.
 
 ## Update 2026-10-19 — L16: the polarimetric spin-handedness test
 
