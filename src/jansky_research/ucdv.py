@@ -58,6 +58,8 @@ __all__ = [
     "run",
     "run_census",
     "backoff_seconds",
+    "retry_policy",
+    "read_done",
     "census_targets",
     "bright_neighbour",
     "fetch_epoch_pair",
@@ -539,6 +541,8 @@ def pick_tile(ra: float, dec: float, regions: list[str]) -> int:
 
 
 JOB_TIMEOUT_S = 600.0  # a CASDA cutout job not done in 10 min is abandoned (aborted) and retried
+JOB_RETRIES = 2  # extra in-slot attempts after a job ends ERROR / HTTP 5xx (transient on CASDA)
+JOB_RETRY_WAIT_S = 20.0
 
 
 def _cutout_urls(
@@ -573,7 +577,14 @@ def _cutout_urls(
             raise TimeoutError(f"CASDA cutout job still {status} after {timeout:.0f} s: {job}")
         time.sleep(poll)
     if status != "COMPLETED":
-        raise ValueError(f"CASDA cutout job ended {status}: {job}")
+        msg = ""
+        try:
+            summ = casda._get_job_details_xml(job).find("uws:errorSummary", casda._uws_ns)
+            if summ is not None:
+                msg = " ".join(t.strip() for t in summ.itertext() if t.strip())
+        except Exception:
+            pass
+        raise ValueError(f"CASDA cutout job ended {status} ({msg or 'no errorSummary'}): {job}")
     details = casda._get_job_details_xml(job)
     results = details.find("uws:results", casda._uws_ns).findall("uws:result", casda._uws_ns)
     return [unquote(r.get("{http://www.w3.org/1999/xlink}href")) for r in results]
@@ -634,9 +645,26 @@ def fetch_epoch_pair(
         return None
     rows = tab[[complete[k]["i"], complete[k]["v"]]]
     t1 = time.time()
-    urls = _cutout_urls(
-        casda, rows["access_url",], SkyCoord(ra * u.deg, dec * u.deg), radius_deg, poll_interval
-    )
+    for attempt in range(JOB_RETRIES + 1):
+        try:
+            urls = _cutout_urls(
+                casda,
+                rows["access_url",],
+                SkyCoord(ra * u.deg, dec * u.deg),
+                radius_deg,
+                poll_interval,
+            )
+            break
+        except (ValueError, requests.HTTPError) as exc:
+            # A job that CASDA ends ERROR, or a 5xx, usually succeeds when simply resubmitted
+            # (2026-10-22: 77 of the last 300 slot errors were "ended ERROR"). Stuck jobs
+            # (TimeoutError) and auth errors are not retried here.
+            transient = isinstance(exc, ValueError) or (
+                exc.response is not None and exc.response.status_code >= 500
+            )
+            if not transient or attempt == JOB_RETRIES:
+                raise
+            time.sleep(JOB_RETRY_WAIT_S)
     t_job = time.time() - t1
     t2 = time.time()
     out: dict[str, Any] = {}
@@ -979,6 +1007,46 @@ def backoff_seconds(consecutive_failures: int, *, base: float = 60.0, cap: float
     return float(min(cap, base * 2.0 ** (k - 1)))
 
 
+def retry_policy(consecutive_failures: int, error: str = "") -> tuple[float, bool]:
+    """(wait seconds, log in again?) after a failed slot.
+
+    An isolated failure is usually one bad CASDA job: wait 30 s and keep the session. Only a run of
+    3+ consecutive failures (an outage) or an authentication error escalates to the exponential
+    backoff with a fresh login, which keeps the 2026-10-16 protection against login storms while
+    no longer paying minutes of backoff, and a login, for every stray job error.
+    """
+    auth = "401" in error or "403" in error or "authenticat" in error.lower()
+    k = max(int(consecutive_failures), 1)
+    if k < 3 and not auth:
+        return 30.0, False
+    return backoff_seconds(max(k - 2, 1)), True
+
+
+def read_done(path) -> set[tuple[int, str]]:
+    """(source_id, epoch) slots already in the census JSONL. A truncated last line (the process
+    killed mid-write) is ignored rather than crashing the resume; any other bad line raises."""
+    import json
+    from pathlib import Path
+
+    done: set[tuple[int, str]] = set()
+    p = Path(path)
+    if not p.exists():
+        return done
+    lines = p.read_text().splitlines()
+    for k, line in enumerate(lines):
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:
+            if k == len(lines) - 1:
+                continue
+            raise
+        done.add((int(r["source_id"]), str(r["epoch"])))
+    return done
+
+
+CENSUS_PASSES = 4  # a pass retries every slot that errored in the previous one
+
+
 def run_census(
     *,
     username: str,
@@ -996,6 +1064,41 @@ def run_census(
     the run can be stopped and restarted. Detection, limits and comparison run afterwards on the
     JSONL, never inside this loop.
     """
+    import time
+    from pathlib import Path
+
+    from .stokesv import _casda_session
+
+    tg = census_targets()
+    out = Path(out_jsonl)
+    if out.exists() and out.stat().st_size and not out.read_bytes().endswith(b"\n"):
+        with out.open("ab") as fh0:  # killed mid-write: end the partial line so appends stay valid
+            fh0.write(b"\n")
+    Path(cutout_dir).mkdir(parents=True, exist_ok=True)
+    casda = _casda_session(username, pw_path)
+    n = 0
+    for pass_no in range(CENSUS_PASSES):
+        done = read_done(out)
+        errors_before = n
+        attempted, failed = _census_pass(
+            tg, done, out, cutout_dir, casda, username, pw_path, poll_interval, limit, n
+        )
+        n = attempted
+        print(
+            time.strftime("%Y-%m-%d %H:%M:%S"),
+            f"census pass {pass_no + 1}: {attempted - errors_before} slots attempted, "
+            f"{failed} failed",
+            flush=True,
+        )
+        if failed == 0 or (limit is not None and n >= limit):
+            break
+    return n
+
+
+def _census_pass(
+    tg, done, out, cutout_dir, casda, username, pw_path, poll_interval, limit, n
+):  # pragma: no cover - network
+    """One pass over every slot not in ``done``. Returns (slots attempted so far, failures)."""
     import json
     import time
     from pathlib import Path
@@ -1003,17 +1106,8 @@ def run_census(
     from .stokesv import _casda_session
     from .stokesv_discovery import epoch_position
 
-    tg = census_targets()
-    done: set[tuple[int, str]] = set()
-    out = Path(out_jsonl)
-    if out.exists():
-        for line in out.read_text().splitlines():
-            r = json.loads(line)
-            done.add((int(r["source_id"]), str(r["epoch"])))
-    Path(cutout_dir).mkdir(parents=True, exist_ok=True)
-    casda = _casda_session(username, pw_path)
-    n = 0
     fails = 0  # consecutive failed slots, drives the backoff
+    failed = 0
     with out.open("a") as fh:
         for r in tg:
             sid = int(r["Source"])
@@ -1021,7 +1115,7 @@ def run_census(
                 if (sid, ep) in done:
                     continue
                 if limit is not None and n >= limit:
-                    return n
+                    return n, failed
                 n += 1
                 rec: dict[str, Any] = {"source_id": sid, "epoch": ep, "t_start": time.time()}
                 pos = (np.array([r["RAICRS"]]), np.array([r["DEICRS"]]))
@@ -1075,30 +1169,32 @@ def run_census(
                             mjd=pair["mjd"],
                             obs_id=pair["obs_id"],
                         )
-                except Exception as exc:  # recorded and retried on the next resume
-                    rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+                except Exception as exc:  # retried in the next pass
+                    rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:500])
                     fails += 1
-                    # Back off exponentially (cap 30 min) so an outage costs tens of logins,
-                    # not hundreds: on 2026-10-16 a fixed 60 s retry made ~285 failed OPAL logins
-                    # over 11.5 h while CASDA authentication was refusing.
-                    wait = backoff_seconds(fails)
+                    failed += 1
+                    # retry_policy: isolated job errors wait 30 s on the same session; a run of
+                    # failures (an outage) backs off exponentially with a fresh login, so an
+                    # outage still costs tens of logins, not hundreds (2026-10-16).
+                    wait, relogin = retry_policy(fails, rec["error"])
                     print(
                         time.strftime("%Y-%m-%d %H:%M:%S"),
-                        f"slot error #{fails} ({rec['error'][:120]}); sleeping {wait:.0f} s",
+                        f"slot error #{fails} {sid}/{ep} ({rec['error']}); sleeping {wait:.0f} s",
                         flush=True,
                     )
                     time.sleep(wait)
-                    try:
-                        casda = _casda_session(username, pw_path)
-                    except Exception as login_exc:
-                        print(time.strftime("%Y-%m-%d %H:%M:%S"), "login failed:", login_exc)
+                    if relogin:
+                        try:
+                            casda = _casda_session(username, pw_path)
+                        except Exception as login_exc:
+                            print(time.strftime("%Y-%m-%d %H:%M:%S"), "login failed:", login_exc)
                 else:
                     fails = 0
                 rec["t_total"] = time.time() - rec["t_start"]
                 if rec["status"] != "error":
                     fh.write(json.dumps(rec, default=float) + "\n")
                     fh.flush()
-    return n
+    return n, failed
 
 
 # C3(b) target, from Rose et al. (arXiv:2306.15219, full text): RACS-mid position at MJD 59216

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
 
@@ -348,3 +350,22 @@ def test_control_metrics_read_committed_results():
     assert m["real_s0_n_ok"] == 80 and m["real_c1_n"] == 400
     assert 0.435 <= m["real_c1_frac_pos"] <= 0.565 and m["real_c3_flips"] == 0
     assert ucdv._control_metrics(Path("/nonexistent")) == {}
+
+
+def test_retry_policy_keeps_session_for_isolated_errors_and_backs_off_on_runs():
+    assert ucdv.retry_policy(1, "ValueError: CASDA cutout job ended ERROR") == (30.0, False)
+    assert ucdv.retry_policy(2) == (30.0, False)
+    assert ucdv.retry_policy(3) == (60.0, True)  # an outage: backoff + fresh login
+    assert ucdv.retry_policy(6) == (480.0, True)
+    assert ucdv.retry_policy(40)[0] == 1800.0
+    assert ucdv.retry_policy(1, "HTTPError: 401 Client Error") == (60.0, True)
+
+
+def test_read_done_skips_a_truncated_last_line_only(tmp_path):
+    p = tmp_path / "c.jsonl"
+    assert ucdv.read_done(p) == set()
+    p.write_text('{"source_id": 1, "epoch": "low2"}\n{"source_id": 2, "epoch": "low3"}\n{"sour')
+    assert ucdv.read_done(p) == {(1, "low2"), (2, "low3")}
+    p.write_text('{"source_id": 1, "epoch": "low2"}\n{bad\n{"source_id": 2, "epoch": "low3"}\n')
+    with pytest.raises(json.JSONDecodeError):
+        ucdv.read_done(p)
