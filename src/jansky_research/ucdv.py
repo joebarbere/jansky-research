@@ -1015,7 +1015,9 @@ def retry_policy(consecutive_failures: int, error: str = "") -> tuple[float, boo
     backoff with a fresh login, which keeps the 2026-10-16 protection against login storms while
     no longer paying minutes of backoff, and a login, for every stray job error.
     """
-    auth = "401" in error or "403" in error or "authenticat" in error.lower()
+    # "'CasdaClass' object has no attribute '_auth'": a failed login left the session without
+    # credentials (2026-10-18/21/23); only a fresh login fixes it.
+    auth = "401" in error or "403" in error or "authenticat" in error.lower() or "_auth" in error
     k = max(int(consecutive_failures), 1)
     if k < 3 and not auth:
         return 30.0, False

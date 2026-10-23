@@ -359,6 +359,8 @@ def test_retry_policy_keeps_session_for_isolated_errors_and_backs_off_on_runs():
     assert ucdv.retry_policy(6) == (480.0, True)
     assert ucdv.retry_policy(40)[0] == 1800.0
     assert ucdv.retry_policy(1, "HTTPError: 401 Client Error") == (60.0, True)
+    err = "AttributeError: 'CasdaClass' object has no attribute '_auth'"
+    assert ucdv.retry_policy(1, err) == (60.0, True)
 
 
 def test_read_done_skips_a_truncated_last_line_only(tmp_path):
