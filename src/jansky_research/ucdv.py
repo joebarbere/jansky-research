@@ -1484,6 +1484,18 @@ def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, A
         o = other[0]
         m["real_det_other_epoch"] = str(o["epoch"])
         m["real_det_other_snr"] = round(float(o["v"]) / float(o["sigma_v"]), 1)
+        lo, hi = (o, row) if ep == "low3" else (row, o)
+        cmp = two_epoch_compare(
+            np.array([float(lo["v"])]),
+            np.array([float(lo["sigma_v"])]),
+            np.array([float(hi["v"])]),
+            np.array([float(hi["sigma_v"])]),
+        )
+        m["real_det_pair_z"] = round(float(cmp["z_diff"][0]), 1)
+    # the frozen two-epoch rule's smallest detectable change at the median sigma_V
+    m["real_two_epoch_floor_mjy"] = round(
+        SNR_DETECT * float(np.sqrt(2.0)) * float(np.nanmedian(real["sigma_v"][real["sane"]])), 2
+    )
     fp = Path(results_dir) / "ucdv_followup_j1123.json"
     if not fp.exists():
         return m
@@ -1497,8 +1509,44 @@ def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, A
     best = indep[int(np.argmax(z))]
     p1 = 1.0 - NormalDist().cdf(float(z.max()))
     sub_ = z[np.abs(z) < 2.5]
+    # the deepest same-band observation without a detection: the matched non-detection
+    best_freq = float(best.get("freq_mhz", np.nan))
+    same = [
+        r
+        for r in indep
+        if r is not best
+        and abs(float(r.get("freq_mhz", np.nan)) - best_freq) < 1.0
+        and r["v"] / r["sigma_v"] < 2.5
+    ]
+    if same:
+        mt = min(same, key=lambda r: r["sigma_v"])
+        m.update(
+            real_fu_match_obs=str(mt["obs_id"]).replace("ASKAP-", ""),
+            real_fu_match_year=int(Time(float(mt["mjd"]), format="mjd").datetime.year),
+            real_fu_match_v=f"{float(mt['v']):.3f}",
+            real_fu_match_sigma_v=f"{float(mt['sigma_v']):.3f}",
+            real_fu_match_z=round(
+                (float(best["v"]) - float(mt["v"]))
+                / float(np.hypot(best["sigma_v"], mt["sigma_v"])),
+                1,
+            ),
+        )
+    # epochs >= 2.5 sigma in V whose V exceeds I by > 2 sigma: not physical on their own
+    viol = [
+        r
+        for r in indep
+        if r["v"] / r["sigma_v"] >= 2.5
+        and (r["v"] - r["i"]) / float(np.hypot(r["sigma_v"], r["sigma_i"])) > 2.0
+    ]
+    m["real_fu_n_v_gt_i"] = len(viol)
+    if viol:
+        m["real_fu_v_gt_i_obs"] = ", ".join(str(r["obs_id"]).replace("ASKAP-", "") for r in viol)
     m.update(
         real_fu_n_obs=len(eps),
+        real_fu_n_nan=sum(
+            r["status"] == "ok" and not (np.isfinite(r["v"]) and np.isfinite(r["sigma_v"]))
+            for r in eps
+        ),
         real_fu_n_refused=sum(r["status"] == "error" for r in eps),
         real_fu_n_meas=len(meas),
         real_fu_n_indep=len(indep),
@@ -1508,8 +1556,8 @@ def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, A
         real_fu_n_neg=int(np.sum(z <= -2.5)),
         real_fu_best_obs=str(best["obs_id"]).replace("ASKAP-", ""),
         real_fu_best_date=Time(float(best["mjd"]), format="mjd").datetime.strftime("%Y %B"),
-        real_fu_best_v=round(float(best["v"]), 3),
-        real_fu_best_sigma_v=round(float(best["sigma_v"]), 3),
+        real_fu_best_v=f"{float(best['v']):.3f}",
+        real_fu_best_sigma_v=f"{float(best['sigma_v']):.3f}",
         real_fu_best_snr=round(float(z.max()), 1),
         real_fu_best_isnr=round(float(best["i"]) / float(best["sigma_i"]), 1),
         real_fu_best_p_tex=_tex_sci(p1, 1),
@@ -1517,6 +1565,136 @@ def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, A
         real_fu_sub_n=int(sub_.size),
         real_fu_sub_mean=round(float(sub_.mean()), 2),
     )
+    return m
+
+
+def beam_centroid(stamp: np.ndarray, pix_arcsec: float, beam, star_offset_pix) -> dict:
+    """Peak and centroid of a source near the stamp centre, fitted with the restoring beam's
+    shape (amplitude and position free) inside +-15 arcsec; offsets are from the star's
+    propagated position, in arcsec (+x = pixel x). Returns NaNs if the fit fails."""
+    from scipy.optimize import curve_fit
+
+    im = np.asarray(stamp, float)
+    n = im.shape[0]
+    c = (n - 1) / 2.0
+    bmaj, bmin, bpa = beam
+    sx, sy, th = bmin / 2.3548 / pix_arcsec, bmaj / 2.3548 / pix_arcsec, np.radians(bpa)
+    yy, xx = np.mgrid[0:n, 0:n]
+    r = int(round(15.0 / pix_arcsec))
+    m = (np.abs(xx - c) <= r) & (np.abs(yy - c) <= r) & np.isfinite(im)
+
+    def model(xy, a, x0, y0):
+        x, y = xy
+        ct, st = np.cos(th), np.sin(th)
+        xr, yr = ct * (x - x0) + st * (y - y0), -st * (x - x0) + ct * (y - y0)
+        return a * np.exp(-0.5 * ((xr / sx) ** 2 + (yr / sy) ** 2))
+
+    try:
+        popt, _ = curve_fit(model, (xx[m], yy[m]), im[m], p0=(float(im[m].max()), c, c))
+    except Exception:
+        return {"peak": np.nan, "dx": np.nan, "dy": np.nan, "r": np.nan}
+    dx = (popt[1] - (c + star_offset_pix[0])) * pix_arcsec
+    dy = (popt[2] - (c + star_offset_pix[1])) * pix_arcsec
+    return {"peak": float(popt[0]), "dx": float(dx), "dy": float(dy), "r": float(np.hypot(dx, dy))}
+
+
+def blank_sky_tail(image_i, image_v, wcs, ra: float, dec: float, *, step_arcsec: float = 16.0):
+    """Forced V/sigma_V on a grid of blank positions >= ``step_arcsec`` apart across a cutout,
+    skipping 30 arcsec around (ra, dec), the 45 arcsec border and any position with I > 5 sigma_I.
+    The cutout's own empirical noise tail, for a detection made in it."""
+    pix = float(abs(wcs.proj_plane_pixel_scales()[0].to_value("arcsec")))
+    ny, nx = np.shape(image_v)
+    step, edge = int(np.ceil(step_arcsec / pix)), int(np.ceil(45.0 / pix))
+    cx, cy = (float(q) for q in wcs.world_to_pixel_values(ra, dec))
+    z = []
+    for y in range(edge, ny - edge, step):
+        for x in range(edge, nx - edge, step):
+            if np.hypot(x - cx, y - cy) * pix < 30.0:
+                continue
+            r, d = wcs.pixel_to_world_values(x, y)
+            m = forced_measure(image_i, image_v, wcs, float(r), float(d))
+            if not (np.isfinite(m["v_rms"]) and m["v_rms"] > 0) or m["i_peak"] > 5 * m["i_rms"]:
+                continue
+            z.append(m["v_peak"] / m["v_rms"])
+    za = np.asarray(z)
+    return {
+        "n": int(za.size),
+        "frac_positive": float(np.mean(za > 0)) if za.size else np.nan,
+        "std": float(za.std()) if za.size else np.nan,
+        "max_abs": float(np.abs(za).max()) if za.size else np.nan,
+        "n_ge3": int(np.sum(np.abs(za) >= 3.0)),
+    }
+
+
+def completeness_weighted_neff(
+    res: dict[str, Any], comp: dict[str, float], l_quote: float
+) -> float:
+    """Effective number of sane snapshots that could detect ``l_quote``, each weighted by the C2
+    injection completeness at its own L/(L per sigma_V) (linear interpolation in sigma, 0 below
+    the lowest level, 1 above the highest). A cross-check on the 5 sigma step definition."""
+    s = res["sane"]
+    per_sigma = luminosity_limit(res["sigma_v"][s], res["dist_pc"][s])
+    snr = l_quote / per_sigma
+    lv = np.array(sorted(float(k) for k in comp))
+    cv = np.array([float(comp[k]) for k in sorted(comp, key=float)])
+    w = np.interp(snr, lv, cv, left=0.0, right=float(cv[-1]))
+    return float(np.nansum(w))
+
+
+def _tail_and_astrometry_metrics(results_dir, real, crow) -> dict[str, Any]:
+    """Referee round 1 (2026-10-26): heavy-tail check of the census nulls, the expected number of
+    chance >= 5 sigma slots, a completeness-weighted fraction limit, and (from the committed
+    stamps file) beam-fitted centroids and each detection image's own blank-sky tail."""
+    import json
+    from pathlib import Path
+    from statistics import NormalDist
+
+    m: dict[str, Any] = {}
+    nz = np.concatenate(
+        [
+            np.asarray(r.get("null_v", []), float) / np.asarray(r.get("null_sigma_v", []), float)
+            for r in crow
+            if r.get("status") == "ok"
+        ]
+    )
+    nz = nz[np.isfinite(nz)]
+    nd = NormalDist()
+    for k in (3, 4, 5):
+        obs = int(np.sum(np.abs(nz) >= k))
+        exp = 2.0 * (1.0 - nd.cdf(k)) * nz.size
+        m[f"real_null_n_ge{k}"] = obs
+        m[f"real_null_exp_ge{k}"] = round(exp, 1 if exp >= 1 else 2)
+        m[f"real_null_ratio_ge{k}"] = round(obs / exp, 1) if exp > 0 else None
+    m["real_chance_ge5"] = round(m["real_null_n_ge5"] / nz.size * real["n_slots"], 1)
+    c1p = Path(results_dir) / "ucdv_controls_c1c2.json"
+    if c1p.exists():
+        comp = json.loads(c1p.read_text())["c2_injection"]["completeness"]
+        neff = completeness_weighted_neff(real, comp, 1e15)
+        m["real_neff_cw_1e15"] = int(round(neff))
+        m["real_frac_cw_upper_1e15"] = round(poisson_upper(0) / neff, 4) if neff > 0 else None
+    sp = Path(results_dir) / "ucdv_followup_j1123_stamps.json"
+    if sp.exists():
+        stamps = json.loads(sp.read_text())
+        tags = {"ASKAP-56518": "racs", "ASKAP-82408": "emu"}
+        for oid, st in stamps["stamps"].items():
+            t = tags.get(oid, oid)
+            for stokes in ("v", "i"):
+                cfit = beam_centroid(
+                    st[f"{stokes}_over_sigma"],
+                    st["pix_arcsec"],
+                    st["beam_arcsec_deg"],
+                    st["star_offset_pix"],
+                )
+                m[f"real_cen_{stokes}_{t}"] = round(cfit["r"], 1)
+            if "blank_tail" in st:
+                bt = st["blank_tail"]
+                m[f"real_tail_n_{t}"] = bt["n"]
+                m[f"real_tail_max_{t}"] = round(bt["max_abs"], 1)
+        cat = stamps.get("racs_low3_catalogue")
+        if cat:
+            m["real_cat_name"] = cat["name"]
+            m["real_cat_offset"] = round(float(cat["offset_arcsec"]), 1)
+            m["real_cat_e_dec"] = round(float(cat["e_dec_arcsec"]), 1)
     return m
 
 
@@ -1588,6 +1766,7 @@ def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
         metrics["real_null_n"] = int(real["null_monitor"].get("n", 0))
         metrics.update(_detection_metrics(Path(out) / "results", real, crow))
         metrics.update(_c3b_metrics(Path(out) / "results"))
+        metrics.update(_tail_and_astrometry_metrics(Path(out) / "results", real, crow))
         metrics["source"] = "synthetic recover-a-known + real RACS-low2/low3 forced-V census"
     op = Path(out)
     write_results(metrics, op / "results" / "ucdv_metrics.json")
@@ -1764,6 +1943,34 @@ _MACROS = {
     "RealFuSubMean": "real_fu_sub_mean",
     "RealCthreebLowtwoSnr": "real_c3b_low2_snr",
     "RealCthreebLowthreeSnr": "real_c3b_low3_snr",
+    "RealNullNGeFour": "real_null_n_ge4",
+    "RealNullExpGeFour": "real_null_exp_ge4",
+    "RealNullRatioGeFour": "real_null_ratio_ge4",
+    "RealNullNGeFive": "real_null_n_ge5",
+    "RealChanceGeFive": "real_chance_ge5",
+    "RealNeffCwFifteen": "real_neff_cw_1e15",
+    "RealFracCwFifteen": "real_frac_cw_upper_1e15",
+    "RealCenVRacs": "real_cen_v_racs",
+    "RealCenVEmu": "real_cen_v_emu",
+    "RealCenIRacs": "real_cen_i_racs",
+    "RealCenIEmu": "real_cen_i_emu",
+    "RealTailNRacs": "real_tail_n_racs",
+    "RealTailMaxRacs": "real_tail_max_racs",
+    "RealTailNEmu": "real_tail_n_emu",
+    "RealTailMaxEmu": "real_tail_max_emu",
+    "RealCatName": "real_cat_name",
+    "RealCatOffset": "real_cat_offset",
+    "RealCatEDec": "real_cat_e_dec",
+    "RealDetPairZ": "real_det_pair_z",
+    "RealTwoEpochFloor": "real_two_epoch_floor_mjy",
+    "RealFuMatchObs": "real_fu_match_obs",
+    "RealFuMatchYear": "real_fu_match_year",
+    "RealFuMatchV": "real_fu_match_v",
+    "RealFuMatchSigmaV": "real_fu_match_sigma_v",
+    "RealFuMatchZ": "real_fu_match_z",
+    "RealFuNVgtI": "real_fu_n_v_gt_i",
+    "RealFuVgtIObs": "real_fu_v_gt_i_obs",
+    "RealFuNNan": "real_fu_n_nan",
     "RealCthreebLowtwoV": "real_c3b_low2_v",
     "RealCthreebLowthreeV": "real_c3b_low3_v",
     "RealCthreebLowtwoFrac": "real_c3b_low2_frac",

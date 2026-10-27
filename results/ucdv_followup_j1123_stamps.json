@@ -5017,7 +5017,14 @@
         ]
       ],
       "sigma_v": 0.1324648800903848,
-      "sigma_i": 0.19168029864364303
+      "sigma_i": 0.19168029864364303,
+      "blank_tail": {
+        "n": 391,
+        "frac_positive": 0.5115089514066496,
+        "std": 1.0172816934396027,
+        "max_abs": 3.3804908226330155,
+        "n_ge3": 1
+      }
     },
     "ASKAP-82408": {
       "mjd": 61091.56597800926,
@@ -12722,7 +12729,29 @@
         ]
       ],
       "sigma_v": 0.029554185362767976,
-      "sigma_i": 0.04491180058867152
+      "sigma_i": 0.04491180058867152,
+      "blank_tail": {
+        "n": 465,
+        "frac_positive": 0.4924731182795699,
+        "std": 0.9498185966093601,
+        "max_abs": 3.574706764127626,
+        "n_ge3": 2
+      }
     }
+  },
+  "racs_low3_catalogue": {
+    "vizier": "J/other/PASA/43.89 (Thomson et al. 2026, SPICE-RACS DR2 component/source tables)",
+    "name": "RACS-LOW3 J112319-05090",
+    "sbid": 56518,
+    "ra": 170.83168067378,
+    "dec": -5.15254112326,
+    "e_ra_arcsec": 1.34,
+    "e_dec_arcsec": 0.8,
+    "fpeak_mjy": 1.133,
+    "e_fpeak_mjy": 0.208,
+    "maj_arcsec": 16.1,
+    "min_arcsec": 11.8,
+    "offset_arcsec": 0.49,
+    "queried": "2026-10-26"
   }
 }

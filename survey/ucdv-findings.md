@@ -218,9 +218,10 @@ afterwards. Findings and what was done:
    checked (SRSC, Wang et al. 2024, V-LoTSS)". "Forced-V measurements show", not "discovered".
    "Intermittent" is inferred from the non-detections; electron-cyclotron maser is
    interpretation only.
-9. **Two-epoch rule (NOTE).** This star's low2/low3 pair differs by ~5.9σ in V but is not flagged
-   because the frozen comparison includes the 10% scale term and the spectral bound; one sentence
-   in the note.
+9. **Two-epoch rule (NOTE).** ~~This star's low2/low3 pair differs by ~5.9σ~~ *Corrected in
+   referee round 1:* the pair differs by **3.9σ** under the frozen comparison (4.2σ without the
+   10% scale term); it is not flagged because the rule's threshold is 5σ, i.e. changes of
+   ≳ 1.07 mJy/beam at the median σ_V, not because of the allowances.
 10. **Accounting (SHOULD-FIX).** The note states 19,610 slots → 10 refused → 19,600 fetched → 24
     failed the per-cutout sanity check → 19,576 with limits. The follow-up count is 29 measured.
 
@@ -244,3 +245,39 @@ full text/tables): not in Pritchard et al. 2021 (Table 2), Pritchard et al. 2024
 catalogues of …", not "first". Four reference titles reconstructed from truncated ADS output were
 wrong (Davoudi, Thomson, Duchesne, Pritchard 2024) and were replaced with the Crossref titles.
 Style lint (RNAAS genre) and triage clean; compiles in the tectonic container, 3 pages.
+
+## Referee round 1 on the note (2026-10-26): minor revision, all eleven findings applied
+
+Presenter then referee (both read-only; worktree clean after each). Two errors of ours surfaced:
+
+- **The 3.1″ catalogue offset was wrong.** The catalogue agent propagated the proper motion from
+  SIMBAD's coordinates, which are at epoch J2000, as if they were at 2016.0. From the Gaia DR2
+  position (epoch 2015.5) propagated to MJD 60310.89, the catalogued Stokes I source
+  RACS-LOW3 J112319−05090 (VizieR J/other/PASA/43.89, Thomson et al. 2026; recorded in
+  `results/ucdv_followup_j1123_stamps.json` → `racs_low3_catalogue`) lies **0.49″** from the
+  star (catalogue e_Dec 0.8″). GATE-2 item 6 and the vetting section inherited the 3.1″.
+- **GATE-2 item 9's "~5.9σ" was wrong** (3.9σ; corrected above).
+
+Changes to the note (numbers from `_tail_and_astrometry_metrics` / `_detection_metrics`):
+1. Two-epoch rule: states its detectable floor (≳ 1.07 mJy/beam) and the star's 3.9σ pair.
+2. Missing GATE-2 items added: each detection image's own blank-sky tail (EMU 465 positions, max
+   |z| 3.6; RACS 391, max 3.4 — committed in the stamps file), the chance expectation, the
+   catalogue entry and offset, beam-fitted V centroids 1.7″ (RACS) and 0.7″ (EMU) (I: 0.5″, 1.9″).
+3. The census epoch is a trigger: 1 null ≥ 5σ in 97,967 → ~0.2 expected among 19,600 slots (the
+   nulls are real sky positions, so this covers unrelated sources too); nulls are heavy-tailed
+   (15 at ≥ 4σ vs 6.2 Gaussian).
+4. EMU p stated as Gaussian-equivalent, one-sided because the census fixed the sign, with the
+   heavy-tail caveat.
+5. ECM "consistent with"; flare-associated coherent emission not excluded.
+6. Fraction-limit sensitivity definition stated as chosen after seeing the data; a
+   completeness-weighted cross-check (C2 curve) gives N_eff 545 and 0.0055 at 1e15; limits are
+   per 15-min snapshot, isotropic, and mix emitter fraction with duty cycle.
+7. Intermittency now rests on the matched non-detection: EMU SBID 75093 (2025, 943 MHz, same
+   depth) V = −0.001 ± 0.024, 4.6σ below SBID 82408 (the circular sub-threshold average argument
+   was dropped).
+8. VAST SBID 83189 has V > I by > 2σ; stated as not a detection by itself.
+9. C3(a) partial circularity stated.
+10. Counts: 36 − 6 refused − 1 off-image = 29; census accounting reordered.
+11. Catalogue locator given (name in the note; VizieR table in the stamps results file).
+
+Abstract trimmed to ≤ the RNAAS p90 length (style lint clean); body ~990 words.

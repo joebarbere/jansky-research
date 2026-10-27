@@ -418,3 +418,28 @@ def test_fraction_limit_sensitivity_ignores_measured_v_and_counts_held_detection
         float(ucdv.luminosity_limit(np.array([3.0]), np.array([20.0]))[0])
     )
     assert ucdv._ltag(3e14) == "3e14" and ucdv._ltag(1e15) == "1e15"
+
+
+def test_beam_centroid_recovers_an_offset_source():
+    n, pix = 49, 2.5
+    yy, xx = np.mgrid[0:n, 0:n]
+    c = (n - 1) / 2
+    sig = 12.0 / 2.3548 / pix
+    im = 6.0 * np.exp(-0.5 * (((xx - (c + 1.0)) / sig) ** 2 + ((yy - (c - 0.6)) / sig) ** 2))
+    im += np.random.default_rng(2).normal(0, 0.05, im.shape)
+    f = ucdv.beam_centroid(im, pix, (12.0, 12.0, 0.0), (0.0, 0.0))
+    assert f["peak"] == pytest.approx(6.0, rel=0.05)
+    assert f["dx"] == pytest.approx(2.5, abs=0.3) and f["dy"] == pytest.approx(-1.5, abs=0.3)
+
+
+def test_completeness_weighted_neff_interpolates_the_c2_curve():
+    res = {
+        "sane": np.array([True, True, True]),
+        "sigma_v": np.array([0.1, 0.1, 0.1]),
+        "dist_pc": np.array([10.0, 20.0, 40.0]),
+    }
+    comp = {"3.0": 0.0, "5.0": 0.5, "7.0": 1.0}
+    per_sigma = ucdv.luminosity_limit(res["sigma_v"], res["dist_pc"])
+    L = 6.0 * float(per_sigma[1])  # the 20 pc slot sits at 6 sigma -> weight 0.75
+    expect = sum(np.interp(L / per_sigma, [3.0, 5.0, 7.0], [0.0, 0.5, 1.0], left=0.0, right=1.0))
+    assert ucdv.completeness_weighted_neff(res, comp, L) == pytest.approx(expect)
