@@ -1530,7 +1530,27 @@ def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, A
                 / float(np.hypot(best["sigma_v"], mt["sigma_v"])),
                 1,
             ),
+            real_fu_match_z_scale=round(
+                float(
+                    two_epoch_compare(
+                        np.array([mt["v"]]),
+                        np.array([mt["sigma_v"]]),
+                        np.array([best["v"]]),
+                        np.array([best["sigma_v"]]),
+                    )["z_diff"][0]
+                ),
+                1,
+            ),
         )
+    # the census detection against the follow-up detection, same band, with the scale term
+    m["real_det_vs_best_z_scale"] = round(
+        float(
+            two_epoch_compare(
+                np.array([best["v"]]), np.array([best["sigma_v"]]), np.array([v]), np.array([sv])
+            )["z_diff"][0]
+        ),
+        1,
+    )
     # epochs >= 2.5 sigma in V whose V exceeds I by > 2 sigma: not physical on their own
     viol = [
         r
@@ -1666,6 +1686,24 @@ def _tail_and_astrometry_metrics(results_dir, real, crow) -> dict[str, Any]:
         m[f"real_null_exp_ge{k}"] = round(exp, 1 if exp >= 1 else 2)
         m[f"real_null_ratio_ge{k}"] = round(obs / exp, 1) if exp > 0 else None
     m["real_chance_ge5"] = round(m["real_null_n_ge5"] / nz.size * real["n_slots"], 1)
+    m["real_chance_ge5_upper"] = round(
+        poisson_upper(m["real_null_n_ge5"]) / nz.size * real["n_slots"], 1
+    )
+    # Referee round 2: an empirical per-look false-alarm bound for a >= 5 sigma value of a
+    # chosen sign, from the census nulls (95% Poisson upper limit on the two-sided count,
+    # halved for one sign), and over the follow-up looks.
+    p_look = poisson_upper(m["real_null_n_ge5"]) / nz.size / 2.0
+    m["real_emp_p_look_tex"] = _tex_sci(p_look, 1)
+    fp = Path(results_dir) / "ucdv_followup_j1123.json"
+    if fp.exists():
+        n_looks = (
+            sum(
+                r["status"] == "ok" and np.isfinite(r["v"]) and np.isfinite(r["sigma_v"])
+                for r in json.loads(fp.read_text())["epochs"]
+            )
+            - 1
+        )  # the census epoch is the trigger, not a look
+        m["real_emp_p_trials_tex"] = _tex_sci(min(1.0, p_look * n_looks), 1)
     c1p = Path(results_dir) / "ucdv_controls_c1c2.json"
     if c1p.exists():
         comp = json.loads(c1p.read_text())["c2_injection"]["completeness"]
@@ -1686,6 +1724,11 @@ def _tail_and_astrometry_metrics(results_dir, real, crow) -> dict[str, Any]:
                     st["star_offset_pix"],
                 )
                 m[f"real_cen_{stokes}_{t}"] = round(cfit["r"], 1)
+                if stokes == "v" and np.isfinite(cfit["peak"]) and cfit["peak"] > 0:
+                    # expected positional scatter per axis, ~ beam FWHM / (2 S/N)
+                    m[f"real_cen_err_{t}"] = round(
+                        float(st["beam_arcsec_deg"][0]) / (2.0 * cfit["peak"]), 1
+                    )
             if "blank_tail" in st:
                 bt = st["blank_tail"]
                 m[f"real_tail_n_{t}"] = bt["n"]
@@ -1943,6 +1986,13 @@ _MACROS = {
     "RealFuSubMean": "real_fu_sub_mean",
     "RealCthreebLowtwoSnr": "real_c3b_low2_snr",
     "RealCthreebLowthreeSnr": "real_c3b_low3_snr",
+    "RealChanceGeFiveUpper": "real_chance_ge5_upper",
+    "RealEmpPLook": "real_emp_p_look_tex",
+    "RealEmpPTrials": "real_emp_p_trials_tex",
+    "RealFuMatchZScale": "real_fu_match_z_scale",
+    "RealDetVsBestZScale": "real_det_vs_best_z_scale",
+    "RealCenErrRacs": "real_cen_err_racs",
+    "RealCenErrEmu": "real_cen_err_emu",
     "RealNullNGeFour": "real_null_n_ge4",
     "RealNullExpGeFour": "real_null_exp_ge4",
     "RealNullRatioGeFour": "real_null_ratio_ge4",

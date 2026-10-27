@@ -281,3 +281,26 @@ Changes to the note (numbers from `_tail_and_astrometry_metrics` / `_detection_m
 11. Catalogue locator given (name in the note; VizieR table in the stamps results file).
 
 Abstract trimmed to ≤ the RNAAS p90 length (style lint clean); body ~990 words.
+
+## Referee round 2 (2026-10-26): minor revision (close to accept) — round 1 confirmed, five new items applied
+
+A fresh referee verified the eleven round-1 fixes (ten confirmed, item 2 partial) and recomputed
+every key number independently, including the 0.49″ catalogue offset (and reproduced the old 3.09″
+from SIMBAD's J2000 coordinates treated as 2016.0). New items, all wording/precision, applied:
+
+1. **Empirical false-alarm bound** beside the Gaussian one: the census nulls (1 at |z| ≥ 5 in
+   97,967) bound a ≥ 5σ value of a chosen sign at ≲ 2e-5 per look (95% Poisson, halved), ≲ 7e-4
+   over the 28 follow-up looks — still significant, four orders weaker than the Gaussian 5e-8.
+2. **"Intermittent" → "varies between epochs"**, with plan 59's 10% scale term: 82408 vs 75093
+   4.2σ (4.6σ without), census vs EMU detections 3.8σ. Neither reaches the frozen 5σ two-epoch
+   threshold, so the note no longer calls it intermittent.
+3. Chance expectation 0.2 now carries its 95% bound (0.9); the step-definition fraction limit
+   (0.0065) is stated as the conservative one versus the completeness-weighted 0.0055; "95%" in
+   the abstract.
+4. "Flare star" removed from the abstract (no flare citation in the note).
+5. Editorial: centroid scatter ≈ 1″ stated beside the 1.7″/0.7″ offsets; the RACS image's own tail
+   (391 positions, max 3.4σ) added; "excluding the census epoch" for the 4-of-28 count; SBID 83189's
+   V > I called unphysical; caption (a) says the detection enters the numerator below its L.
+
+Two method sentences shortened to keep length (throughput rule; peak-search aside). Style lint and
+triage clean; 3 pages.

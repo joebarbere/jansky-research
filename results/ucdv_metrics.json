@@ -189,5 +189,12 @@
   "real_tail_max_emu": 3.6,
   "real_cat_name": "RACS-LOW3 J112319-05090",
   "real_cat_offset": 0.5,
-  "real_cat_e_dec": 0.8
+  "real_cat_e_dec": 0.8,
+  "real_fu_match_z_scale": 4.2,
+  "real_det_vs_best_z_scale": 3.8,
+  "real_chance_ge5_upper": 0.9,
+  "real_emp_p_look_tex": "2\\times10^{-5}",
+  "real_emp_p_trials_tex": "7\\times10^{-4}",
+  "real_cen_err_racs": 1.0,
+  "real_cen_err_emu": 1.1
 }
