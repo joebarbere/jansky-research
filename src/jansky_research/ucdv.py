@@ -1434,6 +1434,112 @@ def _control_metrics(results_dir) -> dict[str, Any]:
     return m
 
 
+def _tex_sci(x: float, digits: int = 2) -> str:
+    """``4.23e14`` -> ``4.2\\times10^{14}`` for a macro (math mode in the paper)."""
+    if not np.isfinite(x) or x == 0:
+        return "--"
+    e = int(np.floor(np.log10(abs(x))))
+    return f"{x / 10**e:.{digits - 1}f}\\times10^{{{e}}}"
+
+
+def _detection_metrics(results_dir, real: dict[str, Any], crow: list[dict[str, Any]]) -> dict:
+    """Numbers for the note's results: slot accounting, each held/candidate slot, and the
+    post-hoc follow-up light curve (``results/ucdv_followup_j1123.json``) of the detection."""
+    import json
+    from pathlib import Path
+    from statistics import NormalDist
+
+    from astropy.time import Time
+
+    m: dict[str, Any] = {
+        "real_n_missing": int(2 * real["n_targets"] - real["n_slots"]),
+        "real_n_insane": int(real["n_slots"] - real["n_sane"]),
+    }
+    det = real["candidate"] | real["held"]
+    if int(det.sum()) != 1:  # the note is written for exactly one vetted detection
+        return m
+    k = int(np.flatnonzero(det)[0])
+    sid, ep = int(real["source_id"][k]), str(real["epoch"][k])
+    row = next(r for r in crow if int(r["source_id"]) == sid and r["epoch"] == ep)
+    other = [r for r in crow if int(r["source_id"]) == sid and r["epoch"] != ep]
+    v, sv, i, si = (float(row[x]) for x in ("v", "sigma_v", "i", "sigma_i"))
+    frac, frac_err = v / i, abs(v / i) * float(np.hypot(sv / v, si / i))
+    d = float(real["dist_pc"][k])
+    m.update(
+        real_det_gaia=str(sid),
+        real_det_epoch=ep,
+        real_det_obs=str(row["obs_id"]).replace("ASKAP-", ""),
+        real_det_date=Time(float(row["mjd"]), format="mjd").datetime.strftime("%Y %B %-d"),
+        real_det_v=round(v, 2),
+        real_det_sigma_v=round(sv, 2),
+        real_det_snr=round(v / sv, 1),
+        real_det_i=round(i, 2),
+        real_det_isnr=round(i / si, 1),
+        real_det_frac=round(frac, 1),
+        real_det_frac_err=round(frac_err, 1),
+        real_det_dist_pc=round(d, 1),
+        real_det_l_tex=_tex_sci(float(luminosity_limit(np.array([abs(v)]), np.array([d]))[0])),
+    )
+    if other:
+        o = other[0]
+        m["real_det_other_epoch"] = str(o["epoch"])
+        m["real_det_other_snr"] = round(float(o["v"]) / float(o["sigma_v"]), 1)
+    fp = Path(results_dir) / "ucdv_followup_j1123.json"
+    if not fp.exists():
+        return m
+    fu = json.loads(fp.read_text())
+    eps = fu["epochs"]
+    meas = [
+        r for r in eps if r["status"] == "ok" and np.isfinite(r["v"]) and np.isfinite(r["sigma_v"])
+    ]
+    indep = [r for r in meas if str(r["obs_id"]) != str(row["obs_id"])]
+    z = np.array([r["v"] / r["sigma_v"] for r in indep])
+    best = indep[int(np.argmax(z))]
+    p1 = 1.0 - NormalDist().cdf(float(z.max()))
+    sub_ = z[np.abs(z) < 2.5]
+    m.update(
+        real_fu_n_obs=len(eps),
+        real_fu_n_refused=sum(r["status"] == "error" for r in eps),
+        real_fu_n_meas=len(meas),
+        real_fu_n_indep=len(indep),
+        real_fu_first_year=int(Time(min(r["mjd"] for r in meas), format="mjd").datetime.year),
+        real_fu_last_year=int(Time(max(r["mjd"] for r in meas), format="mjd").datetime.year),
+        real_fu_n_pos=int(np.sum(z >= 2.5)),
+        real_fu_n_neg=int(np.sum(z <= -2.5)),
+        real_fu_best_obs=str(best["obs_id"]).replace("ASKAP-", ""),
+        real_fu_best_date=Time(float(best["mjd"]), format="mjd").datetime.strftime("%Y %B"),
+        real_fu_best_v=round(float(best["v"]), 3),
+        real_fu_best_sigma_v=round(float(best["sigma_v"]), 3),
+        real_fu_best_snr=round(float(z.max()), 1),
+        real_fu_best_isnr=round(float(best["i"]) / float(best["sigma_i"]), 1),
+        real_fu_best_p_tex=_tex_sci(p1, 1),
+        real_fu_best_p_trials_tex=_tex_sci(min(1.0, p1 * len(indep)), 1),
+        real_fu_sub_n=int(sub_.size),
+        real_fu_sub_mean=round(float(sub_.mean()), 2),
+    )
+    return m
+
+
+def _c3b_metrics(results_dir) -> dict[str, Any]:
+    import json
+    from pathlib import Path
+
+    fp = Path(results_dir) / "ucdv_controls_c3b.json"
+    if not fp.exists():
+        return {}
+    ep = json.loads(fp.read_text())["epochs"]
+    m: dict[str, Any] = {}
+    for e in ("low2", "low3"):
+        r = ep.get(e, {})
+        if r.get("status") == "ok":
+            v, sv, i = float(r["v_peak"]), float(r["v_rms"]), float(r["i_peak"])
+            m[f"real_c3b_{e}_v"] = round(v, 2)
+            m[f"real_c3b_{e}_snr"] = round(v / sv, 1)
+            m[f"real_c3b_{e}_isnr"] = round(i / float(r["i_rms"]), 1)
+            m[f"real_c3b_{e}_frac"] = round(abs(v) / i, 1) if i > 0 else None
+    return m
+
+
 def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
     """Slice entry point. Offline: synthetic census with planted emitters (recover-a-known).
 
@@ -1480,16 +1586,24 @@ def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
             )
         ]
         metrics["real_null_n"] = int(real["null_monitor"].get("n", 0))
+        metrics.update(_detection_metrics(Path(out) / "results", real, crow))
+        metrics.update(_c3b_metrics(Path(out) / "results"))
         metrics["source"] = "synthetic recover-a-known + real RACS-low2/low3 forced-V census"
     op = Path(out)
     write_results(metrics, op / "results" / "ucdv_metrics.json")
-    _figure(real if real is not None else res, op / "papers" / "ucdv" / "figures")
+    fu = None
+    fp = op / "results" / "ucdv_followup_j1123.json"
+    if real is not None and fp.exists():
+        fu = json.loads(fp.read_text())["epochs"]
+    _figure(real if real is not None else res, op / "papers" / "ucdv" / "figures", fu)
     _write_macros(metrics, op / "papers" / "ucdv" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(res: dict[str, Any], out_dir) -> None:
-    """Two panels: per-slot L_nu,V upper limit vs distance; snapshot-fraction limit vs L."""
+def _figure(res: dict[str, Any], out_dir, followup=None) -> None:
+    """(a) 95% limit on the fraction of snapshots above L_nu,V (5 sigma_V sensitivity);
+    (b) with ``followup`` (the post-hoc light curve), V/sigma_V of the detected star in every
+    ASKAP observation; otherwise (b) is the per-slot limit against distance."""
     from pathlib import Path
 
     import matplotlib
@@ -1503,16 +1617,39 @@ def _figure(res: dict[str, Any], out_dir) -> None:
     sens, l_det = _sensitivity_and_detections(res, SENS_NSIGMA[0])
     frac = snapshot_fraction_limit(sens, L_GRID, l_det)
     fig, ax = plt.subplots(1, 2, figsize=(9, 3.6))
-    ax[0].scatter(res["dist_pc"][s], res["l_upper"][s], s=2, alpha=0.4, color="0.3")
-    ax[0].set_xlabel("distance (pc)")
-    ax[0].set_ylabel(r"$L_{\nu,V}$ upper limit (erg s$^{-1}$ Hz$^{-1}$)")
+    fin = np.isfinite(frac["frac_upper"]) & (frac["frac_upper"] <= 1.0)
+    ax[0].plot(frac["l_grid"][fin], frac["frac_upper"][fin], color="k")
+    for L in l_det:
+        ax[0].axvline(L, color="tab:red", ls=":", lw=1)
+    ax[0].set_xscale("log")
     ax[0].set_yscale("log")
-    fin = np.isfinite(frac["frac_upper"])
-    ax[1].plot(frac["l_grid"][fin], frac["frac_upper"][fin], color="k")
-    ax[1].set_xscale("log")
-    ax[1].set_yscale("log")
-    ax[1].set_xlabel(r"$L_{\nu,V}$ (erg s$^{-1}$ Hz$^{-1}$)")
-    ax[1].set_ylabel("95% upper limit on snapshot fraction")
+    ax[0].set_xlabel(r"$L_{\nu,V}$ (erg s$^{-1}$ Hz$^{-1}$)")
+    ax[0].set_ylabel("95% upper limit on snapshot fraction")
+    ax[0].set_title("(a)", loc="left", fontsize=9)
+    if followup:
+        from astropy.time import Time
+
+        ok = [
+            r
+            for r in followup
+            if r.get("status") == "ok" and np.isfinite(r["v"]) and np.isfinite(r["sigma_v"])
+        ]
+        t = Time([r["mjd"] for r in ok], format="mjd").decimalyear
+        z = np.array([r["v"] / r["sigma_v"] for r in ok])
+        census = np.array(["RACS_" in " ".join(r.get("files", [])) for r in ok])
+        ax[1].axhline(0, color="0.6", lw=0.8)
+        ax[1].axhspan(-2.5, 2.5, color="0.92")
+        ax[1].scatter(t[~census], z[~census], s=14, color="0.2", label="other ASKAP projects")
+        ax[1].scatter(t[census], z[census], s=22, marker="s", color="tab:red", label="RACS")
+        ax[1].set_xlabel("year")
+        ax[1].set_ylabel(r"$V/\sigma_V$ at the star")
+        ax[1].legend(fontsize=7, loc="upper left")
+    else:
+        ax[1].scatter(res["dist_pc"][s], res["l_upper"][s], s=2, alpha=0.4, color="0.3")
+        ax[1].set_xlabel("distance (pc)")
+        ax[1].set_ylabel(r"$L_{\nu,V}$ upper limit (erg s$^{-1}$ Hz$^{-1}$)")
+        ax[1].set_yscale("log")
+    ax[1].set_title("(b)", loc="left", fontsize=9)
     fig.tight_layout()
     fig.savefig(od / "ucdv_limits.pdf")
     plt.close(fig)
@@ -1557,6 +1694,46 @@ _MACROS = {
     "RealFracSevenFifteen": "real_frac7_upper_1e15",
     "RealNeffSevenFifteen": "real_neff7_1e15",
     "RealNDetections": "real_n_detections",
+    "RealNullN": "real_null_n",
+    "RealNMissing": "real_n_missing",
+    "RealNInsane": "real_n_insane",
+    "RealDetGaia": "real_det_gaia",
+    "RealDetObs": "real_det_obs",
+    "RealDetDate": "real_det_date",
+    "RealDetV": "real_det_v",
+    "RealDetSigmaV": "real_det_sigma_v",
+    "RealDetSnr": "real_det_snr",
+    "RealDetI": "real_det_i",
+    "RealDetIsnr": "real_det_isnr",
+    "RealDetFrac": "real_det_frac",
+    "RealDetFracErr": "real_det_frac_err",
+    "RealDetDist": "real_det_dist_pc",
+    "RealDetL": "real_det_l_tex",
+    "RealDetOtherSnr": "real_det_other_snr",
+    "RealFuNObs": "real_fu_n_obs",
+    "RealFuNRefused": "real_fu_n_refused",
+    "RealFuNMeas": "real_fu_n_meas",
+    "RealFuNIndep": "real_fu_n_indep",
+    "RealFuFirstYear": "real_fu_first_year",
+    "RealFuLastYear": "real_fu_last_year",
+    "RealFuNPos": "real_fu_n_pos",
+    "RealFuNNeg": "real_fu_n_neg",
+    "RealFuBestObs": "real_fu_best_obs",
+    "RealFuBestDate": "real_fu_best_date",
+    "RealFuBestV": "real_fu_best_v",
+    "RealFuBestSigmaV": "real_fu_best_sigma_v",
+    "RealFuBestSnr": "real_fu_best_snr",
+    "RealFuBestIsnr": "real_fu_best_isnr",
+    "RealFuBestP": "real_fu_best_p_tex",
+    "RealFuBestPTrials": "real_fu_best_p_trials_tex",
+    "RealFuSubN": "real_fu_sub_n",
+    "RealFuSubMean": "real_fu_sub_mean",
+    "RealCthreebLowtwoSnr": "real_c3b_low2_snr",
+    "RealCthreebLowthreeSnr": "real_c3b_low3_snr",
+    "RealCthreebLowtwoV": "real_c3b_low2_v",
+    "RealCthreebLowthreeV": "real_c3b_low3_v",
+    "RealCthreebLowtwoFrac": "real_c3b_low2_frac",
+    "RealCthreebLowthreeFrac": "real_c3b_low3_frac",
     "RealNeffFifteen": "real_neff_1e15",
     "RealFracFifteen": "real_frac_upper_1e15",
     "RealNeffSixteen": "real_neff_1e16",

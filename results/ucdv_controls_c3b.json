@@ -1,0 +1,30 @@
+{
+  "source": "real RACS-low2/low3 forced V at WISE J0623-0456 (C3(b), reported, not a gate)",
+  "target": "WISE J062309.94-045624.6 (T8; arXiv:2306.15219)",
+  "epochs": {
+    "low2": {
+      "status": "ok",
+      "mjd": 59676.424733796295,
+      "obs_id": "ASKAP-39068",
+      "i_peak": 3.442622721195221,
+      "v_peak": -2.4267772678285837,
+      "i_rms": 0.3949044854375903,
+      "v_rms": 0.14879325811707197,
+      "frac_pol": 0.7049210629116069,
+      "offset_arcsec": 1.1752491895111887,
+      "forced": true
+    },
+    "low3": {
+      "status": "ok",
+      "mjd": 60309.69768981481,
+      "obs_id": "ASKAP-56420",
+      "i_peak": 1.771085779182613,
+      "v_peak": -0.9609297849237919,
+      "i_rms": 0.2956064203118218,
+      "v_rms": 0.1460416940553497,
+      "frac_pol": 0.542565355229309,
+      "offset_arcsec": 0.34148412750208684,
+      "forced": true
+    }
+  }
+}

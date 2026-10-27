@@ -223,3 +223,24 @@ afterwards. Findings and what was done:
    in the note.
 10. **Accounting (SHOULD-FIX).** The note states 19,610 slots → 10 refused → 19,600 fetched → 24
     failed the per-cutout sanity check → 19,576 with limits. The follow-up count is 29 measured.
+
+## C3(b) WISE J0623−0456 measured (2026-10-26; reported, not a gate)
+
+`run_c3b` (`results/ucdv_controls_c3b.json`): low2 SBID 39068, V = −2.43 ± 0.15 mJy/beam
+(V/σ = −16.3), I/σ = 8.7, |V|/I ≈ 0.7; low3 SBID 56420, V = −0.96 ± 0.15 (−6.6σ), I/σ = 6.0,
+|V|/I ≈ 0.5. The pipeline recovers this known emitter in both epochs, with one sign. The 10-17
+expectation above ("a non-detection is the likely outcome") was wrong; \citet{rose2023} reported
+no RACS-low1 detection, and its RACS-mid circular fraction was 66%. Sign convention versus Rose et
+al. not compared (their sign not read).
+
+## RNAAS note drafted (2026-10-26)
+
+`papers/ucdv/rnaas.tex`: abstract ~120 words, body ~890; every number a macro (detection,
+follow-up, C3(b), accounting and fraction limits added to `_MACROS`); figure = (a) fraction limit
+vs L, (b) the star's V/σ in every ASKAP epoch. Prior-report check before writing (research agent,
+full text/tables): not in Pritchard et al. 2021 (Table 2), Pritchard et al. 2024 (Table 4, all
+76 stars), or the RACS VIII V catalogue (CASDA TAP `AS110.racs_low2_v_v01`, 221 rows, none within
+6′); SRSC, Wang et al. 2024 and V-LoTSS negative earlier. Wording therefore "absent from the
+catalogues of …", not "first". Four reference titles reconstructed from truncated ADS output were
+wrong (Davoudi, Thomson, Duchesne, Pritchard 2024) and were replaced with the Crossref titles.
+Style lint (RNAAS genre) and triage clean; compiles in the tectonic container, 3 pages.
