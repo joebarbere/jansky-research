@@ -1591,19 +1591,24 @@ def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
         metrics["source"] = "synthetic recover-a-known + real RACS-low2/low3 forced-V census"
     op = Path(out)
     write_results(metrics, op / "results" / "ucdv_metrics.json")
-    fu = None
+    fu = stamps = None
     fp = op / "results" / "ucdv_followup_j1123.json"
+    sp = op / "results" / "ucdv_followup_j1123_stamps.json"
     if real is not None and fp.exists():
         fu = json.loads(fp.read_text())["epochs"]
-    _figure(real if real is not None else res, op / "papers" / "ucdv" / "figures", fu)
+    if real is not None and sp.exists():
+        stamps = json.loads(sp.read_text())
+    _figure(real if real is not None else res, op / "papers" / "ucdv" / "figures", fu, stamps)
     _write_macros(metrics, op / "papers" / "ucdv" / "generated" / "macros.tex")
     return metrics
 
 
-def _figure(res: dict[str, Any], out_dir, followup=None) -> None:
+def _figure(res: dict[str, Any], out_dir, followup=None, stamps=None) -> None:
     """(a) 95% limit on the fraction of snapshots above L_nu,V (5 sigma_V sensitivity);
     (b) with ``followup`` (the post-hoc light curve), V/sigma_V of the detected star in every
-    ASKAP observation; otherwise (b) is the per-slot limit against distance."""
+    ASKAP observation; otherwise (b) is the per-slot limit against distance. With ``stamps``
+    (``results/ucdv_followup_j1123_stamps.json``), (c)-(d) are the Stokes-V images of the two
+    detections, with the propagated position and the beam."""
     from pathlib import Path
 
     import matplotlib
@@ -1616,7 +1621,12 @@ def _figure(res: dict[str, Any], out_dir, followup=None) -> None:
     s = res["sane"]
     sens, l_det = _sensitivity_and_detections(res, SENS_NSIGMA[0])
     frac = snapshot_fraction_limit(sens, L_GRID, l_det)
-    fig, ax = plt.subplots(1, 2, figsize=(9, 3.6))
+    if stamps:
+        fig, axs = plt.subplots(2, 2, figsize=(9, 7.6))
+        ax = axs.ravel()
+    else:
+        fig, axs = plt.subplots(1, 2, figsize=(9, 3.6))
+        ax = axs.ravel()
     fin = np.isfinite(frac["frac_upper"]) & (frac["frac_upper"] <= 1.0)
     ax[0].plot(frac["l_grid"][fin], frac["frac_upper"][fin], color="k")
     for L in l_det:
@@ -1626,9 +1636,9 @@ def _figure(res: dict[str, Any], out_dir, followup=None) -> None:
     ax[0].set_xlabel(r"$L_{\nu,V}$ (erg s$^{-1}$ Hz$^{-1}$)")
     ax[0].set_ylabel("95% upper limit on snapshot fraction")
     ax[0].set_title("(a)", loc="left", fontsize=9)
-    if followup:
-        from astropy.time import Time
+    from astropy.time import Time
 
+    if followup:
         ok = [
             r
             for r in followup
@@ -1650,7 +1660,31 @@ def _figure(res: dict[str, Any], out_dir, followup=None) -> None:
         ax[1].set_ylabel(r"$L_{\nu,V}$ upper limit (erg s$^{-1}$ Hz$^{-1}$)")
         ax[1].set_yscale("log")
     ax[1].set_title("(b)", loc="left", fontsize=9)
-    fig.tight_layout()
+    if stamps:
+        from matplotlib.patches import Ellipse
+
+        labels = {"ASKAP-56518": "RACS-low3 (census)", "ASKAP-82408": "EMU (follow-up)"}
+        for a, (oid, st), tag in zip(
+            ax[2:], stamps["stamps"].items(), ("(c)", "(d)"), strict=False
+        ):
+            v = np.asarray(st["v_over_sigma"], float)
+            hw = (v.shape[0] - 1) / 2 * st["pix_arcsec"]
+            ext = (hw, -hw, -hw, hw)  # east to the left
+            im = a.imshow(v, origin="lower", cmap="RdBu_r", vmin=-6, vmax=6, extent=ext)
+            dx, dy = (o * st["pix_arcsec"] for o in st["star_offset_pix"])
+            a.plot(-dx, dy, marker="+", color="k", ms=14, mew=1.4)
+            bmaj, bmin, bpa = st["beam_arcsec_deg"]
+            a.add_patch(
+                Ellipse((0.75 * hw, -0.75 * hw), bmin, bmaj, angle=-bpa, fill=False, color="k")
+            )
+            yr = Time(st["mjd"], format="mjd").datetime.strftime("%Y %b")
+            a.set_title(f"{tag} Stokes V, {labels.get(oid, oid)}, {yr}", loc="left", fontsize=8)
+            a.set_xlabel(r"$\Delta\alpha$ (arcsec)")
+            a.set_ylabel(r"$\Delta\delta$ (arcsec)")
+            cb = fig.colorbar(im, ax=a, fraction=0.046, pad=0.02)
+            if tag == "(d)":
+                cb.set_label(r"$V/\sigma_V$")
+    fig.tight_layout(w_pad=2.5)
     fig.savefig(od / "ucdv_limits.pdf")
     plt.close(fig)
 
