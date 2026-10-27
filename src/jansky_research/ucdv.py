@@ -59,6 +59,7 @@ __all__ = [
     "run_census",
     "backoff_seconds",
     "retry_policy",
+    "followup_lightcurve",
     "read_done",
     "census_targets",
     "bright_neighbour",
@@ -599,8 +600,12 @@ def fetch_epoch_pair(
     radius_deg: float = CUTOUT_RADIUS_DEG,
     poll_interval: float = 20.0,
     obs_id: str | None = None,
+    any_project: bool = False,
 ):  # pragma: no cover - network
     """One SODA job staging a same-observation I+V cutout pair for ``epoch`` at ``(ra, dec)``.
+
+    ``any_project`` (with ``obs_id``; follow-up only, never the census): drop the RACS collection
+    and band filters so a VAST/EMU/other ASKAP observation of the position can be fetched.
 
     Queries ObsCore for RACS taylor.0 restored conv I and V products of that epoch whose footprint
     contains the position, keeps observations that have both, picks the most central tile
@@ -620,14 +625,22 @@ def fetch_epoch_pair(
     from astropy.io import fits
     from astropy.wcs import WCS
 
-    lam = EPOCH_LAMBDA_M[epoch]
     t0 = time.time()
+    if any_project:
+        if obs_id is None:
+            raise ValueError("any_project needs obs_id")
+        where = f"obs_id = '{obs_id}'"
+    else:
+        lam = EPOCH_LAMBDA_M[epoch]
+        where = (
+            "obs_collection = 'The Rapid ASKAP Continuum Survey' "
+            f"AND em_min > {lam - 0.01:.3f} AND em_max < {lam + 0.01:.3f}"
+        )
     q = f"""
-    SELECT obs_id, filename, t_min, access_url, s_region FROM ivoa.obscore
-    WHERE obs_collection = 'The Rapid ASKAP Continuum Survey'
+    SELECT obs_id, filename, t_min, em_min, access_url, s_region FROM ivoa.obscore
+    WHERE {where}
     AND (filename LIKE 'image.i.%' OR filename LIKE 'image.v.%')
     AND filename LIKE '%.taylor.0.restored.conv.fits'
-    AND em_min > {lam - 0.01:.3f} AND em_max < {lam + 0.01:.3f}
     AND 1 = CONTAINS(POINT('ICRS', {ra:.8f}, {dec:.8f}), s_region)
     """
     tab = pyvo.dal.TAPService(CASDA_TAP_URL).search(q).to_table()
@@ -684,13 +697,23 @@ def fetch_epoch_pair(
                 out["beam"] = Beam(
                     float(hdr["BMAJ"]) * 3600.0, float(hdr["BMIN"]) * 3600.0, float(hdr["BPA"])
                 )
+                if "MJD-OBS" in hdr:
+                    out["mjd_hdr"] = float(hdr["MJD-OBS"])
+                elif "DATE-OBS" in hdr:  # early VAST pilot products
+                    from astropy.time import Time
+
+                    out["mjd_hdr"] = float(Time(hdr["DATE-OBS"], scale="utc").mjd)
     t_dl = time.time() - t2
     if "i" not in out or "v" not in out:
         raise RuntimeError(f"cutout job returned {sorted(out)} for {urls}")
     if np.shape(out["i"]) != np.shape(out["v"]):
         raise RuntimeError("I/V cutout grids differ")
+    mjd = float(rows["t_min"][0])
+    if not np.isfinite(mjd):  # early pilot products carry no t_min in ObsCore
+        mjd = float(out.pop("mjd_hdr", np.nan))
     out.update(
-        mjd=float(rows["t_min"][0]),
+        mjd=mjd,
+        freq_mhz=299.792458 / float(rows["em_min"][0]) if rows["em_min"][0] else np.nan,
         obs_id=str(rows["obs_id"][0]),
         files=[str(x) for x in rows["filename"]],
         t_tap=t_tap,
@@ -1206,6 +1229,66 @@ W0623_RA_DEG = (6 + 23 / 60 + 9.28 / 3600) * 15.0
 W0623_DEC_DEG = -(4 + 56 / 60 + 22.8 / 3600)
 W0623_REF_MJD = 59216.0
 W0623_PM_MAS_YR = (-930.0, 170.0)  # (mu_alpha*, mu_delta)
+
+
+def followup_lightcurve(
+    ra: float, dec: float, pmra: float, pmdec: float, *, username: str, pw_path: str = "~/.casda_pw"
+):  # pragma: no cover - network
+    """Post-hoc follow-up of a census candidate: forced I/V at every ASKAP observation of the
+    position that has I and V images (any project), at the position propagated from Gaia DR2
+    (``ra``, ``dec`` at epoch 2015.5, ``pmra``/``pmdec`` in mas/yr) to each observation's MJD.
+
+    Not part of the frozen census: everything it returns is post hoc and is labelled so.
+    """
+    import pyvo
+
+    from .stokesv import _casda_session
+    from .stokesv_discovery import epoch_position
+
+    q = f"""
+    SELECT DISTINCT obs_id FROM ivoa.obscore
+    WHERE filename LIKE 'image.v.%' AND filename LIKE '%.taylor.0.restored.conv.fits'
+    AND 1 = CONTAINS(POINT('ICRS', {ra:.8f}, {dec:.8f}), s_region)
+    """
+    obs = sorted(str(x) for x in pyvo.dal.TAPService(CASDA_TAP_URL).search(q).to_table()["obs_id"])
+    casda = _casda_session(username, pw_path)
+    out = []
+    for oid in obs:
+        rec: dict[str, Any] = {"obs_id": oid}
+        try:
+            pair = None
+            for attempt in range(3):
+                try:
+                    pair = fetch_epoch_pair(ra, dec, "low2", casda, obs_id=oid, any_project=True)
+                    break
+                except Exception:
+                    if attempt == 2:
+                        raise
+            if pair is None:
+                rec["status"] = "no_pair"
+            else:
+                pos = (np.array([ra]), np.array([dec]))
+                pm = (np.array([pmra]), np.array([pmdec]))
+                rt, dt = (
+                    float(x[0]) for x in epoch_position(*pos, *pm, GAIA_DR2_EPOCH, pair["mjd"])
+                )
+                m = forced_measure(pair["i"], pair["v"], pair["wcs"], rt, dt)
+                rec.update(
+                    status="ok",
+                    mjd=pair["mjd"],
+                    freq_mhz=pair["freq_mhz"],
+                    v=m["v_peak"],
+                    sigma_v=m["v_rms"],
+                    i=m["i_peak"],
+                    sigma_i=m["i_rms"],
+                    bright=bright_neighbour(pair["i"], pair["wcs"], rt, dt),
+                    files=pair["files"],
+                )
+        except Exception as exc:
+            rec.update(status="error", error=f"{type(exc).__name__}: {exc}"[:300])
+        print(rec, flush=True)
+        out.append(rec)
+    return out
 
 
 def w0623_position(mjd: float) -> tuple[float, float]:

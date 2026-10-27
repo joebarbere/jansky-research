@@ -114,3 +114,62 @@ from Gaia and so from the Reylé sample. For this census it is a rotationally pu
 no prior ~0.9 GHz detection, seen in two 15-min snapshots against a 1.9 h period — a
 non-detection is the likely outcome and is not a pipeline failure. `run_c3b` measures it once
 CASDA's archive recovers; reported, not pass/fail, as the plan states.
+
+## Census complete (2026-10-25) and frozen rules applied (2026-10-26)
+
+19,600 of 19,610 target-epochs fetched (99.95%); the 10 missing are low3 images CASDA refuses
+("You do not have access to any of the requested data files", in every retry pass). Frozen rules
+(`analyze_census`, read-only dry run, 2026-10-26):
+
+- C1 null monitor on all census nulls: n = 97,967, V > 0 in 50.09% (99% interval 49.59–50.41%),
+  std V/σ 1.009, one value ≥ 5σ (Gaussian expectation 0.06; allowed ≤ 3.06). **Passes.**
+- 19,576 of 19,600 slots sane; median 3σ |V| limit 0.57 mJy/beam.
+- One slot with |V|/σ_V ≥ 5; 0 candidates by the photometry alone, 1 **held** (Stokes I detected,
+  cutout leakage floor undetermined: < 3 field sources above 50σ). No target differs between
+  epochs under the frozen two-epoch rule (9,771 pairs).
+
+## The held slot: 2MASS J11231964−0509045 (vetting, 2026-10-26)
+
+*Everything in this section after the census row is post hoc follow-up, not part of the frozen
+census.*
+
+- **Census row:** Gaia DR2 3786550031235785344, low3, SBID 56518 (MJD 60310.89): V = +0.773 ±
+  0.132 mJy/beam (5.8σ), I = 1.14 ± 0.19 (5.9σ), V/I ≈ 0.68 (`classify_emitter`:
+  `highly_circular`; far above ASKAP leakage of order 1%, so the undetermined floor cannot
+  explain it). low2 (SBID 38679): V −0.1σ, I −0.2σ. Image inspection: compact, beam-shaped I and V
+  at the propagated position (peak within one 2.5″ pixel); low2 noise only.
+- **Identification** (research agent, VizieR/SIMBAD, locators in its report; key items):
+  SIMBAD LM*, M6V (Davoudi et al. 2025, AJ 170, 213, Table 1, SpeX S/N 69, ±0.5); M7 photometric
+  (Reylé 2018, J/A+A/619/L8 `sptphot`) and M7/dM7 from four LAMOST catalogues (S/N 14–17). So it
+  is at the M6/M7 boundary: a UCD only by the loose definition. Rotation P = 0.129 d (Newton et
+  al. 2018 J/AJ/156/217; Fetherolf et al. 2023 J/ApJS/268/4); TESS flares (Ren et al. 2026,
+  J/ApJS/282/29: 4 flares; Seli et al. 2025); Hα emission EW 13–17 Å (LAMOST). No radio-star
+  catalogue lists it (Driessen et al. 2024 SRSC, Wang et al. 2024, V-LoTSS); no paper on it.
+  **Its RACS-low3 Stokes I source is catalogued but unidentified:** Thomson et al. 2026 (PASA 43,
+  89) RACS-LOW3 J112319−05090, Fpeak 1.13 mJy, 3.1″ from the propagated position.
+- **Every other ASKAP observation of the position** (`followup_lightcurve`,
+  `results/ucdv_followup_j1123.json`): 36 observations with I+V images; 30 measured, 6 refused by
+  CASDA, 1 of the 30 (SBID 56437, low3 the day before) NaN at the target pixel (tile edge).
+  Significant epochs, all **positive** V:
+
+  | SBID (project) | MJD | MHz | V (mJy/beam) | I/σ |
+  |---|---|---|---|---|
+  | 56518 (RACS-low3, the census row) | 60310.9 | 943 | +0.773 ± 0.132 (5.8σ) | +5.9 |
+  | 61512 (VAST) | 60422.5 | 887 | +0.485 ± 0.150 (3.2σ) | +2.8 |
+  | 64973 (VAST) | 60544.2 | 887 | +0.449 ± 0.154 (2.9σ) | +2.9 |
+  | 82408 (EMU, deep) | 61091.6 | 943 | +0.174 ± 0.030 (**5.9σ**) | +5.1 |
+  | 83189 (VAST) | 61125.7 | 887 | +0.502 ± 0.139 (3.6σ) | −0.8 |
+
+  The other 23 measured epochs (2020–2026, 855–1655 MHz) span −1.8σ to +2.2σ; none ≤ −2.5σ.
+- **Statistics (post hoc):** excluding the census epoch, the best epoch (EMU 82408, 5.9σ,
+  one-sided p = 1.9e-9) survives 28 looks at p ≈ 5e-8; the 28 combine to Stouffer z = +3.3. The
+  EMU image shows a compact V source within 2″ of the propagated position (one 2″ pixel) and an
+  I counterpart at 5σ. Two independent observations 2 yr apart detect the star at > 5σ in V with
+  the same sign.
+- **Reading:** a new detection of strongly circularly polarized, intermittent radio emission from
+  a 3.1-h-rotating M6/M7 flare star at 21 pc, consistent in sign over 2024–2026 — the behaviour
+  expected of electron-cyclotron maser emission (interpretation, not measured: no time
+  resolution within the 15-min snapshots has been examined).
+- **Still open:** GATE-2; whether the RACS VIII/Pritchard V tables (not on VizieR) list it; a
+  time-resolved look within SBIDs 56518 and 82408 (needs visibilities); the census paper's UCD
+  definition given the M6/M7 type.
