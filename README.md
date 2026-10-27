@@ -30,6 +30,14 @@ GPUs).
   the lessons about how analyses go wrong are recorded where the next slice will read them.
 
 **Recent headlines.**
+- *2026-10:* a forced Stokes-V census of 9,805 Gaia ultracool dwarfs in two RACS epochs sets
+  per-target limits (median 3σ 0.57 mJy/beam) and turned up strongly circularly polarized emission
+  from the 21-pc M6–M7 dwarf 2MASS J11231964−0509045, confirmed in an independent EMU observation
+  two years later and not in the radio-star catalogues checked (`ucdv`; RNAAS note accepted after
+  three internal referee rounds, not yet submitted).
+- *2026-10:* two cautionary nulls: the published "twisted light" (OAM) estimator of M87*'s spin
+  does not separate spin from imaging noise on the 2017 EHT baselines (`oamspin`), and the LV614
+  LOFAR burst catalogue does not constrain the type III drift-rate index (`lvdrift`).
 - *2026-10:* zdm's per-burst redshift intervals for fast radio bursts place host-identified
   bursts too far away: 95% coverage 0.81 against a floor of 0.86 on 36 bursts it was not fitted
   to (`dmzcal`; RNAAS note accepted after three internal referee rounds, not yet submitted).
@@ -141,6 +149,9 @@ Forty-eight slices, one line each; the long version of every row is `survey/<sli
 | Blind VLASS proper-motion search (plan 64) | `jansky_research.vlasspm` | ✅/➖ UV/BL Ceti recovered blind at 3.41 ± 0.04″/yr (three epochs, parallax-aware; system 3.34); zero new movers after calibrated errors and a compactness cut; 95% limit < 9.3e-5 per deg² on persistent compact optically dark movers (2.4–3.75 mJy, beyond 8 pc, 1.1–5″/yr) |
 | Two-beam FASHI × ALFALFA beam-blending test (plans 97–98) | `jansky_research.hiblend` | ➖ inconclusive: 22,889 matched galaxies; the spectral null fails (β_null 0.26 ± 0.09) for an unidentified reason (the isolated-sample S/N misfit does not reproduce it; robust to 2–8° strip bootstraps); the injection test carries a +0.54 covariate-absorption bias plus a beam signal set by ALFALFA's unmeasured response to added flux, so its pass certifies nothing; a pre-specified recalibration stopped at a held-out gate that failed on χ² and on a tolerance a perfect calibration fails 2/3 of the time — no β is interpreted |
 | Coverage audit of FRB DM→z posteriors on localized hosts (plan 99) | `jansky_research.dmzcal` | ➖/✅ negative: on 36 held-out spectroscopic hosts, zdm's p(z\|DM) fails a frozen coverage rule one-sidedly (95% coverage 0.81 vs floor 0.86, KS p = 1e-4; posterior medians ~1.85× the true z); not fixed by a constant host-DM change; the cause (population model, host selection, or z-dependent host DM) is not separable |
+| M87* twisted-light (OAM) spin estimator test (plan 100) | `jansky_research.oamspin` | ➖ negative: the published TIE + spiral-spectrum estimator does not separate spin from imaging noise — a non-spinning ring through the EHT's own pipeline on the 2017 baselines gives q in 0.67–1.69 (95%, where q is defined), containing the published 1.393; the two-image reconstruction cannot carry a phase vortex on a symmetric ring |
+| LV614 type III drift law, within bursts (plan 101) | `jansky_research.lvdrift` | ➖ negative: only 43 of 290 public LOFAR type III spectra give a usable ridge; their within-burst indices span 0.26–2.32 (IQR) and one shared index fits with χ²/ν ≈ 220, so the catalogue does not constrain the drift-rate index; the published across-burst 0.43 re-fits within its uncertainty |
+| RACS Stokes-V census of Gaia ultracool dwarfs (plan 59) | `jansky_research.ucdv` | ✅/➖ forced V at 9,805 Reylé UCDs in RACS-low2/low3: null passes on 97,967 blank positions, median 3σ limit 0.57 mJy/beam, ≤ 0.0065 (95%) of snapshots sensitive to 10¹⁵ erg/s/Hz exceed it; one trigger, 2MASS J11231964−0509045 (M6–M7, 21 pc), detected in V at 5.9σ in an independent EMU observation (|V|/I ≈ 0.7, varies between epochs); WISE J0623−0456 recovered in both epochs |
 | Type III synthesis: corona → 0.4 AU (4 instruments) | `jansky_research.type3synthesis` | ✅/➖ unified drift-to-distance ladder to 0.384 AU (band edge) on three separate events; the same-event geometric check is additive (13.4 ± 3.3 R⊙ pointing offset, 3.4 R⊙ rms after it) and does not validate the model's log-log shape (slope 0.65) |
 
 Most of these are recover-a-known validations and method work. Several are negatives, written up
@@ -246,6 +257,9 @@ against its committed evidence, which is where several of the fixes below came f
 | SBI for the RACS Stokes-V emitter population | `svsbi/` | first SBI framework for the M-dwarf Stokes-V population (beaming fraction barely updated from the prior; log L* a lower limit; SBC passes, with its blindness stated) + ROCm-trained NPE | 92% | **major revision** ([referee 2026-08-12](survey/svsbi-findings.md)) | ✅ 2026-08-12 — 20 findings; log L* withdrawn to a lower limit |
 | No optically dark compact radio movers in four VLASS epochs (RNAAS note) | `vlasspm/` | first blind (Gaia-free) survey-scale radio proper-motion search: UV/BL Ceti recovered; calibrated error model; compactness cut calibrated on Gaia-star size noise (11 → 1 candidate); parallax-aware completeness; limit < 9.3e-5 deg⁻² | 99% | **ready** ([referee round 3](survey/vlasspm-findings.md)); package built | ✅ 2026-09-28 — 3 rounds; final accept with nits, applied |
 | An inconclusive two-beam FASHI–ALFALFA test for H I beam blending (RNAAS note) | `hiblend/` | two-beam, same-galaxy test of H I beam blending with controls frozen before the data; negative control fails for an unidentified cause; the second attempt's gate failed on χ² and on a tolerance it could rarely pass | 98% | revised after referee round 4 ([findings](survey/hiblend-findings.md)) | ✅ 2026-10-10 — 4 rounds, all minor; calibration-limits claim withdrawn, overcorrections narrowed, C1 split into bias + unmeasured response |
+| No separation of spin from imaging noise by the twisted-light estimator for M87* (RNAAS note) | `oamspin/` | frozen estimator test of the published OAM spin claim: non-spinning null through the EHT's pipeline on the 2017 baselines, simultaneous-band and Δz-convention controls; the null's range contains the published q, and the TIE cannot see a vortex on a symmetric ring | 99% | GATE-2 passed with changes; no presenter/referee round yet ([findings](survey/oamspin-findings.md)) | — GATE-2 only (2026-10-18): lead with the P ≈ 1 rad regime, "not separable at 95%" (p ≈ 0.05), numerology sentence struck |
+| No constraint on the type III drift-rate index from the LV614 LOFAR burst catalogue (RNAAS note) | `lvdrift/` | within-burst drift-law fits with planted-burst, shuffled-null and paper-reproduction controls frozen before the arrays were opened; 43/290 usable, indices not described by one law; R0 fails at the frozen ±3 s window | 69% | GATE-2 passed with changes; no presenter/referee round yet ([findings](survey/lvdrift-findings.md)) | — GATE-2 only (2026-10-19): selection toward higher peak frequency stated; "does not reproduce" withdrawn (0.23 unbinned is within 1σ of 0.43) |
+| Circularly polarized radio emission from an M6–M7 dwarf in a RACS census of Gaia ultracool dwarfs (RNAAS note) | `ucdv/` | forced-V census of 9,805 UCDs with controls frozen before data (S0, blank-sky null, injection, recover-a-known); per-target limits and snapshot-fraction limits; one census trigger confirmed by a post-hoc EMU detection and matched non-detection, with Gaussian and empirical significance | 69% | accepted at referee round 3 ([findings](survey/ucdv-findings.md)) | ✅ 2026-10-26 — GATE-2 + 3 rounds (minor → minor → accept): fraction limits rebuilt on 5σ sensitivity; census epoch reframed as a trigger; a 3.1″ catalogue offset traced to a coordinate-epoch error (true 0.49″); empirical false-alarm bound beside the Gaussian; "intermittent" → "varies" under the 5σ scale-term rule |
 | Dispersion-measure redshift intervals place host-identified FRBs too far away (RNAAS note) | `dmzcal/` | empirical coverage test of per-burst FRB p(z\|DM) intervals on held-out host-identified bursts (none found in a one-pass GATE-0 search), controls frozen before the data; zdm fails one-sidedly; cause left three-way (population model, host selection, or host DM) | 100% | accepted at referee round 3 ([findings](survey/dmzcal-findings.md)) | ✅ 2026-10-10 — 3 rounds (major → minor → accept); unfitted CHIME/MeerKAT models and omitted DM_G uncertainty disclosed, Galactic-σ and host ×1.5/×2 re-runs added, cause left three-way |
 
 `make paper` builds every slice's PDF; `make papers-zip` bundles them all into one archive (the same
@@ -266,7 +280,7 @@ contribution — the tooling and the reproducibility, not a novelty claim:
 
 - **Software / citable archive:** the toolkit is meant for [JOSS](https://joss.theoj.org) (see
   `joss/paper.md`) and a [Zenodo](https://zenodo.org) DOI on release (`.zenodo.json`, `CITATION.cff`).
-- **Short notes:** twelve results are condensed to
+- **Short notes:** fifteen results are condensed to
   [Research Notes of the AAS](https://journals.aas.org/research-notes/) — the frbstats validation
   (`papers/frbstats/rnaas.tex`), the WD-pulsar survey (`papers/wdpulsar/rnaas.tex`, refereed and
   ready to submit), the LPT duty-cycle constraint (`papers/lptduty/rnaas.tex`), the Voyager 2 PRA
@@ -280,7 +294,11 @@ contribution — the tooling and the reproducibility, not a novelty claim:
   their `main.tex`: the FASHI DR2 environment-split caution (`papers/fashienv/`, eight referee
   rounds; round 8's minor fixes applied, not yet confirmed), the blind VLASS proper-motion limit (`papers/vlasspm/`, three rounds), the inconclusive
   two-beam blending test (`papers/hiblend/`, four referee rounds), and the FRB DM→z coverage
-  audit (`papers/dmzcal/`, accepted at referee round 3).
+  audit (`papers/dmzcal/`, accepted at referee round 3). Three more are new RNAAS notes: the RACS
+  Stokes-V UCD census with its one detection (`papers/ucdv/rnaas.tex`, accepted at referee round
+  3), and two GATE-2-reviewed nulls awaiting presenter/referee rounds, the M87* twisted-light
+  estimator test (`papers/oamspin/rnaas.tex`) and the LV614 drift-law note
+  (`papers/lvdrift/rnaas.tex`).
 - **arXiv:** reserved for the genuine-novelty, real-data papers. The current queue, in order, is
   `atlas3i/` (to go out alongside its RNAAS note; the two were aligned claim by claim),
   then `dr20radio/`, `lptv/`, and `innerrc/`, each of which still carries a major-revision
@@ -374,7 +392,7 @@ jansky-research/
     offsets.py pulsarspec.py stacking.py vlbi.py solarbursts.py rmsky.py ppdot.py
     windwaves.py swaves.py triangulate.py sourcecounts.py type3synthesis.py
     ecallisto_catalog.py ecallisto_census.py stokesv.py stokesv_discovery.py lpt.py
-    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py vlasspm.py hiblend.py dmzcal.py
+    rmstructure.py rmdipole.py frbwait.py frblens.py junodam.py torchdsp.py wdpulsar.py fashienv.py svsbi.py lptv.py skr.py typeii.py rfitrend.py vgpra.py pte2.py glitchpop.py vlasspm.py hiblend.py dmzcal.py oamspin.py lvdrift.py ucdv.py
     fdmt.py singlepulse.py  # torch-fdmt: pure PyTorch, device-portable (CPU or AMD GPU via ROCm)
     pipeline.py          # the FRB pipeline (shared by Make / notebook / Snakemake)
     report.py            # figure/macro emitters -> paper inputs

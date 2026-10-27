@@ -426,7 +426,7 @@ Every new slice paper / RNAAS note `\software{}`-cites **`jansky-research`** (th
 concept DOI `10.5281/zenodo.21482378`) alongside `jansky` — copy the `@misc{janskyresearch}`
 `refs.bib` entry from `papers/vgpra/` or `papers/spectra/`. See the `research-publish` skill.
 
-**Merged slices:** forty-four — the authoritative per-slice table
+**Merged slices:** forty-seven — the authoritative per-slice table
 (tool + outcome) is in `README.md`. Each has a paper under `papers/<slice>/`. Publishing steps
 (Zenodo → JOSS → RNAAS → arXiv) are tracked in Joe's personal notes, outside this repo
 (Obsidian vault: `efforts/radio_astronomy/research_paper_todo.md`).
