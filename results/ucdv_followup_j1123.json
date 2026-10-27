@@ -1,0 +1,496 @@
+{
+  "source": "real ASKAP forced V/I follow-up of census candidate (post hoc, not part of the frozen census)",
+  "target": {
+    "name": "2MASS J11231964-0509045",
+    "gaia_dr2": 3786550031235785344,
+    "simbad_otype": "LM*",
+    "spt": "M6V (Davoudi+2025 SpeX) / M7 (Reyle 2018 phot, LAMOST)",
+    "plx_mas": 46.75,
+    "p_rot_d": 0.129
+  },
+  "method": "ucdv.followup_lightcurve: every CASDA observation with taylor.0 restored conv I+V images containing the position; forced_measure at the Gaia DR2 position propagated to each MJD",
+  "n_obs": 36,
+  "n_ok": 29,
+  "epochs": [
+    {
+      "obs_id": "ASKAP-14911",
+      "status": "ok",
+      "mjd": 59020.37946875,
+      "freq_mhz": 887.4910005,
+      "v": 0.05039662937633693,
+      "sigma_v": 0.1312180504570891,
+      "i": 0.3271780733484775,
+      "sigma_i": 0.1852224098713769,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06A.SB14911.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06A.SB14911.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-20857",
+      "status": "ok",
+      "mjd": 59218.89528819444,
+      "freq_mhz": 1367.4900005000002,
+      "v": 0.026253928808728233,
+      "sigma_v": 0.1535083679537273,
+      "i": 0.267791619990021,
+      "sigma_i": 0.1955077460538062,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1127-04.SB20857.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1127-04.SB20857.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-29068",
+      "status": "ok",
+      "mjd": 59419.285256944444,
+      "freq_mhz": 887.4910005,
+      "v": 0.0347594432241749,
+      "sigma_v": 0.13232691042658276,
+      "i": -0.04135787094128318,
+      "sigma_i": 0.19998805684473997,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06A.SB29068.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06A.SB29068.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-30943",
+      "status": "ok",
+      "mjd": 59448.209623842595,
+      "freq_mhz": 887.4910005,
+      "v": 0.1890799030661583,
+      "sigma_v": 0.13273771890520467,
+      "i": 0.088528249762021,
+      "sigma_i": 0.18848437460765985,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06A.SB30943.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06A.SB30943.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-35332",
+      "status": "ok",
+      "mjd": 59583.89742476852,
+      "freq_mhz": 1655.4900005000002,
+      "v": -0.31465786742046475,
+      "sigma_v": 0.17760157572418028,
+      "i": -0.25205346173606813,
+      "sigma_i": 0.20815634172153316,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1127-04.SB35332.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1127-04.SB35332.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-38679",
+      "status": "ok",
+      "mjd": 59667.66339583333,
+      "freq_mhz": 887.4910005,
+      "v": -0.01564995363878552,
+      "sigma_v": 0.13082973987737292,
+      "i": -0.03933581683668308,
+      "sigma_i": 0.18196114467138166,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1122-06.SB38679.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1122-06.SB38679.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-50675",
+      "status": "ok",
+      "mjd": 60117.44248726852,
+      "freq_mhz": 887.4910005,
+      "v": 0.06366954767145216,
+      "sigma_v": 0.13527096495386273,
+      "i": -0.16886790399439633,
+      "sigma_i": 0.19478082846131786,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB50675.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB50675.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-51272",
+      "status": "ok",
+      "mjd": 60131.34885763889,
+      "freq_mhz": 887.4910005,
+      "v": 0.314359029289335,
+      "sigma_v": 0.1401480098633302,
+      "i": -0.26212999364361167,
+      "sigma_i": 0.18291280089225098,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB51272.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB51272.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-52389",
+      "status": "ok",
+      "mjd": 60187.18027777778,
+      "freq_mhz": 887.4910005,
+      "v": 0.07383045885944739,
+      "sigma_v": 0.17443454949523243,
+      "i": 0.10090503928950056,
+      "sigma_i": 0.20560509039803984,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB52389.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB52389.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-54287",
+      "status": "ok",
+      "mjd": 60244.982523148145,
+      "freq_mhz": 887.4910005,
+      "v": -0.24695598403923213,
+      "sigma_v": 0.14221028018697537,
+      "i": -0.03757516969926655,
+      "sigma_i": 0.20649134757040158,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB54287.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB54287.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-56056",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    },
+    {
+      "obs_id": "ASKAP-56437",
+      "status": "ok",
+      "mjd": 60309.89007523148,
+      "freq_mhz": 943.4910004999999,
+      "v": NaN,
+      "sigma_v": NaN,
+      "i": NaN,
+      "sigma_i": NaN,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1106-04.SB56437.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1106-04.SB56437.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-56518",
+      "status": "ok",
+      "mjd": 60310.89453819444,
+      "freq_mhz": 943.4910004999999,
+      "v": 0.7727964548394084,
+      "sigma_v": 0.1324648800903848,
+      "i": 1.1392332380637527,
+      "sigma_i": 0.19168029864364303,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1127-04.SB56518.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1127-04.SB56518.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-59491",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    },
+    {
+      "obs_id": "ASKAP-61512",
+      "status": "ok",
+      "mjd": 60422.52658333333,
+      "freq_mhz": 887.4910005,
+      "v": 0.485438562463969,
+      "sigma_v": 0.1501538694145363,
+      "i": 0.56567502906546,
+      "sigma_i": 0.19916870966211328,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB61512.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB61512.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-63049",
+      "status": "ok",
+      "mjd": 60479.37131018518,
+      "freq_mhz": 887.4910005,
+      "v": 0.046279335947474465,
+      "sigma_v": 0.16132158187761322,
+      "i": -0.012935796803503763,
+      "sigma_i": 0.2231766404449442,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB63049.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB63049.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-64973",
+      "status": "ok",
+      "mjd": 60544.218195601854,
+      "freq_mhz": 887.4910005,
+      "v": 0.44906773837283254,
+      "sigma_v": 0.15365687306562986,
+      "i": 0.5637612193822861,
+      "sigma_i": 0.19619314548184075,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB64973.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB64973.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-67104",
+      "status": "ok",
+      "mjd": 60607.98635763889,
+      "freq_mhz": 887.4910005,
+      "v": -0.26670415536500514,
+      "sigma_v": 0.1658996293776341,
+      "i": 0.24077137641143054,
+      "sigma_i": 0.272223514309168,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB67104.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB67104.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-67378",
+      "status": "ok",
+      "mjd": 60615.07899074074,
+      "freq_mhz": 1367.4900005000002,
+      "v": -0.05842083191964775,
+      "sigma_v": 0.16878156546104048,
+      "i": 0.23866622359491885,
+      "sigma_i": 0.1839819581277764,
+      "bright": false,
+      "files": [
+        "image.i.RACS_1127-04.SB67378.cont.taylor.0.restored.conv.fits",
+        "image.v.RACS_1127-04.SB67378.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-69792",
+      "status": "ok",
+      "mjd": 60668.9085150463,
+      "freq_mhz": 887.4910005,
+      "v": 0.05400968439062126,
+      "sigma_v": 0.18157428854449795,
+      "i": -0.11140392598463222,
+      "sigma_i": 0.24186806444184314,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB69792.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB69792.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-71308",
+      "status": "ok",
+      "mjd": 60729.657545138885,
+      "freq_mhz": 887.4910005,
+      "v": -0.14607094635721296,
+      "sigma_v": 0.17405901060807522,
+      "i": -0.06025684342603199,
+      "sigma_i": 0.23617609462978573,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB71308.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB71308.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-73140",
+      "status": "ok",
+      "mjd": 60788.525849537036,
+      "freq_mhz": 887.4910005,
+      "v": -0.10993221076205373,
+      "sigma_v": 0.16412496095596155,
+      "i": 0.09799528197618201,
+      "sigma_i": 0.20218405652804636,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB73140.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB73140.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-74609",
+      "status": "ok",
+      "mjd": 60854.41765509259,
+      "freq_mhz": 887.4910005,
+      "v": -0.018651313439477235,
+      "sigma_v": 0.13845992160155624,
+      "i": 0.24029800260905176,
+      "sigma_i": 0.18830215149905036,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB74609.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB74609.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-75093",
+      "status": "ok",
+      "mjd": 60884.14273958333,
+      "freq_mhz": 943.4910004999999,
+      "v": -0.0010109071126862545,
+      "sigma_v": 0.02353761541756637,
+      "i": 0.11664054909488186,
+      "sigma_i": 0.039749996755517575,
+      "bright": false,
+      "files": [
+        "image.i.EMU_1127-04A.SB75093.cont.taylor.0.restored.conv.fits",
+        "image.v.EMU_1127-04A.SB75093.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-76347",
+      "status": "ok",
+      "mjd": 60917.15810532407,
+      "freq_mhz": 887.4910005,
+      "v": 0.19693805370479822,
+      "sigma_v": 0.17557631814929592,
+      "i": -0.06269071309361607,
+      "sigma_i": 0.1974855240129372,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB76347.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB76347.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-76604",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    },
+    {
+      "obs_id": "ASKAP-76618",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    },
+    {
+      "obs_id": "ASKAP-76619",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    },
+    {
+      "obs_id": "ASKAP-78412",
+      "status": "ok",
+      "mjd": 60973.01205439815,
+      "freq_mhz": 887.4910005,
+      "v": 0.03621948781074025,
+      "sigma_v": 0.14431392046102012,
+      "i": -0.4513843741733581,
+      "sigma_i": 0.19314652796553564,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB78412.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB78412.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-79214",
+      "status": "ok",
+      "mjd": 60998.11906597222,
+      "freq_mhz": 855.4910005,
+      "v": 0.0566450362384785,
+      "sigma_v": 0.05645897792628165,
+      "i": -0.04183299097348936,
+      "sigma_i": 0.07544377444714961,
+      "bright": false,
+      "files": [
+        "image.i.FLASH_494.SB79214.cont.taylor.0.restored.conv.fits",
+        "image.v.FLASH_494.SB79214.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-81051",
+      "status": "ok",
+      "mjd": 61051.77546296296,
+      "freq_mhz": 887.4910005,
+      "v": 0.0904451371752657,
+      "sigma_v": 0.195588695174394,
+      "i": 0.5246482905931771,
+      "sigma_i": 0.34328553015322766,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB81051.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB81051.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-82408",
+      "status": "ok",
+      "mjd": 61091.56597800926,
+      "freq_mhz": 943.4910004999999,
+      "v": 0.17406506231054664,
+      "sigma_v": 0.029554185362767976,
+      "i": 0.2274802391184494,
+      "sigma_i": 0.04491180058867152,
+      "bright": false,
+      "files": [
+        "image.i.EMU_1127-04B.SB82408.cont.taylor.0.restored.conv.fits",
+        "image.v.EMU_1127-04B.SB82408.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-83189",
+      "status": "ok",
+      "mjd": 61125.689,
+      "freq_mhz": 887.4910005,
+      "v": 0.5015144124627113,
+      "sigma_v": 0.13887460984470432,
+      "i": -0.1540730008855462,
+      "sigma_i": 0.19322476841465266,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB83189.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB83189.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-84635",
+      "status": "ok",
+      "mjd": 61181.42823726852,
+      "freq_mhz": 887.4910005,
+      "v": 0.016774514733697288,
+      "sigma_v": 0.13686401851039562,
+      "i": 0.1495948963565752,
+      "sigma_i": 0.19417099788862177,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB84635.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB84635.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-86662",
+      "status": "ok",
+      "mjd": 61238.335704861114,
+      "freq_mhz": 887.4910005,
+      "v": 0.025985673346440308,
+      "sigma_v": 0.16055435435790677,
+      "i": 0.21661055507138371,
+      "sigma_i": 0.1947303569230907,
+      "bright": false,
+      "files": [
+        "image.i.VAST_1122-06.SB86662.cont.taylor.0.restored.conv.fits",
+        "image.v.VAST_1122-06.SB86662.cont.taylor.0.restored.conv.fits"
+      ]
+    },
+    {
+      "obs_id": "ASKAP-88668",
+      "status": "error",
+      "error": "ValueError: You do not have access to any of the requested data files."
+    }
+  ]
+}

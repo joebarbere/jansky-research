@@ -55,3 +55,8 @@ dmzcal_controls.json
 # synthetic DMs drawn at the real certification redshifts. Synthetic by design; the findings
 # quote it only as the sensitivity of that check.
 dmzcal_dmz_power.json
+# ucdv_metrics.json -- plan 59: one file, two namespaced legs. syn_* is the offline synthetic
+# census (planted emitters, recover-a-known); real_* is the RACS-low2/low3 forced-V census of
+# 9,805 UCDs plus the real S0/C1-C3 controls. The paper cites \ucdvReal* macros for data and
+# \ucdvSyn* only as the synthetic recover-a-known; the source string says so.
+ucdv_metrics.json

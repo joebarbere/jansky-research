@@ -1,0 +1,11 @@
+{
+ "source": "real: Reyle+2018 table x CASDA RACS V footprints (metadata only) + S0 timing",
+ "date": "2026-10-17",
+ "n_reyle": 14915,
+ "n_both_epochs": 12751,
+ "n_set_b": 6374,
+ "projected_full_hours": 156.0,
+ "d_max_pc": 107.8,
+ "n_census": 9805,
+ "census_hours": 120.0
+}

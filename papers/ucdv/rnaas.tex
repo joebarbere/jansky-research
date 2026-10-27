@@ -1,0 +1,153 @@
+\documentclass[RNAAS]{aastex631}
+
+% Numbers are \input from the pipeline-generated macros -- none typed by hand.
+\input{generated/macros}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{Circularly Polarized Radio Emission from an M6--M7 Dwarf in a RACS Census of Gaia Ultracool Dwarfs}
+
+\author[0009-0008-3289-4447]{Joseph Barbere}
+\affiliation{Independent researcher}
+
+\begin{abstract}
+We measured Stokes~$V$ at \ucdvRealNCensus\ ultracool dwarfs from the
+\citet{reyle2018} Gaia DR2 sample within \ucdvRealDmax~pc, in the RACS-low2 (887.5~MHz) and
+RACS-low3 (943.5~MHz) epochs of the Rapid ASKAP Continuum Survey. The median $3\sigma$ limit on
+$|V|$ is \ucdvRealLimit~mJy~beam$^{-1}$, and at most a fraction \ucdvRealFracFifteen\ (95\%) of the
+snapshots sensitive to $L_{\nu,V}=10^{15}$~erg~s$^{-1}$~Hz$^{-1}$ are that bright. One
+dwarf, 2MASS~J11231964$-$0509045, an M6--M7 dwarf at \ucdvRealDetDist~pc, gave the only
+$5\sigma$ value, $V=+\ucdvRealDetV\pm\ucdvRealDetSigmaV$~mJy~beam$^{-1}$ in RACS-low3 with
+$|V|/I\approx\ucdvRealDetFrac$. A deeper EMU observation in \ucdvRealFuBestDate\ shows $V=+\ucdvRealFuBestV\pm\ucdvRealFuBestSigmaV$~mJy~beam$^{-1}$ of the same sign, and a
+matched EMU observation in \ucdvRealFuMatchYear\ shows none. The star is absent from the ASKAP
+radio-star catalogues we checked.
+\end{abstract}
+
+\section{Sample and measurement}
+\label{sec:method}
+Ultracool-dwarf radio emission is coherent and often strongly circularly polarized, so a
+Stokes~$V$ survey selects it against the unpolarized extragalactic background. The blind
+VLASS search of the \citet{reyle2018} candidates at 3~GHz used Stokes~$I$ alone
+\citep{perger2025}, and the RACS-low2 circular-polarization catalogue measures $V$ only at
+Stokes~$I$ catalogue positions \citep{duchesne2026}. We instead measure $V$ at every dwarf.
+
+The parent sample is the \citet{reyle2018} table of Gaia DR2 \citep{gaiadr2} candidates.
+Of its \ucdvRealNReyle\ entries, \ucdvRealNBoth\ fall inside both a low2 and a low3 Stokes~$V$
+image on CASDA; RACS-low1 has no $V$ products there. A throughput rule fixed beforehand, timed on \ucdvRealSzeroN\ test pairs
+(\ucdvRealSzeroSec~s each), set a distance limit of \ucdvRealDmax~pc from parallax alone. For each dwarf and epoch we retrieved a
+$0.06^\circ$ $I$ and $V$ cutout from one observation \citep{mcconnell2020} with
+\code{astroquery} \citep{astroquery}, moved the Gaia position to the observation date with its
+proper motion, and read $I$ and $V$ at the pixel containing it. The noise is the standard
+deviation in an annulus of 30--90\arcsec.
+
+A target-epoch counts as a candidate if $|V|/\sigma_V\geq5$, if $|V|/I$ exceeds the local
+leakage floor when Stokes~$I$ is itself detected, and if no Stokes~$I$ source brighter than
+100~mJy lies within 3\arcmin. A slot whose cutout has too few bright sources to set the floor is
+held for inspection. The upper limit on $|V|$ is $|V|+3\sigma_V$.
+
+\section{Controls}
+\label{sec:controls}
+The thresholds and pass criteria were fixed before any target value was examined. The checks
+used the \ucdvRealSzeroN\ test pairs, whose dwarfs come from the half of the sample (split by a
+hash of the Gaia identifier) that sets no threshold. Forced photometry at
+\ucdvRealConeN\ blank positions 2\arcmin\ from the targets gave positive $V$ in a fraction
+\ucdvRealConePos\ of cases with $\mathrm{std}(V/\sigma_V)=\ucdvRealConeStd$, as expected
+for noise (a peak search would bias it towards one). Point
+sources injected into the real cutouts (\ucdvRealCtwoN\ per level) were recovered at a rate of
+\ucdvRealCtwoComp\ at $7\sigma_V$, with a median recovered-to-injected flux ratio of
+\ucdvRealCtwoRatio\ above $10\sigma_V$. For the \ucdvRealCthreeN\ stars of the RACS-low2
+circular-polarization catalogue \citep{duchesne2026}, measured in their own observations, the
+median ratio of our $V$ to the catalogue value is \ucdvRealCthreeRatio, with
+\ucdvRealCthreeFlips\ sign reversals; as the catalogue comes from the same images, this tests the
+pixel read against a source fit rather than the flux scale. The T8 dwarf WISE~J0623$-$0456, a known periodic emitter
+outside the Gaia sample \citep{rose2023}, gives $V=\ucdvRealCthreebLowtwoV$ and
+$\ucdvRealCthreebLowthreeV$~mJy~beam$^{-1}$ ($V/\sigma_V=\ucdvRealCthreebLowtwoSnr$ and
+$\ucdvRealCthreebLowthreeSnr$) in low2 and low3.
+
+\section{Results}
+\label{sec:results}
+The archive refused \ucdvRealNMissing\ low3 images, so \ucdvRealNSlots\ target-epochs were
+measured; \ucdvRealNInsane\ cutouts failed the noise check, leaving \ucdvRealNSane\ with limits
+(median $\sigma_V=\ucdvRealSigmaV$~mJy~beam$^{-1}$). The \ucdvRealNullN\ blank-sky measurements
+made alongside them give positive $V$ in a fraction \ucdvRealNullPos\ with
+$\mathrm{std}(V/\sigma_V)=\ucdvRealNullStd$, but their tails are heavier than Gaussian:
+\ucdvRealNullNGeFour\ reach $4\sigma$ against \ucdvRealNullExpGeFour\ expected. The fixed
+two-epoch comparison flags no dwarf (\ucdvRealNPairs\ pairs), but at the median noise it can only
+see changes of $\gtrsim\ucdvRealTwoEpochFloor$~mJy~beam$^{-1}$.
+
+After seeing the data we counted a snapshot as sensitive to $L_{\nu,V}$ where $5\sigma_V$ at the
+dwarf's distance reaches it. Then \ucdvRealNeffFifteen\ and \ucdvRealNeffSixteen\ snapshots are
+sensitive to $10^{15}$ and $10^{16}$~erg~s$^{-1}$~Hz$^{-1}$, and the 95\% limits on the fraction
+above them are \ucdvRealFracFifteen\ and \ucdvRealFracSixteen\ (Figure~\ref{fig:census}a);
+weighting each snapshot by the injection completeness instead gives \ucdvRealFracCwFifteen\ at
+$10^{15}$, so the step definition is the conservative one. The limits are per 15-minute snapshot, assume isotropic emission ($4\pi d^2S$), and do
+not separate the fraction of emitters from their duty cycle.
+
+One slot reached $5\sigma$ and was held, its cutout having too few bright sources to set a
+leakage floor. It is 2MASS~J11231964$-$0509045 (Gaia DR2 \ucdvRealDetGaia) in RACS-low3
+observation \ucdvRealDetObs\ on \ucdvRealDetDate: $V=+\ucdvRealDetV\pm\ucdvRealDetSigmaV$ and
+$I=\ucdvRealDetI$~mJy~beam$^{-1}$ ($I/\sigma_I=\ucdvRealDetIsnr$), with $|V|/I=\ucdvRealDetFrac
+\pm\ucdvRealDetFracErr$, far above instrumental leakage (Figure~\ref{fig:census}c). With
+\ucdvRealNullNGeFive\ null value beyond $5\sigma$, about \ucdvRealChanceGeFive\ (95\% upper bound \ucdvRealChanceGeFiveUpper) such slots are
+expected from noise or unrelated sources, so this epoch is a trigger rather than a detection. Its low2 value,
+$V/\sigma_V=\ucdvRealDetOtherSnr$, differs at $\ucdvRealDetPairZ\sigma$, below the fixed
+comparison's threshold. The Stokes~$I$ source is catalogued, unidentified, as
+\ucdvRealCatName\ \citep{thomson2026}, \ucdvRealCatOffset\arcsec\ from the star's position at
+that date. The star has spectral type
+M6V from a near-infrared spectrum \citep{davoudi2025} and M7 from photometry \citep{reyle2018},
+and a rotation period of 0.129~d \citep{newton2018}. At $L_{\nu,V}\approx\ucdvRealDetL$
+~erg~s$^{-1}$~Hz$^{-1}$ it lies below the luminosities of the fraction limits.
+
+After the census, and outside its fixed rules, we measured the star in every ASKAP observation
+of its position with $I$ and $V$ images (\ucdvRealFuNObs\ observations: \ucdvRealFuNRefused\
+refused, \ucdvRealFuNNan\ off the image, \ucdvRealFuNMeas\ measured,
+\ucdvRealFuFirstYear--\ucdvRealFuLastYear; VAST \citealt{murphy2021}, EMU \citealt{hopkins2025};
+Figure~\ref{fig:census}b). EMU observation \ucdvRealFuBestObs\ gives
+$V=+\ucdvRealFuBestV\pm\ucdvRealFuBestSigmaV$~mJy~beam$^{-1}$ ($V/\sigma_V=\ucdvRealFuBestSnr$,
+$I/\sigma_I=\ucdvRealFuBestIsnr$; Figure~\ref{fig:census}d). For Gaussian noise its
+chance probability, one-sided because the census fixed the sign, is $\ucdvRealFuBestP$, or
+$\ucdvRealFuBestPTrials$ for the \ucdvRealFuNIndep\ observations searched; the census nulls
+instead bound the rate of such values at $\lesssim\ucdvRealEmpPLook$ per look, or
+$\lesssim\ucdvRealEmpPTrials$ over the search. Blank positions in the two detection images
+(\ucdvRealTailNRacs\ and \ucdvRealTailNEmu) reach at most $\ucdvRealTailMaxRacs\sigma$ and
+$\ucdvRealTailMaxEmu\sigma$. Beam-fitted $V$ centroids lie \ucdvRealCenVRacs\arcsec\ and
+\ucdvRealCenVEmu\arcsec\ from the star, against an expected scatter of
+$\approx$\ucdvRealCenErrRacs\arcsec. EMU observation \ucdvRealFuMatchObs\
+(\ucdvRealFuMatchYear, same band and depth) gives $V=\ucdvRealFuMatchV\pm\ucdvRealFuMatchSigmaV$~mJy~beam$^{-1}$,
+\ucdvRealFuMatchZScale$\sigma$ below it including a 10\% scale error, and the census and EMU
+detections differ by \ucdvRealDetVsBestZScale$\sigma$; both are below the census's $5\sigma$
+two-epoch threshold but suggest that the emission varies between epochs.
+Excluding the census epoch, \ucdvRealFuNPos\ of the \ucdvRealFuNIndep\ reach $2.5\sigma$, all
+positive and none below $-2.5\sigma$; in \ucdvRealFuVgtIObs\ $V$ exceeds $I$, which is not
+physical, so that value is at least partly noise.
+
+The star is absent from the ASKAP radio-star and circular-polarization catalogues of
+\citet{pritchard2021}, \citet{pritchard2024}, \citet{driessen2024} and \citet{duchesne2026}.
+Apparently variable, strongly circularly polarized emission of one sign from a rapidly rotating late-M
+dwarf is consistent with electron-cyclotron maser emission \citep{hallinan2008}; coherent
+emission during flares is not excluded, since the snapshots do not resolve its time structure.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/ucdv_limits.pdf}
+\caption{(a) 95\% upper limit on the fraction of dwarf snapshots above $L_{\nu,V}$, with each
+snapshot counted where $5\sigma_V$ reaches $L_{\nu,V}$; the dotted line marks the detection,
+which enters the numerator below its luminosity.
+(b) $V/\sigma_V$ at 2MASS~J11231964$-$0509045 in every measured ASKAP observation; squares are
+RACS, and the shaded band is $\pm2.5\sigma$. (c, d) Stokes~$V$ in units of $\sigma_V$ around the
+star in RACS-low3 observation \ucdvRealDetObs\ and EMU observation \ucdvRealFuBestObs; the cross
+is the Gaia position moved to the observation date, and the ellipse is the restoring beam.}
+\label{fig:census}
+\end{figure}
+
+\software{\code{jansky-research} \citep{janskyresearch}, \code{jansky} \citep{jansky},
+\code{astroquery} \citep{astroquery}, NumPy, SciPy, Astropy. Analysis assisted by Claude
+\citep{anthropicclaude}. The scientific kernels are covered by an offline test suite; the
+network and real-data drivers are not unit-tested.}
+
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}
