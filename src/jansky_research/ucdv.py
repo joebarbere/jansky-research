@@ -1687,13 +1687,13 @@ def _tail_and_astrometry_metrics(results_dir, real, crow) -> dict[str, Any]:
         m[f"real_null_ratio_ge{k}"] = round(obs / exp, 1) if exp > 0 else None
     m["real_chance_ge5"] = round(m["real_null_n_ge5"] / nz.size * real["n_slots"], 1)
     m["real_chance_ge5_upper"] = round(
-        poisson_upper(m["real_null_n_ge5"]) / nz.size * real["n_slots"], 1
+        poisson_upper(m["real_null_n_ge5"]) / nz.size * real["n_slots"], 2
     )
     # Referee round 2: an empirical per-look false-alarm bound for a >= 5 sigma value of a
     # chosen sign, from the census nulls (95% Poisson upper limit on the two-sided count,
     # halved for one sign), and over the follow-up looks.
     p_look = poisson_upper(m["real_null_n_ge5"]) / nz.size / 2.0
-    m["real_emp_p_look_tex"] = _tex_sci(p_look, 1)
+    m["real_emp_p_look_tex"] = _tex_sci(p_look, 2)  # an upper bound: keep 2 figures
     fp = Path(results_dir) / "ucdv_followup_j1123.json"
     if fp.exists():
         n_looks = (
@@ -1703,7 +1703,7 @@ def _tail_and_astrometry_metrics(results_dir, real, crow) -> dict[str, Any]:
             )
             - 1
         )  # the census epoch is the trigger, not a look
-        m["real_emp_p_trials_tex"] = _tex_sci(min(1.0, p_look * n_looks), 1)
+        m["real_emp_p_trials_tex"] = _tex_sci(min(1.0, p_look * n_looks), 2)
     c1p = Path(results_dir) / "ucdv_controls_c1c2.json"
     if c1p.exists():
         comp = json.loads(c1p.read_text())["c2_injection"]["completeness"]

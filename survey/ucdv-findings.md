@@ -304,3 +304,13 @@ from SIMBAD's J2000 coordinates treated as 2016.0). New items, all wording/preci
 
 Two method sentences shortened to keep length (throughput rule; peak-search aside). Style lint and
 triage clean; 3 pages.
+
+## Referee round 3 (2026-10-26): ACCEPT
+
+Confirmation round: all five round-2 items confirmed with recomputed numbers (empirical bound
+2.42e-5 per look, 6.8e-4 over 28; scale-term differences 4.21σ and 3.81σ; chance upper bound 0.948;
+4 of 28 follow-up looks ≥ 2.5σ, all positive). Nothing broken by the round-2 edits. Recommended
+edits, applied: the follow-up differences now carry the same "below the census's 5σ two-epoch
+threshold" framing as the census pair, with "suggest that the emission varies" and "apparently
+variable"; upper bounds keep two figures (2.4e-5, 6.8e-4, 0.95) instead of rounding down; the unit
+on the matched non-detection. Length: abstract ≤ p90, body within the RNAAS cap.
