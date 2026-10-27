@@ -59,6 +59,7 @@ __all__ = [
     "run_census",
     "backoff_seconds",
     "retry_policy",
+    "census_leak_floors",
     "followup_lightcurve",
     "read_done",
     "census_targets",
@@ -1434,8 +1435,23 @@ def run(out: str = ".", *, offline: bool = True) -> dict[str, Any]:
         crow = [json.loads(x) for x in cpath.read_text().splitlines()]
         tg = census_targets()
         dist_r = {int(s): 1000.0 / float(p) for s, p in zip(tg["Source"], tg["Plx"], strict=True)}
-        real = analyze_census(crow, dist_r)
+        floors = census_leak_floors(crow, Path(out) / "data" / "ucdv" / "census_cutouts")
+        real = analyze_census(crow, dist_r, floors)
         metrics.update(_metrics(real, "real"))
+        metrics["real_n_floor_computed"] = len(floors)
+        metrics["real_held"] = [
+            {"source_id": int(s), "epoch": str(e)}
+            for s, e in zip(
+                real["source_id"][real["held"]], real["epoch"][real["held"]], strict=True
+            )
+        ]
+        metrics["real_candidates"] = [
+            {"source_id": int(s), "epoch": str(e)}
+            for s, e in zip(
+                real["source_id"][real["candidate"]], real["epoch"][real["candidate"]], strict=True
+            )
+        ]
+        metrics["real_null_n"] = int(real["null_monitor"].get("n", 0))
         metrics["source"] = "synthetic recover-a-known + real RACS-low2/low3 forced-V census"
     op = Path(out)
     write_results(metrics, op / "results" / "ucdv_metrics.json")
@@ -1557,10 +1573,6 @@ def _main(argv: list[str] | None = None) -> int:  # pragma: no cover - thin CLI
     n = run_census(username=user, limit=a.limit)
     print(f"census: {n} slots attempted this run")
     return 0
-
-
-if __name__ == "__main__":  # pragma: no cover
-    raise SystemExit(_main())
 
 
 # ---- analysis of the census (runs after the fetch, never inside it) -----------------------------
@@ -1705,6 +1717,29 @@ def analyze_census(
     }
 
 
+def census_leak_floors(rows: list[dict[str, Any]], cutout_dir) -> dict[tuple[int, str], float]:
+    """Per-slot leakage floor (:func:`cutout_leakage_floor`) from the saved census cutouts.
+
+    Computed only where the frozen detection rule consults it -- |V|/sigma_V >= SNR_DETECT with
+    Stokes I detected (I/sigma_I >= SNR_DETECT); elsewhere the floor cannot change the outcome.
+    A slot whose cutout file is missing gets no entry (the rule then holds it, never passes it).
+    """
+    from pathlib import Path
+
+    out: dict[tuple[int, str], float] = {}
+    for r in rows:
+        if r.get("status") != "ok":
+            continue
+        v, sv, i, si = (float(r[k]) for k in ("v", "sigma_v", "i", "sigma_i"))
+        if not (sv > 0 and si > 0 and abs(v) / sv >= SNR_DETECT and i / si >= SNR_DETECT):
+            continue
+        f = Path(cutout_dir) / f"{int(r['source_id'])}_{r['epoch']}.npz"
+        if f.is_file():
+            c = load_cutout(f)
+            out[(int(r["source_id"]), str(r["epoch"]))] = cutout_leakage_floor(c["i"], c["v"])
+    return out
+
+
 def synthetic_census(
     n_targets: int = 2000, *, n_emitters: int = 6, seed: int = SEED
 ) -> tuple[list[dict[str, Any]], dict[int, float], set[int]]:
@@ -1744,3 +1779,7 @@ def synthetic_census(
                 }
             )
     return rows, dist, emit
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(_main())

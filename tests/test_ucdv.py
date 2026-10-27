@@ -371,3 +371,30 @@ def test_read_done_skips_a_truncated_last_line_only(tmp_path):
     p.write_text('{"source_id": 1, "epoch": "low2"}\n{bad\n{"source_id": 2, "epoch": "low3"}\n')
     with pytest.raises(json.JSONDecodeError):
         ucdv.read_done(p)
+
+
+def test_census_leak_floors_only_where_the_rule_consults_it(tmp_path):
+    rng = np.random.default_rng(1)
+    i = rng.normal(0, 0.2, (80, 80))
+    v = rng.normal(0, 0.2, (80, 80))
+    for k, (y, x) in enumerate(((10, 10), (30, 60), (60, 20), (70, 70))):
+        i[y, x] = 50.0 + k
+        v[y, x] = 0.4
+    np.savez_compressed(
+        tmp_path / "7_low3.npz",
+        i=i,
+        v=v,
+        wcs_header="",
+        beam=np.array([12, 10, 0]),
+        mjd=60000.0,
+        obs_id="x",
+    )
+    rows = [
+        dict(status="ok", source_id=7, epoch="low3", v=1.0, sigma_v=0.1, i=1.0, sigma_i=0.1),
+        dict(status="ok", source_id=8, epoch="low3", v=0.1, sigma_v=0.1, i=1.0, sigma_i=0.1),
+        dict(status="ok", source_id=9, epoch="low2", v=1.0, sigma_v=0.1, i=1.0, sigma_i=0.1),
+    ]
+    f = ucdv.census_leak_floors(rows, tmp_path)
+    assert set(f) == {(7, "low3")}  # 8: V not significant; 9: no cutout file
+    expect = 7.0 * np.median([0.4 / (50.0 + k) for k in range(4)])  # LEAKAGE_NSIGMA x median |V/I|
+    assert f[(7, "low3")] == pytest.approx(expect, rel=1e-6)
