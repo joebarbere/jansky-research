@@ -148,8 +148,8 @@ census.*
   **Its RACS-low3 Stokes I source is catalogued but unidentified:** Thomson et al. 2026 (PASA 43,
   89) RACS-LOW3 J112319−05090, Fpeak 1.13 mJy, 3.1″ from the propagated position.
 - **Every other ASKAP observation of the position** (`followup_lightcurve`,
-  `results/ucdv_followup_j1123.json`): 36 observations with I+V images; 30 measured, 6 refused by
-  CASDA, 1 of the 30 (SBID 56437, low3 the day before) NaN at the target pixel (tile edge).
+  `results/ucdv_followup_j1123.json`): 36 observations with I+V images; 6 refused by CASDA, 1
+  (SBID 56437, low3 the day before) NaN at the target pixel (tile edge), **29 measured**.
   Significant epochs, all **positive** V:
 
   | SBID (project) | MJD | MHz | V (mJy/beam) | I/σ |
@@ -160,7 +160,7 @@ census.*
   | 82408 (EMU, deep) | 61091.6 | 943 | +0.174 ± 0.030 (**5.9σ**) | +5.1 |
   | 83189 (VAST) | 61125.7 | 887 | +0.502 ± 0.139 (3.6σ) | −0.8 |
 
-  The other 23 measured epochs (2020–2026, 855–1655 MHz) span −1.8σ to +2.2σ; none ≤ −2.5σ.
+  The other 24 measured epochs (2020–2026, 855–1655 MHz) span −1.8σ to +2.2σ; none ≤ −2.5σ.
 - **Statistics (post hoc):** excluding the census epoch, the best epoch (EMU 82408, 5.9σ,
   one-sided p = 1.9e-9) survives 28 looks at p ≈ 5e-8; the 28 combine to Stouffer z = +3.3. The
   EMU image shows a compact V source within 2″ of the propagated position (one 2″ pixel) and an
@@ -173,3 +173,53 @@ census.*
 - **Still open:** GATE-2; whether the RACS VIII/Pritchard V tables (not on VizieR) list it; a
   time-resolved look within SBIDs 56518 and 82408 (needs visibilities); the census paper's UCD
   definition given the M6/M7 type.
+
+## GATE-2 (2026-10-26): PASS-WITH-CHANGES, changes applied
+
+Independent read-only science review of the census and the detection; worktree confirmed clean
+afterwards. Findings and what was done:
+
+1. **Census null valid** (NOTE). Forced photometry reads one fixed pixel; nulls V > 0 50.09%,
+   std 1.009. The nulls show a mild heavy tail at 3σ (155 with |z| ≥ 3 vs ~132 Gaussian, +17%);
+   the frozen C1 criterion tests only 5σ. Stated, not a failure.
+2. **Snapshot-fraction limits (MUST-FIX, fixed).** The denominator used each slot's measured
+   |V| + 3σ_V, which is data-dependent (drops positive fluctuations and the detection's own slot)
+   and not the detectability the 5σ rule implies; held detections never entered the numerator;
+   the L = 1e14 row (n_eff = 2, "limit" 1.50) constrained nothing. Now: sensitivity = 5σ_V (and
+   7σ_V, C2's 96.5% completeness point) at the slot's distance, independent of V; held and
+   candidate slots enter the numerator at their measured L; limits > 1 are not reported; quoted
+   L = 3e14, 1e15, 1e16. Results (5σ / 7σ): 3e14: n_eff 17 / 4, one detection, limit 0.28 / —;
+   1e15: 458 / 225, limit **0.0065** / 0.013 (was 0.0035 under the old definition); 1e16:
+   17,886 / 13,152, limit **0.00017** / 0.00023. The detection's L = 4.23e14 erg s⁻¹ Hz⁻¹ is a
+   macro. The two superseded 1e14 keys were deleted from `results/ucdv_metrics.json` by hand
+   (the merge guard keeps keys by design).
+3. **Trial factors (SHOULD-FIX, reworded).** The best follow-up epoch (EMU 82408, p = 1.9e-9 one-
+   sided) survives 28 looks at p ≈ 5e-8. The Stouffer +3.3 over 28 epochs is carried by the same
+   four selected epochs: the other 24 sub-2.5σ epochs give mean z = +0.08 (Stouffer +0.37), so
+   there is **no sub-threshold excess** and the Stouffer number is a restatement, not independent
+   support. The census epoch itself carries a look-elsewhere factor of 19,600.
+4. **EMU noise tail (SHOULD-FIX, done, post hoc).** Forced V at blank positions ≥ 16″ apart in
+   the saved cutouts, avoiding the target and I > 5σ: EMU 82408, 465 positions, V > 0 49%, std
+   0.95, max |z| 3.57, 2 at ≥ 3σ (1.3 expected); RACS 56518, 391 positions, 50%, 1.03, 2.97, 0
+   (1.1 expected). The two 5.8–5.9σ values sit well outside their own images' noise.
+5. **Chance coincidence (SHOULD-FIX).** Census nulls: ≤ 1 event ≥ 5σ in 97,967, i.e. ≲ 0.2
+   expected among 19,600 target slots (an upper bound; consistent with zero). Catalogue density
+   (~221 RACS-low2 V sources over the survey, reviewer's area assumption) gives ~1e-4 within 3″
+   over all 9,805 targets. Proper motion moves the star only ~0.5″ over 2024–26, so variability,
+   not motion, is what links the emission to the star.
+6. **Astrometry (SHOULD-FIX, reworded).** I peak ~0.6″ and V peak one 2.5″ pixel from the
+   propagated position; the catalogued RACS-low3 I source is 3.1″ away, ~2σ for a 6σ source in a
+   13″ beam. Wording: "consistent within the positional uncertainty", not a sub-pixel claim.
+7. **V/I (NOTE).** ~0.7 ± 0.2 (I is only 5.9σ); ≳ 30× typical ASKAP leakage, so leakage is
+   excluded even though this cutout's floor is undetermined.
+8. **Framing (SHOULD-FIX, adopted for the note).** "An M6–M7 dwarf in the Reylé UCD sample
+   (spectroscopic type M6V)", not "an ultracool dwarf". Not "new"/"first" until the Pritchard
+   2021/2024 and RACS VIII V tables are checked; until then, "not in the radio-star catalogues
+   checked (SRSC, Wang et al. 2024, V-LoTSS)". "Forced-V measurements show", not "discovered".
+   "Intermittent" is inferred from the non-detections; electron-cyclotron maser is
+   interpretation only.
+9. **Two-epoch rule (NOTE).** This star's low2/low3 pair differs by ~5.9σ in V but is not flagged
+   because the frozen comparison includes the 10% scale term and the spectral bound; one sentence
+   in the note.
+10. **Accounting (SHOULD-FIX).** The note states 19,610 slots → 10 refused → 19,600 fetched → 24
+    failed the per-cutout sanity check → 19,576 with limits. The follow-up count is 29 measured.

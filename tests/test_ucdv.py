@@ -398,3 +398,23 @@ def test_census_leak_floors_only_where_the_rule_consults_it(tmp_path):
     assert set(f) == {(7, "low3")}  # 8: V not significant; 9: no cutout file
     expect = 7.0 * np.median([0.4 / (50.0 + k) for k in range(4)])  # LEAKAGE_NSIGMA x median |V/I|
     assert f[(7, "low3")] == pytest.approx(expect, rel=1e-6)
+
+
+def test_fraction_limit_sensitivity_ignores_measured_v_and_counts_held_detections():
+    sv = np.array([0.1, 0.1, 0.1])
+    res = {
+        "sane": np.array([True, True, True]),
+        "sigma_v": sv,
+        "v": np.array([0.0, 3.0, -0.2]),  # slot 1: a big positive V (a held detection)
+        "dist_pc": np.array([20.0, 20.0, 20.0]),
+        "candidate": np.array([False, False, False]),
+        "held": np.array([False, True, False]),
+    }
+    sens, l_det = ucdv._sensitivity_and_detections(res, 5.0)
+    # every slot's sensitivity is 5 sigma_V at its distance, whatever V it measured
+    assert np.allclose(sens, ucdv.luminosity_limit(0.5 * np.ones(3), res["dist_pc"]))
+    assert l_det.size == 1
+    assert l_det[0] == pytest.approx(
+        float(ucdv.luminosity_limit(np.array([3.0]), np.array([20.0]))[0])
+    )
+    assert ucdv._ltag(3e14) == "3e14" and ucdv._ltag(1e15) == "1e15"

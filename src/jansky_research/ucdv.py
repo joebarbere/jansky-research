@@ -1327,14 +1327,31 @@ def run_c3b(*, username: str, pw_path: str = "~/.casda_pw"):  # pragma: no cover
 
 
 L_GRID = np.logspace(13.0, 17.0, 41)  # erg s^-1 Hz^-1, for the snapshot-fraction curve
-L_QUOTE = (1e14, 1e15, 1e16)  # luminosities the paper quotes a fraction limit at
+L_QUOTE = (3e14, 1e15, 1e16)  # luminosities the paper quotes a fraction limit at
+SENS_NSIGMA = (5.0, 7.0)  # detectability for the fraction limit: the rule's 5 sigma, and C2's 7
+
+
+def _sensitivity_and_detections(res: dict[str, Any], nsigma: float):
+    """(L each sane slot could have detected at ``nsigma`` sigma_V, L of held/candidate slots).
+
+    GATE-2 (2026-10-26): the denominator must not use the measured V (``|V|+3 sigma`` drops
+    positive fluctuations and the detection's own slot), and a held detection that vetting
+    confirms belongs in the numerator at its measured L, not at its upper limit.
+    """
+    s = res["sane"]
+    sens = luminosity_limit(nsigma * res["sigma_v"][s], res["dist_pc"][s])
+    det = res["candidate"] | res["held"]
+    l_det = luminosity_limit(np.abs(res["v"][det]), res["dist_pc"][det])
+    return sens, l_det
+
+
+def _ltag(L: float) -> str:
+    e = int(np.floor(np.log10(L)))
+    return f"{round(L / 10**e):d}e{e}"
 
 
 def _metrics(res: dict[str, Any], prefix: str) -> dict[str, Any]:
     """Flatten an ``analyze_census`` result into the namespaced metrics the paper cites."""
-    ok_l = res["l_upper"][res["sane"]]
-    det_l = res["l_upper"][res["candidate"]]  # conservative: a candidate's L is its upper value
-    frac = snapshot_fraction_limit(ok_l, np.array(L_QUOTE), det_l)
     m: dict[str, Any] = {
         f"{prefix}_n_targets": res["n_targets"],
         f"{prefix}_n_slots": res["n_slots"],
@@ -1351,10 +1368,21 @@ def _metrics(res: dict[str, Any], prefix: str) -> dict[str, Any]:
         f"{prefix}_null_std": round(float(res["null_monitor"].get("std_z", np.nan)), 3),
         f"{prefix}_null_passed": bool(res["null_monitor"].get("passed", False)),
     }
-    for L, n, f in zip(L_QUOTE, frac["n_eff"], frac["frac_upper"], strict=True):
-        tag = f"1e{int(round(np.log10(L)))}"
-        m[f"{prefix}_neff_{tag}"] = int(n)
-        m[f"{prefix}_frac_upper_{tag}"] = None if not np.isfinite(f) else round(float(f), 5)
+    for nsig in SENS_NSIGMA:
+        sens, l_det = _sensitivity_and_detections(res, nsig)
+        frac = snapshot_fraction_limit(sens, np.array(L_QUOTE), l_det)
+        k = "" if nsig == SENS_NSIGMA[0] else f"{int(nsig)}"
+        for L, n, nd, f in zip(
+            L_QUOTE, frac["n_eff"], frac["n_det"], frac["frac_upper"], strict=True
+        ):
+            tag = _ltag(L)
+            m[f"{prefix}_neff{k}_{tag}"] = int(n)
+            m[f"{prefix}_ndet{k}_{tag}"] = int(nd)
+            ok = np.isfinite(f) and f <= 1.0  # a "fraction limit" above 1 constrains nothing
+            m[f"{prefix}_frac{k}_upper_{tag}"] = round(float(f), 5) if ok else None
+    _, l_det = _sensitivity_and_detections(res, SENS_NSIGMA[0])
+    m[f"{prefix}_n_detections"] = int(l_det.size)
+    m[f"{prefix}_det_l"] = [float(f"{x:.3g}") for x in l_det]
     return m
 
 
@@ -1472,7 +1500,8 @@ def _figure(res: dict[str, Any], out_dir) -> None:
     od = Path(out_dir)
     od.mkdir(parents=True, exist_ok=True)
     s = res["sane"]
-    frac = snapshot_fraction_limit(res["l_upper"][s], L_GRID, res["l_upper"][res["candidate"]])
+    sens, l_det = _sensitivity_and_detections(res, SENS_NSIGMA[0])
+    frac = snapshot_fraction_limit(sens, L_GRID, l_det)
     fig, ax = plt.subplots(1, 2, figsize=(9, 3.6))
     ax[0].scatter(res["dist_pc"][s], res["l_upper"][s], s=2, alpha=0.4, color="0.3")
     ax[0].set_xlabel("distance (pc)")
@@ -1522,8 +1551,12 @@ _MACROS = {
     "RealLimit": "real_median_limit_mjy",
     "RealNullPos": "real_null_frac_positive",
     "RealNullStd": "real_null_std",
-    "RealNeffFourteen": "real_neff_1e14",
-    "RealFracFourteen": "real_frac_upper_1e14",
+    "RealNeffThreeFourteen": "real_neff_3e14",
+    "RealFracThreeFourteen": "real_frac_upper_3e14",
+    "RealNdetThreeFourteen": "real_ndet_3e14",
+    "RealFracSevenFifteen": "real_frac7_upper_1e15",
+    "RealNeffSevenFifteen": "real_neff7_1e15",
+    "RealNDetections": "real_n_detections",
     "RealNeffFifteen": "real_neff_1e15",
     "RealFracFifteen": "real_frac_upper_1e15",
     "RealNeffSixteen": "real_neff_1e16",
