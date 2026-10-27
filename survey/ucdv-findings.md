@@ -229,7 +229,7 @@ afterwards. Findings and what was done:
 `run_c3b` (`results/ucdv_controls_c3b.json`): low2 SBID 39068, V = −2.43 ± 0.15 mJy/beam
 (V/σ = −16.3), I/σ = 8.7, |V|/I ≈ 0.7; low3 SBID 56420, V = −0.96 ± 0.15 (−6.6σ), I/σ = 6.0,
 |V|/I ≈ 0.5. The pipeline recovers this known emitter in both epochs, with one sign. The 10-17
-expectation above ("a non-detection is the likely outcome") was wrong; \citet{rose2023} reported
+expectation above ("a non-detection is the likely outcome") was wrong; Rose et al. (2023) reported
 no RACS-low1 detection, and its RACS-mid circular fraction was 66%. Sign convention versus Rose et
 al. not compared (their sign not read).
 
