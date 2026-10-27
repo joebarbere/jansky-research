@@ -11,6 +11,7 @@ recommend the next version number.
 ## [Unreleased]
 
 ### Added
+- `ucdv` (plan 59): forced Stokes-V census of 9,805 Gaia ultracool dwarfs (Reylé 2018, d < 107.8 pc) in RACS-low2 and RACS-low3 — blank-sky null passes on 97,967 measurements, median 3σ |V| limit 0.57 mJy/beam, ≤ 0.0065 of snapshots sensitive to 10^15 erg/s/Hz exceed it; one held slot vetted as a circularly polarized detection of the M6–M7 flare star 2MASS J11231964−0509045 (5.8σ RACS-low3, 5.9σ in a post-hoc EMU follow-up, |V|/I ≈ 0.7); WISE J0623−0456 recovered in both epochs. Census runner with in-slot job retries and retry passes; post-hoc `followup_lightcurve`. RNAAS note `papers/ucdv/rnaas.tex`.
 - `lvdrift` (plan 101): within-burst drift-law fits to the 290 public LV614 LOFAR type III spectra — the catalogue does not constrain the drift-rate index (43 bursts pass; per-burst IQR 0.26–2.32; one shared index fits with chi2/nu ≈ 220); RNAAS note `papers/lvdrift/rnaas.tex`.
 - `oamspin` (plan 100): the twisted-light spin estimator of Tamburini et al. (2020) tested on the public EHT 2017 M87* data — its q does not separate spin from imaging noise (non-spinning null 95% range 0.67–1.69 where q is defined, containing the published 1.393), and the two-image TIE cannot carry a phase vortex on a symmetric ring. Imaging by the EHT's released pipeline; `ehtim` as an optional `eht` extra. RNAAS note `papers/oamspin/rnaas.tex`.
 
