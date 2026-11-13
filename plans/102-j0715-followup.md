@@ -46,6 +46,26 @@ acceptance). It is **provisional** because it is a code value, not a table in th
 | Separation | 5.5 R☉ |
 | Pdot | **none given** |
 
+### Access check, 2026-11-12 (local session, not the cloud one)
+
+- **Full text: still not readable.** nature.com responds but the article is paywalled. The landing
+  page adds the figure titles: Fig. 1, localization; Fig. 2, single-pulse properties against
+  orbital phase; Fig. 3, the optical spectrum against model spectra. The page names no Table 1.
+  An arXiv title or name search finds no preprint. Step 1 needs Joe's institutional access or
+  the PDF dropped into the repo.
+- **Crossref: reachable.** It confirms the title and the seven authors exactly as in §0, and gives
+  online-first 2026-11-12 with no volume or pages yet. `mcsweeney2026` was added to
+  `papers/lpt/refs.bib` and `papers/lptv/refs.bib` (step 2 done; re-check volume and pages when
+  the issue is assigned). It is not cited in any prose yet.
+- **Zenodo 10.5281/zenodo.21386095: reachable.** Record created 2026-07-16, CC BY 4.0. It holds 76
+  `dyn_spectra_N.tar.gz` (pickled dynamic spectra, ~2 GB in total), `contents.txt` and
+  `toas.ecsv`. The ToA file has sha256 `613c5886…be29d18` and 227 rows: 184 MWA (154/200 MHz,
+  MJD 60648.74–61050.67) and 43 MeerKAT (813/1279 MHz, MJD 60766.53–60915.44). It has per-pulse
+  ToA, ToA_err, fluence and peak S/N, and no orbital phase or polarization. Only this inventory
+  was made; nothing was fitted.
+- **Code repo: unchanged** since `5c367e6` (3 commits, all 2026-07-16). The §0 ephemeris is
+  still the latest public one.
+
 ## 1. Next steps (do these first, in order)
 
 1. **Get the full text.** Use Joe's institutional access or the accepted manuscript, plus the
