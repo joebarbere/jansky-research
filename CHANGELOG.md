@@ -10,6 +10,9 @@ recommend the next version number.
 
 ## [Unreleased]
 
+### Changed
+- `plans/102` (parked): GPM J0715−1141 (McSweeney+2026, Nat. Astron., a 7.9-min WD + G-star LPT). Next steps for catalogue v4 (row 17, spin ≠ orbit schema, reconciling the paper's "4 of 12 WD+M dwarf" against our 2 M-dwarf labels). A scratch what-if of the period-split test (primary p 0.167 → 0.275). Six follow-up leads, GATE-0 not run on any: WD+FGK binary radio census, ASKAP pulses phase-folded on the published orbit, `lptduty` known-answer test, spin vs beat, spin–orbit diagram. Values sourced from the abstract and the authors' code repo; the full text has not been read yet.
+
 ## [1.14.0] - 2026-10-27
 
 ### Added
